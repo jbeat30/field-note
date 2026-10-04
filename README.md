@@ -18,6 +18,7 @@
 
 ```bash
 pnpm install
+pnpm prepare      # 커밋 훅(husky) 연결, 클론 후 1회
 pnpm dev          # api :3000, web :5173
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
