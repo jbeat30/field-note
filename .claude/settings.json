@@ -1,0 +1,17 @@
+{
+  "enabledPlugins": {
+    "jbeat-conventions@jbeat-plugins": true
+  },
+  "extraKnownMarketplaces": {
+    "jbeat-plugins": {
+      "source": {
+        "source": "github",
+        "repo": "jbeat30/jbeat-conventions"
+      }
+    }
+  },
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  }
+}
