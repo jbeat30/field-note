@@ -6,6 +6,33 @@ on:
   pull_request:
 
 jobs:
+  # PR 방향 검사 (docs/02-git-workflow.md)
+  branch-policy:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    steps:
+      - name: 브랜치 규칙 검사
+        env:
+          BASE: ${{ github.base_ref }}
+          HEAD: ${{ github.head_ref }}
+        run: |
+          semver='[0-9]+\.[0-9]+\.[0-9]+'
+          if [[ "$BASE" == "main" ]]; then
+            pattern="^release/${semver}$"
+          elif [[ "$BASE" =~ ^release/${semver}$ ]]; then
+            pattern="^fix/${semver}/.+"
+          elif [[ "$BASE" =~ ^feature/${semver}$ ]]; then
+            pattern="^(feat|fix|docs|chore|refactor|test)/${semver}/.+"
+          else
+            echo "허용되지 않는 대상 브랜치: $BASE"
+            exit 1
+          fi
+          if [[ ! "$HEAD" =~ $pattern ]]; then
+            echo "$HEAD → $BASE PR은 허용되지 않음 (필요 형식: $pattern)"
+            exit 1
+          fi
+          echo "$HEAD → $BASE 허용"
+
   verify:
     runs-on: ubuntu-latest
     steps:
