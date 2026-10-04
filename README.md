@@ -19,7 +19,9 @@
 ```bash
 pnpm install
 pnpm prepare      # 커밋 훅(husky) 연결, 클론 후 1회
-pnpm dev          # api :3000, web :5173
+pnpm dev          # api :3000 + web :5173 (web은 /api를 api로 프록시)
+pnpm dev:api      # api만
+pnpm dev:web      # web만
 pnpm typecheck && pnpm lint && pnpm test && pnpm build
 ```
 
