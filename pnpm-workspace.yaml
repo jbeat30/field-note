@@ -1,0 +1,10 @@
+packages:
+  - apps/*
+  - packages/*
+
+# 설치 스크립트 실행 허용 목록 (네이티브 바이너리 확인용만 허용)
+allowBuilds:
+  '@swc/core': true
+  esbuild: true
+  '@parcel/watcher': false
+  unrs-resolver: false
