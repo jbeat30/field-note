@@ -29,4 +29,5 @@ pnpm typecheck && pnpm lint && pnpm test && pnpm build
 
 - [기획서 분석](docs/00-analysis.md)
 - [개발 순서 설계](docs/01-development-plan.md)
+- [진행 현황](docs/03-progress.md)
 - [서비스 기획서 v2.4](docs/planning/service-plan-v2.4.md) / [기술 기획서 v0.5](docs/planning/tech-plan-v0.5.md)
