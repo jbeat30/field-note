@@ -20,9 +20,9 @@ jobs:
           if [[ "$BASE" == "main" ]]; then
             pattern="^release/${semver}$"
           elif [[ "$BASE" =~ ^release/${semver}$ ]]; then
-            pattern="^fix/${semver}/.+"
+            pattern="^fix-.+"
           elif [[ "$BASE" =~ ^feature/${semver}$ ]]; then
-            pattern="^(feat|fix|docs|chore|refactor|test)/${semver}/.+"
+            pattern="^(feat|fix|docs|chore|refactor|test)-.+"
           else
             echo "허용되지 않는 대상 브랜치: $BASE"
             exit 1
