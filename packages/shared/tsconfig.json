@@ -1,0 +1,5 @@
+{
+  "extends": "@field-note/config/tsconfig.base.json",
+  "compilerOptions": { "types": ["jest"] },
+  "include": ["src"]
+}
