@@ -1,19 +1,29 @@
+import cookieParser from 'cookie-parser';
 import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 
+import { csrfGuard } from './http/csrf';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler';
 import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idempotency';
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import { createLogger, type Logger } from './logger';
+import { registerAuthRoutes } from './routes/auth';
 import { registerHealthRoutes } from './routes/health';
 import { registerSampleRoutes } from './routes/samples';
 import { registerSessionRoutes } from './routes/session';
+import { createMemorySessionStore, type SessionStore } from './session/sessionStore';
+import { createSessionResolver } from './session/cookie';
 
 export type AppOptions = {
-  // 세션 구현(T0-7) 전에는 항상 인증 없음
+  // 기본은 세션 저장소의 쿠키 해석기 (테스트에서 교체 가능)
   resolveAuth?: AuthResolver;
+  // 운영은 PostgreSQL 저장소를 주입, 기본은 메모리 저장소
+  sessionStore?: SessionStore;
+  // CSRF Origin 검증 기준 웹 주소
+  appOrigin?: string;
+  isSecureCookie?: boolean;
   idempotencyStore?: IdempotencyStore;
   logger?: Logger;
   // 개발 환경에서만 API 문서 화면 제공
@@ -26,14 +36,16 @@ export type AppOptions = {
  * @returns 라우트 등록소
  */
 export const createRegistry = (options: AppOptions = {}) => {
+  const sessionStore = options.sessionStore ?? createMemorySessionStore();
   const registry = createRouteRegistry({
-    resolveAuth: options.resolveAuth ?? (async () => null),
+    resolveAuth: options.resolveAuth ?? createSessionResolver(sessionStore),
     idempotencyStore: options.idempotencyStore ?? createMemoryIdempotencyStore(),
   });
 
   registerHealthRoutes(registry);
   registerSessionRoutes(registry);
   registerSampleRoutes(registry);
+  registerAuthRoutes(registry, { sessionStore, isSecureCookie: options.isSecureCookie ?? false });
 
   return registry;
 };
@@ -45,10 +57,12 @@ export const createRegistry = (options: AppOptions = {}) => {
  */
 export const createApp = (options: AppOptions = {}) => {
   const app = express();
-  const registry = createRegistry(options);
+  const sessionStore = options.sessionStore ?? createMemorySessionStore();
+  const registry = createRegistry({ ...options, sessionStore });
 
   app.disable('x-powered-by');
   app.use(express.json({ limit: '100kb' }));
+  app.use(cookieParser());
 
   if (options.isDocsEnabled) {
     app.use(
@@ -58,7 +72,7 @@ export const createApp = (options: AppOptions = {}) => {
     );
   }
 
-  app.use(API_PREFIX, registry.router);
+  app.use(API_PREFIX, csrfGuard(options.appOrigin ?? 'http://localhost:5173'), registry.router);
   app.use(notFoundHandler);
   app.use(createErrorHandler(options.logger ?? createLogger('silent')));
 

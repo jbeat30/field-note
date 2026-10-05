@@ -1,4 +1,4 @@
-import { Router, type RequestHandler } from 'express';
+import { Router, type Request, type RequestHandler, type Response } from 'express';
 import type { ZodType } from 'zod';
 
 import { idempotency, type IdempotencyStore } from './idempotency';
@@ -29,6 +29,9 @@ export type RouteContext = {
   body: unknown;
   // auth: 'required'인 라우트에서만 존재
   auth: AuthContext | undefined;
+  // 쿠키 설정처럼 응답 헤더가 필요한 경우에만 사용 (본문은 반환값으로 내보냄)
+  request: Request;
+  response: Response;
 };
 
 export type RouteHandler = (context: RouteContext) => Promise<unknown>;
@@ -82,13 +85,15 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
     }
 
     // 응답은 스키마로 파싱해 내보내 불필요한 필드(내부 ID, 다른 회사 정보)가 나가지 않게 함
-    const respond: RequestHandler = async (_req, res) => {
+    const respond: RequestHandler = async (req, res) => {
       const input = res.locals.input;
       const data = await handler({
         params: input?.params,
         query: input?.query,
         body: input?.body,
         auth: res.locals.auth,
+        request: req,
+        response: res,
       });
 
       res.status(spec.response.status).json(spec.response.schema.parse(data));

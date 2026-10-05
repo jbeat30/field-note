@@ -5,13 +5,13 @@
 
 ## 1. 한눈에 보기
 
-| 항목                               | 상태                                                           |
-| ---------------------------------- | -------------------------------------------------------------- |
-| 0단계 기획서 분석                  | 완료 (`00-analysis.md`)                                        |
-| 1단계 개발 순서 설계               | 완료 (`01-development-plan.md`)                                |
-| 2단계 모노레포 기본 구성 + 첫 푸시 | 완료 (T0-1)                                                    |
-| 브랜치·PR·버전 전략                | 완료·강제 적용 (`02-git-workflow.md`)                          |
-| **다음 작업**                      | **T0-7 세션·로그인 틀** (브랜치 예: `feat-session-foundation`) |
+| 항목                               | 상태                                        |
+| ---------------------------------- | ------------------------------------------- |
+| 0단계 기획서 분석                  | 완료 (`00-analysis.md`)                     |
+| 1단계 개발 순서 설계               | 완료 (`01-development-plan.md`)             |
+| 2단계 모노레포 기본 구성 + 첫 푸시 | 완료 (T0-1)                                 |
+| 브랜치·PR·버전 전략                | 완료·강제 적용 (`02-git-workflow.md`)       |
+| **다음 작업**                      | **0.1.0 릴리즈** (`release/0.1.0` → `main`) |
 
 ## 2. 기술 0 진행표 (버전 0.1.0)
 
@@ -24,8 +24,8 @@
 | T0-4   | DB·격리 스파이크 (Prisma 7.10.0, `withCompany`, RLS, 격리 테스트) — 최대 위험    | 완료 (PR 대기)                                                                            |
 | T0-5   | API 공통 틀 (validate, requireAuth, 에러 형식, 멱등 키, OpenAPI)                 | 완료 (PR 대기; 프론트 타입은 `packages/shared/openapi`에 생성, openapi-fetch 연결은 T0-6) |
 | T0-6   | 웹 공통 틀 (Tailwind, Router, Query/Zustand, PWA, Storybook)                     | 완료 (PR 대기)                                                                            |
-| T0-7   | 세션·로그인 틀                                                                   | **다음**                                                                                  |
-| 릴리즈 | T0-7 완료 후 `release/0.1.0` → `main`, `package.json` 버전을 0.1.0으로 올림      | **다음**                                                                                  |
+| T0-7   | 세션·로그인 틀                                                                   | 완료 (PR 대기)                                                                            |
+| 릴리즈 | T0-7                                                                             | 세션·로그인 틀                                                                            | 완료 (PR 대기) |
 
 ## 3. Git 상태
 
@@ -76,3 +76,7 @@ gh pr create --base feature/0.1.0        # CI 통과 후 squash 머지
 
 - `docs/planning/`의 두 기획서는 원본 그대로이며 Prettier 대상에서 제외
 - T0-4의 Testcontainers 격리 테스트는 Docker가 필요하다 (로컬은 Docker Desktop, CI는 ubuntu 러너). 앱 계정 비밀번호는 `pnpm db:setup`이 환경 변수 값으로 설정하며 마이그레이션 파일에는 두지 않는다
+- 멱등 키 저장소는 메모리 구현이다(서버 재시작·다중 서버에서 기록이 사라짐). 운영 전에 DB 저장소로 교체 필요
+- 세션 저장소 기본값(`createApp`)은 메모리 구현이며 운영 기동(`main.ts`)에서는 PostgreSQL 저장소를 주입한다
+- 만료 세션 정리(`deleteExpired`)를 호출하는 작업은 P0-4(pg-boss)에서 연결한다
+- 로그인 후 세션 발급(`create`)과 `userId` 검증은 P0-1(사용자 스키마)·P0-3(로그인)에서 연결한다. 현재 `sessions.user_id`는 외래 키가 없다
