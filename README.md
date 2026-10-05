@@ -26,6 +26,8 @@
 pnpm install              # 패키지 설치
 pnpm prepare              # 커밋 훅(husky) 연결
 cp .env.example .env      # 환경 변수 파일 만들기 (.env는 Git에 올라가지 않음)
+pnpm infra:up             # 로컬 인프라 실행 (DB 준비를 위해 먼저 필요)
+pnpm db:setup             # DB 테이블 생성 + 앱 전용 DB 계정 비밀번호 설정
 ```
 
 `.env`의 기본값은 아래 로컬 인프라와 맞춰져 있어서 그대로 써도 된다.
@@ -70,6 +72,13 @@ pnpm dev
 
 - 메일은 실제로 발송되지 않는다. 인증 메일 등은 `localhost:8025`에서 확인한다
 - MinIO 공식 이미지가 더 이상 배포되지 않아 호환 제품인 RustFS를 쓴다
+
+## DB와 회사 격리
+
+- DB 계정이 두 개다. **소유 계정**(`DATABASE_MIGRATE_URL`)은 테이블을 만드는 마이그레이션 전용이고, **앱 계정**(`DATABASE_URL`)은 서버가 쓰며 다른 회사 데이터를 볼 수 없게 DB가 막는다
+- 업무 쿼리는 반드시 `withCompany(prisma, 회사ID, (tx) => …)`가 넘겨주는 `tx`로만 실행한다. 이 밖에서 조회하면 아무 행도 보이지 않는다
+- `pnpm test`의 격리·스키마 검사 테스트는 Docker로 임시 PostgreSQL을 띄운다. Docker가 꺼져 있으면 실패한다
+- Prisma 클라이언트는 `pnpm typecheck`·`pnpm test`가 자동으로 생성한다 (`src/generated`, Git 제외)
 
 ## 환경 변수
 

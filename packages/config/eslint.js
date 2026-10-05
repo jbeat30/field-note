@@ -9,7 +9,9 @@ import tseslint from 'typescript-eslint';
  */
 export const createConfig = () =>
   tseslint.config(
-    { ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', 'docs/**'] },
+    {
+      ignores: ['**/dist/**', '**/coverage/**', '**/node_modules/**', 'docs/**', '**/generated/**'],
+    },
     js.configs.recommended,
     ...tseslint.configs.recommended,
     {

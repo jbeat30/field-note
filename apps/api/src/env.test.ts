@@ -2,6 +2,7 @@ import { parseEnv } from './env';
 
 const validEnv = {
   DATABASE_URL: 'postgresql://user:pw@localhost:5432/db',
+  DATABASE_MIGRATE_URL: 'postgresql://owner:pw@localhost:5432/db',
   S3_ENDPOINT: 'http://localhost:9000',
   S3_REGION: 'us-east-1',
   S3_BUCKET: 'bucket',

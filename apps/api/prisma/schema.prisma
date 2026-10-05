@@ -1,0 +1,46 @@
+// T0-4 격리 스파이크용 최소 스키마 (실제 업무 테이블은 P0·P1에서 추가)
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name      String
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  projects  Project[]
+  memos     Memo[]
+
+  @@map("companies")
+}
+
+model Project {
+  id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company  @relation(fields: [companyId], references: [id])
+  memos     Memo[]
+
+  // 복합 키: 다른 회사 행과의 연결을 외래 키 단계에서 차단
+  @@id([companyId, id])
+  @@map("projects")
+}
+
+model Memo {
+  id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company  @relation(fields: [companyId], references: [id])
+  project   Project  @relation(fields: [companyId, projectId], references: [companyId, id])
+
+  @@id([companyId, id])
+  @@map("memos")
+}
