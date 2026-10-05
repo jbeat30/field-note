@@ -1,7 +1,10 @@
 import { createApp } from './app';
+import { parseEnv } from './env';
+import { createLogger } from './logger';
 
-const port = Number(process.env.PORT ?? 3000);
+const env = parseEnv();
+const logger = createLogger(env.LOG_LEVEL);
 
-createApp().listen(port, () => {
-  console.log(`[api.main] 서버 시작 port=${port}`);
+createApp().listen(env.PORT, () => {
+  logger.info({ port: env.PORT }, '[api.main] 서버 시작');
 });

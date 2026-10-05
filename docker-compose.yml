@@ -1,0 +1,46 @@
+# 로컬 개발 인프라 (PostgreSQL, S3 호환 저장소, 가짜 메일 수신기)
+name: field-note
+
+services:
+  postgres:
+    image: postgres:18
+    environment:
+      POSTGRES_USER: field_note
+      POSTGRES_PASSWORD: field_note
+      POSTGRES_DB: field_note
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres-data:/var/lib/postgresql
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U field_note -d field_note']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  minio:
+    image: minio/minio:latest
+    command: server /data --console-address ":9001"
+    environment:
+      MINIO_ROOT_USER: field_note
+      MINIO_ROOT_PASSWORD: field_note_secret
+    ports:
+      - '9000:9000'
+      - '9001:9001'
+    volumes:
+      - minio-data:/data
+    healthcheck:
+      test: ['CMD', 'mc', 'ready', 'local']
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  mailpit:
+    image: axllent/mailpit:latest
+    ports:
+      - '1025:1025'
+      - '8025:8025'
+
+volumes:
+  postgres-data:
+  minio-data:
