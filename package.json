@@ -9,7 +9,9 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "pnpm -r --parallel --filter \"./apps/*\" dev",
+    "infra:up": "bash scripts/ensure-docker.sh && docker compose up -d --wait",
+    "infra:down": "docker compose down",
+    "dev": "pnpm infra:up && pnpm -r --parallel --filter \"./apps/*\" dev",
     "dev:api": "pnpm --filter @field-note/api dev",
     "dev:web": "pnpm --filter @field-note/web dev",
     "build": "pnpm -r build",
