@@ -21,7 +21,8 @@
     "format:check": "prettier --check .",
     "test": "pnpm --filter @field-note/api db:generate && jest",
     "prepare": "husky",
-    "db:setup": "pnpm --filter @field-note/api db:setup"
+    "db:setup": "pnpm --filter @field-note/api db:setup",
+    "openapi:generate": "pnpm --filter @field-note/api openapi:generate"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",
