@@ -10,3 +10,4 @@ coverage/
 .claude/settings.local.json
 storybook-static/
 .idea/
+apps/api/src/generated

@@ -9,14 +9,22 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "dev": "pnpm -r --parallel --filter ./apps/* dev",
+    "infra:up": "bash scripts/ensure-docker.sh && docker compose up -d --wait",
+    "infra:down": "docker compose down",
+    "dev": "pnpm infra:up && pnpm -r --parallel --filter \"./apps/*\" dev",
+    "dev:api": "pnpm --filter @field-note/api dev",
+    "dev:web": "pnpm --filter @field-note/web dev",
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "jest",
-    "prepare": "husky"
+    "test": "pnpm --filter @field-note/api db:generate && jest",
+    "prepare": "husky",
+    "db:setup": "pnpm --filter @field-note/api db:setup",
+    "openapi:generate": "pnpm --filter @field-note/api openapi:generate",
+    "test:stories": "pnpm --filter @field-note/web test:stories",
+    "storybook": "pnpm --filter @field-note/web storybook"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",

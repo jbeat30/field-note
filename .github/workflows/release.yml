@@ -1,0 +1,30 @@
+name: Release
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  tag-and-release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: 태그와 릴리즈 생성
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          version=$(node -p "require('./package.json').version")
+          tag="v${version}"
+          # 이미 릴리즈된 버전이면 건너뜀
+          if gh release view "$tag" >/dev/null 2>&1; then
+            echo "$tag 이미 존재"
+            exit 0
+          fi
+          if [[ "$version" == 0.0.0 ]]; then
+            echo "버전 미지정(0.0.0), 릴리즈 생략"
+            exit 0
+          fi
+          gh release create "$tag" --target "$GITHUB_SHA" --title "$tag" --generate-notes
