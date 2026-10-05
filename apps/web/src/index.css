@@ -1,0 +1,22 @@
+@import 'tailwindcss';
+
+/* 디자인 토큰: 앱과 Storybook이 같은 파일을 불러와 모양이 같게 보임 */
+@theme {
+  --font-sans: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Noto Sans KR', sans-serif;
+  --color-primary: #1d4ed8;
+  --color-primary-foreground: #ffffff;
+  --color-surface: #ffffff;
+  --color-muted: #f1f5f9;
+  --color-foreground: #0f172a;
+  --color-border: #cbd5e1;
+  --color-danger: #b91c1c;
+  /* 현장 사용 기준 터치 영역 최소 크기 */
+  --spacing-touch: 2.75rem;
+}
+
+body {
+  margin: 0;
+  background: var(--color-surface);
+  color: var(--color-foreground);
+  font-family: var(--font-sans);
+}
