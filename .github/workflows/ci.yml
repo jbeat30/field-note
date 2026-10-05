@@ -20,7 +20,8 @@ jobs:
           if [[ "$BASE" == "main" ]]; then
             pattern="^release/${semver}$"
           elif [[ "$BASE" =~ ^release/${semver}$ ]]; then
-            pattern="^fix-.+"
+            # 같은 버전의 피쳐 브랜치 또는 수정 브랜치
+            pattern="^(feature/${BASE#release/}|fix-.+)$"
           elif [[ "$BASE" =~ ^feature/${semver}$ ]]; then
             pattern="^(feat|fix|docs|chore|refactor|test)-.+"
           else

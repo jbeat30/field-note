@@ -12,7 +12,7 @@
 ## 브랜치 전략 (`docs/02-git-workflow.md`)
 
 - `main`·`feature/*`·`release/*`에 직접 푸시하지 않는다
-- `feature/<버전>` → 기능 브랜치 `<타입>-<작업명>` (예: `feat-login-page`) PR → 테스트 통과 후 `release/<버전>` → `main` PR
+- `main`에서 `feature/<버전>`을 만들고, 기능 브랜치 `<타입>-<작업명>` (예: `feat-login-page`) PR로 모은다. 버전 범위가 끝나면 `main`에서 만든 `release/<버전>`으로 `feature/<버전>` PR → `release/<버전>` → `main` PR
 - 모든 PR은 CI 통과 필수, 버전은 SemVer
 
 ## 명령
