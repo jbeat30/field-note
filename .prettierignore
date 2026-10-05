@@ -4,3 +4,5 @@ coverage
 docs/planning
 apps/api/src/generated
 packages/shared/openapi
+apps/web/.storybook/public
+storybook-static

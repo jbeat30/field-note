@@ -1,3 +1,15 @@
-import { APP_NAME } from '@field-note/shared';
+import { useState } from 'react';
+import { RouterProvider } from 'react-router/dom';
 
-export const App = () => <h1>{APP_NAME}</h1>;
+import { AppProviders } from './AppProviders';
+import { createAppRouter } from './router';
+
+export const App = () => {
+  const [router] = useState(createAppRouter);
+
+  return (
+    <AppProviders>
+      <RouterProvider router={router} />
+    </AppProviders>
+  );
+};
