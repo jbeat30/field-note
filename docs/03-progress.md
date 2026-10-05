@@ -5,13 +5,13 @@
 
 ## 1. 한눈에 보기
 
-| 항목                               | 상태                                                   |
-| ---------------------------------- | ------------------------------------------------------ |
-| 0단계 기획서 분석                  | 완료 (`00-analysis.md`)                                |
-| 1단계 개발 순서 설계               | 완료 (`01-development-plan.md`)                        |
-| 2단계 모노레포 기본 구성 + 첫 푸시 | 완료 (T0-1)                                            |
-| 브랜치·PR·버전 전략                | 완료·강제 적용 (`02-git-workflow.md`)                  |
-| **다음 작업**                      | **T0-6 웹 공통 틀** (브랜치 예: `feat-web-foundation`) |
+| 항목                               | 상태                                                           |
+| ---------------------------------- | -------------------------------------------------------------- |
+| 0단계 기획서 분석                  | 완료 (`00-analysis.md`)                                        |
+| 1단계 개발 순서 설계               | 완료 (`01-development-plan.md`)                                |
+| 2단계 모노레포 기본 구성 + 첫 푸시 | 완료 (T0-1)                                                    |
+| 브랜치·PR·버전 전략                | 완료·강제 적용 (`02-git-workflow.md`)                          |
+| **다음 작업**                      | **T0-7 세션·로그인 틀** (브랜치 예: `feat-session-foundation`) |
 
 ## 2. 기술 0 진행표 (버전 0.1.0)
 
@@ -23,9 +23,9 @@
 | T0-3   | docker-compose(PostgreSQL 18, RustFS, Mailpit), env 검증(Zod), pino 로거(마스킹) | 완료 (compose 3개 컨테이너 기동·헬스 확인)                                                |
 | T0-4   | DB·격리 스파이크 (Prisma 7.10.0, `withCompany`, RLS, 격리 테스트) — 최대 위험    | 완료 (PR 대기)                                                                            |
 | T0-5   | API 공통 틀 (validate, requireAuth, 에러 형식, 멱등 키, OpenAPI)                 | 완료 (PR 대기; 프론트 타입은 `packages/shared/openapi`에 생성, openapi-fetch 연결은 T0-6) |
-| T0-6   | 웹 공통 틀 (Tailwind, Router, Query/Zustand, PWA, Storybook)                     | **다음**                                                                                  |
-| T0-7   | 세션·로그인 틀                                                                   | 대기                                                                                      |
-| 릴리즈 | T0-7 완료 후 `release/0.1.0` → `main`, `package.json` 버전을 0.1.0으로 올림      | 대기                                                                                      |
+| T0-6   | 웹 공통 틀 (Tailwind, Router, Query/Zustand, PWA, Storybook)                     | 완료 (PR 대기)                                                                            |
+| T0-7   | 세션·로그인 틀                                                                   | **다음**                                                                                  |
+| 릴리즈 | T0-7 완료 후 `release/0.1.0` → `main`, `package.json` 버전을 0.1.0으로 올림      | **다음**                                                                                  |
 
 ## 3. Git 상태
 
