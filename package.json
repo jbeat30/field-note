@@ -9,7 +9,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "infra:up": "docker compose up -d --wait",
+    "infra:up": "bash scripts/ensure-docker.sh && docker compose up -d --wait",
     "infra:down": "docker compose down",
     "dev": "pnpm infra:up && pnpm -r --parallel --filter \"./apps/*\" dev",
     "dev:api": "pnpm --filter @field-note/api dev",

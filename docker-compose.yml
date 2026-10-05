@@ -18,22 +18,18 @@ services:
       timeout: 3s
       retries: 10
 
-  minio:
-    image: minio/minio:latest
-    command: server /data --console-address ":9001"
+  # MinIO 공식 이미지는 더 이상 배포되지 않아 MinIO 호환 S3 저장소인 RustFS 사용
+  rustfs:
+    image: rustfs/rustfs:latest
     environment:
-      MINIO_ROOT_USER: field_note
-      MINIO_ROOT_PASSWORD: field_note_secret
+      RUSTFS_ACCESS_KEY: field_note
+      RUSTFS_SECRET_KEY: field_note_secret
+      RUSTFS_CONSOLE_ENABLE: 'true'
     ports:
       - '9000:9000'
       - '9001:9001'
     volumes:
-      - minio-data:/data
-    healthcheck:
-      test: ['CMD', 'mc', 'ready', 'local']
-      interval: 5s
-      timeout: 3s
-      retries: 10
+      - rustfs-data:/data
 
   mailpit:
     image: axllent/mailpit:latest
@@ -43,4 +39,4 @@ services:
 
 volumes:
   postgres-data:
-  minio-data:
+  rustfs-data:
