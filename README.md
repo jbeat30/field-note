@@ -75,7 +75,10 @@ pnpm dev
 
 ## DB와 회사 격리
 
-- DB 계정이 두 개다. **소유 계정**(`DATABASE_MIGRATE_URL`)은 테이블을 만드는 마이그레이션 전용이고, **앱 계정**(`DATABASE_URL`)은 서버가 쓰며 다른 회사 데이터를 볼 수 없게 DB가 막는다
+- DB 계정이 세 개다
+  - **소유 계정**(`DATABASE_MIGRATE_URL`): 테이블을 만드는 마이그레이션 전용
+  - **앱 계정**(`DATABASE_URL`): 업무 쿼리용. 다른 회사 데이터를 볼 수 없게 DB가 막고, 세션 테이블은 접근할 수 없다
+  - **회사 범위 밖 전용 계정**(`DATABASE_AUTH_URL`): 로그인 전처럼 회사를 아직 모르는 시점의 세션 조회 전용. 업무 테이블 권한이 없다
 - 업무 쿼리는 반드시 `withCompany(prisma, 회사ID, (tx) => …)`가 넘겨주는 `tx`로만 실행한다. 이 밖에서 조회하면 아무 행도 보이지 않는다
 - `pnpm test`의 격리·스키마 검사 테스트는 Docker로 임시 PostgreSQL을 띄운다. Docker가 꺼져 있으면 실패한다
 - Prisma 클라이언트는 `pnpm typecheck`·`pnpm test`가 자동으로 생성한다 (`src/generated`, Git 제외)
@@ -97,6 +100,14 @@ pnpm dev
 - 공통 UI 부품과 핵심 컴포넌트는 Storybook 스토리를 만든다(기본·빈 상태·로딩·오류·긴 텍스트 등). 스토리에는 가짜 데이터만 쓰고, 접근성 위반은 실패로 처리된다
 - Vite 환경 변수는 `src/env.ts`로만 접근한다
 - 서비스 워커는 앱 껍데기만 캐시하며 업무 데이터는 오프라인으로 쓰지 않는다
+
+## 로그인 세션
+
+- 세션은 PostgreSQL `sessions` 테이블에 저장하고, 브라우저에는 `sid` 쿠키(HttpOnly, SameSite=Lax, 운영은 Secure)만 둔다. 토큰 원문은 저장하지 않고 해시만 저장한다
+- 회사 ID는 세션에만 기록되며, 요청의 경로·쿼리·헤더·본문으로는 받지 않는다. API 문서에 회사 ID 입력이 생기면 테스트가 실패한다
+- 쓰기 요청(POST·PUT·PATCH·DELETE)은 CSRF 방어를 위해 `X-Field-Note-Client: web` 헤더가 필요하고, Origin이 있으면 `APP_ORIGIN`과 같아야 한다. 웹 API 클라이언트가 자동으로 붙인다
+- 회사 범위 밖 전용 계정을 쓰는 코드는 `apps/api/src/session/`처럼 정해진 위치에만 둔다. 다른 곳에서 DB 클라이언트를 직접 만들면 린트가 막는다
+- 로그인(가입)은 P0-3에서 추가한다. 지금은 세션 저장소, 쿠키, 로그아웃, 인증 확인까지 구현돼 있다
 
 ## 환경 변수
 

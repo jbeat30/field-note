@@ -4,6 +4,7 @@ import { z } from 'zod';
 export const ERROR_CODES = [
   'VALIDATION_ERROR',
   'UNAUTHORIZED',
+  'CSRF_REJECTED',
   'NOT_FOUND',
   'IDEMPOTENCY_KEY_REQUIRED',
   'IDEMPOTENCY_KEY_REUSED',
@@ -35,6 +36,9 @@ export const sessionResponseSchema = z.object({
 });
 
 export type SessionResponse = z.infer<typeof sessionResponseSchema>;
+
+// 로그아웃 응답
+export const logoutResponseSchema = z.object({ success: z.literal(true) });
 
 // 틀 검증용 샘플 쓰기 API (실제 업무 라우트가 생기면 제거)
 export const sampleCreateRequestSchema = z.object({
