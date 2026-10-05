@@ -8,3 +8,9 @@ allowBuilds:
   esbuild: true
   '@parcel/watcher': false
   unrs-resolver: false
+  '@prisma/engines': true
+  prisma: true
+  cpu-features: false
+  protobufjs: false
+  ssh2: false
+  '@scarf/scarf': false
