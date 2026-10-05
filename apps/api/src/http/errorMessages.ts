@@ -4,6 +4,7 @@ import type { ErrorCode } from '@field-note/shared';
 export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   VALIDATION_ERROR: '입력 값을 확인해 주세요',
   UNAUTHORIZED: '로그인이 필요합니다',
+  CSRF_REJECTED: '허용되지 않은 요청입니다',
   NOT_FOUND: '요청한 자료를 찾을 수 없습니다',
   IDEMPOTENCY_KEY_REQUIRED: '요청 식별 키가 필요합니다',
   IDEMPOTENCY_KEY_REUSED: '같은 요청 식별 키로 다른 내용을 보낼 수 없습니다',

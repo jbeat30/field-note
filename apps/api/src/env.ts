@@ -6,6 +6,9 @@ const envSchema = z.object({
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
   DATABASE_URL: z.url(),
   DATABASE_MIGRATE_URL: z.url(),
+  DATABASE_AUTH_URL: z.url(),
+  // 브라우저에서 접속하는 웹 주소 (CSRF Origin 검증 기준)
+  APP_ORIGIN: z.url(),
   S3_ENDPOINT: z.url(),
   S3_REGION: z.string().min(1),
   S3_BUCKET: z.string().min(1),

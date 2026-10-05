@@ -60,4 +60,23 @@ describe('스키마 검사', () => {
 
     expect(rows).toEqual([]);
   });
+
+  it('앱 계정은 세션 테이블에 접근할 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM sessions`).rejects.toThrow();
+  });
+
+  it('회사 범위 밖 전용 계정은 업무 테이블에 접근할 수 없다', async () => {
+    await expect(db.auth.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
+    await expect(db.auth.$queryRaw`SELECT * FROM memos`).rejects.toThrow();
+    await expect(db.auth.$queryRaw`SELECT * FROM companies`).rejects.toThrow();
+  });
+
+  it('회사 범위 밖 전용 계정은 세션 테이블의 수정 권한이 없다 (생성·조회·삭제만)', async () => {
+    const { rows } = await db.ownerPool.query<{ privilege_type: string }>(
+      `SELECT privilege_type FROM information_schema.role_table_grants
+        WHERE grantee = 'field_note_auth' AND table_name = 'sessions' ORDER BY privilege_type`,
+    );
+
+    expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT']);
+  });
 });

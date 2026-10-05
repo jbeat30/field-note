@@ -60,3 +60,59 @@ describe('OpenAPI 계약', () => {
     ).not.toThrow();
   });
 });
+
+// 회사 ID는 세션에서만 얻으므로 어떤 요청 입력(경로·쿼리·헤더·본문)에도 회사 ID 필드가 없어야 한다
+describe('회사 ID 입력 경로 없음', () => {
+  const COMPANY_FIELD = /company/i;
+
+  const collectPropertyNames = (schema: unknown): string[] => {
+    if (!schema || typeof schema !== 'object') {
+      return [];
+    }
+
+    const node = schema as {
+      properties?: Record<string, unknown>;
+      items?: unknown;
+      allOf?: unknown[];
+      oneOf?: unknown[];
+      anyOf?: unknown[];
+    };
+    const nested = [
+      node.items,
+      ...(node.allOf ?? []),
+      ...(node.oneOf ?? []),
+      ...(node.anyOf ?? []),
+    ];
+
+    return [
+      ...Object.keys(node.properties ?? {}),
+      ...Object.values(node.properties ?? {}).flatMap(collectPropertyNames),
+      ...nested.flatMap(collectPropertyNames),
+    ];
+  };
+
+  it('경로·쿼리·헤더 매개변수와 요청 본문에 회사 ID 필드가 없다', () => {
+    const document = generateOpenApiDocument(createRegistry().routes);
+    const inputNames: string[] = [];
+
+    for (const [apiPath, item] of Object.entries(document.paths ?? {})) {
+      inputNames.push(...(apiPath.match(/\{(\w+)\}/g) ?? []));
+
+      for (const operation of Object.values(item as Record<string, unknown>)) {
+        const { parameters = [], requestBody } = operation as {
+          parameters?: { name: string }[];
+          requestBody?: { content?: Record<string, { schema?: unknown }> };
+        };
+
+        inputNames.push(...parameters.map((parameter) => parameter.name));
+        inputNames.push(
+          ...Object.values(requestBody?.content ?? {}).flatMap((media) =>
+            collectPropertyNames(media.schema),
+          ),
+        );
+      }
+    }
+
+    expect(inputNames.filter((name) => COMPANY_FIELD.test(name))).toEqual([]);
+  });
+});

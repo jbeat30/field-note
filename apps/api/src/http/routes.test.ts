@@ -8,6 +8,7 @@ import request from 'supertest';
 import { z } from 'zod';
 
 import { createApp, type AppOptions } from '../app';
+import { CSRF_HEADER, CSRF_HEADER_VALUE } from './csrf';
 
 import { createErrorHandler, notFoundHandler } from './errorHandler';
 import { createMemoryIdempotencyStore } from './idempotency';
@@ -60,6 +61,7 @@ describe('validate', () => {
   it('검증 실패는 400과 위치별 사유를 반환하고 입력 값은 노출하지 않는다', async () => {
     const res = await request(buildApp())
       .post('/api/v1/samples')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
       .set('x-test-company', COMPANY_A)
       .set('Idempotency-Key', keyOf(1))
       .send({ title: '' });
@@ -76,6 +78,7 @@ describe('응답 스키마 파싱', () => {
   it('스키마에 없는 내부 필드는 응답에서 제거한다', async () => {
     const res = await request(buildApp())
       .post('/api/v1/samples')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
       .set('x-test-company', COMPANY_A)
       .set('Idempotency-Key', keyOf(2))
       .send({ title: '현장 A' });
@@ -88,7 +91,10 @@ describe('응답 스키마 파싱', () => {
 
 describe('멱등 키', () => {
   const post = (app: express.Express, company: string, key: string | null, title: string) => {
-    const req = request(app).post('/api/v1/samples').set('x-test-company', company);
+    const req = request(app)
+      .post('/api/v1/samples')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+      .set('x-test-company', company);
 
     return (key ? req.set('Idempotency-Key', key) : req).send({ title });
   };
