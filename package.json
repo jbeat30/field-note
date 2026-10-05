@@ -1,6 +1,6 @@
 {
   "name": "field-note",
-  "version": "0.0.0",
+  "version": "0.1.0",
   "private": true,
   "type": "module",
   "description": "현장 팀 프로젝트 관리 서비스",
