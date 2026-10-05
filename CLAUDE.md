@@ -9,6 +9,12 @@
 - 회사 ID는 세션에서만 얻는다. 요청 본문·주소·헤더로 받지 않는다
 - 커밋 메시지는 `타입: 한국어 설명` 형식으로 사람이 쓴 것처럼 작성하고, Claude Code 안내 문구·Co-Authored-By는 넣지 않는다
 
+## 브랜치 전략 (`docs/02-git-workflow.md`)
+
+- `main`·`feature/*`·`release/*`에 직접 푸시하지 않는다
+- `main`에서 `feature/<버전>`을 만들고, 기능 브랜치 `<타입>-<작업명>` (예: `feat-login-page`) PR로 모은다. 버전 범위가 끝나면 `main`에서 만든 `release/<버전>`으로 `feature/<버전>` PR → `release/<버전>` → `main` PR
+- 모든 PR은 CI 통과 필수, 버전은 SemVer
+
 ## 명령
 
 - `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm build`
