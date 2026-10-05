@@ -3,20 +3,24 @@
 ## 1. 흐름
 
 ```
-main  ◀─────────────────────────────── PR(merge) ──────────── release/0.1.0
-                                                                   ▲
-feature/0.1.0 (피쳐 버전 브랜치) ──── 테스트 완료 후 분기 ──────────┘
-   ▲   ▲   ▲
-   │   │   └─ PR(squash) ─ feat-env-logger   (기능 브랜치)
-   │   └───── PR(squash) ─ feat-api-validate
-   └───────── PR(squash) ─ docs-git-workflow
+main ─┬─▶ feature/0.1.0 (피쳐 버전 브랜치)
+      │      ▲   ▲   ▲
+      │      │   │   └─ PR(squash) ─ feat-env-logger   (기능 브랜치)
+      │      │   └───── PR(squash) ─ feat-api-validate
+      │      └───────── PR(squash) ─ docs-git-workflow
+      │      │
+      │      └─ 버전 범위 완료 후 PR(merge) ─┐
+      │                                      ▼
+      └─▶ release/0.1.0 (릴리즈 브랜치) ─ 버전 올림 fix PR ─┐
+                                                           │
+main ◀──────────────── PR(merge) ──────────────────────────┘
 ```
 
 1. 다음 릴리즈 버전의 **피쳐 버전 브랜치** `feature/<버전>`을 `main`에서 만든다.
 2. 기능마다 **기능 브랜치** `<타입>-<작업명>` (예: `feat-login-page`)을 피쳐 버전 브랜치에서 만든다.
 3. 기능 브랜치 → 피쳐 버전 브랜치로 **PR**. CI가 통과해야 머지(squash)한다.
-4. 피쳐 버전 브랜치에서 해당 버전 범위가 모두 끝나고 CI가 통과하면 **릴리즈 브랜치** `release/<버전>`을 만든다.
-5. 릴리즈 브랜치에서 `package.json` 버전을 올리고 → `release/<버전>` → `main`으로 **PR**(merge commit). CI 통과 필수.
+4. 피쳐 버전 브랜치에서 해당 버전 범위가 모두 끝나면 **릴리즈 브랜치** `release/<버전>`을 `main`에서 만들고, `feature/<버전>` → `release/<버전>`으로 **PR**(merge commit)을 보낸다. CI 통과 필수.
+5. 릴리즈 브랜치에서 `package.json` 버전을 올리고(`fix-…` PR) → `release/<버전>` → `main`으로 **PR**(merge commit). CI 통과 필수.
 6. `main` 머지 시 워크플로가 태그 `v<버전>`과 GitHub Release를 자동 생성한다.
 
 ## 2. 규칙
@@ -25,10 +29,10 @@ feature/0.1.0 (피쳐 버전 브랜치) ──── 테스트 완료 후 분기
 | ----------- | --------------------------------------------------------------------------------------------------------- |
 | `main`      | 직접 푸시 금지. `release/*`에서 온 PR만 허용                                                              |
 | `feature/*` | 직접 푸시 금지. 기능 브랜치 PR만 허용                                                                     |
-| `release/*` | 직접 푸시 금지. 버전 올림·릴리즈 중 발견된 수정(`fix-…` PR)만 허용                                        |
+| `release/*` | 직접 푸시 금지. 같은 버전의 `feature/<버전>` PR, 버전 올림·릴리즈 중 발견된 수정(`fix-…` PR)만 허용       |
 | 모든 PR     | CI(`verify`, `branch-policy`) 통과 필수                                                                   |
 | 브랜치 이름 | 기능: `feat-` `fix-` `docs-` `chore-` `refactor-` `test-` + 작업명 (영문 소문자·하이픈, 버전은 넣지 않음) |
-| 머지 방식   | 기능 → 피쳐: squash / 릴리즈 → main: merge commit                                                         |
+| 머지 방식   | 기능 → 피쳐: squash / 피쳐 → 릴리즈, 릴리즈 → main: merge commit                                          |
 | 커밋 메시지 | `타입: 한국어 설명`                                                                                       |
 
 PR 방향이 맞는지는 `branch-policy` 체크가 검사한다.
@@ -36,7 +40,7 @@ PR 방향이 맞는지는 `branch-policy` 체크가 검사한다.
 | PR 대상(base)   | 허용되는 출처(head)                                       |
 | --------------- | --------------------------------------------------------- |
 | `main`          | `release/x.y.z`                                           |
-| `release/x.y.z` | `fix-…`                                                   |
+| `release/x.y.z` | `feature/x.y.z`(같은 버전) `fix-…`                        |
 | `feature/x.y.z` | `feat-…` `fix-…` `docs-…` `chore-…` `refactor-…` `test-…` |
 
 ## 3. 버저닝 (SemVer 2.0)
