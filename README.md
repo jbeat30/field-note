@@ -80,6 +80,14 @@ pnpm dev
 - `pnpm test`의 격리·스키마 검사 테스트는 Docker로 임시 PostgreSQL을 띄운다. Docker가 꺼져 있으면 실패한다
 - Prisma 클라이언트는 `pnpm typecheck`·`pnpm test`가 자동으로 생성한다 (`src/generated`, Git 제외)
 
+## API 규칙
+
+- 모든 라우트는 `routeRegistry.add(spec, handler)`로만 등록한다. 등록하면 속도 제한 → 입력 검증 → 로그인 확인 → 멱등 키 → 응답 스키마 파싱이 정해진 순서로 자동 적용된다
+- 같은 정의에서 API 문서(OpenAPI)가 만들어진다. 결과물은 `packages/shared/openapi/`에 커밋하며, 라우트를 바꾸고 `pnpm openapi:generate`를 안 하면 테스트가 실패한다
+- 오류 응답은 항상 `{ error: { code, message, details? } }` 형식이다. 사용자 문구는 `apps/api/src/http/errorMessages.ts`에 모은다
+- 쓰기 요청은 `Idempotency-Key` 헤더가 필요하다. 네트워크가 끊겨 같은 요청을 다시 보내도 한 번만 처리된다
+- 개발 서버(`NODE_ENV=development`)에서는 `http://localhost:3000/api/docs`에서 API 문서를 볼 수 있다
+
 ## 환경 변수
 
 - 목록과 기본값은 `.env.example`에 있다. 변수를 추가·변경하면 이 파일도 함께 고친다

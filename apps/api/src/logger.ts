@@ -27,6 +27,8 @@ export const REDACT_PATHS = [
 
 export const REDACT_CENSOR = '[마스킹]';
 
+export type Logger = pino.Logger;
+
 /**
  * @description 개인정보 마스킹이 적용된 pino 로거 생성
  * @param level 로그 레벨

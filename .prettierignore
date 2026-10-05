@@ -3,3 +3,4 @@ dist
 coverage
 docs/planning
 apps/api/src/generated
+packages/shared/openapi
