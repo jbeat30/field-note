@@ -19,8 +19,9 @@
     "lint": "eslint .",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
-    "test": "jest",
-    "prepare": "husky"
+    "test": "pnpm --filter @field-note/api db:generate && jest",
+    "prepare": "husky",
+    "db:setup": "pnpm --filter @field-note/api db:setup"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",
