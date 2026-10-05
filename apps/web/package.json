@@ -7,18 +7,48 @@
     "dev": "vite",
     "build": "tsc -p tsconfig.json && vite build",
     "preview": "vite preview",
-    "typecheck": "tsc -p tsconfig.json"
+    "typecheck": "tsc -p tsconfig.json",
+    "storybook": "storybook dev -p 6006",
+    "build-storybook": "storybook build",
+    "test-storybook": "concurrently -k -s first -n SB,TEST \"http-server storybook-static --port 6006 --silent\" \"wait-on tcp:127.0.0.1:6006 && test-storybook --url http://127.0.0.1:6006\"",
+    "test:stories": "storybook build --quiet && pnpm test-storybook"
   },
   "dependencies": {
     "@field-note/shared": "workspace:*",
+    "@tanstack/react-query": "5.104.1",
+    "class-variance-authority": "0.7.1",
+    "clsx": "2.1.1",
+    "idb-keyval": "6.3.0",
+    "lucide-react": "1.52.0",
+    "openapi-fetch": "0.17.0",
+    "radix-ui": "1.6.7",
     "react": "19.3.0",
-    "react-dom": "19.3.0"
+    "react-dom": "19.3.0",
+    "react-router": "8.4.0",
+    "tailwind-merge": "3.7.0",
+    "workbox-window": "7.4.1",
+    "zustand": "5.0.15"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",
+    "@storybook/addon-a11y": "10.6.1",
+    "@storybook/addon-docs": "10.6.1",
+    "@storybook/addon-themes": "10.6.1",
+    "@storybook/react-vite": "10.6.1",
+    "@storybook/test-runner": "0.26.0",
+    "@tailwindcss/vite": "4.3.3",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "@vitejs/plugin-react": "6.1.1",
-    "vite": "8.3.2"
+    "concurrently": "10.0.5",
+    "http-server": "14.1.1",
+    "msw": "3.0.2",
+    "msw-storybook-addon": "3.0.3",
+    "playwright": "1.63.0",
+    "storybook": "10.6.1",
+    "tailwindcss": "4.3.3",
+    "vite": "8.3.2",
+    "vite-plugin-pwa": "2.0.0",
+    "wait-on": "9.5.1"
   }
 }

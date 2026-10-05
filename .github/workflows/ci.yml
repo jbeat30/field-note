@@ -47,5 +47,7 @@ jobs:
       - run: pnpm lint
       - run: pnpm format:check
       - run: pnpm test
+      - run: pnpm --filter @field-note/web exec playwright install --with-deps chromium
+      - run: pnpm test:stories
       - run: pnpm build
       - run: pnpm audit --prod

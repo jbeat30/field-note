@@ -22,7 +22,9 @@
     "test": "pnpm --filter @field-note/api db:generate && jest",
     "prepare": "husky",
     "db:setup": "pnpm --filter @field-note/api db:setup",
-    "openapi:generate": "pnpm --filter @field-note/api openapi:generate"
+    "openapi:generate": "pnpm --filter @field-note/api openapi:generate",
+    "test:stories": "pnpm --filter @field-note/web test:stories",
+    "storybook": "pnpm --filter @field-note/web storybook"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",

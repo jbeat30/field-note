@@ -1,5 +1,6 @@
 import js from '@eslint/js';
 import reactHooks from 'eslint-plugin-react-hooks';
+import storybook from 'eslint-plugin-storybook';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
@@ -17,6 +18,8 @@ export const createConfig = () =>
         'docs/**',
         '**/generated/**',
         'packages/shared/openapi/**',
+        '**/storybook-static/**',
+        '**/.storybook/public/**',
       ],
     },
     js.configs.recommended,
@@ -31,6 +34,7 @@ export const createConfig = () =>
       languageOptions: { globals: globals.browser },
       rules: reactHooks.configs.recommended.rules,
     },
+    ...storybook.configs['flat/recommended'],
     {
       files: ['**/*.test.{ts,tsx}'],
       languageOptions: { globals: globals.jest },
