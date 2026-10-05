@@ -1,0 +1,61 @@
+// T0-4 격리 스파이크용 최소 스키마 (실제 업무 테이블은 P0·P1에서 추가)
+generator client {
+  provider     = "prisma-client"
+  output       = "../src/generated/prisma"
+  moduleFormat = "cjs"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model Company {
+  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name      String
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  projects  Project[]
+  memos     Memo[]
+  sessions  Session[]
+
+  @@map("companies")
+}
+
+model Project {
+  id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  name      String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company  @relation(fields: [companyId], references: [id])
+  memos     Memo[]
+
+  // 복합 키: 다른 회사 행과의 연결을 외래 키 단계에서 차단
+  @@id([companyId, id])
+  @@map("projects")
+}
+
+model Memo {
+  id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  projectId String   @map("project_id") @db.Uuid
+  content   String
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company  @relation(fields: [companyId], references: [id])
+  project   Project  @relation(fields: [companyId, projectId], references: [companyId, id])
+
+  @@id([companyId, id])
+  @@map("memos")
+}
+
+// 서버 세션 (토큰 원문은 저장하지 않고 SHA-256 해시만 저장). 로그인 전 조회가 필요해 회사 범위 밖 전용 계정만 접근
+model Session {
+  tokenHash String   @id @map("token_hash")
+  userId    String   @map("user_id") @db.Uuid
+  companyId String   @map("company_id") @db.Uuid
+  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
+  company   Company  @relation(fields: [companyId], references: [id])
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
