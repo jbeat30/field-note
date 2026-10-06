@@ -1,5 +1,6 @@
 import {
   companySettingsSchema,
+  socialStartRequestSchema,
   emailChangeSchema,
   passwordChangeSchema,
   passwordResetConfirmSchema,
@@ -23,6 +24,7 @@ import {
   LEGAL_DOCUMENTS,
   MOCK_EMAIL_CODE,
   MOCK_LOCKED_LOGIN_ID,
+  MOCK_KAKAO_PROFILES,
   MOCK_RESET_TOKEN,
   MOCK_TAKEN_LOGIN_ID,
   type MockAccount,
@@ -39,6 +41,8 @@ import {
   setPendingEmail,
   clearFailedLogins,
   findAccount,
+  findAccountByKakao,
+  setKakaoProfile,
   getCurrentAccount,
   isLoginLocked,
   listDevices,
@@ -416,5 +420,160 @@ export const handlers = [
     setPendingEmail(account, newEmail);
 
     return HttpResponse.json({ resendAfterSeconds: 30 });
+  }),
+
+  // 소셜 로그인 (카카오). 시작은 목업 카카오 화면(/mock-kakao) 주소를 돌려줌
+  http.get('/api/v1/auth/social/providers', async () => {
+    await simulateLatency();
+
+    return HttpResponse.json({ kakao: true });
+  }),
+
+  http.post('/api/v1/auth/kakao/start', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const body = await parseBody(request, socialStartRequestSchema);
+
+    if ('response' in body) return body.response;
+
+    if (body.data.purpose === 'login') {
+      return HttpResponse.json({ url: '/mock-kakao?purpose=login' });
+    }
+
+    if (body.data.inviteToken !== DEMO_INVITATION.token) return apiError('NOT_FOUND');
+
+    const agreed = body.data.consents
+      .filter((consent) => consent.isAgreed)
+      .map((consent) => consent.documentId);
+    const query = new URLSearchParams({
+      purpose: 'signup',
+      token: body.data.inviteToken,
+      agreed: agreed.join(','),
+    });
+
+    return HttpResponse.json({ url: `/mock-kakao?${query.toString()}` });
+  }),
+
+  http.post('/api/v1/me/social/kakao/start', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+    if (!getCurrentAccount()) return apiError('UNAUTHORIZED');
+
+    return HttpResponse.json({ url: '/mock-kakao?purpose=link' });
+  }),
+
+  http.get('/api/v1/me/social', async () => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    return HttpResponse.json({
+      hasPassword: account.hasPassword !== false,
+      kakao: { isLinked: account.kakaoProfileKey !== undefined },
+    });
+  }),
+
+  http.delete('/api/v1/me/social/kakao', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    // 비밀번호 로그인이 없으면 마지막 로그인 수단이라 해제할 수 없음 (실제 서버와 같은 규칙)
+    if (account.hasPassword === false) return apiError('LAST_LOGIN_METHOD');
+
+    setKakaoProfile(account, undefined);
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  // 계약 밖의 목업 전용 주소: 목업 카카오 화면에서 계정을 고르면 서버 콜백이 하던 일을 흉내 내고 이동할 주소를 돌려줌
+  http.post('/api/__mock/kakao/complete', async ({ request }) => {
+    await simulateLatency();
+
+    const { purpose, profileKey, token, agreed } = (await request.json()) as {
+      purpose: 'login' | 'link' | 'signup';
+      profileKey: string | null;
+      token?: string;
+      agreed?: string;
+    };
+    const profile = MOCK_KAKAO_PROFILES.find((item) => item.key === profileKey);
+    const returnPath =
+      purpose === 'link' ? '/settings' : purpose === 'signup' ? `/invite/${token ?? ''}` : '/login';
+    const to = (path: string, result?: string) => ({
+      redirect: result ? `${path}?social=${result}` : path,
+    });
+
+    if (!profile) return HttpResponse.json(to(returnPath, 'cancelled'));
+
+    if (purpose === 'login') {
+      const account = findAccountByKakao(profile.key);
+
+      if (!account) return HttpResponse.json(to('/login', 'not-linked'));
+
+      signIn(account.loginId);
+
+      return HttpResponse.json(to(account.isEmailVerified ? '/' : '/verify-email'));
+    }
+
+    if (purpose === 'link') {
+      const current = getCurrentAccount();
+
+      if (!current) return HttpResponse.json(to('/settings', 'failed'));
+
+      if (findAccountByKakao(profile.key) && findAccountByKakao(profile.key) !== current) {
+        return HttpResponse.json(to('/settings', 'already-linked'));
+      }
+
+      setKakaoProfile(current, profile.key);
+
+      return HttpResponse.json(to('/settings', 'linked'));
+    }
+
+    // 초대 가입: 인증된 이메일이 있는 카카오 계정만 가능, 필수 약관 동의 확인
+    if (token !== DEMO_INVITATION.token)
+      return HttpResponse.json(to('/login', 'invitation-invalid'));
+
+    const agreedIds = new Set((agreed ?? '').split(',').filter(Boolean));
+
+    if (
+      !LEGAL_DOCUMENTS.filter((document) => document.isRequired).every((document) =>
+        agreedIds.has(document.id),
+      )
+    ) {
+      return HttpResponse.json(to(returnPath, 'failed'));
+    }
+
+    if (!profile.verifiedEmail) return HttpResponse.json(to(returnPath, 'email-required'));
+
+    if (isEmailInUse(profile.verifiedEmail))
+      return HttpResponse.json(to(returnPath, 'email-taken'));
+
+    if (findAccountByKakao(profile.key)) return HttpResponse.json(to(returnPath, 'already-linked'));
+
+    const account: MockAccount = {
+      loginId: `kakao-${profile.key}`,
+      password: '',
+      hasPassword: false,
+      kakaoProfileKey: profile.key,
+      displayName: DEMO_INVITATION.adminName,
+      email: profile.verifiedEmail,
+      isEmailVerified: true,
+      companyName: DEMO_INVITATION.companyName,
+      settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
+    };
+
+    addAccount(account);
+    signIn(account.loginId);
+
+    return HttpResponse.json(to('/'));
   }),
 ];

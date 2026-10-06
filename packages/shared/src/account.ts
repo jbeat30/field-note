@@ -114,6 +114,52 @@ export const emailChangeSchema = z.object({
 
 export type EmailChange = z.infer<typeof emailChangeSchema>;
 
+// 소셜 로그인 (§6.1): 제공자는 서버 설정에 따라 켜지고, 시작 요청은 로그인 화면 주소를 돌려줌
+export const socialProvidersResponseSchema = z.object({ kakao: z.boolean() });
+
+export const socialStartRequestSchema = z.discriminatedUnion('purpose', [
+  z.object({ purpose: z.literal('login') }),
+  // 초대 링크로 소셜 가입: 약관 동의와 만 14세 확인을 시작 시점에 함께 받음
+  z.object({
+    purpose: z.literal('signup'),
+    inviteToken: z.string().min(8).max(128),
+    isAgeConfirmed: z.literal(true, '만 14세 이상만 가입할 수 있습니다'),
+    consents: z.array(z.object({ documentId: z.uuid(), isAgreed: z.boolean() })),
+  }),
+]);
+
+export type SocialStartRequest = z.infer<typeof socialStartRequestSchema>;
+
+export const socialStartResponseSchema = z.object({ url: z.string().min(1) });
+
+export const socialCallbackQuerySchema = z.object({
+  code: z.string().max(2048).optional(),
+  state: z.string().max(512).optional(),
+  error: z.string().max(256).optional(),
+});
+
+// 제공자 화면에서 돌아온 뒤 화면에 보여줄 결과 (주소의 `?social=` 값)
+export const SOCIAL_RESULTS = [
+  'linked',
+  'cancelled',
+  'failed',
+  'not-linked',
+  'already-linked',
+  'email-required',
+  'email-taken',
+  'invitation-invalid',
+] as const;
+
+export type SocialResult = (typeof SOCIAL_RESULTS)[number];
+
+export const socialMethodsResponseSchema = z.object({
+  // 아이디·비밀번호 로그인 설정 여부 (없으면 소셜 연동을 해제할 수 없음)
+  hasPassword: z.boolean(),
+  kakao: z.object({ isLinked: z.boolean() }),
+});
+
+export type SocialMethodsResponse = z.infer<typeof socialMethodsResponseSchema>;
+
 // 로그인한 관리자 정보 (회사·계정 식별값은 포함하지 않음)
 export const meResponseSchema = z.object({
   displayName: z.string(),

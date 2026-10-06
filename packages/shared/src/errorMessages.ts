@@ -7,6 +7,8 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   CSRF_REJECTED: '허용되지 않은 요청입니다',
   INVALID_CREDENTIALS: '아이디 또는 비밀번호가 올바르지 않습니다',
   CURRENT_PASSWORD_INVALID: '현재 비밀번호가 올바르지 않습니다',
+  LAST_LOGIN_METHOD:
+    '로그인 수단이 하나만 남아 있어 해제할 수 없습니다. 비밀번호 로그인을 먼저 설정해 주세요',
   ACCOUNT_LOCKED: '로그인 시도가 너무 많아 잠시 잠겼습니다. 잠시 후 다시 시도해 주세요',
   LOGIN_ID_TAKEN: '이미 사용 중인 아이디입니다',
   EMAIL_CODE_INVALID: '인증 코드가 올바르지 않거나 만료되었습니다',
@@ -26,6 +28,7 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   CSRF_REJECTED: 403,
   INVALID_CREDENTIALS: 401,
   CURRENT_PASSWORD_INVALID: 400,
+  LAST_LOGIN_METHOD: 409,
   ACCOUNT_LOCKED: 423,
   LOGIN_ID_TAKEN: 409,
   EMAIL_CODE_INVALID: 400,

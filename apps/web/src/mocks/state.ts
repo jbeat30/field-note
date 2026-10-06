@@ -127,6 +127,14 @@ export const applyPendingEmail = (account: MockAccount) => {
   persist();
 };
 
+export const findAccountByKakao = (profileKey: string) =>
+  state.accounts.find((account) => account.kakaoProfileKey === profileKey);
+
+export const setKakaoProfile = (account: MockAccount, profileKey: string | undefined) => {
+  account.kakaoProfileKey = profileKey;
+  persist();
+};
+
 export const isEmailInUse = (email: string) =>
   state.accounts.some((account) => account.email === email);
 

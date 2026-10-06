@@ -287,4 +287,137 @@ describe('목업 서버 계약', () => {
       'changed@example.com',
     );
   });
+
+  describe('카카오 로그인', () => {
+    const complete = async (body: Record<string, unknown>) => {
+      const response = await fetch('http://localhost/api/__mock/kakao/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      return ((await response.json()) as { redirect: string }).redirect;
+    };
+
+    const agreedAll = LEGAL_DOCUMENTS.filter((document) => document.isRequired)
+      .map((document) => document.id)
+      .join(',');
+
+    it('제공자 목록과 시작 주소를 돌려준다', async () => {
+      expect((await client.GET('/api/v1/auth/social/providers')).data).toEqual({ kakao: true });
+
+      const start = await client.POST('/api/v1/auth/kakao/start', { body: { purpose: 'login' } });
+
+      expect(start.data?.url).toBe('/mock-kakao?purpose=login');
+    });
+
+    it('연동하지 않은 카카오 계정은 로그인할 수 없고, 연동하면 로그인된다', async () => {
+      expect(await complete({ purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/login?social=not-linked',
+      );
+
+      await login();
+      expect(await complete({ purpose: 'link', profileKey: 'hanbit' })).toBe(
+        '/settings?social=linked',
+      );
+      expect((await client.GET('/api/v1/me/social')).data).toEqual({
+        hasPassword: true,
+        kakao: { isLinked: true },
+      });
+
+      await client.POST('/api/v1/auth/logout');
+
+      expect(await complete({ purpose: 'login', profileKey: 'hanbit' })).toBe('/');
+      expect((await client.GET('/api/v1/me')).response.status).toBe(200);
+    });
+
+    it('이메일이 같다는 이유만으로 연결되지 않는다 (카카오 인증 이메일이 hanbit과 같아도 연동 전에는 로그인 불가)', async () => {
+      expect(DEMO_ACCOUNTS[0]!.email).toBe('hanbit@example.com');
+      expect(await complete({ purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/login?social=not-linked',
+      );
+    });
+
+    it('이미 다른 계정에 연동된 카카오 계정은 연동할 수 없다', async () => {
+      await login();
+      await complete({ purpose: 'link', profileKey: 'other' });
+      await client.POST('/api/v1/auth/logout');
+      await login(DEMO_ACCOUNTS[1]!.loginId, DEMO_ACCOUNTS[1]!.password);
+
+      expect(await complete({ purpose: 'link', profileKey: 'other' })).toBe(
+        '/settings?social=already-linked',
+      );
+    });
+
+    it('취소하면 돌아갈 화면으로 이동한다', async () => {
+      expect(await complete({ purpose: 'login', profileKey: null })).toBe(
+        '/login?social=cancelled',
+      );
+      expect(await complete({ purpose: 'link', profileKey: null })).toBe(
+        '/settings?social=cancelled',
+      );
+    });
+
+    it('초대 가입: 인증된 이메일이 있으면 바로 가입되고 로그인 수단은 카카오 하나뿐이라 해제할 수 없다', async () => {
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: DEMO_INVITATION.token,
+          agreed: agreedAll,
+        }),
+      ).toBe('/');
+
+      const me = meResponseSchema.parse((await client.GET('/api/v1/me')).data);
+
+      expect(me).toMatchObject({ email: 'kakao-new@example.com', isEmailVerified: true });
+      expect((await client.GET('/api/v1/me/social')).data).toEqual({
+        hasPassword: false,
+        kakao: { isLinked: true },
+      });
+
+      const unlink = await client.DELETE('/api/v1/me/social/kakao');
+
+      expect(unlink.response.status).toBe(409);
+      expect(errorResponseSchema.parse(unlink.error).error.code).toBe('LAST_LOGIN_METHOD');
+    });
+
+    it('초대 가입: 인증된 이메일이 없거나 필수 약관에 동의하지 않았거나 없는 링크면 가입되지 않는다', async () => {
+      const link = `/invite/${DEMO_INVITATION.token}`;
+
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-unverified',
+          token: DEMO_INVITATION.token,
+          agreed: agreedAll,
+        }),
+      ).toBe(`${link}?social=email-required`);
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: DEMO_INVITATION.token,
+          agreed: '',
+        }),
+      ).toBe(`${link}?social=failed`);
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: 'expired-invite-0001',
+          agreed: agreedAll,
+        }),
+      ).toBe('/login?social=invitation-invalid');
+      expect((await client.GET('/api/v1/me')).response.status).toBe(401);
+    });
+
+    it('비밀번호 로그인이 있으면 연동을 해제할 수 있다', async () => {
+      await login();
+      await complete({ purpose: 'link', profileKey: 'hanbit' });
+
+      expect((await client.DELETE('/api/v1/me/social/kakao')).response.status).toBe(200);
+      expect((await client.GET('/api/v1/me/social')).data?.kakao.isLinked).toBe(false);
+    });
+  });
 });

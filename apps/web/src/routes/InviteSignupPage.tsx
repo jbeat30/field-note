@@ -12,6 +12,9 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 import { apiClient } from '../api/client';
+import { KakaoButton } from '../auth/KakaoButton';
+import { SocialNotice } from '../auth/SocialNotice';
+import { useKakaoStart, useSocialProviders } from '../auth/useSocial';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -128,6 +131,8 @@ type AccountStepProps = {
 const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
+  const providers = useSocialProviders();
+  const kakaoStart = useKakaoStart();
   const {
     register,
     handleSubmit,
@@ -170,6 +175,22 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
       <h1 className="text-xl font-bold">계정 만들기</h1>
       {errors.root && <Alert>{errors.root.message}</Alert>}
+      {providers.data?.kakao && (
+        <>
+          <KakaoButton
+            disabled={kakaoStart.isPending}
+            onClick={() =>
+              kakaoStart.mutate({ purpose: 'signup', inviteToken, isAgeConfirmed: true, consents })
+            }
+          >
+            카카오로 가입
+          </KakaoButton>
+          {kakaoStart.isError && <Alert>{kakaoStart.error.message}</Alert>}
+          <p className="text-center text-sm text-foreground/70">
+            또는 아이디로 가입 (인증된 이메일이 있는 카카오 계정만 가입할 수 있습니다)
+          </p>
+        </>
+      )}
       <FormField
         label="아이디"
         hint="소문자·숫자·밑줄·하이픈 4~20자"
@@ -253,9 +274,14 @@ export const InviteSignupPage = () => {
     );
   }
 
-  return consents ? (
-    <AccountStep inviteToken={token} consents={consents} onBack={() => setConsents(null)} />
-  ) : (
-    <ConsentStep invitation={invitation.data} onNext={setConsents} />
+  return (
+    <div className="flex flex-col gap-4">
+      <SocialNotice />
+      {consents ? (
+        <AccountStep inviteToken={token} consents={consents} onBack={() => setConsents(null)} />
+      ) : (
+        <ConsentStep invitation={invitation.data} onNext={setConsents} />
+      )}
+    </div>
   );
 };

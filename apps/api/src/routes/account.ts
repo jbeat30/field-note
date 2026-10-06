@@ -90,6 +90,15 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('ACCOUNT_LOCKED');
     case 'ACCOUNT_NOT_FOUND':
       return new AppError('UNAUTHORIZED');
+    case 'SOCIAL_NOT_LINKED':
+      return new AppError('NOT_FOUND');
+    case 'SOCIAL_ALREADY_LINKED':
+    case 'SOCIAL_EMAIL_REQUIRED':
+      return new AppError('VALIDATION_ERROR', [
+        { path: 'body', message: '소셜 계정을 사용할 수 없습니다' },
+      ]);
+    case 'LAST_LOGIN_METHOD':
+      return new AppError('LAST_LOGIN_METHOD');
   }
 };
 

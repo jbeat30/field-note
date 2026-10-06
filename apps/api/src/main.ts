@@ -4,6 +4,7 @@ import {
   createEmailVerificationService,
   registerEmailVerificationWorker,
 } from './auth/emailVerification';
+import { createSocialService } from './auth/socialService';
 import { createPasswordService, registerPasswordResetWorker } from './auth/passwordService';
 import { createCompanySettingsService } from './company/companySettingsService';
 import { createPrismaClient } from './db/client';
@@ -12,6 +13,7 @@ import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/se
 import { parseEnv } from './env';
 import { createPrismaInvitationStore } from './invitation/invitationStore';
 import { createLogger } from './logger';
+import { chooseSocialProvider } from './social/provider';
 import { createPgBossQueue } from './queue/jobQueue';
 import { createPrismaSessionStore } from './session/sessionStore';
 
@@ -54,6 +56,16 @@ const main = async () => {
     appOrigin: env.APP_ORIGIN,
   });
 
+  // 카카오 키가 있으면 카카오, 없고 개발 환경이면 가짜 제공자, 운영에서 키가 없으면 소셜 로그인은 꺼짐
+  const socialChoice = chooseSocialProvider({
+    nodeEnv: env.NODE_ENV,
+    appOrigin: env.APP_ORIGIN,
+    kakao: { clientId: env.KAKAO_CLIENT_ID, clientSecret: env.KAKAO_CLIENT_SECRET },
+    fakeSecret: env.OAUTH_COOKIE_SECRET,
+  });
+
+  logger.info({ socialProvider: socialChoice.kind }, '[api.main] 소셜 로그인 제공자');
+
   await registerEmailVerificationWorker(queue, emailVerification);
   await registerPasswordResetWorker(queue, passwordService);
   await registerSecurityNoticeWorker(queue, mailer);
@@ -66,6 +78,12 @@ const main = async () => {
     emailVerification,
     passwordService,
     companySettings,
+    social: {
+      choice: socialChoice,
+      service: createSocialService({ auth: authPrisma }),
+      cookieSecret: env.OAUTH_COOKIE_SECRET,
+      fakeSecret: socialChoice.kind === 'fake' ? env.OAUTH_COOKIE_SECRET : undefined,
+    },
     notifier,
     appOrigin: env.APP_ORIGIN,
     isSecureCookie: env.NODE_ENV === 'production',

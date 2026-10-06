@@ -7,6 +7,8 @@ const ESM_ONLY_PACKAGES = [
   'rrule-temporal',
   'serialize-error',
   'non-error',
+  'arctic',
+  '@oslojs',
 ];
 
 module.exports = {

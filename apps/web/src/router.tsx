@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router';
 
 import { RequireAuth } from './auth/RequireAuth';
 import { AppLayout } from './layouts/AppLayout';
+import { env } from './env';
 import { AuthLayout } from './layouts/AuthLayout';
 
 const page = <T extends string>(load: () => Promise<Record<T, React.ComponentType>>, name: T) => ({
@@ -31,6 +32,15 @@ export const routes = [
         path: '/reset-password/:token',
         ...page(() => import('./routes/ResetPasswordPage'), 'ResetPasswordPage'),
       },
+      // 목업 모드에서만 존재하는 가짜 카카오 로그인 화면
+      ...(env.isMockApi
+        ? [
+            {
+              path: '/mock-kakao',
+              ...page(() => import('./routes/MockKakaoPage'), 'MockKakaoPage'),
+            },
+          ]
+        : []),
       { path: '/legal/:slug', ...page(() => import('./routes/LegalPage'), 'LegalPage') },
     ],
   },

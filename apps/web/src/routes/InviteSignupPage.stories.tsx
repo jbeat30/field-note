@@ -108,3 +108,26 @@ export const SignupSuccess: Story = {
     await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
   },
 };
+
+export const KakaoSignupOption: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = await goToAccountStep(canvasElement);
+
+    await expect(await canvas.findByRole('button', { name: '카카오로 가입' })).toBeInTheDocument();
+    await expect(canvas.getByText(/인증된 이메일이 있는 카카오 계정만/)).toBeInTheDocument();
+  },
+};
+
+export const KakaoEmailRequired: Story = {
+  parameters: {
+    router: {
+      initialEntries: ['/invite/demo-invite-0001?social=email-required'],
+      path: '/invite/:token',
+    },
+  },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent(
+      '인증된 이메일이 없는 카카오 계정',
+    );
+  },
+};

@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { signIn } from '../mocks/state';
+import { addAccount, findAccount, setKakaoProfile, signIn } from '../mocks/state';
 
 import { SettingsPage } from './SettingsPage';
 
@@ -219,6 +219,78 @@ export const ChangeEmailWrongCode: Story = {
 
     await expect(
       await section.findByText('인증 코드가 올바르지 않거나 만료되었습니다'),
+    ).toBeInTheDocument();
+  },
+};
+
+const kakaoSection = async (canvas: ReturnType<typeof within>) =>
+  within(await canvas.findByRole('region', { name: '소셜 로그인' }));
+
+export const SocialNotLinked: Story = {
+  play: async ({ canvasElement }) => {
+    const section = await kakaoSection(within(canvasElement));
+
+    await expect(await section.findByText('연동하지 않음')).toBeInTheDocument();
+    await expect(section.getByRole('button', { name: '카카오 연동' })).toBeEnabled();
+  },
+};
+
+export const SocialLinkedAndUnlink: Story = {
+  loaders: [() => setKakaoProfile(findAccount('hanbit')!, 'hanbit')],
+  play: async ({ canvasElement }) => {
+    const section = await kakaoSection(within(canvasElement));
+
+    await expect(await section.findByText('연동됨')).toBeInTheDocument();
+    await userEvent.click(section.getByRole('button', { name: '카카오 연동 해제' }));
+
+    await expect(await section.findByText('연동하지 않음')).toBeInTheDocument();
+  },
+};
+
+// 소셜 로그인만 쓰는 계정은 마지막 로그인 수단이라 해제할 수 없음
+export const SocialOnlyCannotUnlink: Story = {
+  loaders: [
+    () => {
+      addAccount({
+        loginId: 'kakao-only',
+        password: '',
+        hasPassword: false,
+        kakaoProfileKey: 'other',
+        displayName: '카카오 전용',
+        email: 'kakao-other@example.com',
+        isEmailVerified: true,
+        companyName: '미래설비',
+        settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
+      });
+      signIn('kakao-only');
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const section = await kakaoSection(within(canvasElement));
+
+    await expect(await section.findByRole('button', { name: '카카오 연동 해제' })).toBeDisabled();
+    await expect(section.getByText(/로그인 수단이 하나는 남아 있어야/)).toBeInTheDocument();
+  },
+};
+
+export const SocialLinkedNotice: Story = {
+  parameters: { router: { initialEntries: ['/settings?social=linked'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const section = await kakaoSection(within(canvasElement));
+
+    await expect(await section.findByText('카카오 계정을 연동했습니다')).toBeInTheDocument();
+  },
+};
+
+export const SocialAlreadyLinkedNotice: Story = {
+  parameters: {
+    router: { initialEntries: ['/settings?social=already-linked'], path: '/settings' },
+  },
+  play: async ({ canvasElement }) => {
+    const section = await kakaoSection(within(canvasElement));
+
+    await expect(
+      await section.findByText('이미 다른 계정에 연동된 카카오 계정입니다'),
     ).toBeInTheDocument();
   },
 };

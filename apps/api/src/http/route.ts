@@ -20,6 +20,8 @@ export type RouteSpec = {
   auth: 'required' | 'none';
   request?: { params?: ZodType; query?: ZodType; body?: ZodType };
   response: { status: number; schema: ZodType };
+  // true면 핸들러가 돌려준 주소로 이동시키는 라우트 (소셜 로그인 콜백처럼 브라우저 이동 응답), 응답 스키마는 쓰지 않음
+  redirect?: boolean;
   // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능)
   idempotent?: boolean;
   rateLimit?: RateLimitOptions;
@@ -99,6 +101,11 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
         request: req,
         response: res,
       });
+
+      if (spec.redirect) {
+        res.redirect(302, String(data));
+        return;
+      }
 
       res.status(spec.response.status).json(spec.response.schema.parse(data));
     };

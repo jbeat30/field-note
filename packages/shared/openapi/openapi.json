@@ -134,6 +134,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -199,6 +200,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -264,6 +266,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -417,6 +420,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -482,6 +486,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -547,6 +552,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -708,6 +714,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -773,6 +780,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -838,6 +846,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -903,6 +912,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1033,6 +1043,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1098,6 +1109,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1163,6 +1175,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1259,6 +1272,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1324,6 +1338,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1459,6 +1474,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1524,6 +1540,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1589,6 +1606,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1654,6 +1672,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1765,6 +1784,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1876,6 +1896,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2019,6 +2040,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2084,6 +2106,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2203,6 +2226,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2312,6 +2336,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2377,6 +2402,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2442,6 +2468,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2556,6 +2583,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2621,6 +2649,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2727,6 +2756,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2792,6 +2822,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2857,6 +2888,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2977,6 +3009,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3042,6 +3075,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3107,6 +3141,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3230,6 +3265,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3295,6 +3331,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3360,6 +3397,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3425,6 +3463,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3546,6 +3585,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3611,6 +3651,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3676,6 +3717,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3741,6 +3783,1070 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/social/providers": {
+      "get": {
+        "summary": "사용 가능한 소셜 로그인 제공자",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "kakao": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "kakao"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/kakao/start": {
+      "post": {
+        "summary": "카카오 로그인·가입 시작 (카카오 화면 주소 반환)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "oneOf": [
+                  {
+                    "type": "object",
+                    "properties": {
+                      "purpose": {
+                        "type": "string",
+                        "enum": [
+                          "login"
+                        ]
+                      }
+                    },
+                    "required": [
+                      "purpose"
+                    ]
+                  },
+                  {
+                    "type": "object",
+                    "properties": {
+                      "purpose": {
+                        "type": "string",
+                        "enum": [
+                          "signup"
+                        ]
+                      },
+                      "inviteToken": {
+                        "type": "string",
+                        "minLength": 8,
+                        "maxLength": 128
+                      },
+                      "isAgeConfirmed": {
+                        "type": "boolean",
+                        "enum": [
+                          true
+                        ]
+                      },
+                      "consents": {
+                        "type": "array",
+                        "items": {
+                          "type": "object",
+                          "properties": {
+                            "documentId": {
+                              "type": "string",
+                              "format": "uuid"
+                            },
+                            "isAgreed": {
+                              "type": "boolean"
+                            }
+                          },
+                          "required": [
+                            "documentId",
+                            "isAgreed"
+                          ]
+                        }
+                      }
+                    },
+                    "required": [
+                      "purpose",
+                      "inviteToken",
+                      "isAgeConfirmed",
+                      "consents"
+                    ]
+                  }
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 과다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "NOT_IMPLEMENTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/social/kakao/start": {
+      "post": {
+        "summary": "로그인한 계정에 카카오 연동 시작",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  },
+                  "required": [
+                    "url"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 과다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "501": {
+            "description": "NOT_IMPLEMENTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/kakao/callback": {
+      "get": {
+        "summary": "카카오에서 돌아오는 주소 (연동·로그인·가입을 마치고 웹 화면으로 이동)",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 2048
+            },
+            "required": false,
+            "name": "code",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 512
+            },
+            "required": false,
+            "name": "state",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 256
+            },
+            "required": false,
+            "name": "error",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "302": {
+            "description": "다른 주소로 이동 (Location 헤더)"
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 과다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/social": {
+      "get": {
+        "summary": "연동된 로그인 수단",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "hasPassword": {
+                      "type": "boolean"
+                    },
+                    "kakao": {
+                      "type": "object",
+                      "properties": {
+                        "isLinked": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "isLinked"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "hasPassword",
+                    "kakao"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/social/kakao": {
+      "delete": {
+        "summary": "카카오 연동 해제 (로그인 수단이 하나 이상 남아야 함)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "LAST_LOGIN_METHOD",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3839,6 +4945,7 @@
                             "CSRF_REJECTED",
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",

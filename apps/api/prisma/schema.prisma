@@ -51,6 +51,7 @@ model Company {
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
   settings           CompanySettings?
+  socialAccounts     SocialAccount[]
 
   @@map("companies")
 }
@@ -124,6 +125,7 @@ model User {
   invitations       Invitation[]
   emailVerification EmailVerification?
   passwordReset     PasswordReset?
+  socialAccounts    SocialAccount[]
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -287,4 +289,29 @@ model CompanySettings {
   company             Company      @relation(fields: [companyId], references: [id])
 
   @@map("company_settings")
+}
+
+// 소셜 로그인 제공자 (초기에는 카카오, 네이버·구글은 5단계)
+enum SocialProvider {
+  KAKAO
+
+  @@map("social_provider")
+}
+
+// 소셜 계정 연동. 제공자가 준 사용자 번호로만 계정을 찾고 이메일이 같다는 이유로 연결하지 않음 (§6.1)
+// 로그인 전에 조회해야 하므로 회사 범위 밖 전용 계정만 접근
+model SocialAccount {
+  provider       SocialProvider
+  // 제공자가 부여한 사용자 번호 (제공자 안에서 유일)
+  providerUserId String         @map("provider_user_id")
+  companyId      String         @map("company_id") @db.Uuid
+  userId         String         @map("user_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  company        Company        @relation(fields: [companyId], references: [id])
+  user           User           @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([provider, providerUserId])
+  // 한 계정에 같은 제공자는 하나만 연동
+  @@unique([companyId, userId, provider])
+  @@map("social_accounts")
 }
