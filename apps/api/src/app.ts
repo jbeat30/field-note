@@ -8,6 +8,7 @@ import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idem
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
+import type { InvitationStore } from './invitation/invitationStore';
 import { createLogger, type Logger } from './logger';
 import { registerAccountRoutes } from './routes/account';
 import { registerAuthRoutes } from './routes/auth';
@@ -22,6 +23,8 @@ export type AppOptions = {
   resolveAuth?: AuthResolver;
   // 운영은 PostgreSQL 저장소를 주입, 기본은 메모리 저장소
   sessionStore?: SessionStore;
+  // 없으면 초대 확인 API는 501 (운영은 PostgreSQL 저장소를 주입)
+  invitationStore?: InvitationStore;
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
@@ -46,7 +49,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerHealthRoutes(registry);
   registerSessionRoutes(registry);
   registerSampleRoutes(registry);
-  registerAccountRoutes(registry);
+  registerAccountRoutes(registry, { invitationStore: options.invitationStore });
   registerAuthRoutes(registry, { sessionStore, isSecureCookie: options.isSecureCookie ?? false });
 
   return registry;

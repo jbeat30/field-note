@@ -36,16 +36,18 @@ enum LegalDocumentType {
 }
 
 model Company {
-  id          String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  name        String
-  status      CompanyStatus    @default(ACTIVE)
-  createdAt   DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  projects    Project[]
-  memos       Memo[]
-  users       User[]
-  sessions    Session[]
-  consents    Consent[]
-  credentials UserCredential[]
+  id              String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name            String
+  status          CompanyStatus    @default(ACTIVE)
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  projects        Project[]
+  memos           Memo[]
+  users           User[]
+  sessions        Session[]
+  consents        Consent[]
+  credentials     UserCredential[]
+  invitations     Invitation[]
+  operatorActions OperatorAction[]
 
   @@map("companies")
 }
@@ -111,6 +113,7 @@ model User {
   credential      UserCredential?
   consents        Consent[]
   sessions        Session[]
+  invitations     Invitation[]
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -167,4 +170,43 @@ model Consent {
   @@id([companyId, id])
   @@index([companyId, userId, documentId])
   @@map("consents")
+}
+
+// 운영자가 발급하는 1회용 초대 링크 (토큰 원문은 저장하지 않고 SHA-256 해시만 저장)
+// 가입 전에는 회사를 알 수 없어 회사 범위 밖 전용 계정과 운영자 계정만 접근
+model Invitation {
+  tokenHash String    @id @map("token_hash")
+  companyId String    @map("company_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  // 가입에 사용된 시각. 값이 있으면 폐기된 링크
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company   @relation(fields: [companyId], references: [id])
+  user      User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@index([companyId, userId])
+  @@index([expiresAt])
+  @@map("invitations")
+}
+
+enum OperatorActionType {
+  COMPANY_CREATED
+  INVITATION_ISSUED
+
+  @@map("operator_action_type")
+}
+
+// 운영자 작업 기록 (추가만 가능, §5.4). 개인정보는 담지 않고 대상 회사 식별값과 작업자만 기록
+model OperatorAction {
+  id        String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId String             @map("company_id") @db.Uuid
+  action    OperatorActionType
+  // 작업을 실행한 운영자 (OS 사용자명)
+  operator  String
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company            @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("operator_actions")
 }

@@ -38,57 +38,110 @@
 
 ## 시작하기
 
-### 1. 먼저 준비할 것
+로컬에서 확인하는 방법은 두 가지다. 화면만 보려면 A(목업 모드), 실제 DB·api까지 보려면 B를 쓴다.
+
+### 준비물
 
 - Node 24 이상
-- pnpm 12.9.1 (`packageManager`로 고정)
-- Docker (macOS는 Docker Desktop). DB·파일 저장소·메일 수신기를 Docker로 띄운다
+- pnpm 12.9.1 (`packageManager`로 고정, `pnpm -v`로 확인)
+- Docker (macOS는 Docker Desktop). 방식 B와 `pnpm test`에 필요하다 (방식 A는 불필요)
 
-### 2. 처음 한 번만 하는 설정
-
-```bash
-pnpm install              # 패키지 설치
-pnpm prepare              # 커밋 훅(husky) 연결
-pnpm env:init             # .env 생성 (DB 비밀번호·저장소 키를 이 PC에서 새로 만듦, Git에 올라가지 않음)
-pnpm infra:up             # 로컬 인프라 실행 (DB 준비를 위해 먼저 필요)
-pnpm db:setup             # DB 테이블 생성 + 앱 전용·회사 범위 밖 전용 DB 계정 비밀번호 설정
-pnpm db:seed              # 더미 회사·계정·약관 입력 (여러 번 실행해도 같은 결과)
-```
-
-- `pnpm env:init`은 `.env`가 이미 있으면 건너뛴다. 처음부터 다시 만들려면 `pnpm env:init --force` 후 `pnpm db:reset`을 실행한다 (DB 컨테이너에 저장된 기존 비밀번호와 어긋나므로 DB를 함께 초기화해야 한다)
-- 시드는 로컬 개발 전용이며 운영 환경(`NODE_ENV=production`)에서는 실행되지 않는다
-
-### 3. 개발 서버 실행
+### A. 화면만 빠르게 확인 (목업 모드)
 
 ```bash
-pnpm dev
+pnpm install        # 처음 한 번, 의존성이 바뀌었을 때
+pnpm dev:mock       # http://localhost:5173/login
 ```
 
-이 명령 하나로 다음이 차례로 실행된다.
+백엔드 없이 브라우저 안의 가짜 서버가 응답한다. 데모 계정과 시나리오는 아래 [목업 모드](#목업-모드-백엔드-없이-화면-확인) 표를 본다.
 
-1. Docker가 꺼져 있으면 Docker Desktop을 자동으로 켠다 (macOS)
-2. PostgreSQL·RustFS·Mailpit 컨테이너를 띄운다
-3. api(`localhost:3000`)와 web(`localhost:5173`)을 띄운다
+### B. 실제 DB·api까지 확인
 
-종료할 때는 `Ctrl+C`로 서버를 끄고, 컨테이너까지 끄려면 `pnpm infra:down`을 실행한다.
+**처음 한 번 — 순서를 바꾸면 안 된다**
+
+```bash
+pnpm install
+pnpm prepare        # 커밋 훅(husky) 연결
+pnpm env:init       # 1) .env 생성: DB 비밀번호·저장소 키를 이 PC에서 새로 만듦 (Git에 올라가지 않음)
+pnpm infra:up       # 2) Docker 기동(꺼져 있으면 macOS는 Docker Desktop 자동 실행) + DB·저장소·메일 컨테이너
+pnpm db:setup       # 3) 테이블 생성 + DB 계정 비밀번호 설정 (infra:up 뒤에)
+pnpm db:seed        # 4) 더미 회사·계정·약관·초대 링크 입력 (db:setup 뒤에, 여러 번 실행해도 같은 결과)
+```
+
+**평소에는**
+
+```bash
+pnpm dev            # 인프라 기동 + api(:3000) + web(:5173)
+```
+
+종료는 `Ctrl+C`, 컨테이너까지 끄려면 `pnpm infra:down`.
+
+**순서 규칙과 자주 겪는 상황**
+
+| 상황                                                  | 할 일                                                                                                         |
+| ----------------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| 새 마이그레이션이 포함된 브랜치를 받았다 (`git pull`) | `pnpm db:setup` 다시 실행                                                                                     |
+| DB를 처음 상태로 되돌리고 싶다                        | `pnpm db:reset` (컨테이너 삭제 → 기동 → 마이그레이션 → 시드)                                                  |
+| `.env`를 새로 만들고 싶다                             | `pnpm env:init --force` 후 `pnpm db:reset` (DB 컨테이너에 저장된 기존 비밀번호와 어긋나므로 DB도 함께 초기화) |
+| 새 환경 변수가 추가돼 api가 기동하지 않는다           | 오류 메시지의 변수 이름을 `.env.example`과 비교해 `.env`에 추가                                               |
+| `pnpm env:init`이 "이미 있어 건너뜀"이라고 한다       | 정상 (기존 `.env`를 보호). 새로 만들려면 `--force`                                                            |
+
+**확인할 곳**
+
+| 주소                                  | 내용                              |
+| ------------------------------------- | --------------------------------- |
+| `http://localhost:3000/api/v1/health` | api 상태                          |
+| `http://localhost:3000/api/docs`      | API 문서 (개발 환경만)            |
+| `http://localhost:8025`               | Mailpit (발송 메일 확인)          |
+| `http://localhost:9001`               | RustFS 관리 화면 (S3 호환 저장소) |
+
+**현재 한계**
+
+- 실제 로그인·가입 API는 아직 구현 전이라(P0-3) `501`을 반환한다. 웹 로그인 화면은 방식 A로 확인한다
+- 초대 링크 확인 API는 구현돼 있다. 시드가 만든 링크 `http://localhost:5173/invite/demo-invite-0001`의 정보를 `http://localhost:3000/api/v1/invitations/demo-invite-0001`로 확인할 수 있다
+- 시드 데이터는 DB에서 직접 본다: `docker compose exec postgres psql -U field_note -d field_note -c "select * from companies"`
+
+### 코드 검증
+
+```bash
+pnpm typecheck && pnpm lint && pnpm format:check
+pnpm test           # Docker 필요: 회사 격리·시드·초대 테스트가 임시 DB 컨테이너를 띄움
+pnpm build
+pnpm test:stories   # 스토리 동작·접근성 검사 (최초 1회 `pnpm --filter @field-note/web exec playwright install chromium`)
+```
+
+### 운영자 CLI
+
+회사와 관리자 계정을 만들고 1회용 초대 링크를 발급한다. 운영자 전용 DB 계정(`DATABASE_OPERATOR_URL`)으로 접속하며 회사 업무 데이터는 조회할 수 없다.
+
+```bash
+pnpm operator create-company --company "한빛판금" --admin "김한빛"   # 회사 + 관리자(가입 전) + 초대 링크 (기본 7일)
+pnpm operator reissue --company-id <회사 ID>                        # 링크 재발급 (기존 링크는 즉시 만료, 가입 전 회사만)
+pnpm operator list                                                  # 회사 목록과 가입 상태
+```
+
+- 링크는 발급 직후 한 번만 표시된다 (DB에는 해시만 저장)
+- 링크는 한 번 쓰면 폐기되고, 만료·사용 완료·없는 링크는 같은 화면으로 안내된다
+- 운영자 작업은 `operator_actions`에 기록된다
 
 ### 자주 쓰는 명령
 
-| 명령              | 하는 일                                                |
-| ----------------- | ------------------------------------------------------ |
-| `pnpm dev`        | 인프라 + api + web 전부 실행                           |
-| `pnpm dev:api`    | api만 실행 (인프라가 꺼져 있으면 먼저 `pnpm infra:up`) |
-| `pnpm dev:web`    | web만 실행                                             |
-| `pnpm infra:up`   | 로컬 인프라(Docker 컨테이너)만 실행                    |
-| `pnpm infra:down` | 로컬 인프라 종료                                       |
-| `pnpm env:init`   | `.env` 생성 (비밀 값 자동 생성, 이미 있으면 건너뜀)    |
-| `pnpm db:setup`   | DB 마이그레이션 적용 + DB 계정 비밀번호 설정           |
-| `pnpm db:seed`    | 더미 회사·계정·약관 입력                               |
-| `pnpm db:reset`   | 컨테이너·DB 초기화 후 마이그레이션 + 시드 다시 실행    |
-| `pnpm typecheck`  | 타입 검사                                              |
-| `pnpm lint`       | 코드 검사                                              |
-| `pnpm test`       | 테스트                                                 |
-| `pnpm build`      | 빌드                                                   |
+| 명령                                         | 하는 일                                                              |
+| -------------------------------------------- | -------------------------------------------------------------------- |
+| `pnpm dev`                                   | 인프라 + api + web 전부 실행                                         |
+| `pnpm dev:mock`                              | web만 목업 모드로 실행                                               |
+| `pnpm dev:api`                               | api만 실행 (인프라가 꺼져 있으면 먼저 `pnpm infra:up`)               |
+| `pnpm dev:web`                               | web만 실행                                                           |
+| `pnpm infra:up`                              | 로컬 인프라(Docker 컨테이너)만 실행                                  |
+| `pnpm infra:down`                            | 로컬 인프라 종료                                                     |
+| `pnpm env:init`                              | `.env` 생성 (비밀 값 자동 생성, 이미 있으면 건너뜀)                  |
+| `pnpm db:setup`                              | DB 마이그레이션 적용 + DB 계정 비밀번호 설정                         |
+| `pnpm db:seed`                               | 더미 회사·계정·약관·초대 링크 입력                                   |
+| `pnpm db:reset`                              | 컨테이너·DB 초기화 후 마이그레이션 + 시드 다시 실행                  |
+| `pnpm operator`                              | 운영자 CLI (위 설명)                                                 |
+| `pnpm storybook`                             | 컴포넌트 카탈로그 실행 (http://localhost:6006)                       |
+| `pnpm openapi:generate`                      | 라우트 정의에서 API 문서·프론트용 타입 재생성 (라우트를 바꾸면 실행) |
+| `pnpm typecheck` / `lint` / `test` / `build` | 타입 검사 / 코드 검사 / 테스트 / 빌드                                |
 
 ## 목업 모드 (백엔드 없이 화면 확인)
 
@@ -105,7 +158,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 | 이메일 미인증 계정 | 아이디 `newbie` / 비밀번호 `Newbie-demo-2026!` (로그인하면 인증 화면으로 이동) |
 | 로그인 잠금        | 아이디 `locked` (비밀번호 아무거나)                                            |
 | 틀린 비밀번호      | 위 아이디에 다른 비밀번호                                                      |
-| 초대 링크 가입     | 주소의 토큰 `demo-invite-0001` (다온목공, 관리자 이다온)                       |
+| 초대 링크 가입     | 주소의 토큰 `demo-invite-0001` (미래설비, 관리자 최미래)                       |
 | 만료된 초대 링크   | 토큰 `expired-invite-0001` 등 위 값이 아닌 모든 토큰                           |
 | 이미 쓰는 아이디   | 가입 아이디 `taken-id` 또는 `hanbit`                                           |
 | 이메일 인증 코드   | `123456` (그 외는 오류)                                                        |
@@ -165,6 +218,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 ## 환경 변수
 
 - 목록은 `.env.example`에 있고, `pnpm env:init`이 `{{토큰}}` 자리를 새로 만든 비밀 값으로 채워 `.env`를 만든다. 변수를 추가·변경하면 이 파일과 `apps/api/src/env.ts`를 함께 고친다
+- 운영자 접속 정보(`DATABASE_OPERATOR_URL`)는 api 서버가 읽지 않는 값이다. 운영에서는 운영자 PC에만 둔다
 - 비밀 값은 운영에서 쓰는 형식을 따른다 (DB 비밀번호 32자, 저장소 접근 키 20자·비밀 키 40자). 사람이 정한 단순한 값을 쓰지 않는다
 - 운영 값은 저장소에 두지 않고 배포 환경의 비밀 저장소에서 주입한다
 - api는 시작할 때 `apps/api/src/env.ts`로 값을 검사한다. 빠졌거나 형식이 틀리면 어떤 변수가 문제인지 알려주고 실행을 멈춘다
