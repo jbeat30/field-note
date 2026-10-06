@@ -1,6 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { findAccount, getCurrentAccount, startClosure } from '../mocks/state';
+
 import { LoginPage } from './LoginPage';
 
 const meta = {
@@ -104,5 +106,25 @@ export const UnknownSocialResult: Story = {
 
     await canvas.findByRole('button', { name: '카카오로 로그인' }, { timeout: 3000 });
     await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  },
+};
+
+// 해지 요청 중인 계정은 비밀번호가 맞아도 로그인되지 않고 해지 상태를 안내
+export const ClosingAccount: Story = {
+  loaders: [() => startClosure(findAccount('hanbit')!, '2026-10-20T00:00:00.000Z')],
+  play: async ({ canvasElement }) => {
+    const canvas = await fillAndSubmit(canvasElement, 'hanbit', 'Hanbit-demo-2026!');
+
+    await expect(await canvas.findByRole('alert')).toHaveTextContent('해지 요청 중인 계정');
+    await expect(getCurrentAccount()).toBeUndefined();
+  },
+};
+
+export const KakaoClosing: Story = {
+  parameters: { router: { initialEntries: ['/login?social=closing'], path: '/login' } },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent(
+      '해지 요청 중인 계정',
+    );
   },
 };

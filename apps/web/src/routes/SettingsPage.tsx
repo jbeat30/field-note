@@ -17,6 +17,7 @@ import { getErrorMessage } from '../lib/apiError';
 import { hoursToMinutes, minutesToHours } from '../lib/workTime';
 import { EmailChangeForm } from '../settings/EmailChangeForm';
 import { PasswordChangeForm } from '../settings/PasswordChangeForm';
+import { ClosureSection } from '../settings/ClosureSection';
 import { SocialLoginSection } from '../settings/SocialLoginSection';
 import { useCompanySettings, useSaveCompanySettings } from '../settings/useCompanySettings';
 import { useDevices, useRevokeDevice } from '../settings/useDevices';
@@ -267,6 +268,13 @@ export const SettingsPage = () => {
           로그인한 기기
         </h2>
         <DevicesSection />
+      </section>
+
+      <section className="flex flex-col gap-3" aria-labelledby="closure-heading">
+        <h2 id="closure-heading" className="text-lg font-bold">
+          계정 해지
+        </h2>
+        <ClosureSection />
       </section>
 
       <section className="flex flex-col gap-3">

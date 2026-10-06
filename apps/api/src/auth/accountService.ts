@@ -178,7 +178,12 @@ export const createAccountService = ({
 
       await assertPassword(credential, password, at, 'INVALID_CREDENTIALS');
 
-      // 정지·해지 요청 중인 회사는 로그인 차단 (사유는 알려 주지 않음)
+      // 해지 요청 중인 계정은 비밀번호가 맞을 때만 상태를 알려 주고(취소 링크 안내), 로그인은 막음
+      if (credential.user.company.status === 'CLOSING') {
+        throw new AccountError('ACCOUNT_CLOSING');
+      }
+
+      // 정지·삭제 완료된 회사는 로그인 차단 (사유는 알려 주지 않음)
       if (credential.user.company.status !== 'ACTIVE') {
         throw new AccountError('INVALID_CREDENTIALS');
       }

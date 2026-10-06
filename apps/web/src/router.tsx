@@ -32,6 +32,14 @@ export const routes = [
         path: '/reset-password/:token',
         ...page(() => import('./routes/ResetPasswordPage'), 'ResetPasswordPage'),
       },
+      {
+        path: '/closure/cancel/:token',
+        ...page(() => import('./routes/ClosureCancelPage'), 'ClosureCancelPage'),
+      },
+      {
+        path: '/closure/requested',
+        ...page(() => import('./routes/ClosureRequestedPage'), 'ClosureRequestedPage'),
+      },
       // 목업 모드에서만 존재하는 가짜 카카오 로그인 화면
       ...(env.isMockApi
         ? [
