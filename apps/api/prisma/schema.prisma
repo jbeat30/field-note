@@ -49,6 +49,7 @@ model Company {
   invitations        Invitation[]
   operatorActions    OperatorAction[]
   emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
 
   @@map("companies")
 }
@@ -116,6 +117,7 @@ model User {
   sessions          Session[]
   invitations       Invitation[]
   emailVerification EmailVerification?
+  passwordReset     PasswordReset?
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -223,6 +225,8 @@ model EmailVerification {
   userId          String    @map("user_id") @db.Uuid
   // 코드를 보낸 이메일 주소 (가입 후 이메일이 바뀌어도 이전 코드는 쓰지 못하게 구분)
   email           String
+  // 이메일 변경 중에는 코드를 받은 새 주소 (인증이 끝나면 계정 이메일로 반영)
+  pendingEmail    String?   @map("pending_email")
   codeHash        String?   @map("code_hash")
   expiresAt       DateTime? @map("expires_at") @db.Timestamptz(3)
   // 틀린 입력 횟수 (제한을 넘으면 새 코드를 받아야 함)
@@ -237,4 +241,21 @@ model EmailVerification {
 
   @@id([companyId, userId])
   @@map("email_verifications")
+}
+
+// 비밀번호 재설정 링크 상태 (사용자당 한 행). 토큰 원문은 저장하지 않고 SHA-256 해시만 저장하며, 사용하면 해시를 비워 폐기
+model PasswordReset {
+  companyId       String    @map("company_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  tokenHash       String?   @unique @map("token_hash")
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(3)
+  lastRequestedAt DateTime  @map("last_requested_at") @db.Timestamptz(3)
+  windowStartedAt DateTime  @map("window_started_at") @db.Timestamptz(3)
+  requestCount    Int       @default(1) @map("request_count")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company   @relation(fields: [companyId], references: [id])
+  user            User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([companyId, userId])
+  @@map("password_resets")
 }

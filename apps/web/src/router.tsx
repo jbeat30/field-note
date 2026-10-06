@@ -23,6 +23,14 @@ export const routes = [
         path: '/verify-email',
         ...page(() => import('./routes/VerifyEmailPage'), 'VerifyEmailPage'),
       },
+      {
+        path: '/forgot-password',
+        ...page(() => import('./routes/ForgotPasswordPage'), 'ForgotPasswordPage'),
+      },
+      {
+        path: '/reset-password/:token',
+        ...page(() => import('./routes/ResetPasswordPage'), 'ResetPasswordPage'),
+      },
       { path: '/legal/:slug', ...page(() => import('./routes/LegalPage'), 'LegalPage') },
     ],
   },

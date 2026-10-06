@@ -1,7 +1,13 @@
 import {
   companySettingsSchema,
+  emailChangeSchema,
+  passwordChangeSchema,
+  passwordResetConfirmSchema,
+  passwordResetParamsSchema,
+  passwordResetRequestSchema,
   emailVerifyRequestSchema,
   ERROR_MESSAGES,
+  ERROR_STATUS,
   invitationParamsSchema,
   loginRequestSchema,
   signupRequestSchema,
@@ -12,21 +18,30 @@ import { delay, http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import {
+  DEMO_ACCOUNTS,
   DEMO_INVITATION,
   LEGAL_DOCUMENTS,
   MOCK_EMAIL_CODE,
   MOCK_LOCKED_LOGIN_ID,
+  MOCK_RESET_TOKEN,
   MOCK_TAKEN_LOGIN_ID,
   type MockAccount,
 } from './data';
 import {
   addAccount,
+  applyPendingEmail,
+  consumeMockReset,
+  getMockResetTarget,
+  isEmailInUse,
+  isMockResetUsable,
+  requestMockReset,
+  setPassword,
+  setPendingEmail,
   clearFailedLogins,
   findAccount,
   getCurrentAccount,
   isLoginLocked,
   listDevices,
-  markEmailVerified,
   recordFailedLogin,
   removeDevice,
   signIn,
@@ -35,23 +50,8 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 
-// 실제 API와 같은 상태 코드·오류 형식을 쓴다 (apps/api/src/http/AppError.ts와 동일)
-const STATUS: Record<ErrorCode, number> = {
-  VALIDATION_ERROR: 400,
-  UNAUTHORIZED: 401,
-  CSRF_REJECTED: 403,
-  INVALID_CREDENTIALS: 401,
-  ACCOUNT_LOCKED: 423,
-  LOGIN_ID_TAKEN: 409,
-  EMAIL_CODE_INVALID: 400,
-  NOT_IMPLEMENTED: 501,
-  NOT_FOUND: 404,
-  IDEMPOTENCY_KEY_REQUIRED: 400,
-  IDEMPOTENCY_KEY_REUSED: 422,
-  IDEMPOTENCY_IN_PROGRESS: 409,
-  TOO_MANY_REQUESTS: 429,
-  INTERNAL_ERROR: 500,
-};
+// 실제 API와 같은 상태 코드·오류 형식을 쓴다 (공유 패키지의 같은 표 사용)
+const STATUS = ERROR_STATUS;
 
 const apiError = (code: ErrorCode, details?: { path: string; message: string }[]) =>
   HttpResponse.json(
@@ -176,7 +176,8 @@ export const handlers = [
 
     if (body.data.code !== MOCK_EMAIL_CODE) return apiError('EMAIL_CODE_INVALID');
 
-    markEmailVerified(account);
+    // 이메일 변경 중이면 새 주소로 반영, 아니면 가입 인증 완료
+    applyPendingEmail(account);
 
     return HttpResponse.json(toMe(account));
   }),
@@ -285,5 +286,135 @@ export const handlers = [
       return apiError('NOT_FOUND');
 
     return HttpResponse.json({ success: true });
+  }),
+
+  // 비밀번호 재설정: 가입 여부와 관계없이 같은 응답 (시연용으로 일치하는 계정만 대상 기록)
+  http.post('/api/v1/auth/password-reset/request', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const body = await parseBody(request, passwordResetRequestSchema);
+
+    if ('response' in body) return body.response;
+
+    const target = DEMO_ACCOUNTS.find(
+      (account) => account.email === body.data.email.trim().toLowerCase(),
+    );
+
+    if (target) requestMockReset(target.loginId);
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.get('/api/v1/auth/password-reset/:token', async ({ params }) => {
+    await simulateLatency();
+
+    const parsed = passwordResetParamsSchema.safeParse(params);
+
+    if (!parsed.success || parsed.data.token !== MOCK_RESET_TOKEN || !isMockResetUsable()) {
+      return apiError('NOT_FOUND');
+    }
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post('/api/v1/auth/password-reset/confirm', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const body = await parseBody(request, passwordResetConfirmSchema);
+
+    if ('response' in body) return body.response;
+
+    if (body.data.token !== MOCK_RESET_TOKEN || !isMockResetUsable()) return apiError('NOT_FOUND');
+
+    const account = findAccount(getMockResetTarget() ?? 'hanbit');
+
+    if (account) {
+      setPassword(account, body.data.newPassword);
+      clearFailedLogins(account.loginId);
+    }
+
+    // 실제 서버처럼 모든 기기 로그아웃, 링크는 한 번만
+    signOut();
+    consumeMockReset();
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post('/api/v1/me/password', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, passwordChangeSchema);
+
+    if ('response' in body) return body.response;
+
+    if (isLoginLocked(account.loginId)) return apiError('ACCOUNT_LOCKED');
+
+    if (account.password !== body.data.currentPassword) {
+      // 로그인과 같은 실패 횟수·잠금 정책
+      if (recordFailedLogin(account.loginId) >= MOCK_MAX_FAILED_LOGINS) {
+        return apiError('ACCOUNT_LOCKED');
+      }
+
+      return apiError('CURRENT_PASSWORD_INVALID');
+    }
+
+    clearFailedLogins(account.loginId);
+    setPassword(account, body.data.newPassword);
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post('/api/v1/me/email/change', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, emailChangeSchema);
+
+    if ('response' in body) return body.response;
+
+    if (isLoginLocked(account.loginId)) return apiError('ACCOUNT_LOCKED');
+
+    if (account.password !== body.data.currentPassword) {
+      if (recordFailedLogin(account.loginId) >= MOCK_MAX_FAILED_LOGINS) {
+        return apiError('ACCOUNT_LOCKED');
+      }
+
+      return apiError('CURRENT_PASSWORD_INVALID');
+    }
+
+    clearFailedLogins(account.loginId);
+
+    const newEmail = body.data.newEmail.trim().toLowerCase();
+
+    if (newEmail === account.email) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.newEmail', message: '현재 이메일과 같습니다' },
+      ]);
+    }
+
+    if (isEmailInUse(newEmail)) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.newEmail', message: '이미 사용 중인 이메일입니다' },
+      ]);
+    }
+
+    setPendingEmail(account, newEmail);
+
+    return HttpResponse.json({ resendAfterSeconds: 30 });
   }),
 ];

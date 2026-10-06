@@ -15,6 +15,8 @@ import { Input } from '../components/ui/input';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { getErrorMessage } from '../lib/apiError';
 import { hoursToMinutes, minutesToHours } from '../lib/workTime';
+import { EmailChangeForm } from '../settings/EmailChangeForm';
+import { PasswordChangeForm } from '../settings/PasswordChangeForm';
 import { useCompanySettings, useSaveCompanySettings } from '../settings/useCompanySettings';
 import { useDevices, useRevokeDevice } from '../settings/useDevices';
 
@@ -224,6 +226,20 @@ export const SettingsPage = () => {
           <dt className="text-foreground/70">이메일</dt>
           <dd>{me.data?.email}</dd>
         </dl>
+      </section>
+
+      <section className="flex flex-col gap-3" aria-labelledby="password-heading">
+        <h2 id="password-heading" className="text-lg font-bold">
+          비밀번호 변경
+        </h2>
+        <PasswordChangeForm />
+      </section>
+
+      <section className="flex flex-col gap-3" aria-labelledby="email-heading">
+        <h2 id="email-heading" className="text-lg font-bold">
+          이메일 변경
+        </h2>
+        <EmailChangeForm />
       </section>
 
       <section className="flex flex-col gap-3" aria-labelledby="company-heading">

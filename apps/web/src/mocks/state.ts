@@ -33,6 +33,22 @@ const failedLogins = new Map<string, number>();
 
 export const MOCK_MAX_FAILED_LOGINS = 5;
 
+// 비밀번호 재설정 시연 상태 (새로고침하면 초기화)
+let resetTargetLoginId: string | null = null;
+let isResetTokenUsed = false;
+
+export const requestMockReset = (loginId: string) => {
+  resetTargetLoginId = loginId;
+};
+
+export const getMockResetTarget = () => resetTargetLoginId;
+
+export const isMockResetUsable = () => !isResetTokenUsed;
+
+export const consumeMockReset = () => {
+  isResetTokenUsed = true;
+};
+
 export const recordFailedLogin = (loginId: string) => {
   const count = (failedLogins.get(loginId) ?? 0) + 1;
 
@@ -59,6 +75,8 @@ const persist = () => {
 export const resetMockState = () => {
   state = createInitialState();
   failedLogins.clear();
+  resetTargetLoginId = null;
+  isResetTokenUsed = false;
 
   try {
     sessionStorage.removeItem(MOCK_SESSION_STORAGE_KEY);
@@ -88,10 +106,29 @@ export const addAccount = (account: MockAccount) => {
   persist();
 };
 
-export const markEmailVerified = (account: MockAccount) => {
+export const setPassword = (account: MockAccount, password: string) => {
+  account.password = password;
+  persist();
+};
+
+export const setPendingEmail = (account: MockAccount, email: string) => {
+  account.pendingEmail = email;
+  persist();
+};
+
+// 이메일 변경 인증이 끝나면 새 주소로 반영
+export const applyPendingEmail = (account: MockAccount) => {
+  if (account.pendingEmail) {
+    account.email = account.pendingEmail;
+    account.pendingEmail = undefined;
+  }
+
   account.isEmailVerified = true;
   persist();
 };
+
+export const isEmailInUse = (email: string) =>
+  state.accounts.some((account) => account.email === email);
 
 export const updateSettings = (account: MockAccount, settings: CompanySettings) => {
   account.settings = settings;

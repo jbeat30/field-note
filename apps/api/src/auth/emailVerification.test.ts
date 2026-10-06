@@ -229,7 +229,9 @@ describe('인증 코드 확인', () => {
     nowMs += RESEND_INTERVAL_MS + 1000;
     await verification.request(account);
 
-    await expect(verification.verify(account, lastCode())).resolves.toBeUndefined();
+    await expect(verification.verify(account, lastCode())).resolves.toEqual({
+      previousEmail: null,
+    });
   });
 
   it('유효 시간이 지난 코드는 거부한다', async () => {
@@ -261,7 +263,7 @@ describe('인증 코드 확인', () => {
       await expectError(verification.verify(account, first), 'CODE_INVALID');
     }
 
-    await expect(verification.verify(account, second)).resolves.toBeUndefined();
+    await expect(verification.verify(account, second)).resolves.toEqual({ previousEmail: null });
   });
 
   it('다른 회사 계정의 코드로는 인증할 수 없다', async () => {
@@ -287,6 +289,102 @@ describe('인증 코드 확인', () => {
     ]);
 
     expect(rowA?.codeHash).not.toBe(rowB?.codeHash);
+  });
+});
+
+describe('이메일 변경', () => {
+  // 인증을 마친 계정 (변경 전에는 인증된 이메일이 있어야 함)
+  const verified = async () => {
+    const context = await setup();
+
+    await context.verification.request(context.account);
+    await context.verification.verify(context.account, context.lastCode());
+    nowMs += RESEND_INTERVAL_MS + 1000;
+
+    return context;
+  };
+
+  it('새 주소로 코드가 가고, 인증하기 전에는 계정 이메일이 바뀌지 않는다', async () => {
+    const { verification, account, email, mails } = await verified();
+
+    await verification.requestChange(account, 'changed@example.com');
+
+    expect(mails.at(-1)?.to).toBe('changed@example.com');
+    expect(
+      (await db.owner.user.findFirst({ where: { companyId: account.companyId } }))?.email,
+    ).toBe(email);
+  });
+
+  it('새 주소의 코드를 확인하면 이메일이 바뀌고 이전 주소를 알려 준다', async () => {
+    const { verification, account, email, lastCode } = await verified();
+
+    await verification.requestChange(account, 'changed2@example.com');
+
+    await expect(verification.verify(account, lastCode())).resolves.toEqual({
+      previousEmail: email,
+    });
+
+    const user = await db.owner.user.findFirst({ where: { companyId: account.companyId } });
+
+    expect(user?.email).toBe('changed2@example.com');
+    expect(user?.emailVerifiedAt).not.toBeNull();
+  });
+
+  it('변경 중에는 새 주소로 코드를 다시 받을 수 있다', async () => {
+    const { verification, account, mails } = await verified();
+
+    await verification.requestChange(account, 'resend@example.com');
+    nowMs += RESEND_INTERVAL_MS + 1000;
+    await verification.request(account);
+
+    expect(mails.at(-1)?.to).toBe('resend@example.com');
+  });
+
+  it('이미 쓰는 주소와 현재 주소로는 바꿀 수 없다', async () => {
+    const a = await verified();
+    const b = await verified();
+
+    await expectError(a.verification.requestChange(a.account, b.email), 'EMAIL_TAKEN');
+    await expectError(a.verification.requestChange(a.account, a.email), 'SAME_EMAIL');
+  });
+
+  it('변경을 요청했다가 다른 주소로 다시 요청하면 이전 코드는 쓸 수 없다', async () => {
+    const { verification, account, lastCode } = await verified();
+
+    await verification.requestChange(account, 'first-change@example.com');
+
+    const firstCode = lastCode();
+
+    nowMs += RESEND_INTERVAL_MS + 1000;
+    await verification.requestChange(account, 'second-change@example.com');
+
+    if (firstCode !== lastCode()) {
+      await expectError(verification.verify(account, firstCode), 'CODE_INVALID');
+    }
+
+    await verification.verify(account, lastCode());
+
+    expect(
+      (await db.owner.user.findFirst({ where: { companyId: account.companyId } }))?.email,
+    ).toBe('second-change@example.com');
+  });
+
+  it('인증 전 계정도 잘못 입력한 이메일을 바꿀 수 있다', async () => {
+    const { verification, account, lastCode } = await setup();
+
+    await verification.requestChange(account, 'typo-fixed@example.com');
+    await verification.verify(account, lastCode());
+
+    const user = await db.owner.user.findFirst({ where: { companyId: account.companyId } });
+
+    expect(user).toMatchObject({ email: 'typo-fixed@example.com', status: 'ACTIVE' });
+  });
+
+  it('변경 요청에도 재발송 간격 제한이 적용된다', async () => {
+    const { verification, account } = await verified();
+
+    await verification.requestChange(account, 'limit@example.com');
+    await expectError(verification.requestChange(account, 'limit2@example.com'), 'RESEND_TOO_SOON');
   });
 });
 
