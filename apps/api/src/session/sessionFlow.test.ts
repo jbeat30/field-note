@@ -1,8 +1,4 @@
-import {
-  errorResponseSchema,
-  logoutResponseSchema,
-  sessionResponseSchema,
-} from '@field-note/shared';
+import { errorResponseSchema, logoutResponseSchema } from '@field-note/shared';
 import request from 'supertest';
 
 import { createApp } from '../app';
@@ -23,10 +19,11 @@ const setup = async () => {
   return { app, sessionStore, token };
 };
 
+// 인증이 필요한 라우트(/me/devices)로 세션 쿠키 인증을 확인
 describe('세션 인증 흐름', () => {
   it('세션 쿠키가 없으면 401', async () => {
     const { app } = await setup();
-    const res = await request(app).get('/api/v1/session');
+    const res = await request(app).get('/api/v1/me/devices');
 
     expect(res.status).toBe(401);
   });
@@ -34,31 +31,21 @@ describe('세션 인증 흐름', () => {
   it('위조된 쿠키는 401', async () => {
     const { app } = await setup();
     const res = await request(app)
-      .get('/api/v1/session')
+      .get('/api/v1/me/devices')
       .set('Cookie', `${SESSION_COOKIE}=forged-token`);
 
     expect(res.status).toBe(401);
   });
 
-  it('유효한 쿠키면 세션에 기록된 회사 ID를 얻는다', async () => {
+  it('유효한 쿠키면 인증을 통과해 기기 목록을 얻는다', async () => {
     const { app, token } = await setup();
     const res = await request(app)
-      .get('/api/v1/session')
+      .get('/api/v1/me/devices')
       .set('Cookie', `${SESSION_COOKIE}=${token}`);
 
     expect(res.status).toBe(200);
-    expect(sessionResponseSchema.parse(res.body)).toEqual({ userId: USER, companyId: COMPANY });
-  });
-
-  it('쿼리·헤더로 다른 회사 ID를 보내도 세션의 회사 ID만 쓴다', async () => {
-    const { app, token } = await setup();
-    const res = await request(app)
-      .get('/api/v1/session')
-      .query({ companyId: '0198a000-0000-7000-8000-00000000000b' })
-      .set('X-Company-Id', '0198a000-0000-7000-8000-00000000000b')
-      .set('Cookie', `${SESSION_COOKIE}=${token}`);
-
-    expect(res.body.companyId).toBe(COMPANY);
+    expect(res.body.devices).toHaveLength(1);
+    expect(res.body.devices[0].isCurrent).toBe(true);
   });
 
   it('로그아웃하면 세션이 삭제되고 쿠키가 만료된다', async () => {
@@ -75,7 +62,7 @@ describe('세션 인증 흐름', () => {
     expect(String(res.headers['set-cookie'])).toMatch(/sid=;/);
 
     const after = await request(app)
-      .get('/api/v1/session')
+      .get('/api/v1/me/devices')
       .set('Cookie', `${SESSION_COOKIE}=${token}`);
 
     expect(after.status).toBe(401);

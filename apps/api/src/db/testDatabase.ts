@@ -10,6 +10,10 @@ const APP_ROLE = 'field_note_app';
 const APP_PASSWORD = 'test_app_password';
 const AUTH_ROLE = 'field_note_auth';
 const AUTH_PASSWORD = 'test_auth_password';
+const OPERATOR_ROLE = 'field_note_operator';
+const OPERATOR_PASSWORD = 'test_operator_password';
+const QUEUE_ROLE = 'field_note_queue';
+const QUEUE_PASSWORD = 'test_queue_password';
 const API_ROOT = path.resolve(__dirname, '../..');
 
 export type TestDatabase = {
@@ -20,6 +24,11 @@ export type TestDatabase = {
   app: PrismaClient;
   // 회사 범위 밖 전용 계정 (세션만 접근 가능)
   auth: PrismaClient;
+  // 운영자 계정 (회사·계정·초대 발급과 작업 기록만 가능)
+  operator: PrismaClient;
+  // 작업 큐(pg-boss) 전용 계정 접속 주소 (큐 스키마만 접근)
+  queueUrl: string;
+  ownerUrl: string;
   stop: () => Promise<void>;
 };
 
@@ -43,6 +52,8 @@ export const startTestDatabase = async (): Promise<TestDatabase> => {
   await ownerPool.query(`ALTER ROLE ${APP_ROLE} PASSWORD '${APP_PASSWORD}'`);
 
   await ownerPool.query(`ALTER ROLE ${AUTH_ROLE} PASSWORD '${AUTH_PASSWORD}'`);
+  await ownerPool.query(`ALTER ROLE ${OPERATOR_ROLE} PASSWORD '${OPERATOR_PASSWORD}'`);
+  await ownerPool.query(`ALTER ROLE ${QUEUE_ROLE} PASSWORD '${QUEUE_PASSWORD}'`);
 
   const roleUrl = (username: string, password: string) => {
     const url = new URL(ownerUrl);
@@ -56,15 +67,20 @@ export const startTestDatabase = async (): Promise<TestDatabase> => {
   const owner = createPrismaClient(ownerUrl);
   const app = createPrismaClient(roleUrl(APP_ROLE, APP_PASSWORD));
   const auth = createPrismaClient(roleUrl(AUTH_ROLE, AUTH_PASSWORD));
+  const operator = createPrismaClient(roleUrl(OPERATOR_ROLE, OPERATOR_PASSWORD));
 
   return {
     owner,
     ownerPool,
     app,
     auth,
+    operator,
+    queueUrl: roleUrl(QUEUE_ROLE, QUEUE_PASSWORD),
+    ownerUrl,
     stop: async () => {
       await app.$disconnect();
       await auth.$disconnect();
+      await operator.$disconnect();
       await owner.$disconnect();
       await ownerPool.end();
       await container.stop();
