@@ -38,7 +38,8 @@ describe('OAuth 진행 상태 쿠키', () => {
 
   it('변조하거나 다른 비밀 값으로 열면 거부한다', () => {
     const sealed = sealOAuthSession(SECRET, 's', { purpose: 'login' });
-    const tampered = `${sealed.slice(0, -2)}${sealed.endsWith('A') ? 'B' : 'A'}A`;
+    // 끝부분은 base64 패딩 비트라 바꿔도 같은 값이 될 수 있으므로 중간 글자를 반드시 다른 글자로 바꿈
+    const tampered = `${sealed.slice(0, 10)}${sealed[10] === 'A' ? 'B' : 'A'}${sealed.slice(11)}`;
 
     expect(openOAuthSession(SECRET, tampered, 's')).toBeNull();
     expect(openOAuthSession('another-secret-another-secret-0000000', sealed, 's')).toBeNull();

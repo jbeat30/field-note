@@ -1,6 +1,7 @@
 import {
   companySettingsSchema,
   devicesResponseSchema,
+  closureResponseSchema,
   errorResponseSchema,
   invitationResponseSchema,
   meResponseSchema,
@@ -15,6 +16,7 @@ import {
   DEMO_INVITATION,
   LEGAL_DOCUMENTS,
   MOCK_EMAIL_CODE,
+  MOCK_CLOSURE_TOKEN,
   MOCK_RESET_TOKEN,
 } from './data';
 import { handlers } from './handlers';
@@ -243,6 +245,56 @@ describe('목업 서버 계약', () => {
           body: { token: MOCK_RESET_TOKEN, newPassword: 'Another-2026-pass!' },
         })
       ).response.status,
+    ).toBe(404);
+  });
+
+  it('계정 해지: 비밀번호를 확인하고, 요청하면 로그아웃·로그인 차단, 링크로 취소하면 복구된다', async () => {
+    await login();
+
+    const noPassword = await client.POST('/api/v1/me/closure', { body: {} });
+    const wrong = await client.POST('/api/v1/me/closure', {
+      body: { currentPassword: 'wrong-password-1' },
+    });
+
+    expect(noPassword.response.status).toBe(400);
+    expect(errorResponseSchema.parse(wrong.error).error.code).toBe('CURRENT_PASSWORD_INVALID');
+    // 요청 전에는 링크가 없음
+    expect(
+      (
+        await client.GET('/api/v1/auth/closure/{token}', {
+          params: { path: { token: MOCK_CLOSURE_TOKEN } },
+        })
+      ).response.status,
+    ).toBe(404);
+
+    const requested = await client.POST('/api/v1/me/closure', {
+      body: { currentPassword: demo.password },
+    });
+
+    expect(closureResponseSchema.parse(requested.data).purgeAfter).toBeDefined();
+    expect((await client.GET('/api/v1/me')).response.status).toBe(401);
+
+    const blocked = await login(demo.loginId, demo.password);
+
+    expect(blocked.response.status).toBe(403);
+    expect(errorResponseSchema.parse(blocked.error).error.code).toBe('ACCOUNT_CLOSING');
+    expect((await login(demo.loginId, 'wrong-password-1')).response.status).toBe(401);
+
+    const check = await client.GET('/api/v1/auth/closure/{token}', {
+      params: { path: { token: MOCK_CLOSURE_TOKEN } },
+    });
+
+    expect(closureResponseSchema.parse(check.data).purgeAfter).toBe(
+      closureResponseSchema.parse(requested.data).purgeAfter,
+    );
+    expect(
+      (await client.POST('/api/v1/auth/closure/cancel', { body: { token: MOCK_CLOSURE_TOKEN } }))
+        .response.status,
+    ).toBe(200);
+    expect((await login()).response.status).toBe(200);
+    expect(
+      (await client.POST('/api/v1/auth/closure/cancel', { body: { token: MOCK_CLOSURE_TOKEN } }))
+        .response.status,
     ).toBe(404);
   });
 

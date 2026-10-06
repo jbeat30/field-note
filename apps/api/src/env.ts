@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-const envSchema = z.object({
+const baseSchema = z.object({
   NODE_ENV: z.enum(['development', 'test', 'production']).default('development'),
   PORT: z.coerce.number().int().min(1).max(65535).default(3000),
   LOG_LEVEL: z.enum(['fatal', 'error', 'warn', 'info', 'debug', 'trace', 'silent']).default('info'),
@@ -29,6 +29,61 @@ const envSchema = z.object({
   SMTP_USER: z.string().min(1).optional(),
   SMTP_PASSWORD: z.string().min(1).optional(),
   SMTP_FROM: z.email(),
+});
+
+// 로컬 개발용 값이 운영에 섞이는 사고를 막는 검사 (환경 분리, 기술 기획서 §14)
+const LOCAL_HOSTS = new Set([
+  'localhost',
+  '127.0.0.1',
+  '::1',
+  '[::1]',
+  'postgres',
+  'mailpit',
+  'rustfs',
+]);
+const isLocalHost = (value: string) => {
+  try {
+    return LOCAL_HOSTS.has(new URL(value).hostname);
+  } catch {
+    return LOCAL_HOSTS.has(value);
+  }
+};
+
+const envSchema = baseSchema.superRefine((env, context) => {
+  if (env.NODE_ENV !== 'production') {
+    return;
+  }
+
+  const problem = (path: keyof typeof env, message: string) =>
+    context.addIssue({ code: 'custom', path: [path], message });
+
+  for (const key of [
+    'DATABASE_URL',
+    'DATABASE_MIGRATE_URL',
+    'DATABASE_AUTH_URL',
+    'DATABASE_QUEUE_URL',
+    'S3_ENDPOINT',
+  ] as const) {
+    if (isLocalHost(env[key])) problem(key, '운영에서는 로컬 주소를 쓸 수 없음');
+  }
+
+  if (isLocalHost(env.SMTP_HOST)) problem('SMTP_HOST', '운영에서는 로컬 메일 수신기를 쓸 수 없음');
+  if (!env.SMTP_USER || !env.SMTP_PASSWORD)
+    problem('SMTP_USER', '운영 메일 서비스의 계정이 필요함');
+  if (new URL(env.APP_ORIGIN).protocol !== 'https:') problem('APP_ORIGIN', '운영은 https여야 함');
+  if (env.LOG_LEVEL === 'debug' || env.LOG_LEVEL === 'trace') {
+    problem(
+      'LOG_LEVEL',
+      '운영에서는 debug 이하 로그를 켤 수 없음 (개인정보가 로그에 남을 수 있음)',
+    );
+  }
+
+  // 로컬 `.env.example`로 만든 값 그대로 쓰는 경우를 막음 (비밀 값은 환경마다 새로 만든다)
+  for (const key of ['DATABASE_URL', 'DATABASE_MIGRATE_URL', 'S3_SECRET_KEY'] as const) {
+    if (/field_note_secret|:field_note@|:field_note_app@/.test(env[key])) {
+      problem(key, '로컬 기본 비밀번호를 운영에서 쓸 수 없음');
+    }
+  }
 });
 
 export type Env = z.infer<typeof envSchema>;

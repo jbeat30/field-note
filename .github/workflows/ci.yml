@@ -34,7 +34,8 @@ jobs:
           fi
           echo "$HEAD → $BASE 허용"
 
-  verify:
+  # 아래 세 잡은 병렬로 실행하고, 필수 체크 이름인 `verify`는 마지막 잡이 결과를 모아 판정한다
+  static:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7.0.1
@@ -47,8 +48,43 @@ jobs:
       - run: pnpm typecheck
       - run: pnpm lint
       - run: pnpm format:check
-      - run: pnpm test
-      - run: pnpm --filter @field-note/web exec playwright install --with-deps chromium
-      - run: pnpm test:stories
       - run: pnpm build
       - run: pnpm audit --prod
+
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm test
+
+  stories:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @field-note/web exec playwright install --with-deps chromium
+      - run: pnpm test:stories
+
+  verify:
+    needs: [static, test, stories]
+    if: always()
+    runs-on: ubuntu-latest
+    steps:
+      - name: 검사 결과 판정
+        run: |
+          echo "static=${{ needs.static.result }} test=${{ needs.test.result }} stories=${{ needs.stories.result }}"
+          if [[ "${{ needs.static.result }}" != "success" || "${{ needs.test.result }}" != "success" || "${{ needs.stories.result }}" != "success" ]]; then
+            echo "실패한 검사가 있음"
+            exit 1
+          fi

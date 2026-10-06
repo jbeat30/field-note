@@ -99,6 +99,8 @@ const toAppError = (error: unknown): unknown => {
       ]);
     case 'LAST_LOGIN_METHOD':
       return new AppError('LAST_LOGIN_METHOD');
+    case 'ACCOUNT_CLOSING':
+      return new AppError('ACCOUNT_CLOSING');
   }
 };
 

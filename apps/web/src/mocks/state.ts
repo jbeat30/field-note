@@ -135,6 +135,20 @@ export const setKakaoProfile = (account: MockAccount, profileKey: string | undef
   persist();
 };
 
+// 해지 요청 (실제 서버처럼 모든 기기 로그아웃은 호출하는 쪽에서 처리)
+export const startClosure = (account: MockAccount, purgeAfter: string) => {
+  account.closingPurgeAfter = purgeAfter;
+  persist();
+};
+
+export const cancelClosure = (account: MockAccount) => {
+  account.closingPurgeAfter = undefined;
+  persist();
+};
+
+// 취소 링크가 가리키는 해지 중 계정 (시연용 링크는 하나라 해지 중인 첫 계정)
+export const findClosingAccount = () => state.accounts.find((account) => account.closingPurgeAfter);
+
 export const isEmailInUse = (email: string) =>
   state.accounts.some((account) => account.email === email);
 
