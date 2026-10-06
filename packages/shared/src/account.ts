@@ -59,8 +59,10 @@ export const signupResponseSchema = z.object({
 export type SignupResponse = z.infer<typeof signupResponseSchema>;
 
 export const emailVerifyRequestSchema = z.object({
-  code: z.string().regex(/^\d{6}$/, '6자리 숫자'),
+  code: z.string().regex(/^\d{6}$/, '6자리 숫자를 입력해 주세요'),
 });
+
+export type EmailVerifyRequest = z.infer<typeof emailVerifyRequestSchema>;
 
 export const emailResendResponseSchema = z.object({
   resendAfterSeconds: z.number().int().nonnegative(),
