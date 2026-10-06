@@ -4,4 +4,6 @@ export const queryKeys = {
   session: () => ['session', 'current', {}] as const,
   me: () => ['me', 'current', {}] as const,
   invitation: (token: string) => ['invitation', 'detail', { token }] as const,
+  companySettings: () => ['company-settings', 'current', {}] as const,
+  devices: () => ['devices', 'all', {}] as const,
 };
