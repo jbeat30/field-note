@@ -23,7 +23,7 @@ jobs:
             # 같은 버전의 피쳐 브랜치 또는 수정 브랜치
             pattern="^(feature/${BASE#release/}|fix-.+)$"
           elif [[ "$BASE" =~ ^feature/${semver}$ ]]; then
-            pattern="^(feat|fix|docs|chore|refactor|test)-.+"
+            pattern="^((feat|fix|docs|chore|refactor|test)-.+|[a-z0-9-]+-patch-[0-9]+)$"
           else
             echo "허용되지 않는 대상 브랜치: $BASE"
             exit 1
