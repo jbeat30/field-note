@@ -7,8 +7,6 @@ import { hashToken } from '../auth/token';
 
 import type { PrismaClient } from './client';
 
-const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
-
 export type SeedResult = {
   companies: number;
   users: number;
@@ -17,6 +15,9 @@ export type SeedResult = {
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
+
+// 문서 본문 해시 (운영자 등록 `registerLegalDocuments`와 같은 알고리즘, 같은 본문이면 같은 값)
+const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
 /**
  * @description 로컬 개발용 더미 데이터 입력 (여러 번 실행해도 같은 결과, 소유 계정 클라이언트 전용)
@@ -29,7 +30,8 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     DEMO_LEGAL_DOCUMENTS.map((document) =>
       prisma.legalDocument.upsert({
         where: { type_version: { type: document.type, version: document.version } },
-        update: {},
+        // 개발용 시드는 문서 원본이 바뀌면 같은 버전의 해시도 최신으로 맞춤 (운영 등록은 이를 거부함)
+        update: { contentHash: sha256(document.draftText) },
         create: {
           id: document.id,
           type: document.type,

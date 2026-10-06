@@ -65,8 +65,17 @@ export const findCurrentDocuments = async (
     }
   }
 
-  return [...latestByType.values()];
+  // 시행 시각이 같아도 화면 순서가 흔들리지 않게 고정 순서로 정렬: 이용약관, 개인정보, 마케팅(선택)
+  return [...latestByType.values()].sort(
+    (a, b) => DOCUMENT_ORDER.indexOf(a.type) - DOCUMENT_ORDER.indexOf(b.type),
+  );
 };
+
+const DOCUMENT_ORDER: readonly CurrentLegalDocument['type'][] = [
+  'TERMS_OF_SERVICE',
+  'PRIVACY_POLICY',
+  'MARKETING',
+];
 
 export type InvitationStore = {
   // 사용·만료·정지·가입 완료 등 유효하지 않은 이유를 구분하지 않고 null
