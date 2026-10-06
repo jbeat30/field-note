@@ -11,3 +11,4 @@ coverage/
 storybook-static/
 .idea/
 apps/api/src/generated
+backups/

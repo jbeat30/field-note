@@ -276,6 +276,14 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 유예가 끝나면 `pnpm operator purge-due`가 업무 데이터를 삭제하고 계정·회사는 개인 식별 항목만 지워 익명화한다. 동의 이력·운영자 작업 기록·해지 기록은 개인정보 없이 남긴다 (처리 기준은 `apps/api/src/closure/purgePolicy.ts`, 회사 범위 테이블을 추가하면 반드시 등록해야 하며 누락은 테스트가 잡는다)
 - 목업 모드에서는 해지를 요청한 뒤 `/closure/cancel/demo-closure-token-0001`에서 취소를 시연할 수 있다
 
+## 백업과 복구
+
+- `pnpm backup create`로 DB 백업(덤프·계정 정의·확인용 기록)을 `backups/`에 만들고 30일이 지난 백업을 정리한다
+- `pnpm backup drill`은 최근 백업을 **임시 DB에 복구해 검증**한다 (체크섬·행 수·마이그레이션·회사 격리). 운영 DB는 건드리지 않고, 실패하면 종료 코드가 0이 아니다
+- 호스트에 PostgreSQL 도구가 없어도 되도록 Docker 컨테이너 안의 도구를 쓴다 (서버에 설치돼 있으면 `BACKUP_PG_MODE=local`)
+- 절차·복구 시험 기록·환경 분리 표는 [docs/05-backup-restore.md](docs/05-backup-restore.md), 정기 실행 예시는 `ops/crontab.example`
+- 운영(`NODE_ENV=production`)에서는 로컬 주소·`http`·`debug` 로그·로컬 기본 비밀번호가 있으면 api가 기동을 중단한다
+
 ## 로그인 세션
 
 - 로그인 실패가 연속 5번이면 해당 계정을 15분 잠근다 (잠긴 동안은 맞는 비밀번호도 거부). 없는 아이디와 틀린 비밀번호는 같은 오류·같은 처리 시간으로 응답한다
@@ -301,5 +309,6 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - [기획서 분석](docs/00-analysis.md)
 - [개발 순서 설계](docs/01-development-plan.md)
 - [데이터 모델](docs/04-data-model.md)
+- [백업·복구와 환경 분리](docs/05-backup-restore.md)
 - [진행 현황](docs/03-progress.md)
 - [서비스 기획서 v2.4](docs/planning/service-plan-v2.4.md) / [기술 기획서 v0.5](docs/planning/tech-plan-v0.5.md)

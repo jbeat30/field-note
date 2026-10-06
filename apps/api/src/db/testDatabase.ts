@@ -3,7 +3,8 @@ import { randomUUID } from 'node:crypto';
 import pg from 'pg';
 
 import { createPrismaClient, type PrismaClient } from './client';
-import { ROLE_PASSWORDS, SHARED_URL_ENV, TEMPLATE_DB, withDatabase } from './sharedTestDatabase';
+import { withDatabase } from './connectionUrl';
+import { ROLE_PASSWORDS, SHARED_URL_ENV, TEMPLATE_DB } from './sharedTestDatabase';
 
 export type TestDatabase = {
   // 소유 계정 (테스트 데이터 준비·스키마 점검용)
