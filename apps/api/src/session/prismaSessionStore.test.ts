@@ -32,6 +32,9 @@ afterAll(async () => {
 
 describeSessionStoreContract('PostgreSQL', () => ({
   createStore: (now) => createPrismaSessionStore(db.auth, now),
+  reset: async () => {
+    await db.ownerPool.query('DELETE FROM sessions');
+  },
   readStoredValues: async () => {
     const { rows } = await db.ownerPool.query<{ token_hash: string }>(
       'SELECT token_hash FROM sessions',
