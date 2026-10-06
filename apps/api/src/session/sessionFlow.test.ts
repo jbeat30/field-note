@@ -19,7 +19,7 @@ const setup = async () => {
   return { app, sessionStore, token };
 };
 
-// 인증이 필요한 라우트(/me/devices)는 구현 전이라 인증을 통과하면 501, 통과하지 못하면 401
+// 인증이 필요한 라우트(/me/devices)로 세션 쿠키 인증을 확인
 describe('세션 인증 흐름', () => {
   it('세션 쿠키가 없으면 401', async () => {
     const { app } = await setup();
@@ -37,13 +37,15 @@ describe('세션 인증 흐름', () => {
     expect(res.status).toBe(401);
   });
 
-  it('유효한 쿠키면 인증을 통과한다', async () => {
+  it('유효한 쿠키면 인증을 통과해 기기 목록을 얻는다', async () => {
     const { app, token } = await setup();
     const res = await request(app)
       .get('/api/v1/me/devices')
       .set('Cookie', `${SESSION_COOKIE}=${token}`);
 
-    expect(res.status).toBe(501);
+    expect(res.status).toBe(200);
+    expect(res.body.devices).toHaveLength(1);
+    expect(res.body.devices[0].isCurrent).toBe(true);
   });
 
   it('로그아웃하면 세션이 삭제되고 쿠키가 만료된다', async () => {

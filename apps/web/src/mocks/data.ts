@@ -32,11 +32,11 @@ export const LEGAL_DOCUMENTS: readonly LegalDocumentSummary[] = LEGAL_DOCUMENTS_
 export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [
   {
     id: 'device-current',
-    label: '이 기기 (Chrome, macOS)',
+    label: 'Chrome · macOS',
     lastActiveAt: '2026-10-06T09:00:00.000Z',
   },
-  { id: 'device-phone', label: 'iPhone (Safari)', lastActiveAt: '2026-10-05T18:20:00.000Z' },
-  { id: 'device-old', label: 'Android (Chrome)', lastActiveAt: '2026-09-28T07:45:00.000Z' },
+  { id: 'device-phone', label: 'Safari · iPhone', lastActiveAt: '2026-10-05T18:20:00.000Z' },
+  { id: 'device-old', label: 'Chrome · Android', lastActiveAt: '2026-09-28T07:45:00.000Z' },
 ];
 
 // 인증 코드와 시연용 특수 값 (README 목업 모드 표와 같아야 함)

@@ -174,7 +174,12 @@ const DevicesSection = () => {
   const renderDevice = (device: Device) => (
     <li key={device.id} className="flex min-h-touch items-center justify-between gap-3 py-2">
       <div>
-        <p className="font-medium">{device.label}</p>
+        <p className="font-medium">
+          {device.label}
+          {device.isCurrent && (
+            <span className="ml-2 text-sm font-normal text-primary">이 기기</span>
+          )}
+        </p>
         <p className="text-sm text-foreground/70">
           마지막 사용 {formatLastActive(device.lastActiveAt)}
         </p>

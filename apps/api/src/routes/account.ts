@@ -33,6 +33,7 @@ import type { SecurityNotifier } from '../email/securityNotice';
 import { AppError } from '../http/AppError';
 import type { Logger } from '../logger';
 import type { InvitationStore } from '../invitation/invitationStore';
+import { buildDeviceLabel } from '../session/deviceLabel';
 import { readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionStore } from '../session/sessionStore';
 import type { RouteHandler, RouteRegistry } from '../http/route';
@@ -196,7 +197,7 @@ export const registerAccountRoutes = (
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     isAccountReady
-      ? async ({ body, response }) => {
+      ? async ({ body, request, response }) => {
           const input = body as SignupRequest;
 
           try {
@@ -208,10 +209,10 @@ export const registerAccountRoutes = (
               consents: input.consents,
             });
             // 가입 직후 로그인 상태(이메일 인증 전)로 두어 인증 화면으로 이어지게 함
-            const session = await sessionStore.create({
-              userId: account.userId,
-              companyId: account.companyId,
-            });
+            const session = await sessionStore.create(
+              { userId: account.userId, companyId: account.companyId },
+              { deviceLabel: buildDeviceLabel(request.get('user-agent')) },
+            );
 
             setSessionCookie(response, session, isSecureCookie);
 
@@ -298,7 +299,7 @@ export const registerAccountRoutes = (
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     isAccountReady
-      ? async ({ body, response }) => {
+      ? async ({ body, request, response }) => {
           const input = body as LoginRequest;
 
           try {
@@ -308,6 +309,7 @@ export const registerAccountRoutes = (
             });
             const session = await sessionStore.create(account, {
               isRemembered: input.isRemembered,
+              deviceLabel: buildDeviceLabel(request.get('user-agent')),
             });
 
             setSessionCookie(response, session, isSecureCookie);
@@ -371,7 +373,23 @@ export const registerAccountRoutes = (
       auth: 'required',
       response: { status: 200, schema: devicesResponseSchema },
     },
-    notImplemented,
+    sessionStore
+      ? async ({ auth, request }) => {
+          const devices = await sessionStore.listDevices(
+            auth!.userId,
+            readSessionToken(request) ?? '',
+          );
+
+          return {
+            devices: devices.map((device) => ({
+              id: device.id,
+              label: device.label,
+              lastActiveAt: device.lastActiveAt.toISOString(),
+              isCurrent: device.isCurrent,
+            })),
+          };
+        }
+      : notImplemented,
   );
 
   add(
@@ -384,7 +402,23 @@ export const registerAccountRoutes = (
       response: { status: 200, schema: successResponseSchema },
       errors: ['NOT_FOUND'],
     },
-    notImplemented,
+    sessionStore
+      ? async ({ auth, params, request }) => {
+          const { id } = params as { id: string };
+          const isRevoked = await sessionStore.revokeDevice(
+            auth!.userId,
+            id,
+            readSessionToken(request) ?? '',
+          );
+
+          // 없는 기기, 다른 사용자의 기기, 현재 기기(로그아웃 API로만 종료)는 구분하지 않음
+          if (!isRevoked) {
+            throw new AppError('NOT_FOUND');
+          }
+
+          return { success: true };
+        }
+      : notImplemented,
   );
 
   // 비밀번호 재설정 (로그인 전)

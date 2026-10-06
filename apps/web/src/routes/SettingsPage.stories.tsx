@@ -64,10 +64,10 @@ export const Devices: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText(/이 기기/)).toBeInTheDocument();
+    await expect(await canvas.findByText('이 기기')).toBeInTheDocument();
     // 현재 기기에는 원격 로그아웃 버튼이 없음
     await expect(
-      canvas.queryByRole('button', { name: /이 기기.*로그아웃/ }),
+      canvas.queryByRole('button', { name: 'Chrome · macOS 로그아웃' }),
     ).not.toBeInTheDocument();
     await expect(
       canvas.getAllByRole('button', { name: /로그아웃$/ }).length,
@@ -79,10 +79,10 @@ export const RevokeDevice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: 'iPhone (Safari) 로그아웃' }));
+    await userEvent.click(await canvas.findByRole('button', { name: 'Safari · iPhone 로그아웃' }));
 
-    await waitFor(() => expect(canvas.queryByText('iPhone (Safari)')).not.toBeInTheDocument());
-    await expect(canvas.getByText('Android (Chrome)')).toBeInTheDocument();
+    await waitFor(() => expect(canvas.queryByText('Safari · iPhone')).not.toBeInTheDocument());
+    await expect(canvas.getByText('Chrome · Android')).toBeInTheDocument();
   },
 };
 
