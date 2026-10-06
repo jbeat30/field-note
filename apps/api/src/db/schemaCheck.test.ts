@@ -141,4 +141,17 @@ describe('스키마 검사', () => {
 
     expect(rows).toEqual([]);
   });
+
+  it('인증 코드 테이블은 전용 계정만 접근하고 삭제 권한은 아무도 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM email_verifications`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM email_verifications`).rejects.toThrow();
+
+    const { rows } = await db.ownerPool.query(
+      `SELECT grantee FROM information_schema.role_table_grants
+        WHERE table_name = 'email_verifications' AND privilege_type = 'DELETE'
+          AND grantee IN ('field_note_app', 'field_note_auth', 'field_note_operator', 'field_note_queue')`,
+    );
+
+    expect(rows).toEqual([]);
+  });
 });

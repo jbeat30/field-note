@@ -9,6 +9,7 @@ import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import type { AccountService } from './auth/accountService';
+import type { EmailVerificationService } from './auth/emailVerification';
 import type { InvitationStore } from './invitation/invitationStore';
 import { createLogger, type Logger } from './logger';
 import { registerAccountRoutes } from './routes/account';
@@ -27,6 +28,8 @@ export type AppOptions = {
   invitationStore?: InvitationStore;
   // 없으면 가입·로그인·내 정보 API는 501
   accountService?: AccountService;
+  // 없으면 이메일 인증 확인·재발송 API는 501
+  emailVerification?: EmailVerificationService;
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
@@ -53,6 +56,8 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerAccountRoutes(registry, {
     invitationStore: options.invitationStore,
     accountService: options.accountService,
+    emailVerification: options.emailVerification,
+    logger: options.logger,
     sessionStore,
     isSecureCookie: options.isSecureCookie,
   });

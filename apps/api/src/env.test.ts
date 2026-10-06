@@ -4,6 +4,8 @@ const validEnv = {
   DATABASE_URL: 'postgresql://user:pw@localhost:5432/db',
   DATABASE_MIGRATE_URL: 'postgresql://owner:pw@localhost:5432/db',
   DATABASE_AUTH_URL: 'postgresql://auth:pw@localhost:5432/db',
+  DATABASE_QUEUE_URL: 'postgresql://queue:pw@localhost:5432/db',
+  CODE_HASH_SECRET: 'test-secret-test-secret-test-secret-0000',
   APP_ORIGIN: 'http://localhost:5173',
   S3_ENDPOINT: 'http://localhost:9000',
   S3_REGION: 'us-east-1',
