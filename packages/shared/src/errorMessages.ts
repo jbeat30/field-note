@@ -6,6 +6,7 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   UNAUTHORIZED: '로그인이 필요합니다',
   CSRF_REJECTED: '허용되지 않은 요청입니다',
   INVALID_CREDENTIALS: '아이디 또는 비밀번호가 올바르지 않습니다',
+  CURRENT_PASSWORD_INVALID: '현재 비밀번호가 올바르지 않습니다',
   ACCOUNT_LOCKED: '로그인 시도가 너무 많아 잠시 잠겼습니다. 잠시 후 다시 시도해 주세요',
   LOGIN_ID_TAKEN: '이미 사용 중인 아이디입니다',
   EMAIL_CODE_INVALID: '인증 코드가 올바르지 않거나 만료되었습니다',
@@ -16,4 +17,23 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   IDEMPOTENCY_IN_PROGRESS: '같은 요청을 처리 중입니다. 잠시 후 다시 시도해 주세요',
   TOO_MANY_REQUESTS: '요청이 너무 많습니다. 잠시 후 다시 시도해 주세요',
   INTERNAL_ERROR: '일시적인 오류가 발생했습니다',
+};
+
+// 오류 코드별 HTTP 상태 (api와 웹 목업이 같은 표 사용)
+export const ERROR_STATUS: Record<ErrorCode, number> = {
+  VALIDATION_ERROR: 400,
+  UNAUTHORIZED: 401,
+  CSRF_REJECTED: 403,
+  INVALID_CREDENTIALS: 401,
+  CURRENT_PASSWORD_INVALID: 400,
+  ACCOUNT_LOCKED: 423,
+  LOGIN_ID_TAKEN: 409,
+  EMAIL_CODE_INVALID: 400,
+  NOT_IMPLEMENTED: 501,
+  NOT_FOUND: 404,
+  IDEMPOTENCY_KEY_REQUIRED: 400,
+  IDEMPOTENCY_KEY_REUSED: 422,
+  IDEMPOTENCY_IN_PROGRESS: 409,
+  TOO_MANY_REQUESTS: 429,
+  INTERNAL_ERROR: 500,
 };

@@ -4,8 +4,10 @@ import {
   createEmailVerificationService,
   registerEmailVerificationWorker,
 } from './auth/emailVerification';
+import { createPasswordService, registerPasswordResetWorker } from './auth/passwordService';
 import { createPrismaClient } from './db/client';
 import { createSmtpMailer } from './email/mailer';
+import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
 import { parseEnv } from './env';
 import { createPrismaInvitationStore } from './invitation/invitationStore';
 import { createLogger } from './logger';
@@ -28,20 +30,33 @@ const main = async () => {
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
+  const mailer = createSmtpMailer({
+    host: env.SMTP_HOST,
+    port: env.SMTP_PORT,
+    from: env.SMTP_FROM,
+    user: env.SMTP_USER,
+    password: env.SMTP_PASSWORD,
+  });
   const emailVerification = createEmailVerificationService({
     auth: authPrisma,
     queue,
-    mailer: createSmtpMailer({
-      host: env.SMTP_HOST,
-      port: env.SMTP_PORT,
-      from: env.SMTP_FROM,
-      user: env.SMTP_USER,
-      password: env.SMTP_PASSWORD,
-    }),
+    mailer,
     secret: env.CODE_HASH_SECRET,
+  });
+  const notifier = createSecurityNotifier(queue);
+  const passwordService = createPasswordService({
+    auth: authPrisma,
+    queue,
+    mailer,
+    accountService,
+    sessionStore,
+    notifier,
+    appOrigin: env.APP_ORIGIN,
   });
 
   await registerEmailVerificationWorker(queue, emailVerification);
+  await registerPasswordResetWorker(queue, passwordService);
+  await registerSecurityNoticeWorker(queue, mailer);
 
   const server = createApp({
     logger,
@@ -49,6 +64,8 @@ const main = async () => {
     invitationStore,
     accountService,
     emailVerification,
+    passwordService,
+    notifier,
     appOrigin: env.APP_ORIGIN,
     isSecureCookie: env.NODE_ENV === 'production',
     isDocsEnabled: env.NODE_ENV === 'development',

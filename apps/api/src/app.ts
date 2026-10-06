@@ -10,6 +10,8 @@ import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import type { AccountService } from './auth/accountService';
 import type { EmailVerificationService } from './auth/emailVerification';
+import type { PasswordService } from './auth/passwordService';
+import type { SecurityNotifier } from './email/securityNotice';
 import type { InvitationStore } from './invitation/invitationStore';
 import { createLogger, type Logger } from './logger';
 import { registerAccountRoutes } from './routes/account';
@@ -30,6 +32,10 @@ export type AppOptions = {
   accountService?: AccountService;
   // 없으면 이메일 인증 확인·재발송 API는 501
   emailVerification?: EmailVerificationService;
+  // 없으면 비밀번호 재설정·변경 API는 501
+  passwordService?: PasswordService;
+  // 계정 보안 변경 알림 요청기 (없으면 알림 생략)
+  notifier?: SecurityNotifier;
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
@@ -57,6 +63,8 @@ export const createRegistry = (options: AppOptions = {}) => {
     invitationStore: options.invitationStore,
     accountService: options.accountService,
     emailVerification: options.emailVerification,
+    passwordService: options.passwordService,
+    notifier: options.notifier,
     logger: options.logger,
     sessionStore,
     isSecureCookie: options.isSecureCookie,

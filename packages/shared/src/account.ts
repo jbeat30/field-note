@@ -84,6 +84,36 @@ export const loginRequestSchema = z.object({
 
 export type LoginRequest = z.input<typeof loginRequestSchema>;
 
+// 비밀번호 재설정: 가입 여부를 알리지 않도록 요청 응답은 항상 같음
+export const passwordResetRequestSchema = z.object({ email: z.email().max(254) });
+
+export type PasswordResetRequest = z.infer<typeof passwordResetRequestSchema>;
+
+export const passwordResetParamsSchema = z.object({ token: z.string().min(8).max(128) });
+
+export const passwordResetConfirmSchema = z.object({
+  token: z.string().min(8).max(128),
+  newPassword: passwordSchema,
+});
+
+export type PasswordResetConfirm = z.infer<typeof passwordResetConfirmSchema>;
+
+// 로그인 상태의 비밀번호 변경 (현재 비밀번호 재확인)
+export const passwordChangeSchema = z.object({
+  currentPassword: z.string().min(1),
+  newPassword: passwordSchema,
+});
+
+export type PasswordChange = z.infer<typeof passwordChangeSchema>;
+
+// 이메일 변경: 비밀번호를 다시 확인하고 새 이메일의 인증 코드를 확인해야 반영 (§6.7)
+export const emailChangeSchema = z.object({
+  newEmail: z.email().max(254),
+  currentPassword: z.string().min(1),
+});
+
+export type EmailChange = z.infer<typeof emailChangeSchema>;
+
 // 로그인한 관리자 정보 (회사·계정 식별값은 포함하지 않음)
 export const meResponseSchema = z.object({
   displayName: z.string(),

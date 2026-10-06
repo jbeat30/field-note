@@ -10,6 +10,15 @@ import {
   loginRequestSchema,
   meResponseSchema,
   signupRequestSchema,
+  emailChangeSchema,
+  emailResendResponseSchema as emailChangeResponseSchema,
+  passwordChangeSchema,
+  passwordResetConfirmSchema,
+  passwordResetParamsSchema,
+  passwordResetRequestSchema,
+  type EmailChange,
+  type PasswordChange,
+  type PasswordResetConfirm,
   type LoginRequest,
   type SignupRequest,
   signupResponseSchema,
@@ -18,10 +27,13 @@ import {
 
 import { AccountError, type AccountService } from '../auth/accountService';
 import { EmailVerificationError, type EmailVerificationService } from '../auth/emailVerification';
+import { PasswordError, type PasswordService } from '../auth/passwordService';
+import { maskEmail } from '../email/accountEmails';
+import type { SecurityNotifier } from '../email/securityNotice';
 import { AppError } from '../http/AppError';
 import type { Logger } from '../logger';
 import type { InvitationStore } from '../invitation/invitationStore';
-import { setSessionCookie } from '../session/cookie';
+import { readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionStore } from '../session/sessionStore';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 
@@ -36,6 +48,8 @@ type AccountRouteOptions = {
   accountService?: AccountService;
   sessionStore?: SessionStore;
   emailVerification?: EmailVerificationService;
+  passwordService?: PasswordService;
+  notifier?: SecurityNotifier;
   logger?: Logger;
   isSecureCookie?: boolean;
 };
@@ -66,11 +80,17 @@ const toAppError = (error: unknown): unknown => {
       ]);
     case 'INVALID_CREDENTIALS':
       return new AppError('INVALID_CREDENTIALS');
+    case 'CURRENT_PASSWORD_INVALID':
+      return new AppError('CURRENT_PASSWORD_INVALID');
     case 'ACCOUNT_LOCKED':
       return new AppError('ACCOUNT_LOCKED');
     case 'ACCOUNT_NOT_FOUND':
       return new AppError('UNAUTHORIZED');
   }
+};
+
+const assertNever = (value: never): never => {
+  throw new Error(`[routes.account] 처리되지 않은 오류 코드 ${String(value)}`);
 };
 
 // 이메일 인증 서비스의 업무 오류를 공통 오류 형식으로 변환
@@ -93,6 +113,17 @@ const toVerificationError = (error: unknown): unknown => {
       return new AppError('VALIDATION_ERROR', [
         { path: 'body', message: '인증할 이메일이 없습니다' },
       ]);
+    case 'EMAIL_TAKEN':
+      return new AppError('VALIDATION_ERROR', [
+        { path: 'body.newEmail', message: '이미 사용 중인 이메일입니다' },
+      ]);
+    case 'SAME_EMAIL':
+      return new AppError('VALIDATION_ERROR', [
+        { path: 'body.newEmail', message: '현재 이메일과 같습니다' },
+      ]);
+    default:
+      // 새 오류 코드를 추가하고 변환을 빠뜨리면 500이 아니라 컴파일 단계에서 잡히게 함
+      return assertNever(error.code);
   }
 };
 
@@ -105,6 +136,8 @@ export const registerAccountRoutes = (
     accountService,
     sessionStore,
     emailVerification,
+    passwordService,
+    notifier,
     logger,
     isSecureCookie = false,
   }: AccountRouteOptions = {},
@@ -209,9 +242,22 @@ export const registerAccountRoutes = (
     emailVerification && accountService
       ? async ({ auth, body }) => {
           try {
-            await emailVerification.verify(auth!, (body as { code: string }).code);
+            const { previousEmail } = await emailVerification.verify(
+              auth!,
+              (body as { code: string }).code,
+            );
+            const me = await accountService.getMe(auth!);
 
-            return await accountService.getMe(auth!);
+            // 이메일이 바뀐 경우 이전 주소로 변경 사실을 알림 (본인이 하지 않은 변경을 알아차리게 함)
+            if (previousEmail && me.email) {
+              await notifier
+                ?.notify('EMAIL_CHANGED', previousEmail, maskEmail(me.email))
+                .catch((error: unknown) => {
+                  logger?.error({ err: error }, '[routes.verifyEmail] 이메일 변경 알림 요청 실패');
+                });
+            }
+
+            return me;
           } catch (error) {
             throw toVerificationError(toAppError(error));
           }
@@ -339,5 +385,140 @@ export const registerAccountRoutes = (
       errors: ['NOT_FOUND'],
     },
     notImplemented,
+  );
+
+  // 비밀번호 재설정 (로그인 전)
+  add(
+    {
+      method: 'post',
+      path: '/auth/password-reset/request',
+      summary: '비밀번호 재설정 메일 요청 (가입 여부와 관계없이 같은 응답)',
+      auth: 'none',
+      request: { body: passwordResetRequestSchema },
+      response: { status: 200, schema: successResponseSchema },
+      rateLimit: { windowMs: 60_000, limit: 5 },
+    },
+    passwordService
+      ? async ({ body }) => {
+          // 처리 중 오류가 나도 같은 응답을 주어 오류 여부로 계정 존재를 추측하지 못하게 함
+          await passwordService
+            .requestReset((body as { email: string }).email.trim().toLowerCase())
+            .catch((error: unknown) => {
+              logger?.error({ err: error }, '[routes.passwordReset] 재설정 요청 처리 실패');
+            });
+
+          return { success: true };
+        }
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/auth/password-reset/{token}',
+      summary: '비밀번호 재설정 링크 확인',
+      auth: 'none',
+      request: { params: passwordResetParamsSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: ['NOT_FOUND'],
+      rateLimit: { windowMs: 60_000, limit: 30 },
+    },
+    passwordService
+      ? async ({ params }) => {
+          // 사용·만료·없는 링크는 구분하지 않음
+          if (!(await passwordService.isResetLinkValid((params as { token: string }).token))) {
+            throw new AppError('NOT_FOUND');
+          }
+
+          return { success: true };
+        }
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/auth/password-reset/confirm',
+      summary: '새 비밀번호 설정 (모든 기기 로그아웃)',
+      auth: 'none',
+      request: { body: passwordResetConfirmSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: ['NOT_FOUND'],
+      rateLimit: { windowMs: 60_000, limit: 10 },
+    },
+    passwordService
+      ? async ({ body }) => {
+          const input = body as PasswordResetConfirm;
+
+          try {
+            await passwordService.confirmReset(input.token, input.newPassword);
+          } catch (error) {
+            throw error instanceof PasswordError ? new AppError('NOT_FOUND') : error;
+          }
+
+          return { success: true };
+        }
+      : notImplemented,
+  );
+
+  // 로그인 상태의 비밀번호·이메일 변경 (현재 비밀번호 재확인)
+  add(
+    {
+      method: 'post',
+      path: '/me/password',
+      summary: '비밀번호 변경 (다른 기기 로그아웃)',
+      auth: 'required',
+      request: { body: passwordChangeSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: ['CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED'],
+      rateLimit: { windowMs: 60_000, limit: 10 },
+    },
+    passwordService
+      ? async ({ auth, body, request }) => {
+          const input = body as PasswordChange;
+
+          try {
+            await passwordService.changePassword(auth!, {
+              currentPassword: input.currentPassword,
+              newPassword: input.newPassword,
+              currentSessionToken: readSessionToken(request) ?? '',
+            });
+          } catch (error) {
+            throw toAppError(error);
+          }
+
+          return { success: true };
+        }
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/me/email/change',
+      summary: '이메일 변경 요청 (새 주소로 인증 코드 발송, 인증해야 반영)',
+      auth: 'required',
+      request: { body: emailChangeSchema },
+      response: { status: 200, schema: emailChangeResponseSchema },
+      errors: ['CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED', 'TOO_MANY_REQUESTS'],
+      rateLimit: { windowMs: 60_000, limit: 5 },
+    },
+    emailVerification && accountService
+      ? async ({ auth, body }) => {
+          const input = body as EmailChange;
+
+          try {
+            // 계정 탈취 시 이메일을 바꿔 복구 수단을 가로채지 못하도록 비밀번호를 먼저 재확인
+            await accountService.verifyCurrentPassword(auth!, input.currentPassword);
+
+            return await emailVerification.requestChange(
+              auth!,
+              input.newEmail.trim().toLowerCase(),
+            );
+          } catch (error) {
+            throw toVerificationError(toAppError(error));
+          }
+        }
+      : notImplemented,
   );
 };
