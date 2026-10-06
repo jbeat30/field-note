@@ -2,30 +2,15 @@ import type { MeResponse } from '@field-note/shared';
 
 import type { PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
-import { findCurrentDocuments, validInvitationWhere } from '../invitation/invitationStore';
 
+import { AccountError } from './accountError';
+import { acceptInvitation, recordConsents } from './invitationAcceptance';
 import { LOGIN_LOCK_MS, MAX_FAILED_LOGINS } from './loginPolicy';
 import { hashPassword, verifyPassword } from './password';
 
 type Clock = () => Date;
 
-export type AccountErrorCode =
-  | 'INVITATION_INVALID'
-  | 'LOGIN_ID_TAKEN'
-  | 'EMAIL_TAKEN'
-  | 'CONSENT_REQUIRED'
-  | 'CONSENT_UNKNOWN_DOCUMENT'
-  | 'INVALID_CREDENTIALS'
-  | 'CURRENT_PASSWORD_INVALID'
-  | 'ACCOUNT_LOCKED'
-  | 'ACCOUNT_NOT_FOUND';
-
-// 업무 규칙 위반 (HTTP 응답으로의 변환은 라우트가 담당)
-export class AccountError extends Error {
-  constructor(readonly code: AccountErrorCode) {
-    super(`[auth.accountService] ${code}`);
-  }
-}
+export { AccountError, type AccountErrorCode } from './accountError';
 
 export type SignupInput = {
   inviteToken: string;
@@ -141,41 +126,7 @@ export const createAccountService = ({
 
       try {
         return await auth.$transaction(async (tx) => {
-          const invitation = await tx.invitation.findFirst({
-            where: validInvitationWhere(input.inviteToken, at),
-          });
-
-          if (!invitation) {
-            throw new AccountError('INVITATION_INVALID');
-          }
-
-          // 동시에 같은 링크를 쓰는 요청이 있어도 조건부 갱신이라 한 쪽만 통과
-          const { count } = await tx.invitation.updateMany({
-            where: { tokenHash: invitation.tokenHash, usedAt: null },
-            data: { usedAt: at },
-          });
-
-          if (count !== 1) {
-            throw new AccountError('INVITATION_INVALID');
-          }
-
-          // 필수 문서에 모두 동의해야 하고, 현재 시행 중이 아닌 문서에 대한 동의는 받지 않음
-          const documents = await findCurrentDocuments(tx, at);
-          const documentIds = new Set(documents.map((document) => document.id));
-
-          if (input.consents.some((consent) => !documentIds.has(consent.documentId))) {
-            throw new AccountError('CONSENT_UNKNOWN_DOCUMENT');
-          }
-
-          const agreedIds = new Set(
-            input.consents
-              .filter((consent) => consent.isAgreed)
-              .map((consent) => consent.documentId),
-          );
-
-          if (documents.some((document) => document.isRequired && !agreedIds.has(document.id))) {
-            throw new AccountError('CONSENT_REQUIRED');
-          }
+          const invitation = await acceptInvitation(tx, input, at);
 
           if (await tx.userCredential.findUnique({ where: { loginId: input.loginId } })) {
             throw new AccountError('LOGIN_ID_TAKEN');
@@ -198,15 +149,7 @@ export const createAccountService = ({
               passwordHash,
             },
           });
-          await tx.consent.createMany({
-            data: input.consents.map((consent) => ({
-              companyId: invitation.companyId,
-              userId: invitation.userId,
-              documentId: consent.documentId,
-              isAgreed: consent.isAgreed,
-              decidedAt: at,
-            })),
-          });
+          await recordConsents(tx, invitation, input.consents, at);
 
           return { userId: invitation.userId, companyId: invitation.companyId, email: input.email };
         });

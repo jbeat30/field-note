@@ -43,10 +43,12 @@ export const generateOpenApiDocument = (routes: readonly RouteSpec[]) => {
           : undefined,
       },
       responses: {
-        [spec.response.status]: {
-          description: '성공',
-          content: jsonContent(spec.response.schema),
-        },
+        [spec.response.status]: spec.redirect
+          ? { description: '다른 주소로 이동 (Location 헤더)' }
+          : {
+              description: '성공',
+              content: jsonContent(spec.response.schema),
+            },
         ...(hasValidationError || spec.idempotent
           ? { 400: { description: '입력 오류', content: jsonContent(errorResponseSchema) } }
           : {}),
