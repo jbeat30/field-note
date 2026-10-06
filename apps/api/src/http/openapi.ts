@@ -6,6 +6,7 @@ import {
 import { errorResponseSchema } from '@field-note/shared';
 import { z } from 'zod';
 
+import { STATUS_BY_CODE } from './AppError';
 import { IDEMPOTENCY_HEADER } from './idempotency';
 import type { RouteSpec } from './route';
 
@@ -42,16 +43,24 @@ export const generateOpenApiDocument = (routes: readonly RouteSpec[]) => {
           : undefined,
       },
       responses: {
-        [spec.response.status]: {
-          description: '성공',
-          content: jsonContent(spec.response.schema),
-        },
+        [spec.response.status]: spec.redirect
+          ? { description: '다른 주소로 이동 (Location 헤더)' }
+          : {
+              description: '성공',
+              content: jsonContent(spec.response.schema),
+            },
         ...(hasValidationError || spec.idempotent
           ? { 400: { description: '입력 오류', content: jsonContent(errorResponseSchema) } }
           : {}),
         ...(spec.auth === 'required'
           ? { 401: { description: '로그인 필요', content: jsonContent(errorResponseSchema) } }
           : {}),
+        ...Object.fromEntries(
+          (spec.errors ?? []).map((code) => [
+            STATUS_BY_CODE[code],
+            { description: code, content: jsonContent(errorResponseSchema) },
+          ]),
+        ),
         ...(spec.rateLimit
           ? { 429: { description: '요청 과다', content: jsonContent(errorResponseSchema) } }
           : {}),

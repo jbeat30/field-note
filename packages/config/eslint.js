@@ -66,7 +66,7 @@ export const createConfig = () =>
       languageOptions: { globals: globals.jest },
     },
     {
-      files: ['**/*.{js,cjs}'],
+      files: ['**/*.{js,cjs,mjs}'],
       languageOptions: { globals: globals.node },
       rules: { '@typescript-eslint/no-require-imports': 'off' },
     },

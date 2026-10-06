@@ -1,0 +1,423 @@
+import {
+  companySettingsSchema,
+  devicesResponseSchema,
+  errorResponseSchema,
+  invitationResponseSchema,
+  meResponseSchema,
+  signupResponseSchema,
+} from '@field-note/shared';
+import { setupServer } from 'msw/node';
+
+import { createApiClient } from '../api/client';
+
+import {
+  DEMO_ACCOUNTS,
+  DEMO_INVITATION,
+  LEGAL_DOCUMENTS,
+  MOCK_EMAIL_CODE,
+  MOCK_RESET_TOKEN,
+} from './data';
+import { handlers } from './handlers';
+import { resetMockState } from './state';
+
+// 목업 응답이 서버 계약(공유 스키마)을 지키는지 검사: 목업과 실제 API가 어긋나면 화면만 통과하는 일을 막음
+// 핸들러 경로는 상대 경로라 Node에서는 기준 주소(location)가 필요
+Object.defineProperty(globalThis, 'location', {
+  value: new URL('http://localhost/'),
+  configurable: true,
+});
+
+const server = setupServer(...handlers);
+// openapi-fetch는 생성 시점의 fetch를 붙잡으므로 msw가 fetch를 가로챈 뒤에 만든다
+let client: ReturnType<typeof createApiClient>;
+const demo = DEMO_ACCOUNTS[0]!;
+
+beforeAll(() => {
+  server.listen({ onUnhandledFrame: 'error' });
+  client = createApiClient('http://localhost');
+});
+afterEach(() => resetMockState());
+afterAll(() => server.close());
+
+const login = (loginId = demo.loginId, password = demo.password) =>
+  client.POST('/api/v1/auth/login', { body: { loginId, password, isRemembered: true } });
+
+describe('목업 서버 계약', () => {
+  it('초대 링크 확인 응답이 계약과 같다', async () => {
+    const { data } = await client.GET('/api/v1/invitations/{token}', {
+      params: { path: { token: DEMO_INVITATION.token } },
+    });
+
+    expect(invitationResponseSchema.parse(data).documents).toHaveLength(LEGAL_DOCUMENTS.length);
+  });
+
+  it('없는 초대 링크는 공통 오류 형식의 404', async () => {
+    const { error, response } = await client.GET('/api/v1/invitations/{token}', {
+      params: { path: { token: 'expired-invite-0001' } },
+    });
+
+    expect(response.status).toBe(404);
+    expect(errorResponseSchema.parse(error).error.code).toBe('NOT_FOUND');
+  });
+
+  it('로그인하면 정보를 얻고 회사·계정 식별값은 응답에 없다', async () => {
+    const { data } = await login();
+    const me = meResponseSchema.parse(data);
+
+    expect(me.companyName).toBe('한빛판금');
+    expect(JSON.stringify(data)).not.toMatch(/companyId|userId/);
+  });
+
+  it('틀린 비밀번호와 없는 아이디는 같은 오류로 응답한다', async () => {
+    const wrongPassword = await login(demo.loginId, 'wrong-password-1');
+    const unknownId = await login('nobody', 'wrong-password-1');
+
+    expect(wrongPassword.response.status).toBe(401);
+    expect(unknownId.error).toEqual(wrongPassword.error);
+  });
+
+  it('로그인 잠금 시연 계정은 423', async () => {
+    const { response } = await login('locked', 'whatever-password');
+
+    expect(response.status).toBe(423);
+  });
+
+  it('연속 5번 틀리면 잠기고 맞는 비밀번호도 거부한다 (실제 서버와 같은 정책)', async () => {
+    let last = 0;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      last = (await login(demo.loginId, 'wrong-password-1')).response.status;
+    }
+
+    expect(last).toBe(423);
+    expect((await login()).response.status).toBe(423);
+  });
+
+  it('로그인에 성공하면 실패 횟수가 초기화된다', async () => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      await login(demo.loginId, 'wrong-password-1');
+    }
+
+    expect((await login()).response.status).toBe(200);
+    expect((await login(demo.loginId, 'wrong-password-1')).response.status).toBe(401);
+  });
+
+  it('로그인 전에는 보호된 API가 401', async () => {
+    const { response } = await client.GET('/api/v1/me');
+
+    expect(response.status).toBe(401);
+  });
+
+  it('쓰기 요청에 CSRF 헤더가 없으면 403 (웹 클라이언트 회귀 방지)', async () => {
+    const response = await fetch('http://localhost/api/v1/auth/login', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ loginId: demo.loginId, password: demo.password }),
+    });
+
+    expect(response.status).toBe(403);
+  });
+
+  it('가입 → 이메일 인증 → 로그인 정보 확인 흐름', async () => {
+    const consents = LEGAL_DOCUMENTS.map((document) => ({
+      documentId: document.id,
+      isAgreed: document.isRequired,
+    }));
+    const signup = await client.POST('/api/v1/auth/signup', {
+      body: {
+        inviteToken: DEMO_INVITATION.token,
+        loginId: 'daon-wood',
+        password: 'Daon-demo-2026!',
+        email: 'daon@example.com',
+        isAgeConfirmed: true,
+        consents,
+      },
+    });
+
+    expect(signupResponseSchema.parse(signup.data).resendAfterSeconds).toBe(30);
+    expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data).isEmailVerified).toBe(
+      false,
+    );
+
+    const wrong = await client.POST('/api/v1/auth/email/verify', { body: { code: '000000' } });
+
+    expect(wrong.response.status).toBe(400);
+
+    const verified = await client.POST('/api/v1/auth/email/verify', {
+      body: { code: MOCK_EMAIL_CODE },
+    });
+
+    expect(meResponseSchema.parse(verified.data).isEmailVerified).toBe(true);
+  });
+
+  it('필수 약관에 동의하지 않으면 가입할 수 없다', async () => {
+    const { response } = await client.POST('/api/v1/auth/signup', {
+      body: {
+        inviteToken: DEMO_INVITATION.token,
+        loginId: 'daon-wood',
+        password: 'Daon-demo-2026!',
+        email: 'daon@example.com',
+        isAgeConfirmed: true,
+        consents: [],
+      },
+    });
+
+    expect(response.status).toBe(400);
+  });
+
+  it('이미 쓰는 아이디는 409', async () => {
+    const { response } = await client.POST('/api/v1/auth/signup', {
+      body: {
+        inviteToken: DEMO_INVITATION.token,
+        loginId: demo.loginId,
+        password: 'Daon-demo-2026!',
+        email: 'daon@example.com',
+        isAgeConfirmed: true,
+        consents: LEGAL_DOCUMENTS.map((document) => ({ documentId: document.id, isAgreed: true })),
+      },
+    });
+
+    expect(response.status).toBe(409);
+  });
+
+  it('회사 설정을 바꾸면 다시 조회할 때 반영된다', async () => {
+    await login();
+    const next = { standardWorkMinutes: 420, monthlyWorkDays: 20, workUnitMode: 'HOURS' as const };
+
+    await client.PUT('/api/v1/company/settings', { body: next });
+
+    expect(
+      companySettingsSchema.parse((await client.GET('/api/v1/company/settings')).data),
+    ).toEqual(next);
+  });
+
+  it('기기 원격 로그아웃은 현재 기기를 제외한 기기만 지운다', async () => {
+    await login();
+    const list = devicesResponseSchema.parse((await client.GET('/api/v1/me/devices')).data);
+    const other = list.devices.find((device) => !device.isCurrent)!;
+
+    expect(
+      (await client.DELETE('/api/v1/me/devices/{id}', { params: { path: { id: other.id } } }))
+        .response.status,
+    ).toBe(200);
+    expect(
+      (
+        await client.DELETE('/api/v1/me/devices/{id}', {
+          params: { path: { id: 'device-current' } },
+        })
+      ).response.status,
+    ).toBe(404);
+  });
+
+  it('비밀번호 재설정: 가입 여부와 관계없이 같은 응답, 링크는 한 번만 쓰고 모든 기기가 로그아웃된다', async () => {
+    await login();
+
+    const known = await client.POST('/api/v1/auth/password-reset/request', {
+      body: { email: demo.email },
+    });
+    const unknown = await client.POST('/api/v1/auth/password-reset/request', {
+      body: { email: 'nobody@example.com' },
+    });
+
+    expect(known.response.status).toBe(200);
+    expect(unknown.data).toEqual(known.data);
+
+    const check = await client.GET('/api/v1/auth/password-reset/{token}', {
+      params: { path: { token: MOCK_RESET_TOKEN } },
+    });
+
+    expect(check.response.status).toBe(200);
+
+    await client.POST('/api/v1/auth/password-reset/request', { body: { email: demo.email } });
+    const confirmed = await client.POST('/api/v1/auth/password-reset/confirm', {
+      body: { token: MOCK_RESET_TOKEN, newPassword: 'Brand-new-2026!' },
+    });
+
+    expect(confirmed.response.status).toBe(200);
+    expect((await client.GET('/api/v1/me')).response.status).toBe(401);
+    expect((await login(demo.loginId, demo.password)).response.status).toBe(401);
+    expect((await login(demo.loginId, 'Brand-new-2026!')).response.status).toBe(200);
+    expect(
+      (
+        await client.POST('/api/v1/auth/password-reset/confirm', {
+          body: { token: MOCK_RESET_TOKEN, newPassword: 'Another-2026-pass!' },
+        })
+      ).response.status,
+    ).toBe(404);
+  });
+
+  it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
+    await login();
+
+    const wrong = await client.POST('/api/v1/me/password', {
+      body: { currentPassword: 'wrong-password-1', newPassword: 'Changed-2026-pass!' },
+    });
+
+    expect(wrong.response.status).toBe(400);
+    expect(errorResponseSchema.parse(wrong.error).error.code).toBe('CURRENT_PASSWORD_INVALID');
+
+    const changed = await client.POST('/api/v1/me/password', {
+      body: { currentPassword: demo.password, newPassword: 'Changed-2026-pass!' },
+    });
+
+    expect(changed.response.status).toBe(200);
+    expect((await login(demo.loginId, 'Changed-2026-pass!')).response.status).toBe(200);
+  });
+
+  it('이메일 변경: 새 주소를 인증해야 반영되고 이미 쓰는 주소는 거부한다', async () => {
+    await login();
+
+    const taken = await client.POST('/api/v1/me/email/change', {
+      body: { newEmail: DEMO_ACCOUNTS[1]!.email, currentPassword: demo.password },
+    });
+
+    expect(taken.response.status).toBe(400);
+
+    const requested = await client.POST('/api/v1/me/email/change', {
+      body: { newEmail: 'changed@example.com', currentPassword: demo.password },
+    });
+
+    expect(requested.response.status).toBe(200);
+    // 인증 전에는 기존 이메일 유지
+    expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data).email).toBe(demo.email);
+
+    await client.POST('/api/v1/auth/email/verify', { body: { code: MOCK_EMAIL_CODE } });
+
+    expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data).email).toBe(
+      'changed@example.com',
+    );
+  });
+
+  describe('카카오 로그인', () => {
+    const complete = async (body: Record<string, unknown>) => {
+      const response = await fetch('http://localhost/api/__mock/kakao/complete', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+
+      return ((await response.json()) as { redirect: string }).redirect;
+    };
+
+    const agreedAll = LEGAL_DOCUMENTS.filter((document) => document.isRequired)
+      .map((document) => document.id)
+      .join(',');
+
+    it('제공자 목록과 시작 주소를 돌려준다', async () => {
+      expect((await client.GET('/api/v1/auth/social/providers')).data).toEqual({ kakao: true });
+
+      const start = await client.POST('/api/v1/auth/kakao/start', { body: { purpose: 'login' } });
+
+      expect(start.data?.url).toBe('/mock-kakao?purpose=login');
+    });
+
+    it('연동하지 않은 카카오 계정은 로그인할 수 없고, 연동하면 로그인된다', async () => {
+      expect(await complete({ purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/login?social=not-linked',
+      );
+
+      await login();
+      expect(await complete({ purpose: 'link', profileKey: 'hanbit' })).toBe(
+        '/settings?social=linked',
+      );
+      expect((await client.GET('/api/v1/me/social')).data).toEqual({
+        hasPassword: true,
+        kakao: { isLinked: true },
+      });
+
+      await client.POST('/api/v1/auth/logout');
+
+      expect(await complete({ purpose: 'login', profileKey: 'hanbit' })).toBe('/');
+      expect((await client.GET('/api/v1/me')).response.status).toBe(200);
+    });
+
+    it('이메일이 같다는 이유만으로 연결되지 않는다 (카카오 인증 이메일이 hanbit과 같아도 연동 전에는 로그인 불가)', async () => {
+      expect(DEMO_ACCOUNTS[0]!.email).toBe('hanbit@example.com');
+      expect(await complete({ purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/login?social=not-linked',
+      );
+    });
+
+    it('이미 다른 계정에 연동된 카카오 계정은 연동할 수 없다', async () => {
+      await login();
+      await complete({ purpose: 'link', profileKey: 'other' });
+      await client.POST('/api/v1/auth/logout');
+      await login(DEMO_ACCOUNTS[1]!.loginId, DEMO_ACCOUNTS[1]!.password);
+
+      expect(await complete({ purpose: 'link', profileKey: 'other' })).toBe(
+        '/settings?social=already-linked',
+      );
+    });
+
+    it('취소하면 돌아갈 화면으로 이동한다', async () => {
+      expect(await complete({ purpose: 'login', profileKey: null })).toBe(
+        '/login?social=cancelled',
+      );
+      expect(await complete({ purpose: 'link', profileKey: null })).toBe(
+        '/settings?social=cancelled',
+      );
+    });
+
+    it('초대 가입: 인증된 이메일이 있으면 바로 가입되고 로그인 수단은 카카오 하나뿐이라 해제할 수 없다', async () => {
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: DEMO_INVITATION.token,
+          agreed: agreedAll,
+        }),
+      ).toBe('/');
+
+      const me = meResponseSchema.parse((await client.GET('/api/v1/me')).data);
+
+      expect(me).toMatchObject({ email: 'kakao-new@example.com', isEmailVerified: true });
+      expect((await client.GET('/api/v1/me/social')).data).toEqual({
+        hasPassword: false,
+        kakao: { isLinked: true },
+      });
+
+      const unlink = await client.DELETE('/api/v1/me/social/kakao');
+
+      expect(unlink.response.status).toBe(409);
+      expect(errorResponseSchema.parse(unlink.error).error.code).toBe('LAST_LOGIN_METHOD');
+    });
+
+    it('초대 가입: 인증된 이메일이 없거나 필수 약관에 동의하지 않았거나 없는 링크면 가입되지 않는다', async () => {
+      const link = `/invite/${DEMO_INVITATION.token}`;
+
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-unverified',
+          token: DEMO_INVITATION.token,
+          agreed: agreedAll,
+        }),
+      ).toBe(`${link}?social=email-required`);
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: DEMO_INVITATION.token,
+          agreed: '',
+        }),
+      ).toBe(`${link}?social=failed`);
+      expect(
+        await complete({
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: 'expired-invite-0001',
+          agreed: agreedAll,
+        }),
+      ).toBe('/login?social=invitation-invalid');
+      expect((await client.GET('/api/v1/me')).response.status).toBe(401);
+    });
+
+    it('비밀번호 로그인이 있으면 연동을 해제할 수 있다', async () => {
+      await login();
+      await complete({ purpose: 'link', profileKey: 'hanbit' });
+
+      expect((await client.DELETE('/api/v1/me/social/kakao')).response.status).toBe(200);
+      expect((await client.GET('/api/v1/me/social')).data?.kakao.isLinked).toBe(false);
+    });
+  });
+});
