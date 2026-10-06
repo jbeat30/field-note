@@ -1,22 +1,9 @@
-import { execFileSync } from 'node:child_process';
-import path from 'node:path';
+import { randomUUID } from 'node:crypto';
 
-import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import pg from 'pg';
 
 import { createPrismaClient, type PrismaClient } from './client';
-
-const APP_ROLE = 'field_note_app';
-const APP_PASSWORD = 'test_app_password';
-const AUTH_ROLE = 'field_note_auth';
-const AUTH_PASSWORD = 'test_auth_password';
-const OPERATOR_ROLE = 'field_note_operator';
-const OPERATOR_PASSWORD = 'test_operator_password';
-const QUEUE_ROLE = 'field_note_queue';
-const QUEUE_PASSWORD = 'test_queue_password';
-const PURGE_ROLE = 'field_note_purge';
-const PURGE_PASSWORD = 'test_purge_password';
-const API_ROOT = path.resolve(__dirname, '../..');
+import { ROLE_PASSWORDS, SHARED_URL_ENV, TEMPLATE_DB, withDatabase } from './sharedTestDatabase';
 
 export type TestDatabase = {
   // 소유 계정 (테스트 데이터 준비·스키마 점검용)
@@ -36,44 +23,55 @@ export type TestDatabase = {
   stop: () => Promise<void>;
 };
 
+const CLONE_LOCK_ID = 7_310_001;
+
 /**
- * @description 실제 PostgreSQL 컨테이너를 띄우고 마이그레이션 적용 후 소유·앱 계정 클라이언트 반환
+ * @description 공유 PostgreSQL 컨테이너에 마이그레이션이 끝난 템플릿 DB를 복제해 스위트 전용 DB를 만들고 계정별 클라이언트 반환
+ * 컨테이너는 jest 전역 설정(`jest.global-setup.ts`)이 한 번만 띄운다
  * @returns 테스트 DB 핸들
  */
 export const startTestDatabase = async (): Promise<TestDatabase> => {
-  const container: StartedPostgreSqlContainer = await new PostgreSqlContainer(
-    'postgres:18',
-  ).start();
-  const ownerUrl = container.getConnectionUri();
+  const adminUrl = process.env[SHARED_URL_ENV];
 
-  execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
-    cwd: API_ROOT,
-    env: { ...process.env, DATABASE_MIGRATE_URL: ownerUrl },
-    stdio: 'pipe',
-  });
+  if (!adminUrl) {
+    throw new Error(
+      '[testDatabase] 공유 DB가 없음 (jest 전역 설정이 실행되지 않음, `pnpm test`로 실행)',
+    );
+  }
 
+  const databaseName = `t_${randomUUID().replaceAll('-', '')}`;
+  const admin = new pg.Pool({ connectionString: adminUrl });
+
+  // 같은 템플릿을 동시에 복제하면 "source database is being accessed" 오류가 날 수 있어 서버 전체에서 한 번에 하나씩 복제
+  const cloner = await admin.connect();
+
+  try {
+    await cloner.query('SELECT pg_advisory_lock($1)', [CLONE_LOCK_ID]);
+    await cloner.query(`CREATE DATABASE ${databaseName} TEMPLATE ${TEMPLATE_DB}`);
+  } finally {
+    await cloner.query('SELECT pg_advisory_unlock($1)', [CLONE_LOCK_ID]).catch(() => undefined);
+    cloner.release();
+  }
+
+  // 데이터베이스 단위 권한은 템플릿 복제에 포함되지 않으므로 마이그레이션이 준 권한을 다시 부여 (작업 큐 계정의 스키마 생성)
+  await admin.query(`GRANT CREATE ON DATABASE ${databaseName} TO field_note_queue`);
+
+  const ownerUrl = withDatabase(adminUrl, databaseName);
   const ownerPool = new pg.Pool({ connectionString: ownerUrl });
-  await ownerPool.query(`ALTER ROLE ${APP_ROLE} PASSWORD '${APP_PASSWORD}'`);
-
-  await ownerPool.query(`ALTER ROLE ${AUTH_ROLE} PASSWORD '${AUTH_PASSWORD}'`);
-  await ownerPool.query(`ALTER ROLE ${OPERATOR_ROLE} PASSWORD '${OPERATOR_PASSWORD}'`);
-  await ownerPool.query(`ALTER ROLE ${QUEUE_ROLE} PASSWORD '${QUEUE_PASSWORD}'`);
-  await ownerPool.query(`ALTER ROLE ${PURGE_ROLE} PASSWORD '${PURGE_PASSWORD}'`);
-
-  const roleUrl = (username: string, password: string) => {
+  const roleUrl = (role: keyof typeof ROLE_PASSWORDS) => {
     const url = new URL(ownerUrl);
 
-    url.username = username;
-    url.password = password;
+    url.username = role;
+    url.password = ROLE_PASSWORDS[role];
 
     return url.toString();
   };
 
   const owner = createPrismaClient(ownerUrl);
-  const app = createPrismaClient(roleUrl(APP_ROLE, APP_PASSWORD));
-  const auth = createPrismaClient(roleUrl(AUTH_ROLE, AUTH_PASSWORD));
-  const operator = createPrismaClient(roleUrl(OPERATOR_ROLE, OPERATOR_PASSWORD));
-  const purge = createPrismaClient(roleUrl(PURGE_ROLE, PURGE_PASSWORD));
+  const app = createPrismaClient(roleUrl('field_note_app'));
+  const auth = createPrismaClient(roleUrl('field_note_auth'));
+  const operator = createPrismaClient(roleUrl('field_note_operator'));
+  const purge = createPrismaClient(roleUrl('field_note_purge'));
 
   return {
     owner,
@@ -82,16 +80,19 @@ export const startTestDatabase = async (): Promise<TestDatabase> => {
     auth,
     operator,
     purge,
-    queueUrl: roleUrl(QUEUE_ROLE, QUEUE_PASSWORD),
+    queueUrl: roleUrl('field_note_queue'),
     ownerUrl,
     stop: async () => {
-      await app.$disconnect();
-      await auth.$disconnect();
-      await operator.$disconnect();
-      await purge.$disconnect();
-      await owner.$disconnect();
+      await Promise.all([
+        app.$disconnect(),
+        auth.$disconnect(),
+        operator.$disconnect(),
+        purge.$disconnect(),
+        owner.$disconnect(),
+      ]);
       await ownerPool.end();
-      await container.stop();
+      // DB는 지우지 않음: 컨테이너가 전체 실행이 끝날 때 통째로 사라지고, 닫히는 중인 연결을 강제로 끊으면 연결 오류가 처리되지 않은 채 올라옴
+      await admin.end();
     },
   };
 };
