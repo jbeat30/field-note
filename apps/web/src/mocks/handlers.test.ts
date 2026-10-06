@@ -76,6 +76,26 @@ describe('목업 서버 계약', () => {
     expect(response.status).toBe(423);
   });
 
+  it('연속 5번 틀리면 잠기고 맞는 비밀번호도 거부한다 (실제 서버와 같은 정책)', async () => {
+    let last = 0;
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      last = (await login(demo.loginId, 'wrong-password-1')).response.status;
+    }
+
+    expect(last).toBe(423);
+    expect((await login()).response.status).toBe(423);
+  });
+
+  it('로그인에 성공하면 실패 횟수가 초기화된다', async () => {
+    for (let attempt = 0; attempt < 4; attempt += 1) {
+      await login(demo.loginId, 'wrong-password-1');
+    }
+
+    expect((await login()).response.status).toBe(200);
+    expect((await login(demo.loginId, 'wrong-password-1')).response.status).toBe(401);
+  });
+
   it('로그인 전에는 보호된 API가 401', async () => {
     const { response } = await client.GET('/api/v1/me');
 

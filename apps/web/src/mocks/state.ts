@@ -28,6 +28,26 @@ const loadState = (): MockState => {
 
 let state = loadState();
 
+// 연속 로그인 실패 횟수 (실제 서버의 잠금 정책을 흉내, 새로고침하면 초기화)
+const failedLogins = new Map<string, number>();
+
+export const MOCK_MAX_FAILED_LOGINS = 5;
+
+export const recordFailedLogin = (loginId: string) => {
+  const count = (failedLogins.get(loginId) ?? 0) + 1;
+
+  failedLogins.set(loginId, count);
+
+  return count;
+};
+
+export const clearFailedLogins = (loginId: string) => {
+  failedLogins.delete(loginId);
+};
+
+export const isLoginLocked = (loginId: string) =>
+  (failedLogins.get(loginId) ?? 0) >= MOCK_MAX_FAILED_LOGINS;
+
 const persist = () => {
   try {
     sessionStorage.setItem(MOCK_SESSION_STORAGE_KEY, JSON.stringify(state));
@@ -38,6 +58,7 @@ const persist = () => {
 
 export const resetMockState = () => {
   state = createInitialState();
+  failedLogins.clear();
 
   try {
     sessionStorage.removeItem(MOCK_SESSION_STORAGE_KEY);
