@@ -97,9 +97,12 @@ pnpm dev            # 인프라 기동 + api(:3000) + web(:5173)
 
 **현재 한계**
 
-- 실제 로그인·가입 API는 아직 구현 전이라(P0-3) `501`을 반환한다. 웹 로그인 화면은 방식 A로 확인한다
-- 초대 링크 확인 API는 구현돼 있다. 시드가 만든 링크 `http://localhost:5173/invite/demo-invite-0001`의 정보를 `http://localhost:3000/api/v1/invitations/demo-invite-0001`로 확인할 수 있다
-- 시드 데이터는 DB에서 직접 본다: `docker compose exec postgres psql -U field_note -d field_note -c "select * from companies"`
+- 가입과 로그인은 실제로 동작한다. 아이디·비밀번호 로그인, 연속 5번 실패 시 15분 잠금, 초대 링크 가입(약관 동의·만 14세 확인)을 브라우저에서 확인할 수 있다
+- 이메일 인증 코드 발송은 P0-4 전이라 가입 후 인증 화면의 확인·재발송이 `501`이다. 인증 전 계정도 로그인은 되지만 인증 화면으로 이동한다
+- 회사 설정·로그인 기기 목록 API는 P0-8·P0-6 전이라 설정 화면에서 오류 안내가 보인다. 해당 화면은 방식 A(목업)로 확인한다
+- 시드가 만든 초대 링크 `http://localhost:5173/invite/demo-invite-0001`은 한 번 가입하면 폐기된다. 다시 쓰려면 `pnpm db:reset`
+- 시드 계정으로 로그인해 볼 수 있다: `hanbit` / `Hanbit-demo-2026!`, `saeron` / `Saeron-demo-2026!` (잠겼다면 15분 뒤 또는 `pnpm db:reset`)
+- 시드 데이터는 DB에서 직접 볼 수도 있다: `docker compose exec postgres psql -U field_note -d field_note -c "select * from companies"`
 
 ### 코드 검증
 
@@ -208,6 +211,9 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 서비스 워커는 앱 껍데기만 캐시하며 업무 데이터는 오프라인으로 쓰지 않는다
 
 ## 로그인 세션
+
+- 로그인 실패가 연속 5번이면 해당 계정을 15분 잠근다 (잠긴 동안은 맞는 비밀번호도 거부). 없는 아이디와 틀린 비밀번호는 같은 오류·같은 처리 시간으로 응답한다
+- 비밀번호는 argon2id 해시로만 저장한다. 로그인 유지를 선택하지 않으면 브라우저를 닫을 때 사라지는 세션 쿠키로 발급한다
 
 - 세션은 PostgreSQL `sessions` 테이블에 저장하고, 브라우저에는 `sid` 쿠키(HttpOnly, SameSite=Lax, 운영은 Secure)만 둔다. 토큰 원문은 저장하지 않고 해시만 저장한다
 - 회사 ID는 세션에만 기록되며, 요청의 경로·쿼리·헤더·본문으로는 받지 않는다. API 문서에 회사 ID 입력이 생기면 테스트가 실패한다

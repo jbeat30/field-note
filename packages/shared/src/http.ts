@@ -34,14 +34,6 @@ export const errorResponseSchema = z.object({
 
 export type ErrorResponse = z.infer<typeof errorResponseSchema>;
 
-// 세션 확인 응답 (회사 ID는 세션에서만 얻고 응답으로 확인만 제공)
-export const sessionResponseSchema = z.object({
-  userId: z.uuid(),
-  companyId: z.uuid(),
-});
-
-export type SessionResponse = z.infer<typeof sessionResponseSchema>;
-
 // 본문 없이 성공 여부만 알리는 응답
 export const successResponseSchema = z.object({ success: z.literal(true) });
 

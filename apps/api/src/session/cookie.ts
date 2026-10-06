@@ -20,9 +20,10 @@ export const sessionCookieOptions = (isSecure: boolean): CookieOptions => ({
 });
 
 export const setSessionCookie = (res: Response, session: CreatedSession, isSecure: boolean) => {
+  // 로그인 유지를 선택하지 않으면 만료 시각 없이 세션 쿠키로 보내 브라우저를 닫으면 사라지게 함
   res.cookie(SESSION_COOKIE, session.token, {
     ...sessionCookieOptions(isSecure),
-    expires: session.expiresAt,
+    ...(session.isPersistent ? { expires: session.expiresAt } : { maxAge: undefined }),
   });
 };
 

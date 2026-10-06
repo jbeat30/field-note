@@ -1,4 +1,5 @@
 import { createApp } from './app';
+import { createAccountService } from './auth/accountService';
 import { createPrismaClient } from './db/client';
 import { parseEnv } from './env';
 import { createLogger } from './logger';
@@ -12,11 +13,17 @@ const logger = createLogger(env.LOG_LEVEL);
 const authPrisma = createPrismaClient(env.DATABASE_AUTH_URL);
 const sessionStore = createPrismaSessionStore(authPrisma);
 const invitationStore = createPrismaInvitationStore(authPrisma);
+// 로그인 후 회사 범위 조회는 앱 계정(RLS 적용)으로만 수행
+const accountService = createAccountService({
+  auth: authPrisma,
+  app: createPrismaClient(env.DATABASE_URL),
+});
 
 createApp({
   logger,
   sessionStore,
   invitationStore,
+  accountService,
   appOrigin: env.APP_ORIGIN,
   isSecureCookie: env.NODE_ENV === 'production',
   isDocsEnabled: env.NODE_ENV === 'development',

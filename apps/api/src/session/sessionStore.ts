@@ -1,5 +1,6 @@
 import { generateToken, hashToken } from '../auth/token';
 import type { PrismaClient } from '../db/client';
+import { SHORT_SESSION_MS } from '../auth/loginPolicy';
 import type { AuthContext } from '../http/types';
 
 // 세션 최대 유지 기간 (기기 목록·원격 로그아웃은 P0-6에서 확장)
@@ -9,10 +10,20 @@ export type CreatedSession = {
   // 쿠키로만 전달하는 원문 토큰 (저장소에는 해시만 보관)
   token: string;
   expiresAt: Date;
+  // false면 브라우저를 닫을 때 사라지는 세션 쿠키 (로그인 유지를 선택하지 않은 경우)
+  isPersistent: boolean;
 };
 
+export type CreateSessionOptions = {
+  // 기본 true (로그인 유지, §6.4)
+  isRemembered?: boolean;
+};
+
+const sessionLifetimeMs = (options?: CreateSessionOptions) =>
+  options?.isRemembered === false ? SHORT_SESSION_MS : SESSION_MAX_AGE_MS;
+
 export type SessionStore = {
-  create: (input: AuthContext) => Promise<CreatedSession>;
+  create: (input: AuthContext, options?: CreateSessionOptions) => Promise<CreatedSession>;
   find: (token: string) => Promise<AuthContext | null>;
   delete: (token: string) => Promise<void>;
   // 비밀번호 재설정·전 기기 로그아웃용
@@ -32,15 +43,15 @@ export const createPrismaSessionStore = (
   prisma: PrismaClient,
   now: Clock = () => new Date(),
 ): SessionStore => ({
-  create: async ({ userId, companyId }) => {
+  create: async ({ userId, companyId }, options) => {
     const token = generateToken();
-    const expiresAt = new Date(now().getTime() + SESSION_MAX_AGE_MS);
+    const expiresAt = new Date(now().getTime() + sessionLifetimeMs(options));
 
     await prisma.session.create({
       data: { tokenHash: hashToken(token), userId, companyId, expiresAt },
     });
 
-    return { token, expiresAt };
+    return { token, expiresAt, isPersistent: options?.isRemembered !== false };
   },
   find: async (token) => {
     const session = await prisma.session.findFirst({
@@ -69,13 +80,13 @@ export const createMemorySessionStore = (now: Clock = () => new Date()): Session
   const sessions = new Map<string, AuthContext & { expiresAt: Date }>();
 
   return {
-    create: async (input) => {
+    create: async (input, options) => {
       const token = generateToken();
-      const expiresAt = new Date(now().getTime() + SESSION_MAX_AGE_MS);
+      const expiresAt = new Date(now().getTime() + sessionLifetimeMs(options));
 
       sessions.set(hashToken(token), { ...input, expiresAt });
 
-      return { token, expiresAt };
+      return { token, expiresAt, isPersistent: options?.isRemembered !== false };
     },
     find: async (token) => {
       const session = sessions.get(hashToken(token));

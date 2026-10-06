@@ -21,6 +21,53 @@ export type CurrentLegalDocument = {
   isRequired: boolean;
 };
 
+// 트랜잭션 안과 밖에서 같은 조회를 쓰기 위한 최소 형태
+type InvitationReader = Pick<PrismaClient, 'invitation' | 'legalDocument'>;
+
+/**
+ * @description 유효한 초대의 조회 조건: 미사용·미만료·회사 활성·관리자 가입 전
+ * @param token 토큰 원문
+ * @param now 현재 시각
+ * @returns Prisma where 조건
+ */
+export const validInvitationWhere = (token: string, now: Date) => ({
+  tokenHash: hashToken(token),
+  usedAt: null,
+  expiresAt: { gt: now },
+  company: { status: 'ACTIVE' as const },
+  user: { status: 'INVITED' as const },
+});
+
+/**
+ * @description 종류별로 현재 시행 중인 최신 약관 문서 (시행 전 미래 버전과 옛 버전 제외)
+ * @param prisma 조회에 쓸 클라이언트 또는 트랜잭션
+ * @param now 현재 시각
+ * @returns 현재 약관 문서 목록
+ */
+export const findCurrentDocuments = async (
+  prisma: InvitationReader,
+  now: Date,
+): Promise<CurrentLegalDocument[]> => {
+  const documents = await prisma.legalDocument.findMany({
+    where: { effectiveAt: { lte: now } },
+    orderBy: { effectiveAt: 'desc' },
+  });
+  const latestByType = new Map<string, CurrentLegalDocument>();
+
+  for (const document of documents) {
+    if (!latestByType.has(document.type)) {
+      latestByType.set(document.type, {
+        id: document.id,
+        type: document.type,
+        version: document.version,
+        isRequired: document.isRequired,
+      });
+    }
+  }
+
+  return [...latestByType.values()];
+};
+
 export type InvitationStore = {
   // 사용·만료·정지·가입 완료 등 유효하지 않은 이유를 구분하지 않고 null
   find: (token: string) => Promise<InvitationInfo | null>;
@@ -40,14 +87,7 @@ export const createPrismaInvitationStore = (
   prisma: PrismaClient,
   now: Clock = () => new Date(),
 ): InvitationStore => {
-  // 회사가 활성이고 관리자가 아직 가입 전인 초대만 유효
-  const validWhere = (token: string) => ({
-    tokenHash: hashToken(token),
-    usedAt: null,
-    expiresAt: { gt: now() },
-    company: { status: 'ACTIVE' as const },
-    user: { status: 'INVITED' as const },
-  });
+  const validWhere = (token: string) => validInvitationWhere(token, now());
 
   return {
     find: async (token) => {
@@ -79,25 +119,6 @@ export const createPrismaInvitationStore = (
 
       return count === 1 ? { companyId: invitation.companyId, userId: invitation.userId } : null;
     },
-    listCurrentDocuments: async () => {
-      const documents = await prisma.legalDocument.findMany({
-        where: { effectiveAt: { lte: now() } },
-        orderBy: { effectiveAt: 'desc' },
-      });
-      const latestByType = new Map<string, CurrentLegalDocument>();
-
-      for (const document of documents) {
-        if (!latestByType.has(document.type)) {
-          latestByType.set(document.type, {
-            id: document.id,
-            type: document.type,
-            version: document.version,
-            isRequired: document.isRequired,
-          });
-        }
-      }
-
-      return [...latestByType.values()];
-    },
+    listCurrentDocuments: () => findCurrentDocuments(prisma, now()),
   };
 };
