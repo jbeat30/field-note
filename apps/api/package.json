@@ -10,13 +10,16 @@
     "db:generate": "prisma generate",
     "db:setup": "tsx --env-file-if-exists=../../.env scripts/db-setup.ts",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
-    "openapi:check": "tsx scripts/generate-openapi.ts --check"
+    "openapi:check": "tsx scripts/generate-openapi.ts --check",
+    "db:seed": "tsx --env-file-if-exists=../../.env scripts/db-seed.ts",
+    "env:init": "tsx scripts/init-env.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "9.1.0",
     "@field-note/shared": "workspace:*",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "argon2": "0.45.1",
     "cookie-parser": "1.4.7",
     "express": "5.2.1",
     "express-rate-limit": "8.7.0",
