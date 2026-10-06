@@ -36,18 +36,19 @@ enum LegalDocumentType {
 }
 
 model Company {
-  id              String           @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  name            String
-  status          CompanyStatus    @default(ACTIVE)
-  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  projects        Project[]
-  memos           Memo[]
-  users           User[]
-  sessions        Session[]
-  consents        Consent[]
-  credentials     UserCredential[]
-  invitations     Invitation[]
-  operatorActions OperatorAction[]
+  id                 String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name               String
+  status             CompanyStatus       @default(ACTIVE)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  projects           Project[]
+  memos              Memo[]
+  users              User[]
+  sessions           Session[]
+  consents           Consent[]
+  credentials        UserCredential[]
+  invitations        Invitation[]
+  operatorActions    OperatorAction[]
+  emailVerifications EmailVerification[]
 
   @@map("companies")
 }
@@ -96,24 +97,25 @@ model Session {
 
 // 회사 관리자 계정 (회사당 하나). 직원은 계정이 없음
 model User {
-  id              String          @default(dbgenerated("uuidv7()")) @db.Uuid
-  companyId       String          @map("company_id") @db.Uuid
+  id                String             @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId         String             @map("company_id") @db.Uuid
   // 인증 전에는 비어 있고 서비스 전체에서 유일
-  email           String?         @unique
-  emailVerifiedAt DateTime?       @map("email_verified_at") @db.Timestamptz(3)
+  email             String?            @unique
+  emailVerifiedAt   DateTime?          @map("email_verified_at") @db.Timestamptz(3)
   // 이름 또는 상호
-  displayName     String          @map("display_name")
-  phone           String?
+  displayName       String             @map("display_name")
+  phone             String?
   // 만 14세 이상 확인 시각
-  ageConfirmedAt  DateTime?       @map("age_confirmed_at") @db.Timestamptz(3)
-  status          UserStatus      @default(INVITED)
-  createdAt       DateTime        @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime        @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company         Company         @relation(fields: [companyId], references: [id])
-  credential      UserCredential?
-  consents        Consent[]
-  sessions        Session[]
-  invitations     Invitation[]
+  ageConfirmedAt    DateTime?          @map("age_confirmed_at") @db.Timestamptz(3)
+  status            UserStatus         @default(INVITED)
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company           Company            @relation(fields: [companyId], references: [id])
+  credential        UserCredential?
+  consents          Consent[]
+  sessions          Session[]
+  invitations       Invitation[]
+  emailVerification EmailVerification?
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -212,4 +214,27 @@ model OperatorAction {
 
   @@index([companyId])
   @@map("operator_actions")
+}
+
+// 이메일 인증 코드 상태 (사용자당 한 행). 코드 원문은 저장하지 않고 서버 비밀 값으로 만든 HMAC 해시만 저장
+// 요청 기록(횟수·간격 제한)과 코드를 한 곳에 두고, 회사 범위 밖 전용 계정만 접근
+model EmailVerification {
+  companyId       String    @map("company_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  // 코드를 보낸 이메일 주소 (가입 후 이메일이 바뀌어도 이전 코드는 쓰지 못하게 구분)
+  email           String
+  codeHash        String?   @map("code_hash")
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(3)
+  // 틀린 입력 횟수 (제한을 넘으면 새 코드를 받아야 함)
+  attempts        Int       @default(0)
+  lastRequestedAt DateTime  @map("last_requested_at") @db.Timestamptz(3)
+  // 시간당 발송 횟수 제한용 구간 시작 시각과 구간 내 요청 수
+  windowStartedAt DateTime  @map("window_started_at") @db.Timestamptz(3)
+  requestCount    Int       @default(1) @map("request_count")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company   @relation(fields: [companyId], references: [id])
+  user            User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([companyId, userId])
+  @@map("email_verifications")
 }

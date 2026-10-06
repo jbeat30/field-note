@@ -17,7 +17,9 @@ import {
 } from '@field-note/shared';
 
 import { AccountError, type AccountService } from '../auth/accountService';
+import { EmailVerificationError, type EmailVerificationService } from '../auth/emailVerification';
 import { AppError } from '../http/AppError';
+import type { Logger } from '../logger';
 import type { InvitationStore } from '../invitation/invitationStore';
 import { setSessionCookie } from '../session/cookie';
 import type { SessionStore } from '../session/sessionStore';
@@ -33,6 +35,8 @@ type AccountRouteOptions = {
   invitationStore?: InvitationStore;
   accountService?: AccountService;
   sessionStore?: SessionStore;
+  emailVerification?: EmailVerificationService;
+  logger?: Logger;
   isSecureCookie?: boolean;
 };
 
@@ -69,6 +73,29 @@ const toAppError = (error: unknown): unknown => {
   }
 };
 
+// 이메일 인증 서비스의 업무 오류를 공통 오류 형식으로 변환
+const toVerificationError = (error: unknown): unknown => {
+  if (!(error instanceof EmailVerificationError)) {
+    return error;
+  }
+
+  switch (error.code) {
+    case 'CODE_INVALID':
+      return new AppError('EMAIL_CODE_INVALID');
+    case 'RESEND_TOO_SOON':
+    case 'HOURLY_LIMIT':
+      return new AppError('TOO_MANY_REQUESTS');
+    case 'ALREADY_VERIFIED':
+      return new AppError('VALIDATION_ERROR', [
+        { path: 'body', message: '이미 인증된 이메일입니다' },
+      ]);
+    case 'NO_EMAIL':
+      return new AppError('VALIDATION_ERROR', [
+        { path: 'body', message: '인증할 이메일이 없습니다' },
+      ]);
+  }
+};
+
 const EMAIL_RESEND_WAIT_SECONDS = 30;
 
 export const registerAccountRoutes = (
@@ -77,6 +104,8 @@ export const registerAccountRoutes = (
     invitationStore,
     accountService,
     sessionStore,
+    emailVerification,
+    logger,
     isSecureCookie = false,
   }: AccountRouteOptions = {},
 ) => {
@@ -153,6 +182,11 @@ export const registerAccountRoutes = (
 
             setSessionCookie(response, session, isSecureCookie);
 
+            // 가입은 이미 완료됐으므로 발송 요청이 실패해도 가입은 유지하고, 인증 화면의 재발송으로 이어지게 함
+            await emailVerification?.request(account).catch((error: unknown) => {
+              logger?.error({ err: error }, '[routes.signup] 인증 코드 발송 요청 실패');
+            });
+
             return { email: account.email, resendAfterSeconds: EMAIL_RESEND_WAIT_SECONDS };
           } catch (error) {
             throw toAppError(error);
@@ -172,7 +206,17 @@ export const registerAccountRoutes = (
       errors: ['EMAIL_CODE_INVALID'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
-    notImplemented,
+    emailVerification && accountService
+      ? async ({ auth, body }) => {
+          try {
+            await emailVerification.verify(auth!, (body as { code: string }).code);
+
+            return await accountService.getMe(auth!);
+          } catch (error) {
+            throw toVerificationError(toAppError(error));
+          }
+        }
+      : notImplemented,
   );
 
   add(
@@ -182,9 +226,18 @@ export const registerAccountRoutes = (
       summary: '이메일 인증 코드 재발송',
       auth: 'required',
       response: { status: 200, schema: emailResendResponseSchema },
+      errors: ['TOO_MANY_REQUESTS'],
       rateLimit: { windowMs: 60_000, limit: 3 },
     },
-    notImplemented,
+    emailVerification
+      ? async ({ auth }) => {
+          try {
+            return await emailVerification.request(auth!);
+          } catch (error) {
+            throw toVerificationError(error);
+          }
+        }
+      : notImplemented,
   );
 
   add(

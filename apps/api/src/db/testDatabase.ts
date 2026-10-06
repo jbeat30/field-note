@@ -12,6 +12,8 @@ const AUTH_ROLE = 'field_note_auth';
 const AUTH_PASSWORD = 'test_auth_password';
 const OPERATOR_ROLE = 'field_note_operator';
 const OPERATOR_PASSWORD = 'test_operator_password';
+const QUEUE_ROLE = 'field_note_queue';
+const QUEUE_PASSWORD = 'test_queue_password';
 const API_ROOT = path.resolve(__dirname, '../..');
 
 export type TestDatabase = {
@@ -24,6 +26,9 @@ export type TestDatabase = {
   auth: PrismaClient;
   // 운영자 계정 (회사·계정·초대 발급과 작업 기록만 가능)
   operator: PrismaClient;
+  // 작업 큐(pg-boss) 전용 계정 접속 주소 (큐 스키마만 접근)
+  queueUrl: string;
+  ownerUrl: string;
   stop: () => Promise<void>;
 };
 
@@ -48,6 +53,7 @@ export const startTestDatabase = async (): Promise<TestDatabase> => {
 
   await ownerPool.query(`ALTER ROLE ${AUTH_ROLE} PASSWORD '${AUTH_PASSWORD}'`);
   await ownerPool.query(`ALTER ROLE ${OPERATOR_ROLE} PASSWORD '${OPERATOR_PASSWORD}'`);
+  await ownerPool.query(`ALTER ROLE ${QUEUE_ROLE} PASSWORD '${QUEUE_PASSWORD}'`);
 
   const roleUrl = (username: string, password: string) => {
     const url = new URL(ownerUrl);
@@ -69,6 +75,8 @@ export const startTestDatabase = async (): Promise<TestDatabase> => {
     app,
     auth,
     operator,
+    queueUrl: roleUrl(QUEUE_ROLE, QUEUE_PASSWORD),
+    ownerUrl,
     stop: async () => {
       await app.$disconnect();
       await auth.$disconnect();
