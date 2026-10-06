@@ -20,7 +20,7 @@ const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * @description 로컬 개발용 더미 데이터 입력 (여러 번 실행해도 같은 결과, 소유 계정 클라이언트 전용)
- * 회사·계정·약관 버전·동의 이력과, 가입 전 회사의 1회용 초대 링크(`demo-invite-0001`)를 만든다. 회사 설정은 테이블이 생기는 P0-8에서 추가
+ * 회사·계정·약관 버전·동의 이력과, 가입 전 회사의 1회용 초대 링크(`demo-invite-0001`)를 만든다. 회사 설정(기준시간·월 기준일수·공수 방식)
  * @param prisma 소유 계정(DATABASE_MIGRATE_URL) Prisma 클라이언트
  * @returns 입력한 개수
  */
@@ -76,6 +76,13 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         loginId: account.loginId,
         passwordHash: await hashPassword(account.password),
       },
+    });
+
+    // 회사 설정 (처음 한 번만 만들고, 이후 화면에서 바꾼 값은 시드가 되돌리지 않음)
+    await prisma.companySettings.upsert({
+      where: { companyId: account.companyId },
+      update: {},
+      create: { companyId: account.companyId, ...account.settings },
     });
 
     // 필수 약관과 만 14세 확인에 동의한 이력 (선택인 마케팅은 동의하지 않음)

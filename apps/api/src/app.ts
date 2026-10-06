@@ -9,6 +9,7 @@ import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import type { AccountService } from './auth/accountService';
+import type { CompanySettingsService } from './company/companySettingsService';
 import type { EmailVerificationService } from './auth/emailVerification';
 import type { PasswordService } from './auth/passwordService';
 import type { SecurityNotifier } from './email/securityNotice';
@@ -34,6 +35,8 @@ export type AppOptions = {
   emailVerification?: EmailVerificationService;
   // 없으면 비밀번호 재설정·변경 API는 501
   passwordService?: PasswordService;
+  // 없으면 회사 설정 API는 501
+  companySettings?: CompanySettingsService;
   // 계정 보안 변경 알림 요청기 (없으면 알림 생략)
   notifier?: SecurityNotifier;
   // CSRF Origin 검증 기준 웹 주소
@@ -64,6 +67,7 @@ export const createRegistry = (options: AppOptions = {}) => {
     accountService: options.accountService,
     emailVerification: options.emailVerification,
     passwordService: options.passwordService,
+    companySettings: options.companySettings,
     notifier: options.notifier,
     logger: options.logger,
     sessionStore,

@@ -139,6 +139,13 @@ export const companySettingsSchema = z.object({
 
 export type CompanySettings = z.infer<typeof companySettingsSchema>;
 
+// 설정을 저장하기 전 회사의 기본값 (서비스 기획서 §9.5: 하루 8시간, 월 22일, 비율 방식)
+export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
+  standardWorkMinutes: 480,
+  monthlyWorkDays: 22,
+  workUnitMode: 'RATIO',
+};
+
 // 로그인 기기 목록 (§6.4). 식별자는 원격 로그아웃 대상 지정용 불투명 값
 export const deviceSchema = z.object({
   id: z.string(),

@@ -59,6 +59,29 @@ describe('seedDemoData', () => {
     expect(byName[hanbit.displayName]?.emailVerifiedAt).not.toBeNull();
   });
 
+  it('회사 설정이 시드되고 다시 실행해도 바꾼 값을 되돌리지 않는다', async () => {
+    const before = await db.owner.companySettings.findUnique({
+      where: { companyId: saeron.companyId },
+    });
+
+    expect(before).toMatchObject({
+      standardWorkMinutes: 540,
+      monthlyWorkDays: 26,
+      workUnitMode: 'HOURS',
+    });
+
+    await db.owner.companySettings.update({
+      where: { companyId: saeron.companyId },
+      data: { monthlyWorkDays: 20 },
+    });
+    await seedDemoData(db.owner);
+
+    expect(
+      (await db.owner.companySettings.findUnique({ where: { companyId: saeron.companyId } }))
+        ?.monthlyWorkDays,
+    ).toBe(20);
+  });
+
   it('필수 약관 동의 이력이 계정마다 한 번씩만 남는다', async () => {
     const consents = await db.owner.consent.findMany({ where: { companyId: hanbit.companyId } });
 

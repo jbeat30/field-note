@@ -16,6 +16,7 @@ import {
   passwordResetConfirmSchema,
   passwordResetParamsSchema,
   passwordResetRequestSchema,
+  type CompanySettings,
   type EmailChange,
   type PasswordChange,
   type PasswordResetConfirm,
@@ -26,6 +27,7 @@ import {
 } from '@field-note/shared';
 
 import { AccountError, type AccountService } from '../auth/accountService';
+import type { CompanySettingsService } from '../company/companySettingsService';
 import { EmailVerificationError, type EmailVerificationService } from '../auth/emailVerification';
 import { PasswordError, type PasswordService } from '../auth/passwordService';
 import { maskEmail } from '../email/accountEmails';
@@ -50,6 +52,7 @@ type AccountRouteOptions = {
   sessionStore?: SessionStore;
   emailVerification?: EmailVerificationService;
   passwordService?: PasswordService;
+  companySettings?: CompanySettingsService;
   notifier?: SecurityNotifier;
   logger?: Logger;
   isSecureCookie?: boolean;
@@ -138,6 +141,7 @@ export const registerAccountRoutes = (
     sessionStore,
     emailVerification,
     passwordService,
+    companySettings,
     notifier,
     logger,
     isSecureCookie = false,
@@ -350,7 +354,8 @@ export const registerAccountRoutes = (
       auth: 'required',
       response: { status: 200, schema: companySettingsSchema },
     },
-    notImplemented,
+    // 회사 ID는 세션에서만 얻음 (요청 값 사용 금지)
+    companySettings ? async ({ auth }) => companySettings.get(auth!.companyId) : notImplemented,
   );
 
   add(
@@ -362,7 +367,9 @@ export const registerAccountRoutes = (
       request: { body: companySettingsSchema },
       response: { status: 200, schema: companySettingsSchema },
     },
-    notImplemented,
+    companySettings
+      ? async ({ auth, body }) => companySettings.save(auth!.companyId, body as CompanySettings)
+      : notImplemented,
   );
 
   add(
