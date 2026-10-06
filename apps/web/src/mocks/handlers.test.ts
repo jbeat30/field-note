@@ -10,7 +10,13 @@ import { setupServer } from 'msw/node';
 
 import { createApiClient } from '../api/client';
 
-import { DEMO_ACCOUNTS, DEMO_INVITATION, LEGAL_DOCUMENTS, MOCK_EMAIL_CODE } from './data';
+import {
+  DEMO_ACCOUNTS,
+  DEMO_INVITATION,
+  LEGAL_DOCUMENTS,
+  MOCK_EMAIL_CODE,
+  MOCK_RESET_TOKEN,
+} from './data';
 import { handlers } from './handlers';
 import { resetMockState } from './state';
 
@@ -201,5 +207,84 @@ describe('목업 서버 계약', () => {
         })
       ).response.status,
     ).toBe(404);
+  });
+
+  it('비밀번호 재설정: 가입 여부와 관계없이 같은 응답, 링크는 한 번만 쓰고 모든 기기가 로그아웃된다', async () => {
+    await login();
+
+    const known = await client.POST('/api/v1/auth/password-reset/request', {
+      body: { email: demo.email },
+    });
+    const unknown = await client.POST('/api/v1/auth/password-reset/request', {
+      body: { email: 'nobody@example.com' },
+    });
+
+    expect(known.response.status).toBe(200);
+    expect(unknown.data).toEqual(known.data);
+
+    const check = await client.GET('/api/v1/auth/password-reset/{token}', {
+      params: { path: { token: MOCK_RESET_TOKEN } },
+    });
+
+    expect(check.response.status).toBe(200);
+
+    await client.POST('/api/v1/auth/password-reset/request', { body: { email: demo.email } });
+    const confirmed = await client.POST('/api/v1/auth/password-reset/confirm', {
+      body: { token: MOCK_RESET_TOKEN, newPassword: 'Brand-new-2026!' },
+    });
+
+    expect(confirmed.response.status).toBe(200);
+    expect((await client.GET('/api/v1/me')).response.status).toBe(401);
+    expect((await login(demo.loginId, demo.password)).response.status).toBe(401);
+    expect((await login(demo.loginId, 'Brand-new-2026!')).response.status).toBe(200);
+    expect(
+      (
+        await client.POST('/api/v1/auth/password-reset/confirm', {
+          body: { token: MOCK_RESET_TOKEN, newPassword: 'Another-2026-pass!' },
+        })
+      ).response.status,
+    ).toBe(404);
+  });
+
+  it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
+    await login();
+
+    const wrong = await client.POST('/api/v1/me/password', {
+      body: { currentPassword: 'wrong-password-1', newPassword: 'Changed-2026-pass!' },
+    });
+
+    expect(wrong.response.status).toBe(400);
+    expect(errorResponseSchema.parse(wrong.error).error.code).toBe('CURRENT_PASSWORD_INVALID');
+
+    const changed = await client.POST('/api/v1/me/password', {
+      body: { currentPassword: demo.password, newPassword: 'Changed-2026-pass!' },
+    });
+
+    expect(changed.response.status).toBe(200);
+    expect((await login(demo.loginId, 'Changed-2026-pass!')).response.status).toBe(200);
+  });
+
+  it('이메일 변경: 새 주소를 인증해야 반영되고 이미 쓰는 주소는 거부한다', async () => {
+    await login();
+
+    const taken = await client.POST('/api/v1/me/email/change', {
+      body: { newEmail: DEMO_ACCOUNTS[1]!.email, currentPassword: demo.password },
+    });
+
+    expect(taken.response.status).toBe(400);
+
+    const requested = await client.POST('/api/v1/me/email/change', {
+      body: { newEmail: 'changed@example.com', currentPassword: demo.password },
+    });
+
+    expect(requested.response.status).toBe(200);
+    // 인증 전에는 기존 이메일 유지
+    expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data).email).toBe(demo.email);
+
+    await client.POST('/api/v1/auth/email/verify', { body: { code: MOCK_EMAIL_CODE } });
+
+    expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data).email).toBe(
+      'changed@example.com',
+    );
   });
 });

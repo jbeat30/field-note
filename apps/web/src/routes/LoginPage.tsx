@@ -2,7 +2,7 @@ import { loginRequestSchema, type LoginRequest } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
-import { Navigate, useNavigate } from 'react-router';
+import { Link, Navigate, useNavigate } from 'react-router';
 
 import { apiClient } from '../api/client';
 import { useMe } from '../auth/useMe';
@@ -79,6 +79,12 @@ export const LoginPage = () => {
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '로그인 중' : '로그인'}
       </Button>
+      <Link
+        className="min-h-touch content-center text-sm text-primary underline"
+        to="/forgot-password"
+      >
+        비밀번호를 잊으셨나요?
+      </Link>
       <p className="text-sm text-foreground/70">
         가입은 운영자가 보낸 초대 링크로만 할 수 있습니다
       </p>

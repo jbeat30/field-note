@@ -96,3 +96,129 @@ export const Logout: Story = {
     await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
   },
 };
+
+const fillPasswordChange = async (
+  canvas: ReturnType<typeof within>,
+  current: string,
+  next: string,
+  confirm: string,
+) => {
+  const section = within(await canvas.findByRole('region', { name: '비밀번호 변경' }));
+
+  await userEvent.type(section.getByLabelText('현재 비밀번호'), current);
+  await userEvent.type(section.getByLabelText('새 비밀번호', { selector: 'input' }), next);
+  await userEvent.type(section.getByLabelText('새 비밀번호 확인'), confirm);
+  await userEvent.click(section.getByRole('button', { name: '비밀번호 변경' }));
+
+  return section;
+};
+
+export const ChangePassword: Story = {
+  play: async ({ canvasElement }) => {
+    const section = await fillPasswordChange(
+      within(canvasElement),
+      'Hanbit-demo-2026!',
+      'Changed-2026-pass!',
+      'Changed-2026-pass!',
+    );
+
+    await expect(await section.findByText(/다른 기기는 로그아웃되었습니다/)).toBeInTheDocument();
+  },
+};
+
+export const ChangePasswordWrongCurrent: Story = {
+  play: async ({ canvasElement }) => {
+    const section = await fillPasswordChange(
+      within(canvasElement),
+      'wrong-password-1',
+      'Changed-2026-pass!',
+      'Changed-2026-pass!',
+    );
+
+    await expect(await section.findByText('현재 비밀번호가 올바르지 않습니다')).toBeInTheDocument();
+  },
+};
+
+export const ChangePasswordMismatch: Story = {
+  play: async ({ canvasElement }) => {
+    const section = await fillPasswordChange(
+      within(canvasElement),
+      'Hanbit-demo-2026!',
+      'Changed-2026-pass!',
+      'Different-2026-pass!',
+    );
+
+    await expect(await section.findByText('비밀번호가 일치하지 않습니다')).toBeInTheDocument();
+  },
+};
+
+const requestEmailChange = async (
+  canvas: ReturnType<typeof within>,
+  newEmail: string,
+  password: string,
+) => {
+  const section = within(await canvas.findByRole('region', { name: '이메일 변경' }));
+
+  await userEvent.type(section.getByLabelText('새 이메일'), newEmail);
+  await userEvent.type(section.getByLabelText('현재 비밀번호'), password);
+  await userEvent.click(section.getByRole('button', { name: '인증 코드 받기' }));
+
+  return section;
+};
+
+// 비밀번호 재확인 → 새 주소 코드 확인 → 반영
+export const ChangeEmail: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const section = await requestEmailChange(canvas, 'new-hanbit@example.com', 'Hanbit-demo-2026!');
+
+    await expect(await section.findByText('new-hanbit@example.com')).toBeInTheDocument();
+
+    await userEvent.type(section.getByLabelText('인증 코드'), '123456');
+    await userEvent.click(section.getByRole('button', { name: '이메일 변경 완료' }));
+
+    await expect(await section.findByText(/이전 주소로 변경 알림/)).toBeInTheDocument();
+    await expect(await canvas.findByText('new-hanbit@example.com')).toBeInTheDocument();
+  },
+};
+
+export const ChangeEmailWrongPassword: Story = {
+  play: async ({ canvasElement }) => {
+    const section = await requestEmailChange(
+      within(canvasElement),
+      'new-hanbit@example.com',
+      'wrong-password-1',
+    );
+
+    await expect(await section.findByText('현재 비밀번호가 올바르지 않습니다')).toBeInTheDocument();
+  },
+};
+
+export const ChangeEmailAlreadyUsed: Story = {
+  play: async ({ canvasElement }) => {
+    const section = await requestEmailChange(
+      within(canvasElement),
+      'saeron@example.com',
+      'Hanbit-demo-2026!',
+    );
+
+    await expect(await section.findByText(/이미 사용 중이거나/)).toBeInTheDocument();
+  },
+};
+
+export const ChangeEmailWrongCode: Story = {
+  play: async ({ canvasElement }) => {
+    const section = await requestEmailChange(
+      within(canvasElement),
+      'new-hanbit@example.com',
+      'Hanbit-demo-2026!',
+    );
+
+    await userEvent.type(await section.findByLabelText('인증 코드'), '000000');
+    await userEvent.click(section.getByRole('button', { name: '이메일 변경 완료' }));
+
+    await expect(
+      await section.findByText('인증 코드가 올바르지 않거나 만료되었습니다'),
+    ).toBeInTheDocument();
+  },
+};

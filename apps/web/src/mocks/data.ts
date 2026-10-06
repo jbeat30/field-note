@@ -10,6 +10,8 @@ export type MockAccount = {
   isEmailVerified: boolean;
   companyName: string;
   settings: CompanySettings;
+  // 이메일 변경을 요청하고 코드 인증을 기다리는 새 주소
+  pendingEmail?: string;
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용
@@ -39,6 +41,8 @@ export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [
 
 // 인증 코드와 시연용 특수 값 (README 목업 모드 표와 같아야 함)
 export const MOCK_EMAIL_CODE = '123456';
+// 비밀번호 재설정 링크 시연용 (`/reset-password/demo-reset-token-0001`), 한 번 쓰면 폐기
+export const MOCK_RESET_TOKEN = 'demo-reset-token-0001';
 export const MOCK_LOCKED_LOGIN_ID = 'locked';
 export const MOCK_TAKEN_LOGIN_ID = 'taken-id';
 export const MOCK_SESSION_STORAGE_KEY = 'field-note-mock-session';

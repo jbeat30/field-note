@@ -66,6 +66,18 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
       expect(await store.find(other.token)).not.toBeNull();
     });
 
+    it('현재 세션만 남기고 같은 사용자의 다른 세션을 삭제한다', async () => {
+      const current = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+      const other = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+      const stranger = await store.create({ userId: USER_2, companyId: COMPANY_2 });
+
+      await store.deleteByUserExcept(USER_1, current.token);
+
+      expect(await store.find(current.token)).not.toBeNull();
+      expect(await store.find(other.token)).toBeNull();
+      expect(await store.find(stranger.token)).not.toBeNull();
+    });
+
     it('만료된 세션만 정리한다', async () => {
       const old = await store.create({ userId: USER_1, companyId: COMPANY_1 });
 

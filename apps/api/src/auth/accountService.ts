@@ -16,6 +16,7 @@ export type AccountErrorCode =
   | 'CONSENT_REQUIRED'
   | 'CONSENT_UNKNOWN_DOCUMENT'
   | 'INVALID_CREDENTIALS'
+  | 'CURRENT_PASSWORD_INVALID'
   | 'ACCOUNT_LOCKED'
   | 'ACCOUNT_NOT_FOUND';
 
@@ -40,6 +41,8 @@ export type AccountService = {
   // 초대 링크를 사용해 가입 (이메일 인증 전 상태). 한 트랜잭션이라 실패하면 링크도 소모되지 않음
   signup: (input: SignupInput) => Promise<AuthenticatedAccount & { email: string }>;
   login: (input: { loginId: string; password: string }) => Promise<AuthenticatedAccount>;
+  // 로그인한 상태에서 비밀번호를 다시 확인 (비밀번호·이메일 변경 전). 틀리면 로그인과 같은 실패 횟수·잠금 정책 적용
+  verifyCurrentPassword: (account: AuthenticatedAccount, password: string) => Promise<void>;
   // 로그인한 관리자 정보 (회사 식별값은 응답에 없음)
   getMe: (account: AuthenticatedAccount) => Promise<MeResponse>;
 };
@@ -79,113 +82,31 @@ const mapUniqueViolation = (error: unknown): AccountError | null => {
  * @param deps 전용 계정·앱 계정 클라이언트와 시계
  * @returns 계정 서비스
  */
+type CredentialRow = {
+  companyId: string;
+  userId: string;
+  passwordHash: string | null;
+  failedLoginCount: number;
+  lockedUntil: Date | null;
+};
+
 export const createAccountService = ({
   auth,
   app,
   now = () => new Date(),
-}: ServiceDeps): AccountService => ({
-  signup: async (input) => {
-    // 해시 계산은 느리므로 트랜잭션 밖에서 먼저 수행
-    const passwordHash = await hashPassword(input.password);
-    const at = now();
-
-    try {
-      return await auth.$transaction(async (tx) => {
-        const invitation = await tx.invitation.findFirst({
-          where: validInvitationWhere(input.inviteToken, at),
-        });
-
-        if (!invitation) {
-          throw new AccountError('INVITATION_INVALID');
-        }
-
-        // 동시에 같은 링크를 쓰는 요청이 있어도 조건부 갱신이라 한 쪽만 통과
-        const { count } = await tx.invitation.updateMany({
-          where: { tokenHash: invitation.tokenHash, usedAt: null },
-          data: { usedAt: at },
-        });
-
-        if (count !== 1) {
-          throw new AccountError('INVITATION_INVALID');
-        }
-
-        // 필수 문서에 모두 동의해야 하고, 현재 시행 중이 아닌 문서에 대한 동의는 받지 않음
-        const documents = await findCurrentDocuments(tx, at);
-        const documentIds = new Set(documents.map((document) => document.id));
-
-        if (input.consents.some((consent) => !documentIds.has(consent.documentId))) {
-          throw new AccountError('CONSENT_UNKNOWN_DOCUMENT');
-        }
-
-        const agreedIds = new Set(
-          input.consents.filter((consent) => consent.isAgreed).map((consent) => consent.documentId),
-        );
-
-        if (documents.some((document) => document.isRequired && !agreedIds.has(document.id))) {
-          throw new AccountError('CONSENT_REQUIRED');
-        }
-
-        if (await tx.userCredential.findUnique({ where: { loginId: input.loginId } })) {
-          throw new AccountError('LOGIN_ID_TAKEN');
-        }
-
-        if (await tx.user.findUnique({ where: { email: input.email } })) {
-          throw new AccountError('EMAIL_TAKEN');
-        }
-
-        // 이메일 인증이 끝나기 전까지 계정 상태는 초대(INVITED)로 유지 (활성화는 P0-4)
-        await tx.user.update({
-          where: { companyId_id: { companyId: invitation.companyId, id: invitation.userId } },
-          data: { email: input.email, ageConfirmedAt: at },
-        });
-        await tx.userCredential.create({
-          data: {
-            companyId: invitation.companyId,
-            userId: invitation.userId,
-            loginId: input.loginId,
-            passwordHash,
-          },
-        });
-        await tx.consent.createMany({
-          data: input.consents.map((consent) => ({
-            companyId: invitation.companyId,
-            userId: invitation.userId,
-            documentId: consent.documentId,
-            isAgreed: consent.isAgreed,
-            decidedAt: at,
-          })),
-        });
-
-        return { userId: invitation.userId, companyId: invitation.companyId, email: input.email };
-      });
-    } catch (error) {
-      throw mapUniqueViolation(error) ?? error;
-    }
-  },
-
-  login: async ({ loginId, password }) => {
-    const at = now();
-    const credential = await auth.userCredential.findUnique({
-      where: { loginId },
-      include: { user: { include: { company: true } } },
-    });
-
-    // 없는 아이디도 같은 비용의 해시 비교를 거쳐 응답 시간 차이로 존재 여부를 알 수 없게 함
-    if (!credential?.passwordHash) {
-      await verifyPassword(await getDummyHash(), password);
-      throw new AccountError('INVALID_CREDENTIALS');
-    }
-
-    // 잠금 중에는 비밀번호가 맞아도 거부 (추측 시도를 계속 허용하지 않기 위함)
-    if (credential.lockedUntil && credential.lockedUntil > at) {
-      throw new AccountError('ACCOUNT_LOCKED');
-    }
-
+}: ServiceDeps): AccountService => {
+  // 비밀번호 확인과 실패 횟수·잠금 처리 (로그인과 재확인이 같은 정책을 씀)
+  const assertPassword = async (
+    credential: CredentialRow,
+    password: string,
+    at: Date,
+    invalidCode: 'INVALID_CREDENTIALS' | 'CURRENT_PASSWORD_INVALID',
+  ) => {
     const where = {
       companyId_userId: { companyId: credential.companyId, userId: credential.userId },
     };
 
-    if (!(await verifyPassword(credential.passwordHash, password))) {
+    if (!(await verifyPassword(credential.passwordHash ?? '', password))) {
       // 잠금이 이미 풀린 뒤의 첫 실패는 횟수를 처음부터 다시 셈
       const expired = credential.lockedUntil !== null && credential.lockedUntil <= at;
       const updated = await auth.userCredential.update({
@@ -204,37 +125,159 @@ export const createAccountService = ({
         throw new AccountError('ACCOUNT_LOCKED');
       }
 
-      throw new AccountError('INVALID_CREDENTIALS');
-    }
-
-    // 정지·해지 요청 중인 회사는 로그인 차단 (사유는 알려 주지 않음)
-    if (credential.user.company.status !== 'ACTIVE') {
-      throw new AccountError('INVALID_CREDENTIALS');
+      throw new AccountError(invalidCode);
     }
 
     if (credential.failedLoginCount > 0 || credential.lockedUntil) {
       await auth.userCredential.update({ where, data: { failedLoginCount: 0, lockedUntil: null } });
     }
+  };
 
-    return { userId: credential.userId, companyId: credential.companyId };
-  },
+  return {
+    signup: async (input) => {
+      // 해시 계산은 느리므로 트랜잭션 밖에서 먼저 수행
+      const passwordHash = await hashPassword(input.password);
+      const at = now();
 
-  getMe: ({ userId, companyId }) =>
-    withCompany(app, companyId, async (tx) => {
-      const [user, company] = await Promise.all([
-        tx.user.findFirst({ where: { id: userId } }),
-        tx.company.findFirst(),
-      ]);
+      try {
+        return await auth.$transaction(async (tx) => {
+          const invitation = await tx.invitation.findFirst({
+            where: validInvitationWhere(input.inviteToken, at),
+          });
 
-      if (!user || !company) {
-        throw new AccountError('ACCOUNT_NOT_FOUND');
+          if (!invitation) {
+            throw new AccountError('INVITATION_INVALID');
+          }
+
+          // 동시에 같은 링크를 쓰는 요청이 있어도 조건부 갱신이라 한 쪽만 통과
+          const { count } = await tx.invitation.updateMany({
+            where: { tokenHash: invitation.tokenHash, usedAt: null },
+            data: { usedAt: at },
+          });
+
+          if (count !== 1) {
+            throw new AccountError('INVITATION_INVALID');
+          }
+
+          // 필수 문서에 모두 동의해야 하고, 현재 시행 중이 아닌 문서에 대한 동의는 받지 않음
+          const documents = await findCurrentDocuments(tx, at);
+          const documentIds = new Set(documents.map((document) => document.id));
+
+          if (input.consents.some((consent) => !documentIds.has(consent.documentId))) {
+            throw new AccountError('CONSENT_UNKNOWN_DOCUMENT');
+          }
+
+          const agreedIds = new Set(
+            input.consents
+              .filter((consent) => consent.isAgreed)
+              .map((consent) => consent.documentId),
+          );
+
+          if (documents.some((document) => document.isRequired && !agreedIds.has(document.id))) {
+            throw new AccountError('CONSENT_REQUIRED');
+          }
+
+          if (await tx.userCredential.findUnique({ where: { loginId: input.loginId } })) {
+            throw new AccountError('LOGIN_ID_TAKEN');
+          }
+
+          if (await tx.user.findUnique({ where: { email: input.email } })) {
+            throw new AccountError('EMAIL_TAKEN');
+          }
+
+          // 이메일 인증이 끝나기 전까지 계정 상태는 초대(INVITED)로 유지 (활성화는 P0-4)
+          await tx.user.update({
+            where: { companyId_id: { companyId: invitation.companyId, id: invitation.userId } },
+            data: { email: input.email, ageConfirmedAt: at },
+          });
+          await tx.userCredential.create({
+            data: {
+              companyId: invitation.companyId,
+              userId: invitation.userId,
+              loginId: input.loginId,
+              passwordHash,
+            },
+          });
+          await tx.consent.createMany({
+            data: input.consents.map((consent) => ({
+              companyId: invitation.companyId,
+              userId: invitation.userId,
+              documentId: consent.documentId,
+              isAgreed: consent.isAgreed,
+              decidedAt: at,
+            })),
+          });
+
+          return { userId: invitation.userId, companyId: invitation.companyId, email: input.email };
+        });
+      } catch (error) {
+        throw mapUniqueViolation(error) ?? error;
+      }
+    },
+
+    login: async ({ loginId, password }) => {
+      const at = now();
+      const credential = await auth.userCredential.findUnique({
+        where: { loginId },
+        include: { user: { include: { company: true } } },
+      });
+
+      // 없는 아이디도 같은 비용의 해시 비교를 거쳐 응답 시간 차이로 존재 여부를 알 수 없게 함
+      if (!credential?.passwordHash) {
+        await verifyPassword(await getDummyHash(), password);
+        throw new AccountError('INVALID_CREDENTIALS');
       }
 
-      return {
-        displayName: user.displayName,
-        email: user.email,
-        isEmailVerified: user.emailVerifiedAt !== null,
-        companyName: company.name,
-      };
-    }),
-});
+      // 잠금 중에는 비밀번호가 맞아도 거부 (추측 시도를 계속 허용하지 않기 위함)
+      if (credential.lockedUntil && credential.lockedUntil > at) {
+        throw new AccountError('ACCOUNT_LOCKED');
+      }
+
+      await assertPassword(credential, password, at, 'INVALID_CREDENTIALS');
+
+      // 정지·해지 요청 중인 회사는 로그인 차단 (사유는 알려 주지 않음)
+      if (credential.user.company.status !== 'ACTIVE') {
+        throw new AccountError('INVALID_CREDENTIALS');
+      }
+
+      return { userId: credential.userId, companyId: credential.companyId };
+    },
+
+    verifyCurrentPassword: async ({ userId, companyId }, password) => {
+      const at = now();
+      const credential = await auth.userCredential.findUnique({
+        where: { companyId_userId: { companyId, userId } },
+      });
+
+      // 비밀번호가 없는 계정(소셜 로그인만 사용)은 재확인할 수단이 없음
+      if (!credential?.passwordHash) {
+        throw new AccountError('CURRENT_PASSWORD_INVALID');
+      }
+
+      if (credential.lockedUntil && credential.lockedUntil > at) {
+        throw new AccountError('ACCOUNT_LOCKED');
+      }
+
+      await assertPassword(credential, password, at, 'CURRENT_PASSWORD_INVALID');
+    },
+
+    getMe: ({ userId, companyId }) =>
+      withCompany(app, companyId, async (tx) => {
+        const [user, company] = await Promise.all([
+          tx.user.findFirst({ where: { id: userId } }),
+          tx.company.findFirst(),
+        ]);
+
+        if (!user || !company) {
+          throw new AccountError('ACCOUNT_NOT_FOUND');
+        }
+
+        return {
+          displayName: user.displayName,
+          email: user.email,
+          isEmailVerified: user.emailVerifiedAt !== null,
+          companyName: company.name,
+        };
+      }),
+  };
+};

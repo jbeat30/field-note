@@ -28,6 +28,8 @@ export type SessionStore = {
   delete: (token: string) => Promise<void>;
   // 비밀번호 재설정·전 기기 로그아웃용
   deleteByUser: (userId: string) => Promise<void>;
+  // 비밀번호 변경 시 현재 기기만 남기고 다른 기기 로그아웃
+  deleteByUserExcept: (userId: string, keepToken: string) => Promise<void>;
   deleteExpired: () => Promise<void>;
 };
 
@@ -66,6 +68,11 @@ export const createPrismaSessionStore = (
   deleteByUser: async (userId) => {
     await prisma.session.deleteMany({ where: { userId } });
   },
+  deleteByUserExcept: async (userId, keepToken) => {
+    await prisma.session.deleteMany({
+      where: { userId, tokenHash: { not: hashToken(keepToken) } },
+    });
+  },
   deleteExpired: async () => {
     await prisma.session.deleteMany({ where: { expiresAt: { lte: now() } } });
   },
@@ -101,6 +108,13 @@ export const createMemorySessionStore = (now: Clock = () => new Date()): Session
     deleteByUser: async (userId) => {
       for (const [key, session] of sessions) {
         if (session.userId === userId) {
+          sessions.delete(key);
+        }
+      }
+    },
+    deleteByUserExcept: async (userId, keepToken) => {
+      for (const [key, session] of sessions) {
+        if (session.userId === userId && key !== hashToken(keepToken)) {
           sessions.delete(key);
         }
       }

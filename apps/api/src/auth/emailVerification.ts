@@ -17,7 +17,13 @@ export const MAX_REQUESTS_PER_HOUR = 5;
 const HOUR_MS = 60 * 60 * 1000;
 
 export type EmailVerificationErrorCode =
-  'ALREADY_VERIFIED' | 'NO_EMAIL' | 'RESEND_TOO_SOON' | 'HOURLY_LIMIT' | 'CODE_INVALID';
+  | 'ALREADY_VERIFIED'
+  | 'NO_EMAIL'
+  | 'EMAIL_TAKEN'
+  | 'SAME_EMAIL'
+  | 'RESEND_TOO_SOON'
+  | 'HOURLY_LIMIT'
+  | 'CODE_INVALID';
 
 export class EmailVerificationError extends Error {
   constructor(
@@ -36,8 +42,10 @@ export type EmailVerificationService = {
   request: (account: Account) => Promise<{ resendAfterSeconds: number }>;
   // 작업 처리기에서 호출: 새 코드를 만들어 해시를 저장하고 메일 발송
   deliver: (account: Account) => Promise<void>;
-  // 코드 확인: 성공하면 이메일 인증 완료와 계정 활성화
-  verify: (account: Account, code: string) => Promise<void>;
+  // 이메일 변경 요청: 새 주소로 코드를 보내고, 인증이 끝나야 계정 이메일이 바뀜 (비밀번호 재확인은 호출자가 먼저 수행)
+  requestChange: (account: Account, newEmail: string) => Promise<{ resendAfterSeconds: number }>;
+  // 코드 확인: 성공하면 이메일 인증 완료와 계정 활성화. 이메일 변경이면 바뀌기 전 주소를 돌려줌 (알림 메일용)
+  verify: (account: Account, code: string) => Promise<{ previousEmail: string | null }>;
 };
 
 type Deps = {
@@ -87,17 +95,19 @@ export const createEmailVerificationService = ({
         throw new EmailVerificationError('NO_EMAIL');
       }
 
-      if (user.emailVerifiedAt) {
-        throw new EmailVerificationError('ALREADY_VERIFIED');
-      }
-
-      if (!user.email) {
-        throw new EmailVerificationError('NO_EMAIL');
-      }
-
       const existing = await tx.emailVerification.findUnique({
         where: { companyId_userId: { companyId: account.companyId, userId: account.userId } },
       });
+      // 이메일 변경 중이면 새 주소로 재발송, 아니면 기존 주소의 최초 인증
+      const target = existing?.pendingEmail ?? user.email;
+
+      if (user.emailVerifiedAt && !existing?.pendingEmail) {
+        throw new EmailVerificationError('ALREADY_VERIFIED');
+      }
+
+      if (!target) {
+        throw new EmailVerificationError('NO_EMAIL');
+      }
 
       if (existing) {
         const waitMs = existing.lastRequestedAt.getTime() + RESEND_INTERVAL_MS - at.getTime();
@@ -118,7 +128,7 @@ export const createEmailVerificationService = ({
         await tx.emailVerification.update({
           where: { companyId_userId: { companyId: account.companyId, userId: account.userId } },
           data: {
-            email: user.email,
+            email: target,
             lastRequestedAt: at,
             ...(isSameWindow
               ? { requestCount: { increment: 1 } }
@@ -133,7 +143,7 @@ export const createEmailVerificationService = ({
         data: {
           companyId: account.companyId,
           userId: account.userId,
-          email: user.email,
+          email: target,
           lastRequestedAt: at,
           windowStartedAt: at,
         },
@@ -148,14 +158,98 @@ export const createEmailVerificationService = ({
     return { resendAfterSeconds: RESEND_INTERVAL_MS / 1000 };
   },
 
+  requestChange: async (account, newEmail) => {
+    const at = now();
+
+    await auth.$transaction(async (tx) => {
+      const user = await tx.user.findFirst({
+        where: { companyId: account.companyId, id: account.userId },
+      });
+
+      if (!user) {
+        throw new EmailVerificationError('NO_EMAIL');
+      }
+
+      if (user.email === newEmail) {
+        throw new EmailVerificationError('SAME_EMAIL');
+      }
+
+      if (await tx.user.findUnique({ where: { email: newEmail } })) {
+        throw new EmailVerificationError('EMAIL_TAKEN');
+      }
+
+      const where = { companyId_userId: { companyId: account.companyId, userId: account.userId } };
+      const existing = await tx.emailVerification.findUnique({ where });
+      // 이전에 받은 코드는 새 주소에 쓸 수 없으므로 비움
+      const reset = {
+        email: newEmail,
+        pendingEmail: newEmail,
+        codeHash: null,
+        expiresAt: null,
+        attempts: 0,
+      };
+
+      if (!existing) {
+        await tx.emailVerification.create({
+          data: {
+            companyId: account.companyId,
+            userId: account.userId,
+            lastRequestedAt: at,
+            windowStartedAt: at,
+            ...reset,
+          },
+        });
+
+        return;
+      }
+
+      const waitMs = existing.lastRequestedAt.getTime() + RESEND_INTERVAL_MS - at.getTime();
+
+      if (waitMs > 0) {
+        throw new EmailVerificationError('RESEND_TOO_SOON', Math.ceil(waitMs / 1000));
+      }
+
+      const isSameWindow = existing.windowStartedAt.getTime() + HOUR_MS > at.getTime();
+
+      if (isSameWindow && existing.requestCount >= MAX_REQUESTS_PER_HOUR) {
+        throw new EmailVerificationError(
+          'HOURLY_LIMIT',
+          Math.ceil((existing.windowStartedAt.getTime() + HOUR_MS - at.getTime()) / 1000),
+        );
+      }
+
+      await tx.emailVerification.update({
+        where,
+        data: {
+          ...reset,
+          lastRequestedAt: at,
+          ...(isSameWindow
+            ? { requestCount: { increment: 1 } }
+            : { requestCount: 1, windowStartedAt: at }),
+        },
+      });
+    });
+
+    await queue.send(EMAIL_VERIFICATION_QUEUE, {
+      companyId: account.companyId,
+      userId: account.userId,
+    });
+
+    return { resendAfterSeconds: RESEND_INTERVAL_MS / 1000 };
+  },
+
   deliver: async (account) => {
     const at = now();
+    const where = { companyId_userId: { companyId: account.companyId, userId: account.userId } };
     const user = await auth.user.findFirst({
       where: { companyId: account.companyId, id: account.userId },
     });
+    const record = await auth.emailVerification.findUnique({ where });
+    // 이메일 변경 중이면 새 주소로, 아니면 가입 때 입력한 주소로 보냄
+    const target = record?.pendingEmail ?? user?.email;
 
     // 그 사이 인증이 끝났거나 계정이 없으면 보낼 이유가 없음 (재시도하지 않고 종료)
-    if (!user?.email || user.emailVerifiedAt) {
+    if (!user || !target || (user.emailVerifiedAt && !record?.pendingEmail)) {
       return;
     }
 
@@ -164,14 +258,14 @@ export const createEmailVerificationService = ({
 
     // 요청 기록이 없는 채로 작업이 도착해도(예: 요청 직후 기록 유실) 새로 만들어 처리
     const fields = {
-      email: user.email,
+      email: target,
       codeHash: hashCode(secret, account, code),
       expiresAt: new Date(at.getTime() + CODE_TTL_MS),
       attempts: 0,
     };
 
     await auth.emailVerification.upsert({
-      where: { companyId_userId: { companyId: account.companyId, userId: account.userId } },
+      where,
       update: fields,
       create: {
         companyId: account.companyId,
@@ -183,62 +277,66 @@ export const createEmailVerificationService = ({
     });
 
     // 발송에 실패하면 예외가 작업 큐로 전달되어 재시도 (재시도마다 새 코드)
-    await mailer.send(buildVerificationEmail(user.email, code, CODE_TTL_MS / 60_000));
+    await mailer.send(buildVerificationEmail(target, code, CODE_TTL_MS / 60_000));
   },
 
   verify: async (account, code) => {
     const at = now();
-
-    await auth
-      .$transaction(async (tx) => {
-        const where = {
-          companyId_userId: { companyId: account.companyId, userId: account.userId },
-        };
-        const record = await tx.emailVerification.findUnique({ where });
-        const user = await tx.user.findFirst({
-          where: { companyId: account.companyId, id: account.userId },
-        });
-
-        if (user?.emailVerifiedAt) {
-          throw new EmailVerificationError('ALREADY_VERIFIED');
-        }
-
-        // 이메일이 바뀌었거나 코드가 없거나 만료되었거나 시도 횟수를 넘긴 경우는 같은 오류
-        const isUsable =
-          record?.codeHash &&
-          record.expiresAt &&
-          record.expiresAt > at &&
-          record.attempts < MAX_CODE_ATTEMPTS &&
-          record.email === user?.email;
-
-        if (!isUsable) {
-          throw new EmailVerificationError('CODE_INVALID');
-        }
-
-        if (!safeEqual(record.codeHash!, hashCode(secret, account, code))) {
-          await tx.emailVerification.update({ where, data: { attempts: { increment: 1 } } });
-
-          // 실패 횟수 기록을 롤백하지 않도록 트랜잭션 밖에서 오류 처리
-          return 'MISMATCH' as const;
-        }
-
-        await tx.user.update({
-          where: { companyId_id: { companyId: account.companyId, id: account.userId } },
-          data: { emailVerifiedAt: at, status: 'ACTIVE' },
-        });
-        // 사용한 코드는 즉시 무효화
-        await tx.emailVerification.update({
-          where,
-          data: { codeHash: null, expiresAt: null, attempts: 0 },
-        });
-
-        return 'VERIFIED' as const;
-      })
-      .then((result) => {
-        if (result === 'MISMATCH') {
-          throw new EmailVerificationError('CODE_INVALID');
-        }
+    const outcome = await auth.$transaction(async (tx) => {
+      const where = { companyId_userId: { companyId: account.companyId, userId: account.userId } };
+      const record = await tx.emailVerification.findUnique({ where });
+      const user = await tx.user.findFirst({
+        where: { companyId: account.companyId, id: account.userId },
       });
+
+      if (user?.emailVerifiedAt && !record?.pendingEmail) {
+        throw new EmailVerificationError('ALREADY_VERIFIED');
+      }
+
+      // 코드를 받은 주소가 지금 인증할 주소와 다르거나, 코드가 없거나 만료되었거나, 시도 횟수를 넘긴 경우는 같은 오류
+      const expectedEmail = record?.pendingEmail ?? user?.email;
+      const isUsable =
+        record?.codeHash &&
+        record.expiresAt &&
+        record.expiresAt > at &&
+        record.attempts < MAX_CODE_ATTEMPTS &&
+        record.email === expectedEmail;
+
+      if (!isUsable) {
+        throw new EmailVerificationError('CODE_INVALID');
+      }
+
+      if (!safeEqual(record.codeHash!, hashCode(secret, account, code))) {
+        await tx.emailVerification.update({ where, data: { attempts: { increment: 1 } } });
+
+        // 실패 횟수 기록을 롤백하지 않도록 트랜잭션 밖에서 오류 처리
+        return { mismatch: true as const };
+      }
+
+      const isChange = record.pendingEmail !== null;
+
+      await tx.user.update({
+        where: { companyId_id: { companyId: account.companyId, id: account.userId } },
+        data: {
+          emailVerifiedAt: at,
+          status: 'ACTIVE',
+          ...(isChange ? { email: record.pendingEmail } : {}),
+        },
+      });
+      // 사용한 코드는 즉시 무효화하고 변경 대기 상태를 해제
+      await tx.emailVerification.update({
+        where,
+        data: { codeHash: null, expiresAt: null, attempts: 0, pendingEmail: null },
+      });
+
+      return { mismatch: false as const, previousEmail: isChange ? (user?.email ?? null) : null };
+    });
+
+    if (outcome.mismatch) {
+      throw new EmailVerificationError('CODE_INVALID');
+    }
+
+    return { previousEmail: outcome.previousEmail };
   },
 });
 
