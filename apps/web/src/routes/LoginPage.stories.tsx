@@ -70,3 +70,39 @@ export const LongInput: Story = {
     await expect(canvas.getByLabelText('아이디')).toHaveValue('a'.repeat(60));
   },
 };
+
+export const WithKakaoButton: Story = {
+  play: async ({ canvasElement }) => {
+    await expect(
+      await within(canvasElement).findByRole('button', { name: '카카오로 로그인' }),
+    ).toBeInTheDocument();
+  },
+};
+
+// 카카오에서 돌아온 결과 안내 (주소의 ?social= 값)
+export const KakaoNotLinked: Story = {
+  parameters: { router: { initialEntries: ['/login?social=not-linked'], path: '/login' } },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent(
+      '연결된 계정이 없습니다',
+    );
+  },
+};
+
+export const KakaoCancelled: Story = {
+  parameters: { router: { initialEntries: ['/login?social=cancelled'], path: '/login' } },
+  play: async ({ canvasElement }) => {
+    await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent('취소했습니다');
+  },
+};
+
+// 알 수 없는 값은 안내하지 않음
+export const UnknownSocialResult: Story = {
+  parameters: { router: { initialEntries: ['/login?social=%3Cscript%3E'], path: '/login' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByRole('button', { name: '카카오로 로그인' }, { timeout: 3000 });
+    await expect(canvas.queryByRole('alert')).not.toBeInTheDocument();
+  },
+};

@@ -11,6 +11,11 @@ const envSchema = z.object({
   DATABASE_QUEUE_URL: z.url(),
   // 이메일 인증 코드 해시용 서버 비밀 값 (유출되면 6자리 코드를 대입으로 복원할 수 있으므로 32자 이상 무작위)
   CODE_HASH_SECRET: z.string().min(32),
+  // 소셜 로그인 진행 상태 쿠키 암호화용 서버 비밀 값 (개발 환경 가짜 제공자의 코드 서명에도 사용)
+  OAUTH_COOKIE_SECRET: z.string().min(32),
+  // 카카오 앱 등록 후 채움 (둘 다 있어야 카카오 로그인이 켜지고, 없으면 운영에서는 소셜 로그인이 꺼짐)
+  KAKAO_CLIENT_ID: z.string().min(1).optional(),
+  KAKAO_CLIENT_SECRET: z.string().min(1).optional(),
   // 브라우저에서 접속하는 웹 주소 (CSRF Origin 검증 기준)
   APP_ORIGIN: z.url(),
   S3_ENDPOINT: z.url(),

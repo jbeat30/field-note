@@ -17,6 +17,7 @@ import { getErrorMessage } from '../lib/apiError';
 import { hoursToMinutes, minutesToHours } from '../lib/workTime';
 import { EmailChangeForm } from '../settings/EmailChangeForm';
 import { PasswordChangeForm } from '../settings/PasswordChangeForm';
+import { SocialLoginSection } from '../settings/SocialLoginSection';
 import { useCompanySettings, useSaveCompanySettings } from '../settings/useCompanySettings';
 import { useDevices, useRevokeDevice } from '../settings/useDevices';
 
@@ -245,6 +246,13 @@ export const SettingsPage = () => {
           이메일 변경
         </h2>
         <EmailChangeForm />
+      </section>
+
+      <section className="flex flex-col gap-3" aria-labelledby="social-heading">
+        <h2 id="social-heading" className="text-lg font-bold">
+          소셜 로그인
+        </h2>
+        <SocialLoginSection />
       </section>
 
       <section className="flex flex-col gap-3" aria-labelledby="company-heading">

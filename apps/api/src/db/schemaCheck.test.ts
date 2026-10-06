@@ -156,4 +156,17 @@ describe('스키마 검사', () => {
 
     expect(rows).toEqual([]);
   });
+
+  it('소셜 연동 테이블은 전용 계정만 접근하고, 앱·운영자·큐 계정은 읽을 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM social_accounts`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM social_accounts`).rejects.toThrow();
+
+    const { rows } = await db.ownerPool.query<{ privilege_type: string }>(
+      `SELECT privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'social_accounts' AND grantee = 'field_note_auth' ORDER BY privilege_type`,
+    );
+
+    // 연동 해제를 위한 삭제만 허용, 수정 권한은 없음 (소셜 계정을 다른 계정으로 옮길 수 없음)
+    expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT']);
+  });
 });

@@ -5,7 +5,10 @@ import { Controller, useForm } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router';
 
 import { apiClient } from '../api/client';
+import { KakaoButton } from '../auth/KakaoButton';
+import { SocialNotice } from '../auth/SocialNotice';
 import { useMe } from '../auth/useMe';
+import { useKakaoStart, useSocialProviders } from '../auth/useSocial';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -18,6 +21,8 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const me = useMe();
+  const providers = useSocialProviders();
+  const kakaoStart = useKakaoStart();
   const {
     register,
     control,
@@ -51,6 +56,7 @@ export const LoginPage = () => {
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
       <h1 className="text-xl font-bold">로그인</h1>
+      <SocialNotice />
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField label="아이디" error={errors.loginId && '아이디를 입력해 주세요'}>
         <Input
@@ -79,6 +85,18 @@ export const LoginPage = () => {
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '로그인 중' : '로그인'}
       </Button>
+      {providers.data?.kakao && (
+        <>
+          <p className="text-center text-sm text-foreground/70">또는</p>
+          <KakaoButton
+            disabled={kakaoStart.isPending}
+            onClick={() => kakaoStart.mutate({ purpose: 'login' })}
+          >
+            카카오로 로그인
+          </KakaoButton>
+          {kakaoStart.isError && <Alert>{kakaoStart.error.message}</Alert>}
+        </>
+      )}
       <Link
         className="min-h-touch content-center text-sm text-primary underline"
         to="/forgot-password"
