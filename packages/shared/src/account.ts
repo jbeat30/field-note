@@ -20,6 +20,8 @@ export const LEGAL_DOCUMENT_META = {
   MARKETING: { title: '마케팅 정보 수신 동의 (선택)', path: '/legal/marketing' },
 } as const;
 
+export type LegalDocumentType = z.infer<typeof legalDocumentTypeSchema>;
+
 export const legalDocumentSummarySchema = z.object({
   id: z.uuid(),
   type: legalDocumentTypeSchema,

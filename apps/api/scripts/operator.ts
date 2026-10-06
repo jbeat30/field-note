@@ -4,6 +4,7 @@ import { parseArgs } from 'node:util';
 import { z } from 'zod';
 
 import { createPrismaClient } from '../src/db/client';
+import { registerLegalDocuments, LegalContentChangedError } from '../src/legal/legalDocuments';
 import {
   buildInvitationLink,
   createCompanyWithInvitation,
@@ -17,7 +18,11 @@ const USAGE = `운영자 CLI (회사 업무 데이터는 조회하지 않음)
 사용법
   pnpm operator create-company --company "회사 이름" --admin "관리자 이름" [--days 7]
   pnpm operator reissue --company-id <회사 ID> [--days 7]
-  pnpm operator list`;
+  pnpm operator list
+  pnpm operator legal-register`;
+
+const LEGAL_USAGE_NOTE =
+  '약관·처리방침 문서를 DB에 등록 (이미 등록된 같은 버전은 건너뛰고, 내용이 달라졌는데 버전이 같으면 거부)';
 
 // 운영자 접속 정보는 api 서버 설정과 분리 (운영자 PC에만 둠)
 const envSchema = z.object({
@@ -82,6 +87,9 @@ const main = async () => {
         env.APP_ORIGIN,
         await reissueInvitation(prisma, { companyId: values['company-id'], days, operator }),
       );
+    } else if (command === 'legal-register') {
+      console.log(LEGAL_USAGE_NOTE);
+      console.table(await registerLegalDocuments(prisma));
     } else if (command === 'list') {
       console.table(await listCompanies(prisma));
     } else {
@@ -93,7 +101,9 @@ const main = async () => {
 };
 
 main().catch((error: unknown) => {
-  if (error instanceof InvitationReissueError) {
+  if (error instanceof LegalContentChangedError) {
+    console.error(error.message);
+  } else if (error instanceof InvitationReissueError) {
     console.error(`재발급할 수 없음: ${error.message}`);
   } else {
     console.error(error instanceof Error ? error.message : error);
