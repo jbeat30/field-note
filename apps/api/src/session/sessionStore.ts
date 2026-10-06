@@ -1,5 +1,4 @@
-import { createHash, randomBytes } from 'node:crypto';
-
+import { generateToken, hashToken } from '../auth/token';
 import type { PrismaClient } from '../db/client';
 import type { AuthContext } from '../http/types';
 
@@ -22,11 +21,6 @@ export type SessionStore = {
 };
 
 type Clock = () => Date;
-
-const hashToken = (token: string) => createHash('sha256').update(token).digest('hex');
-
-// 추측이 불가능한 256비트 난수 토큰
-const generateToken = () => randomBytes(32).toString('base64url');
 
 /**
  * @description 회사 범위 밖 전용 계정으로 접속한 PostgreSQL 세션 저장소

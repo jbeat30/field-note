@@ -13,6 +13,13 @@ export const passwordSchema = z.string().min(10, '10자 이상').max(72, '72자 
 
 export const legalDocumentTypeSchema = z.enum(['TERMS_OF_SERVICE', 'PRIVACY_POLICY', 'MARKETING']);
 
+// 약관 종류별 제목과 전문 경로 (화면·API·시드가 같은 값 사용)
+export const LEGAL_DOCUMENT_META = {
+  TERMS_OF_SERVICE: { title: '이용약관', path: '/legal/terms' },
+  PRIVACY_POLICY: { title: '개인정보 수집·이용 동의', path: '/legal/privacy' },
+  MARKETING: { title: '마케팅 정보 수신 동의 (선택)', path: '/legal/marketing' },
+} as const;
+
 export const legalDocumentSummarySchema = z.object({
   id: z.uuid(),
   type: legalDocumentTypeSchema,

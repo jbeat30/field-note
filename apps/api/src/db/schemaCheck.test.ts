@@ -107,4 +107,38 @@ describe('스키마 검사', () => {
 
     expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT']);
   });
+
+  it('운영자 계정은 업무 테이블·세션·비밀번호에 접근할 수 없다', async () => {
+    await expect(db.operator.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM memos`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM sessions`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM user_credentials`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM consents`).rejects.toThrow();
+  });
+
+  it('운영자 작업 기록은 추가만 가능하다 (수정·삭제 권한 없음)', async () => {
+    const { rows } = await db.ownerPool.query<{ privilege_type: string }>(
+      `SELECT privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'operator_actions' AND grantee = 'field_note_operator' ORDER BY privilege_type`,
+    );
+
+    expect(rows.map((row) => row.privilege_type)).toEqual(['INSERT', 'SELECT']);
+  });
+
+  it('앱 계정과 전용 계정은 운영자 작업 기록에 접근할 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM operator_actions`).rejects.toThrow();
+    await expect(db.auth.$queryRaw`SELECT * FROM operator_actions`).rejects.toThrow();
+  });
+
+  it('초대 테이블은 앱 계정이 접근할 수 없고 삭제 권한은 아무도 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM invitations`).rejects.toThrow();
+
+    const { rows } = await db.ownerPool.query(
+      `SELECT grantee FROM information_schema.role_table_grants
+        WHERE table_name = 'invitations' AND privilege_type = 'DELETE'
+          AND grantee IN ('field_note_app', 'field_note_auth', 'field_note_operator')`,
+    );
+
+    expect(rows).toEqual([]);
+  });
 });

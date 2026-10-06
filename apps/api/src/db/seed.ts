@@ -1,18 +1,26 @@
 import { createHash } from 'node:crypto';
 
-import { DEMO_ACCOUNTS, DEMO_LEGAL_DOCUMENTS } from '@field-note/shared/demo';
+import { DEMO_ACCOUNTS, DEMO_INVITATION, DEMO_LEGAL_DOCUMENTS } from '@field-note/shared/demo';
 
 import { hashPassword } from '../auth/password';
+import { hashToken } from '../auth/token';
 
 import type { PrismaClient } from './client';
 
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
-export type SeedResult = { companies: number; users: number; documents: number };
+export type SeedResult = {
+  companies: number;
+  users: number;
+  documents: number;
+  invitations: number;
+};
+
+const DAY_MS = 24 * 60 * 60 * 1000;
 
 /**
  * @description 로컬 개발용 더미 데이터 입력 (여러 번 실행해도 같은 결과, 소유 계정 클라이언트 전용)
- * 회사·계정·약관 버전·동의 이력을 만든다. 회사 설정과 초대는 해당 테이블이 생기는 P0-2·P0-8에서 추가
+ * 회사·계정·약관 버전·동의 이력과, 가입 전 회사의 1회용 초대 링크(`demo-invite-0001`)를 만든다. 회사 설정은 테이블이 생기는 P0-8에서 추가
  * @param prisma 소유 계정(DATABASE_MIGRATE_URL) Prisma 클라이언트
  * @returns 입력한 개수
  */
@@ -89,9 +97,41 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
+  // 가입 전 회사: 운영자 CLI가 만드는 것과 같은 구조(초대 상태 관리자 + 해시만 저장된 초대 링크)
+  await prisma.company.upsert({
+    where: { id: DEMO_INVITATION.companyId },
+    update: { name: DEMO_INVITATION.companyName },
+    create: { id: DEMO_INVITATION.companyId, name: DEMO_INVITATION.companyName },
+  });
+  await prisma.user.upsert({
+    where: { companyId_id: { companyId: DEMO_INVITATION.companyId, id: DEMO_INVITATION.userId } },
+    update: {},
+    create: {
+      id: DEMO_INVITATION.userId,
+      companyId: DEMO_INVITATION.companyId,
+      displayName: DEMO_INVITATION.adminName,
+      status: 'INVITED',
+    },
+  });
+
+  // 다시 실행하면 만료일만 연장하고, 이미 사용한 링크는 되살리지 않음
+  const expiresAt = new Date(Date.now() + DEMO_INVITATION.expiresInDays * DAY_MS);
+
+  await prisma.invitation.upsert({
+    where: { tokenHash: hashToken(DEMO_INVITATION.token) },
+    update: { expiresAt },
+    create: {
+      tokenHash: hashToken(DEMO_INVITATION.token),
+      companyId: DEMO_INVITATION.companyId,
+      userId: DEMO_INVITATION.userId,
+      expiresAt,
+    },
+  });
+
   return {
-    companies: DEMO_ACCOUNTS.length,
-    users: DEMO_ACCOUNTS.length,
+    companies: DEMO_ACCOUNTS.length + 1,
+    users: DEMO_ACCOUNTS.length + 1,
     documents: documents.length,
+    invitations: 1,
   };
 };

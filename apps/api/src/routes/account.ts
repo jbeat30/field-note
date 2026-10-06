@@ -1,4 +1,5 @@
 import {
+  LEGAL_DOCUMENT_META,
   companySettingsSchema,
   deviceParamsSchema,
   devicesResponseSchema,
@@ -14,6 +15,7 @@ import {
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
+import type { InvitationStore } from '../invitation/invitationStore';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 
 // 계약 선행 라우트: 화면은 이 계약(OpenAPI)으로 목업과 함께 먼저 만들고, 실제 구현은 P0-2~P0-8에서 채운다
@@ -21,7 +23,15 @@ const notImplemented: RouteHandler = async () => {
   throw new AppError('NOT_IMPLEMENTED');
 };
 
-export const registerAccountRoutes = ({ add }: RouteRegistry) => {
+type AccountRouteOptions = {
+  // 없으면 초대 확인은 구현 전 상태(501)로 동작
+  invitationStore?: InvitationStore;
+};
+
+export const registerAccountRoutes = (
+  { add }: RouteRegistry,
+  { invitationStore }: AccountRouteOptions = {},
+) => {
   add(
     {
       method: 'get',
@@ -34,7 +44,32 @@ export const registerAccountRoutes = ({ add }: RouteRegistry) => {
       errors: ['NOT_FOUND'],
       rateLimit: { windowMs: 60_000, limit: 30 },
     },
-    notImplemented,
+    invitationStore
+      ? async ({ params }) => {
+          const { token } = params as { token: string };
+          const invitation = await invitationStore.find(token);
+
+          // 만료·사용 완료·없는 링크·정지된 회사는 구분하지 않고 같은 응답
+          if (!invitation) {
+            throw new AppError('NOT_FOUND');
+          }
+
+          const documents = await invitationStore.listCurrentDocuments();
+
+          return {
+            companyName: invitation.companyName,
+            adminName: invitation.adminName,
+            expiresAt: invitation.expiresAt.toISOString(),
+            documents: documents.map((document) => ({
+              id: document.id,
+              type: document.type,
+              version: document.version,
+              isRequired: document.isRequired,
+              ...LEGAL_DOCUMENT_META[document.type],
+            })),
+          };
+        }
+      : notImplemented,
   );
 
   add(

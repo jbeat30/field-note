@@ -28,7 +28,8 @@
     "dev:mock": "pnpm --filter @field-note/web dev:mock",
     "env:init": "pnpm --filter @field-note/api env:init",
     "db:seed": "pnpm --filter @field-note/api db:seed",
-    "db:reset": "docker compose down -v && pnpm infra:up && pnpm db:setup && pnpm db:seed"
+    "db:reset": "docker compose down -v && pnpm infra:up && pnpm db:setup && pnpm db:seed",
+    "operator": "pnpm --filter @field-note/api operator"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",

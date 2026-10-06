@@ -8,6 +8,7 @@ const GENERATORS: Record<string, () => string> = {
   DB_OWNER_PASSWORD: () => randomBytes(24).toString('base64url'),
   DB_APP_PASSWORD: () => randomBytes(24).toString('base64url'),
   DB_AUTH_PASSWORD: () => randomBytes(24).toString('base64url'),
+  DB_OPERATOR_PASSWORD: () => randomBytes(24).toString('base64url'),
   // S3 호환 저장소의 접근 키(20자 대문자·숫자)와 비밀 키(40자)
   S3_ACCESS_KEY: () =>
     Array.from(randomBytes(20), (byte) => UPPER_ALNUM[byte % UPPER_ALNUM.length]).join(''),

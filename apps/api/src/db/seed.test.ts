@@ -1,6 +1,7 @@
-import { DEMO_ACCOUNTS } from '@field-note/shared/demo';
+import { DEMO_ACCOUNTS, DEMO_INVITATION } from '@field-note/shared/demo';
 
 import { verifyPassword } from '../auth/password';
+import { createPrismaInvitationStore } from '../invitation/invitationStore';
 
 import { startTestDatabase, type TestDatabase } from './testDatabase';
 import { seedDemoData } from './seed';
@@ -32,8 +33,8 @@ describe('seedDemoData', () => {
       ?.passwordHash;
 
     expect(second).toEqual(first);
-    expect(await db.owner.company.count()).toBe(3);
-    expect(await db.owner.user.count()).toBe(3);
+    expect(await db.owner.company.count()).toBe(4);
+    expect(await db.owner.user.count()).toBe(4);
     expect(await db.owner.legalDocument.count()).toBe(3);
     expect(hashAfter).toBe(hashBefore);
   });
@@ -47,7 +48,9 @@ describe('seedDemoData', () => {
   });
 
   it('이메일 인증 전 계정은 초대 상태이고 인증한 계정은 활성이다', async () => {
-    const users = await db.owner.user.findMany({ orderBy: { createdAt: 'asc' } });
+    const users = await db.owner.user.findMany({
+      where: { companyId: { not: DEMO_INVITATION.companyId } },
+    });
     const byName = Object.fromEntries(users.map((user) => [user.displayName, user]));
 
     expect(byName[newbie.displayName]?.status).toBe('INVITED');
@@ -69,5 +72,25 @@ describe('seedDemoData', () => {
 
     expect(users.map((user) => user.displayName)).toEqual([hanbit.displayName]);
     expect(consents.every((consent) => consent.companyId === saeron.companyId)).toBe(true);
+  });
+
+  it('데모 초대 링크는 해시로만 저장되고 한 번만 사용할 수 있다', async () => {
+    const stored = await db.owner.invitation.findMany();
+
+    expect(stored).toHaveLength(1);
+    expect(stored[0]?.tokenHash).not.toContain(DEMO_INVITATION.token);
+
+    const store = createPrismaInvitationStore(db.auth);
+
+    expect((await store.find(DEMO_INVITATION.token))?.companyName).toBe(
+      DEMO_INVITATION.companyName,
+    );
+    expect(await store.consume(DEMO_INVITATION.token)).not.toBeNull();
+    expect(await store.consume(DEMO_INVITATION.token)).toBeNull();
+
+    // 시드를 다시 실행해도 사용한 링크는 되살아나지 않음
+    await seedDemoData(db.owner);
+
+    expect(await store.find(DEMO_INVITATION.token)).toBeNull();
   });
 });
