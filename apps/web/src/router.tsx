@@ -1,20 +1,41 @@
 import { createBrowserRouter } from 'react-router';
 
+import { RequireAuth } from './auth/RequireAuth';
 import { AppLayout } from './layouts/AppLayout';
+import { AuthLayout } from './layouts/AuthLayout';
+
+const page = <T extends string>(load: () => Promise<Record<T, React.ComponentType>>, name: T) => ({
+  lazy: async () => ({ Component: (await load())[name] }),
+});
 
 // 라우트 단위 코드 분할(lazy): 무거운 화면은 필요할 때 불러온다
 export const routes = [
   {
-    path: '/',
-    Component: AppLayout,
+    // 로그인 전 화면
+    Component: AuthLayout,
     children: [
+      { path: '/login', ...page(() => import('./routes/LoginPage'), 'LoginPage') },
       {
-        index: true,
-        lazy: async () => ({ Component: (await import('./routes/HomePage')).HomePage }),
+        path: '/invite/:token',
+        ...page(() => import('./routes/InviteSignupPage'), 'InviteSignupPage'),
       },
       {
-        path: '*',
-        lazy: async () => ({ Component: (await import('./routes/NotFoundPage')).NotFoundPage }),
+        path: '/verify-email',
+        ...page(() => import('./routes/VerifyEmailPage'), 'VerifyEmailPage'),
+      },
+      { path: '/legal/:slug', ...page(() => import('./routes/LegalPage'), 'LegalPage') },
+    ],
+  },
+  {
+    // 로그인 후 화면
+    Component: RequireAuth,
+    children: [
+      {
+        Component: AppLayout,
+        children: [
+          { path: '/', ...page(() => import('./routes/HomePage'), 'HomePage') },
+          { path: '*', ...page(() => import('./routes/NotFoundPage'), 'NotFoundPage') },
+        ],
       },
     ],
   },
