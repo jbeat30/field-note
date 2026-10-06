@@ -1,11 +1,14 @@
-import type { ErrorCode, ErrorResponse } from '@field-note/shared';
+import { ERROR_MESSAGES, type ErrorCode, type ErrorResponse } from '@field-note/shared';
 
-import { ERROR_MESSAGES } from './errorMessages';
-
-const STATUS_BY_CODE: Record<ErrorCode, number> = {
+export const STATUS_BY_CODE: Record<ErrorCode, number> = {
   VALIDATION_ERROR: 400,
   UNAUTHORIZED: 401,
   CSRF_REJECTED: 403,
+  INVALID_CREDENTIALS: 401,
+  ACCOUNT_LOCKED: 423,
+  LOGIN_ID_TAKEN: 409,
+  EMAIL_CODE_INVALID: 400,
+  NOT_IMPLEMENTED: 501,
   NOT_FOUND: 404,
   IDEMPOTENCY_KEY_REQUIRED: 400,
   IDEMPOTENCY_KEY_REUSED: 422,
