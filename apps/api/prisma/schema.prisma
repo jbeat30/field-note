@@ -123,16 +123,19 @@ model User {
 
 // 로그인 자격 (회사 범위 밖 전용 계정만 접근). 소셜 로그인만 쓰면 행이 없거나 값이 비어 있음
 model UserCredential {
-  companyId    String   @map("company_id") @db.Uuid
-  userId       String   @map("user_id") @db.Uuid
+  companyId        String    @map("company_id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
   // 서비스 전체에서 유일한 로그인 아이디 (소문자)
-  loginId      String?  @unique @map("login_id")
+  loginId          String?   @unique @map("login_id")
   // 복원 불가능한 해시만 저장
-  passwordHash String?  @map("password_hash")
-  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company      Company  @relation(fields: [companyId], references: [id])
-  user         User     @relation(fields: [companyId, userId], references: [companyId, id])
+  passwordHash     String?   @map("password_hash")
+  // 연속 로그인 실패 횟수와 잠금 해제 시각 (성공하면 0으로 초기화)
+  failedLoginCount Int       @default(0) @map("failed_login_count")
+  lockedUntil      DateTime? @map("locked_until") @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company          Company   @relation(fields: [companyId], references: [id])
+  user             User      @relation(fields: [companyId, userId], references: [companyId, id])
 
   @@id([companyId, userId])
   @@map("user_credentials")

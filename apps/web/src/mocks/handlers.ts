@@ -21,14 +21,18 @@ import {
 } from './data';
 import {
   addAccount,
+  clearFailedLogins,
   findAccount,
   getCurrentAccount,
+  isLoginLocked,
   listDevices,
   markEmailVerified,
+  recordFailedLogin,
   removeDevice,
   signIn,
   signOut,
   updateSettings,
+  MOCK_MAX_FAILED_LOGINS,
 } from './state';
 
 // 실제 API와 같은 상태 코드·오류 형식을 쓴다 (apps/api/src/http/AppError.ts와 동일)
@@ -197,13 +201,21 @@ export const handlers = [
 
     const loginId = body.data.loginId.toLowerCase();
 
-    if (loginId === MOCK_LOCKED_LOGIN_ID) return apiError('ACCOUNT_LOCKED');
+    if (loginId === MOCK_LOCKED_LOGIN_ID || isLoginLocked(loginId))
+      return apiError('ACCOUNT_LOCKED');
 
     const account = findAccount(loginId);
 
     // 아이디 존재 여부를 알려 주지 않도록 같은 오류로 응답
-    if (!account || account.password !== body.data.password) return apiError('INVALID_CREDENTIALS');
+    if (!account || account.password !== body.data.password) {
+      // 실제 서버처럼 존재하는 계정만 실패 횟수를 세고, 잠금을 일으킨 실패에도 잠금 오류로 응답
+      if (account && recordFailedLogin(loginId) >= MOCK_MAX_FAILED_LOGINS)
+        return apiError('ACCOUNT_LOCKED');
 
+      return apiError('INVALID_CREDENTIALS');
+    }
+
+    clearFailedLogins(loginId);
     signIn(account.loginId);
 
     return HttpResponse.json(toMe(account));

@@ -8,13 +8,13 @@ import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idem
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
+import type { AccountService } from './auth/accountService';
 import type { InvitationStore } from './invitation/invitationStore';
 import { createLogger, type Logger } from './logger';
 import { registerAccountRoutes } from './routes/account';
 import { registerAuthRoutes } from './routes/auth';
 import { registerHealthRoutes } from './routes/health';
 import { registerSampleRoutes } from './routes/samples';
-import { registerSessionRoutes } from './routes/session';
 import { createMemorySessionStore, type SessionStore } from './session/sessionStore';
 import { createSessionResolver } from './session/cookie';
 
@@ -25,6 +25,8 @@ export type AppOptions = {
   sessionStore?: SessionStore;
   // 없으면 초대 확인 API는 501 (운영은 PostgreSQL 저장소를 주입)
   invitationStore?: InvitationStore;
+  // 없으면 가입·로그인·내 정보 API는 501
+  accountService?: AccountService;
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
@@ -47,9 +49,13 @@ export const createRegistry = (options: AppOptions = {}) => {
   });
 
   registerHealthRoutes(registry);
-  registerSessionRoutes(registry);
   registerSampleRoutes(registry);
-  registerAccountRoutes(registry, { invitationStore: options.invitationStore });
+  registerAccountRoutes(registry, {
+    invitationStore: options.invitationStore,
+    accountService: options.accountService,
+    sessionStore,
+    isSecureCookie: options.isSecureCookie,
+  });
   registerAuthRoutes(registry, { sessionStore, isSecureCookie: options.isSecureCookie ?? false });
 
   return registry;
