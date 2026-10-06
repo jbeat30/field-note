@@ -14,6 +14,8 @@ enum CompanyStatus {
   ACTIVE
   SUSPENDED
   CLOSING
+  // 해지 유예가 끝나 삭제·익명화까지 마친 회사
+  CLOSED
 
   @@map("company_status")
 }
@@ -52,6 +54,7 @@ model Company {
   passwordResets     PasswordReset[]
   settings           CompanySettings?
   socialAccounts     SocialAccount[]
+  closure            CompanyClosure?
 
   @@map("companies")
 }
@@ -314,4 +317,20 @@ model SocialAccount {
   // 한 계정에 같은 제공자는 하나만 연동
   @@unique([companyId, userId, provider])
   @@map("social_accounts")
+}
+
+// 계정 해지 진행 상태 (회사당 한 행). 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제 (서비스 기획서 §6.5)
+// 취소 토큰 원문은 저장하지 않고 해시만 저장. 삭제를 마치면 purged_at만 남겨 파기했다는 기록으로 보존 (개인정보 없음)
+model CompanyClosure {
+  companyId       String    @id @map("company_id") @db.Uuid
+  requestedAt     DateTime  @map("requested_at") @db.Timestamptz(3)
+  // 이 시각이 지나면 삭제 대상
+  purgeAfter      DateTime  @map("purge_after") @db.Timestamptz(3)
+  cancelTokenHash String?   @unique @map("cancel_token_hash")
+  cancelledAt     DateTime? @map("cancelled_at") @db.Timestamptz(3)
+  purgedAt        DateTime? @map("purged_at") @db.Timestamptz(3)
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company   @relation(fields: [companyId], references: [id])
+
+  @@map("company_closures")
 }

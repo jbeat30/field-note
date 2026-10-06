@@ -9,6 +9,8 @@ import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import type { AccountService } from './auth/accountService';
+import type { ClosureService } from './closure/closureService';
+import { registerClosureRoutes } from './routes/closure';
 import type { CompanySettingsService } from './company/companySettingsService';
 import type { EmailVerificationService } from './auth/emailVerification';
 import type { PasswordService } from './auth/passwordService';
@@ -39,6 +41,8 @@ export type AppOptions = {
   emailVerification?: EmailVerificationService;
   // 없으면 비밀번호 재설정·변경 API는 501
   passwordService?: PasswordService;
+  // 없으면 계정 해지 API는 501
+  closure?: ClosureService;
   // 없으면 회사 설정 API는 501
   companySettings?: CompanySettingsService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
@@ -86,6 +90,7 @@ export const createRegistry = (options: AppOptions = {}) => {
     sessionStore,
     isSecureCookie: options.isSecureCookie,
   });
+  registerClosureRoutes(registry, options.closure);
   registerSocialRoutes(
     registry,
     options.social && options.accountService

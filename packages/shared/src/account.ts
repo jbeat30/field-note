@@ -150,6 +150,7 @@ export const SOCIAL_RESULTS = [
   'email-required',
   'email-taken',
   'invitation-invalid',
+  'closing',
 ] as const;
 
 export type SocialResult = (typeof SOCIAL_RESULTS)[number];
@@ -161,6 +162,20 @@ export const socialMethodsResponseSchema = z.object({
 });
 
 export type SocialMethodsResponse = z.infer<typeof socialMethodsResponseSchema>;
+
+// 계정 해지 (§6.5): 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제, 메일로 받은 링크로 취소
+// 비밀번호 로그인이 있는 계정은 현재 비밀번호를 다시 확인 (소셜 로그인만 쓰는 계정은 확인할 비밀번호가 없음)
+export const closureRequestSchema = z.object({ currentPassword: z.string().min(1).optional() });
+
+export type ClosureRequest = z.infer<typeof closureRequestSchema>;
+
+export const closureResponseSchema = z.object({ purgeAfter: z.iso.datetime() });
+
+export type ClosureResponse = z.infer<typeof closureResponseSchema>;
+
+export const closureTokenParamsSchema = z.object({ token: z.string().min(8).max(128) });
+
+export const closureCancelSchema = z.object({ token: z.string().min(8).max(128) });
 
 // 로그인한 관리자 정보 (회사·계정 식별값은 포함하지 않음)
 export const meResponseSchema = z.object({

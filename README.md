@@ -126,10 +126,13 @@ pnpm operator create-company --company "한빛판금" --admin "김한빛"   # �
 pnpm operator reissue --company-id <회사 ID>                        # 링크 재발급 (기존 링크는 즉시 만료, 가입 전 회사만)
 pnpm operator list                                                  # 회사 목록과 가입 상태
 pnpm operator legal-register                                        # 약관·처리방침 문서를 DB에 등록 (운영 환경 최초 1회, 문서를 바꿔 버전을 올릴 때마다)
+pnpm operator closures                                              # 해지 요청 현황 (유예 중·삭제 예정 시각, 삭제 대상 표시)
+pnpm operator purge-due [--dry-run]                                 # 유예(14일)가 끝난 회사의 데이터 삭제·익명화 (--dry-run은 대상만 표시)
 ```
 
 - 링크는 발급 직후 한 번만 표시된다 (DB에는 해시만 저장)
 - 링크는 한 번 쓰면 폐기되고, 만료·사용 완료·없는 링크는 같은 화면으로 안내된다
+- `closures`·`purge-due`는 삭제 전용 DB 계정(`DATABASE_PURGE_URL`)으로 접속한다. 삭제는 api가 하지 않고, 정해진 주기로 이 명령을 실행해 처리한다 (주기 실행은 운영 환경 구성 때 연결)
 - 운영자 작업은 `operator_actions`에 기록된다 (회사와 무관한 약관 문서 등록은 `legal_documents`의 생성 시각으로 확인)
 
 ### 자주 쓰는 명령
@@ -190,12 +193,13 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 
 ## DB와 회사 격리
 
-- DB 계정이 다섯 개다
+- DB 계정이 여섯 개다
   - **소유 계정**(`DATABASE_MIGRATE_URL`): 테이블을 만드는 마이그레이션 전용
   - **앱 계정**(`DATABASE_URL`): 업무 쿼리용. 다른 회사 데이터를 볼 수 없게 DB가 막고, 세션 테이블은 접근할 수 없다
   - **회사 범위 밖 전용 계정**(`DATABASE_AUTH_URL`): 로그인 전처럼 회사를 아직 모르는 시점의 세션 조회 전용. 업무 테이블 권한이 없다
   - **작업 큐 계정**(`DATABASE_QUEUE_URL`): 이메일 발송 같은 백그라운드 작업 큐(pg-boss)용. 큐 스키마(`pgboss`)만 쓰고 업무 테이블은 읽을 수 없다
   - **운영자 계정**(`DATABASE_OPERATOR_URL`): 운영자 CLI 전용. 회사·초대 발급만 가능하고 업무 테이블은 읽을 수 없다
+  - **삭제 계정**(`DATABASE_PURGE_URL`): 해지 유예가 끝난 회사의 데이터 삭제·익명화 전용. 해지 중이 아닌 회사의 행은 DB가 보이지 않게 막는다
 - 업무 쿼리는 반드시 `withCompany(prisma, 회사ID, (tx) => …)`가 넘겨주는 `tx`로만 실행한다. 이 밖에서 조회하면 아무 행도 보이지 않는다
 - `pnpm test`의 격리·스키마 검사 테스트는 Docker로 임시 PostgreSQL을 띄운다. Docker가 꺼져 있으면 실패한다
 - Prisma 클라이언트는 `pnpm typecheck`·`pnpm test`가 자동으로 생성한다 (`src/generated`, Git 제외)
@@ -264,6 +268,13 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 이메일은 요청 처리 중에 직접 보내지 않고 작업 큐(PostgreSQL 기반 pg-boss)를 거친다. 발송에 실패하면 30초부터 지수적으로 늘려 5번까지 다시 시도한다
 - 인증 코드 원문은 큐·DB·로그에 남기지 않는다. 작업 처리기가 발송 직전에 만들고, DB에는 서버 비밀 값으로 만든 해시만 저장한다
 - 로컬은 Mailpit, 운영은 `SMTP_HOST`·`SMTP_PORT`·`SMTP_USER`·`SMTP_PASSWORD`·`SMTP_FROM`만 메일 발송 서비스 값으로 바꾼다 (코드 변경 없음)
+
+## 계정 해지
+
+- 설정 화면의 "계정 해지"에서 비밀번호를 다시 확인하고 요청한다 (소셜 로그인만 쓰는 계정은 비밀번호 없이). 요청하면 **즉시 모든 기기에서 로그아웃**되고 로그인이 막히며, 해지 취소 링크가 메일로 간다
+- 유예는 14일이다. 그 안에는 메일의 링크(`/closure/cancel/<토큰>`, 로그인 없이, 한 번만)로 취소해 계정을 복구한다. 유예 중 로그인하면 비밀번호가 맞을 때만 해지 중임을 알려 준다
+- 유예가 끝나면 `pnpm operator purge-due`가 업무 데이터를 삭제하고 계정·회사는 개인 식별 항목만 지워 익명화한다. 동의 이력·운영자 작업 기록·해지 기록은 개인정보 없이 남긴다 (처리 기준은 `apps/api/src/closure/purgePolicy.ts`, 회사 범위 테이블을 추가하면 반드시 등록해야 하며 누락은 테스트가 잡는다)
+- 목업 모드에서는 해지를 요청한 뒤 `/closure/cancel/demo-closure-token-0001`에서 취소를 시연할 수 있다
 
 ## 로그인 세션
 

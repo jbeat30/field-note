@@ -212,7 +212,10 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
           const account = await socialService.findAccount('KAKAO', profile.providerUserId);
 
           if (!account) {
-            return redirectTo('/login', 'not-linked');
+            // 해지 요청 중인 계정이면 연결이 없는 것과 구분해 취소 링크를 안내
+            const isClosing = await socialService.isClosing('KAKAO', profile.providerUserId);
+
+            return redirectTo('/login', isClosing ? 'closing' : 'not-linked');
           }
 
           const created = await sessionStore.create(account, {

@@ -1,7 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { addAccount, findAccount, setKakaoProfile, signIn } from '../mocks/state';
+import {
+  addAccount,
+  findAccount,
+  getCurrentAccount,
+  setKakaoProfile,
+  signIn,
+} from '../mocks/state';
 
 import { SettingsPage } from './SettingsPage';
 
@@ -292,5 +298,65 @@ export const SocialAlreadyLinkedNotice: Story = {
     await expect(
       await section.findByText('이미 다른 계정에 연동된 카카오 계정입니다'),
     ).toBeInTheDocument();
+  },
+};
+
+const closureSection = (canvas: ReturnType<typeof within>) =>
+  within(canvas.getByRole('region', { name: '계정 해지' }));
+
+export const ClosureWrongPassword: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '계정 해지' }));
+
+    const section = closureSection(canvas);
+
+    await userEvent.type(section.getByLabelText('현재 비밀번호'), 'wrong-password-1');
+    await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+
+    await expect(await section.findByText('현재 비밀번호가 올바르지 않습니다')).toBeInTheDocument();
+  },
+};
+
+export const ClosureRequiresPassword: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '계정 해지' }));
+
+    const section = closureSection(canvas);
+
+    await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+
+    await expect(await section.findByText('현재 비밀번호를 입력해 주세요')).toBeInTheDocument();
+  },
+};
+
+// 요청하면 로그아웃되어 안내 화면으로 이동 (스토리에서는 서버 상태가 해지 중으로 바뀌는지 확인)
+export const ClosureRequested: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '계정 해지' }));
+
+    const section = closureSection(canvas);
+
+    await userEvent.type(section.getByLabelText('현재 비밀번호'), 'Hanbit-demo-2026!');
+    await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+
+    await waitFor(() => expect(findAccount('hanbit')?.closingPurgeAfter).toBeDefined());
+    await expect(getCurrentAccount()).toBeUndefined();
+  },
+};
+
+export const ClosureCanGoBack: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '계정 해지' }));
+    await userEvent.click(canvas.getByRole('button', { name: '돌아가기' }));
+
+    await expect(await canvas.findByRole('button', { name: '계정 해지' })).toBeInTheDocument();
   },
 };
