@@ -31,6 +31,16 @@ export const DEMO_ACCOUNTS: readonly MockAccount[] = [
     companyName: '새론전기',
     settings: { standardWorkMinutes: 540, monthlyWorkDays: 26, workUnitMode: 'HOURS' },
   },
+  {
+    // 가입은 했지만 이메일 인증 전인 계정: 로그인하면 인증 화면으로 이동
+    loginId: 'newbie',
+    password: 'Newbie-demo-2026!',
+    displayName: '이다온',
+    email: 'newbie@example.com',
+    isEmailVerified: false,
+    companyName: '다온목공',
+    settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
+  },
 ];
 
 // 초대 링크 가입 시연용 (운영자가 만든 초대를 흉내)
