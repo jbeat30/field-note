@@ -28,7 +28,8 @@ export const buildPasswordResetEmail = (
 <p>본인이 요청하지 않았다면 이 메일을 무시해 주세요. 비밀번호는 바뀌지 않습니다.</p>`,
 });
 
-export type SecurityNoticeKind = 'PASSWORD_CHANGED' | 'PASSWORD_RESET_DONE' | 'EMAIL_CHANGED';
+export type SecurityNoticeKind =
+  'PASSWORD_CHANGED' | 'PASSWORD_RESET_DONE' | 'EMAIL_CHANGED' | 'CLOSURE_CANCELLED';
 
 const NOTICES: Record<SecurityNoticeKind, { subject: string; lines: (hint?: string) => string[] }> =
   {
@@ -44,6 +45,13 @@ const NOTICES: Record<SecurityNoticeKind, { subject: string; lines: (hint?: stri
       lines: () => [
         '비밀번호 재설정이 완료되었습니다.',
         '모든 기기의 로그인이 해제되었습니다. 새 비밀번호로 다시 로그인해 주세요.',
+      ],
+    },
+    CLOSURE_CANCELLED: {
+      subject: '[field-note] 계정 해지가 취소되었습니다',
+      lines: () => [
+        '계정 해지 요청이 취소되어 계정을 다시 사용할 수 있습니다.',
+        '다시 로그인해 주세요.',
       ],
     },
     EMAIL_CHANGED: {
@@ -91,4 +99,42 @@ export const maskEmail = (email: string) => {
   const [local = '', domain = ''] = email.split('@');
 
   return `${local.slice(0, 2)}***@${domain}`;
+};
+
+/**
+ * @description 해지 요청 접수 안내와 취소 링크 메일 (본문에 개인정보 없음)
+ * @param to 받는 주소
+ * @param link 해지 취소 링크 (토큰 원문은 이 링크에만 담김)
+ * @param purgeAfter 이 시각 이후 데이터가 삭제됨
+ * @returns 발송할 메일
+ */
+export const buildClosureEmail = (to: string, link: string, purgeAfter: Date): MailMessage => {
+  const date = new Intl.DateTimeFormat('ko-KR', {
+    dateStyle: 'long',
+    timeZone: 'Asia/Seoul',
+  }).format(purgeAfter);
+  const lines = [
+    '계정 해지 요청이 접수되었습니다.',
+    '',
+    '즉시 로그인이 막혔고 모든 기기에서 로그아웃되었습니다.',
+    `${date}까지는 아래 링크로 해지를 취소하고 계정을 복구할 수 있습니다. 이 기간이 지나면 데이터가 삭제되며 복구할 수 없습니다.`,
+    link,
+    '',
+    '본인이 요청하지 않았다면 즉시 위 링크로 해지를 취소하고 비밀번호를 바꿔 주세요.',
+  ];
+
+  return {
+    to,
+    subject: '[field-note] 계정 해지 요청이 접수되었습니다',
+    text: lines.join('\n'),
+    html: lines
+      .map((line) =>
+        line.startsWith('http')
+          ? `<p><a href="${line}">해지 취소하기</a></p>`
+          : line
+            ? `<p>${line}</p>`
+            : '',
+      )
+      .join('\n'),
+  };
 };

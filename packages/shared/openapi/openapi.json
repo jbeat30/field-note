@@ -135,6 +135,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -201,6 +202,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -267,6 +269,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -421,6 +424,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -487,6 +491,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -553,6 +558,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -715,6 +721,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -781,6 +788,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -847,6 +855,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -913,6 +922,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1044,6 +1054,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1110,6 +1121,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1176,6 +1188,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1273,6 +1286,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1339,6 +1353,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1475,6 +1490,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1541,6 +1557,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1607,6 +1624,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1673,6 +1691,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1785,6 +1804,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -1897,6 +1917,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2041,6 +2062,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2107,6 +2129,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2227,6 +2250,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2337,6 +2361,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2403,6 +2428,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2469,6 +2495,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2584,6 +2611,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2650,6 +2678,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2757,6 +2786,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2823,6 +2853,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -2889,6 +2920,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3010,6 +3042,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3076,6 +3109,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3142,6 +3176,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3266,6 +3301,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3332,6 +3368,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3398,6 +3435,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3464,6 +3502,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3586,6 +3625,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3652,6 +3692,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3718,6 +3759,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3784,6 +3826,812 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/me/closure": {
+      "post": {
+        "summary": "계정 해지 요청 (즉시 로그인 차단, 14일 유예 뒤 삭제)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "currentPassword": {
+                    "type": "string",
+                    "minLength": 1
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "purgeAfter": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "purgeAfter"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "CURRENT_PASSWORD_INVALID",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "423": {
+            "description": "ACCOUNT_LOCKED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 과다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/closure/{token}": {
+      "get": {
+        "summary": "해지 취소 링크 확인 (삭제 예정 시각)",
+        "security": [],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 8,
+              "maxLength": 128
+            },
+            "required": true,
+            "name": "token",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "purgeAfter": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "purgeAfter"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 과다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/closure/cancel": {
+      "post": {
+        "summary": "해지 취소 (계정 복구)",
+        "security": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "token": {
+                    "type": "string",
+                    "minLength": 8,
+                    "maxLength": 128
+                  }
+                },
+                "required": [
+                  "token"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "요청 과다",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -3975,6 +4823,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4041,6 +4890,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4107,6 +4957,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4173,6 +5024,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4270,6 +5122,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4336,6 +5189,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4402,6 +5256,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4508,6 +5363,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4574,6 +5430,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4682,6 +5539,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4781,6 +5639,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4847,6 +5706,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",
@@ -4946,6 +5806,7 @@
                             "INVALID_CREDENTIALS",
                             "CURRENT_PASSWORD_INVALID",
                             "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
                             "ACCOUNT_LOCKED",
                             "LOGIN_ID_TAKEN",
                             "EMAIL_CODE_INVALID",

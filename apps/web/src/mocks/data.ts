@@ -16,6 +16,8 @@ export type MockAccount = {
   kakaoProfileKey?: string;
   // false면 소셜 로그인만 쓰는 계정 (비밀번호 로그인 없음)
   hasPassword?: boolean;
+  // 해지 요청 중이면 삭제 예정 시각 (ISO)
+  closingPurgeAfter?: string;
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용
@@ -47,6 +49,8 @@ export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [
 export const MOCK_EMAIL_CODE = '123456';
 // 비밀번호 재설정 링크 시연용 (`/reset-password/demo-reset-token-0001`), 한 번 쓰면 폐기
 export const MOCK_RESET_TOKEN = 'demo-reset-token-0001';
+// 해지 취소 링크 시연용 (`/closure/cancel/demo-closure-token-0001`), 해지를 요청한 뒤부터 유효하고 한 번 쓰면 폐기
+export const MOCK_CLOSURE_TOKEN = 'demo-closure-token-0001';
 export const MOCK_LOCKED_LOGIN_ID = 'locked';
 export const MOCK_TAKEN_LOGIN_ID = 'taken-id';
 export const MOCK_SESSION_STORAGE_KEY = 'field-note-mock-session';
