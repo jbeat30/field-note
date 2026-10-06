@@ -1,29 +1,13 @@
-import { APP_NAME } from '@field-note/shared';
-import { useQuery } from '@tanstack/react-query';
+import { useMe } from '../auth/useMe';
 
-import { apiClient } from '../api/client';
-import { queryKeys } from '../query/queryKeys';
-
+// 로그인 후 첫 화면 (홈 대시보드는 1단계 이후)
 export const HomePage = () => {
-  const health = useQuery({
-    queryKey: queryKeys.health(),
-    queryFn: async () => {
-      const { data, error } = await apiClient.GET('/api/v1/health');
-
-      if (error) {
-        throw new Error('[web.HomePage] 서버 상태 확인 실패');
-      }
-
-      return data;
-    },
-  });
+  const me = useMe();
 
   return (
     <section>
-      <h1 className="text-2xl font-bold">{APP_NAME}</h1>
-      {health.isPending && <p className="mt-2 text-sm">서버 상태 확인 중</p>}
-      {health.isError && <p className="mt-2 text-sm text-danger">서버에 연결할 수 없습니다</p>}
-      {health.isSuccess && <p className="mt-2 text-sm">서버 연결됨</p>}
+      <h1 className="text-2xl font-bold">{me.data?.companyName}</h1>
+      <p className="mt-2 text-sm">{me.data?.displayName}님, 안녕하세요</p>
     </section>
   );
 };

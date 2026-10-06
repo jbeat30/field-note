@@ -10,17 +10,24 @@
     "db:generate": "prisma generate",
     "db:setup": "tsx --env-file-if-exists=../../.env scripts/db-setup.ts",
     "openapi:generate": "tsx scripts/generate-openapi.ts",
-    "openapi:check": "tsx scripts/generate-openapi.ts --check"
+    "openapi:check": "tsx scripts/generate-openapi.ts --check",
+    "db:seed": "tsx --env-file-if-exists=../../.env scripts/db-seed.ts",
+    "env:init": "tsx scripts/init-env.ts",
+    "operator": "tsx --env-file-if-exists=../../.env scripts/operator.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "9.1.0",
     "@field-note/shared": "workspace:*",
     "@prisma/adapter-pg": "7.10.0",
     "@prisma/client": "7.10.0",
+    "arctic": "3.7.0",
+    "argon2": "0.45.1",
     "cookie-parser": "1.4.7",
     "express": "5.2.1",
     "express-rate-limit": "8.7.0",
+    "nodemailer": "10.0.14",
     "pg": "8.23.1",
+    "pg-boss": "12.36.0",
     "pino": "10.4.0",
     "pino-http": "11.0.0",
     "swagger-ui-express": "5.0.1",
@@ -32,12 +39,14 @@
     "@types/cookie-parser": "1.4.10",
     "@types/express": "5.0.6",
     "@types/node": "24.19.1",
+    "@types/nodemailer": "8.0.2",
     "@types/pg": "8.23.1",
     "@types/supertest": "7.2.1",
     "@types/swagger-ui-express": "4.1.8",
     "openapi-typescript": "7.13.0",
     "prisma": "7.10.0",
     "supertest": "7.3.1",
+    "testcontainers": "12.2.0",
     "tsx": "4.23.15"
   }
 }

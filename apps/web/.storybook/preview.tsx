@@ -1,26 +1,42 @@
 import type { Preview } from '@storybook/react-vite';
 import { mswLoader } from 'msw-storybook-addon/csf3';
-import { MemoryRouter } from 'react-router';
+import { MemoryRouter, Route, Routes } from 'react-router';
 
+import { handlers } from '../src/mocks/handlers';
+import { resetMockState } from '../src/mocks/state';
 import { AppProviders } from '../src/AppProviders';
 import { createQueryClient } from '../src/query/queryClient';
 import '../src/index.css';
 
 const preview: Preview = {
-  // API 응답은 스토리마다 msw 핸들러로 가짜 응답을 준다
-  loaders: [mswLoader()],
+  // API 응답은 스토리마다 msw 핸들러로 가짜 응답을 준다 (기본은 목업 서버 전체)
+  loaders: [
+    () => {
+      // 스토리끼리 가짜 서버 상태(로그인·가입)가 섞이지 않게 초기화
+      resetMockState();
+    },
+    mswLoader(),
+  ],
   decorators: [
     // 스토리마다 새 QueryClient를 만들어 캐시가 서로 영향을 주지 않게 함
-    (Story) => (
-      <AppProviders queryClient={createQueryClient()}>
-        <MemoryRouter>
-          <Story />
-        </MemoryRouter>
-      </AppProviders>
-    ),
+    (Story, { parameters }) => {
+      const router = parameters.router as { initialEntries?: string[]; path?: string } | undefined;
+
+      return (
+        <AppProviders queryClient={createQueryClient()}>
+          <MemoryRouter initialEntries={router?.initialEntries ?? ['/']}>
+            <Routes>
+              <Route path={router?.path ?? '*'} element={<Story />} />
+              <Route path="*" element={<p data-testid="navigated">이동함</p>} />
+            </Routes>
+          </MemoryRouter>
+        </AppProviders>
+      );
+    },
   ],
   parameters: {
     layout: 'padded',
+    msw: { handlers },
     viewport: {
       options: {
         mobile: { name: '모바일', styles: { width: '390px', height: '844px' }, type: 'mobile' },

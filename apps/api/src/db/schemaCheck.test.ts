@@ -2,6 +2,8 @@ import { startTestDatabase, type TestDatabase } from './testDatabase';
 
 // 회사 자체를 나타내는 테이블 (company_id 대신 id로 격리)
 const TENANT_TABLES = ['companies'];
+// 회사와 무관한 공용 자료 (앱·전용 계정은 조회만 가능해야 함, 아래 검사에서 확인)
+const GLOBAL_TABLES = ['legal_documents'];
 const MIGRATION_TABLES = ['_prisma_migrations'];
 
 let db: TestDatabase;
@@ -28,7 +30,7 @@ describe('스키마 검사', () => {
             SELECT 1 FROM information_schema.columns c
              WHERE c.table_schema = 'public' AND c.table_name = t.table_name
                AND c.column_name = 'company_id' AND c.is_nullable = 'NO')`,
-      [[...TENANT_TABLES, ...MIGRATION_TABLES]],
+      [[...TENANT_TABLES, ...GLOBAL_TABLES, ...MIGRATION_TABLES]],
     );
 
     expect(rows.map((row) => row.table_name)).toEqual([]);
@@ -44,7 +46,7 @@ describe('스키마 검사', () => {
             c.relrowsecurity AND c.relforcerowsecurity
             AND EXISTS (SELECT 1 FROM pg_policies p WHERE p.schemaname = 'public' AND p.tablename = c.relname)
           )`,
-      [MIGRATION_TABLES],
+      [[...GLOBAL_TABLES, ...MIGRATION_TABLES]],
     );
 
     expect(rows.map((row) => row.relname)).toEqual([]);
@@ -68,7 +70,33 @@ describe('스키마 검사', () => {
   it('회사 범위 밖 전용 계정은 업무 테이블에 접근할 수 없다', async () => {
     await expect(db.auth.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
     await expect(db.auth.$queryRaw`SELECT * FROM memos`).rejects.toThrow();
-    await expect(db.auth.$queryRaw`SELECT * FROM companies`).rejects.toThrow();
+  });
+
+  it('앱 계정은 로그인 자격(비밀번호 해시) 테이블에 접근할 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM user_credentials`).rejects.toThrow();
+  });
+
+  it('공용 자료(약관 버전)는 두 계정 모두 조회만 가능하다', async () => {
+    const { rows } = await db.ownerPool.query<{ grantee: string; privilege_type: string }>(
+      `SELECT grantee, privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'legal_documents' AND grantee IN ('field_note_app', 'field_note_auth')
+        ORDER BY grantee, privilege_type`,
+    );
+
+    expect(rows).toEqual([
+      { grantee: 'field_note_app', privilege_type: 'SELECT' },
+      { grantee: 'field_note_auth', privilege_type: 'SELECT' },
+    ]);
+  });
+
+  it('동의 이력은 추가만 가능하다 (어느 계정도 수정·삭제 권한 없음)', async () => {
+    const { rows } = await db.ownerPool.query<{ grantee: string; privilege_type: string }>(
+      `SELECT grantee, privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'consents' AND grantee IN ('field_note_app', 'field_note_auth')
+          AND privilege_type IN ('UPDATE', 'DELETE', 'TRUNCATE')`,
+    );
+
+    expect(rows).toEqual([]);
   });
 
   it('회사 범위 밖 전용 계정은 세션 테이블의 수정 권한이 없다 (생성·조회·삭제만)', async () => {
@@ -77,6 +105,68 @@ describe('스키마 검사', () => {
         WHERE grantee = 'field_note_auth' AND table_name = 'sessions' ORDER BY privilege_type`,
     );
 
+    expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT']);
+  });
+
+  it('운영자 계정은 업무 테이블·세션·비밀번호에 접근할 수 없다', async () => {
+    await expect(db.operator.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM memos`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM sessions`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM user_credentials`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM consents`).rejects.toThrow();
+  });
+
+  it('운영자 작업 기록은 추가만 가능하다 (수정·삭제 권한 없음)', async () => {
+    const { rows } = await db.ownerPool.query<{ privilege_type: string }>(
+      `SELECT privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'operator_actions' AND grantee = 'field_note_operator' ORDER BY privilege_type`,
+    );
+
+    expect(rows.map((row) => row.privilege_type)).toEqual(['INSERT', 'SELECT']);
+  });
+
+  it('앱 계정과 전용 계정은 운영자 작업 기록에 접근할 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM operator_actions`).rejects.toThrow();
+    await expect(db.auth.$queryRaw`SELECT * FROM operator_actions`).rejects.toThrow();
+  });
+
+  it('초대 테이블은 앱 계정이 접근할 수 없고 삭제 권한은 아무도 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM invitations`).rejects.toThrow();
+
+    const { rows } = await db.ownerPool.query(
+      `SELECT grantee FROM information_schema.role_table_grants
+        WHERE table_name = 'invitations' AND privilege_type = 'DELETE'
+          AND grantee IN ('field_note_app', 'field_note_auth', 'field_note_operator')`,
+    );
+
+    expect(rows).toEqual([]);
+  });
+
+  it('인증 코드·재설정 링크 테이블은 전용 계정만 접근하고 삭제 권한은 아무도 없다', async () => {
+    for (const table of ['email_verifications', 'password_resets']) {
+      await expect(db.app.$queryRawUnsafe(`SELECT * FROM ${table}`)).rejects.toThrow();
+      await expect(db.operator.$queryRawUnsafe(`SELECT * FROM ${table}`)).rejects.toThrow();
+    }
+
+    const { rows } = await db.ownerPool.query(
+      `SELECT grantee FROM information_schema.role_table_grants
+        WHERE table_name IN ('email_verifications', 'password_resets') AND privilege_type = 'DELETE'
+          AND grantee IN ('field_note_app', 'field_note_auth', 'field_note_operator', 'field_note_queue')`,
+    );
+
+    expect(rows).toEqual([]);
+  });
+
+  it('소셜 연동 테이블은 전용 계정만 접근하고, 앱·운영자·큐 계정은 읽을 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM social_accounts`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM social_accounts`).rejects.toThrow();
+
+    const { rows } = await db.ownerPool.query<{ privilege_type: string }>(
+      `SELECT privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'social_accounts' AND grantee = 'field_note_auth' ORDER BY privilege_type`,
+    );
+
+    // 연동 해제를 위한 삭제만 허용, 수정 권한은 없음 (소셜 계정을 다른 계정으로 옮길 수 없음)
     expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT']);
   });
 });
