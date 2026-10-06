@@ -58,6 +58,10 @@ export const SOCIAL_RESULT_MESSAGES: Record<
   },
   'email-taken': { text: '이미 사용 중인 이메일입니다', tone: 'danger' },
   'invitation-invalid': { text: '초대 링크가 만료되었거나 이미 사용되었습니다', tone: 'danger' },
+  closing: {
+    text: '해지 요청 중인 계정입니다. 메일로 받은 해지 취소 링크로 복구할 수 있습니다',
+    tone: 'danger',
+  },
 };
 
 // 로그인 수단 조회·해제 (설정 화면)

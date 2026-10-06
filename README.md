@@ -125,11 +125,15 @@ pnpm test:stories   # 스토리 동작·접근성 검사 (최초 1회 `pnpm --fi
 pnpm operator create-company --company "한빛판금" --admin "김한빛"   # 회사 + 관리자(가입 전) + 초대 링크 (기본 7일)
 pnpm operator reissue --company-id <회사 ID>                        # 링크 재발급 (기존 링크는 즉시 만료, 가입 전 회사만)
 pnpm operator list                                                  # 회사 목록과 가입 상태
+pnpm operator legal-register                                        # 약관·처리방침 문서를 DB에 등록 (운영 환경 최초 1회, 문서를 바꿔 버전을 올릴 때마다)
+pnpm operator closures                                              # 해지 요청 현황 (유예 중·삭제 예정 시각, 삭제 대상 표시)
+pnpm operator purge-due [--dry-run]                                 # 유예(14일)가 끝난 회사의 데이터 삭제·익명화 (--dry-run은 대상만 표시)
 ```
 
 - 링크는 발급 직후 한 번만 표시된다 (DB에는 해시만 저장)
 - 링크는 한 번 쓰면 폐기되고, 만료·사용 완료·없는 링크는 같은 화면으로 안내된다
-- 운영자 작업은 `operator_actions`에 기록된다
+- `closures`·`purge-due`는 삭제 전용 DB 계정(`DATABASE_PURGE_URL`)으로 접속한다. 삭제는 api가 하지 않고, 정해진 주기로 이 명령을 실행해 처리한다 (주기 실행은 운영 환경 구성 때 연결)
+- 운영자 작업은 `operator_actions`에 기록된다 (회사와 무관한 약관 문서 등록은 `legal_documents`의 생성 시각으로 확인)
 
 ### 자주 쓰는 명령
 
@@ -189,12 +193,13 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 
 ## DB와 회사 격리
 
-- DB 계정이 다섯 개다
+- DB 계정이 여섯 개다
   - **소유 계정**(`DATABASE_MIGRATE_URL`): 테이블을 만드는 마이그레이션 전용
   - **앱 계정**(`DATABASE_URL`): 업무 쿼리용. 다른 회사 데이터를 볼 수 없게 DB가 막고, 세션 테이블은 접근할 수 없다
   - **회사 범위 밖 전용 계정**(`DATABASE_AUTH_URL`): 로그인 전처럼 회사를 아직 모르는 시점의 세션 조회 전용. 업무 테이블 권한이 없다
   - **작업 큐 계정**(`DATABASE_QUEUE_URL`): 이메일 발송 같은 백그라운드 작업 큐(pg-boss)용. 큐 스키마(`pgboss`)만 쓰고 업무 테이블은 읽을 수 없다
   - **운영자 계정**(`DATABASE_OPERATOR_URL`): 운영자 CLI 전용. 회사·초대 발급만 가능하고 업무 테이블은 읽을 수 없다
+  - **삭제 계정**(`DATABASE_PURGE_URL`): 해지 유예가 끝난 회사의 데이터 삭제·익명화 전용. 해지 중이 아닌 회사의 행은 DB가 보이지 않게 막는다
 - 업무 쿼리는 반드시 `withCompany(prisma, 회사ID, (tx) => …)`가 넘겨주는 `tx`로만 실행한다. 이 밖에서 조회하면 아무 행도 보이지 않는다
 - `pnpm test`의 격리·스키마 검사 테스트는 Docker로 임시 PostgreSQL을 띄운다. Docker가 꺼져 있으면 실패한다
 - Prisma 클라이언트는 `pnpm typecheck`·`pnpm test`가 자동으로 생성한다 (`src/generated`, Git 제외)
@@ -216,6 +221,14 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 공통 UI 부품과 핵심 컴포넌트는 Storybook 스토리를 만든다(기본·빈 상태·로딩·오류·긴 텍스트 등). 스토리에는 가짜 데이터만 쓰고, 접근성 위반은 실패로 처리된다
 - Vite 환경 변수는 `src/env.ts`로만 접근한다
 - 서비스 워커는 앱 껍데기만 캐시하며 업무 데이터는 오프라인으로 쓰지 않는다
+
+## 약관·개인정보 처리방침
+
+- 이용약관, 개인정보 처리방침(수집·이용 동의), 마케팅 수신 동의의 본문은 `packages/shared/src/legal.ts`에서 코드로 관리한다. 화면(`/legal/terms`, `/legal/privacy`, `/legal/marketing`)과 동의 이력의 본문 해시가 같은 원본에서 나온다
+- 로그인·가입 화면 하단과 설정 화면 하단에서 항상 볼 수 있다
+- **지금은 초안**이다. 서비스 공개 전에 전문가 검토를 거쳐 확정하며, 확정 전 항목(보호책임자, 수탁·위탁 현황, 국외 이전, 접속 기록 보관 등)은 문서 상단에 표시된다 (서비스 기획서 §18.2)
+- 본문을 바꿀 때는 반드시 `version`을 올린다. 운영에서 `pnpm operator legal-register`는 같은 버전의 내용이 달라졌으면 등록을 거부한다 (이미 동의받은 문서가 몰래 바뀌는 것을 막기 위함). 중요한 변경은 새 버전으로 다시 동의를 받는다
+- 개발 시드(`pnpm db:seed`)는 같은 원본을 사용하고, 개발 중에는 같은 버전의 해시도 최신 본문으로 맞춘다
 
 ## 소셜 로그인(카카오)
 
@@ -256,6 +269,21 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 인증 코드 원문은 큐·DB·로그에 남기지 않는다. 작업 처리기가 발송 직전에 만들고, DB에는 서버 비밀 값으로 만든 해시만 저장한다
 - 로컬은 Mailpit, 운영은 `SMTP_HOST`·`SMTP_PORT`·`SMTP_USER`·`SMTP_PASSWORD`·`SMTP_FROM`만 메일 발송 서비스 값으로 바꾼다 (코드 변경 없음)
 
+## 계정 해지
+
+- 설정 화면의 "계정 해지"에서 비밀번호를 다시 확인하고 요청한다 (소셜 로그인만 쓰는 계정은 비밀번호 없이). 요청하면 **즉시 모든 기기에서 로그아웃**되고 로그인이 막히며, 해지 취소 링크가 메일로 간다
+- 유예는 14일이다. 그 안에는 메일의 링크(`/closure/cancel/<토큰>`, 로그인 없이, 한 번만)로 취소해 계정을 복구한다. 유예 중 로그인하면 비밀번호가 맞을 때만 해지 중임을 알려 준다
+- 유예가 끝나면 `pnpm operator purge-due`가 업무 데이터를 삭제하고 계정·회사는 개인 식별 항목만 지워 익명화한다. 동의 이력·운영자 작업 기록·해지 기록은 개인정보 없이 남긴다 (처리 기준은 `apps/api/src/closure/purgePolicy.ts`, 회사 범위 테이블을 추가하면 반드시 등록해야 하며 누락은 테스트가 잡는다)
+- 목업 모드에서는 해지를 요청한 뒤 `/closure/cancel/demo-closure-token-0001`에서 취소를 시연할 수 있다
+
+## 백업과 복구
+
+- `pnpm backup create`로 DB 백업(덤프·계정 정의·확인용 기록)을 `backups/`에 만들고 30일이 지난 백업을 정리한다
+- `pnpm backup drill`은 최근 백업을 **임시 DB에 복구해 검증**한다 (체크섬·행 수·마이그레이션·회사 격리). 운영 DB는 건드리지 않고, 실패하면 종료 코드가 0이 아니다
+- 호스트에 PostgreSQL 도구가 없어도 되도록 Docker 컨테이너 안의 도구를 쓴다 (서버에 설치돼 있으면 `BACKUP_PG_MODE=local`)
+- 절차·복구 시험 기록·환경 분리 표는 [docs/05-backup-restore.md](docs/05-backup-restore.md), 정기 실행 예시는 `ops/crontab.example`
+- 운영(`NODE_ENV=production`)에서는 로컬 주소·`http`·`debug` 로그·로컬 기본 비밀번호가 있으면 api가 기동을 중단한다
+
 ## 로그인 세션
 
 - 로그인 실패가 연속 5번이면 해당 계정을 15분 잠근다 (잠긴 동안은 맞는 비밀번호도 거부). 없는 아이디와 틀린 비밀번호는 같은 오류·같은 처리 시간으로 응답한다
@@ -281,5 +309,6 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - [기획서 분석](docs/00-analysis.md)
 - [개발 순서 설계](docs/01-development-plan.md)
 - [데이터 모델](docs/04-data-model.md)
+- [백업·복구와 환경 분리](docs/05-backup-restore.md)
 - [진행 현황](docs/03-progress.md)
 - [서비스 기획서 v2.4](docs/planning/service-plan-v2.4.md) / [기술 기획서 v0.5](docs/planning/tech-plan-v0.5.md)

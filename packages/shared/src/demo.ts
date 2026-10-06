@@ -1,4 +1,5 @@
-import { LEGAL_DOCUMENT_META, type CompanySettings, type LegalDocumentSummary } from './account';
+import { type CompanySettings, type LegalDocumentSummary, type LegalDocumentType } from './account';
+import { LEGAL_DOCUMENT_CONTENTS, legalDocumentText } from './legal';
 
 // 로컬 개발 전용 더미 데이터: 목업 서버(웹)와 DB 시드(api)가 같은 값을 쓰도록 한 곳에 둔다
 // 운영 번들에 섞이지 않도록 `@field-note/shared/demo`로만 가져온다 (index에서 내보내지 않음)
@@ -56,41 +57,30 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
 
 export type DemoLegalDocument = LegalDocumentSummary & {
   effectiveAt: string;
-  // 정식 본문 등록 전까지의 초안 문구 (동의 시점의 내용을 해시로 증명하는 용도)
+  // 동의 시점의 내용을 해시로 증명하기 위한 본문 평문 (화면에 보이는 문서와 같은 원본)
   draftText: string;
 };
 
+// 시드가 DB에 넣는 약관 문서: 식별자만 고정하고 버전·본문은 실제 문서 원본(`legal.ts`)을 그대로 사용
+const demoLegalDocument = (id: string, type: LegalDocumentType): DemoLegalDocument => {
+  const content = LEGAL_DOCUMENT_CONTENTS[type];
+
+  return {
+    id,
+    type,
+    version: content.version,
+    title: content.title,
+    isRequired: content.isRequired,
+    path: content.path,
+    effectiveAt: content.effectiveAt,
+    draftText: legalDocumentText(content),
+  };
+};
+
 export const DEMO_LEGAL_DOCUMENTS: readonly DemoLegalDocument[] = [
-  {
-    id: '0198c000-0000-7000-8000-000000000001',
-    type: 'TERMS_OF_SERVICE',
-    version: '2026-10-01',
-    title: LEGAL_DOCUMENT_META.TERMS_OF_SERVICE.title,
-    isRequired: true,
-    path: LEGAL_DOCUMENT_META.TERMS_OF_SERVICE.path,
-    effectiveAt: '2026-10-01T00:00:00.000Z',
-    draftText: '이용약관 초안 (2026-10-01) — 정식 본문은 전문가 검토 후 등록',
-  },
-  {
-    id: '0198c000-0000-7000-8000-000000000002',
-    type: 'PRIVACY_POLICY',
-    version: '2026-10-01',
-    title: LEGAL_DOCUMENT_META.PRIVACY_POLICY.title,
-    isRequired: true,
-    path: LEGAL_DOCUMENT_META.PRIVACY_POLICY.path,
-    effectiveAt: '2026-10-01T00:00:00.000Z',
-    draftText: '개인정보 수집·이용 동의 초안 (2026-10-01) — 정식 본문은 전문가 검토 후 등록',
-  },
-  {
-    id: '0198c000-0000-7000-8000-000000000003',
-    type: 'MARKETING',
-    version: '2026-10-01',
-    title: LEGAL_DOCUMENT_META.MARKETING.title,
-    isRequired: false,
-    path: LEGAL_DOCUMENT_META.MARKETING.path,
-    effectiveAt: '2026-10-01T00:00:00.000Z',
-    draftText: '마케팅 정보 수신 동의 초안 (2026-10-01) — 정식 본문은 전문가 검토 후 등록',
-  },
+  demoLegalDocument('0198c000-0000-7000-8000-000000000001', 'TERMS_OF_SERVICE'),
+  demoLegalDocument('0198c000-0000-7000-8000-000000000002', 'PRIVACY_POLICY'),
+  demoLegalDocument('0198c000-0000-7000-8000-000000000003', 'MARKETING'),
 ];
 
 // 초대 링크 가입 시연용 (운영자가 만든 초대를 흉내)

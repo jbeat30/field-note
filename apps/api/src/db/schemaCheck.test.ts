@@ -1,3 +1,5 @@
+import { PURGE_POLICY } from '../closure/purgePolicy';
+
 import { startTestDatabase, type TestDatabase } from './testDatabase';
 
 // 회사 자체를 나타내는 테이블 (company_id 대신 id로 격리)
@@ -168,5 +170,71 @@ describe('스키마 검사', () => {
 
     // 연동 해제를 위한 삭제만 허용, 수정 권한은 없음 (소셜 계정을 다른 계정으로 옮길 수 없음)
     expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT']);
+  });
+  it('모든 회사 범위 테이블은 해지 삭제 정책(PURGE_POLICY)에 등록되어 있다', async () => {
+    const { rows } = await db.ownerPool.query<{ table_name: string }>(
+      `SELECT table_name FROM information_schema.tables
+        WHERE table_schema = 'public' AND table_type = 'BASE TABLE'
+          AND table_name <> ALL($1)`,
+      [[...GLOBAL_TABLES, ...MIGRATION_TABLES]],
+    );
+
+    expect(rows.map((row) => row.table_name).sort()).toEqual(Object.keys(PURGE_POLICY).sort());
+  });
+
+  it('삭제 전용 계정은 삭제·익명화 대상 정책에 맞는 권한만 가진다', async () => {
+    const { rows } = await db.ownerPool.query<{ table_name: string; privilege_type: string }>(
+      `SELECT table_name, privilege_type FROM information_schema.table_privileges
+        WHERE grantee = 'field_note_purge' AND table_schema = 'public'`,
+    );
+    const granted = (table: string) =>
+      rows
+        .filter((row) => row.table_name === table)
+        .map((row) => row.privilege_type)
+        .sort();
+
+    for (const [table, policy] of Object.entries(PURGE_POLICY)) {
+      if (policy === 'DELETE') {
+        expect(granted(table)).toEqual(['DELETE', 'SELECT']);
+      }
+    }
+
+    // KEEP 대상(동의 이력·운영자 작업 기록)은 접근 불가, 해지 기록은 조회와 삭제 완료 시각 갱신만
+    expect(granted('consents')).toEqual([]);
+    expect(granted('operator_actions')).toEqual([]);
+    expect(granted('legal_documents')).toEqual([]);
+    // 회사·계정·해지 기록은 조회만 테이블 단위로 허용하고, 수정은 아래 컬럼으로만 한정
+    expect(granted('company_closures')).toEqual(['SELECT']);
+    expect(granted('users')).toEqual(['SELECT']);
+    expect(granted('companies')).toEqual(['SELECT']);
+
+    const { rows: columns } = await db.ownerPool.query<{ table_name: string; column_name: string }>(
+      `SELECT table_name, column_name FROM information_schema.column_privileges
+        WHERE grantee = 'field_note_purge' AND privilege_type = 'UPDATE' AND table_schema = 'public'
+        ORDER BY table_name, column_name`,
+    );
+
+    expect(columns.map((row) => `${row.table_name}.${row.column_name}`)).toEqual([
+      'companies.name',
+      'companies.status',
+      'company_closures.purged_at',
+      'company_closures.updated_at',
+      'users.age_confirmed_at',
+      'users.display_name',
+      'users.email',
+      'users.email_verified_at',
+      'users.phone',
+      'users.updated_at',
+    ]);
+  });
+
+  it('삭제 전용 계정은 해지 중이 아닌 회사의 행을 읽을 수 없다', async () => {
+    await db.ownerPool.query(`INSERT INTO companies (name, status) VALUES ('활성 회사', 'ACTIVE')`);
+
+    const rows = await db.purge.$queryRaw<
+      { name: string }[]
+    >`SELECT name FROM companies WHERE status = 'ACTIVE'`;
+
+    expect(rows).toEqual([]);
   });
 });

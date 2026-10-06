@@ -15,6 +15,9 @@ module.exports = {
   ...base,
   displayName: 'api',
   testEnvironment: 'node',
+  // 모든 DB 테스트가 공유하는 PostgreSQL 컨테이너 (src/db/sharedTestDatabase.ts)
+  globalSetup: '<rootDir>/jest.global-setup.ts',
+  globalTeardown: '<rootDir>/jest.global-teardown.ts',
   // .mjs로 배포되는 ESM 패키지도 변환 대상에 포함
   transform: { '^.+\\.(t|j|mj)sx?$': base.transform['^.+\\.(t|j)sx?$'] },
   transformIgnorePatterns: [

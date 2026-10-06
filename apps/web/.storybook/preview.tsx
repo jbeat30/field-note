@@ -1,12 +1,16 @@
 import type { Preview } from '@storybook/react-vite';
 import { mswLoader } from 'msw-storybook-addon/csf3';
 import { MemoryRouter, Route, Routes } from 'react-router';
+import { configure } from 'storybook/test';
 
 import { handlers } from '../src/mocks/handlers';
 import { resetMockState } from '../src/mocks/state';
 import { AppProviders } from '../src/AppProviders';
 import { createQueryClient } from '../src/query/queryClient';
 import '../src/index.css';
+
+// 비동기 조회(findBy*)의 기본 대기는 1초라 CI처럼 느린 환경에서 흔들린다. 요청이 많은 화면을 위해 넉넉하게 둔다
+configure({ asyncUtilTimeout: 5000 });
 
 const preview: Preview = {
   // API 응답은 스토리마다 msw 핸들러로 가짜 응답을 준다 (기본은 목업 서버 전체)

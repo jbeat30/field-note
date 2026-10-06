@@ -7,10 +7,11 @@ const appUrl = process.env.DATABASE_URL;
 const authUrl = process.env.DATABASE_AUTH_URL;
 const operatorUrl = process.env.DATABASE_OPERATOR_URL;
 const queueUrl = process.env.DATABASE_QUEUE_URL;
+const purgeUrl = process.env.DATABASE_PURGE_URL;
 
-if (!migrateUrl || !appUrl || !authUrl || !operatorUrl || !queueUrl) {
+if (!migrateUrl || !appUrl || !authUrl || !operatorUrl || !queueUrl || !purgeUrl) {
   throw new Error(
-    '[db-setup] DATABASE_MIGRATE_URL, DATABASE_URL, DATABASE_AUTH_URL, DATABASE_OPERATOR_URL, DATABASE_QUEUE_URL 필요',
+    '[db-setup] DATABASE_MIGRATE_URL, DATABASE_URL, DATABASE_AUTH_URL, DATABASE_OPERATOR_URL, DATABASE_QUEUE_URL, DATABASE_PURGE_URL 필요',
   );
 }
 
@@ -18,7 +19,7 @@ if (!migrateUrl || !appUrl || !authUrl || !operatorUrl || !queueUrl) {
 execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], { stdio: 'inherit' });
 
 // 앱·회사 범위 밖 전용·운영자 계정 비밀번호는 마이그레이션 파일에 두지 않고 환경 변수 값으로 설정
-const roleUrls = [appUrl, authUrl, operatorUrl, queueUrl];
+const roleUrls = [appUrl, authUrl, operatorUrl, queueUrl, purgeUrl];
 const client = new pg.Client({ connectionString: migrateUrl });
 
 await client.connect();

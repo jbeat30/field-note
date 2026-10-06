@@ -1,0 +1,12 @@
+# 운영 점검 작업 예시 (서버의 crontab 또는 스케줄러에 맞게 옮겨 쓴다)
+# 실행 위치는 저장소 루트이고 `.env`(또는 배포 환경의 비밀 저장소 값)가 필요하다
+# 시각은 서버 시간대 기준이며, 사용자가 적은 새벽 시간대를 쓴다
+
+# 매일 03:00 데이터베이스 백업 후 보관 기간(기본 30일)이 지난 백업 정리
+0 3 * * * cd /srv/field-note && pnpm backup create >> /var/log/field-note/backup.log 2>&1
+
+# 매일 03:30 해지 유예(14일)가 끝난 회사의 삭제·익명화
+30 3 * * * cd /srv/field-note && pnpm operator purge-due >> /var/log/field-note/purge.log 2>&1
+
+# 매주 월요일 04:00 최근 백업을 임시 DB에 복구해 검증 (실패하면 종료 코드가 0이 아니므로 알림에 연결)
+0 4 * * 1 cd /srv/field-note && pnpm backup drill >> /var/log/field-note/drill.log 2>&1

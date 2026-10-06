@@ -20,6 +20,8 @@ export type SocialService = {
     provider: SocialProviderId,
     providerUserId: string,
   ) => Promise<AuthenticatedAccount | null>;
+  // 해지 요청 중인 회사의 소셜 계정인지 (로그인은 막되 취소 링크를 안내하기 위함)
+  isClosing: (provider: SocialProviderId, providerUserId: string) => Promise<boolean>;
   // 로그인한 계정에 소셜 계정 연동. 이미 다른 계정에 연동된 소셜 계정은 거부
   link: (
     account: AuthenticatedAccount,
@@ -58,6 +60,15 @@ export const createSocialService = ({ auth, now = () => new Date() }: Deps): Soc
     }
 
     return { userId: social.userId, companyId: social.companyId };
+  },
+
+  isClosing: async (provider, providerUserId) => {
+    const social = await auth.socialAccount.findUnique({
+      where: { provider_providerUserId: { provider, providerUserId } },
+      include: { user: { include: { company: true } } },
+    });
+
+    return social?.user.company.status === 'CLOSING';
   },
 
   link: async ({ userId, companyId }, provider, providerUserId) => {
