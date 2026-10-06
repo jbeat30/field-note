@@ -98,7 +98,7 @@ const CompanySettingsSection = () => {
       {isSaved && <Alert variant="info">저장했습니다</Alert>}
       <FormField
         label="하루 기준시간 (시간)"
-        hint="공수 1.0에 해당하는 시간입니다"
+        hint="공수 1.0에 해당하는 시간입니다. 바꿔도 이미 기록된 공수는 변하지 않습니다"
         error={errors.standardWorkHours?.message}
       >
         <Input

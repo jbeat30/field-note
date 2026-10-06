@@ -50,6 +50,7 @@ model Company {
   operatorActions    OperatorAction[]
   emailVerifications EmailVerification[]
   passwordResets     PasswordReset[]
+  settings           CompanySettings?
 
   @@map("companies")
 }
@@ -263,4 +264,27 @@ model PasswordReset {
 
   @@id([companyId, userId])
   @@map("password_resets")
+}
+
+// 공수 입력 방식: 비율(하루=1.0) 또는 시간 (서비스 기획서 §9.5)
+enum WorkUnitMode {
+  RATIO
+  HOURS
+
+  @@map("work_unit_mode")
+}
+
+// 회사 설정 (회사당 한 행, 행이 없으면 기본값으로 동작). 저장은 항상 분 단위라 기준을 바꿔도 과거 기록은 변하지 않음
+model CompanySettings {
+  companyId           String       @id @map("company_id") @db.Uuid
+  // 하루 기준시간(분). 공수 1.0에 해당
+  standardWorkMinutes Int          @default(480) @map("standard_work_minutes")
+  // MM(맨먼스) 계산에 쓰는 월 기준일수
+  monthlyWorkDays     Int          @default(22) @map("monthly_work_days")
+  workUnitMode        WorkUnitMode @default(RATIO) @map("work_unit_mode")
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company             Company      @relation(fields: [companyId], references: [id])
+
+  @@map("company_settings")
 }
