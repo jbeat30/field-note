@@ -5,6 +5,7 @@ import {
   registerEmailVerificationWorker,
 } from './auth/emailVerification';
 import { createPasswordService, registerPasswordResetWorker } from './auth/passwordService';
+import { createCompanySettingsService } from './company/companySettingsService';
 import { createPrismaClient } from './db/client';
 import { createSmtpMailer } from './email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
@@ -23,10 +24,9 @@ const main = async () => {
   const sessionStore = createPrismaSessionStore(authPrisma);
   const invitationStore = createPrismaInvitationStore(authPrisma);
   // 로그인 후 회사 범위 조회는 앱 계정(RLS 적용)으로만 수행
-  const accountService = createAccountService({
-    auth: authPrisma,
-    app: createPrismaClient(env.DATABASE_URL),
-  });
+  const appPrisma = createPrismaClient(env.DATABASE_URL);
+  const accountService = createAccountService({ auth: authPrisma, app: appPrisma });
+  const companySettings = createCompanySettingsService(appPrisma);
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
@@ -65,6 +65,7 @@ const main = async () => {
     accountService,
     emailVerification,
     passwordService,
+    companySettings,
     notifier,
     appOrigin: env.APP_ORIGIN,
     isSecureCookie: env.NODE_ENV === 'production',
