@@ -1,8 +1,10 @@
 import { SESSION_MAX_AGE_MS, type SessionStore } from './sessionStore';
 
-const COMPANY = '0198a000-0000-7000-8000-00000000000a';
-const USER_1 = '0198a000-0000-7000-8000-0000000000a1';
-const USER_2 = '0198a000-0000-7000-8000-0000000000a2';
+// 회사당 계정은 하나이므로 사용자마다 다른 회사
+export const COMPANY_1 = '0198a000-0000-7000-8000-00000000000a';
+export const COMPANY_2 = '0198a000-0000-7000-8000-00000000000b';
+export const USER_1 = '0198a000-0000-7000-8000-0000000000a1';
+export const USER_2 = '0198a000-0000-7000-8000-0000000000a2';
 
 export type ContractContext = {
   // 시각을 조작할 수 있는 저장소 생성
@@ -27,9 +29,9 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
     });
 
     it('만든 세션의 토큰으로 사용자와 회사를 찾는다', async () => {
-      const { token } = await store.create({ userId: USER_1, companyId: COMPANY });
+      const { token } = await store.create({ userId: USER_1, companyId: COMPANY_1 });
 
-      expect(await store.find(token)).toEqual({ userId: USER_1, companyId: COMPANY });
+      expect(await store.find(token)).toEqual({ userId: USER_1, companyId: COMPANY_1 });
     });
 
     it('알 수 없는 토큰은 찾지 못한다', async () => {
@@ -37,7 +39,7 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
     });
 
     it('만료된 세션은 찾지 못한다', async () => {
-      const { token } = await store.create({ userId: USER_1, companyId: COMPANY });
+      const { token } = await store.create({ userId: USER_1, companyId: COMPANY_1 });
 
       nowMs += SESSION_MAX_AGE_MS + 1000;
 
@@ -45,7 +47,7 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
     });
 
     it('삭제한 세션은 찾지 못한다', async () => {
-      const { token } = await store.create({ userId: USER_1, companyId: COMPANY });
+      const { token } = await store.create({ userId: USER_1, companyId: COMPANY_1 });
 
       await store.delete(token);
 
@@ -53,9 +55,9 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
     });
 
     it('사용자 기준으로 모든 세션을 삭제하고 다른 사용자 세션은 유지한다', async () => {
-      const first = await store.create({ userId: USER_1, companyId: COMPANY });
-      const second = await store.create({ userId: USER_1, companyId: COMPANY });
-      const other = await store.create({ userId: USER_2, companyId: COMPANY });
+      const first = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+      const second = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+      const other = await store.create({ userId: USER_2, companyId: COMPANY_2 });
 
       await store.deleteByUser(USER_1);
 
@@ -65,10 +67,10 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
     });
 
     it('만료된 세션만 정리한다', async () => {
-      const old = await store.create({ userId: USER_1, companyId: COMPANY });
+      const old = await store.create({ userId: USER_1, companyId: COMPANY_1 });
 
       nowMs += SESSION_MAX_AGE_MS + 1000;
-      const fresh = await store.create({ userId: USER_2, companyId: COMPANY });
+      const fresh = await store.create({ userId: USER_2, companyId: COMPANY_2 });
 
       await store.deleteExpired();
 
@@ -77,8 +79,8 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
     });
 
     it('세션마다 서로 다른 토큰을 발급한다', async () => {
-      const first = await store.create({ userId: USER_1, companyId: COMPANY });
-      const second = await store.create({ userId: USER_1, companyId: COMPANY });
+      const first = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+      const second = await store.create({ userId: USER_1, companyId: COMPANY_1 });
 
       expect(first.token).not.toBe(second.token);
       expect(first.token.length).toBeGreaterThanOrEqual(43);
@@ -91,7 +93,7 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
         return;
       }
 
-      const { token } = await store.create({ userId: USER_1, companyId: COMPANY });
+      const { token } = await store.create({ userId: USER_1, companyId: COMPANY_1 });
       const stored = await readStoredValues();
 
       expect(stored.length).toBeGreaterThan(0);

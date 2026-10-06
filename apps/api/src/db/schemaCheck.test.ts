@@ -2,6 +2,8 @@ import { startTestDatabase, type TestDatabase } from './testDatabase';
 
 // 회사 자체를 나타내는 테이블 (company_id 대신 id로 격리)
 const TENANT_TABLES = ['companies'];
+// 회사와 무관한 공용 자료 (앱·전용 계정은 조회만 가능해야 함, 아래 검사에서 확인)
+const GLOBAL_TABLES = ['legal_documents'];
 const MIGRATION_TABLES = ['_prisma_migrations'];
 
 let db: TestDatabase;
@@ -28,7 +30,7 @@ describe('스키마 검사', () => {
             SELECT 1 FROM information_schema.columns c
              WHERE c.table_schema = 'public' AND c.table_name = t.table_name
                AND c.column_name = 'company_id' AND c.is_nullable = 'NO')`,
-      [[...TENANT_TABLES, ...MIGRATION_TABLES]],
+      [[...TENANT_TABLES, ...GLOBAL_TABLES, ...MIGRATION_TABLES]],
     );
 
     expect(rows.map((row) => row.table_name)).toEqual([]);
@@ -44,7 +46,7 @@ describe('스키마 검사', () => {
             c.relrowsecurity AND c.relforcerowsecurity
             AND EXISTS (SELECT 1 FROM pg_policies p WHERE p.schemaname = 'public' AND p.tablename = c.relname)
           )`,
-      [MIGRATION_TABLES],
+      [[...GLOBAL_TABLES, ...MIGRATION_TABLES]],
     );
 
     expect(rows.map((row) => row.relname)).toEqual([]);
@@ -68,7 +70,33 @@ describe('스키마 검사', () => {
   it('회사 범위 밖 전용 계정은 업무 테이블에 접근할 수 없다', async () => {
     await expect(db.auth.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
     await expect(db.auth.$queryRaw`SELECT * FROM memos`).rejects.toThrow();
-    await expect(db.auth.$queryRaw`SELECT * FROM companies`).rejects.toThrow();
+  });
+
+  it('앱 계정은 로그인 자격(비밀번호 해시) 테이블에 접근할 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM user_credentials`).rejects.toThrow();
+  });
+
+  it('공용 자료(약관 버전)는 두 계정 모두 조회만 가능하다', async () => {
+    const { rows } = await db.ownerPool.query<{ grantee: string; privilege_type: string }>(
+      `SELECT grantee, privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'legal_documents' AND grantee IN ('field_note_app', 'field_note_auth')
+        ORDER BY grantee, privilege_type`,
+    );
+
+    expect(rows).toEqual([
+      { grantee: 'field_note_app', privilege_type: 'SELECT' },
+      { grantee: 'field_note_auth', privilege_type: 'SELECT' },
+    ]);
+  });
+
+  it('동의 이력은 추가만 가능하다 (어느 계정도 수정·삭제 권한 없음)', async () => {
+    const { rows } = await db.ownerPool.query<{ grantee: string; privilege_type: string }>(
+      `SELECT grantee, privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'consents' AND grantee IN ('field_note_app', 'field_note_auth')
+          AND privilege_type IN ('UPDATE', 'DELETE', 'TRUNCATE')`,
+    );
+
+    expect(rows).toEqual([]);
   });
 
   it('회사 범위 밖 전용 계정은 세션 테이블의 수정 권한이 없다 (생성·조회·삭제만)', async () => {
