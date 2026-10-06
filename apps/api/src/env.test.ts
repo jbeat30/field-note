@@ -44,4 +44,44 @@ describe('parseEnv', () => {
     expect(message).toContain('DATABASE_URL');
     expect(message).not.toContain('secret-value');
   });
+
+  describe('운영 환경 분리', () => {
+    const production = {
+      ...validEnv,
+      NODE_ENV: 'production',
+      LOG_LEVEL: 'info',
+      DATABASE_URL: 'postgresql://app:Xk29fj3kd8s@db.example.com:5432/field_note',
+      DATABASE_MIGRATE_URL: 'postgresql://owner:Xk29fj3kd8s@db.example.com:5432/field_note',
+      DATABASE_AUTH_URL: 'postgresql://auth:Xk29fj3kd8s@db.example.com:5432/field_note',
+      DATABASE_QUEUE_URL: 'postgresql://queue:Xk29fj3kd8s@db.example.com:5432/field_note',
+      APP_ORIGIN: 'https://app.example.com',
+      S3_ENDPOINT: 'https://s3.example.com',
+      SMTP_HOST: 'smtp.example.com',
+      SMTP_USER: 'mailer',
+      SMTP_PASSWORD: 'mail-password',
+    };
+
+    it('운영용 값이면 통과한다', () => {
+      expect(parseEnv(production).NODE_ENV).toBe('production');
+    });
+
+    it.each([
+      ['DATABASE_URL', 'postgresql://app:pw@localhost:5432/db'],
+      ['DATABASE_AUTH_URL', 'postgresql://auth:pw@127.0.0.1:5432/db'],
+      ['S3_ENDPOINT', 'http://localhost:9000'],
+      ['SMTP_HOST', 'mailpit'],
+      ['APP_ORIGIN', 'http://app.example.com'],
+      ['LOG_LEVEL', 'debug'],
+      ['SMTP_USER', undefined],
+      ['DATABASE_MIGRATE_URL', 'postgresql://field_note:field_note@db.example.com:5432/field_note'],
+    ])('운영에서 %s가 로컬·개발용 값이면 기동을 막는다', (key, value) => {
+      expect(() => parseEnv({ ...production, [key]: value })).toThrow(key);
+    });
+
+    it('개발 환경에서는 로컬 값을 그대로 쓸 수 있다', () => {
+      expect(() =>
+        parseEnv({ ...validEnv, NODE_ENV: 'development', LOG_LEVEL: 'debug' }),
+      ).not.toThrow();
+    });
+  });
 });
