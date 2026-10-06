@@ -9,13 +9,49 @@ datasource db {
   provider = "postgresql"
 }
 
+// 회사 상태: 정지·해지 요청 중에는 로그인 차단 (해지는 P0-11)
+enum CompanyStatus {
+  ACTIVE
+  SUSPENDED
+  CLOSING
+
+  @@map("company_status")
+}
+
+// 계정 상태: 운영자 초대만 된 상태와 가입 완료 상태
+enum UserStatus {
+  INVITED
+  ACTIVE
+
+  @@map("user_status")
+}
+
+// 동의 대상 문서 종류. 마케팅 수신은 별도 선택 동의
+enum LegalDocumentType {
+  TERMS_OF_SERVICE
+  PRIVACY_POLICY
+  MARKETING
+
+  @@map("legal_document_type")
+}
+
 model Company {
-  id        String    @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  name      String
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  projects  Project[]
-  memos     Memo[]
-  sessions  Session[]
+  id                 String              @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name               String
+  status             CompanyStatus       @default(ACTIVE)
+  createdAt          DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  projects           Project[]
+  memos              Memo[]
+  users              User[]
+  sessions           Session[]
+  consents           Consent[]
+  credentials        UserCredential[]
+  invitations        Invitation[]
+  operatorActions    OperatorAction[]
+  emailVerifications EmailVerification[]
+  passwordResets     PasswordReset[]
+  settings           CompanySettings?
+  socialAccounts     SocialAccount[]
 
   @@map("companies")
 }
@@ -48,14 +84,234 @@ model Memo {
 
 // 서버 세션 (토큰 원문은 저장하지 않고 SHA-256 해시만 저장). 로그인 전 조회가 필요해 회사 범위 밖 전용 계정만 접근
 model Session {
-  tokenHash String   @id @map("token_hash")
-  userId    String   @map("user_id") @db.Uuid
-  companyId String   @map("company_id") @db.Uuid
-  createdAt DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
-  expiresAt DateTime @map("expires_at") @db.Timestamptz(3)
-  company   Company  @relation(fields: [companyId], references: [id])
+  tokenHash    String   @id @map("token_hash")
+  userId       String   @map("user_id") @db.Uuid
+  companyId    String   @map("company_id") @db.Uuid
+  createdAt    DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  expiresAt    DateTime @map("expires_at") @db.Timestamptz(3)
+  // 기기 목록·원격 로그아웃에서 쓰는 공개용 식별자 (토큰 해시와 무관)
+  publicId     String   @unique @default(dbgenerated("uuidv7()")) @map("public_id") @db.Uuid
+  // 로그인 때 접속 정보에서 만든 기기 이름 (예: Chrome · macOS)
+  deviceLabel  String   @default("알 수 없는 기기") @map("device_label")
+  lastActiveAt DateTime @default(now()) @map("last_active_at") @db.Timestamptz(3)
+  company      Company  @relation(fields: [companyId], references: [id])
+  // 세션의 사용자는 같은 회사 소속이어야 함
+  user         User     @relation(fields: [companyId, userId], references: [companyId, id])
 
   @@index([userId])
   @@index([expiresAt])
   @@map("sessions")
+}
+
+// 회사 관리자 계정 (회사당 하나). 직원은 계정이 없음
+model User {
+  id                String             @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId         String             @map("company_id") @db.Uuid
+  // 인증 전에는 비어 있고 서비스 전체에서 유일
+  email             String?            @unique
+  emailVerifiedAt   DateTime?          @map("email_verified_at") @db.Timestamptz(3)
+  // 이름 또는 상호
+  displayName       String             @map("display_name")
+  phone             String?
+  // 만 14세 이상 확인 시각
+  ageConfirmedAt    DateTime?          @map("age_confirmed_at") @db.Timestamptz(3)
+  status            UserStatus         @default(INVITED)
+  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt         DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company           Company            @relation(fields: [companyId], references: [id])
+  credential        UserCredential?
+  consents          Consent[]
+  sessions          Session[]
+  invitations       Invitation[]
+  emailVerification EmailVerification?
+  passwordReset     PasswordReset?
+  socialAccounts    SocialAccount[]
+
+  @@id([companyId, id])
+  // 한 회사에 계정은 하나
+  @@unique([companyId])
+  @@map("users")
+}
+
+// 로그인 자격 (회사 범위 밖 전용 계정만 접근). 소셜 로그인만 쓰면 행이 없거나 값이 비어 있음
+model UserCredential {
+  companyId        String    @map("company_id") @db.Uuid
+  userId           String    @map("user_id") @db.Uuid
+  // 서비스 전체에서 유일한 로그인 아이디 (소문자)
+  loginId          String?   @unique @map("login_id")
+  // 복원 불가능한 해시만 저장
+  passwordHash     String?   @map("password_hash")
+  // 연속 로그인 실패 횟수와 잠금 해제 시각 (성공하면 0으로 초기화)
+  failedLoginCount Int       @default(0) @map("failed_login_count")
+  lockedUntil      DateTime? @map("locked_until") @db.Timestamptz(3)
+  createdAt        DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company          Company   @relation(fields: [companyId], references: [id])
+  user             User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([companyId, userId])
+  @@map("user_credentials")
+}
+
+// 약관·개인정보 처리방침 등의 버전 (회사와 무관한 공용 자료, 쓰기는 운영 경로만)
+model LegalDocument {
+  id          String            @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  type        LegalDocumentType
+  version     String
+  effectiveAt DateTime          @map("effective_at") @db.Timestamptz(3)
+  // 동의 시점에 어떤 내용이었는지 증명하는 본문 해시
+  contentHash String            @map("content_hash")
+  // 필수 동의 여부 (마케팅은 선택)
+  isRequired  Boolean           @map("is_required")
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  consents    Consent[]
+
+  @@unique([type, version])
+  @@map("legal_documents")
+}
+
+// 동의 이력 (추가만 가능). 철회는 is_agreed=false 행을 새로 추가하고 가장 최근 행이 현재 상태
+model Consent {
+  id         String        @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId  String        @map("company_id") @db.Uuid
+  userId     String        @map("user_id") @db.Uuid
+  documentId String        @map("document_id") @db.Uuid
+  isAgreed   Boolean       @default(true) @map("is_agreed")
+  decidedAt  DateTime      @default(now()) @map("decided_at") @db.Timestamptz(3)
+  company    Company       @relation(fields: [companyId], references: [id])
+  user       User          @relation(fields: [companyId, userId], references: [companyId, id])
+  document   LegalDocument @relation(fields: [documentId], references: [id])
+
+  @@id([companyId, id])
+  @@index([companyId, userId, documentId])
+  @@map("consents")
+}
+
+// 운영자가 발급하는 1회용 초대 링크 (토큰 원문은 저장하지 않고 SHA-256 해시만 저장)
+// 가입 전에는 회사를 알 수 없어 회사 범위 밖 전용 계정과 운영자 계정만 접근
+model Invitation {
+  tokenHash String    @id @map("token_hash")
+  companyId String    @map("company_id") @db.Uuid
+  userId    String    @map("user_id") @db.Uuid
+  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
+  // 가입에 사용된 시각. 값이 있으면 폐기된 링크
+  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company   @relation(fields: [companyId], references: [id])
+  user      User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@index([companyId, userId])
+  @@index([expiresAt])
+  @@map("invitations")
+}
+
+enum OperatorActionType {
+  COMPANY_CREATED
+  INVITATION_ISSUED
+
+  @@map("operator_action_type")
+}
+
+// 운영자 작업 기록 (추가만 가능, §5.4). 개인정보는 담지 않고 대상 회사 식별값과 작업자만 기록
+model OperatorAction {
+  id        String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId String             @map("company_id") @db.Uuid
+  action    OperatorActionType
+  // 작업을 실행한 운영자 (OS 사용자명)
+  operator  String
+  createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company            @relation(fields: [companyId], references: [id])
+
+  @@index([companyId])
+  @@map("operator_actions")
+}
+
+// 이메일 인증 코드 상태 (사용자당 한 행). 코드 원문은 저장하지 않고 서버 비밀 값으로 만든 HMAC 해시만 저장
+// 요청 기록(횟수·간격 제한)과 코드를 한 곳에 두고, 회사 범위 밖 전용 계정만 접근
+model EmailVerification {
+  companyId       String    @map("company_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  // 코드를 보낸 이메일 주소 (가입 후 이메일이 바뀌어도 이전 코드는 쓰지 못하게 구분)
+  email           String
+  // 이메일 변경 중에는 코드를 받은 새 주소 (인증이 끝나면 계정 이메일로 반영)
+  pendingEmail    String?   @map("pending_email")
+  codeHash        String?   @map("code_hash")
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(3)
+  // 틀린 입력 횟수 (제한을 넘으면 새 코드를 받아야 함)
+  attempts        Int       @default(0)
+  lastRequestedAt DateTime  @map("last_requested_at") @db.Timestamptz(3)
+  // 시간당 발송 횟수 제한용 구간 시작 시각과 구간 내 요청 수
+  windowStartedAt DateTime  @map("window_started_at") @db.Timestamptz(3)
+  requestCount    Int       @default(1) @map("request_count")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company   @relation(fields: [companyId], references: [id])
+  user            User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([companyId, userId])
+  @@map("email_verifications")
+}
+
+// 비밀번호 재설정 링크 상태 (사용자당 한 행). 토큰 원문은 저장하지 않고 SHA-256 해시만 저장하며, 사용하면 해시를 비워 폐기
+model PasswordReset {
+  companyId       String    @map("company_id") @db.Uuid
+  userId          String    @map("user_id") @db.Uuid
+  tokenHash       String?   @unique @map("token_hash")
+  expiresAt       DateTime? @map("expires_at") @db.Timestamptz(3)
+  lastRequestedAt DateTime  @map("last_requested_at") @db.Timestamptz(3)
+  windowStartedAt DateTime  @map("window_started_at") @db.Timestamptz(3)
+  requestCount    Int       @default(1) @map("request_count")
+  updatedAt       DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company   @relation(fields: [companyId], references: [id])
+  user            User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([companyId, userId])
+  @@map("password_resets")
+}
+
+// 공수 입력 방식: 비율(하루=1.0) 또는 시간 (서비스 기획서 §9.5)
+enum WorkUnitMode {
+  RATIO
+  HOURS
+
+  @@map("work_unit_mode")
+}
+
+// 회사 설정 (회사당 한 행, 행이 없으면 기본값으로 동작). 저장은 항상 분 단위라 기준을 바꿔도 과거 기록은 변하지 않음
+model CompanySettings {
+  companyId           String       @id @map("company_id") @db.Uuid
+  // 하루 기준시간(분). 공수 1.0에 해당
+  standardWorkMinutes Int          @default(480) @map("standard_work_minutes")
+  // MM(맨먼스) 계산에 쓰는 월 기준일수
+  monthlyWorkDays     Int          @default(22) @map("monthly_work_days")
+  workUnitMode        WorkUnitMode @default(RATIO) @map("work_unit_mode")
+  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company             Company      @relation(fields: [companyId], references: [id])
+
+  @@map("company_settings")
+}
+
+// 소셜 로그인 제공자 (초기에는 카카오, 네이버·구글은 5단계)
+enum SocialProvider {
+  KAKAO
+
+  @@map("social_provider")
+}
+
+// 소셜 계정 연동. 제공자가 준 사용자 번호로만 계정을 찾고 이메일이 같다는 이유로 연결하지 않음 (§6.1)
+// 로그인 전에 조회해야 하므로 회사 범위 밖 전용 계정만 접근
+model SocialAccount {
+  provider       SocialProvider
+  // 제공자가 부여한 사용자 번호 (제공자 안에서 유일)
+  providerUserId String         @map("provider_user_id")
+  companyId      String         @map("company_id") @db.Uuid
+  userId         String         @map("user_id") @db.Uuid
+  createdAt      DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
+  company        Company        @relation(fields: [companyId], references: [id])
+  user           User           @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([provider, providerUserId])
+  // 한 계정에 같은 제공자는 하나만 연동
+  @@unique([companyId, userId, provider])
+  @@map("social_accounts")
 }

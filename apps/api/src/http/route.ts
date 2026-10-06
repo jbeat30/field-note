@@ -1,6 +1,8 @@
 import { Router, type Request, type RequestHandler, type Response } from 'express';
 import type { ZodType } from 'zod';
 
+import type { ErrorCode } from '@field-note/shared';
+
 import { idempotency, type IdempotencyStore } from './idempotency';
 import { createRateLimiter, type RateLimitOptions } from './rateLimit';
 import { requireAuth } from './requireAuth';
@@ -18,9 +20,13 @@ export type RouteSpec = {
   auth: 'required' | 'none';
   request?: { params?: ZodType; query?: ZodType; body?: ZodType };
   response: { status: number; schema: ZodType };
+  // true면 핸들러가 돌려준 주소로 이동시키는 라우트 (소셜 로그인 콜백처럼 브라우저 이동 응답), 응답 스키마는 쓰지 않음
+  redirect?: boolean;
   // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능)
   idempotent?: boolean;
   rateLimit?: RateLimitOptions;
+  // 이 라우트가 업무적으로 반환하는 오류 코드 (OpenAPI 문서에 응답으로 기록)
+  errors?: readonly ErrorCode[];
 };
 
 export type RouteContext = {
@@ -95,6 +101,11 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
         request: req,
         response: res,
       });
+
+      if (spec.redirect) {
+        res.redirect(302, String(data));
+        return;
+      }
 
       res.status(spec.response.status).json(spec.response.schema.parse(data));
     };

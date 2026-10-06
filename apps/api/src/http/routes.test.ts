@@ -1,8 +1,4 @@
-import {
-  errorResponseSchema,
-  sampleResponseSchema,
-  sessionResponseSchema,
-} from '@field-note/shared';
+import { errorResponseSchema, sampleResponseSchema } from '@field-note/shared';
 import express from 'express';
 import request from 'supertest';
 import { z } from 'zod';
@@ -32,24 +28,49 @@ const resolveAuth: NonNullable<AppOptions['resolveAuth']> = async (
 const buildApp = () => createApp({ resolveAuth, idempotencyStore: createMemoryIdempotencyStore() });
 const keyOf = (n: number) => `test-key-${n}-0000`;
 
+// 인증된 요청의 회사 ID를 그대로 돌려주는 검증용 라우트만 가진 앱
+const buildWhoamiApp = () => {
+  const registry = createRouteRegistry({
+    resolveAuth,
+    idempotencyStore: createMemoryIdempotencyStore(),
+  });
+  const app = express();
+
+  registry.add(
+    {
+      method: 'get',
+      path: '/whoami',
+      summary: '인증 정보 확인 (테스트용)',
+      auth: 'required',
+      response: { status: 200, schema: z.object({ userId: z.string(), companyId: z.string() }) },
+    },
+    async ({ auth }) => auth,
+  );
+  app.use(registry.router);
+  app.use(notFoundHandler);
+  app.use(createErrorHandler(createLogger('silent')));
+
+  return app;
+};
+
 describe('requireAuth', () => {
   it('세션이 없으면 401', async () => {
-    const res = await request(buildApp()).get('/api/v1/session');
+    const res = await request(buildWhoamiApp()).get('/whoami');
 
     expect(res.status).toBe(401);
     expect(errorResponseSchema.parse(res.body).error.code).toBe('UNAUTHORIZED');
   });
 
   it('세션이 있으면 회사 ID를 세션에서 얻는다', async () => {
-    const res = await request(buildApp()).get('/api/v1/session').set('x-test-company', COMPANY_A);
+    const res = await request(buildWhoamiApp()).get('/whoami').set('x-test-company', COMPANY_A);
 
     expect(res.status).toBe(200);
-    expect(sessionResponseSchema.parse(res.body).companyId).toBe(COMPANY_A);
+    expect(res.body.companyId).toBe(COMPANY_A);
   });
 
-  it('요청 본문의 회사 ID는 무시한다', async () => {
-    const res = await request(buildApp())
-      .get('/api/v1/session')
+  it('쿼리·본문의 회사 ID는 무시한다', async () => {
+    const res = await request(buildWhoamiApp())
+      .get('/whoami')
       .query({ companyId: COMPANY_B })
       .set('x-test-company', COMPANY_A);
 
@@ -217,5 +238,40 @@ describe('속도 제한과 예상 밖 오류', () => {
         ),
       ),
     ).toThrow('멱등 키는 인증 필요 라우트에만 사용');
+  });
+});
+
+describe('계약 선행 라우트', () => {
+  it('아직 구현되지 않은 공개 라우트는 공통 오류 형식의 501을 반환한다', async () => {
+    const res = await request(buildApp())
+      .post('/api/v1/auth/login')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+      .send({ loginId: 'hanbit', password: 'whatever-password' });
+
+    expect(res.status).toBe(501);
+    expect(errorResponseSchema.parse(res.body).error.code).toBe('NOT_IMPLEMENTED');
+  });
+
+  it('입력 검증은 구현 전에도 계약대로 동작한다', async () => {
+    const res = await request(buildApp())
+      .post('/api/v1/auth/signup')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+      .send({
+        loginId: 'AB',
+        password: 'short',
+        email: 'not-email',
+        isAgeConfirmed: false,
+        consents: [],
+      });
+
+    expect(res.status).toBe(400);
+    expect(errorResponseSchema.parse(res.body).error.details?.map((detail) => detail.path)).toEqual(
+      expect.arrayContaining([
+        'body.loginId',
+        'body.password',
+        'body.email',
+        'body.isAgeConfirmed',
+      ]),
+    );
   });
 });

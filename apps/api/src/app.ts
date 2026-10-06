@@ -8,11 +8,21 @@ import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idem
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
+import type { AccountService } from './auth/accountService';
+import type { CompanySettingsService } from './company/companySettingsService';
+import type { EmailVerificationService } from './auth/emailVerification';
+import type { PasswordService } from './auth/passwordService';
+import type { SecurityNotifier } from './email/securityNotice';
+import type { InvitationStore } from './invitation/invitationStore';
 import { createLogger, type Logger } from './logger';
+import { registerAccountRoutes } from './routes/account';
+import { registerSocialRoutes } from './routes/social';
+import type { SocialService } from './auth/socialService';
+import { mountFakeKakaoRoutes } from './social/fakeKakaoRoutes';
+import type { SocialProviderChoice } from './social/provider';
 import { registerAuthRoutes } from './routes/auth';
 import { registerHealthRoutes } from './routes/health';
 import { registerSampleRoutes } from './routes/samples';
-import { registerSessionRoutes } from './routes/session';
 import { createMemorySessionStore, type SessionStore } from './session/sessionStore';
 import { createSessionResolver } from './session/cookie';
 
@@ -21,6 +31,27 @@ export type AppOptions = {
   resolveAuth?: AuthResolver;
   // 운영은 PostgreSQL 저장소를 주입, 기본은 메모리 저장소
   sessionStore?: SessionStore;
+  // 없으면 초대 확인 API는 501 (운영은 PostgreSQL 저장소를 주입)
+  invitationStore?: InvitationStore;
+  // 없으면 가입·로그인·내 정보 API는 501
+  accountService?: AccountService;
+  // 없으면 이메일 인증 확인·재발송 API는 501
+  emailVerification?: EmailVerificationService;
+  // 없으면 비밀번호 재설정·변경 API는 501
+  passwordService?: PasswordService;
+  // 없으면 회사 설정 API는 501
+  companySettings?: CompanySettingsService;
+  // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
+  social?: {
+    choice: SocialProviderChoice;
+    service: SocialService;
+    // 진행 상태 쿠키 암호화용 서버 비밀 값
+    cookieSecret: string;
+    // 개발 환경에서 가짜 제공자를 쓸 때만 지정 (가짜 로그인 화면을 켬)
+    fakeSecret?: string;
+  };
+  // 계정 보안 변경 알림 요청기 (없으면 알림 생략)
+  notifier?: SecurityNotifier;
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
@@ -43,8 +74,34 @@ export const createRegistry = (options: AppOptions = {}) => {
   });
 
   registerHealthRoutes(registry);
-  registerSessionRoutes(registry);
   registerSampleRoutes(registry);
+  registerAccountRoutes(registry, {
+    invitationStore: options.invitationStore,
+    accountService: options.accountService,
+    emailVerification: options.emailVerification,
+    passwordService: options.passwordService,
+    companySettings: options.companySettings,
+    notifier: options.notifier,
+    logger: options.logger,
+    sessionStore,
+    isSecureCookie: options.isSecureCookie,
+  });
+  registerSocialRoutes(
+    registry,
+    options.social && options.accountService
+      ? {
+          choice: options.social.choice,
+          socialService: options.social.service,
+          accountService: options.accountService,
+          sessionStore,
+          invitationStore: options.invitationStore,
+          cookieSecret: options.social.cookieSecret,
+          appOrigin: options.appOrigin ?? 'http://localhost:5173',
+          isSecureCookie: options.isSecureCookie ?? false,
+          logger: options.logger,
+        }
+      : undefined,
+  );
   registerAuthRoutes(registry, { sessionStore, isSecureCookie: options.isSecureCookie ?? false });
 
   return registry;
@@ -70,6 +127,11 @@ export const createApp = (options: AppOptions = {}) => {
       swaggerUi.serve,
       swaggerUi.setup(generateOpenApiDocument(registry.routes)),
     );
+  }
+
+  // 개발 환경에서만 켜지는 가짜 카카오 로그인 화면 (운영에서는 지정되지 않음)
+  if (options.social?.fakeSecret) {
+    mountFakeKakaoRoutes(app, options.social.fakeSecret);
   }
 
   app.use(API_PREFIX, csrfGuard(options.appOrigin ?? 'http://localhost:5173'), registry.router);
