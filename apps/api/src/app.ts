@@ -9,6 +9,7 @@ import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import { createLogger, type Logger } from './logger';
+import { registerAccountRoutes } from './routes/account';
 import { registerAuthRoutes } from './routes/auth';
 import { registerHealthRoutes } from './routes/health';
 import { registerSampleRoutes } from './routes/samples';
@@ -45,6 +46,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerHealthRoutes(registry);
   registerSessionRoutes(registry);
   registerSampleRoutes(registry);
+  registerAccountRoutes(registry);
   registerAuthRoutes(registry, { sessionStore, isSecureCookie: options.isSecureCookie ?? false });
 
   return registry;

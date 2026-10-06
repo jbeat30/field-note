@@ -24,7 +24,8 @@
     "db:setup": "pnpm --filter @field-note/api db:setup",
     "openapi:generate": "pnpm --filter @field-note/api openapi:generate",
     "test:stories": "pnpm --filter @field-note/web test:stories",
-    "storybook": "pnpm --filter @field-note/web storybook"
+    "storybook": "pnpm --filter @field-note/web storybook",
+    "dev:mock": "pnpm --filter @field-note/web dev:mock"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",

@@ -1,6 +1,8 @@
 import { Router, type Request, type RequestHandler, type Response } from 'express';
 import type { ZodType } from 'zod';
 
+import type { ErrorCode } from '@field-note/shared';
+
 import { idempotency, type IdempotencyStore } from './idempotency';
 import { createRateLimiter, type RateLimitOptions } from './rateLimit';
 import { requireAuth } from './requireAuth';
@@ -21,6 +23,8 @@ export type RouteSpec = {
   // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능)
   idempotent?: boolean;
   rateLimit?: RateLimitOptions;
+  // 이 라우트가 업무적으로 반환하는 오류 코드 (OpenAPI 문서에 응답으로 기록)
+  errors?: readonly ErrorCode[];
 };
 
 export type RouteContext = {

@@ -219,3 +219,38 @@ describe('속도 제한과 예상 밖 오류', () => {
     ).toThrow('멱등 키는 인증 필요 라우트에만 사용');
   });
 });
+
+describe('계약 선행 라우트', () => {
+  it('아직 구현되지 않은 공개 라우트는 공통 오류 형식의 501을 반환한다', async () => {
+    const res = await request(buildApp())
+      .post('/api/v1/auth/login')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+      .send({ loginId: 'hanbit', password: 'whatever-password' });
+
+    expect(res.status).toBe(501);
+    expect(errorResponseSchema.parse(res.body).error.code).toBe('NOT_IMPLEMENTED');
+  });
+
+  it('입력 검증은 구현 전에도 계약대로 동작한다', async () => {
+    const res = await request(buildApp())
+      .post('/api/v1/auth/signup')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+      .send({
+        loginId: 'AB',
+        password: 'short',
+        email: 'not-email',
+        isAgeConfirmed: false,
+        consents: [],
+      });
+
+    expect(res.status).toBe(400);
+    expect(errorResponseSchema.parse(res.body).error.details?.map((detail) => detail.path)).toEqual(
+      expect.arrayContaining([
+        'body.loginId',
+        'body.password',
+        'body.email',
+        'body.isAgeConfirmed',
+      ]),
+    );
+  });
+});
