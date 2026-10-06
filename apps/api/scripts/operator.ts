@@ -4,6 +4,7 @@ import { parseArgs } from 'node:util';
 import { z } from 'zod';
 
 import { createPrismaClient } from '../src/db/client';
+import { listDueClosures, purgeDueCompanies } from '../src/closure/purgeService';
 import { registerLegalDocuments, LegalContentChangedError } from '../src/legal/legalDocuments';
 import {
   buildInvitationLink,
@@ -19,7 +20,9 @@ const USAGE = `운영자 CLI (회사 업무 데이터는 조회하지 않음)
   pnpm operator create-company --company "회사 이름" --admin "관리자 이름" [--days 7]
   pnpm operator reissue --company-id <회사 ID> [--days 7]
   pnpm operator list
-  pnpm operator legal-register`;
+  pnpm operator legal-register
+  pnpm operator closures                       # 해지 요청 목록 (삭제 전용 계정 필요)
+  pnpm operator purge-due [--dry-run]          # 유예가 끝난 회사의 데이터 삭제·익명화 (삭제 전용 계정 필요)`;
 
 const LEGAL_USAGE_NOTE =
   '약관·처리방침 문서를 DB에 등록 (이미 등록된 같은 버전은 건너뛰고, 내용이 달라졌는데 버전이 같으면 거부)';
@@ -27,6 +30,8 @@ const LEGAL_USAGE_NOTE =
 // 운영자 접속 정보는 api 서버 설정과 분리 (운영자 PC에만 둠)
 const envSchema = z.object({
   DATABASE_OPERATOR_URL: z.url(),
+  // 해지 삭제 명령에만 필요
+  DATABASE_PURGE_URL: z.url().optional(),
   APP_ORIGIN: z.url(),
 });
 
@@ -49,6 +54,7 @@ const main = async () => {
       company: { type: 'string' },
       admin: { type: 'string' },
       'company-id': { type: 'string' },
+      'dry-run': { type: 'boolean' },
       days: { type: 'string' },
     },
   });
@@ -90,6 +96,42 @@ const main = async () => {
     } else if (command === 'legal-register') {
       console.log(LEGAL_USAGE_NOTE);
       console.table(await registerLegalDocuments(prisma));
+    } else if (command === 'closures' || command === 'purge-due') {
+      if (!env.DATABASE_PURGE_URL) {
+        throw new Error('DATABASE_PURGE_URL 필요 (삭제 전용 계정)');
+      }
+
+      const purgePrisma = createPrismaClient(env.DATABASE_PURGE_URL);
+
+      try {
+        if (command === 'closures' || values['dry-run']) {
+          console.log(
+            values['dry-run']
+              ? '삭제 대상 (실제 삭제는 하지 않음)'
+              : '유예가 끝나 삭제할 수 있는 해지 요청',
+          );
+          console.table(await listDueClosures(purgePrisma));
+        } else {
+          const summary = await purgeDueCompanies(purgePrisma);
+
+          console.log(`삭제 완료 ${summary.purged.length}건, 실패 ${summary.failed.length}건`);
+
+          if (summary.purged.length)
+            console.table(
+              summary.purged.map((item) => ({
+                companyId: item.companyId,
+                ...item.deleted,
+                익명화한계정: item.anonymizedUsers,
+              })),
+            );
+          if (summary.failed.length) {
+            console.table(summary.failed);
+            process.exitCode = 1;
+          }
+        }
+      } finally {
+        await purgePrisma.$disconnect();
+      }
     } else if (command === 'list') {
       console.table(await listCompanies(prisma));
     } else {

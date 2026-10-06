@@ -1,4 +1,7 @@
 import {
+  closureCancelSchema,
+  closureRequestSchema,
+  closureTokenParamsSchema,
   companySettingsSchema,
   socialStartRequestSchema,
   emailChangeSchema,
@@ -22,6 +25,7 @@ import {
   DEMO_ACCOUNTS,
   DEMO_INVITATION,
   LEGAL_DOCUMENTS,
+  MOCK_CLOSURE_TOKEN,
   MOCK_EMAIL_CODE,
   MOCK_LOCKED_LOGIN_ID,
   MOCK_KAKAO_PROFILES,
@@ -32,7 +36,10 @@ import {
 import {
   addAccount,
   applyPendingEmail,
+  cancelClosure,
   consumeMockReset,
+  findClosingAccount,
+  startClosure,
   getMockResetTarget,
   isEmailInUse,
   isMockResetUsable,
@@ -221,6 +228,10 @@ export const handlers = [
     }
 
     clearFailedLogins(loginId);
+
+    // 해지 요청 중인 계정은 비밀번호가 맞을 때만 상태를 알려 주고 로그인은 막음
+    if (account.closingPurgeAfter) return apiError('ACCOUNT_CLOSING');
+
     signIn(account.loginId);
 
     return HttpResponse.json(toMe(account));
@@ -378,6 +389,84 @@ export const handlers = [
     return HttpResponse.json({ success: true });
   }),
 
+  http.post('/api/v1/me/closure', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, closureRequestSchema);
+
+    if ('response' in body) return body.response;
+
+    // 비밀번호 로그인이 있는 계정만 비밀번호를 다시 확인
+    if (account.hasPassword !== false) {
+      if (!body.data.currentPassword) {
+        return apiError('VALIDATION_ERROR', [
+          { path: 'body.currentPassword', message: '현재 비밀번호를 입력해 주세요' },
+        ]);
+      }
+
+      if (isLoginLocked(account.loginId)) return apiError('ACCOUNT_LOCKED');
+
+      if (account.password !== body.data.currentPassword) {
+        if (recordFailedLogin(account.loginId) >= MOCK_MAX_FAILED_LOGINS) {
+          return apiError('ACCOUNT_LOCKED');
+        }
+
+        return apiError('CURRENT_PASSWORD_INVALID');
+      }
+
+      clearFailedLogins(account.loginId);
+    }
+
+    const purgeAfter = new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString();
+
+    startClosure(account, purgeAfter);
+    // 실제 서버처럼 요청 즉시 모든 기기 로그아웃
+    signOut();
+
+    return HttpResponse.json({ purgeAfter });
+  }),
+
+  http.get('/api/v1/auth/closure/:token', async ({ params }) => {
+    await simulateLatency();
+
+    const parsed = closureTokenParamsSchema.safeParse(params);
+    const closing = findClosingAccount();
+
+    if (
+      !parsed.success ||
+      parsed.data.token !== MOCK_CLOSURE_TOKEN ||
+      !closing?.closingPurgeAfter
+    ) {
+      return apiError('NOT_FOUND');
+    }
+
+    return HttpResponse.json({ purgeAfter: closing.closingPurgeAfter });
+  }),
+
+  http.post('/api/v1/auth/closure/cancel', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const body = await parseBody(request, closureCancelSchema);
+
+    if ('response' in body) return body.response;
+
+    const closing = findClosingAccount();
+
+    if (body.data.token !== MOCK_CLOSURE_TOKEN || !closing) return apiError('NOT_FOUND');
+
+    cancelClosure(closing);
+
+    return HttpResponse.json({ success: true });
+  }),
+
   http.post('/api/v1/me/email/change', async ({ request }) => {
     await simulateLatency();
 
@@ -518,6 +607,8 @@ export const handlers = [
       const account = findAccountByKakao(profile.key);
 
       if (!account) return HttpResponse.json(to('/login', 'not-linked'));
+
+      if (account.closingPurgeAfter) return HttpResponse.json(to('/login', 'closing'));
 
       signIn(account.loginId);
 
