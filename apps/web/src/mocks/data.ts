@@ -1,6 +1,6 @@
 import type { CompanySettings, Device, LegalDocumentSummary } from '@field-note/shared';
 
-// 화면 확인용 더미 데이터. 실제 개인정보를 쓰지 않고 example.com 이메일만 사용
+import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
 
 export type MockAccount = {
   loginId: string;
@@ -12,71 +12,20 @@ export type MockAccount = {
   settings: CompanySettings;
 };
 
-export const DEMO_ACCOUNTS: readonly MockAccount[] = [
-  {
-    loginId: 'hanbit',
-    password: 'Hanbit-demo-2026!',
-    displayName: '김한빛',
-    email: 'hanbit@example.com',
-    isEmailVerified: true,
-    companyName: '한빛판금',
-    settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
-  },
-  {
-    loginId: 'saeron',
-    password: 'Saeron-demo-2026!',
-    displayName: '박새론',
-    email: 'saeron@example.com',
-    isEmailVerified: true,
-    companyName: '새론전기',
-    settings: { standardWorkMinutes: 540, monthlyWorkDays: 26, workUnitMode: 'HOURS' },
-  },
-  {
-    // 가입은 했지만 이메일 인증 전인 계정: 로그인하면 인증 화면으로 이동
-    loginId: 'newbie',
-    password: 'Newbie-demo-2026!',
-    displayName: '이다온',
-    email: 'newbie@example.com',
-    isEmailVerified: false,
-    companyName: '다온목공',
-    settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
-  },
-];
+// 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용
+export const DEMO_ACCOUNTS: readonly MockAccount[] = SHARED_DEMO_ACCOUNTS.map((account) => ({
+  loginId: account.loginId,
+  password: account.password,
+  displayName: account.displayName,
+  email: account.email,
+  isEmailVerified: account.isEmailVerified,
+  companyName: account.companyName,
+  settings: account.settings,
+}));
 
-// 초대 링크 가입 시연용 (운영자가 만든 초대를 흉내)
-export const DEMO_INVITATION = {
-  token: 'demo-invite-0001',
-  companyName: '다온목공',
-  adminName: '이다온',
-  expiresInDays: 7,
-};
+export { DEMO_INVITATION } from './demoSource';
 
-export const LEGAL_DOCUMENTS: readonly LegalDocumentSummary[] = [
-  {
-    id: '0198c000-0000-7000-8000-000000000001',
-    type: 'TERMS_OF_SERVICE',
-    version: '2026-10-01',
-    title: '이용약관',
-    isRequired: true,
-    path: '/legal/terms',
-  },
-  {
-    id: '0198c000-0000-7000-8000-000000000002',
-    type: 'PRIVACY_POLICY',
-    version: '2026-10-01',
-    title: '개인정보 수집·이용 동의',
-    isRequired: true,
-    path: '/legal/privacy',
-  },
-  {
-    id: '0198c000-0000-7000-8000-000000000003',
-    type: 'MARKETING',
-    version: '2026-10-01',
-    title: '마케팅 정보 수신 동의 (선택)',
-    isRequired: false,
-    path: '/legal/marketing',
-  },
-];
+export const LEGAL_DOCUMENTS: readonly LegalDocumentSummary[] = LEGAL_DOCUMENTS_FOR_MOCK;
 
 export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [
   {
