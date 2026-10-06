@@ -4,6 +4,8 @@ import path from 'node:path';
 import { PostgreSqlContainer, type StartedPostgreSqlContainer } from '@testcontainers/postgresql';
 import pg from 'pg';
 
+import { withDatabase } from './connectionUrl';
+
 // 테스트 실행 전체가 PostgreSQL 컨테이너 하나를 공유한다 (스위트마다 컨테이너를 띄우면 느리고 종료 시점에 연결 오류가 난다)
 // 스위트는 마이그레이션이 끝난 템플릿 DB를 복제해 자기만의 DB를 쓴다
 export const SHARED_URL_ENV = 'FIELD_NOTE_TEST_PG_URL';
@@ -18,14 +20,6 @@ export const ROLE_PASSWORDS = {
 } as const;
 
 const API_ROOT = path.resolve(__dirname, '../..');
-
-export const withDatabase = (uri: string, database: string) => {
-  const url = new URL(uri);
-
-  url.pathname = `/${database}`;
-
-  return url.toString();
-};
 
 /**
  * @description 마이그레이션 적용과 역할 비밀번호 설정을 마친 템플릿 DB가 있는 컨테이너 시작
