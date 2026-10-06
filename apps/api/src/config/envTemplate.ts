@@ -10,6 +10,7 @@ const GENERATORS: Record<string, () => string> = {
   DB_AUTH_PASSWORD: () => randomBytes(24).toString('base64url'),
   DB_OPERATOR_PASSWORD: () => randomBytes(24).toString('base64url'),
   DB_QUEUE_PASSWORD: () => randomBytes(24).toString('base64url'),
+  DB_PURGE_PASSWORD: () => randomBytes(24).toString('base64url'),
   // 서버 비밀 값 (256비트)
   CODE_HASH_SECRET: () => randomBytes(32).toString('base64url'),
   OAUTH_COOKIE_SECRET: () => randomBytes(32).toString('base64url'),

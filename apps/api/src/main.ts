@@ -6,6 +6,7 @@ import {
 } from './auth/emailVerification';
 import { createSocialService } from './auth/socialService';
 import { createPasswordService, registerPasswordResetWorker } from './auth/passwordService';
+import { createClosureService, registerClosureWorker } from './closure/closureService';
 import { createCompanySettingsService } from './company/companySettingsService';
 import { createPrismaClient } from './db/client';
 import { createSmtpMailer } from './email/mailer';
@@ -66,6 +67,16 @@ const main = async () => {
 
   logger.info({ socialProvider: socialChoice.kind }, '[api.main] 소셜 로그인 제공자');
 
+  const closure = createClosureService({
+    auth: authPrisma,
+    queue,
+    mailer,
+    accountService,
+    notifier,
+    appOrigin: env.APP_ORIGIN,
+  });
+
+  await registerClosureWorker(queue, closure);
   await registerEmailVerificationWorker(queue, emailVerification);
   await registerPasswordResetWorker(queue, passwordService);
   await registerSecurityNoticeWorker(queue, mailer);
@@ -78,6 +89,7 @@ const main = async () => {
     emailVerification,
     passwordService,
     companySettings,
+    closure,
     social: {
       choice: socialChoice,
       service: createSocialService({ auth: authPrisma }),
