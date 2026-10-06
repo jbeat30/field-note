@@ -24,6 +24,7 @@ import {
   findAccount,
   getCurrentAccount,
   listDevices,
+  markEmailVerified,
   removeDevice,
   signIn,
   signOut,
@@ -171,7 +172,7 @@ export const handlers = [
 
     if (body.data.code !== MOCK_EMAIL_CODE) return apiError('EMAIL_CODE_INVALID');
 
-    account.isEmailVerified = true;
+    markEmailVerified(account);
 
     return HttpResponse.json(toMe(account));
   }),

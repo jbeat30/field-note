@@ -90,6 +90,8 @@ export type MeResponse = z.infer<typeof meResponseSchema>;
 // 공수 입력 방식: 비율(1.0=하루) 또는 시간 (§9.5)
 export const workUnitModeSchema = z.enum(['RATIO', 'HOURS']);
 
+export type WorkUnitMode = z.infer<typeof workUnitModeSchema>;
+
 export const companySettingsSchema = z.object({
   // 하루 기준시간(분). 저장은 항상 분 단위이므로 바꿔도 과거 기록은 변하지 않음
   standardWorkMinutes: z.number().int().min(60).max(960),

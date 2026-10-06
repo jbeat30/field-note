@@ -34,6 +34,7 @@ export const routes = [
         Component: AppLayout,
         children: [
           { path: '/', ...page(() => import('./routes/HomePage'), 'HomePage') },
+          { path: '/settings', ...page(() => import('./routes/SettingsPage'), 'SettingsPage') },
           { path: '*', ...page(() => import('./routes/NotFoundPage'), 'NotFoundPage') },
         ],
       },
