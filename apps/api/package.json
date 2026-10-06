@@ -12,7 +12,8 @@
     "openapi:generate": "tsx scripts/generate-openapi.ts",
     "openapi:check": "tsx scripts/generate-openapi.ts --check",
     "db:seed": "tsx --env-file-if-exists=../../.env scripts/db-seed.ts",
-    "env:init": "tsx scripts/init-env.ts"
+    "env:init": "tsx scripts/init-env.ts",
+    "operator": "tsx --env-file-if-exists=../../.env scripts/operator.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "9.1.0",

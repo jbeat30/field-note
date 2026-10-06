@@ -27,7 +27,7 @@ export const Consent: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByRole('heading', { name: '다온목공' })).toBeInTheDocument();
+    await expect(await canvas.findByRole('heading', { name: '미래설비' })).toBeInTheDocument();
     // 필수 약관과 만 14세 확인 전에는 다음 단계로 갈 수 없음
     await expect(canvas.getByRole('button', { name: '다음' })).toBeDisabled();
   },
