@@ -1,6 +1,7 @@
 import { type CompanySettings, type LegalDocumentSummary, type LegalDocumentType } from './account';
 import type { EmployeeStatus } from './employees';
 import type { PartnerKind } from './partners';
+import type { ProjectStatus } from './projects';
 import { LEGAL_DOCUMENT_CONTENTS, legalDocumentText } from './legal';
 
 // 로컬 개발 전용 더미 데이터: 목업 서버(웹)와 DB 시드(api)가 같은 값을 쓰도록 한 곳에 둔다
@@ -293,6 +294,131 @@ export const DEMO_PARTNERS: readonly DemoPartner[] = [
     name: '한빛전선',
     contactName: '조영업',
     phone: '02-0000-0402',
+  },
+];
+
+export type DemoProject = {
+  id: string;
+  companyId: string;
+  // 자동 번호와 같은 형식(`연도-순번`). 시드가 번호표도 이 값에 맞춘다
+  code: string;
+  name: string;
+  status: ProjectStatus;
+  siteName: string;
+  siteAddress?: string;
+  siteMapUrl?: string;
+  siteContactName?: string;
+  siteContactPhone?: string;
+  accessMemo?: string;
+  // 명부·직원·선택 목록 항목의 이름 (식별자는 환경마다 달라 이름으로 연결)
+  clientName: string;
+  managerName: string;
+  trades: readonly string[];
+  contractDate: string;
+  plannedStart: string;
+  plannedEnd: string;
+  memo?: string;
+};
+
+const projectId = (n: number) => `0198d000-0000-7000-8000-0000000003${String(n).padStart(2, '0')}`;
+
+// 가상의 프로젝트만 사용한다 (연락처는 실제로 쓰이지 않는 0000 대역). 상태는 P1-6 전환 기능 전이라 시드가 직접 정한다
+export const DEMO_PROJECTS: readonly DemoProject[] = [
+  {
+    id: projectId(1),
+    companyId: HANBIT,
+    code: '2026-001',
+    name: 'A동 외장 판금 공사',
+    status: 'IN_PROGRESS',
+    siteName: 'A동 신축 현장',
+    siteAddress: '서울특별시 중구 세종대로 110',
+    siteMapUrl: 'https://map.example.com/a-dong',
+    siteContactName: '윤소장',
+    siteContactPhone: '02-0000-0101',
+    accessMemo: '정문 출입증 필요, 작업 시간 08~18시, 주차는 지하 2층',
+    clientName: '가나다건설',
+    managerName: '송소장',
+    trades: ['판금'],
+    contractDate: '2026-06-20',
+    plannedStart: '2026-07-15',
+    plannedEnd: '2026-11-30',
+    memo: '외장 패널 설치 후 마감 점검',
+  },
+  {
+    id: projectId(2),
+    companyId: HANBIT,
+    code: '2026-002',
+    name: '미래오피스 천장 마감',
+    status: 'PLANNED',
+    siteName: '미래오피스 8층',
+    siteAddress: '서울특별시 강남구 테헤란로 1',
+    clientName: '미래오피스',
+    managerName: '정판금',
+    trades: ['인테리어'],
+    contractDate: '2026-09-25',
+    plannedStart: '2026-11-02',
+    plannedEnd: '2027-01-29',
+  },
+  {
+    id: projectId(3),
+    companyId: HANBIT,
+    code: '2026-003',
+    name: 'B동 덕트 설치',
+    status: 'SUSPENDED',
+    siteName: 'B동 지하 기계실',
+    siteContactName: '문반장',
+    siteContactPhone: '010-0000-0201',
+    accessMemo: '우천 시 지하 출입 금지',
+    clientName: '가나다건설',
+    managerName: '최설치',
+    trades: ['판금', '설비'],
+    contractDate: '2026-05-10',
+    plannedStart: '2026-06-01',
+    plannedEnd: '2026-10-15',
+    memo: '자재 지연으로 중단',
+  },
+  {
+    id: projectId(4),
+    companyId: HANBIT,
+    code: '2026-004',
+    name: '옛날상가 간판 교체',
+    status: 'COMPLETED',
+    siteName: '옛날상가 1층',
+    clientName: '옛날상가',
+    managerName: '송소장',
+    trades: ['판금'],
+    contractDate: '2026-01-20',
+    plannedStart: '2026-02-01',
+    plannedEnd: '2026-03-15',
+  },
+  {
+    id: projectId(5),
+    companyId: HANBIT,
+    code: '2025-012',
+    name: 'C동 환기 설비',
+    status: 'CLOSED',
+    siteName: 'C동 옥상',
+    clientName: '가나다건설',
+    managerName: '송소장',
+    trades: ['판금', '설비'],
+    contractDate: '2025-08-20',
+    plannedStart: '2025-09-01',
+    plannedEnd: '2025-12-20',
+  },
+  {
+    id: projectId(6),
+    companyId: SAERON,
+    code: '2026-001',
+    name: '푸른학교 조명 교체',
+    status: 'IN_PROGRESS',
+    siteName: '푸른학교 본관',
+    siteAddress: '경기도 성남시 분당구 판교로 1',
+    clientName: '푸른학교',
+    managerName: '배전기',
+    trades: ['전기'],
+    contractDate: '2026-08-01',
+    plannedStart: '2026-09-01',
+    plannedEnd: '2026-11-20',
   },
 ];
 

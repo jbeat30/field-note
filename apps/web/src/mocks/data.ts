@@ -5,6 +5,7 @@ import type {
   LegalDocumentSummary,
   OptionItem,
   PartnerDetail,
+  ProjectDetail,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
@@ -33,6 +34,8 @@ export type MockAccount = {
   employees?: EmployeeDetail[];
   // 고객·협력업체·자재 공급처 명부. 처음 조회할 때 더미 업체로 채움
   partners?: PartnerDetail[];
+  // 프로젝트. 처음 조회할 때 더미 프로젝트로 채움
+  projects?: ProjectDetail[];
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용

@@ -6,6 +6,12 @@ import {
   socialStartRequestSchema,
   EMPLOYEE_MAX_PER_COMPANY,
   PARTNER_KINDS,
+  formatProjectCode,
+  projectCreateSchema,
+  projectListQuerySchema,
+  projectParamsSchema,
+  projectUpdateSchema,
+  type ProjectDetail,
   PARTNER_MAX_PER_COMPANY,
   normalizePartnerName,
   partnerCreateSchema,
@@ -67,6 +73,8 @@ import {
   getEmployees,
   getOptions,
   getPartners,
+  getProjects,
+  saveProjects,
   savePartners,
   saveEmployees,
   saveOptions,
@@ -157,6 +165,55 @@ const checkOption = (
   return option.isActive
     ? null
     : apiError('VALIDATION_ERROR', [{ path, message: `숨긴 ${label}은 새로 고를 수 없습니다` }]);
+};
+
+// 프로젝트의 고객·담당자·공종 검사 (서버와 같은 규칙): 같은 회사의 해당 구분·종류만, 숨기거나 퇴사한 대상은 새로 고를 수 없음
+const checkClient = (account: MockAccount, id: string, currentId: string | null) => {
+  const partner = getPartners(account).find((item) => item.id === id && item.kind === 'CLIENT');
+
+  if (!partner) {
+    return apiError('VALIDATION_ERROR', [
+      { path: 'body.clientId', message: '선택할 수 없는 고객입니다' },
+    ]);
+  }
+
+  return partner.isActive || id === currentId
+    ? null
+    : apiError('VALIDATION_ERROR', [
+        { path: 'body.clientId', message: '숨긴 고객은 새로 고를 수 없습니다' },
+      ]);
+};
+
+const checkManager = (account: MockAccount, id: string, currentId: string | null) => {
+  const employee = getEmployees(account).find((item) => item.id === id);
+
+  if (!employee) {
+    return apiError('VALIDATION_ERROR', [
+      { path: 'body.managerId', message: '선택할 수 없는 담당자입니다' },
+    ]);
+  }
+
+  return employee.status !== 'LEFT' || id === currentId
+    ? null
+    : apiError('VALIDATION_ERROR', [
+        { path: 'body.managerId', message: '퇴사한 직원은 담당자로 지정할 수 없습니다' },
+      ]);
+};
+
+const checkTrades = (account: MockAccount, ids: string[], currentIds: string[]) => {
+  const invalid = (message: string) =>
+    apiError('VALIDATION_ERROR', [{ path: 'body.tradeIds', message }]);
+
+  if (new Set(ids).size !== ids.length) return invalid('같은 공종을 두 번 고를 수 없습니다');
+
+  const options = getOptions(account).filter((item) => item.kind === 'TRADE');
+  const found = ids.flatMap((id) => options.find((item) => item.id === id) ?? []);
+
+  if (found.length !== ids.length) return invalid('선택할 수 없는 공종이 있습니다');
+
+  return found.some((item) => !item.isActive && !currentIds.includes(item.id))
+    ? invalid('숨긴 공종은 새로 고를 수 없습니다')
+    : null;
 };
 
 export const handlers = [
@@ -982,6 +1039,225 @@ export const handlers = [
     savePartners(
       account,
       partners.map((item) => (item.id === current.id ? updated : item)),
+    );
+
+    return HttpResponse.json(updated);
+  }),
+
+  http.get('/api/v1/projects', async ({ request }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const query = projectListQuerySchema.safeParse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    if (!query.success) {
+      return apiError(
+        'VALIDATION_ERROR',
+        query.error.issues.map((issue) => ({
+          path: ['query', ...issue.path].join('.'),
+          message: issue.message,
+        })),
+      );
+    }
+
+    const { status, clientId, managerId, tradeId, from, to, q, sort = 'recent' } = query.data;
+    const needle = q?.toLowerCase();
+    const codeKey = (code: string) => {
+      const [year, sequence] = code.split('-').map(Number) as [number, number];
+
+      return year * 1_000_000 + sequence;
+    };
+    // 서버와 같은 규칙: 목록에는 현장 연락처·출입 메모·계약일·메모를 싣지 않음
+    const items = getProjects(account)
+      .filter(
+        (item) =>
+          (!status || item.status === status) &&
+          (!clientId || item.clientId === clientId) &&
+          (!managerId || item.managerId === managerId) &&
+          (!tradeId || item.tradeIds.includes(tradeId)) &&
+          (!from || item.plannedEnd >= from) &&
+          (!to || item.plannedStart <= to) &&
+          (!needle ||
+            item.name.toLowerCase().includes(needle) ||
+            item.code.toLowerCase().includes(needle) ||
+            item.siteName.toLowerCase().includes(needle)),
+      )
+      .sort((a, b) => {
+        const recent = codeKey(b.code) - codeKey(a.code);
+
+        if (sort === 'endDate') return a.plannedEnd.localeCompare(b.plannedEnd) || recent;
+        if (sort === 'name') return a.name.localeCompare(b.name, 'ko') || recent;
+
+        return recent;
+      })
+      .map((item) => ({
+        id: item.id,
+        code: item.code,
+        name: item.name,
+        status: item.status,
+        siteName: item.siteName,
+        clientId: item.clientId,
+        managerId: item.managerId,
+        tradeIds: item.tradeIds,
+        plannedStart: item.plannedStart,
+        plannedEnd: item.plannedEnd,
+      }));
+
+    return HttpResponse.json({ items });
+  }),
+
+  http.post('/api/v1/projects', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, projectCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    const projects = getProjects(account);
+    const input = body.data;
+    const tradeIds = input.tradeIds ?? [];
+    const referenceError =
+      checkClient(account, input.clientId, null) ??
+      checkManager(account, input.managerId, null) ??
+      checkTrades(account, tradeIds, []);
+
+    if (referenceError) return referenceError;
+
+    // 서버와 같은 규칙: 등록한 날(서울 기준) 연도로 그 해의 마지막 번호 다음 번호를 붙임
+    const year = Number(todayInSeoul(new Date()).slice(0, 4));
+    const last = projects
+      .filter((item) => item.code.startsWith(`${year}-`))
+      .reduce((max, item) => Math.max(max, Number(item.code.split('-')[1])), 0);
+    const now = new Date().toISOString();
+    const created: ProjectDetail = {
+      id: crypto.randomUUID(),
+      code: formatProjectCode(year, last + 1),
+      name: input.name,
+      status: 'PLANNED',
+      siteName: input.siteName,
+      siteAddress: input.siteAddress ?? null,
+      siteMapUrl: input.siteMapUrl ?? null,
+      siteContactName: input.siteContactName ?? null,
+      siteContactPhone: input.siteContactPhone ?? null,
+      accessMemo: input.accessMemo || null,
+      clientId: input.clientId,
+      managerId: input.managerId,
+      tradeIds,
+      contractDate: input.contractDate,
+      plannedStart: input.plannedStart,
+      plannedEnd: input.plannedEnd,
+      memo: input.memo || null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    saveProjects(account, [...projects, created]);
+
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.get('/api/v1/projects/:id', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const found = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    return found ? HttpResponse.json(found) : apiError('NOT_FOUND');
+  }),
+
+  http.patch('/api/v1/projects/:id', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, projectUpdateSchema);
+
+    if ('response' in body) return body.response;
+
+    const projects = getProjects(account);
+    const current = projects.find((item) => item.id === parsed.data.id);
+
+    if (!current) return apiError('NOT_FOUND');
+
+    const input = body.data;
+    const referenceError =
+      (input.clientId !== undefined
+        ? checkClient(account, input.clientId, current.clientId)
+        : null) ??
+      (input.managerId !== undefined
+        ? checkManager(account, input.managerId, current.managerId)
+        : null) ??
+      (input.tradeIds !== undefined
+        ? checkTrades(account, input.tradeIds, current.tradeIds)
+        : null);
+
+    if (referenceError) return referenceError;
+
+    // 한쪽 날짜만 바꿔도 합친 값으로 순서를 확인
+    const plannedStart = input.plannedStart ?? current.plannedStart;
+    const plannedEnd = input.plannedEnd ?? current.plannedEnd;
+
+    if (plannedStart > plannedEnd) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.plannedEnd', message: '종료 예정일은 시작 예정일보다 빠를 수 없습니다' },
+      ]);
+    }
+
+    // 보낸 항목만 바꾸고, 보내지 않은(undefined) 항목은 그대로 둠 (코드·상태는 바꿀 수 없음)
+    const updated: ProjectDetail = {
+      ...current,
+      name: input.name ?? current.name,
+      siteName: input.siteName ?? current.siteName,
+      siteAddress: input.siteAddress === undefined ? current.siteAddress : input.siteAddress,
+      siteMapUrl: input.siteMapUrl === undefined ? current.siteMapUrl : input.siteMapUrl,
+      siteContactName:
+        input.siteContactName === undefined ? current.siteContactName : input.siteContactName,
+      siteContactPhone:
+        input.siteContactPhone === undefined ? current.siteContactPhone : input.siteContactPhone,
+      accessMemo: input.accessMemo === undefined ? current.accessMemo : input.accessMemo || null,
+      clientId: input.clientId ?? current.clientId,
+      managerId: input.managerId ?? current.managerId,
+      tradeIds: input.tradeIds ?? current.tradeIds,
+      contractDate: input.contractDate ?? current.contractDate,
+      plannedStart,
+      plannedEnd,
+      memo: input.memo === undefined ? current.memo : input.memo || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    saveProjects(
+      account,
+      projects.map((item) => (item.id === current.id ? updated : item)),
     );
 
     return HttpResponse.json(updated);

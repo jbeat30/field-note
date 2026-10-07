@@ -61,6 +61,18 @@ export const routes = [
         children: [
           { path: '/', ...page(() => import('./routes/HomePage'), 'HomePage') },
           {
+            path: '/projects',
+            ...page(() => import('./routes/ProjectListPage'), 'ProjectListPage'),
+          },
+          {
+            path: '/projects/new',
+            ...page(() => import('./routes/ProjectNewPage'), 'ProjectNewPage'),
+          },
+          {
+            path: '/projects/:id',
+            ...page(() => import('./routes/ProjectCardPage'), 'ProjectCardPage'),
+          },
+          {
             path: '/employees',
             ...page(() => import('./routes/EmployeeListPage'), 'EmployeeListPage'),
           },
