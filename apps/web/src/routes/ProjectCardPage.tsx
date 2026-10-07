@@ -56,6 +56,12 @@ export const ProjectCardPage = () => {
           </a>
         )}
       </div>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/work-logs?project=${project.data.id}`}
+      >
+        일지 입력
+      </Link>
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
       <section className="flex flex-col gap-3" aria-labelledby="info-heading">
