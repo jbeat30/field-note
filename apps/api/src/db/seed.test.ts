@@ -5,6 +5,7 @@ import {
   DEMO_INVITATION,
   DEMO_PARTNERS,
   DEMO_PROJECTS,
+  DEMO_WORK_LOGS,
 } from '@field-note/shared/demo';
 
 import { verifyPassword } from '../auth/password';
@@ -311,5 +312,66 @@ describe('seedDemoData', () => {
 
     expect(await changes()).toHaveLength(1);
     expect(await db.owner.projectAssignment.count()).toBe(all.length);
+  });
+
+  it('더미 작업일지(임시 저장·수정 이력·변경 작업 포함)를 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_WORK_LOGS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.workLog.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.workLog.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+    expect(await db.owner.workLog.count({ where: { status: 'DRAFT' } })).toBe(1);
+    expect(await db.owner.workLog.count({ where: { isChange: true } })).toBe(1);
+
+    // 수정한 일지는 버전이 올라가 있고 고치기 전 값이 이력에 있음
+    const edited = await db.owner.workLog.findFirstOrThrow({
+      where: {
+        companyId: hanbit.companyId,
+        workDate: new Date('2026-09-02T00:00:00Z'),
+        project: { code: '2026-001' },
+      },
+      include: { revisions: true, entries: true },
+    });
+
+    expect(edited.version).toBe(2);
+    expect(edited.revisions).toHaveLength(1);
+    expect(edited.revisions[0]).toMatchObject({ version: 1, changedBy: hanbit.userId });
+    expect(edited.entries).toHaveLength(2);
+
+    // 모든 일지가 자기 프로젝트의 예정 기간 안, 공수는 1분 이상
+    const all = await db.owner.workLog.findMany({ include: { project: true, entries: true } });
+
+    for (const log of all) {
+      expect(
+        log.workDate >= log.project.plannedStart && log.workDate <= log.project.plannedEnd,
+      ).toBe(true);
+      expect(log.entries.every((entry) => entry.minutes >= 1)).toBe(true);
+    }
+
+    // 같은 날 A동·B동에 모두 480분을 쓴 직원이 있어 하루 합계 경고를 볼 수 있음
+    const worker = await db.owner.employee.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, name: '최설치' },
+    });
+    const sameDay = await db.owner.workLogEntry.findMany({
+      where: {
+        employeeId: worker.id,
+        workLog: { workDate: new Date('2026-09-02T00:00:00Z'), status: 'SAVED' },
+      },
+    });
+
+    expect(sameDay.reduce((sum, entry) => sum + entry.minutes, 0)).toBe(960);
+
+    const total = await db.owner.workLog.count();
+
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.workLog.count()).toBe(total);
+    expect(await db.owner.workLogRevision.count()).toBe(1);
   });
 });

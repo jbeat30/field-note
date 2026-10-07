@@ -325,6 +325,23 @@ export type DemoPeriodChange = {
   reason?: string;
 };
 
+export type DemoWorkLogEntry = { employeeName: string; categoryName: string; minutes: number };
+
+export type DemoWorkLog = {
+  id: string;
+  companyId: string;
+  projectCode: string;
+  workDate: string;
+  status: 'DRAFT' | 'SAVED';
+  content: string;
+  area?: string;
+  notes?: string;
+  isChange?: boolean;
+  entries: readonly DemoWorkLogEntry[];
+  // 저장된 일지를 고친 기록 (고치기 전 값, 오래된 것부터). 시드가 버전을 이에 맞춰 올림
+  revisions?: readonly { content: string; area?: string; entries: readonly DemoWorkLogEntry[] }[];
+};
+
 export type DemoProject = {
   id: string;
   companyId: string;
@@ -586,6 +603,100 @@ export const DEMO_ASSIGNMENTS: readonly DemoAssignment[] = [
     employeeName: '노배선',
     startDate: '2026-09-01',
     endDate: '2026-11-20',
+  },
+];
+
+const workLogId = (n: number) => `0198d000-0000-7000-8000-0000000005${String(n).padStart(2, '0')}`;
+
+// 같은 직원(최설치)이 같은 날 A동·B동에 저장되어 하루 합계 경고(2.0)를 볼 수 있는 사례, 임시 저장·수정 이력·변경 작업 사례를 포함한다
+// 날짜는 프로젝트 예정 기간 안의 과거 날짜 (오늘보다 이전이어야 입력할 수 있음)
+export const DEMO_WORK_LOGS: readonly DemoWorkLog[] = [
+  {
+    id: workLogId(1),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    workDate: '2026-09-01',
+    status: 'SAVED',
+    content: '1~2층 외장 패널 프레임 설치. 오후에 우천으로 작업 일부 중단',
+    area: '1~2층',
+    notes: '오후 비',
+    entries: [
+      { employeeName: '정판금', categoryName: '설치', minutes: 480 },
+      { employeeName: '최설치', categoryName: '설치', minutes: 480 },
+      { employeeName: '한용접', categoryName: '생산·가공', minutes: 240 },
+      { employeeName: '한용접', categoryName: '설치', minutes: 240 },
+    ],
+  },
+  {
+    id: workLogId(2),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    workDate: '2026-09-02',
+    status: 'SAVED',
+    content: '3층 외장 패널 설치 (고객 요청으로 창 위치 변경 작업 포함)',
+    area: '3층',
+    isChange: true,
+    entries: [
+      { employeeName: '정판금', categoryName: '설치', minutes: 480 },
+      { employeeName: '최설치', categoryName: '설치', minutes: 480 },
+    ],
+    revisions: [
+      {
+        content: '3층 외장 패널 설치',
+        area: '3층',
+        entries: [
+          { employeeName: '정판금', categoryName: '설치', minutes: 480 },
+          { employeeName: '최설치', categoryName: '설치', minutes: 360 },
+        ],
+      },
+    ],
+  },
+  {
+    id: workLogId(3),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    workDate: '2026-09-03',
+    status: 'SAVED',
+    content: '4층 패널 가공품 반입 및 정리',
+    entries: [
+      { employeeName: '김일용', categoryName: '운반', minutes: 480 },
+      { employeeName: '한용접', categoryName: '생산·가공', minutes: 480 },
+    ],
+  },
+  {
+    id: workLogId(4),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    workDate: '2026-09-04',
+    status: 'DRAFT',
+    content: '4층 패널 설치 (작성 중)',
+    entries: [{ employeeName: '정판금', categoryName: '설치', minutes: 480 }],
+  },
+  {
+    id: workLogId(5),
+    companyId: HANBIT,
+    projectCode: '2026-003',
+    workDate: '2026-09-02',
+    status: 'SAVED',
+    content: 'B동 기계실 덕트 지지대 설치',
+    area: '지하 기계실',
+    entries: [
+      { employeeName: '최설치', categoryName: '설치', minutes: 480 },
+      { employeeName: '한용접', categoryName: '설치', minutes: 480 },
+    ],
+  },
+  {
+    id: workLogId(6),
+    companyId: SAERON,
+    projectCode: '2026-001',
+    workDate: '2026-09-02',
+    status: 'SAVED',
+    content: '본관 2층 조명 기구 교체',
+    area: '본관 2층',
+    entries: [
+      { employeeName: '배전기', categoryName: '배선', minutes: 480 },
+      { employeeName: '노배선', categoryName: '배선', minutes: 480 },
+    ],
   },
 ];
 

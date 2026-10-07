@@ -8,6 +8,9 @@ import type {
   ProjectDetail,
   ProjectPeriodChange,
   ProjectStatusChange,
+  WorkLogEntry,
+  WorkLogRevision,
+  WorkLogStatus,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
@@ -21,6 +24,24 @@ export type AssignmentRow = {
   endDate: string;
   plannedMinutes: number | null;
   cancelledAt: string | null;
+};
+
+// 목업이 저장하는 작업일지 (경고는 응답할 때 계산)
+export type MockWorkLog = {
+  id: string;
+  projectId: string;
+  workDate: string;
+  status: WorkLogStatus;
+  content: string;
+  area: string | null;
+  notes: string | null;
+  isChange: boolean;
+  isAfterService: boolean;
+  version: number;
+  savedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  entries: WorkLogEntry[];
 };
 
 export type MockAccount = {
@@ -55,6 +76,9 @@ export type MockAccount = {
   projectPeriodHistory?: Record<string, ProjectPeriodChange[]>;
   // 투입 (취소한 것 포함)
   assignments?: AssignmentRow[];
+  // 작업일지와 일지별 수정 이력 (일지 id → 오래된 것부터)
+  workLogs?: MockWorkLog[];
+  workLogRevisions?: Record<string, WorkLogRevision[]>;
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용

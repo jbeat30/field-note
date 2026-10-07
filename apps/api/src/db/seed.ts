@@ -12,6 +12,7 @@ import {
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
   DEMO_PROJECTS,
+  DEMO_WORK_LOGS,
   DEMO_INVITATION,
   DEMO_LEGAL_DOCUMENTS,
 } from '@field-note/shared/demo';
@@ -30,6 +31,7 @@ export type SeedResult = {
   partners: number;
   projects: number;
   assignments: number;
+  workLogs: number;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -326,6 +328,90 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     });
   }
 
+  // 작업일지 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
+  for (const log of DEMO_WORK_LOGS) {
+    if (
+      await prisma.workLog.findUnique({
+        where: { companyId_id: { companyId: log.companyId, id: log.id } },
+      })
+    ) {
+      continue;
+    }
+
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: log.companyId, code: log.projectCode },
+    });
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === log.companyId);
+    const toEntries = async (
+      items: readonly { employeeName: string; categoryName: string; minutes: number }[],
+    ) =>
+      Promise.all(
+        items.map(async (item) => ({
+          employeeId: (
+            await prisma.employee.findFirstOrThrow({
+              where: { companyId: log.companyId, name: item.employeeName },
+            })
+          ).id,
+          categoryId: (
+            await prisma.optionItem.findFirstOrThrow({
+              where: {
+                companyId: log.companyId,
+                kind: 'WORK_CATEGORY',
+                nameKey: normalizeOptionName(item.categoryName),
+              },
+            })
+          ).id,
+          minutes: item.minutes,
+        })),
+      );
+    const revisions = log.revisions ?? [];
+
+    await prisma.workLog.create({
+      data: {
+        id: log.id,
+        companyId: log.companyId,
+        projectId: project.id,
+        workDate: requiredDate(log.workDate),
+        status: log.status,
+        content: log.content,
+        area: log.area ?? null,
+        notes: log.notes ?? null,
+        isChange: log.isChange ?? false,
+        // 작업한 날 저녁에 저장한 것으로 두어 지연 입력으로 표시되지 않게 함
+        savedAt: log.status === 'SAVED' ? new Date(`${log.workDate}T10:00:00.000Z`) : null,
+        // 고친 횟수만큼 버전이 올라간 상태
+        version: 1 + revisions.length,
+      },
+    });
+    await prisma.workLogEntry.createMany({
+      data: (await toEntries(log.entries)).map((entry) => ({
+        companyId: log.companyId,
+        workLogId: log.id,
+        ...entry,
+      })),
+    });
+
+    for (const [index, revision] of revisions.entries()) {
+      await prisma.workLogRevision.create({
+        data: {
+          companyId: log.companyId,
+          workLogId: log.id,
+          version: index + 1,
+          snapshot: {
+            status: 'SAVED',
+            content: revision.content,
+            area: revision.area ?? null,
+            notes: null,
+            isChange: false,
+            isAfterService: false,
+            entries: await toEntries(revision.entries),
+          },
+          changedBy: admin!.userId,
+        },
+      });
+    }
+  }
+
   // 코드 번호표를 시드의 마지막 번호에 맞춰 화면에서 새로 등록하면 이어서 붙게 함 (이미 더 큰 번호가 있으면 유지)
   const lastNumbers = new Map<string, { companyId: string; year: number; last: number }>();
 
@@ -395,5 +481,6 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     partners: DEMO_PARTNERS.length,
     projects: DEMO_PROJECTS.length,
     assignments: DEMO_ASSIGNMENTS.length,
+    workLogs: DEMO_WORK_LOGS.length,
   };
 };
