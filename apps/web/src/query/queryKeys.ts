@@ -9,4 +9,6 @@ export const queryKeys = {
   socialMethods: () => ['social-methods', 'current', {}] as const,
   devices: () => ['devices', 'all', {}] as const,
   options: () => ['options', 'all', {}] as const,
+  employees: (filter: object = {}) => ['employees', 'list', filter] as const,
+  employee: (id: string) => ['employees', 'detail', { id }] as const,
 };

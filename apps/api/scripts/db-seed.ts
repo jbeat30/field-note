@@ -18,7 +18,7 @@ try {
   const result = await seedDemoData(prisma);
 
   console.log(
-    `[db-seed] 완료 회사=${result.companies} 계정=${result.users} 약관=${result.documents}`,
+    `[db-seed] 완료 회사=${result.companies} 계정=${result.users} 약관=${result.documents} 직원=${result.employees}`,
   );
 } finally {
   await prisma.$disconnect();

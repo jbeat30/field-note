@@ -5,11 +5,15 @@ import {
   errorResponseSchema,
   invitationResponseSchema,
   meResponseSchema,
+  EMPLOYEE_STATUSES,
+  employeeDetailSchema,
+  employeesResponseSchema,
   OPTION_KINDS,
   OPTION_PRESETS,
   optionItemSchema,
   optionsResponseSchema,
   signupResponseSchema,
+  todayInSeoul,
 } from '@field-note/shared';
 import { setupServer } from 'msw/node';
 
@@ -384,6 +388,114 @@ describe('목업 서버 계약', () => {
     ).toBe(400);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 30_000);
+
+  it('직원: 이름만으로 등록, 목록엔 개인정보 제외, 퇴사·재입사·검증 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/employees')).response.status).toBe(401);
+
+    await login();
+
+    const listed = await client.GET('/api/v1/employees');
+    const list = employeesResponseSchema.parse(listed.data);
+
+    expect(list.items.length).toBeGreaterThan(0);
+    // 목록에는 생년월일·연락처·메모가 없고, 재직 → 휴직 → 퇴사 순
+    expect(JSON.stringify(listed.data)).not.toMatch(/birthDate|phone|memo/);
+    expect(list.items.map((item) => item.status)).toEqual(
+      [...list.items.map((item) => item.status)].sort(
+        (a, b) => EMPLOYEE_STATUSES.indexOf(a) - EMPLOYEE_STATUSES.indexOf(b),
+      ),
+    );
+
+    const created = await client.POST('/api/v1/employees', { body: { name: '  신입 ' } });
+    const card = employeeDetailSchema.parse(created.data);
+
+    expect(created.response.status).toBe(201);
+    expect(card).toMatchObject({ name: '신입', status: 'ACTIVE', jobTypeId: null, phone: null });
+
+    const options = optionsResponseSchema.parse(
+      (await client.GET('/api/v1/company/options')).data,
+    ).items;
+    const jobId = options.find((item) => item.kind === 'JOB_TYPE')!.id;
+    const workId = options.find((item) => item.kind === 'WORK_CATEGORY')!.id;
+
+    // 직종 자리에 다른 종류 항목, 없는 항목, 형식이 틀린 값은 거부
+    for (const body of [
+      { name: '김', jobTypeId: workId },
+      { name: '김', jobTypeId: '0198d000-0000-7000-8000-000000000999' },
+      { name: '김', phone: 'abc' },
+      { name: '김', birthDate: '2999-01-01' },
+      { name: '   ' },
+    ]) {
+      expect((await client.POST('/api/v1/employees', { body })).response.status).toBe(400);
+    }
+
+    const patched = await client.PATCH('/api/v1/employees/{id}', {
+      params: { path: { id: card.id } },
+      body: { jobTypeId: jobId, title: '반장', phone: '010-1111-2222' },
+    });
+
+    expect(employeeDetailSchema.parse(patched.data)).toMatchObject({
+      jobTypeId: jobId,
+      title: '반장',
+    });
+
+    const cleared = await client.PATCH('/api/v1/employees/{id}', {
+      params: { path: { id: card.id } },
+      body: { title: null, phone: null },
+    });
+
+    expect(employeeDetailSchema.parse(cleared.data)).toMatchObject({
+      title: null,
+      phone: null,
+      jobTypeId: jobId,
+    });
+
+    // 퇴사하면 퇴사일이 채워지고, 재입사하면 지워진다
+    const left = employeeDetailSchema.parse(
+      (
+        await client.PATCH('/api/v1/employees/{id}', {
+          params: { path: { id: card.id } },
+          body: { status: 'LEFT' },
+        })
+      ).data,
+    );
+
+    expect(left).toMatchObject({ status: 'LEFT', leftOn: todayInSeoul(new Date()) });
+    expect(
+      (
+        await client.PATCH('/api/v1/employees/{id}', {
+          params: { path: { id: card.id } },
+          body: { leftOn: null },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      employeeDetailSchema.parse(
+        (
+          await client.PATCH('/api/v1/employees/{id}', {
+            params: { path: { id: card.id } },
+            body: { status: 'ACTIVE' },
+          })
+        ).data,
+      ),
+    ).toMatchObject({ status: 'ACTIVE', leftOn: null });
+    expect(
+      (
+        await client.GET('/api/v1/employees/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+
+    const filtered = await client.GET('/api/v1/employees', {
+      params: { query: { status: 'LEFT' } },
+    });
+
+    expect(
+      employeesResponseSchema.parse(filtered.data).items.every((item) => item.status === 'LEFT'),
+    ).toBe(true);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 60_000);
 
   it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
     await login();

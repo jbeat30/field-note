@@ -1,4 +1,4 @@
-import { DEMO_ACCOUNTS, DEMO_INVITATION } from '@field-note/shared/demo';
+import { DEMO_ACCOUNTS, DEMO_EMPLOYEES, DEMO_INVITATION } from '@field-note/shared/demo';
 
 import { verifyPassword } from '../auth/password';
 import { createPrismaInvitationStore } from '../invitation/invitationStore';
@@ -115,5 +115,43 @@ describe('seedDemoData', () => {
     await seedDemoData(db.owner);
 
     expect(await store.find(DEMO_INVITATION.token)).toBeNull();
+  });
+
+  it('더미 직원을 회사별로 넣고, 선택 목록 항목과 연결하며, 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_EMPLOYEES.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.employee.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.employee.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+
+    const welder = await db.owner.employee.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, name: '한용접' },
+      include: { jobType: true, workerType: true },
+    });
+
+    expect(welder.jobType?.name).toBe('용접공');
+    expect(welder.workerType?.name).toBe('계약직');
+    expect(welder.companyId).toBe(welder.jobType?.companyId);
+
+    // 앱 계정은 자기 회사 직원만 본다
+    const visible = await withCompany(db.app, saeron.companyId, (tx) => tx.employee.findMany());
+
+    expect(visible).toHaveLength(count(saeron.companyId));
+    expect(visible.every((item) => item.companyId === saeron.companyId)).toBe(true);
+  });
+
+  it('시드 직원에는 주민등록번호·계좌 같은 항목이 없고 연락처는 가상 번호다', async () => {
+    const phones = (await db.owner.employee.findMany({ select: { phone: true } })).flatMap(
+      (item) => (item.phone ? [item.phone] : []),
+    );
+
+    expect(phones.length).toBeGreaterThan(0);
+    expect(phones.every((phone) => /^010-0000-\d{4}$/.test(phone))).toBe(true);
   });
 });

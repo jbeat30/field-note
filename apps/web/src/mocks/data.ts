@@ -1,8 +1,16 @@
-import type { CompanySettings, Device, LegalDocumentSummary, OptionItem } from '@field-note/shared';
+import type {
+  CompanySettings,
+  Device,
+  EmployeeDetail,
+  LegalDocumentSummary,
+  OptionItem,
+} from '@field-note/shared';
 
 import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
 
 export type MockAccount = {
+  // 더미 직원을 찾는 키 (데모 계정만 있고, 목업에서 새로 가입한 계정은 없음)
+  companyId?: string;
   loginId: string;
   password: string;
   displayName: string;
@@ -20,10 +28,13 @@ export type MockAccount = {
   closingPurgeAfter?: string;
   // 선택 목록(직종·작업 구분·공종·직원 구분). 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
   options?: OptionItem[];
+  // 직원 카드. 처음 조회할 때 더미 직원(DB 시드와 같은 원본)으로 채움
+  employees?: EmployeeDetail[];
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용
 export const DEMO_ACCOUNTS: readonly MockAccount[] = SHARED_DEMO_ACCOUNTS.map((account) => ({
+  companyId: account.companyId,
   loginId: account.loginId,
   password: account.password,
   displayName: account.displayName,
