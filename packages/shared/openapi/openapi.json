@@ -141,6 +141,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -208,6 +209,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -275,6 +277,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -430,6 +433,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -497,6 +501,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -564,6 +569,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -727,6 +733,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -794,6 +801,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -861,6 +869,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -928,6 +937,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1060,6 +1070,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1127,6 +1138,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1194,6 +1206,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1292,6 +1305,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1359,6 +1373,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1496,6 +1511,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1563,6 +1579,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1630,6 +1647,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1697,6 +1715,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1810,6 +1829,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1923,6 +1943,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2068,6 +2089,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2135,6 +2157,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2256,6 +2279,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2367,6 +2391,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2434,6 +2459,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2501,6 +2527,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2617,6 +2644,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2684,6 +2712,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2792,6 +2821,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2859,6 +2889,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2926,6 +2957,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3048,6 +3080,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3115,6 +3148,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3182,6 +3216,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3307,6 +3342,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3374,6 +3410,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3441,6 +3478,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3508,6 +3546,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3631,6 +3670,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3698,6 +3738,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3765,6 +3806,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3832,6 +3874,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3946,6 +3989,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4013,6 +4057,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4080,6 +4125,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4147,6 +4193,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4253,6 +4300,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4320,6 +4368,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4387,6 +4436,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4503,6 +4553,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4570,6 +4621,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4637,6 +4689,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4764,6 +4817,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4908,6 +4962,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4975,6 +5030,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5109,6 +5165,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5176,6 +5233,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5243,6 +5301,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5390,6 +5449,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5457,6 +5517,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5524,6 +5585,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5727,6 +5789,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5794,6 +5857,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6053,6 +6117,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6120,6 +6185,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6313,6 +6379,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6380,6 +6447,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6447,6 +6515,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6722,6 +6791,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6789,6 +6859,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6856,6 +6927,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7013,6 +7085,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7080,6 +7153,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7277,6 +7351,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7344,6 +7419,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7501,6 +7577,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7568,6 +7645,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7635,6 +7713,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7834,6 +7913,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7901,6 +7981,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7968,6 +8049,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8216,6 +8298,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8283,6 +8366,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8611,6 +8695,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8678,6 +8763,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8913,6 +8999,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8980,6 +9067,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9047,6 +9135,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9384,6 +9473,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9451,6 +9541,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9518,6 +9609,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9791,6 +9883,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9858,6 +9951,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9925,6 +10019,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10088,6 +10183,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10155,6 +10251,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10222,6 +10319,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10374,6 +10472,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10441,6 +10540,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10508,6 +10608,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10747,6 +10848,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10814,6 +10916,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10881,6 +10984,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11136,6 +11240,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11203,6 +11308,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11270,6 +11376,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11527,6 +11634,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11594,6 +11702,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11661,6 +11770,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11902,6 +12012,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11969,6 +12080,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12036,6 +12148,1745 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{id}/work-logs": {
+      "get": {
+        "summary": "프로젝트 작업일지 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "from",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "to",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "SAVED"
+              ]
+            },
+            "required": false,
+            "name": "status",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "workDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "status": {
+                            "type": "string",
+                            "enum": [
+                              "DRAFT",
+                              "SAVED"
+                            ]
+                          },
+                          "isChange": {
+                            "type": "boolean"
+                          },
+                          "isAfterService": {
+                            "type": "boolean"
+                          },
+                          "isLate": {
+                            "type": "boolean"
+                          },
+                          "entryCount": {
+                            "type": "integer"
+                          },
+                          "totalMinutes": {
+                            "type": "integer"
+                          },
+                          "hasContent": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "workDate",
+                          "status",
+                          "isChange",
+                          "isAfterService",
+                          "isLate",
+                          "entryCount",
+                          "totalMinutes",
+                          "hasContent"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{id}/work-logs/{workDate}": {
+      "get": {
+        "summary": "그날의 작업일지 (공수 항목과 경고 포함)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "workDate",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "workDate": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "DRAFT",
+                        "SAVED"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "area": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "notes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "isChange": {
+                      "type": "boolean"
+                    },
+                    "isAfterService": {
+                      "type": "boolean"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "savedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
+                    },
+                    "isLate": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "employeeId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "categoryId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "minutes": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1440
+                          }
+                        },
+                        "required": [
+                          "employeeId",
+                          "categoryId",
+                          "minutes"
+                        ]
+                      }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "DAILY_OVER"
+                                ]
+                              },
+                              "employeeId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "totalMinutes": {
+                                "type": "integer"
+                              },
+                              "otherProjects": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "projectId": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "projectCode": {
+                                      "type": "string"
+                                    },
+                                    "projectName": {
+                                      "type": "string"
+                                    },
+                                    "minutes": {
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": [
+                                    "projectId",
+                                    "projectCode",
+                                    "projectName",
+                                    "minutes"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "employeeId",
+                              "totalMinutes",
+                              "otherProjects"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "ON_LEAVE"
+                                ]
+                              },
+                              "employeeId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "employeeId"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "LEFT"
+                                ]
+                              },
+                              "employeeId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "employeeId"
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "autoAssignedEmployeeIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "workDate",
+                    "status",
+                    "content",
+                    "area",
+                    "notes",
+                    "isChange",
+                    "isAfterService",
+                    "version",
+                    "savedAt",
+                    "isLate",
+                    "createdAt",
+                    "updatedAt",
+                    "entries",
+                    "warnings",
+                    "autoAssignedEmployeeIds"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "그날의 작업일지 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "workDate",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "status": {
+                    "type": "string",
+                    "enum": [
+                      "DRAFT",
+                      "SAVED"
+                    ]
+                  },
+                  "content": {
+                    "type": "string",
+                    "maxLength": 5000
+                  },
+                  "area": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 100
+                  },
+                  "notes": {
+                    "type": [
+                      "string",
+                      "null"
+                    ],
+                    "maxLength": 1000
+                  },
+                  "isChange": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "isAfterService": {
+                    "type": "boolean",
+                    "default": false
+                  },
+                  "entries": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "employeeId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "categoryId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "minutes": {
+                          "type": "integer",
+                          "minimum": 1,
+                          "maximum": 1440
+                        }
+                      },
+                      "required": [
+                        "employeeId",
+                        "categoryId",
+                        "minutes"
+                      ]
+                    },
+                    "maxItems": 100
+                  },
+                  "expectedVersion": {
+                    "type": [
+                      "integer",
+                      "null"
+                    ],
+                    "minimum": 1
+                  },
+                  "confirmStatus": {
+                    "type": "boolean"
+                  },
+                  "addMissingAssignments": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "status",
+                  "content",
+                  "entries"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "workDate": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "DRAFT",
+                        "SAVED"
+                      ]
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "area": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "notes": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "isChange": {
+                      "type": "boolean"
+                    },
+                    "isAfterService": {
+                      "type": "boolean"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "savedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
+                    },
+                    "isLate": {
+                      "type": "boolean"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "entries": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "employeeId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "categoryId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "minutes": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 1440
+                          }
+                        },
+                        "required": [
+                          "employeeId",
+                          "categoryId",
+                          "minutes"
+                        ]
+                      }
+                    },
+                    "warnings": {
+                      "type": "array",
+                      "items": {
+                        "oneOf": [
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "DAILY_OVER"
+                                ]
+                              },
+                              "employeeId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "totalMinutes": {
+                                "type": "integer"
+                              },
+                              "otherProjects": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "projectId": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "projectCode": {
+                                      "type": "string"
+                                    },
+                                    "projectName": {
+                                      "type": "string"
+                                    },
+                                    "minutes": {
+                                      "type": "integer"
+                                    }
+                                  },
+                                  "required": [
+                                    "projectId",
+                                    "projectCode",
+                                    "projectName",
+                                    "minutes"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "employeeId",
+                              "totalMinutes",
+                              "otherProjects"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "ON_LEAVE"
+                                ]
+                              },
+                              "employeeId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "employeeId"
+                            ]
+                          },
+                          {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "LEFT"
+                                ]
+                              },
+                              "employeeId": {
+                                "type": "string",
+                                "format": "uuid"
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "employeeId"
+                            ]
+                          }
+                        ]
+                      }
+                    },
+                    "autoAssignedEmployeeIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "string",
+                        "format": "uuid"
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "workDate",
+                    "status",
+                    "content",
+                    "area",
+                    "notes",
+                    "isChange",
+                    "isAfterService",
+                    "version",
+                    "savedAt",
+                    "isLate",
+                    "createdAt",
+                    "updatedAt",
+                    "entries",
+                    "warnings",
+                    "autoAssignedEmployeeIds"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "CONFLICT",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{id}/work-logs/{workDate}/revisions": {
+      "get": {
+        "summary": "작업일지 수정 이력 (고치기 전 값, 최근이 맨 앞)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "date"
+            },
+            "required": true,
+            "name": "workDate",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "version": {
+                            "type": "integer"
+                          },
+                          "snapshot": {
+                            "type": "object",
+                            "properties": {
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "DRAFT",
+                                  "SAVED"
+                                ]
+                              },
+                              "content": {
+                                "type": "string"
+                              },
+                              "area": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "notes": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "isChange": {
+                                "type": "boolean"
+                              },
+                              "isAfterService": {
+                                "type": "boolean"
+                              },
+                              "entries": {
+                                "type": "array",
+                                "items": {
+                                  "type": "object",
+                                  "properties": {
+                                    "employeeId": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "categoryId": {
+                                      "type": "string",
+                                      "format": "uuid"
+                                    },
+                                    "minutes": {
+                                      "type": "integer",
+                                      "minimum": 1,
+                                      "maximum": 1440
+                                    }
+                                  },
+                                  "required": [
+                                    "employeeId",
+                                    "categoryId",
+                                    "minutes"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "status",
+                              "content",
+                              "area",
+                              "notes",
+                              "isChange",
+                              "isAfterService",
+                              "entries"
+                            ]
+                          },
+                          "changedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "version",
+                          "snapshot",
+                          "changedAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12228,6 +14079,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12295,6 +14147,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12362,6 +14215,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12429,6 +14283,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12527,6 +14382,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12594,6 +14450,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12661,6 +14518,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12768,6 +14626,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12835,6 +14694,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12944,6 +14804,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13044,6 +14905,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13111,6 +14973,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13211,6 +15074,7 @@
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
+                            "CONFLICT",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",

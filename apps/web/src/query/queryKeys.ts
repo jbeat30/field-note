@@ -16,6 +16,10 @@ export const queryKeys = {
   project: (id: string) => ['projects', 'detail', { id }] as const,
   assignments: (projectId: string, includeCancelled = false) =>
     ['assignments', 'all', { projectId, includeCancelled }] as const,
+  workLogs: (projectId: string, filter: object = {}) =>
+    ['work-logs', 'list', { projectId, ...filter }] as const,
+  workLog: (projectId: string, workDate: string) =>
+    ['work-logs', 'detail', { projectId, workDate }] as const,
   projectPeriodHistory: (id: string) => ['project-period-history', 'all', { id }] as const,
   projectHistory: (id: string) => ['project-history', 'all', { id }] as const,
   employee: (id: string) => ['employees', 'detail', { id }] as const,

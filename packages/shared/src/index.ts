@@ -12,3 +12,4 @@ export * from './partners';
 export * from './projects';
 export * from './projectTransitions';
 export * from './assignments';
+export * from './workLogs';
