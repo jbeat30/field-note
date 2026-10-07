@@ -1,9 +1,11 @@
 import {
+  employeeWorkHistorySchema,
   errorResponseSchema,
   optionsResponseSchema,
   workLogRevisionsSchema,
   workLogSchema,
   workLogsResponseSchema,
+  workSummarySchema,
 } from '@field-note/shared';
 import request from 'supertest';
 
@@ -934,5 +936,168 @@ describe('회사 격리·DB 제약', () => {
         [company, created.body.id, a.worker, b.categories[0]!.id],
       ),
     ).rejects.toThrow(/work_log_entries_company_id_category_id_fkey/);
+  });
+});
+
+describe('공수 집계', () => {
+  const fetch = (instance: ReturnType<typeof app>, cookie: string, path: string) =>
+    request(instance).get(`/api/v1${path}`).set('Cookie', cookie);
+
+  it('프로젝트 집계는 저장된 일지만 직원별·작업 구분별·주별로 합산하고 임시 저장은 건수만 알린다', async () => {
+    const instance = app();
+    const s = await setup(instance);
+    const [cat1, cat2] = [s.categories[0]!.id, s.categories[1]!.id];
+
+    await s.client.put(s.project, '2026-10-05', {
+      status: 'SAVED',
+      content: '월요일 작업',
+      entries: [
+        { employeeId: s.worker, categoryId: cat1, minutes: 240 },
+        { employeeId: s.worker, categoryId: cat2, minutes: 240 },
+        { employeeId: s.worker2, categoryId: cat2, minutes: 720 },
+      ],
+    });
+    await s.client.put(s.project, '2026-10-06', {
+      status: 'SAVED',
+      content: '화요일 작업',
+      entries: [{ employeeId: s.worker, categoryId: cat1, minutes: 480 }],
+    });
+    await s.client.put(s.project, '2026-10-07', {
+      status: 'DRAFT',
+      content: '',
+      entries: [{ employeeId: s.worker2, categoryId: cat1, minutes: 480 }],
+    });
+
+    const res = await fetch(instance, s.cookie, `/projects/${s.project}/work-summary`);
+    const summary = workSummarySchema.parse(res.body);
+
+    expect(res.status).toBe(200);
+    expect(summary).toMatchObject({
+      totalMinutes: 1680,
+      workedDays: 2,
+      savedLogCount: 2,
+      draftLogCount: 1,
+      plannedMinutes: null,
+    });
+    expect(summary.byEmployee).toEqual([
+      { employeeId: s.worker, workedDays: 2, totalMinutes: 960, plannedMinutes: null },
+      { employeeId: s.worker2, workedDays: 1, totalMinutes: 720, plannedMinutes: null },
+    ]);
+    expect(summary.byCategory).toEqual([
+      { categoryId: cat2, totalMinutes: 960 },
+      { categoryId: cat1, totalMinutes: 720 },
+    ]);
+    expect(summary.byPeriod).toEqual([{ periodStart: '2026-10-05', totalMinutes: 1680 }]);
+
+    // 기간 필터와 월별 묶음
+    const ranged = workSummarySchema.parse(
+      (
+        await fetch(
+          instance,
+          s.cookie,
+          `/projects/${s.project}/work-summary?from=2026-10-06&to=2026-10-31&unit=month`,
+        )
+      ).body,
+    );
+
+    expect(ranged.totalMinutes).toBe(480);
+    expect(ranged.byPeriod).toEqual([{ periodStart: '2026-10-01', totalMinutes: 480 }]);
+  });
+
+  it('계획 공수는 취소하지 않은 투입의 합이다', async () => {
+    const instance = app();
+    const s = await setup(instance);
+    const planner = await s.client.createEmployee('계획직원');
+    const extra = await s.client.assign(s.project, {
+      employeeId: planner,
+      startDate: '2026-10-01',
+      endDate: '2026-10-31',
+      plannedMinutes: 4800,
+    });
+
+    expect(extra.status).toBe(201);
+
+    const summary = workSummarySchema.parse(
+      (await fetch(instance, s.cookie, `/projects/${s.project}/work-summary`)).body,
+    );
+
+    expect(summary.plannedMinutes).toBe(4800);
+    expect(summary.byEmployee.find((row) => row.employeeId === planner)?.plannedMinutes).toBe(4800);
+  });
+
+  it('직원 이력은 프로젝트별 투입 기간·일수·공수와 이번 달·올해 공수를 준다', async () => {
+    const instance = app();
+    const s = await setup(instance);
+    const other = await s.make('B동 설비 공사');
+    const cat = s.categories[0]!.id;
+
+    await s.client.put(
+      s.project,
+      '2026-10-05',
+      full(s, { entries: [{ employeeId: s.worker, categoryId: cat, minutes: 480 }] }),
+    );
+    await s.client.put(
+      s.project,
+      '2026-10-06',
+      full(s, { entries: [{ employeeId: s.worker, categoryId: cat, minutes: 720 }] }),
+    );
+    await s.client.put(
+      other,
+      '2026-10-02',
+      full(s, { entries: [{ employeeId: s.worker, categoryId: cat, minutes: 480 }] }),
+    );
+    await s.client.put(other, '2026-10-03', {
+      status: 'DRAFT',
+      content: '',
+      entries: [{ employeeId: s.worker, categoryId: cat, minutes: 480 }],
+    });
+
+    const res = await fetch(instance, s.cookie, `/employees/${s.worker}/work-history`);
+    const history = employeeWorkHistorySchema.parse(res.body);
+
+    expect(res.status).toBe(200);
+    expect(history).toMatchObject({
+      thisMonthMinutes: 1680,
+      thisYearMinutes: 1680,
+      totalMinutes: 1680,
+    });
+    expect(history.projects).toHaveLength(2);
+    expect(history.projects[0]).toMatchObject({
+      projectId: s.project,
+      workedDays: 2,
+      totalMinutes: 1200,
+      lastWorkDate: '2026-10-06',
+      assignedFrom: '2026-10-01',
+      assignedTo: '2026-12-31',
+    });
+    expect(history.projects[1]).toMatchObject({
+      projectId: other,
+      workedDays: 1,
+      totalMinutes: 480,
+    });
+  });
+
+  it('다른 회사의 프로젝트·직원이나 없는 대상은 찾을 수 없고 로그인이 필요하다', async () => {
+    const instance = app();
+    const a = await setup(instance);
+    const b = await setup(instance);
+
+    expect((await fetch(instance, b.cookie, `/projects/${a.project}/work-summary`)).status).toBe(
+      404,
+    );
+    expect((await fetch(instance, b.cookie, `/employees/${a.worker}/work-history`)).status).toBe(
+      404,
+    );
+    expect((await request(instance).get(`/api/v1/projects/${a.project}/work-summary`)).status).toBe(
+      401,
+    );
+    expect((await request(instance).get(`/api/v1/employees/${a.worker}/work-history`)).status).toBe(
+      401,
+    );
+    expect(
+      errorResponseSchema.parse(
+        (await fetch(instance, a.cookie, `/projects/${a.project}/work-summary?from=bad`)).body,
+      ).error.code,
+    ).toBe('VALIDATION_ERROR');
   });
 });

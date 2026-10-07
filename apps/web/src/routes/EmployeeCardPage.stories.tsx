@@ -188,3 +188,31 @@ export const NotFound: Story = {
     ).toBeInTheDocument();
   },
 };
+
+// 최설치: A동(2026-09-01, 09-02)과 B동 덕트 설치(09-02)에 저장된 일지가 있음
+export const WorkHistory: Story = {
+  parameters: { router: routerFor('최설치') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const history = within(await canvas.findByRole('region', { name: '투입 이력' }));
+    const list = within(await history.findByRole('list', { name: '프로젝트별 투입 이력' }));
+
+    await expect(
+      list.getByRole('link', { name: /2026-001 A동 외장 판금 공사/ }),
+    ).toBeInTheDocument();
+    await expect(list.getByRole('link', { name: /2026-003 B동 덕트 설치/ })).toBeInTheDocument();
+    await expect(list.getByText(/2일 · 2.0 MD \(16시간\)/)).toBeInTheDocument();
+    await expect(history.getByText('이번 달 공수')).toBeInTheDocument();
+    await expect(history.getByText('올해 공수')).toBeInTheDocument();
+  },
+};
+
+export const WorkHistoryEmpty: Story = {
+  parameters: { router: routerFor('오전기') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const history = within(await canvas.findByRole('region', { name: '투입 이력' }));
+
+    await expect(await history.findByText(/아직 투입된 프로젝트가 없습니다/)).toBeInTheDocument();
+  },
+};

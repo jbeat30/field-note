@@ -12,7 +12,10 @@ import {
   dailyOverMinutes,
   isLateInput,
   validateWorkLogForSave,
+  summarizeEmployeeWork,
+  summarizeProjectWork,
   workLogListQuerySchema,
+  workSummaryQuerySchema,
   workLogParamsSchema,
   workLogSaveSchema,
   workLogStatusCheck,
@@ -1829,6 +1832,104 @@ export const handlers = [
         b.changedAt.localeCompare(a.changedAt),
       ),
     });
+  }),
+
+  http.get('/api/v1/projects/:id/work-summary', async ({ request, params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    const query = workSummaryQuerySchema.safeParse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    if (!query.success) {
+      return apiError(
+        'VALIDATION_ERROR',
+        query.error.issues.map((issue) => ({
+          path: ['query', ...issue.path].join('.'),
+          message: issue.message,
+        })),
+      );
+    }
+
+    const { from, to, unit } = query.data;
+    const logs = getWorkLogs(account).filter(
+      (item) =>
+        item.projectId === parsed.data.id &&
+        (!from || item.workDate >= from) &&
+        (!to || item.workDate <= to),
+    );
+    const saved = logs.filter((item) => item.status === 'SAVED');
+
+    return HttpResponse.json(
+      summarizeProjectWork({
+        entries: saved.flatMap((log) =>
+          log.entries.map((entry) => ({
+            workDate: log.workDate,
+            employeeId: entry.employeeId,
+            categoryId: entry.categoryId,
+            minutes: entry.minutes,
+          })),
+        ),
+        savedLogCount: saved.length,
+        draftLogCount: logs.length - saved.length,
+        assignments: getAssignments(account).filter(
+          (item) => item.projectId === parsed.data.id && !item.cancelledAt,
+        ),
+        unit: unit ?? 'week',
+      }),
+    );
+  }),
+
+  http.get('/api/v1/employees/:id/work-history', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = employeeParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getEmployees(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    const employeeId = parsed.data.id;
+    const logs = getWorkLogs(account).filter((item) => item.status === 'SAVED');
+
+    return HttpResponse.json(
+      summarizeEmployeeWork({
+        entries: logs.flatMap((log) =>
+          log.entries
+            .filter((entry) => entry.employeeId === employeeId)
+            .map((entry) => ({
+              projectId: log.projectId,
+              workDate: log.workDate,
+              minutes: entry.minutes,
+            })),
+        ),
+        assignments: getAssignments(account).filter(
+          (item) => item.employeeId === employeeId && !item.cancelledAt,
+        ),
+        projects: new Map(getProjects(account).map((item) => [item.id, item])),
+        today: todayInSeoul(new Date()),
+      }),
+    );
   }),
 
   http.get('/api/v1/projects/:id/work-logs', async ({ request, params }) => {

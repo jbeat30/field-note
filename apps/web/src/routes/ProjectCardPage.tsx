@@ -7,6 +7,7 @@ import { ProjectForm } from '../projects/ProjectForm';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
 import { ProjectStatusPanel } from '../projects/ProjectStatusPanel';
 import { useProject } from '../projects/useProjects';
+import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel';
 
 // 프로젝트 기본정보 화면. 투입·일지·집계 같은 탭은 이후 단계에서 붙는다
 export const ProjectCardPage = () => {
@@ -64,6 +65,7 @@ export const ProjectCardPage = () => {
       </Link>
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
+      <ProjectWorkSummaryPanel projectId={project.data.id} />
       <section className="flex flex-col gap-3" aria-labelledby="info-heading">
         <h2 id="info-heading" className="text-lg font-bold">
           기본정보

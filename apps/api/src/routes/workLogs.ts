@@ -6,6 +6,11 @@ import {
   workLogSchema,
   workLogsResponseSchema,
   projectParamsSchema,
+  employeeParamsSchema,
+  employeeWorkHistorySchema,
+  workSummaryQuerySchema,
+  workSummarySchema,
+  type WorkSummaryQuery,
   type WorkLogListQuery,
   type WorkLogSave,
 } from '@field-note/shared';
@@ -58,6 +63,48 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
             query as WorkLogListQuery,
           ),
         };
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/projects/{id}/work-summary',
+      summary: '프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 일지만 반영)',
+      auth: 'required',
+      request: { params: projectParamsSchema, query: workSummaryQuerySchema },
+      response: { status: 200, schema: workSummarySchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params, query }) => {
+      try {
+        return await workLogs!.summary(
+          auth!.companyId,
+          (params as { id: string }).id,
+          query as WorkSummaryQuery,
+        );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/employees/{id}/work-history',
+      summary: '직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 일지만 반영)',
+      auth: 'required',
+      request: { params: employeeParamsSchema },
+      response: { status: 200, schema: employeeWorkHistorySchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params }) => {
+      try {
+        return await workLogs!.employeeHistory(auth!.companyId, (params as { id: string }).id);
       } catch (error) {
         throw toAppError(error);
       }

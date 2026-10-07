@@ -17,6 +17,7 @@ import { splitServerErrors } from '../lib/serverErrors';
 import { OptionSelect } from '../employees/OptionSelect';
 import { useEmployee, useUpdateEmployee } from '../employees/useEmployees';
 import { useOptions } from '../settings/useOptions';
+import { EmployeeWorkHistoryPanel } from '../workSummary/EmployeeWorkHistoryPanel';
 
 // 입력칸은 모두 문자열로 다루고, 비어 있으면 null로 보낸다 (항목 지우기)
 type CardForm = {
@@ -161,6 +162,8 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
           </span>
         </h1>
       </div>
+
+      <EmployeeWorkHistoryPanel employeeId={employee.id} />
 
       {saved && <Alert variant="info">{saved}</Alert>}
       {errors.root && <Alert>{errors.root.message}</Alert>}
