@@ -5,7 +5,30 @@ import {
   errorResponseSchema,
   invitationResponseSchema,
   meResponseSchema,
+  EMPLOYEE_STATUSES,
+  employeeDetailSchema,
+  employeesResponseSchema,
+  OPTION_KINDS,
+  OPTION_PRESETS,
+  PARTNER_KINDS,
+  projectDetailSchema,
+  projectsResponseSchema,
+  assignmentSchema,
+  workLogRevisionsSchema,
+  workLogSchema,
+  workLogsResponseSchema,
+  workSummarySchema,
+  employeeWorkHistorySchema,
+  assignmentsResponseSchema,
+  projectPeriodHistorySchema,
+  projectStatusHistorySchema,
+  type ProjectStatus,
+  partnerDetailSchema,
+  partnersResponseSchema,
+  optionItemSchema,
+  optionsResponseSchema,
   signupResponseSchema,
+  todayInSeoul,
 } from '@field-note/shared';
 import { setupServer } from 'msw/node';
 
@@ -297,6 +320,876 @@ describe('목업 서버 계약', () => {
         .response.status,
     ).toBe(404);
   });
+
+  it('선택 목록: 처음에는 프리셋, 추가·이름 변경·숨기기·순서 변경과 중복·격리 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/company/options')).response.status).toBe(401);
+
+    await login();
+
+    const first = optionsResponseSchema.parse((await client.GET('/api/v1/company/options')).data);
+
+    for (const kind of OPTION_KINDS) {
+      expect(first.items.filter((item) => item.kind === kind).map((item) => item.name)).toEqual(
+        OPTION_PRESETS[kind],
+      );
+    }
+
+    const created = await client.POST('/api/v1/company/options', {
+      body: { kind: 'TRADE', name: '  도장 ' },
+    });
+
+    expect(created.response.status).toBe(201);
+    expect(optionItemSchema.parse(created.data)).toMatchObject({ name: '도장', isActive: true });
+
+    const duplicate = await client.POST('/api/v1/company/options', {
+      body: { kind: 'TRADE', name: ' 판금 ' },
+    });
+
+    expect(duplicate.response.status).toBe(400);
+    expect(errorResponseSchema.parse(duplicate.error).error.details?.[0]?.path).toBe('body.name');
+    expect(
+      (await client.POST('/api/v1/company/options', { body: { kind: 'JOB_TYPE', name: '도장' } }))
+        .response.status,
+    ).toBe(201);
+
+    const id = created.data!.id;
+    const renamed = await client.PATCH('/api/v1/company/options/{id}', {
+      params: { path: { id } },
+      body: { name: '도장공' },
+    });
+
+    expect(optionItemSchema.parse(renamed.data).name).toBe('도장공');
+    expect(
+      (
+        await client.PATCH('/api/v1/company/options/{id}', {
+          params: { path: { id } },
+          body: { isActive: false },
+        })
+      ).data?.isActive,
+    ).toBe(false);
+    expect(
+      (
+        await client.PATCH('/api/v1/company/options/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+          body: { isActive: false },
+        })
+      ).response.status,
+    ).toBe(404);
+
+    const trades = optionsResponseSchema
+      .parse((await client.GET('/api/v1/company/options')).data)
+      .items.filter((item) => item.kind === 'TRADE');
+    const reversed = [...trades].reverse().map((item) => item.id);
+
+    expect(
+      (
+        await client.PUT('/api/v1/company/options/order', {
+          body: { kind: 'TRADE', ids: reversed },
+        })
+      ).response.status,
+    ).toBe(200);
+    expect(
+      optionsResponseSchema
+        .parse((await client.GET('/api/v1/company/options')).data)
+        .items.filter((item) => item.kind === 'TRADE')
+        .map((item) => item.id),
+    ).toEqual(reversed);
+    expect(
+      (
+        await client.PUT('/api/v1/company/options/order', {
+          body: { kind: 'TRADE', ids: reversed.slice(1) },
+        })
+      ).response.status,
+    ).toBe(400);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 30_000);
+
+  it('직원: 이름만으로 등록, 목록엔 개인정보 제외, 퇴사·재입사·검증 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/employees')).response.status).toBe(401);
+
+    await login();
+
+    const listed = await client.GET('/api/v1/employees');
+    const list = employeesResponseSchema.parse(listed.data);
+
+    expect(list.items.length).toBeGreaterThan(0);
+    // 목록에는 생년월일·연락처·메모가 없고, 재직 → 휴직 → 퇴사 순
+    expect(JSON.stringify(listed.data)).not.toMatch(/birthDate|phone|memo/);
+    expect(list.items.map((item) => item.status)).toEqual(
+      [...list.items.map((item) => item.status)].sort(
+        (a, b) => EMPLOYEE_STATUSES.indexOf(a) - EMPLOYEE_STATUSES.indexOf(b),
+      ),
+    );
+
+    const created = await client.POST('/api/v1/employees', { body: { name: '  신입 ' } });
+    const card = employeeDetailSchema.parse(created.data);
+
+    expect(created.response.status).toBe(201);
+    expect(card).toMatchObject({ name: '신입', status: 'ACTIVE', jobTypeId: null, phone: null });
+
+    const options = optionsResponseSchema.parse(
+      (await client.GET('/api/v1/company/options')).data,
+    ).items;
+    const jobId = options.find((item) => item.kind === 'JOB_TYPE')!.id;
+    const workId = options.find((item) => item.kind === 'WORK_CATEGORY')!.id;
+
+    // 직종 자리에 다른 종류 항목, 없는 항목, 형식이 틀린 값은 거부
+    for (const body of [
+      { name: '김', jobTypeId: workId },
+      { name: '김', jobTypeId: '0198d000-0000-7000-8000-000000000999' },
+      { name: '김', phone: 'abc' },
+      { name: '김', birthDate: '2999-01-01' },
+      { name: '   ' },
+    ]) {
+      expect((await client.POST('/api/v1/employees', { body })).response.status).toBe(400);
+    }
+
+    const patched = await client.PATCH('/api/v1/employees/{id}', {
+      params: { path: { id: card.id } },
+      body: { jobTypeId: jobId, title: '반장', phone: '010-1111-2222' },
+    });
+
+    expect(employeeDetailSchema.parse(patched.data)).toMatchObject({
+      jobTypeId: jobId,
+      title: '반장',
+    });
+
+    const cleared = await client.PATCH('/api/v1/employees/{id}', {
+      params: { path: { id: card.id } },
+      body: { title: null, phone: null },
+    });
+
+    expect(employeeDetailSchema.parse(cleared.data)).toMatchObject({
+      title: null,
+      phone: null,
+      jobTypeId: jobId,
+    });
+
+    // 퇴사하면 퇴사일이 채워지고, 재입사하면 지워진다
+    const left = employeeDetailSchema.parse(
+      (
+        await client.PATCH('/api/v1/employees/{id}', {
+          params: { path: { id: card.id } },
+          body: { status: 'LEFT' },
+        })
+      ).data,
+    );
+
+    expect(left).toMatchObject({ status: 'LEFT', leftOn: todayInSeoul(new Date()) });
+    expect(
+      (
+        await client.PATCH('/api/v1/employees/{id}', {
+          params: { path: { id: card.id } },
+          body: { leftOn: null },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      employeeDetailSchema.parse(
+        (
+          await client.PATCH('/api/v1/employees/{id}', {
+            params: { path: { id: card.id } },
+            body: { status: 'ACTIVE' },
+          })
+        ).data,
+      ),
+    ).toMatchObject({ status: 'ACTIVE', leftOn: null });
+    expect(
+      (
+        await client.GET('/api/v1/employees/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+
+    const filtered = await client.GET('/api/v1/employees', {
+      params: { query: { status: 'LEFT' } },
+    });
+
+    expect(
+      employeesResponseSchema.parse(filtered.data).items.every((item) => item.status === 'LEFT'),
+    ).toBe(true);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 60_000);
+
+  it('명부: 구분·상호만으로 등록, 목록엔 연락처 제외, 구분별 중복·숨기기 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/partners')).response.status).toBe(401);
+
+    await login();
+
+    const listed = await client.GET('/api/v1/partners');
+    const list = partnersResponseSchema.parse(listed.data);
+
+    expect(list.items.length).toBeGreaterThan(0);
+    expect(JSON.stringify(listed.data)).not.toMatch(/phone|memo/);
+    // 구분 순서(고객 → 협력업체 → 공급처)
+    expect(list.items.map((item) => item.kind)).toEqual(
+      [...list.items.map((item) => item.kind)].sort(
+        (a, b) => PARTNER_KINDS.indexOf(a) - PARTNER_KINDS.indexOf(b),
+      ),
+    );
+
+    const created = await client.POST('/api/v1/partners', {
+      body: { kind: 'CLIENT', name: '  신규고객 ' },
+    });
+    const card = partnerDetailSchema.parse(created.data);
+
+    expect(created.response.status).toBe(201);
+    expect(card).toMatchObject({ name: '신규고객', isActive: true, phone: null });
+
+    // 같은 구분의 같은 상호(공백·대소문자 차이 포함)는 거부, 다른 구분은 허용
+    expect(
+      (await client.POST('/api/v1/partners', { body: { kind: 'CLIENT', name: ' 신규 고객' } }))
+        .response.status,
+    ).toBe(201);
+    expect(
+      (await client.POST('/api/v1/partners', { body: { kind: 'CLIENT', name: '신규  고객 ' } }))
+        .response.status,
+    ).toBe(400);
+    expect(
+      (await client.POST('/api/v1/partners', { body: { kind: 'SUPPLIER', name: '신규고객' } }))
+        .response.status,
+    ).toBe(201);
+
+    for (const body of [
+      { kind: 'CLIENT', name: '   ' },
+      { kind: 'CLIENT', name: '가', phone: 'abc' },
+      { name: '가' },
+    ]) {
+      expect((await client.POST('/api/v1/partners', { body: body as never })).response.status).toBe(
+        400,
+      );
+    }
+
+    const patched = await client.PATCH('/api/v1/partners/{id}', {
+      params: { path: { id: card.id } },
+      body: { contactName: '담당', phone: '02-111-2222', isActive: false },
+    });
+
+    expect(partnerDetailSchema.parse(patched.data)).toMatchObject({
+      contactName: '담당',
+      isActive: false,
+    });
+
+    const cleared = await client.PATCH('/api/v1/partners/{id}', {
+      params: { path: { id: card.id } },
+      body: { contactName: null, phone: null },
+    });
+
+    expect(partnerDetailSchema.parse(cleared.data)).toMatchObject({
+      contactName: null,
+      phone: null,
+      isActive: false,
+    });
+    expect(
+      (
+        await client.PATCH('/api/v1/partners/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+          body: { name: '가' },
+        })
+      ).response.status,
+    ).toBe(404);
+    expect(
+      partnersResponseSchema
+        .parse(
+          (await client.GET('/api/v1/partners', { params: { query: { kind: 'SUPPLIER' } } })).data,
+        )
+        .items.every((item) => item.kind === 'SUPPLIER'),
+    ).toBe(true);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 60_000);
+
+  it('프로젝트: 코드 자동 번호, 필수 항목·참조 검사, 필터와 수정 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/projects')).response.status).toBe(401);
+
+    await login();
+
+    const listed = projectsResponseSchema.parse((await client.GET('/api/v1/projects')).data);
+    const options = optionsResponseSchema.parse(
+      (await client.GET('/api/v1/company/options')).data,
+    ).items;
+    const partners = partnersResponseSchema.parse(
+      (await client.GET('/api/v1/partners')).data,
+    ).items;
+    const employees = employeesResponseSchema.parse(
+      (await client.GET('/api/v1/employees')).data,
+    ).items;
+    const clientId = partners.find((item) => item.kind === 'CLIENT' && item.isActive)!.id;
+    const supplierId = partners.find((item) => item.kind === 'SUPPLIER')!.id;
+    const managerId = employees.find((item) => item.status === 'ACTIVE')!.id;
+    const leftId = employees.find((item) => item.status === 'LEFT')!.id;
+    const trade = options.find((item) => item.kind === 'TRADE')!.id;
+    const body = {
+      name: '  새 프로젝트 ',
+      siteName: '새 현장',
+      clientId,
+      managerId,
+      contractDate: '2026-10-01',
+      plannedStart: '2026-10-10',
+      plannedEnd: '2026-12-31',
+    };
+
+    // 최근 등록순(코드 숫자 순서), 목록에는 현장 연락처·출입 메모·계약일이 없다
+    expect(JSON.stringify(listed)).not.toMatch(/siteContact|accessMemo|contractDate/);
+    expect(listed.items.length).toBeGreaterThan(0);
+
+    const created = await client.POST('/api/v1/projects', { body: { ...body, tradeIds: [trade] } });
+    const card = projectDetailSchema.parse(created.data);
+
+    expect(created.response.status).toBe(201);
+    expect(card).toMatchObject({ name: '새 프로젝트', status: 'PLANNED', tradeIds: [trade] });
+    expect(card.code).toMatch(/^\d{4}-\d{3,}$/);
+
+    const second = projectDetailSchema.parse(
+      (await client.POST('/api/v1/projects', { body: { ...body, name: '둘째' } })).data,
+    );
+
+    expect(Number(second.code.split('-')[1])).toBe(Number(card.code.split('-')[1]) + 1);
+
+    // 필수 항목 누락·기간 순서·참조 규칙 위반은 거부
+    for (const patch of [
+      { name: '   ' },
+      { plannedEnd: '2026-09-01' },
+      { siteMapUrl: 'javascript:alert(1)' },
+      { clientId: supplierId },
+      { managerId: leftId },
+      { tradeIds: [options.find((item) => item.kind === 'JOB_TYPE')!.id] },
+    ]) {
+      expect(
+        (await client.POST('/api/v1/projects', { body: { ...body, ...patch } })).response.status,
+      ).toBe(400);
+    }
+
+    const filtered = projectsResponseSchema.parse(
+      (
+        await client.GET('/api/v1/projects', {
+          params: { query: { status: 'PLANNED', sort: 'name' } },
+        })
+      ).data,
+    );
+
+    expect(filtered.items.every((item) => item.status === 'PLANNED')).toBe(true);
+
+    // 수정: 보낸 항목만 바꾸고 null로 비우며, 코드·상태는 바꿀 수 없다
+    const patched = await client.PATCH('/api/v1/projects/{id}', {
+      params: { path: { id: card.id } },
+      body: { name: '고침', siteAddress: '주소', tradeIds: [] },
+    });
+
+    expect(projectDetailSchema.parse(patched.data)).toMatchObject({
+      name: '고침',
+      siteAddress: '주소',
+      tradeIds: [],
+      code: card.code,
+      status: 'PLANNED',
+    });
+    expect(
+      projectDetailSchema.parse(
+        (
+          await client.PATCH('/api/v1/projects/{id}', {
+            params: { path: { id: card.id } },
+            body: { siteAddress: null },
+          })
+        ).data,
+      ).siteAddress,
+    ).toBeNull();
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          params: { path: { id: card.id } },
+          body: { plannedEnd: '2026-01-01' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+          body: { name: '가' },
+        })
+      ).response.status,
+    ).toBe(404);
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 90_000);
+
+  it('프로젝트 상태 전환: 허용된 전환만, 날짜·사유 규칙, 이력, 수정 제한이 서버와 같다', async () => {
+    expect(
+      (
+        await client.POST('/api/v1/projects/{id}/status', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000302' } },
+          body: { toStatus: 'IN_PROGRESS' },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const planned = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects', { params: { query: { status: 'PLANNED' } } })).data,
+    ).items[0]!;
+    const path = { params: { path: { id: planned.id } } };
+    const move = (body: {
+      toStatus: ProjectStatus;
+      effectiveOn?: string;
+      reason?: string | null;
+    }) => client.POST('/api/v1/projects/{id}/status', { ...path, body });
+
+    // 허용되지 않은 전환, 미래 날짜, 사유 없는 취소는 거부
+    for (const body of [
+      { toStatus: 'COMPLETED' as const },
+      { toStatus: 'SUSPENDED' as const, reason: '사유' },
+      { toStatus: 'IN_PROGRESS' as const, effectiveOn: '2999-01-01' },
+      { toStatus: 'CANCELLED' as const },
+    ]) {
+      expect((await move(body)).response.status).toBe(400);
+    }
+
+    const started = projectDetailSchema.parse(
+      (await move({ toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' })).data,
+    );
+
+    expect(started).toMatchObject({
+      status: 'IN_PROGRESS',
+      actualStart: '2026-10-01',
+      actualEnd: null,
+    });
+    // 이전 변경일보다 빠른 날짜는 거부, 같은 날은 허용
+    expect(
+      (await move({ toStatus: 'SUSPENDED', effectiveOn: '2026-09-30', reason: '우천' })).response
+        .status,
+    ).toBe(400);
+    expect(
+      (await move({ toStatus: 'SUSPENDED', effectiveOn: '2026-10-01', reason: ' 우천 ' })).response
+        .status,
+    ).toBe(200);
+
+    const resumed = projectDetailSchema.parse(
+      (await move({ toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-02' })).data,
+    );
+
+    expect(resumed.actualStart).toBe('2026-10-01');
+
+    const completed = projectDetailSchema.parse(
+      (await move({ toStatus: 'COMPLETED', effectiveOn: '2026-10-03' })).data,
+    );
+
+    expect(completed).toMatchObject({ status: 'COMPLETED', actualEnd: '2026-10-03' });
+    expect((await move({ toStatus: 'IN_PROGRESS' })).response.status).toBe(400);
+
+    const history = projectStatusHistorySchema.parse(
+      (await client.GET('/api/v1/projects/{id}/status-history', path)).data,
+    ).items;
+
+    expect(history.map((item) => `${item.fromStatus}>${item.toStatus}`)).toEqual([
+      'IN_PROGRESS>COMPLETED',
+      'SUSPENDED>IN_PROGRESS',
+      'IN_PROGRESS>SUSPENDED',
+      'PLANNED>IN_PROGRESS',
+    ]);
+    expect(history.find((item) => item.toStatus === 'SUSPENDED')?.reason).toBe('우천');
+
+    // 완료는 기본정보를 계속 수정할 수 있지만 취소하면 수정할 수 없다
+    expect(
+      (await client.PATCH('/api/v1/projects/{id}', { ...path, body: { name: '완료 후 수정' } }))
+        .response.status,
+    ).toBe(200);
+
+    const other = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects', { params: { query: { status: 'IN_PROGRESS' } } })).data,
+    ).items[0]!;
+
+    await client.POST('/api/v1/projects/{id}/status', {
+      params: { path: { id: other.id } },
+      body: { toStatus: 'CANCELLED', reason: '계약 해지' },
+    });
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          params: { path: { id: other.id } },
+          body: { name: '수정' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/status-history', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 120_000);
+
+  it('투입: 프로젝트 기간 안, 겹침 경고, 상태별 허용, 취소 표시와 기간 변경 이력이 서버와 같다', async () => {
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/assignments', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000301' } },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const projects = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects')).data,
+    ).items;
+    const employees = employeesResponseSchema.parse(
+      (await client.GET('/api/v1/employees')).data,
+    ).items;
+    const planned = projects.find((item) => item.status === 'PLANNED')!;
+    const running = projects.find((item) => item.status === 'IN_PROGRESS')!;
+    const completed = projects.find((item) => item.status === 'COMPLETED')!;
+    const left = employees.find((item) => item.status === 'LEFT')!;
+    const onLeave = employees.find((item) => item.status === 'ON_LEAVE')!;
+    const worker = employees.find((item) => item.status === 'ACTIVE' && item.name === '오전기')!;
+    const path = (id: string) => ({ params: { path: { id } } });
+    const assign = (id: string, body: object) =>
+      client.POST('/api/v1/projects/{id}/assignments', { ...path(id), body: body as never });
+
+    // 더미 투입(취소한 것 제외)이 목록에 있고 겹침 경고가 붙는다
+    const seeded = assignmentsResponseSchema.parse(
+      (await client.GET('/api/v1/projects/{id}/assignments', path(running.id))).data,
+    ).items;
+
+    expect(seeded.length).toBeGreaterThan(0);
+    expect(seeded.some((item) => item.warnings.some((warning) => warning.type === 'OVERLAP'))).toBe(
+      true,
+    );
+    expect(seeded.every((item) => item.cancelledAt === null)).toBe(true);
+
+    const full = { startDate: planned.plannedStart, endDate: planned.plannedEnd };
+
+    // 기간 밖·퇴사 직원·완료 프로젝트는 거부
+    for (const [id, body] of [
+      [planned.id, { employeeId: worker.id, startDate: '2000-01-01', endDate: planned.plannedEnd }],
+      [
+        planned.id,
+        { employeeId: worker.id, startDate: planned.plannedStart, endDate: '2099-01-01' },
+      ],
+      [planned.id, { employeeId: left.id, ...full }],
+      [
+        completed.id,
+        { employeeId: worker.id, startDate: completed.plannedStart, endDate: completed.plannedEnd },
+      ],
+    ] as const) {
+      expect((await assign(id, body)).response.status).toBe(400);
+    }
+
+    const created = assignmentSchema.parse(
+      (await assign(planned.id, { employeeId: worker.id, ...full, plannedMinutes: 960 })).data,
+    );
+
+    expect(created).toMatchObject({ plannedMinutes: 960, cancelledAt: null });
+    // 같은 프로젝트에 같은 직원이 겹치게 다시 투입할 수 없다
+    expect((await assign(planned.id, { employeeId: worker.id, ...full })).response.status).toBe(
+      400,
+    );
+    // 휴직 직원은 경고와 함께 투입된다
+    expect(
+      assignmentSchema.parse((await assign(planned.id, { employeeId: onLeave.id, ...full })).data)
+        .warnings,
+    ).toEqual([{ type: 'ON_LEAVE' }]);
+
+    const patched = assignmentSchema.parse(
+      (
+        await client.PATCH('/api/v1/projects/{id}/assignments/{assignmentId}', {
+          params: { path: { id: planned.id, assignmentId: created.id } },
+          body: { endDate: planned.plannedStart, plannedMinutes: null },
+        })
+      ).data,
+    );
+
+    expect(patched).toMatchObject({ endDate: planned.plannedStart, plannedMinutes: null });
+
+    const cancelled = await client.POST('/api/v1/projects/{id}/assignments/{assignmentId}/cancel', {
+      params: { path: { id: planned.id, assignmentId: created.id } },
+      body: {},
+    });
+
+    expect(assignmentSchema.parse(cancelled.data).cancelledAt).not.toBeNull();
+    expect(
+      assignmentsResponseSchema
+        .parse((await client.GET('/api/v1/projects/{id}/assignments', path(planned.id))).data)
+        .items.some((item) => item.id === created.id),
+    ).toBe(false);
+    expect(
+      assignmentsResponseSchema
+        .parse(
+          (
+            await client.GET('/api/v1/projects/{id}/assignments', {
+              params: { path: { id: planned.id }, query: { includeCancelled: 'true' } },
+            })
+          ).data,
+        )
+        .items.some((item) => item.id === created.id),
+    ).toBe(true);
+
+    // 예정 상태에서는 사유 없이 기간을 바꿀 수 있고 이력이 남으며, 시작한 프로젝트는 사유 필수·투입이 밖으로 나가면 거부
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(planned.id),
+          body: { plannedEnd: '2027-06-30' },
+        })
+      ).response.status,
+    ).toBe(200);
+    expect(
+      projectPeriodHistorySchema.parse(
+        (await client.GET('/api/v1/projects/{id}/period-history', path(planned.id))).data,
+      ).items[0],
+    ).toMatchObject({ toEnd: '2027-06-30', reason: null });
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(running.id),
+          body: { plannedEnd: '2027-01-31' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(running.id),
+          body: { plannedEnd: '2026-08-01', periodChangeReason: '단축' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(running.id),
+          body: { plannedEnd: '2027-01-31', periodChangeReason: '연장' },
+        })
+      ).response.status,
+    ).toBe(200);
+    expect(
+      (
+        await client.GET(
+          '/api/v1/projects/{id}/period-history',
+          path('0198d000-0000-7000-8000-000000000999'),
+        )
+      ).response.status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 120_000);
+
+  it('작업일지: 임시 저장·저장, 낙관적 잠금, 수정 이력, 날짜·상태·투입·하루 합계 규칙이 서버와 같다', async () => {
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/work-logs', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000301' } },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const projects = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects')).data,
+    ).items;
+    const employees = employeesResponseSchema.parse(
+      (await client.GET('/api/v1/employees')).data,
+    ).items;
+    const options = optionsResponseSchema.parse(
+      (await client.GET('/api/v1/company/options')).data,
+    ).items;
+    const running = projects.find((item) => item.code === '2026-001')!;
+    const planned = projects.find((item) => item.status === 'PLANNED')!;
+    const worker = employees.find((item) => item.name === '정판금')!;
+    const stranger = employees.find((item) => item.name === '오전기')!;
+    const category = options.find((item) => item.kind === 'WORK_CATEGORY' && item.name === '설치')!;
+    const path = (workDate: string, id = running.id) => ({ params: { path: { id, workDate } } });
+    const put = (workDate: string, body: object, id = running.id) =>
+      client.PUT('/api/v1/projects/{id}/work-logs/{workDate}', {
+        ...path(workDate, id),
+        body: body as never,
+      });
+    const entries = [{ employeeId: worker.id, categoryId: category.id, minutes: 480 }];
+
+    // 더미 일지: 임시 저장 1건 포함, 최근 날짜 순
+    const listed = workLogsResponseSchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-logs', {
+          params: { path: { id: running.id }, query: {} },
+        })
+      ).data,
+    ).items;
+
+    expect(listed.length).toBeGreaterThanOrEqual(4);
+    expect(listed.map((item) => item.workDate)).toEqual(
+      [...listed.map((item) => item.workDate)].sort().reverse(),
+    );
+    expect(listed.some((item) => item.status === 'DRAFT')).toBe(true);
+
+    // 하루 합계: 같은 날 다른 프로젝트에도 저장된 일지가 있는 직원은 경고
+    const seeded = workLogSchema.parse(
+      (await client.GET('/api/v1/projects/{id}/work-logs/{workDate}', path('2026-09-02'))).data,
+    );
+
+    expect(seeded).toMatchObject({ version: 2, isChange: true });
+    expect(seeded.warnings.some((warning) => warning.type === 'DAILY_OVER')).toBe(true);
+    expect(
+      workLogRevisionsSchema.parse(
+        (
+          await client.GET(
+            '/api/v1/projects/{id}/work-logs/{workDate}/revisions',
+            path('2026-09-02'),
+          )
+        ).data,
+      ).items,
+    ).toHaveLength(1);
+
+    // 날짜·상태 규칙
+    expect(
+      (await put('2026-06-01', { status: 'DRAFT', content: '', entries: [] })).response.status,
+    ).toBe(400);
+    expect(
+      (await put('2999-01-01', { status: 'DRAFT', content: '', entries: [] })).response.status,
+    ).toBe(400);
+    expect(
+      (await put('2026-09-05', { status: 'DRAFT', content: '', entries: [] }, planned.id)).response
+        .status,
+    ).toBe(400);
+    expect(
+      (await put('2026-09-05', { status: 'SAVED', content: '  ', entries })).response.status,
+    ).toBe(400);
+
+    // 임시 저장 → 저장 (낙관적 잠금), 투입 없는 직원은 확인 후 자동 추가
+    const draft = workLogSchema.parse(
+      (
+        await put('2026-09-05', {
+          status: 'DRAFT',
+          content: '초안',
+          entries: [{ employeeId: stranger.id, categoryId: category.id, minutes: 60 }],
+        })
+      ).data,
+    );
+
+    expect(draft).toMatchObject({ version: 1, savedAt: null });
+    expect(
+      (await put('2026-09-05', { status: 'DRAFT', content: '버전 없음', entries: [] })).response
+        .status,
+    ).toBe(409);
+
+    const withStranger = {
+      status: 'SAVED',
+      content: '신규 작업',
+      entries: [{ employeeId: stranger.id, categoryId: category.id, minutes: 60 }],
+      expectedVersion: 1,
+    };
+
+    expect((await put('2026-09-05', withStranger)).response.status).toBe(400);
+
+    const saved = workLogSchema.parse(
+      (await put('2026-09-05', { ...withStranger, addMissingAssignments: true })).data,
+    );
+
+    expect(saved).toMatchObject({
+      status: 'SAVED',
+      version: 2,
+      autoAssignedEmployeeIds: [stranger.id],
+    });
+    expect(saved.savedAt).not.toBeNull();
+    // 저장된 일지를 임시 저장으로 되돌릴 수 없고, 고치면 이력이 남는다
+    expect(
+      (await put('2026-09-05', { status: 'DRAFT', content: '', entries: [], expectedVersion: 2 }))
+        .response.status,
+    ).toBe(400);
+    expect(
+      (await put('2026-09-05', { ...withStranger, content: '수정', expectedVersion: 1 })).response
+        .status,
+    ).toBe(409);
+    expect(
+      (await put('2026-09-05', { ...withStranger, content: '수정', expectedVersion: 2 })).data
+        ?.version,
+    ).toBe(3);
+    expect(
+      workLogRevisionsSchema.parse(
+        (
+          await client.GET(
+            '/api/v1/projects/{id}/work-logs/{workDate}/revisions',
+            path('2026-09-05'),
+          )
+        ).data,
+      ).items[0]!.snapshot.content,
+    ).toBe('신규 작업');
+    expect(
+      (await client.GET('/api/v1/projects/{id}/work-logs/{workDate}', path('2026-09-30'))).response
+        .status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 120_000);
+
+  it('공수 집계: 저장된 일지만 직원별·작업 구분별·주별로 합산하고 직원 이력은 프로젝트별로 나온다', async () => {
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000301' }, query: {} },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const projects = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects')).data,
+    ).items;
+    const a = projects.find((item) => item.code === '2026-001')!;
+    const summary = workSummarySchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary', {
+          params: { path: { id: a.id }, query: {} },
+        })
+      ).data,
+    );
+
+    // 더미 일지: A동은 저장 3건 + 임시 저장 1건
+    expect(summary.savedLogCount).toBe(3);
+    expect(summary.draftLogCount).toBe(1);
+    expect(summary.totalMinutes).toBe(480 * 6 + 240 * 2 + 0);
+    expect(summary.byEmployee.length).toBeGreaterThan(0);
+
+    const ranged = workSummarySchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary', {
+          params: {
+            path: { id: a.id },
+            query: { from: '2026-09-02', to: '2026-09-02', unit: 'month' },
+          },
+        })
+      ).data,
+    );
+
+    expect(ranged.savedLogCount).toBe(1);
+    expect(ranged.byPeriod).toEqual([{ periodStart: '2026-09-01', totalMinutes: 960 }]);
+
+    const employeeId = summary.byEmployee[0]!.employeeId;
+    const history = employeeWorkHistorySchema.parse(
+      (
+        await client.GET('/api/v1/employees/{id}/work-history', {
+          params: { path: { id: employeeId } },
+        })
+      ).data,
+    );
+
+    expect(history.projects.length).toBeGreaterThan(0);
+    expect(history.totalMinutes).toBeGreaterThan(0);
+    expect(
+      (
+        await client.GET('/api/v1/employees/{id}/work-history', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+  }, 60_000);
 
   it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
     await login();

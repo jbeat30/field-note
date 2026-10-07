@@ -1,6 +1,34 @@
-import type { CompanySettings, Device } from '@field-note/shared';
+import {
+  OPTION_KINDS,
+  OPTION_PRESETS,
+  normalizeOptionName,
+  type CompanySettings,
+  type Device,
+  type EmployeeDetail,
+  type OptionItem,
+  normalizePartnerName,
+  type PartnerDetail,
+  type ProjectDetail,
+  type ProjectPeriodChange,
+  type ProjectStatusChange,
+  type WorkLogRevision,
+} from '@field-note/shared';
 
-import { DEMO_ACCOUNTS, DEMO_DEVICES, MOCK_SESSION_STORAGE_KEY, type MockAccount } from './data';
+import {
+  DEMO_ACCOUNTS,
+  DEMO_DEVICES,
+  MOCK_SESSION_STORAGE_KEY,
+  type AssignmentRow,
+  type MockAccount,
+  type MockWorkLog,
+} from './data';
+import {
+  DEMO_ASSIGNMENTS,
+  DEMO_EMPLOYEES,
+  DEMO_PARTNERS,
+  DEMO_PROJECTS,
+  DEMO_WORK_LOGS,
+} from './demoSource';
 
 // 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
@@ -148,6 +176,367 @@ export const cancelClosure = (account: MockAccount) => {
 
 // 취소 링크가 가리키는 해지 중 계정 (시연용 링크는 하나라 해지 중인 첫 계정)
 export const findClosingAccount = () => state.accounts.find((account) => account.closingPurgeAfter);
+
+// 선택 목록: 처음 조회할 때 프리셋으로 채우고 이후에는 계정에 저장된 목록을 그대로 씀 (종류 순서 → 정해진 순서)
+export const getOptions = (account: MockAccount): OptionItem[] => {
+  if (!account.options) {
+    account.options = OPTION_KINDS.flatMap((kind) =>
+      OPTION_PRESETS[kind].map((name) => ({
+        id: crypto.randomUUID(),
+        kind,
+        name,
+        isActive: true,
+      })),
+    );
+    persist();
+  }
+
+  return account.options;
+};
+
+export const saveOptions = (account: MockAccount, options: OptionItem[]) => {
+  account.options = options;
+  persist();
+};
+
+// 직원 카드: 처음 조회할 때 더미 직원으로 채움 (직종·구분은 선택 목록 항목과 이름으로 연결, DB 시드와 같은 방식)
+export const getEmployees = (account: MockAccount): EmployeeDetail[] => {
+  if (!account.employees) {
+    const options = getOptions(account);
+    const idOf = (kind: OptionItem['kind'], name?: string) =>
+      name
+        ? (options.find(
+            (item) =>
+              item.kind === kind && normalizeOptionName(item.name) === normalizeOptionName(name),
+          )?.id ?? null)
+        : null;
+
+    account.employees = DEMO_EMPLOYEES.filter((item) => item.companyId === account.companyId).map(
+      (item) => ({
+        id: item.id,
+        name: item.name,
+        title: item.title ?? null,
+        jobTypeId: idOf('JOB_TYPE', item.jobType),
+        workerTypeId: idOf('WORKER_TYPE', item.workerType),
+        status: item.status,
+        hiredOn: item.hiredOn ?? null,
+        leftOn: item.leftOn ?? null,
+        birthDate: item.birthDate ?? null,
+        phone: item.phone ?? null,
+        memo: item.memo ?? null,
+        createdAt: '2026-10-01T00:00:00.000Z',
+        updatedAt: '2026-10-01T00:00:00.000Z',
+      }),
+    );
+    persist();
+  }
+
+  return account.employees;
+};
+
+export const saveEmployees = (account: MockAccount, employees: EmployeeDetail[]) => {
+  account.employees = employees;
+  persist();
+};
+
+// 명부: 처음 조회할 때 더미 업체(DB 시드와 같은 원본)로 채움
+export const getPartners = (account: MockAccount): PartnerDetail[] => {
+  if (!account.partners) {
+    account.partners = DEMO_PARTNERS.filter((item) => item.companyId === account.companyId).map(
+      (item) => ({
+        id: item.id,
+        kind: item.kind,
+        name: item.name,
+        contactName: item.contactName ?? null,
+        phone: item.phone ?? null,
+        memo: item.memo ?? null,
+        isActive: item.isActive ?? true,
+        createdAt: '2026-10-01T00:00:00.000Z',
+        updatedAt: '2026-10-01T00:00:00.000Z',
+      }),
+    );
+    persist();
+  }
+
+  return account.partners;
+};
+
+export const savePartners = (account: MockAccount, partners: PartnerDetail[]) => {
+  account.partners = partners;
+  persist();
+};
+
+// 프로젝트: 처음 조회할 때 더미 프로젝트로 채움 (고객·담당자·공종은 이름으로 연결, DB 시드와 같은 방식)
+export const getProjects = (account: MockAccount): ProjectDetail[] => {
+  if (!account.projects) {
+    const options = getOptions(account);
+    const partners = getPartners(account);
+    const employees = getEmployees(account);
+    const tradeId = (name: string) =>
+      options.find(
+        (item) =>
+          item.kind === 'TRADE' && normalizeOptionName(item.name) === normalizeOptionName(name),
+      )?.id;
+
+    account.projects = DEMO_PROJECTS.filter((item) => item.companyId === account.companyId).flatMap(
+      (item) => {
+        const client = partners.find(
+          (partner) =>
+            partner.kind === 'CLIENT' &&
+            normalizePartnerName(partner.name) === normalizePartnerName(item.clientName),
+        );
+        const manager = employees.find((employee) => employee.name === item.managerName);
+
+        if (!client || !manager) return [];
+
+        return [
+          {
+            id: item.id,
+            code: item.code,
+            name: item.name,
+            status: item.status,
+            siteName: item.siteName,
+            siteAddress: item.siteAddress ?? null,
+            siteMapUrl: item.siteMapUrl ?? null,
+            siteContactName: item.siteContactName ?? null,
+            siteContactPhone: item.siteContactPhone ?? null,
+            accessMemo: item.accessMemo ?? null,
+            clientId: client.id,
+            managerId: manager.id,
+            tradeIds: item.trades.flatMap((name) => tradeId(name) ?? []),
+            contractDate: item.contractDate,
+            plannedStart: item.plannedStart,
+            plannedEnd: item.plannedEnd,
+            actualStart: item.actualStart ?? null,
+            actualEnd: item.actualEnd ?? null,
+            memo: item.memo ?? null,
+            createdAt: '2026-10-01T00:00:00.000Z',
+            updatedAt: '2026-10-01T00:00:00.000Z',
+          },
+        ];
+      },
+    );
+    persist();
+  }
+
+  return account.projects;
+};
+
+// 프로젝트 상태 변경 이력: 처음 조회할 때 더미 이력(DB 시드와 같은 원본)으로 채움
+export const getProjectHistory = (
+  account: MockAccount,
+  projectId: string,
+): ProjectStatusChange[] => {
+  if (!account.projectHistory) {
+    account.projectHistory = Object.fromEntries(
+      DEMO_PROJECTS.filter((item) => item.companyId === account.companyId).map((item) => [
+        item.id,
+        (item.history ?? []).map((change) => ({
+          id: crypto.randomUUID(),
+          fromStatus: change.fromStatus,
+          toStatus: change.toStatus,
+          effectiveOn: change.effectiveOn,
+          reason: change.reason ?? null,
+          changedAt: `${change.effectiveOn}T09:00:00.000Z`,
+        })),
+      ]),
+    );
+    persist();
+  }
+
+  return account.projectHistory[projectId] ?? [];
+};
+
+export const addProjectStatusChange = (
+  account: MockAccount,
+  projectId: string,
+  change: ProjectStatusChange,
+) => {
+  getProjectHistory(account, projectId);
+  account.projectHistory = {
+    ...account.projectHistory,
+    [projectId]: [...(account.projectHistory?.[projectId] ?? []), change],
+  };
+  persist();
+};
+
+// 프로젝트 예정 기간 변경 이력: 처음 조회할 때 더미 이력(DB 시드와 같은 원본)으로 채움
+export const getProjectPeriodHistory = (
+  account: MockAccount,
+  projectId: string,
+): ProjectPeriodChange[] => {
+  if (!account.projectPeriodHistory) {
+    account.projectPeriodHistory = Object.fromEntries(
+      DEMO_PROJECTS.filter((item) => item.companyId === account.companyId).map((item) => [
+        item.id,
+        (item.periodChanges ?? []).map((change) => ({
+          id: crypto.randomUUID(),
+          fromStart: change.fromStart,
+          fromEnd: change.fromEnd,
+          toStart: change.toStart,
+          toEnd: change.toEnd,
+          reason: change.reason ?? null,
+          changedAt: `${change.toEnd.slice(0, 7)}-01T09:00:00.000Z`,
+        })),
+      ]),
+    );
+    persist();
+  }
+
+  return account.projectPeriodHistory[projectId] ?? [];
+};
+
+export const addProjectPeriodChange = (
+  account: MockAccount,
+  projectId: string,
+  change: ProjectPeriodChange,
+) => {
+  getProjectPeriodHistory(account, projectId);
+  account.projectPeriodHistory = {
+    ...account.projectPeriodHistory,
+    [projectId]: [...(account.projectPeriodHistory?.[projectId] ?? []), change],
+  };
+  persist();
+};
+
+// 투입: 처음 조회할 때 더미 투입으로 채움 (프로젝트 코드·직원 이름으로 연결, DB 시드와 같은 방식)
+export const getAssignments = (account: MockAccount): AssignmentRow[] => {
+  if (!account.assignments) {
+    const projects = getProjects(account);
+    const employees = getEmployees(account);
+
+    account.assignments = DEMO_ASSIGNMENTS.filter(
+      (item) => item.companyId === account.companyId,
+    ).flatMap((item) => {
+      const project = projects.find((candidate) => candidate.code === item.projectCode);
+      const employee = employees.find((candidate) => candidate.name === item.employeeName);
+
+      return project && employee
+        ? [
+            {
+              id: item.id,
+              projectId: project.id,
+              employeeId: employee.id,
+              startDate: item.startDate,
+              endDate: item.endDate,
+              plannedMinutes: item.plannedMinutes ?? null,
+              cancelledAt: item.cancelled ? '2026-08-01T09:00:00.000Z' : null,
+            },
+          ]
+        : [];
+    });
+    persist();
+  }
+
+  return account.assignments;
+};
+
+// 작업일지: 처음 조회할 때 더미 일지(DB 시드와 같은 원본)로 채움 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결)
+export const getWorkLogs = (account: MockAccount): MockWorkLog[] => {
+  if (!account.workLogs) {
+    const projects = getProjects(account);
+    const employees = getEmployees(account);
+    const categories = getOptions(account).filter((item) => item.kind === 'WORK_CATEGORY');
+    const revisions: Record<string, WorkLogRevision[]> = {};
+    const toEntries = (
+      items: readonly { employeeName: string; categoryName: string; minutes: number }[],
+    ) =>
+      items.flatMap((item) => {
+        const employee = employees.find((candidate) => candidate.name === item.employeeName);
+        const category = categories.find(
+          (candidate) =>
+            normalizeOptionName(candidate.name) === normalizeOptionName(item.categoryName),
+        );
+
+        return employee && category
+          ? [{ employeeId: employee.id, categoryId: category.id, minutes: item.minutes }]
+          : [];
+      });
+
+    account.workLogs = DEMO_WORK_LOGS.filter(
+      (item) => item.companyId === account.companyId,
+    ).flatMap((item) => {
+      const project = projects.find((candidate) => candidate.code === item.projectCode);
+
+      if (!project) return [];
+
+      const id = crypto.randomUUID();
+      const stamp = `${item.workDate}T10:00:00.000Z`;
+
+      revisions[id] = (item.revisions ?? []).map((revision, index) => ({
+        id: crypto.randomUUID(),
+        version: index + 1,
+        snapshot: {
+          status: 'SAVED' as const,
+          content: revision.content,
+          area: revision.area ?? null,
+          notes: null,
+          isChange: false,
+          isAfterService: false,
+          entries: toEntries(revision.entries),
+        },
+        changedAt: stamp,
+      }));
+
+      return [
+        {
+          id,
+          projectId: project.id,
+          workDate: item.workDate,
+          status: item.status,
+          content: item.content,
+          area: item.area ?? null,
+          notes: item.notes ?? null,
+          isChange: item.isChange ?? false,
+          isAfterService: false,
+          version: 1 + (item.revisions?.length ?? 0),
+          savedAt: item.status === 'SAVED' ? stamp : null,
+          createdAt: stamp,
+          updatedAt: stamp,
+          entries: toEntries(item.entries),
+        },
+      ];
+    });
+    account.workLogRevisions = revisions;
+    persist();
+  }
+
+  return account.workLogs;
+};
+
+export const saveWorkLogs = (account: MockAccount, workLogs: MockWorkLog[]) => {
+  account.workLogs = workLogs;
+  persist();
+};
+
+export const getWorkLogRevisions = (account: MockAccount, workLogId: string): WorkLogRevision[] => {
+  getWorkLogs(account);
+
+  return account.workLogRevisions?.[workLogId] ?? [];
+};
+
+export const addWorkLogRevision = (
+  account: MockAccount,
+  workLogId: string,
+  revision: WorkLogRevision,
+) => {
+  getWorkLogs(account);
+  account.workLogRevisions = {
+    ...account.workLogRevisions,
+    [workLogId]: [...(account.workLogRevisions?.[workLogId] ?? []), revision],
+  };
+  persist();
+};
+
+export const saveAssignments = (account: MockAccount, assignments: AssignmentRow[]) => {
+  account.assignments = assignments;
+  persist();
+};
+
+export const saveProjects = (account: MockAccount, projects: ProjectDetail[]) => {
+  account.projects = projects;
+  persist();
+};
 
 export const isEmailInUse = (email: string) =>
   state.accounts.some((account) => account.email === email);

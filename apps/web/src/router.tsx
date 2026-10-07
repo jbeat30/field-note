@@ -60,7 +60,43 @@ export const routes = [
         Component: AppLayout,
         children: [
           { path: '/', ...page(() => import('./routes/HomePage'), 'HomePage') },
+          {
+            path: '/projects',
+            ...page(() => import('./routes/ProjectListPage'), 'ProjectListPage'),
+          },
+          {
+            path: '/projects/new',
+            ...page(() => import('./routes/ProjectNewPage'), 'ProjectNewPage'),
+          },
+          {
+            path: '/projects/:id',
+            ...page(() => import('./routes/ProjectCardPage'), 'ProjectCardPage'),
+          },
+          {
+            path: '/work-logs',
+            ...page(() => import('./routes/WorkLogPage'), 'WorkLogPage'),
+          },
+          {
+            path: '/employees',
+            ...page(() => import('./routes/EmployeeListPage'), 'EmployeeListPage'),
+          },
+          {
+            path: '/employees/:id',
+            ...page(() => import('./routes/EmployeeCardPage'), 'EmployeeCardPage'),
+          },
+          {
+            path: '/partners',
+            ...page(() => import('./routes/PartnerListPage'), 'PartnerListPage'),
+          },
+          {
+            path: '/partners/:id',
+            ...page(() => import('./routes/PartnerCardPage'), 'PartnerCardPage'),
+          },
           { path: '/settings', ...page(() => import('./routes/SettingsPage'), 'SettingsPage') },
+          {
+            path: '/settings/lists',
+            ...page(() => import('./routes/OptionListsPage'), 'OptionListsPage'),
+          },
           { path: '*', ...page(() => import('./routes/NotFoundPage'), 'NotFoundPage') },
         ],
       },
