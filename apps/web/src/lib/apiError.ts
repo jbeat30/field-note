@@ -23,3 +23,16 @@ export const getErrorMessage = (error: unknown): string => {
 
   return code ? ERROR_MESSAGES[code] : FALLBACK_MESSAGE;
 };
+
+/**
+ * @description 검증 오류의 첫 번째 상세 사유 (예: "이미 같은 이름이 있습니다"), 없으면 일반 오류 문구
+ * @param error openapi-fetch가 돌려준 오류 본문
+ * @returns 화면 표시용 문구
+ */
+export const getErrorDetailMessage = (error: unknown): string => {
+  const parsed = errorResponseSchema.safeParse(error);
+
+  return parsed.success && parsed.data.error.details?.[0]
+    ? parsed.data.error.details[0].message
+    : getErrorMessage(error);
+};

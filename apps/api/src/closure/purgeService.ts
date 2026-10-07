@@ -50,9 +50,20 @@ export const purgeCompany = (
     const deleted: Record<string, number> = {};
     const where = { companyId };
 
-    // 외래 키 순서: 메모 → 프로젝트 → 나머지 (소속 행이 먼저)
-    deleted.memos = (await tx.memo.deleteMany({ where })).count;
+    // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
+    // 일지의 수정 이력 → 공수 항목 → 일지 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
+    deleted.work_log_revisions = (await tx.workLogRevision.deleteMany({ where })).count;
+    deleted.work_log_entries = (await tx.workLogEntry.deleteMany({ where })).count;
+    deleted.work_logs = (await tx.workLog.deleteMany({ where })).count;
+    deleted.project_assignments = (await tx.projectAssignment.deleteMany({ where })).count;
+    deleted.project_period_changes = (await tx.projectPeriodChange.deleteMany({ where })).count;
+    deleted.project_status_changes = (await tx.projectStatusChange.deleteMany({ where })).count;
+    deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
     deleted.projects = (await tx.project.deleteMany({ where })).count;
+    deleted.project_code_sequences = (await tx.projectCodeSequence.deleteMany({ where })).count;
+    deleted.employees = (await tx.employee.deleteMany({ where })).count;
+    deleted.partners = (await tx.partner.deleteMany({ where })).count;
+    deleted.option_items = (await tx.optionItem.deleteMany({ where })).count;
     deleted.sessions = (await tx.session.deleteMany({ where })).count;
     deleted.invitations = (await tx.invitation.deleteMany({ where })).count;
     deleted.email_verifications = (await tx.emailVerification.deleteMany({ where })).count;

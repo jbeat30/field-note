@@ -1,8 +1,52 @@
-import type { CompanySettings, Device, LegalDocumentSummary } from '@field-note/shared';
+import type {
+  CompanySettings,
+  Device,
+  EmployeeDetail,
+  LegalDocumentSummary,
+  OptionItem,
+  PartnerDetail,
+  ProjectDetail,
+  ProjectPeriodChange,
+  ProjectStatusChange,
+  WorkLogEntry,
+  WorkLogRevision,
+  WorkLogStatus,
+} from '@field-note/shared';
 
 import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
 
+// 목업이 저장하는 투입 (경고는 응답할 때 계산)
+export type AssignmentRow = {
+  id: string;
+  projectId: string;
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  plannedMinutes: number | null;
+  cancelledAt: string | null;
+};
+
+// 목업이 저장하는 작업일지 (경고는 응답할 때 계산)
+export type MockWorkLog = {
+  id: string;
+  projectId: string;
+  workDate: string;
+  status: WorkLogStatus;
+  content: string;
+  area: string | null;
+  notes: string | null;
+  isChange: boolean;
+  isAfterService: boolean;
+  version: number;
+  savedAt: string | null;
+  createdAt: string;
+  updatedAt: string;
+  entries: WorkLogEntry[];
+};
+
 export type MockAccount = {
+  // 더미 직원을 찾는 키 (데모 계정만 있고, 목업에서 새로 가입한 계정은 없음)
+  companyId?: string;
   loginId: string;
   password: string;
   displayName: string;
@@ -18,10 +62,28 @@ export type MockAccount = {
   hasPassword?: boolean;
   // 해지 요청 중이면 삭제 예정 시각 (ISO)
   closingPurgeAfter?: string;
+  // 선택 목록(직종·작업 구분·공종·직원 구분). 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
+  options?: OptionItem[];
+  // 직원 카드. 처음 조회할 때 더미 직원(DB 시드와 같은 원본)으로 채움
+  employees?: EmployeeDetail[];
+  // 고객·협력업체·자재 공급처 명부. 처음 조회할 때 더미 업체로 채움
+  partners?: PartnerDetail[];
+  // 프로젝트. 처음 조회할 때 더미 프로젝트로 채움
+  projects?: ProjectDetail[];
+  // 프로젝트별 상태 변경 이력 (프로젝트 id → 오래된 것부터)
+  projectHistory?: Record<string, ProjectStatusChange[]>;
+  // 프로젝트별 예정 기간 변경 이력 (프로젝트 id → 오래된 것부터)
+  projectPeriodHistory?: Record<string, ProjectPeriodChange[]>;
+  // 투입 (취소한 것 포함)
+  assignments?: AssignmentRow[];
+  // 작업일지와 일지별 수정 이력 (일지 id → 오래된 것부터)
+  workLogs?: MockWorkLog[];
+  workLogRevisions?: Record<string, WorkLogRevision[]>;
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용
 export const DEMO_ACCOUNTS: readonly MockAccount[] = SHARED_DEMO_ACCOUNTS.map((account) => ({
+  companyId: account.companyId,
   loginId: account.loginId,
   password: account.password,
   displayName: account.displayName,
