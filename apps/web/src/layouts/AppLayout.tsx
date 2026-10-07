@@ -9,6 +9,7 @@ import { useUiStore } from '../stores/uiStore';
 const NAV_ITEMS = [
   { to: '/', label: '홈', end: true },
   { to: '/projects', label: '프로젝트', end: false },
+  { to: '/work-logs', label: '일지', end: false },
   { to: '/employees', label: '직원', end: false },
   { to: '/partners', label: '명부', end: false },
   { to: '/settings', label: '설정', end: false },
@@ -21,7 +22,7 @@ export const AppLayout = () => {
   return (
     <div className="flex min-h-dvh flex-col">
       <header className="flex items-center justify-between border-b border-border px-4">
-        <p className="font-bold text-primary">{APP_NAME}</p>
+        <p className="shrink-0 pr-2 text-sm font-bold text-primary">{APP_NAME}</p>
         <nav aria-label="주 메뉴" className="flex">
           {NAV_ITEMS.map((item) => (
             <NavLink
@@ -30,7 +31,7 @@ export const AppLayout = () => {
               end={item.end}
               className={({ isActive }) =>
                 cn(
-                  'flex min-h-touch items-center px-3 text-base',
+                  'flex min-h-touch items-center px-2 text-sm whitespace-nowrap',
                   isActive ? 'font-bold text-primary' : 'text-foreground',
                 )
               }
