@@ -3,6 +3,7 @@ import { DEMO_LEGAL_DOCUMENTS } from '@field-note/shared/demo';
 // 목업이 쓰는 더미 데이터의 단일 진입점 (DB 시드와 같은 원본)
 export {
   DEMO_ACCOUNTS,
+  DEMO_ASSIGNMENTS,
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
   DEMO_PARTNERS,

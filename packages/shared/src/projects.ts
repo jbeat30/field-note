@@ -231,6 +231,12 @@ export const projectUpdateSchema = z
     plannedStart: dateSchema,
     plannedEnd: dateSchema,
     memo: memoSchema('메모').nullable(),
+    // 예정 기간을 바꿀 때의 사유 (시작한 뒤에는 필수, 기간을 바꾸지 않으면 무시)
+    periodChangeReason: z
+      .string()
+      .trim()
+      .max(500, '사유는 500자까지 입력할 수 있습니다')
+      .nullable(),
   })
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {

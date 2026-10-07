@@ -14,6 +14,9 @@ export const queryKeys = {
   partner: (id: string) => ['partners', 'detail', { id }] as const,
   projects: (filter: object = {}) => ['projects', 'list', filter] as const,
   project: (id: string) => ['projects', 'detail', { id }] as const,
+  assignments: (projectId: string, includeCancelled = false) =>
+    ['assignments', 'all', { projectId, includeCancelled }] as const,
+  projectPeriodHistory: (id: string) => ['project-period-history', 'all', { id }] as const,
   projectHistory: (id: string) => ['project-history', 'all', { id }] as const,
   employee: (id: string) => ['employees', 'detail', { id }] as const,
 };

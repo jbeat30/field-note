@@ -12,12 +12,14 @@ import type { AccountService } from './auth/accountService';
 import type { ClosureService } from './closure/closureService';
 import { registerClosureRoutes } from './routes/closure';
 import { registerEmployeeRoutes } from './routes/employees';
+import { registerAssignmentRoutes } from './routes/assignments';
 import { registerOptionRoutes } from './routes/options';
 import { registerPartnerRoutes } from './routes/partners';
 import { registerProjectRoutes } from './routes/projects';
 import type { CompanySettingsService } from './company/companySettingsService';
 import type { OptionService } from './company/optionService';
 import type { EmployeeService } from './employee/employeeService';
+import type { AssignmentService } from './assignment/assignmentService';
 import type { PartnerService } from './partner/partnerService';
 import type { ProjectService } from './project/projectService';
 import type { EmailVerificationService } from './auth/emailVerification';
@@ -57,6 +59,7 @@ export type AppOptions = {
   employees?: EmployeeService;
   partners?: PartnerService;
   projects?: ProjectService;
+  assignments?: AssignmentService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
   social?: {
     choice: SocialProviderChoice;
@@ -107,6 +110,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerEmployeeRoutes(registry, options.employees);
   registerPartnerRoutes(registry, options.partners);
   registerProjectRoutes(registry, options.projects);
+  registerAssignmentRoutes(registry, options.assignments);
   registerSocialRoutes(
     registry,
     options.social && options.accountService

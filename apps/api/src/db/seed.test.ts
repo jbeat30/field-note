@@ -1,5 +1,6 @@
 import {
   DEMO_ACCOUNTS,
+  DEMO_ASSIGNMENTS,
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
   DEMO_PARTNERS,
@@ -259,5 +260,56 @@ describe('seedDemoData', () => {
     expect((await history('2026-003')).every((item) => item.changedBy === hanbit.userId)).toBe(
       true,
     );
+  });
+
+  it('더미 투입(취소한 투입 포함)과 예정 기간 변경 이력을 넣고 다시 실행해도 늘지 않으며 투입은 프로젝트 기간 안이다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_ASSIGNMENTS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.projectAssignment.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.projectAssignment.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+    expect(await db.owner.projectAssignment.count({ where: { cancelledAt: { not: null } } })).toBe(
+      1,
+    );
+
+    // 모든 투입이 자기 프로젝트의 예정 기간 안에 있음
+    const all = await db.owner.projectAssignment.findMany({ include: { project: true } });
+
+    expect(all.length).toBeGreaterThan(0);
+    for (const item of all) {
+      expect(item.startDate >= item.project.plannedStart).toBe(true);
+      expect(item.endDate <= item.project.plannedEnd).toBe(true);
+    }
+
+    // 최설치는 A동과 B동에 겹쳐 투입되어 겹침 경고를 볼 수 있음
+    const worker = await db.owner.employee.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, name: '최설치' },
+    });
+    const own = all.filter((item) => item.employeeId === worker.id && !item.cancelledAt);
+
+    expect(own).toHaveLength(2);
+
+    const changes = () =>
+      db.owner.projectPeriodChange.findMany({
+        where: { companyId: hanbit.companyId, project: { code: '2026-001' } },
+      });
+    const before = await changes();
+
+    expect(before).toHaveLength(1);
+    expect(before[0]).toMatchObject({
+      reason: '외장 패널 납품 지연으로 종료 예정일 연장',
+      changedBy: hanbit.userId,
+    });
+
+    await seedDemoData(db.owner);
+
+    expect(await changes()).toHaveLength(1);
+    expect(await db.owner.projectAssignment.count()).toBe(all.length);
   });
 });
