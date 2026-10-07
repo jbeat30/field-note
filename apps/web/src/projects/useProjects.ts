@@ -101,7 +101,10 @@ export const useUpdateProject = (id: string) => {
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.project(id), saved);
 
-      return queryClient.invalidateQueries({ queryKey: ['projects', 'list'] });
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: ['projects', 'list'] }),
+        queryClient.invalidateQueries({ queryKey: queryKeys.projectPeriodHistory(id) }),
+      ]);
     },
   });
 };

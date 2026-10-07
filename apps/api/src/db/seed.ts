@@ -8,6 +8,7 @@ import {
 } from '@field-note/shared';
 import {
   DEMO_ACCOUNTS,
+  DEMO_ASSIGNMENTS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
   DEMO_PROJECTS,
@@ -28,6 +29,7 @@ export type SeedResult = {
   employees: number;
   partners: number;
   projects: number;
+  assignments: number;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -270,6 +272,58 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
       })),
       skipDuplicates: true,
     });
+
+    // 예정 기간 변경 이력은 처음 한 번만 넣음
+    if (
+      project.periodChanges &&
+      (await prisma.projectPeriodChange.count({
+        where: { companyId: project.companyId, projectId: project.id },
+      })) === 0
+    ) {
+      const admin = DEMO_ACCOUNTS.find((account) => account.companyId === project.companyId);
+
+      if (admin) {
+        for (const change of project.periodChanges) {
+          await prisma.projectPeriodChange.create({
+            data: {
+              companyId: project.companyId,
+              projectId: project.id,
+              fromStart: requiredDate(change.fromStart),
+              fromEnd: requiredDate(change.fromEnd),
+              toStart: requiredDate(change.toStart),
+              toEnd: requiredDate(change.toEnd),
+              reason: change.reason ?? null,
+              changedBy: admin.userId,
+            },
+          });
+        }
+      }
+    }
+  }
+
+  // 투입 (프로젝트 코드와 직원 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
+  for (const assignment of DEMO_ASSIGNMENTS) {
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: assignment.companyId, code: assignment.projectCode },
+    });
+    const employee = await prisma.employee.findFirstOrThrow({
+      where: { companyId: assignment.companyId, name: assignment.employeeName },
+    });
+
+    await prisma.projectAssignment.upsert({
+      where: { companyId_id: { companyId: assignment.companyId, id: assignment.id } },
+      update: {},
+      create: {
+        id: assignment.id,
+        companyId: assignment.companyId,
+        projectId: project.id,
+        employeeId: employee.id,
+        startDate: requiredDate(assignment.startDate),
+        endDate: requiredDate(assignment.endDate),
+        plannedMinutes: assignment.plannedMinutes ?? null,
+        cancelledAt: assignment.cancelled ? new Date() : null,
+      },
+    });
   }
 
   // 코드 번호표를 시드의 마지막 번호에 맞춰 화면에서 새로 등록하면 이어서 붙게 함 (이미 더 큰 번호가 있으면 유지)
@@ -340,5 +394,6 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     employees: DEMO_EMPLOYEES.length,
     partners: DEMO_PARTNERS.length,
     projects: DEMO_PROJECTS.length,
+    assignments: DEMO_ASSIGNMENTS.length,
   };
 };

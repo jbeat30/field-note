@@ -7,6 +7,15 @@ import {
   EMPLOYEE_MAX_PER_COMPANY,
   PARTNER_KINDS,
   allowedProjectFields,
+  assignmentCancelSchema,
+  assignmentCreateSchema,
+  assignmentParamsSchema,
+  assignmentStatusCheck,
+  assignmentUpdateSchema,
+  checkAssignmentPeriod,
+  overlapRange,
+  periodChangeNeedsReason,
+  type AssignmentWarning,
   formatProjectCode,
   PROJECT_STATUS_LABELS,
   projectTransitionSchema,
@@ -66,6 +75,7 @@ import {
   MOCK_KAKAO_PROFILES,
   MOCK_RESET_TOKEN,
   MOCK_TAKEN_LOGIN_ID,
+  type AssignmentRow,
   type MockAccount,
 } from './data';
 import {
@@ -76,7 +86,11 @@ import {
   findClosingAccount,
   getEmployees,
   getOptions,
+  addProjectPeriodChange,
   addProjectStatusChange,
+  getAssignments,
+  getProjectPeriodHistory,
+  saveAssignments,
   getPartners,
   getProjectHistory,
   getProjects,
@@ -220,6 +234,66 @@ const checkTrades = (account: MockAccount, ids: string[], currentIds: string[]) 
   return found.some((item) => !item.isActive && !currentIds.includes(item.id))
     ? invalid('숨긴 공종은 새로 고를 수 없습니다')
     : null;
+};
+
+// 같은 프로젝트·같은 직원의 취소하지 않은 투입과 기간이 겹치면 사유 문구를 돌려줌 (서버와 같은 규칙)
+const findSameProjectOverlap = (
+  account: MockAccount,
+  projectId: string,
+  employeeId: string,
+  startDate: string,
+  endDate: string,
+  exceptId: string | null,
+) => {
+  const clash = getAssignments(account).find(
+    (item) =>
+      item.projectId === projectId &&
+      item.employeeId === employeeId &&
+      !item.cancelledAt &&
+      item.id !== exceptId &&
+      overlapRange(startDate, endDate, item.startDate, item.endDate) !== null,
+  );
+
+  return clash
+    ? `같은 직원이 이 프로젝트에 ${clash.startDate} ~ ${clash.endDate}로 이미 투입되어 있습니다. 기존 투입의 기간을 수정해 주세요`
+    : null;
+};
+
+// 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음)
+const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
+  if (row.cancelledAt) return { ...row, warnings: [] as AssignmentWarning[] };
+
+  const projects = getProjects(account);
+  const warnings: AssignmentWarning[] = [];
+
+  for (const other of getAssignments(account)) {
+    if (
+      other.employeeId !== row.employeeId ||
+      other.cancelledAt ||
+      other.projectId === row.projectId
+    )
+      continue;
+
+    const project = projects.find((item) => item.id === other.projectId);
+    const range = overlapRange(row.startDate, row.endDate, other.startDate, other.endDate);
+
+    if (project && project.status !== 'CANCELLED' && range) {
+      warnings.push({
+        type: 'OVERLAP',
+        projectId: project.id,
+        projectCode: project.code,
+        projectName: project.name,
+        ...range,
+      });
+    }
+  }
+
+  const status = getEmployees(account).find((item) => item.id === row.employeeId)?.status;
+
+  if (status === 'ON_LEAVE') warnings.push({ type: 'ON_LEAVE' });
+  if (status === 'LEFT') warnings.push({ type: 'LEFT' });
+
+  return { ...row, warnings };
 };
 
 export const handlers = [
@@ -1265,6 +1339,48 @@ export const handlers = [
       ]);
     }
 
+    // 예정 기간을 바꾸면 이력을 남김 (서버와 같은 규칙: 시작한 뒤에는 사유 필수, 투입이 새 기간 밖으로 나가면 거부)
+    const periodChanged =
+      plannedStart !== current.plannedStart || plannedEnd !== current.plannedEnd;
+    const periodReason = input.periodChangeReason?.trim() || null;
+
+    if (periodChanged) {
+      if (periodChangeNeedsReason(current.status) && !periodReason) {
+        return apiError('VALIDATION_ERROR', [
+          {
+            path: 'body.periodChangeReason',
+            message: '시작한 프로젝트의 기간을 바꿀 때는 사유를 입력해 주세요',
+          },
+        ]);
+      }
+
+      const outside = getAssignments(account).filter(
+        (item) =>
+          item.projectId === current.id &&
+          !item.cancelledAt &&
+          (item.startDate < plannedStart || item.endDate > plannedEnd),
+      ).length;
+
+      if (outside > 0) {
+        return apiError('VALIDATION_ERROR', [
+          {
+            path: input.plannedStart !== undefined ? 'body.plannedStart' : 'body.plannedEnd',
+            message: `투입 ${outside}건이 새 기간 밖에 있습니다. 먼저 투입 기간을 조정하거나 취소해 주세요`,
+          },
+        ]);
+      }
+
+      addProjectPeriodChange(account, current.id, {
+        id: crypto.randomUUID(),
+        fromStart: current.plannedStart,
+        fromEnd: current.plannedEnd,
+        toStart: plannedStart,
+        toEnd: plannedEnd,
+        reason: periodReason,
+        changedAt: new Date().toISOString(),
+      });
+    }
+
     // 보낸 항목만 바꾸고, 보내지 않은(undefined) 항목은 그대로 둠 (코드·상태는 바꿀 수 없음)
     const updated: ProjectDetail = {
       ...current,
@@ -1392,6 +1508,254 @@ export const handlers = [
     // 최근 변경이 맨 앞
     return HttpResponse.json({
       items: [...getProjectHistory(account, parsed.data.id)].sort((a, b) =>
+        b.changedAt.localeCompare(a.changedAt),
+      ),
+    });
+  }),
+
+  http.get('/api/v1/projects/:id/assignments', async ({ request, params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id)) {
+      return apiError('NOT_FOUND');
+    }
+
+    const includeCancelled = new URL(request.url).searchParams.get('includeCancelled') === 'true';
+    const rows = getAssignments(account)
+      .filter(
+        (item) => item.projectId === parsed.data.id && (includeCancelled || !item.cancelledAt),
+      )
+      .sort((a, b) => a.startDate.localeCompare(b.startDate) || a.id.localeCompare(b.id));
+
+    return HttpResponse.json({ items: rows.map((row) => withAssignmentWarnings(account, row)) });
+  }),
+
+  http.post('/api/v1/projects/:id/assignments', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, assignmentCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    const project = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    const input = body.data;
+    const invalid = (path: string, message: string) =>
+      apiError('VALIDATION_ERROR', [{ path: `body.${path}`, message }]);
+    const statusCheck = assignmentStatusCheck(project.status, input.confirmSuspended === true);
+
+    if (!statusCheck.ok) return invalid(statusCheck.path, statusCheck.message);
+
+    const employee = getEmployees(account).find((item) => item.id === input.employeeId);
+
+    if (!employee) return invalid('employeeId', '선택할 수 없는 직원입니다');
+    if (employee.status === 'LEFT')
+      return invalid('employeeId', '퇴사한 직원은 투입할 수 없습니다');
+
+    const periodCheck = checkAssignmentPeriod(input.startDate, input.endDate, project);
+
+    if (!periodCheck.ok) return invalid(periodCheck.path, periodCheck.message);
+
+    const clash = findSameProjectOverlap(
+      account,
+      project.id,
+      input.employeeId,
+      input.startDate,
+      input.endDate,
+      null,
+    );
+
+    if (clash) return invalid('startDate', clash);
+
+    const created: AssignmentRow = {
+      id: crypto.randomUUID(),
+      projectId: project.id,
+      employeeId: input.employeeId,
+      startDate: input.startDate,
+      endDate: input.endDate,
+      plannedMinutes: input.plannedMinutes ?? null,
+      cancelledAt: null,
+    };
+
+    saveAssignments(account, [...getAssignments(account), created]);
+
+    return HttpResponse.json(withAssignmentWarnings(account, created), { status: 201 });
+  }),
+
+  http.patch('/api/v1/projects/:id/assignments/:assignmentId', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = assignmentParamsSchema.safeParse({
+      id: params.id,
+      assignmentId: params.assignmentId,
+    });
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, assignmentUpdateSchema);
+
+    if ('response' in body) return body.response;
+
+    const project = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    const current = getAssignments(account).find(
+      (item) => item.id === parsed.data.assignmentId && item.projectId === project.id,
+    );
+
+    if (!current) return apiError('NOT_FOUND');
+
+    const invalid = (path: string, message: string) =>
+      apiError('VALIDATION_ERROR', [{ path: path === 'body' ? 'body' : `body.${path}`, message }]);
+
+    if (current.cancelledAt) return invalid('body', '취소된 투입은 수정할 수 없습니다');
+
+    const statusCheck = assignmentStatusCheck(project.status, body.data.confirmSuspended === true);
+
+    if (!statusCheck.ok) return invalid(statusCheck.path, statusCheck.message);
+
+    const startDate = body.data.startDate ?? current.startDate;
+    const endDate = body.data.endDate ?? current.endDate;
+    const periodCheck = checkAssignmentPeriod(startDate, endDate, project);
+
+    if (!periodCheck.ok) return invalid(periodCheck.path, periodCheck.message);
+
+    const clash = findSameProjectOverlap(
+      account,
+      project.id,
+      current.employeeId,
+      startDate,
+      endDate,
+      current.id,
+    );
+
+    if (clash) return invalid('startDate', clash);
+
+    const updated: AssignmentRow = {
+      ...current,
+      startDate,
+      endDate,
+      plannedMinutes:
+        body.data.plannedMinutes === undefined ? current.plannedMinutes : body.data.plannedMinutes,
+    };
+
+    saveAssignments(
+      account,
+      getAssignments(account).map((item) => (item.id === current.id ? updated : item)),
+    );
+
+    return HttpResponse.json(withAssignmentWarnings(account, updated));
+  }),
+
+  http.post(
+    '/api/v1/projects/:id/assignments/:assignmentId/cancel',
+    async ({ request, params }) => {
+      await simulateLatency();
+
+      if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+      const account = getCurrentAccount();
+
+      if (!account) return apiError('UNAUTHORIZED');
+
+      const parsed = assignmentParamsSchema.safeParse({
+        id: params.id,
+        assignmentId: params.assignmentId,
+      });
+
+      if (!parsed.success) {
+        return apiError('VALIDATION_ERROR', [{ path: 'params', message: 'Invalid UUID' }]);
+      }
+
+      const body = await parseBody(request, assignmentCancelSchema);
+
+      if ('response' in body) return body.response;
+
+      const project = getProjects(account).find((item) => item.id === parsed.data.id);
+      const current = getAssignments(account).find(
+        (item) => item.id === parsed.data.assignmentId && item.projectId === parsed.data.id,
+      );
+
+      if (!project || !current) return apiError('NOT_FOUND');
+
+      if (current.cancelledAt) {
+        return apiError('VALIDATION_ERROR', [{ path: 'body', message: '이미 취소된 투입입니다' }]);
+      }
+
+      const statusCheck = assignmentStatusCheck(
+        project.status,
+        body.data.confirmSuspended === true,
+      );
+
+      if (!statusCheck.ok) {
+        return apiError('VALIDATION_ERROR', [
+          { path: `body.${statusCheck.path}`, message: statusCheck.message },
+        ]);
+      }
+
+      const cancelled: AssignmentRow = { ...current, cancelledAt: new Date().toISOString() };
+
+      saveAssignments(
+        account,
+        getAssignments(account).map((item) => (item.id === current.id ? cancelled : item)),
+      );
+
+      return HttpResponse.json({ ...cancelled, warnings: [] });
+    },
+  ),
+
+  http.get('/api/v1/projects/:id/period-history', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id)) {
+      return apiError('NOT_FOUND');
+    }
+
+    return HttpResponse.json({
+      items: [...getProjectPeriodHistory(account, parsed.data.id)].sort((a, b) =>
         b.changedAt.localeCompare(a.changedAt),
       ),
     });

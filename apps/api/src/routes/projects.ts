@@ -3,6 +3,7 @@ import {
   projectDetailSchema,
   projectListQuerySchema,
   projectParamsSchema,
+  projectPeriodHistorySchema,
   projectStatusHistorySchema,
   projectTransitionSchema,
   projectUpdateSchema,
@@ -106,6 +107,7 @@ export const registerProjectRoutes = (registry: RouteRegistry, projects?: Projec
       try {
         return await projects!.update(
           auth!.companyId,
+          auth!.userId,
           (params as { id: string }).id,
           body as ProjectUpdate,
         );
@@ -152,6 +154,27 @@ export const registerProjectRoutes = (registry: RouteRegistry, projects?: Projec
     async ({ auth, params }) => {
       try {
         return { items: await projects!.history(auth!.companyId, (params as { id: string }).id) };
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/projects/{id}/period-history',
+      summary: '프로젝트 예정 기간 변경 이력 (연장·단축한 날짜와 사유, 최근이 맨 앞)',
+      auth: 'required',
+      request: { params: projectParamsSchema },
+      response: { status: 200, schema: projectPeriodHistorySchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params }) => {
+      try {
+        return {
+          items: await projects!.periodHistory(auth!.companyId, (params as { id: string }).id),
+        };
       } catch (error) {
         throw toAppError(error);
       }

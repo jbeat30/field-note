@@ -11,3 +11,4 @@ export * from './employeeRules';
 export * from './partners';
 export * from './projects';
 export * from './projectTransitions';
+export * from './assignments';

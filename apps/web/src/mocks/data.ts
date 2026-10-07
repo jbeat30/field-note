@@ -6,10 +6,22 @@ import type {
   OptionItem,
   PartnerDetail,
   ProjectDetail,
+  ProjectPeriodChange,
   ProjectStatusChange,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
+
+// 목업이 저장하는 투입 (경고는 응답할 때 계산)
+export type AssignmentRow = {
+  id: string;
+  projectId: string;
+  employeeId: string;
+  startDate: string;
+  endDate: string;
+  plannedMinutes: number | null;
+  cancelledAt: string | null;
+};
 
 export type MockAccount = {
   // 더미 직원을 찾는 키 (데모 계정만 있고, 목업에서 새로 가입한 계정은 없음)
@@ -39,6 +51,10 @@ export type MockAccount = {
   projects?: ProjectDetail[];
   // 프로젝트별 상태 변경 이력 (프로젝트 id → 오래된 것부터)
   projectHistory?: Record<string, ProjectStatusChange[]>;
+  // 프로젝트별 예정 기간 변경 이력 (프로젝트 id → 오래된 것부터)
+  projectPeriodHistory?: Record<string, ProjectPeriodChange[]>;
+  // 투입 (취소한 것 포함)
+  assignments?: AssignmentRow[];
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용

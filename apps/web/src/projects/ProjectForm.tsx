@@ -2,6 +2,7 @@ import {
   PROJECT_MEMO_MAX_LENGTH,
   PROJECT_STATUS_LABELS,
   allowedProjectFields,
+  periodChangeNeedsReason,
   partnerNameSchema,
   optionNameSchema,
   projectCreateSchema,
@@ -43,6 +44,8 @@ type FormValues = {
   plannedStart: string;
   plannedEnd: string;
   memo: string;
+  // 예정 기간을 바꿀 때의 사유 (시작한 프로젝트는 필수)
+  periodChangeReason: string;
 };
 
 const FIELDS = [
@@ -60,6 +63,7 @@ const FIELDS = [
   'plannedStart',
   'plannedEnd',
   'memo',
+  'periodChangeReason',
 ] as const;
 
 const EMPTY: FormValues = {
@@ -77,6 +81,7 @@ const EMPTY: FormValues = {
   plannedStart: '',
   plannedEnd: '',
   memo: '',
+  periodChangeReason: '',
 };
 
 const toValues = (project: ProjectDetail): FormValues => ({
@@ -94,6 +99,7 @@ const toValues = (project: ProjectDetail): FormValues => ({
   plannedStart: project.plannedStart,
   plannedEnd: project.plannedEnd,
   memo: project.memo ?? '',
+  periodChangeReason: '',
 });
 
 const orNull = (value: string) => value.trim() || null;
@@ -114,6 +120,7 @@ const toBody = (values: FormValues) => ({
   plannedStart: values.plannedStart,
   plannedEnd: values.plannedEnd,
   memo: values.memo.trim() ? values.memo : null,
+  periodChangeReason: orNull(values.periodChangeReason),
 });
 
 // 상태 때문에 수정할 수 없는 항목은 안의 입력과 버튼을 한꺼번에 막는다 (레이아웃은 그대로)
@@ -152,7 +159,15 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   const tradeIds = useWatch({ control, name: 'tradeIds' });
   const clientId = useWatch({ control, name: 'clientId' });
   const managerId = useWatch({ control, name: 'managerId' });
+  const plannedStartValue = useWatch({ control, name: 'plannedStart' });
+  const plannedEndValue = useWatch({ control, name: 'plannedEnd' });
   const isEdit = Boolean(project);
+  // 예정 기간을 바꾸면 사유를 받는다 (시작한 뒤에는 필수, 예정 상태에서는 선택)
+  const periodChanged =
+    Boolean(project) &&
+    (plannedStartValue !== project?.plannedStart || plannedEndValue !== project?.plannedEnd);
+  const reasonRequired =
+    periodChanged && project !== undefined && periodChangeNeedsReason(project.status);
   // 상태별 수정 제한 (서비스 기획서 §10.3): 종료·취소는 수정 불가, 보증 중은 담당자·메모만
   const allowed = project ? allowedProjectFields(project.status) : 'all';
   const isLocked = (field: string) => allowed !== 'all' && !allowed.includes(field);
@@ -214,6 +229,12 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
 
     // 막힌 항목은 보내지 않는다 (보증 중에는 담당자·메모만)
     const body = toBody({ ...toValues(project!), ...values });
+
+    // 기간을 바꾸지 않았다면 사유는 보내지 않음
+    if (!periodChanged) {
+      delete (body as Partial<typeof body>).periodChangeReason;
+    }
+
     const sendable =
       allowed === 'all'
         ? body
@@ -222,6 +243,14 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
 
     if (!parsed.success) {
       showSchemaErrors(parsed.error.issues);
+      return;
+    }
+
+    // 기간 순서 같은 입력 오류를 먼저 보여 주고, 그다음에 사유 누락을 확인
+    if (periodChanged && reasonRequired && !body.periodChangeReason) {
+      setError('periodChangeReason', {
+        message: '시작한 프로젝트의 기간을 바꿀 때는 사유를 입력해 주세요',
+      });
       return;
     }
 
@@ -451,6 +480,18 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
           </FormField>
         </fieldset>
       </Lockable>
+
+      {periodChanged && (
+        <Lockable locked={isLocked('plannedStart')}>
+          <FormField
+            label={reasonRequired ? '기간 변경 사유 (필수)' : '기간 변경 사유 (선택)'}
+            hint="연장·단축한 이유를 남기면 기간 변경 이력에 기록됩니다"
+            error={errors.periodChangeReason?.message}
+          >
+            <Textarea {...register('periodChangeReason')} />
+          </FormField>
+        </Lockable>
+      )}
 
       <Lockable locked={isLocked('memo')}>
         <FormField

@@ -304,6 +304,27 @@ export type DemoStatusChange = {
   reason?: string;
 };
 
+export type DemoAssignment = {
+  id: string;
+  // 프로젝트 코드와 직원 이름으로 연결 (식별자는 환경마다 달라 이름·코드를 씀)
+  projectCode: string;
+  companyId: string;
+  employeeName: string;
+  startDate: string;
+  endDate: string;
+  // 계획 공수(분). 기본 기준시간 8시간이면 480분 = 1MD
+  plannedMinutes?: number;
+  cancelled?: boolean;
+};
+
+export type DemoPeriodChange = {
+  fromStart: string;
+  fromEnd: string;
+  toStart: string;
+  toEnd: string;
+  reason?: string;
+};
+
 export type DemoProject = {
   id: string;
   companyId: string;
@@ -329,6 +350,8 @@ export type DemoProject = {
   actualEnd?: string;
   // 상태 변경 이력 (오래된 것부터)
   history?: readonly DemoStatusChange[];
+  // 예정 기간 변경 이력 (오래된 것부터)
+  periodChanges?: readonly DemoPeriodChange[];
   memo?: string;
 };
 
@@ -356,6 +379,15 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
     plannedEnd: '2026-11-30',
     actualStart: '2026-07-15',
     history: [{ fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2026-07-15' }],
+    periodChanges: [
+      {
+        fromStart: '2026-07-15',
+        fromEnd: '2026-11-15',
+        toStart: '2026-07-15',
+        toEnd: '2026-11-30',
+        reason: '외장 패널 납품 지연으로 종료 예정일 연장',
+      },
+    ],
     memo: '외장 패널 설치 후 마감 점검',
   },
   {
@@ -459,6 +491,101 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
     plannedEnd: '2026-11-20',
     actualStart: '2026-09-01',
     history: [{ fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2026-09-01' }],
+  },
+];
+
+const assignmentId = (n: number) =>
+  `0198d000-0000-7000-8000-0000000004${String(n).padStart(2, '0')}`;
+
+// 겹침 경고를 볼 수 있게 한 직원(최설치)이 A동·B동에 겹쳐 투입된 사례를 포함한다
+export const DEMO_ASSIGNMENTS: readonly DemoAssignment[] = [
+  {
+    id: assignmentId(1),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    employeeName: '정판금',
+    startDate: '2026-07-15',
+    endDate: '2026-11-30',
+    plannedMinutes: 480 * 60,
+  },
+  {
+    id: assignmentId(2),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    employeeName: '최설치',
+    startDate: '2026-08-01',
+    endDate: '2026-11-30',
+    plannedMinutes: 480 * 40,
+  },
+  {
+    id: assignmentId(3),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    employeeName: '한용접',
+    startDate: '2026-07-15',
+    endDate: '2026-09-30',
+    plannedMinutes: 480 * 20,
+  },
+  {
+    id: assignmentId(4),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    employeeName: '김일용',
+    startDate: '2026-09-01',
+    endDate: '2026-10-15',
+  },
+  {
+    id: assignmentId(5),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    employeeName: '오전기',
+    startDate: '2026-07-15',
+    endDate: '2026-08-31',
+    cancelled: true,
+  },
+  {
+    id: assignmentId(6),
+    companyId: HANBIT,
+    projectCode: '2026-003',
+    employeeName: '최설치',
+    startDate: '2026-06-01',
+    endDate: '2026-10-15',
+    plannedMinutes: 480 * 30,
+  },
+  {
+    id: assignmentId(7),
+    companyId: HANBIT,
+    projectCode: '2026-003',
+    employeeName: '한용접',
+    startDate: '2026-06-01',
+    endDate: '2026-10-15',
+    plannedMinutes: 480 * 25,
+  },
+  {
+    id: assignmentId(8),
+    companyId: HANBIT,
+    projectCode: '2026-002',
+    employeeName: '정판금',
+    startDate: '2026-11-02',
+    endDate: '2027-01-29',
+    plannedMinutes: 480 * 50,
+  },
+  {
+    id: assignmentId(9),
+    companyId: SAERON,
+    projectCode: '2026-001',
+    employeeName: '배전기',
+    startDate: '2026-09-01',
+    endDate: '2026-11-20',
+    plannedMinutes: 540 * 30,
+  },
+  {
+    id: assignmentId(10),
+    companyId: SAERON,
+    projectCode: '2026-001',
+    employeeName: '노배선',
+    startDate: '2026-09-01',
+    endDate: '2026-11-20',
   },
 ];
 

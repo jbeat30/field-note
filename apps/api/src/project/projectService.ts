@@ -2,11 +2,13 @@ import {
   PROJECT_STATUS_LABELS,
   allowedProjectFields,
   formatProjectCode,
+  periodChangeNeedsReason,
   todayInSeoul,
   validateProjectTransition,
   type ProjectCreate,
   type ProjectDetail,
   type ProjectListQuery,
+  type ProjectPeriodChange,
   type ProjectStatusChange,
   type ProjectSummary,
   type ProjectTransition,
@@ -35,7 +37,13 @@ export type ProjectService = {
   // 등록: 코드를 자동으로 붙이고 상태는 '예정'
   create: (companyId: string, input: ProjectCreate) => Promise<ProjectDetail>;
   // 수정: 코드·상태는 바꿀 수 없고, 종료·취소는 수정할 수 없으며 보증 중에는 담당자·메모만 고칠 수 있음
-  update: (companyId: string, id: string, input: ProjectUpdate) => Promise<ProjectDetail>;
+  // 예정 기간을 바꾸면 기간 변경 이력이 남고(시작한 뒤에는 사유 필수), 투입이 새 기간 밖으로 나가면 거부
+  update: (
+    companyId: string,
+    userId: string,
+    id: string,
+    input: ProjectUpdate,
+  ) => Promise<ProjectDetail>;
   // 상태 전환 (예정 → 진행 → 중단·완료, 취소): 규칙 검사, 실제 시작·완료일 기록, 변경 이력 추가를 한 트랜잭션으로 처리
   transition: (
     companyId: string,
@@ -45,6 +53,8 @@ export type ProjectService = {
   ) => Promise<ProjectDetail>;
   // 상태 변경 이력 (최근이 맨 앞)
   history: (companyId: string, id: string) => Promise<ProjectStatusChange[]>;
+  // 예정 기간 변경 이력 (최근이 맨 앞)
+  periodHistory: (companyId: string, id: string) => Promise<ProjectPeriodChange[]>;
 };
 
 type Row = Prisma.ProjectGetPayload<{ include: { trades: { select: { tradeId: true } } } }>;
@@ -259,8 +269,11 @@ export const createProjectService = (
       return toDetail({ ...created, trades: tradeIds.map((tradeId) => ({ tradeId })) });
     }),
 
-  update: (companyId, id, input) =>
+  update: (companyId, userId, id, input) =>
     withCompany(app, companyId, async (tx) => {
+      // 같은 프로젝트의 투입 등록과 기간 변경이 동시에 들어와도 어긋나지 않게 프로젝트 행을 잠금
+      await tx.$queryRaw`SELECT id FROM projects WHERE id = ${id}::uuid FOR UPDATE`;
+
       const current = await tx.project.findFirst({ where: { id }, include: INCLUDE_TRADES });
 
       if (!current) {
@@ -306,6 +319,53 @@ export const createProjectService = (
 
       if (plannedStart > plannedEnd) {
         throw invalid('body.plannedEnd', '종료 예정일은 시작 예정일보다 빠를 수 없습니다');
+      }
+
+      const periodChanged =
+        plannedStart !== fromDate(current.plannedStart) ||
+        plannedEnd !== fromDate(current.plannedEnd);
+      const periodReason = input.periodChangeReason?.trim() || null;
+
+      if (periodChanged) {
+        // 시작한 뒤에 기간을 바꿀 때는 왜 바꾸는지 남겨야 함 (연장·단축 기록, 서비스 기획서 §10.2)
+        if (periodChangeNeedsReason(current.status) && !periodReason) {
+          throw invalid(
+            'body.periodChangeReason',
+            '시작한 프로젝트의 기간을 바꿀 때는 사유를 입력해 주세요',
+          );
+        }
+
+        // 취소하지 않은 투입이 새 기간 밖으로 나가면 거부 (프로젝트 기간 밖의 투입은 있을 수 없음, §9.4)
+        const outside = await tx.projectAssignment.count({
+          where: {
+            projectId: id,
+            cancelledAt: null,
+            OR: [
+              { startDate: { lt: toDate(plannedStart) } },
+              { endDate: { gt: toDate(plannedEnd) } },
+            ],
+          },
+        });
+
+        if (outside > 0) {
+          throw invalid(
+            input.plannedStart !== undefined ? 'body.plannedStart' : 'body.plannedEnd',
+            `투입 ${outside}건이 새 기간 밖에 있습니다. 먼저 투입 기간을 조정하거나 취소해 주세요`,
+          );
+        }
+
+        await tx.projectPeriodChange.create({
+          data: {
+            companyId,
+            projectId: id,
+            fromStart: current.plannedStart,
+            fromEnd: current.plannedEnd,
+            toStart: toDate(plannedStart),
+            toEnd: toDate(plannedEnd),
+            reason: periodReason,
+            changedBy: userId,
+          },
+        });
       }
 
       if (input.tradeIds !== undefined) {
@@ -426,6 +486,28 @@ export const createProjectService = (
         fromStatus: row.fromStatus,
         toStatus: row.toStatus,
         effectiveOn: fromDate(row.effectiveOn),
+        reason: row.reason,
+        changedAt: row.changedAt.toISOString(),
+      }));
+    }),
+
+  periodHistory: (companyId, id) =>
+    withCompany(app, companyId, async (tx) => {
+      if (!(await tx.project.findFirst({ where: { id }, select: { id: true } }))) {
+        throw new ProjectError('NOT_FOUND');
+      }
+
+      const rows = await tx.projectPeriodChange.findMany({
+        where: { projectId: id },
+        orderBy: [{ changedAt: 'desc' }, { id: 'desc' }],
+      });
+
+      return rows.map((row) => ({
+        id: row.id,
+        fromStart: fromDate(row.fromStart),
+        fromEnd: fromDate(row.fromEnd),
+        toStart: fromDate(row.toStart),
+        toEnd: fromDate(row.toEnd),
         reason: row.reason,
         changedAt: row.changedAt.toISOString(),
       }));

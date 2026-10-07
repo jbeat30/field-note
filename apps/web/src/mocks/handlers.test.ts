@@ -13,6 +13,9 @@ import {
   PARTNER_KINDS,
   projectDetailSchema,
   projectsResponseSchema,
+  assignmentSchema,
+  assignmentsResponseSchema,
+  projectPeriodHistorySchema,
   projectStatusHistorySchema,
   type ProjectStatus,
   partnerDetailSchema,
@@ -814,6 +817,160 @@ describe('목업 서버 계약', () => {
         await client.GET('/api/v1/projects/{id}/status-history', {
           params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
         })
+      ).response.status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 120_000);
+
+  it('투입: 프로젝트 기간 안, 겹침 경고, 상태별 허용, 취소 표시와 기간 변경 이력이 서버와 같다', async () => {
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/assignments', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000301' } },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const projects = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects')).data,
+    ).items;
+    const employees = employeesResponseSchema.parse(
+      (await client.GET('/api/v1/employees')).data,
+    ).items;
+    const planned = projects.find((item) => item.status === 'PLANNED')!;
+    const running = projects.find((item) => item.status === 'IN_PROGRESS')!;
+    const completed = projects.find((item) => item.status === 'COMPLETED')!;
+    const left = employees.find((item) => item.status === 'LEFT')!;
+    const onLeave = employees.find((item) => item.status === 'ON_LEAVE')!;
+    const worker = employees.find((item) => item.status === 'ACTIVE' && item.name === '오전기')!;
+    const path = (id: string) => ({ params: { path: { id } } });
+    const assign = (id: string, body: object) =>
+      client.POST('/api/v1/projects/{id}/assignments', { ...path(id), body: body as never });
+
+    // 더미 투입(취소한 것 제외)이 목록에 있고 겹침 경고가 붙는다
+    const seeded = assignmentsResponseSchema.parse(
+      (await client.GET('/api/v1/projects/{id}/assignments', path(running.id))).data,
+    ).items;
+
+    expect(seeded.length).toBeGreaterThan(0);
+    expect(seeded.some((item) => item.warnings.some((warning) => warning.type === 'OVERLAP'))).toBe(
+      true,
+    );
+    expect(seeded.every((item) => item.cancelledAt === null)).toBe(true);
+
+    const full = { startDate: planned.plannedStart, endDate: planned.plannedEnd };
+
+    // 기간 밖·퇴사 직원·완료 프로젝트는 거부
+    for (const [id, body] of [
+      [planned.id, { employeeId: worker.id, startDate: '2000-01-01', endDate: planned.plannedEnd }],
+      [
+        planned.id,
+        { employeeId: worker.id, startDate: planned.plannedStart, endDate: '2099-01-01' },
+      ],
+      [planned.id, { employeeId: left.id, ...full }],
+      [
+        completed.id,
+        { employeeId: worker.id, startDate: completed.plannedStart, endDate: completed.plannedEnd },
+      ],
+    ] as const) {
+      expect((await assign(id, body)).response.status).toBe(400);
+    }
+
+    const created = assignmentSchema.parse(
+      (await assign(planned.id, { employeeId: worker.id, ...full, plannedMinutes: 960 })).data,
+    );
+
+    expect(created).toMatchObject({ plannedMinutes: 960, cancelledAt: null });
+    // 같은 프로젝트에 같은 직원이 겹치게 다시 투입할 수 없다
+    expect((await assign(planned.id, { employeeId: worker.id, ...full })).response.status).toBe(
+      400,
+    );
+    // 휴직 직원은 경고와 함께 투입된다
+    expect(
+      assignmentSchema.parse((await assign(planned.id, { employeeId: onLeave.id, ...full })).data)
+        .warnings,
+    ).toEqual([{ type: 'ON_LEAVE' }]);
+
+    const patched = assignmentSchema.parse(
+      (
+        await client.PATCH('/api/v1/projects/{id}/assignments/{assignmentId}', {
+          params: { path: { id: planned.id, assignmentId: created.id } },
+          body: { endDate: planned.plannedStart, plannedMinutes: null },
+        })
+      ).data,
+    );
+
+    expect(patched).toMatchObject({ endDate: planned.plannedStart, plannedMinutes: null });
+
+    const cancelled = await client.POST('/api/v1/projects/{id}/assignments/{assignmentId}/cancel', {
+      params: { path: { id: planned.id, assignmentId: created.id } },
+      body: {},
+    });
+
+    expect(assignmentSchema.parse(cancelled.data).cancelledAt).not.toBeNull();
+    expect(
+      assignmentsResponseSchema
+        .parse((await client.GET('/api/v1/projects/{id}/assignments', path(planned.id))).data)
+        .items.some((item) => item.id === created.id),
+    ).toBe(false);
+    expect(
+      assignmentsResponseSchema
+        .parse(
+          (
+            await client.GET('/api/v1/projects/{id}/assignments', {
+              params: { path: { id: planned.id }, query: { includeCancelled: 'true' } },
+            })
+          ).data,
+        )
+        .items.some((item) => item.id === created.id),
+    ).toBe(true);
+
+    // 예정 상태에서는 사유 없이 기간을 바꿀 수 있고 이력이 남으며, 시작한 프로젝트는 사유 필수·투입이 밖으로 나가면 거부
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(planned.id),
+          body: { plannedEnd: '2027-06-30' },
+        })
+      ).response.status,
+    ).toBe(200);
+    expect(
+      projectPeriodHistorySchema.parse(
+        (await client.GET('/api/v1/projects/{id}/period-history', path(planned.id))).data,
+      ).items[0],
+    ).toMatchObject({ toEnd: '2027-06-30', reason: null });
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(running.id),
+          body: { plannedEnd: '2027-01-31' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(running.id),
+          body: { plannedEnd: '2026-08-01', periodChangeReason: '단축' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          ...path(running.id),
+          body: { plannedEnd: '2027-01-31', periodChangeReason: '연장' },
+        })
+      ).response.status,
+    ).toBe(200);
+    expect(
+      (
+        await client.GET(
+          '/api/v1/projects/{id}/period-history',
+          path('0198d000-0000-7000-8000-000000000999'),
+        )
       ).response.status,
     ).toBe(404);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림

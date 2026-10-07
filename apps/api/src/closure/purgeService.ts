@@ -51,6 +51,8 @@ export const purgeCompany = (
     const where = { companyId };
 
     // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
+    deleted.project_assignments = (await tx.projectAssignment.deleteMany({ where })).count;
+    deleted.project_period_changes = (await tx.projectPeriodChange.deleteMany({ where })).count;
     deleted.project_status_changes = (await tx.projectStatusChange.deleteMany({ where })).count;
     deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
     deleted.projects = (await tx.project.deleteMany({ where })).count;
