@@ -13,3 +13,4 @@ export * from './projects';
 export * from './projectTransitions';
 export * from './assignments';
 export * from './workLogs';
+export * from './workSummary';
