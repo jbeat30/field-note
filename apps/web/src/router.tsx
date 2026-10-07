@@ -61,6 +61,10 @@ export const routes = [
         children: [
           { path: '/', ...page(() => import('./routes/HomePage'), 'HomePage') },
           { path: '/settings', ...page(() => import('./routes/SettingsPage'), 'SettingsPage') },
+          {
+            path: '/settings/lists',
+            ...page(() => import('./routes/OptionListsPage'), 'OptionListsPage'),
+          },
           { path: '*', ...page(() => import('./routes/NotFoundPage'), 'NotFoundPage') },
         ],
       },
