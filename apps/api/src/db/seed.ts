@@ -1,6 +1,12 @@
 import { createHash } from 'node:crypto';
 
-import { DEMO_ACCOUNTS, DEMO_INVITATION, DEMO_LEGAL_DOCUMENTS } from '@field-note/shared/demo';
+import { OPTION_KINDS, OPTION_PRESETS, normalizeOptionName } from '@field-note/shared';
+import {
+  DEMO_ACCOUNTS,
+  DEMO_EMPLOYEES,
+  DEMO_INVITATION,
+  DEMO_LEGAL_DOCUMENTS,
+} from '@field-note/shared/demo';
 
 import { hashPassword } from '../auth/password';
 import { hashToken } from '../auth/token';
@@ -12,6 +18,7 @@ export type SeedResult = {
   users: number;
   documents: number;
   invitations: number;
+  employees: number;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -106,6 +113,55 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
+  // 직원이 있는 회사는 선택 목록(직종·구분 프리셋)을 먼저 채우고 직원 카드를 입력 (앱이 처음 조회할 때 채우는 것과 같은 내용)
+  // 직원은 처음 한 번만 만들고, 이후 화면에서 바꾼 값은 시드가 되돌리지 않음
+  for (const companyId of new Set(DEMO_EMPLOYEES.map((employee) => employee.companyId))) {
+    for (const kind of OPTION_KINDS) {
+      await prisma.optionItem.createMany({
+        data: OPTION_PRESETS[kind].map((name, index) => ({
+          companyId,
+          kind,
+          name,
+          nameKey: normalizeOptionName(name),
+          sortOrder: index,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  const toDate = (value?: string) => (value ? new Date(`${value}T00:00:00.000Z`) : null);
+
+  for (const employee of DEMO_EMPLOYEES) {
+    const optionId = async (kind: 'JOB_TYPE' | 'WORKER_TYPE', name?: string) =>
+      name
+        ? (
+            await prisma.optionItem.findFirstOrThrow({
+              where: { companyId: employee.companyId, kind, nameKey: normalizeOptionName(name) },
+            })
+          ).id
+        : null;
+
+    await prisma.employee.upsert({
+      where: { companyId_id: { companyId: employee.companyId, id: employee.id } },
+      update: {},
+      create: {
+        id: employee.id,
+        companyId: employee.companyId,
+        name: employee.name,
+        title: employee.title ?? null,
+        jobTypeId: await optionId('JOB_TYPE', employee.jobType),
+        workerTypeId: await optionId('WORKER_TYPE', employee.workerType),
+        status: employee.status,
+        hiredOn: toDate(employee.hiredOn),
+        leftOn: toDate(employee.leftOn),
+        birthDate: toDate(employee.birthDate),
+        phone: employee.phone ?? null,
+        memo: employee.memo ?? null,
+      },
+    });
+  }
+
   // 가입 전 회사: 운영자 CLI가 만드는 것과 같은 구조(초대 상태 관리자 + 해시만 저장된 초대 링크)
   await prisma.company.upsert({
     where: { id: DEMO_INVITATION.companyId },
@@ -142,5 +198,6 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     users: DEMO_ACCOUNTS.length + 1,
     documents: documents.length,
     invitations: 1,
+    employees: DEMO_EMPLOYEES.length,
   };
 };
