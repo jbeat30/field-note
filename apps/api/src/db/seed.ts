@@ -1,6 +1,21 @@
 import { createHash } from 'node:crypto';
 
-import { DEMO_ACCOUNTS, DEMO_INVITATION, DEMO_LEGAL_DOCUMENTS } from '@field-note/shared/demo';
+import {
+  OPTION_KINDS,
+  OPTION_PRESETS,
+  normalizeOptionName,
+  normalizePartnerName,
+} from '@field-note/shared';
+import {
+  DEMO_ACCOUNTS,
+  DEMO_ASSIGNMENTS,
+  DEMO_EMPLOYEES,
+  DEMO_PARTNERS,
+  DEMO_PROJECTS,
+  DEMO_WORK_LOGS,
+  DEMO_INVITATION,
+  DEMO_LEGAL_DOCUMENTS,
+} from '@field-note/shared/demo';
 
 import { hashPassword } from '../auth/password';
 import { hashToken } from '../auth/token';
@@ -12,6 +27,11 @@ export type SeedResult = {
   users: number;
   documents: number;
   invitations: number;
+  employees: number;
+  partners: number;
+  projects: number;
+  assignments: number;
+  workLogs: number;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -106,6 +126,321 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
+  // 직원이 있는 회사는 선택 목록(직종·구분 프리셋)을 먼저 채우고 직원 카드를 입력 (앱이 처음 조회할 때 채우는 것과 같은 내용)
+  // 직원은 처음 한 번만 만들고, 이후 화면에서 바꾼 값은 시드가 되돌리지 않음
+  for (const companyId of new Set(DEMO_EMPLOYEES.map((employee) => employee.companyId))) {
+    for (const kind of OPTION_KINDS) {
+      await prisma.optionItem.createMany({
+        data: OPTION_PRESETS[kind].map((name, index) => ({
+          companyId,
+          kind,
+          name,
+          nameKey: normalizeOptionName(name),
+          sortOrder: index,
+        })),
+        skipDuplicates: true,
+      });
+    }
+  }
+
+  const toDate = (value?: string) => (value ? new Date(`${value}T00:00:00.000Z`) : null);
+  const requiredDate = (value: string) => new Date(`${value}T00:00:00.000Z`);
+
+  for (const employee of DEMO_EMPLOYEES) {
+    const optionId = async (kind: 'JOB_TYPE' | 'WORKER_TYPE', name?: string) =>
+      name
+        ? (
+            await prisma.optionItem.findFirstOrThrow({
+              where: { companyId: employee.companyId, kind, nameKey: normalizeOptionName(name) },
+            })
+          ).id
+        : null;
+
+    await prisma.employee.upsert({
+      where: { companyId_id: { companyId: employee.companyId, id: employee.id } },
+      update: {},
+      create: {
+        id: employee.id,
+        companyId: employee.companyId,
+        name: employee.name,
+        title: employee.title ?? null,
+        jobTypeId: await optionId('JOB_TYPE', employee.jobType),
+        workerTypeId: await optionId('WORKER_TYPE', employee.workerType),
+        status: employee.status,
+        hiredOn: toDate(employee.hiredOn),
+        leftOn: toDate(employee.leftOn),
+        birthDate: toDate(employee.birthDate),
+        phone: employee.phone ?? null,
+        memo: employee.memo ?? null,
+      },
+    });
+  }
+
+  // 고객·협력업체·자재 공급처 명부 (처음 한 번만 만들고, 이후 화면에서 바꾼 값은 시드가 되돌리지 않음)
+  for (const partner of DEMO_PARTNERS) {
+    await prisma.partner.upsert({
+      where: { companyId_id: { companyId: partner.companyId, id: partner.id } },
+      update: {},
+      create: {
+        id: partner.id,
+        companyId: partner.companyId,
+        kind: partner.kind,
+        name: partner.name,
+        nameKey: normalizePartnerName(partner.name),
+        contactName: partner.contactName ?? null,
+        phone: partner.phone ?? null,
+        memo: partner.memo ?? null,
+        isActive: partner.isActive ?? true,
+      },
+    });
+  }
+
+  // 프로젝트 (고객·담당자·공종은 이름으로 찾아 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
+  for (const project of DEMO_PROJECTS) {
+    const byName = async (kind: 'JOB_TYPE' | 'TRADE', name: string) =>
+      (
+        await prisma.optionItem.findFirstOrThrow({
+          where: { companyId: project.companyId, kind, nameKey: normalizeOptionName(name) },
+        })
+      ).id;
+    const client = await prisma.partner.findFirstOrThrow({
+      where: {
+        companyId: project.companyId,
+        kind: 'CLIENT',
+        nameKey: normalizePartnerName(project.clientName),
+      },
+    });
+    const manager = await prisma.employee.findFirstOrThrow({
+      where: { companyId: project.companyId, name: project.managerName },
+    });
+    const tradeIds = await Promise.all(project.trades.map((name) => byName('TRADE', name)));
+
+    await prisma.project.upsert({
+      where: { companyId_id: { companyId: project.companyId, id: project.id } },
+      update: {},
+      create: {
+        id: project.id,
+        companyId: project.companyId,
+        code: project.code,
+        name: project.name,
+        status: project.status,
+        siteName: project.siteName,
+        siteAddress: project.siteAddress ?? null,
+        siteMapUrl: project.siteMapUrl ?? null,
+        siteContactName: project.siteContactName ?? null,
+        siteContactPhone: project.siteContactPhone ?? null,
+        accessMemo: project.accessMemo ?? null,
+        clientId: client.id,
+        managerId: manager.id,
+        contractDate: requiredDate(project.contractDate),
+        plannedStart: requiredDate(project.plannedStart),
+        plannedEnd: requiredDate(project.plannedEnd),
+        actualStart: project.actualStart ? requiredDate(project.actualStart) : null,
+        actualEnd: project.actualEnd ? requiredDate(project.actualEnd) : null,
+        memo: project.memo ?? null,
+      },
+    });
+
+    // 상태 변경 이력은 처음 한 번만 넣음 (변경자는 그 회사의 관리자)
+    if (
+      project.history &&
+      (await prisma.projectStatusChange.count({
+        where: { companyId: project.companyId, projectId: project.id },
+      })) === 0
+    ) {
+      const admin = DEMO_ACCOUNTS.find((account) => account.companyId === project.companyId);
+
+      if (admin) {
+        for (const change of project.history) {
+          await prisma.projectStatusChange.create({
+            data: {
+              companyId: project.companyId,
+              projectId: project.id,
+              fromStatus: change.fromStatus,
+              toStatus: change.toStatus,
+              effectiveOn: requiredDate(change.effectiveOn),
+              reason: change.reason ?? null,
+              changedBy: admin.userId,
+            },
+          });
+        }
+      }
+    }
+    await prisma.projectTrade.createMany({
+      data: tradeIds.map((tradeId) => ({
+        companyId: project.companyId,
+        projectId: project.id,
+        tradeId,
+      })),
+      skipDuplicates: true,
+    });
+
+    // 예정 기간 변경 이력은 처음 한 번만 넣음
+    if (
+      project.periodChanges &&
+      (await prisma.projectPeriodChange.count({
+        where: { companyId: project.companyId, projectId: project.id },
+      })) === 0
+    ) {
+      const admin = DEMO_ACCOUNTS.find((account) => account.companyId === project.companyId);
+
+      if (admin) {
+        for (const change of project.periodChanges) {
+          await prisma.projectPeriodChange.create({
+            data: {
+              companyId: project.companyId,
+              projectId: project.id,
+              fromStart: requiredDate(change.fromStart),
+              fromEnd: requiredDate(change.fromEnd),
+              toStart: requiredDate(change.toStart),
+              toEnd: requiredDate(change.toEnd),
+              reason: change.reason ?? null,
+              changedBy: admin.userId,
+            },
+          });
+        }
+      }
+    }
+  }
+
+  // 투입 (프로젝트 코드와 직원 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
+  for (const assignment of DEMO_ASSIGNMENTS) {
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: assignment.companyId, code: assignment.projectCode },
+    });
+    const employee = await prisma.employee.findFirstOrThrow({
+      where: { companyId: assignment.companyId, name: assignment.employeeName },
+    });
+
+    await prisma.projectAssignment.upsert({
+      where: { companyId_id: { companyId: assignment.companyId, id: assignment.id } },
+      update: {},
+      create: {
+        id: assignment.id,
+        companyId: assignment.companyId,
+        projectId: project.id,
+        employeeId: employee.id,
+        startDate: requiredDate(assignment.startDate),
+        endDate: requiredDate(assignment.endDate),
+        plannedMinutes: assignment.plannedMinutes ?? null,
+        cancelledAt: assignment.cancelled ? new Date() : null,
+      },
+    });
+  }
+
+  // 작업일지 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
+  for (const log of DEMO_WORK_LOGS) {
+    if (
+      await prisma.workLog.findUnique({
+        where: { companyId_id: { companyId: log.companyId, id: log.id } },
+      })
+    ) {
+      continue;
+    }
+
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: log.companyId, code: log.projectCode },
+    });
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === log.companyId);
+    const toEntries = async (
+      items: readonly { employeeName: string; categoryName: string; minutes: number }[],
+    ) =>
+      Promise.all(
+        items.map(async (item) => ({
+          employeeId: (
+            await prisma.employee.findFirstOrThrow({
+              where: { companyId: log.companyId, name: item.employeeName },
+            })
+          ).id,
+          categoryId: (
+            await prisma.optionItem.findFirstOrThrow({
+              where: {
+                companyId: log.companyId,
+                kind: 'WORK_CATEGORY',
+                nameKey: normalizeOptionName(item.categoryName),
+              },
+            })
+          ).id,
+          minutes: item.minutes,
+        })),
+      );
+    const revisions = log.revisions ?? [];
+
+    await prisma.workLog.create({
+      data: {
+        id: log.id,
+        companyId: log.companyId,
+        projectId: project.id,
+        workDate: requiredDate(log.workDate),
+        status: log.status,
+        content: log.content,
+        area: log.area ?? null,
+        notes: log.notes ?? null,
+        isChange: log.isChange ?? false,
+        // 작업한 날 저녁에 저장한 것으로 두어 지연 입력으로 표시되지 않게 함
+        savedAt: log.status === 'SAVED' ? new Date(`${log.workDate}T10:00:00.000Z`) : null,
+        // 고친 횟수만큼 버전이 올라간 상태
+        version: 1 + revisions.length,
+      },
+    });
+    await prisma.workLogEntry.createMany({
+      data: (await toEntries(log.entries)).map((entry) => ({
+        companyId: log.companyId,
+        workLogId: log.id,
+        ...entry,
+      })),
+    });
+
+    for (const [index, revision] of revisions.entries()) {
+      await prisma.workLogRevision.create({
+        data: {
+          companyId: log.companyId,
+          workLogId: log.id,
+          version: index + 1,
+          snapshot: {
+            status: 'SAVED',
+            content: revision.content,
+            area: revision.area ?? null,
+            notes: null,
+            isChange: false,
+            isAfterService: false,
+            entries: await toEntries(revision.entries),
+          },
+          changedBy: admin!.userId,
+        },
+      });
+    }
+  }
+
+  // 코드 번호표를 시드의 마지막 번호에 맞춰 화면에서 새로 등록하면 이어서 붙게 함 (이미 더 큰 번호가 있으면 유지)
+  const lastNumbers = new Map<string, { companyId: string; year: number; last: number }>();
+
+  for (const project of DEMO_PROJECTS) {
+    const [year, number] = project.code.split('-').map(Number) as [number, number];
+    const key = `${project.companyId}:${year}`;
+    const known = lastNumbers.get(key);
+
+    lastNumbers.set(key, {
+      companyId: project.companyId,
+      year,
+      last: Math.max(known?.last ?? 0, number),
+    });
+  }
+
+  for (const { companyId, year, last } of lastNumbers.values()) {
+    const current = await prisma.projectCodeSequence.findUnique({
+      where: { companyId_year: { companyId, year } },
+    });
+
+    if (!current || current.lastNumber < last) {
+      await prisma.projectCodeSequence.upsert({
+        where: { companyId_year: { companyId, year } },
+        update: { lastNumber: last },
+        create: { companyId, year, lastNumber: last },
+      });
+    }
+  }
+
   // 가입 전 회사: 운영자 CLI가 만드는 것과 같은 구조(초대 상태 관리자 + 해시만 저장된 초대 링크)
   await prisma.company.upsert({
     where: { id: DEMO_INVITATION.companyId },
@@ -142,5 +477,10 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     users: DEMO_ACCOUNTS.length + 1,
     documents: documents.length,
     invitations: 1,
+    employees: DEMO_EMPLOYEES.length,
+    partners: DEMO_PARTNERS.length,
+    projects: DEMO_PROJECTS.length,
+    assignments: DEMO_ASSIGNMENTS.length,
+    workLogs: DEMO_WORK_LOGS.length,
   };
 };

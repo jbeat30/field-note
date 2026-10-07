@@ -54,7 +54,7 @@ describe('스키마 검사', () => {
     expect(rows.map((row) => row.relname)).toEqual([]);
   });
 
-  it('앱 계정은 어떤 테이블도 삭제·구조 변경 권한이 없다', async () => {
+  it('앱 계정은 공종 연결 테이블 외에는 삭제·구조 변경 권한이 없다', async () => {
     const { rows } = await db.ownerPool.query<{ table_name: string; privilege_type: string }>(
       `SELECT table_name, privilege_type
          FROM information_schema.role_table_grants
@@ -62,7 +62,12 @@ describe('스키마 검사', () => {
           AND privilege_type IN ('DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER')`,
     );
 
-    expect(rows).toEqual([]);
+    // 예외: 프로젝트의 공종 선택은 수정할 때 연결 행을 지워야 하는 연결 테이블이다 (업무 기록이 아니라 선택 관계일 뿐이며 삭제만 허용)
+    // 일지 공수 항목도 수정할 때 바뀐 행을 지워야 하는 하위 행이다 (이전 값은 수정 이력 스냅샷에 보존됨)
+    expect(rows).toEqual([
+      { table_name: 'project_trades', privilege_type: 'DELETE' },
+      { table_name: 'work_log_entries', privilege_type: 'DELETE' },
+    ]);
   });
 
   it('앱 계정은 세션 테이블에 접근할 수 없다', async () => {
@@ -71,7 +76,7 @@ describe('스키마 검사', () => {
 
   it('회사 범위 밖 전용 계정은 업무 테이블에 접근할 수 없다', async () => {
     await expect(db.auth.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
-    await expect(db.auth.$queryRaw`SELECT * FROM memos`).rejects.toThrow();
+    await expect(db.auth.$queryRaw`SELECT * FROM employees`).rejects.toThrow();
   });
 
   it('앱 계정은 로그인 자격(비밀번호 해시) 테이블에 접근할 수 없다', async () => {
@@ -112,7 +117,7 @@ describe('스키마 검사', () => {
 
   it('운영자 계정은 업무 테이블·세션·비밀번호에 접근할 수 없다', async () => {
     await expect(db.operator.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
-    await expect(db.operator.$queryRaw`SELECT * FROM memos`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM employees`).rejects.toThrow();
     await expect(db.operator.$queryRaw`SELECT * FROM sessions`).rejects.toThrow();
     await expect(db.operator.$queryRaw`SELECT * FROM user_credentials`).rejects.toThrow();
     await expect(db.operator.$queryRaw`SELECT * FROM consents`).rejects.toThrow();

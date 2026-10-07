@@ -263,6 +263,18 @@ export const SettingsPage = () => {
         <CompanySettingsSection />
       </section>
 
+      <section className="flex flex-col gap-3" aria-labelledby="lists-heading">
+        <h2 id="lists-heading" className="text-lg font-bold">
+          목록 관리
+        </h2>
+        <p className="text-sm text-foreground/70">
+          직종, 작업 구분, 공종, 직원 구분을 회사에 맞게 바꿉니다
+        </p>
+        <Button variant="secondary" asChild>
+          <Link to="/settings/lists">목록 관리 열기</Link>
+        </Button>
+      </section>
+
       <section className="flex flex-col gap-3" aria-labelledby="devices-heading">
         <h2 id="devices-heading" className="text-lg font-bold">
           로그인한 기기
