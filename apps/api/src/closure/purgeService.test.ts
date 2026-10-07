@@ -38,7 +38,11 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
   const { account, ...rest } = await h.passwordAccount();
 
   // 프로젝트는 고객·담당 직원을 참조하므로 삭제 순서(프로젝트 먼저)까지 함께 확인
-  const { project } = await createTestProject(db.owner, account.companyId, '삭제될 현장');
+  const { project, managerId } = await createTestProject(
+    db.owner,
+    account.companyId,
+    '삭제될 현장',
+  );
   const trade = await db.owner.optionItem.create({
     data: {
       companyId: account.companyId,
@@ -51,6 +55,26 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
 
   await db.owner.projectTrade.create({
     data: { companyId: account.companyId, projectId: project.id, tradeId: trade.id },
+  });
+  await db.owner.projectAssignment.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      employeeId: managerId,
+      startDate: new Date('2026-10-01T00:00:00Z'),
+      endDate: new Date('2026-10-31T00:00:00Z'),
+    },
+  });
+  await db.owner.projectPeriodChange.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      fromStart: new Date('2026-10-01T00:00:00Z'),
+      fromEnd: new Date('2026-12-31T00:00:00Z'),
+      toStart: new Date('2026-10-01T00:00:00Z'),
+      toEnd: new Date('2027-01-31T00:00:00Z'),
+      changedBy: account.userId,
+    },
   });
   await db.owner.projectStatusChange.create({
     data: {
@@ -116,6 +140,8 @@ describe('삭제·익명화', () => {
     expect(await db.owner.project.count({ where })).toBe(0);
     expect(await db.owner.projectTrade.count({ where })).toBe(0);
     expect(await db.owner.projectStatusChange.count({ where })).toBe(0);
+    expect(await db.owner.projectAssignment.count({ where })).toBe(0);
+    expect(await db.owner.projectPeriodChange.count({ where })).toBe(0);
     expect(await db.owner.projectCodeSequence.count({ where })).toBe(0);
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);

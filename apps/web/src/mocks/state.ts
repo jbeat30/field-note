@@ -9,11 +9,18 @@ import {
   normalizePartnerName,
   type PartnerDetail,
   type ProjectDetail,
+  type ProjectPeriodChange,
   type ProjectStatusChange,
 } from '@field-note/shared';
 
-import { DEMO_ACCOUNTS, DEMO_DEVICES, MOCK_SESSION_STORAGE_KEY, type MockAccount } from './data';
-import { DEMO_EMPLOYEES, DEMO_PARTNERS, DEMO_PROJECTS } from './demoSource';
+import {
+  DEMO_ACCOUNTS,
+  DEMO_DEVICES,
+  MOCK_SESSION_STORAGE_KEY,
+  type AssignmentRow,
+  type MockAccount,
+} from './data';
+import { DEMO_ASSIGNMENTS, DEMO_EMPLOYEES, DEMO_PARTNERS, DEMO_PROJECTS } from './demoSource';
 
 // 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
@@ -342,6 +349,82 @@ export const addProjectStatusChange = (
     ...account.projectHistory,
     [projectId]: [...(account.projectHistory?.[projectId] ?? []), change],
   };
+  persist();
+};
+
+// 프로젝트 예정 기간 변경 이력: 처음 조회할 때 더미 이력(DB 시드와 같은 원본)으로 채움
+export const getProjectPeriodHistory = (
+  account: MockAccount,
+  projectId: string,
+): ProjectPeriodChange[] => {
+  if (!account.projectPeriodHistory) {
+    account.projectPeriodHistory = Object.fromEntries(
+      DEMO_PROJECTS.filter((item) => item.companyId === account.companyId).map((item) => [
+        item.id,
+        (item.periodChanges ?? []).map((change) => ({
+          id: crypto.randomUUID(),
+          fromStart: change.fromStart,
+          fromEnd: change.fromEnd,
+          toStart: change.toStart,
+          toEnd: change.toEnd,
+          reason: change.reason ?? null,
+          changedAt: `${change.toEnd.slice(0, 7)}-01T09:00:00.000Z`,
+        })),
+      ]),
+    );
+    persist();
+  }
+
+  return account.projectPeriodHistory[projectId] ?? [];
+};
+
+export const addProjectPeriodChange = (
+  account: MockAccount,
+  projectId: string,
+  change: ProjectPeriodChange,
+) => {
+  getProjectPeriodHistory(account, projectId);
+  account.projectPeriodHistory = {
+    ...account.projectPeriodHistory,
+    [projectId]: [...(account.projectPeriodHistory?.[projectId] ?? []), change],
+  };
+  persist();
+};
+
+// 투입: 처음 조회할 때 더미 투입으로 채움 (프로젝트 코드·직원 이름으로 연결, DB 시드와 같은 방식)
+export const getAssignments = (account: MockAccount): AssignmentRow[] => {
+  if (!account.assignments) {
+    const projects = getProjects(account);
+    const employees = getEmployees(account);
+
+    account.assignments = DEMO_ASSIGNMENTS.filter(
+      (item) => item.companyId === account.companyId,
+    ).flatMap((item) => {
+      const project = projects.find((candidate) => candidate.code === item.projectCode);
+      const employee = employees.find((candidate) => candidate.name === item.employeeName);
+
+      return project && employee
+        ? [
+            {
+              id: item.id,
+              projectId: project.id,
+              employeeId: employee.id,
+              startDate: item.startDate,
+              endDate: item.endDate,
+              plannedMinutes: item.plannedMinutes ?? null,
+              cancelledAt: item.cancelled ? '2026-08-01T09:00:00.000Z' : null,
+            },
+          ]
+        : [];
+    });
+    persist();
+  }
+
+  return account.assignments;
+};
+
+export const saveAssignments = (account: MockAccount, assignments: AssignmentRow[]) => {
+  account.assignments = assignments;
   persist();
 };
 

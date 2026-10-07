@@ -2,7 +2,9 @@ import { PROJECT_STATUS_LABELS } from '@field-note/shared';
 import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
+import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
 import { ProjectForm } from '../projects/ProjectForm';
+import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
 import { ProjectStatusPanel } from '../projects/ProjectStatusPanel';
 import { useProject } from '../projects/useProjects';
 
@@ -55,12 +57,14 @@ export const ProjectCardPage = () => {
         )}
       </div>
       <ProjectStatusPanel project={project.data} />
+      <ProjectAssignmentsPanel project={project.data} />
       <section className="flex flex-col gap-3" aria-labelledby="info-heading">
         <h2 id="info-heading" className="text-lg font-bold">
           기본정보
         </h2>
         <ProjectForm project={project.data} />
       </section>
+      <ProjectPeriodHistory projectId={project.data.id} />
     </div>
   );
 };

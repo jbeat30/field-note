@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { findAccount, getProjects, saveProjects, signIn } from '../mocks/state';
@@ -90,8 +90,7 @@ export const EndBeforeStart: Story = {
     const canvas = within(canvasElement);
     const end = await canvas.findByLabelText('종료 예정일');
 
-    await userEvent.clear(end);
-    await userEvent.type(end, '2026-07-01');
+    fireEvent.change(end, { target: { value: '2026-07-01' } });
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(
@@ -240,8 +239,7 @@ export const FutureDateRejected: Story = {
     const form = within(await canvas.findByRole('form', { name: '완료 처리 확인' }));
     const date = form.getByLabelText('실제 완료일');
 
-    await userEvent.clear(date);
-    await userEvent.type(date, '2099-01-01');
+    fireEvent.change(date, { target: { value: '2099-01-01' } });
     await userEvent.click(form.getByRole('button', { name: '확인' }));
 
     await expect(await form.findByText(/오늘 이후 날짜로 입력할 수 없습니다/)).toBeInTheDocument();
@@ -359,5 +357,296 @@ export const WarrantyEditsOnlyManagerAndMemo: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('저장했습니다')).toBeInTheDocument();
+  },
+};
+
+// 투입 패널은 목록이 도착한 뒤에 그려지므로 기다렸다가 찾는다
+const assignForm = async (canvas: ReturnType<typeof within>) =>
+  within(await canvas.findByRole('form', { name: '투입 등록' }));
+
+export const AssignmentsListed: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const list = within(await canvas.findByRole('list', { name: '투입 목록' }));
+
+    await expect(await list.findByText('정판금')).toBeInTheDocument();
+    // 취소한 투입(오전기)은 기본 목록에 없음
+    await expect(list.queryByText('오전기')).not.toBeInTheDocument();
+    // 계획 공수(분 → MD·시간)와 기간
+    await expect(
+      await canvas.findByText(/2026-08-01 ~ 2026-11-30 · 계획 40MD \(320시간\)/),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText(/2026-09-01 ~ 2026-10-15 · 계획 공수 없음/)).toBeInTheDocument();
+  },
+};
+
+export const OverlapWarningShown: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await canvas.findByRole('list', { name: '투입 목록' });
+
+    // 최설치·한용접은 중단된 B동 덕트 설치와, 정판금은 예정인 미래오피스 천장 마감과 기간이 겹침
+    await expect(
+      (await canvas.findAllByText(/'B동 덕트 설치'\(2026-003\)에도 투입되어 있습니다/)).length,
+    ).toBeGreaterThanOrEqual(2);
+    await expect(
+      canvas.getByText(
+        /2026-11-02 ~ 2026-11-30에 '미래오피스 천장 마감'\(2026-002\)에도 투입되어 있습니다/,
+      ),
+    ).toBeInTheDocument();
+  },
+};
+
+export const AddAssignment: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const form = await assignForm(canvas);
+
+    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
+    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
+    await userEvent.type(form.getByLabelText('계획 공수 (MD)'), '10');
+    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+
+    await expect(await canvas.findByText(/오전기님을 투입했습니다/)).toBeInTheDocument();
+    await expect(
+      await canvas.findByText(/2026-07-15 ~ 2026-11-30 · 계획 10MD \(80시간\)/),
+    ).toBeInTheDocument();
+  },
+};
+
+export const LeftEmployeeNotSelectable: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const select = await (await assignForm(canvas)).findByLabelText('직원');
+
+    await within(select).findByRole('option', { name: '오전기' });
+    await expect(within(select).queryByRole('option', { name: '박퇴사' })).not.toBeInTheDocument();
+    // 휴직 직원은 고를 수 있고 표시가 붙음
+    await expect(
+      within(select).getByRole('option', { name: '이조공 (조공) (휴직)' }),
+    ).toBeInTheDocument();
+  },
+};
+
+export const AssignmentOutsideProjectPeriod: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const form = await assignForm(canvas);
+
+    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
+    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
+    fireEvent.change(form.getByLabelText('투입 시작일'), { target: { value: '2026-07-01' } });
+    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+
+    await expect(
+      await form.findByText(/프로젝트 시작 예정일\(2026-07-15\) 이후여야 합니다/),
+    ).toBeInTheDocument();
+  },
+};
+
+export const AssignmentNeedsEmployee: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click((await assignForm(canvas)).getByRole('button', { name: '투입 등록' }));
+
+    await expect(await canvas.findByText('직원을 선택해 주세요')).toBeInTheDocument();
+  },
+};
+
+export const SameProjectOverlapRejected: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const form = await assignForm(canvas);
+
+    await within(await form.findByLabelText('직원')).findByRole('option', {
+      name: '정판금 (반장)',
+    });
+    await userEvent.selectOptions(form.getByLabelText('직원'), '정판금 (반장)');
+    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+
+    await expect(await form.findByText(/이미 투입되어 있습니다/)).toBeInTheDocument();
+  },
+};
+
+// 다른 프로젝트와 겹치면 막지 않고 저장한 뒤 겹치는 구간을 알려 줌
+export const OverlapWarningAfterAdd: Story = {
+  parameters: { router: routerFor('미래오피스 천장 마감') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const form = await assignForm(canvas);
+
+    await within(await form.findByLabelText('직원')).findByRole('option', {
+      name: '최설치 (기공)',
+    });
+    await userEvent.selectOptions(form.getByLabelText('직원'), '최설치 (기공)');
+    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+
+    await expect(await canvas.findByText(/최설치님을 투입했습니다/)).toBeInTheDocument();
+    await expect(await canvas.findByText('확인이 필요합니다')).toBeInTheDocument();
+    await expect(
+      canvas.getAllByText(
+        /2026-11-02 ~ 2026-11-30에 'A동 외장 판금 공사'\(2026-001\)에도 투입되어 있습니다/,
+      ).length,
+    ).toBeGreaterThan(0);
+  },
+};
+
+export const EditAssignment: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '김일용 투입 수정' }));
+
+    const form = within(await canvas.findByRole('form', { name: '김일용 투입 수정' }));
+    const end = form.getByLabelText('투입 종료일');
+
+    fireEvent.change(end, { target: { value: '2026-10-31' } });
+    await userEvent.type(form.getByLabelText('계획 공수 (MD)'), '5');
+    await userEvent.click(form.getByRole('button', { name: '저장' }));
+
+    await expect(
+      await canvas.findByText(/2026-09-01 ~ 2026-10-31 · 계획 5MD \(40시간\)/),
+    ).toBeInTheDocument();
+  },
+};
+
+export const EditAssignmentOutsidePeriod: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '김일용 투입 수정' }));
+
+    const form = within(await canvas.findByRole('form', { name: '김일용 투입 수정' }));
+    const end = form.getByLabelText('투입 종료일');
+
+    fireEvent.change(end, { target: { value: '2027-03-01' } });
+    await userEvent.click(form.getByRole('button', { name: '저장' }));
+
+    await expect(
+      await form.findByText(/프로젝트 종료 예정일\(2026-11-30\) 이전이어야 합니다/),
+    ).toBeInTheDocument();
+  },
+};
+
+export const CancelAssignment: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '김일용 투입 취소' }));
+    await userEvent.click(await canvas.findByRole('button', { name: '취소 확인' }));
+
+    const list = within(canvas.getByRole('list', { name: '투입 목록' }));
+
+    await waitFor(() => expect(list.queryByText('김일용')).not.toBeInTheDocument());
+    await expect(list.getByText('정판금')).toBeInTheDocument();
+  },
+};
+
+export const CompletedProjectLocksAssignments: Story = {
+  parameters: { router: routerFor('옛날상가 간판 교체') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await expect(
+      await canvas.findByText(/상태의 프로젝트에는 투입을 바꿀 수 없습니다/),
+    ).toBeInTheDocument();
+    await expect(canvas.queryByRole('form', { name: '투입 등록' })).not.toBeInTheDocument();
+  },
+};
+
+export const SuspendedProjectNeedsConfirmation: Story = {
+  parameters: { router: routerFor('B동 덕트 설치') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const form = await assignForm(canvas);
+
+    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
+    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
+    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+
+    await expect(
+      await canvas.findByText(/중단 중인 프로젝트입니다. 투입하려면 확인이 필요합니다/),
+    ).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByLabelText(/투입을 바꾸는 것을 확인합니다/));
+    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+
+    await expect(await canvas.findByText(/오전기님을 투입했습니다/)).toBeInTheDocument();
+  },
+};
+
+export const PeriodChangeNeedsReasonAfterStart: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const end = await canvas.findByLabelText('종료 예정일');
+
+    // 기간을 바꾸기 전에는 사유 입력칸이 없음
+    await expect(canvas.queryByLabelText('기간 변경 사유 (필수)')).not.toBeInTheDocument();
+
+    fireEvent.change(end, { target: { value: '2026-12-15' } });
+
+    await expect(await canvas.findByLabelText('기간 변경 사유 (필수)')).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+    await expect(
+      await canvas.findByText('시작한 프로젝트의 기간을 바꿀 때는 사유를 입력해 주세요'),
+    ).toBeInTheDocument();
+
+    await userEvent.type(canvas.getByLabelText('기간 변경 사유 (필수)'), '고객 요청으로 연장');
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+
+    await expect(await canvas.findByText('저장했습니다')).toBeInTheDocument();
+    // 이력 맨 앞에 방금 변경이 기록됨
+    await expect(await canvas.findByText('사유: 고객 요청으로 연장')).toBeInTheDocument();
+    await expect(
+      canvas.getByText('2026-07-15 ~ 2026-11-30 → 2026-07-15 ~ 2026-12-15'),
+    ).toBeInTheDocument();
+  },
+};
+
+export const PeriodHistorySeeded: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await expect(
+      await canvas.findByText('사유: 외장 패널 납품 지연으로 종료 예정일 연장'),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.getByText('2026-07-15 ~ 2026-11-15 → 2026-07-15 ~ 2026-11-30'),
+    ).toBeInTheDocument();
+  },
+};
+
+export const PeriodReasonOptionalBeforeStart: Story = {
+  parameters: { router: routerFor('미래오피스 천장 마감') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const end = await canvas.findByLabelText('종료 예정일');
+
+    fireEvent.change(end, { target: { value: '2027-02-15' } });
+
+    await expect(await canvas.findByLabelText('기간 변경 사유 (선택)')).toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+
+    await expect(await canvas.findByText('저장했습니다')).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('2026-11-02 ~ 2027-01-29 → 2026-11-02 ~ 2027-02-15'),
+    ).toBeInTheDocument();
+  },
+};
+
+export const ShrinkBlockedByAssignments: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const end = await canvas.findByLabelText('종료 예정일');
+
+    fireEvent.change(end, { target: { value: '2026-09-20' } });
+    await userEvent.type(await canvas.findByLabelText('기간 변경 사유 (필수)'), '조기 종료');
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+
+    await expect(await canvas.findByText(/투입 \d건이 새 기간 밖에 있습니다/)).toBeInTheDocument();
   },
 };
