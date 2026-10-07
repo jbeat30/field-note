@@ -297,6 +297,13 @@ export const DEMO_PARTNERS: readonly DemoPartner[] = [
   },
 ];
 
+export type DemoStatusChange = {
+  fromStatus: ProjectStatus;
+  toStatus: ProjectStatus;
+  effectiveOn: string;
+  reason?: string;
+};
+
 export type DemoProject = {
   id: string;
   companyId: string;
@@ -317,6 +324,11 @@ export type DemoProject = {
   contractDate: string;
   plannedStart: string;
   plannedEnd: string;
+  // 상태를 바꿀 때 기록되는 실제 시작·완료일 (시드는 상태와 이 값이 일관되게 맞춤)
+  actualStart?: string;
+  actualEnd?: string;
+  // 상태 변경 이력 (오래된 것부터)
+  history?: readonly DemoStatusChange[];
   memo?: string;
 };
 
@@ -342,6 +354,8 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
     contractDate: '2026-06-20',
     plannedStart: '2026-07-15',
     plannedEnd: '2026-11-30',
+    actualStart: '2026-07-15',
+    history: [{ fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2026-07-15' }],
     memo: '외장 패널 설치 후 마감 점검',
   },
   {
@@ -375,6 +389,16 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
     contractDate: '2026-05-10',
     plannedStart: '2026-06-01',
     plannedEnd: '2026-10-15',
+    actualStart: '2026-06-01',
+    history: [
+      { fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2026-06-01' },
+      {
+        fromStatus: 'IN_PROGRESS',
+        toStatus: 'SUSPENDED',
+        effectiveOn: '2026-09-10',
+        reason: '철골 자재 납품 지연으로 중단',
+      },
+    ],
     memo: '자재 지연으로 중단',
   },
   {
@@ -390,6 +414,12 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
     contractDate: '2026-01-20',
     plannedStart: '2026-02-01',
     plannedEnd: '2026-03-15',
+    actualStart: '2026-02-03',
+    actualEnd: '2026-03-12',
+    history: [
+      { fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2026-02-03' },
+      { fromStatus: 'IN_PROGRESS', toStatus: 'COMPLETED', effectiveOn: '2026-03-12' },
+    ],
   },
   {
     id: projectId(5),
@@ -404,6 +434,14 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
     contractDate: '2025-08-20',
     plannedStart: '2025-09-01',
     plannedEnd: '2025-12-20',
+    actualStart: '2025-09-02',
+    actualEnd: '2025-12-18',
+    history: [
+      { fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2025-09-02' },
+      { fromStatus: 'IN_PROGRESS', toStatus: 'COMPLETED', effectiveOn: '2025-12-18' },
+      { fromStatus: 'COMPLETED', toStatus: 'WARRANTY', effectiveOn: '2025-12-19' },
+      { fromStatus: 'WARRANTY', toStatus: 'CLOSED', effectiveOn: '2025-12-20' },
+    ],
   },
   {
     id: projectId(6),
@@ -419,6 +457,8 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
     contractDate: '2026-08-01',
     plannedStart: '2026-09-01',
     plannedEnd: '2026-11-20',
+    actualStart: '2026-09-01',
+    history: [{ fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2026-09-01' }],
   },
 ];
 

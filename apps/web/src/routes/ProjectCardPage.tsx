@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { ProjectForm } from '../projects/ProjectForm';
+import { ProjectStatusPanel } from '../projects/ProjectStatusPanel';
 import { useProject } from '../projects/useProjects';
 
 // 프로젝트 기본정보 화면. 투입·일지·집계 같은 탭은 이후 단계에서 붙는다
@@ -53,7 +54,13 @@ export const ProjectCardPage = () => {
           </a>
         )}
       </div>
-      <ProjectForm project={project.data} />
+      <ProjectStatusPanel project={project.data} />
+      <section className="flex flex-col gap-3" aria-labelledby="info-heading">
+        <h2 id="info-heading" className="text-lg font-bold">
+          기본정보
+        </h2>
+        <ProjectForm project={project.data} />
+      </section>
     </div>
   );
 };
