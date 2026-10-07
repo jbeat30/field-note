@@ -1,4 +1,12 @@
-import { DEMO_ACCOUNTS, DEMO_INVITATION } from '@field-note/shared/demo';
+import {
+  DEMO_ACCOUNTS,
+  DEMO_ASSIGNMENTS,
+  DEMO_EMPLOYEES,
+  DEMO_INVITATION,
+  DEMO_PARTNERS,
+  DEMO_PROJECTS,
+  DEMO_WORK_LOGS,
+} from '@field-note/shared/demo';
 
 import { verifyPassword } from '../auth/password';
 import { createPrismaInvitationStore } from '../invitation/invitationStore';
@@ -115,5 +123,255 @@ describe('seedDemoData', () => {
     await seedDemoData(db.owner);
 
     expect(await store.find(DEMO_INVITATION.token)).toBeNull();
+  });
+
+  it('더미 직원을 회사별로 넣고, 선택 목록 항목과 연결하며, 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_EMPLOYEES.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.employee.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.employee.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+
+    const welder = await db.owner.employee.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, name: '한용접' },
+      include: { jobType: true, workerType: true },
+    });
+
+    expect(welder.jobType?.name).toBe('용접공');
+    expect(welder.workerType?.name).toBe('계약직');
+    expect(welder.companyId).toBe(welder.jobType?.companyId);
+
+    // 앱 계정은 자기 회사 직원만 본다
+    const visible = await withCompany(db.app, saeron.companyId, (tx) => tx.employee.findMany());
+
+    expect(visible).toHaveLength(count(saeron.companyId));
+    expect(visible.every((item) => item.companyId === saeron.companyId)).toBe(true);
+  });
+
+  it('시드 직원에는 주민등록번호·계좌 같은 항목이 없고 연락처는 가상 번호다', async () => {
+    const phones = (await db.owner.employee.findMany({ select: { phone: true } })).flatMap(
+      (item) => (item.phone ? [item.phone] : []),
+    );
+
+    expect(phones.length).toBeGreaterThan(0);
+    expect(phones.every((phone) => /^010-0000-\d{4}$/.test(phone))).toBe(true);
+  });
+
+  it('더미 명부를 회사별로 넣고 다시 실행해도 늘지 않으며 앱 계정은 자기 회사 것만 본다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_PARTNERS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.partner.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.partner.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+    // 숨긴 업체도 시드에 있어 화면에서 숨김 표시를 확인할 수 있음
+    expect(
+      await db.owner.partner.count({ where: { companyId: hanbit.companyId, isActive: false } }),
+    ).toBe(1);
+
+    const visible = await withCompany(db.app, saeron.companyId, (tx) => tx.partner.findMany());
+
+    expect(visible).toHaveLength(count(saeron.companyId));
+    expect(visible.every((item) => item.companyId === saeron.companyId)).toBe(true);
+  });
+
+  it('더미 프로젝트를 고객·담당자·공종과 연결해 넣고 코드 번호표가 이어서 붙게 맞춘다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_PROJECTS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.project.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.project.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+
+    const duct = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-003' },
+      include: { client: true, manager: true, trades: { include: { trade: true } } },
+    });
+
+    expect(duct.status).toBe('SUSPENDED');
+    expect(duct.client.name).toBe('가나다건설');
+    expect(duct.manager.name).toBe('최설치');
+    expect(duct.trades.map((item) => item.trade.name).sort()).toEqual(['설비', '판금']);
+
+    // 번호표: 한빛판금 2026년은 4번까지, 2025년은 12번까지 썼으므로 다음 번호는 5번·13번
+    const sequences = await db.owner.projectCodeSequence.findMany({
+      where: { companyId: hanbit.companyId },
+      orderBy: { year: 'asc' },
+    });
+
+    expect(sequences.map((item) => [item.year, item.lastNumber])).toEqual([
+      [2025, 12],
+      [2026, 4],
+    ]);
+
+    const visible = await withCompany(db.app, saeron.companyId, (tx) => tx.project.findMany());
+
+    expect(visible).toHaveLength(count(saeron.companyId));
+  });
+
+  it('더미 프로젝트의 실제 시작·완료일과 상태 변경 이력을 넣고 다시 실행해도 이력이 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+
+    const history = (code: string) =>
+      db.owner.projectStatusChange.findMany({
+        where: { companyId: hanbit.companyId, project: { code } },
+        orderBy: { effectiveOn: 'asc' },
+      });
+    const duct = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-003' },
+    });
+    const completed = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-004' },
+    });
+    const planned = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-002' },
+    });
+    const before = (await history('2026-003')).length;
+
+    expect(duct.actualStart?.toISOString().slice(0, 10)).toBe('2026-06-01');
+    expect(duct.actualEnd).toBeNull();
+    expect(completed.actualEnd?.toISOString().slice(0, 10)).toBe('2026-03-12');
+    expect(planned.actualStart).toBeNull();
+    expect((await history('2026-003')).at(-1)).toMatchObject({
+      toStatus: 'SUSPENDED',
+      reason: '철골 자재 납품 지연으로 중단',
+    });
+    expect(await history('2026-002')).toHaveLength(0);
+
+    await seedDemoData(db.owner);
+
+    expect(await history('2026-003')).toHaveLength(before);
+    // 변경자는 같은 회사의 관리자
+    expect((await history('2026-003')).every((item) => item.changedBy === hanbit.userId)).toBe(
+      true,
+    );
+  });
+
+  it('더미 투입(취소한 투입 포함)과 예정 기간 변경 이력을 넣고 다시 실행해도 늘지 않으며 투입은 프로젝트 기간 안이다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_ASSIGNMENTS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.projectAssignment.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.projectAssignment.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+    expect(await db.owner.projectAssignment.count({ where: { cancelledAt: { not: null } } })).toBe(
+      1,
+    );
+
+    // 모든 투입이 자기 프로젝트의 예정 기간 안에 있음
+    const all = await db.owner.projectAssignment.findMany({ include: { project: true } });
+
+    expect(all.length).toBeGreaterThan(0);
+    for (const item of all) {
+      expect(item.startDate >= item.project.plannedStart).toBe(true);
+      expect(item.endDate <= item.project.plannedEnd).toBe(true);
+    }
+
+    // 최설치는 A동과 B동에 겹쳐 투입되어 겹침 경고를 볼 수 있음
+    const worker = await db.owner.employee.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, name: '최설치' },
+    });
+    const own = all.filter((item) => item.employeeId === worker.id && !item.cancelledAt);
+
+    expect(own).toHaveLength(2);
+
+    const changes = () =>
+      db.owner.projectPeriodChange.findMany({
+        where: { companyId: hanbit.companyId, project: { code: '2026-001' } },
+      });
+    const before = await changes();
+
+    expect(before).toHaveLength(1);
+    expect(before[0]).toMatchObject({
+      reason: '외장 패널 납품 지연으로 종료 예정일 연장',
+      changedBy: hanbit.userId,
+    });
+
+    await seedDemoData(db.owner);
+
+    expect(await changes()).toHaveLength(1);
+    expect(await db.owner.projectAssignment.count()).toBe(all.length);
+  });
+
+  it('더미 작업일지(임시 저장·수정 이력·변경 작업 포함)를 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_WORK_LOGS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.workLog.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.workLog.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+    expect(await db.owner.workLog.count({ where: { status: 'DRAFT' } })).toBe(1);
+    expect(await db.owner.workLog.count({ where: { isChange: true } })).toBe(1);
+
+    // 수정한 일지는 버전이 올라가 있고 고치기 전 값이 이력에 있음
+    const edited = await db.owner.workLog.findFirstOrThrow({
+      where: {
+        companyId: hanbit.companyId,
+        workDate: new Date('2026-09-02T00:00:00Z'),
+        project: { code: '2026-001' },
+      },
+      include: { revisions: true, entries: true },
+    });
+
+    expect(edited.version).toBe(2);
+    expect(edited.revisions).toHaveLength(1);
+    expect(edited.revisions[0]).toMatchObject({ version: 1, changedBy: hanbit.userId });
+    expect(edited.entries).toHaveLength(2);
+
+    // 모든 일지가 자기 프로젝트의 예정 기간 안, 공수는 1분 이상
+    const all = await db.owner.workLog.findMany({ include: { project: true, entries: true } });
+
+    for (const log of all) {
+      expect(
+        log.workDate >= log.project.plannedStart && log.workDate <= log.project.plannedEnd,
+      ).toBe(true);
+      expect(log.entries.every((entry) => entry.minutes >= 1)).toBe(true);
+    }
+
+    // 같은 날 A동·B동에 모두 480분을 쓴 직원이 있어 하루 합계 경고를 볼 수 있음
+    const worker = await db.owner.employee.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, name: '최설치' },
+    });
+    const sameDay = await db.owner.workLogEntry.findMany({
+      where: {
+        employeeId: worker.id,
+        workLog: { workDate: new Date('2026-09-02T00:00:00Z'), status: 'SAVED' },
+      },
+    });
+
+    expect(sameDay.reduce((sum, entry) => sum + entry.minutes, 0)).toBe(960);
+
+    const total = await db.owner.workLog.count();
+
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.workLog.count()).toBe(total);
+    expect(await db.owner.workLogRevision.count()).toBe(1);
   });
 });
