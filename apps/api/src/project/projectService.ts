@@ -1,10 +1,15 @@
 import {
+  PROJECT_STATUS_LABELS,
+  allowedProjectFields,
   formatProjectCode,
   todayInSeoul,
+  validateProjectTransition,
   type ProjectCreate,
   type ProjectDetail,
   type ProjectListQuery,
+  type ProjectStatusChange,
   type ProjectSummary,
+  type ProjectTransition,
   type ProjectUpdate,
 } from '@field-note/shared';
 
@@ -29,8 +34,17 @@ export type ProjectService = {
   get: (companyId: string, id: string) => Promise<ProjectDetail>;
   // 등록: 코드를 자동으로 붙이고 상태는 '예정'
   create: (companyId: string, input: ProjectCreate) => Promise<ProjectDetail>;
-  // 수정: 코드·상태는 바꿀 수 없음
+  // 수정: 코드·상태는 바꿀 수 없고, 종료·취소는 수정할 수 없으며 보증 중에는 담당자·메모만 고칠 수 있음
   update: (companyId: string, id: string, input: ProjectUpdate) => Promise<ProjectDetail>;
+  // 상태 전환 (예정 → 진행 → 중단·완료, 취소): 규칙 검사, 실제 시작·완료일 기록, 변경 이력 추가를 한 트랜잭션으로 처리
+  transition: (
+    companyId: string,
+    userId: string,
+    id: string,
+    input: ProjectTransition,
+  ) => Promise<ProjectDetail>;
+  // 상태 변경 이력 (최근이 맨 앞)
+  history: (companyId: string, id: string) => Promise<ProjectStatusChange[]>;
 };
 
 type Row = Prisma.ProjectGetPayload<{ include: { trades: { select: { tradeId: true } } } }>;
@@ -60,6 +74,8 @@ const toDetail = (row: Row): ProjectDetail => ({
   siteContactPhone: row.siteContactPhone,
   accessMemo: row.accessMemo,
   contractDate: fromDate(row.contractDate),
+  actualStart: row.actualStart ? fromDate(row.actualStart) : null,
+  actualEnd: row.actualEnd ? fromDate(row.actualEnd) : null,
   memo: row.memo,
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),
@@ -251,6 +267,25 @@ export const createProjectService = (
         throw new ProjectError('NOT_FOUND');
       }
 
+      // 상태별 수정 제한 (서비스 기획서 §10.3): 종료·취소는 수정 불가, 보증 중은 담당자·메모만
+      const allowed = allowedProjectFields(current.status);
+
+      if (allowed !== 'all') {
+        const sent = Object.entries(input)
+          .filter(([, value]) => value !== undefined)
+          .map(([key]) => key);
+        const blocked = sent.find((key) => !allowed.includes(key));
+
+        if (blocked !== undefined) {
+          throw invalid(
+            allowed.length === 0 ? 'body' : `body.${blocked}`,
+            allowed.length === 0
+              ? `'${PROJECT_STATUS_LABELS[current.status]}' 상태의 프로젝트는 수정할 수 없습니다`
+              : `'${PROJECT_STATUS_LABELS[current.status]}' 상태에서는 담당자와 메모만 수정할 수 있습니다`,
+          );
+        }
+      }
+
       if (input.clientId !== undefined) {
         await assertClient(tx, input.clientId, current.clientId);
       }
@@ -306,5 +341,93 @@ export const createProjectService = (
       });
 
       return toDetail(updated);
+    }),
+
+  transition: (companyId, userId, id, input) =>
+    withCompany(app, companyId, async (tx) => {
+      const current = await tx.project.findFirst({ where: { id } });
+
+      if (!current) {
+        throw new ProjectError('NOT_FOUND');
+      }
+
+      const last = await tx.projectStatusChange.findFirst({
+        where: { projectId: id },
+        orderBy: [{ effectiveOn: 'desc' }, { changedAt: 'desc' }],
+      });
+      const today = todayInSeoul(now());
+      const effectiveOn = input.effectiveOn ?? today;
+      const reason = input.reason?.trim() || null;
+      const checked = validateProjectTransition({
+        from: current.status,
+        to: input.toStatus,
+        effectiveOn,
+        reason,
+        actualStart: current.actualStart ? fromDate(current.actualStart) : null,
+        lastEffectiveOn: last ? fromDate(last.effectiveOn) : null,
+        today,
+      });
+
+      if (!checked.ok) {
+        throw invalid(`body.${checked.path}`, checked.message);
+      }
+
+      // 상태가 그 사이 바뀌지 않았을 때만 갱신해 동시에 두 번 눌러도 이력이 중복되지 않게 함
+      const changed = await tx.project.updateMany({
+        where: { companyId, id, status: current.status },
+        data: {
+          status: input.toStatus,
+          // 처음 시작할 때만 실제 시작일을 기록 (중단 후 재개는 시작일을 바꾸지 않음)
+          actualStart:
+            current.status === 'PLANNED' && input.toStatus === 'IN_PROGRESS'
+              ? toDate(effectiveOn)
+              : undefined,
+          actualEnd: input.toStatus === 'COMPLETED' ? toDate(effectiveOn) : undefined,
+        },
+      });
+
+      if (changed.count !== 1) {
+        throw invalid(
+          'body.toStatus',
+          '다른 곳에서 상태가 먼저 바뀌었습니다. 새로 고친 뒤 다시 시도해 주세요',
+        );
+      }
+
+      await tx.projectStatusChange.create({
+        data: {
+          companyId,
+          projectId: id,
+          fromStatus: current.status,
+          toStatus: input.toStatus,
+          effectiveOn: toDate(effectiveOn),
+          reason,
+          changedBy: userId,
+        },
+      });
+
+      return toDetail(
+        await tx.project.findFirstOrThrow({ where: { id }, include: INCLUDE_TRADES }),
+      );
+    }),
+
+  history: (companyId, id) =>
+    withCompany(app, companyId, async (tx) => {
+      if (!(await tx.project.findFirst({ where: { id }, select: { id: true } }))) {
+        throw new ProjectError('NOT_FOUND');
+      }
+
+      const rows = await tx.projectStatusChange.findMany({
+        where: { projectId: id },
+        orderBy: [{ changedAt: 'desc' }, { id: 'desc' }],
+      });
+
+      return rows.map((row) => ({
+        id: row.id,
+        fromStatus: row.fromStatus,
+        toStatus: row.toStatus,
+        effectiveOn: fromDate(row.effectiveOn),
+        reason: row.reason,
+        changedAt: row.changedAt.toISOString(),
+      }));
     }),
 });

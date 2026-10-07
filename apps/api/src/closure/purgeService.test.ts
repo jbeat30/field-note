@@ -52,6 +52,16 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
   await db.owner.projectTrade.create({
     data: { companyId: account.companyId, projectId: project.id, tradeId: trade.id },
   });
+  await db.owner.projectStatusChange.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      fromStatus: 'PLANNED',
+      toStatus: 'IN_PROGRESS',
+      effectiveOn: new Date('2026-10-01T00:00:00Z'),
+      changedBy: account.userId,
+    },
+  });
   await db.owner.projectCodeSequence.create({
     data: { companyId: account.companyId, year: 2026, lastNumber: 1 },
   });
@@ -105,6 +115,7 @@ describe('삭제·익명화', () => {
     expect(result.anonymizedUsers).toBe(1);
     expect(await db.owner.project.count({ where })).toBe(0);
     expect(await db.owner.projectTrade.count({ where })).toBe(0);
+    expect(await db.owner.projectStatusChange.count({ where })).toBe(0);
     expect(await db.owner.projectCodeSequence.count({ where })).toBe(0);
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);

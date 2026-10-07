@@ -3,10 +3,13 @@ import {
   projectDetailSchema,
   projectListQuerySchema,
   projectParamsSchema,
+  projectStatusHistorySchema,
+  projectTransitionSchema,
   projectUpdateSchema,
   projectsResponseSchema,
   type ProjectCreate,
   type ProjectListQuery,
+  type ProjectTransition,
   type ProjectUpdate,
 } from '@field-note/shared';
 
@@ -106,6 +109,49 @@ export const registerProjectRoutes = (registry: RouteRegistry, projects?: Projec
           (params as { id: string }).id,
           body as ProjectUpdate,
         );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/projects/{id}/status',
+      summary: '프로젝트 상태 전환 (예정 → 진행 → 중단·완료, 취소). 날짜·사유와 함께 이력에 남음',
+      auth: 'required',
+      request: { params: projectParamsSchema, body: projectTransitionSchema },
+      response: { status: 200, schema: projectDetailSchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params, body }) => {
+      try {
+        return await projects!.transition(
+          auth!.companyId,
+          auth!.userId,
+          (params as { id: string }).id,
+          body as ProjectTransition,
+        );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/projects/{id}/status-history',
+      summary: '프로젝트 상태 변경 이력 (최근이 맨 앞)',
+      auth: 'required',
+      request: { params: projectParamsSchema },
+      response: { status: 200, schema: projectStatusHistorySchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params }) => {
+      try {
+        return { items: await projects!.history(auth!.companyId, (params as { id: string }).id) };
       } catch (error) {
         throw toAppError(error);
       }

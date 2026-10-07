@@ -9,6 +9,7 @@ import {
   normalizePartnerName,
   type PartnerDetail,
   type ProjectDetail,
+  type ProjectStatusChange,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS, DEMO_DEVICES, MOCK_SESSION_STORAGE_KEY, type MockAccount } from './data';
@@ -291,6 +292,8 @@ export const getProjects = (account: MockAccount): ProjectDetail[] => {
             contractDate: item.contractDate,
             plannedStart: item.plannedStart,
             plannedEnd: item.plannedEnd,
+            actualStart: item.actualStart ?? null,
+            actualEnd: item.actualEnd ?? null,
             memo: item.memo ?? null,
             createdAt: '2026-10-01T00:00:00.000Z',
             updatedAt: '2026-10-01T00:00:00.000Z',
@@ -302,6 +305,44 @@ export const getProjects = (account: MockAccount): ProjectDetail[] => {
   }
 
   return account.projects;
+};
+
+// 프로젝트 상태 변경 이력: 처음 조회할 때 더미 이력(DB 시드와 같은 원본)으로 채움
+export const getProjectHistory = (
+  account: MockAccount,
+  projectId: string,
+): ProjectStatusChange[] => {
+  if (!account.projectHistory) {
+    account.projectHistory = Object.fromEntries(
+      DEMO_PROJECTS.filter((item) => item.companyId === account.companyId).map((item) => [
+        item.id,
+        (item.history ?? []).map((change) => ({
+          id: crypto.randomUUID(),
+          fromStatus: change.fromStatus,
+          toStatus: change.toStatus,
+          effectiveOn: change.effectiveOn,
+          reason: change.reason ?? null,
+          changedAt: `${change.effectiveOn}T09:00:00.000Z`,
+        })),
+      ]),
+    );
+    persist();
+  }
+
+  return account.projectHistory[projectId] ?? [];
+};
+
+export const addProjectStatusChange = (
+  account: MockAccount,
+  projectId: string,
+  change: ProjectStatusChange,
+) => {
+  getProjectHistory(account, projectId);
+  account.projectHistory = {
+    ...account.projectHistory,
+    [projectId]: [...(account.projectHistory?.[projectId] ?? []), change],
+  };
+  persist();
 };
 
 export const saveProjects = (account: MockAccount, projects: ProjectDetail[]) => {

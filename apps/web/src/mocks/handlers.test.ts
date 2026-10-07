@@ -13,6 +13,8 @@ import {
   PARTNER_KINDS,
   projectDetailSchema,
   projectsResponseSchema,
+  projectStatusHistorySchema,
+  type ProjectStatus,
   partnerDetailSchema,
   partnersResponseSchema,
   optionItemSchema,
@@ -708,6 +710,114 @@ describe('목업 서버 계약', () => {
     ).toBe(404);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 90_000);
+
+  it('프로젝트 상태 전환: 허용된 전환만, 날짜·사유 규칙, 이력, 수정 제한이 서버와 같다', async () => {
+    expect(
+      (
+        await client.POST('/api/v1/projects/{id}/status', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000302' } },
+          body: { toStatus: 'IN_PROGRESS' },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const planned = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects', { params: { query: { status: 'PLANNED' } } })).data,
+    ).items[0]!;
+    const path = { params: { path: { id: planned.id } } };
+    const move = (body: {
+      toStatus: ProjectStatus;
+      effectiveOn?: string;
+      reason?: string | null;
+    }) => client.POST('/api/v1/projects/{id}/status', { ...path, body });
+
+    // 허용되지 않은 전환, 미래 날짜, 사유 없는 취소는 거부
+    for (const body of [
+      { toStatus: 'COMPLETED' as const },
+      { toStatus: 'SUSPENDED' as const, reason: '사유' },
+      { toStatus: 'IN_PROGRESS' as const, effectiveOn: '2999-01-01' },
+      { toStatus: 'CANCELLED' as const },
+    ]) {
+      expect((await move(body)).response.status).toBe(400);
+    }
+
+    const started = projectDetailSchema.parse(
+      (await move({ toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' })).data,
+    );
+
+    expect(started).toMatchObject({
+      status: 'IN_PROGRESS',
+      actualStart: '2026-10-01',
+      actualEnd: null,
+    });
+    // 이전 변경일보다 빠른 날짜는 거부, 같은 날은 허용
+    expect(
+      (await move({ toStatus: 'SUSPENDED', effectiveOn: '2026-09-30', reason: '우천' })).response
+        .status,
+    ).toBe(400);
+    expect(
+      (await move({ toStatus: 'SUSPENDED', effectiveOn: '2026-10-01', reason: ' 우천 ' })).response
+        .status,
+    ).toBe(200);
+
+    const resumed = projectDetailSchema.parse(
+      (await move({ toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-02' })).data,
+    );
+
+    expect(resumed.actualStart).toBe('2026-10-01');
+
+    const completed = projectDetailSchema.parse(
+      (await move({ toStatus: 'COMPLETED', effectiveOn: '2026-10-03' })).data,
+    );
+
+    expect(completed).toMatchObject({ status: 'COMPLETED', actualEnd: '2026-10-03' });
+    expect((await move({ toStatus: 'IN_PROGRESS' })).response.status).toBe(400);
+
+    const history = projectStatusHistorySchema.parse(
+      (await client.GET('/api/v1/projects/{id}/status-history', path)).data,
+    ).items;
+
+    expect(history.map((item) => `${item.fromStatus}>${item.toStatus}`)).toEqual([
+      'IN_PROGRESS>COMPLETED',
+      'SUSPENDED>IN_PROGRESS',
+      'IN_PROGRESS>SUSPENDED',
+      'PLANNED>IN_PROGRESS',
+    ]);
+    expect(history.find((item) => item.toStatus === 'SUSPENDED')?.reason).toBe('우천');
+
+    // 완료는 기본정보를 계속 수정할 수 있지만 취소하면 수정할 수 없다
+    expect(
+      (await client.PATCH('/api/v1/projects/{id}', { ...path, body: { name: '완료 후 수정' } }))
+        .response.status,
+    ).toBe(200);
+
+    const other = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects', { params: { query: { status: 'IN_PROGRESS' } } })).data,
+    ).items[0]!;
+
+    await client.POST('/api/v1/projects/{id}/status', {
+      params: { path: { id: other.id } },
+      body: { toStatus: 'CANCELLED', reason: '계약 해지' },
+    });
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          params: { path: { id: other.id } },
+          body: { name: '수정' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/status-history', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 120_000);
 
   it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
     await login();

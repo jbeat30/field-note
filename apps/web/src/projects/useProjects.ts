@@ -1,4 +1,9 @@
-import type { ProjectCreate, ProjectListQuery, ProjectUpdate } from '@field-note/shared';
+import type {
+  ProjectCreate,
+  ProjectListQuery,
+  ProjectTransition,
+  ProjectUpdate,
+} from '@field-note/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '../api/client';
@@ -97,6 +102,50 @@ export const useUpdateProject = (id: string) => {
       queryClient.setQueryData(queryKeys.project(id), saved);
 
       return queryClient.invalidateQueries({ queryKey: ['projects', 'list'] });
+    },
+  });
+};
+
+export const useProjectHistory = (id: string) =>
+  useQuery({
+    queryKey: queryKeys.projectHistory(id),
+    queryFn: async () => {
+      const { data } = await apiClient.GET('/api/v1/projects/{id}/status-history', {
+        params: { path: { id } },
+      });
+
+      if (!data) {
+        throw new Error('[web.useProjectHistory] 상태 이력 조회 실패');
+      }
+
+      return data.items;
+    },
+  });
+
+// 상태 전환: 서버가 규칙을 확인한 뒤에만 반영 (낙관적 업데이트 없음). 규칙 위반은 호출한 쪽이 화면에 보여 줌
+export const useTransitionProject = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: ProjectTransition) => {
+      const { data, error } = await apiClient.POST('/api/v1/projects/{id}/status', {
+        params: { path: { id } },
+        body,
+      });
+
+      if (!data) {
+        throw error ?? new Error('[web.useTransitionProject] 상태 전환 실패');
+      }
+
+      return data;
+    },
+    onSuccess: (saved) => {
+      queryClient.setQueryData(queryKeys.project(id), saved);
+
+      return Promise.all([
+        queryClient.invalidateQueries({ queryKey: queryKeys.projectHistory(id) }),
+        queryClient.invalidateQueries({ queryKey: ['projects', 'list'] }),
+      ]);
     },
   });
 };

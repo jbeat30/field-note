@@ -129,6 +129,9 @@ export const projectSummarySchema = z.object({
 export type ProjectSummary = z.infer<typeof projectSummarySchema>;
 
 export const projectDetailSchema = projectSummarySchema.extend({
+  // 실제 시작일·완료일은 상태를 바꿀 때 기록됨
+  actualStart: z.iso.date().nullable(),
+  actualEnd: z.iso.date().nullable(),
   siteAddress: z.string().nullable(),
   siteMapUrl: z.string().nullable(),
   siteContactName: z.string().nullable(),
@@ -236,3 +239,28 @@ export const projectUpdateSchema = z
   .refine(periodRefinement, PERIOD_ERROR);
 
 export type ProjectUpdate = z.infer<typeof projectUpdateSchema>;
+
+// 상태 전환 요청: 바꿀 상태와 그 일이 실제로 일어난 날(생략하면 오늘), 중단·취소는 사유 필수
+export const projectTransitionSchema = z.object({
+  toStatus: projectStatusSchema,
+  effectiveOn: dateSchema.optional(),
+  reason: z.string().trim().max(500, '사유는 500자까지 입력할 수 있습니다').nullish(),
+});
+
+export type ProjectTransition = z.infer<typeof projectTransitionSchema>;
+
+export const projectStatusChangeSchema = z.object({
+  id: z.uuid(),
+  fromStatus: projectStatusSchema,
+  toStatus: projectStatusSchema,
+  effectiveOn: z.iso.date(),
+  reason: z.string().nullable(),
+  changedAt: z.iso.datetime(),
+});
+
+export type ProjectStatusChange = z.infer<typeof projectStatusChangeSchema>;
+
+// 최근 변경이 맨 앞
+export const projectStatusHistorySchema = z.object({ items: z.array(projectStatusChangeSchema) });
+
+export type ProjectStatusHistory = z.infer<typeof projectStatusHistorySchema>;

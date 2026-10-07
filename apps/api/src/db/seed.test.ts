@@ -222,4 +222,42 @@ describe('seedDemoData', () => {
 
     expect(visible).toHaveLength(count(saeron.companyId));
   });
+
+  it('더미 프로젝트의 실제 시작·완료일과 상태 변경 이력을 넣고 다시 실행해도 이력이 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+
+    const history = (code: string) =>
+      db.owner.projectStatusChange.findMany({
+        where: { companyId: hanbit.companyId, project: { code } },
+        orderBy: { effectiveOn: 'asc' },
+      });
+    const duct = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-003' },
+    });
+    const completed = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-004' },
+    });
+    const planned = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-002' },
+    });
+    const before = (await history('2026-003')).length;
+
+    expect(duct.actualStart?.toISOString().slice(0, 10)).toBe('2026-06-01');
+    expect(duct.actualEnd).toBeNull();
+    expect(completed.actualEnd?.toISOString().slice(0, 10)).toBe('2026-03-12');
+    expect(planned.actualStart).toBeNull();
+    expect((await history('2026-003')).at(-1)).toMatchObject({
+      toStatus: 'SUSPENDED',
+      reason: '철골 자재 납품 지연으로 중단',
+    });
+    expect(await history('2026-002')).toHaveLength(0);
+
+    await seedDemoData(db.owner);
+
+    expect(await history('2026-003')).toHaveLength(before);
+    // 변경자는 같은 회사의 관리자
+    expect((await history('2026-003')).every((item) => item.changedBy === hanbit.userId)).toBe(
+      true,
+    );
+  });
 });

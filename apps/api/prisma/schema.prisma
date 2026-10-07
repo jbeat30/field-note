@@ -59,6 +59,7 @@ model Company {
   projects             Project[]
   projectTrades        ProjectTrade[]
   projectCodeSequences ProjectCodeSequence[]
+  projectStatusChanges ProjectStatusChange[]
 
   @@map("companies")
 }
@@ -79,38 +80,64 @@ enum ProjectStatus {
 // 프로젝트 (서비스 기획서 §10.2). 계약 금액은 저장하지 않음
 // 고객·담당자·공종은 같은 회사의 명부·직원·선택 목록만 복합 키로 가리킬 수 있음
 model Project {
-  companyId        String         @map("company_id") @db.Uuid
-  id               String         @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId        String                @map("company_id") @db.Uuid
+  id               String                @default(dbgenerated("uuidv7()")) @db.Uuid
   // 회사별 자동 번호 (예: 2026-012). 등록 때 정해지고 수정할 수 없음
   code             String
   name             String
-  status           ProjectStatus  @default(PLANNED)
-  siteName         String         @map("site_name")
-  siteAddress      String?        @map("site_address")
-  siteMapUrl       String?        @map("site_map_url")
-  siteContactName  String?        @map("site_contact_name")
-  siteContactPhone String?        @map("site_contact_phone")
+  status           ProjectStatus         @default(PLANNED)
+  siteName         String                @map("site_name")
+  siteAddress      String?               @map("site_address")
+  siteMapUrl       String?               @map("site_map_url")
+  siteContactName  String?               @map("site_contact_name")
+  siteContactPhone String?               @map("site_contact_phone")
   // 출입 방법, 주차, 작업 시간 제한 등
-  accessMemo       String?        @map("access_memo")
-  clientId         String         @map("client_id") @db.Uuid
-  managerId        String         @map("manager_id") @db.Uuid
-  contractDate     DateTime       @map("contract_date") @db.Date
+  accessMemo       String?               @map("access_memo")
+  clientId         String                @map("client_id") @db.Uuid
+  managerId        String                @map("manager_id") @db.Uuid
+  contractDate     DateTime              @map("contract_date") @db.Date
   // 시작·종료 예정일은 작업일지를 입력할 수 있는 기간이 됨
-  plannedStart     DateTime       @map("planned_start") @db.Date
-  plannedEnd       DateTime       @map("planned_end") @db.Date
+  plannedStart     DateTime              @map("planned_start") @db.Date
+  plannedEnd       DateTime              @map("planned_end") @db.Date
+  // 실제 시작일·완료일은 상태를 바꿀 때 기록됨 (직접 수정하지 않음)
+  actualStart      DateTime?             @map("actual_start") @db.Date
+  actualEnd        DateTime?             @map("actual_end") @db.Date
   memo             String?
-  createdAt        DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt        DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company          Company        @relation(fields: [companyId], references: [id])
-  client           Partner        @relation("ProjectClient", fields: [companyId, clientId], references: [companyId, id], onDelete: Restrict)
-  manager          Employee       @relation("ProjectManager", fields: [companyId, managerId], references: [companyId, id], onDelete: Restrict)
+  createdAt        DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company          Company               @relation(fields: [companyId], references: [id])
+  client           Partner               @relation("ProjectClient", fields: [companyId, clientId], references: [companyId, id], onDelete: Restrict)
+  manager          Employee              @relation("ProjectManager", fields: [companyId, managerId], references: [companyId, id], onDelete: Restrict)
   trades           ProjectTrade[]
+  statusChanges    ProjectStatusChange[]
 
   @@id([companyId, id])
   @@unique([companyId, code])
   @@index([companyId, status])
   @@index([companyId, plannedEnd])
   @@map("projects")
+}
+
+// 프로젝트 상태 변경 이력 (변경자·시각·사유, 서비스 기획서 §10.3). 추가만 가능하고 수정·삭제할 수 없음
+model ProjectStatusChange {
+  companyId   String        @map("company_id") @db.Uuid
+  id          String        @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId   String        @map("project_id") @db.Uuid
+  fromStatus  ProjectStatus @map("from_status")
+  toStatus    ProjectStatus @map("to_status")
+  // 시작일·중단일·재개일·완료일·취소일처럼 상태가 실제로 바뀐 날 (입력한 날짜)
+  effectiveOn DateTime      @map("effective_on") @db.Date
+  // 중단·취소는 사유가 필수
+  reason      String?
+  changedBy   String        @map("changed_by") @db.Uuid
+  changedAt   DateTime      @default(now()) @map("changed_at") @db.Timestamptz(3)
+  company     Company       @relation(fields: [companyId], references: [id])
+  project     Project       @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  user        User          @relation("ProjectStatusChangedBy", fields: [companyId, changedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, projectId, changedAt])
+  @@map("project_status_changes")
 }
 
 // 프로젝트의 공종 (복수 선택)
@@ -160,27 +187,28 @@ model Session {
 
 // 회사 관리자 계정 (회사당 하나). 직원은 계정이 없음
 model User {
-  id                String             @default(dbgenerated("uuidv7()")) @db.Uuid
-  companyId         String             @map("company_id") @db.Uuid
+  id                   String                @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId            String                @map("company_id") @db.Uuid
   // 인증 전에는 비어 있고 서비스 전체에서 유일
-  email             String?            @unique
-  emailVerifiedAt   DateTime?          @map("email_verified_at") @db.Timestamptz(3)
+  email                String?               @unique
+  emailVerifiedAt      DateTime?             @map("email_verified_at") @db.Timestamptz(3)
   // 이름 또는 상호
-  displayName       String             @map("display_name")
-  phone             String?
+  displayName          String                @map("display_name")
+  phone                String?
   // 만 14세 이상 확인 시각
-  ageConfirmedAt    DateTime?          @map("age_confirmed_at") @db.Timestamptz(3)
-  status            UserStatus         @default(INVITED)
-  createdAt         DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt         DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company           Company            @relation(fields: [companyId], references: [id])
-  credential        UserCredential?
-  consents          Consent[]
-  sessions          Session[]
-  invitations       Invitation[]
-  emailVerification EmailVerification?
-  passwordReset     PasswordReset?
-  socialAccounts    SocialAccount[]
+  ageConfirmedAt       DateTime?             @map("age_confirmed_at") @db.Timestamptz(3)
+  status               UserStatus            @default(INVITED)
+  createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company              Company               @relation(fields: [companyId], references: [id])
+  credential           UserCredential?
+  consents             Consent[]
+  sessions             Session[]
+  invitations          Invitation[]
+  emailVerification    EmailVerification?
+  passwordReset        PasswordReset?
+  socialAccounts       SocialAccount[]
+  projectStatusChanges ProjectStatusChange[] @relation("ProjectStatusChangedBy")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
