@@ -68,6 +68,14 @@ export const routes = [
             path: '/employees/:id',
             ...page(() => import('./routes/EmployeeCardPage'), 'EmployeeCardPage'),
           },
+          {
+            path: '/partners',
+            ...page(() => import('./routes/PartnerListPage'), 'PartnerListPage'),
+          },
+          {
+            path: '/partners/:id',
+            ...page(() => import('./routes/PartnerCardPage'), 'PartnerCardPage'),
+          },
           { path: '/settings', ...page(() => import('./routes/SettingsPage'), 'SettingsPage') },
           {
             path: '/settings/lists',

@@ -1,5 +1,6 @@
 import { type CompanySettings, type LegalDocumentSummary, type LegalDocumentType } from './account';
 import type { EmployeeStatus } from './employees';
+import type { PartnerKind } from './partners';
 import { LEGAL_DOCUMENT_CONTENTS, legalDocumentText } from './legal';
 
 // 로컬 개발 전용 더미 데이터: 목업 서버(웹)와 DB 시드(api)가 같은 값을 쓰도록 한 곳에 둔다
@@ -199,6 +200,99 @@ export const DEMO_EMPLOYEES: readonly DemoEmployee[] = [
     jobType: '사무',
     workerType: '정직원',
     status: 'ACTIVE',
+  },
+];
+
+export type DemoPartner = {
+  id: string;
+  companyId: string;
+  kind: PartnerKind;
+  name: string;
+  contactName?: string;
+  phone?: string;
+  memo?: string;
+  isActive?: boolean;
+};
+
+const partnerId = (n: number) => `0198d000-0000-7000-8000-0000000002${String(n).padStart(2, '0')}`;
+
+// 가상의 업체와 담당자만 사용한다 (연락처는 실제로 쓰이지 않는 0000 대역)
+export const DEMO_PARTNERS: readonly DemoPartner[] = [
+  {
+    id: partnerId(1),
+    companyId: HANBIT,
+    kind: 'CLIENT',
+    name: '가나다건설',
+    contactName: '윤소장',
+    phone: '02-0000-0101',
+    memo: '원청. 현장 출입증 사전 신청 필요',
+  },
+  {
+    id: partnerId(2),
+    companyId: HANBIT,
+    kind: 'CLIENT',
+    name: '미래오피스',
+    contactName: '강과장',
+    phone: '02-0000-0102',
+  },
+  {
+    id: partnerId(3),
+    companyId: HANBIT,
+    kind: 'CLIENT',
+    name: '옛날상가',
+    contactName: '정사장',
+    phone: '031-000-0103',
+    memo: '2024년 공사 완료, 이후 거래 없음',
+    isActive: false,
+  },
+  {
+    id: partnerId(4),
+    companyId: HANBIT,
+    kind: 'SUBCONTRACTOR',
+    name: '대성전기',
+    contactName: '문반장',
+    phone: '010-0000-0201',
+    memo: '전기 배선 외주',
+  },
+  {
+    id: partnerId(5),
+    companyId: HANBIT,
+    kind: 'SUBCONTRACTOR',
+    name: '든든도장',
+    contactName: '하사장',
+    phone: '010-0000-0202',
+  },
+  {
+    id: partnerId(6),
+    companyId: HANBIT,
+    kind: 'SUPPLIER',
+    name: '대한철강',
+    contactName: '김영업',
+    phone: '02-0000-0301',
+    memo: '아연도강판 납품, 주문 후 2일',
+  },
+  {
+    id: partnerId(7),
+    companyId: HANBIT,
+    kind: 'SUPPLIER',
+    name: '새한볼트',
+    phone: '032-000-0302',
+  },
+  {
+    id: partnerId(8),
+    companyId: SAERON,
+    kind: 'CLIENT',
+    name: '푸른학교',
+    contactName: '이행정',
+    phone: '02-0000-0401',
+  },
+  {
+    id: partnerId(9),
+    companyId: SAERON,
+    kind: 'SUPPLIER',
+    name: '한빛전선',
+    contactName: '조영업',
+    phone: '02-0000-0402',
   },
 ];
 

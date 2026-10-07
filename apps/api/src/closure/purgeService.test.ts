@@ -63,6 +63,14 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       phone: '010-0000-0000',
     },
   });
+  await db.owner.partner.create({
+    data: {
+      companyId: account.companyId,
+      kind: 'CLIENT',
+      name: '삭제될 고객',
+      nameKey: '삭제될 고객',
+    },
+  });
   await h.sessionStore.create(account);
   await h.closure.request(account, OLD_PASSWORD);
 
@@ -89,6 +97,7 @@ describe('삭제·익명화', () => {
     expect(await db.owner.memo.count({ where })).toBe(0);
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
+    expect(await db.owner.partner.count({ where })).toBe(0);
     expect(await db.owner.session.count({ where })).toBe(0);
     expect(await db.owner.userCredential.count({ where })).toBe(0);
     expect(await db.owner.invitation.count({ where })).toBe(0);

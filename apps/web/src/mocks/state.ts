@@ -6,10 +6,11 @@ import {
   type Device,
   type EmployeeDetail,
   type OptionItem,
+  type PartnerDetail,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS, DEMO_DEVICES, MOCK_SESSION_STORAGE_KEY, type MockAccount } from './data';
-import { DEMO_EMPLOYEES } from './demoSource';
+import { DEMO_EMPLOYEES, DEMO_PARTNERS } from './demoSource';
 
 // 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
@@ -217,6 +218,33 @@ export const getEmployees = (account: MockAccount): EmployeeDetail[] => {
 
 export const saveEmployees = (account: MockAccount, employees: EmployeeDetail[]) => {
   account.employees = employees;
+  persist();
+};
+
+// 명부: 처음 조회할 때 더미 업체(DB 시드와 같은 원본)로 채움
+export const getPartners = (account: MockAccount): PartnerDetail[] => {
+  if (!account.partners) {
+    account.partners = DEMO_PARTNERS.filter((item) => item.companyId === account.companyId).map(
+      (item) => ({
+        id: item.id,
+        kind: item.kind,
+        name: item.name,
+        contactName: item.contactName ?? null,
+        phone: item.phone ?? null,
+        memo: item.memo ?? null,
+        isActive: item.isActive ?? true,
+        createdAt: '2026-10-01T00:00:00.000Z',
+        updatedAt: '2026-10-01T00:00:00.000Z',
+      }),
+    );
+    persist();
+  }
+
+  return account.partners;
+};
+
+export const savePartners = (account: MockAccount, partners: PartnerDetail[]) => {
+  account.partners = partners;
   persist();
 };
 

@@ -6,7 +6,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { useOptions } from '../settings/useOptions';
 
-import { splitServerErrors } from './errors';
+import { splitServerErrors } from '../lib/serverErrors';
 import { OptionSelect } from './OptionSelect';
 import { useCreateEmployee } from './useEmployees';
 

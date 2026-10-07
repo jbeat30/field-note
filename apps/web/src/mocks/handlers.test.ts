@@ -10,6 +10,9 @@ import {
   employeesResponseSchema,
   OPTION_KINDS,
   OPTION_PRESETS,
+  PARTNER_KINDS,
+  partnerDetailSchema,
+  partnersResponseSchema,
   optionItemSchema,
   optionsResponseSchema,
   signupResponseSchema,
@@ -493,6 +496,93 @@ describe('목업 서버 계약', () => {
 
     expect(
       employeesResponseSchema.parse(filtered.data).items.every((item) => item.status === 'LEFT'),
+    ).toBe(true);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 60_000);
+
+  it('명부: 구분·상호만으로 등록, 목록엔 연락처 제외, 구분별 중복·숨기기 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/partners')).response.status).toBe(401);
+
+    await login();
+
+    const listed = await client.GET('/api/v1/partners');
+    const list = partnersResponseSchema.parse(listed.data);
+
+    expect(list.items.length).toBeGreaterThan(0);
+    expect(JSON.stringify(listed.data)).not.toMatch(/phone|memo/);
+    // 구분 순서(고객 → 협력업체 → 공급처)
+    expect(list.items.map((item) => item.kind)).toEqual(
+      [...list.items.map((item) => item.kind)].sort(
+        (a, b) => PARTNER_KINDS.indexOf(a) - PARTNER_KINDS.indexOf(b),
+      ),
+    );
+
+    const created = await client.POST('/api/v1/partners', {
+      body: { kind: 'CLIENT', name: '  신규고객 ' },
+    });
+    const card = partnerDetailSchema.parse(created.data);
+
+    expect(created.response.status).toBe(201);
+    expect(card).toMatchObject({ name: '신규고객', isActive: true, phone: null });
+
+    // 같은 구분의 같은 상호(공백·대소문자 차이 포함)는 거부, 다른 구분은 허용
+    expect(
+      (await client.POST('/api/v1/partners', { body: { kind: 'CLIENT', name: ' 신규 고객' } }))
+        .response.status,
+    ).toBe(201);
+    expect(
+      (await client.POST('/api/v1/partners', { body: { kind: 'CLIENT', name: '신규  고객 ' } }))
+        .response.status,
+    ).toBe(400);
+    expect(
+      (await client.POST('/api/v1/partners', { body: { kind: 'SUPPLIER', name: '신규고객' } }))
+        .response.status,
+    ).toBe(201);
+
+    for (const body of [
+      { kind: 'CLIENT', name: '   ' },
+      { kind: 'CLIENT', name: '가', phone: 'abc' },
+      { name: '가' },
+    ]) {
+      expect((await client.POST('/api/v1/partners', { body: body as never })).response.status).toBe(
+        400,
+      );
+    }
+
+    const patched = await client.PATCH('/api/v1/partners/{id}', {
+      params: { path: { id: card.id } },
+      body: { contactName: '담당', phone: '02-111-2222', isActive: false },
+    });
+
+    expect(partnerDetailSchema.parse(patched.data)).toMatchObject({
+      contactName: '담당',
+      isActive: false,
+    });
+
+    const cleared = await client.PATCH('/api/v1/partners/{id}', {
+      params: { path: { id: card.id } },
+      body: { contactName: null, phone: null },
+    });
+
+    expect(partnerDetailSchema.parse(cleared.data)).toMatchObject({
+      contactName: null,
+      phone: null,
+      isActive: false,
+    });
+    expect(
+      (
+        await client.PATCH('/api/v1/partners/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+          body: { name: '가' },
+        })
+      ).response.status,
+    ).toBe(404);
+    expect(
+      partnersResponseSchema
+        .parse(
+          (await client.GET('/api/v1/partners', { params: { query: { kind: 'SUPPLIER' } } })).data,
+        )
+        .items.every((item) => item.kind === 'SUPPLIER'),
     ).toBe(true);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 60_000);

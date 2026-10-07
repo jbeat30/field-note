@@ -1,9 +1,15 @@
 import { createHash } from 'node:crypto';
 
-import { OPTION_KINDS, OPTION_PRESETS, normalizeOptionName } from '@field-note/shared';
+import {
+  OPTION_KINDS,
+  OPTION_PRESETS,
+  normalizeOptionName,
+  normalizePartnerName,
+} from '@field-note/shared';
 import {
   DEMO_ACCOUNTS,
   DEMO_EMPLOYEES,
+  DEMO_PARTNERS,
   DEMO_INVITATION,
   DEMO_LEGAL_DOCUMENTS,
 } from '@field-note/shared/demo';
@@ -19,6 +25,7 @@ export type SeedResult = {
   documents: number;
   invitations: number;
   employees: number;
+  partners: number;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -162,6 +169,25 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     });
   }
 
+  // 고객·협력업체·자재 공급처 명부 (처음 한 번만 만들고, 이후 화면에서 바꾼 값은 시드가 되돌리지 않음)
+  for (const partner of DEMO_PARTNERS) {
+    await prisma.partner.upsert({
+      where: { companyId_id: { companyId: partner.companyId, id: partner.id } },
+      update: {},
+      create: {
+        id: partner.id,
+        companyId: partner.companyId,
+        kind: partner.kind,
+        name: partner.name,
+        nameKey: normalizePartnerName(partner.name),
+        contactName: partner.contactName ?? null,
+        phone: partner.phone ?? null,
+        memo: partner.memo ?? null,
+        isActive: partner.isActive ?? true,
+      },
+    });
+  }
+
   // 가입 전 회사: 운영자 CLI가 만드는 것과 같은 구조(초대 상태 관리자 + 해시만 저장된 초대 링크)
   await prisma.company.upsert({
     where: { id: DEMO_INVITATION.companyId },
@@ -199,5 +225,6 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     documents: documents.length,
     invitations: 1,
     employees: DEMO_EMPLOYEES.length,
+    partners: DEMO_PARTNERS.length,
   };
 };
