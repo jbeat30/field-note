@@ -650,3 +650,52 @@ export const ShrinkBlockedByAssignments: Story = {
     await expect(await canvas.findByText(/투입 \d건이 새 기간 밖에 있습니다/)).toBeInTheDocument();
   },
 };
+
+// 더미 일지: 저장 3건(공수 합 7.0 MD) + 임시 저장 1건은 집계 제외
+export const WorkSummary: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const summary = within(await canvas.findByRole('region', { name: '공수 집계' }));
+
+    await expect(
+      await summary.findByText('7.0 MD (56시간)', { selector: 'dd' }),
+    ).toBeInTheDocument();
+    await expect(summary.getByText('0.32 MM')).toBeInTheDocument();
+    await expect(
+      summary.getByText(/임시 저장 일지 1건은 집계에 포함되지 않았습니다/),
+    ).toBeInTheDocument();
+    await expect(summary.getByText('6%')).toBeInTheDocument();
+
+    const employees = within(summary.getByRole('list', { name: '직원별 공수' }));
+
+    await expect(employees.getByText('정판금')).toBeInTheDocument();
+    await expect(employees.getByText('한용접')).toBeInTheDocument();
+    await expect(
+      within(summary.getByRole('list', { name: '작업 구분별 공수' })).getByText('설치'),
+    ).toBeInTheDocument();
+    await expect(summary.getByRole('list', { name: '기간별 공수' })).toBeInTheDocument();
+  },
+};
+
+export const WorkSummaryDateRangeAndMonthly: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const summary = within(await canvas.findByRole('region', { name: '공수 집계' }));
+
+    await summary.findByRole('list', { name: '직원별 공수' });
+    await fireEvent.change(summary.getByLabelText('집계 시작일'), {
+      target: { value: '2026-09-02' },
+    });
+    await fireEvent.change(summary.getByLabelText('집계 종료일'), {
+      target: { value: '2026-09-02' },
+    });
+
+    await waitFor(() =>
+      expect(summary.getByText('2.0 MD (16시간)', { selector: 'dd' })).toBeInTheDocument(),
+    );
+    await expect(summary.getByText('기간 선택 중에는 표시하지 않음')).toBeInTheDocument();
+
+    await userEvent.selectOptions(summary.getByLabelText('기간 묶음'), '월별');
+    await expect(await summary.findByText('2026-09월')).toBeInTheDocument();
+  },
+};

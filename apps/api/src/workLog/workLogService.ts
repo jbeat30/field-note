@@ -3,6 +3,8 @@ import {
   checkWorkDate,
   dailyOverMinutes,
   isLateInput,
+  summarizeEmployeeWork,
+  summarizeProjectWork,
   todayInSeoul,
   validateWorkLogForSave,
   workLogSnapshotSchema,
@@ -13,6 +15,9 @@ import {
   type WorkLogSave,
   type WorkLogSummary,
   type WorkLogWarning,
+  type EmployeeWorkHistory,
+  type WorkSummary,
+  type WorkSummaryQuery,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -48,6 +53,10 @@ export type WorkLogService = {
   ) => Promise<WorkLog>;
   // 수정 이력 (최근이 맨 앞)
   revisions: (companyId: string, projectId: string, workDate: string) => Promise<WorkLogRevision[]>;
+  // 프로젝트 공수 집계 (직원별·작업 구분별·기간별). 저장된 일지만 반영
+  summary: (companyId: string, projectId: string, query: WorkSummaryQuery) => Promise<WorkSummary>;
+  // 직원 카드의 프로젝트별 투입 이력과 이번 달·올해 공수
+  employeeHistory: (companyId: string, employeeId: string) => Promise<EmployeeWorkHistory>;
 };
 
 type LogRow = Prisma.WorkLogGetPayload<{ include: { entries: true } }>;
@@ -221,6 +230,87 @@ export const createWorkLogService = (
       });
 
       return rows.map(toSummary);
+    }),
+
+  summary: (companyId, projectId, { from, to, unit }) =>
+    withCompany(app, companyId, async (tx) => {
+      if (!(await tx.project.findFirst({ where: { id: projectId }, select: { id: true } }))) {
+        throw new WorkLogError('NOT_FOUND');
+      }
+
+      const range = {
+        gte: from ? toDate(from) : undefined,
+        lte: to ? toDate(to) : undefined,
+      };
+      const [saved, draftLogCount, assignments] = await Promise.all([
+        tx.workLog.findMany({
+          where: { projectId, status: 'SAVED', workDate: range },
+          include: { entries: true },
+        }),
+        tx.workLog.count({ where: { projectId, status: 'DRAFT', workDate: range } }),
+        tx.projectAssignment.findMany({
+          where: { projectId, cancelledAt: null },
+          select: { employeeId: true, plannedMinutes: true },
+        }),
+      ]);
+
+      return summarizeProjectWork({
+        entries: saved.flatMap((log) =>
+          log.entries.map((entry) => ({
+            workDate: fromDate(log.workDate),
+            employeeId: entry.employeeId,
+            categoryId: entry.categoryId,
+            minutes: entry.minutes,
+          })),
+        ),
+        savedLogCount: saved.length,
+        draftLogCount,
+        assignments,
+        unit: unit ?? 'week',
+      });
+    }),
+
+  employeeHistory: (companyId, employeeId) =>
+    withCompany(app, companyId, async (tx) => {
+      if (!(await tx.employee.findFirst({ where: { id: employeeId }, select: { id: true } }))) {
+        throw new WorkLogError('NOT_FOUND');
+      }
+
+      const [entries, assignments] = await Promise.all([
+        tx.workLogEntry.findMany({
+          where: { employeeId, workLog: { status: 'SAVED' } },
+          select: { minutes: true, workLog: { select: { projectId: true, workDate: true } } },
+        }),
+        tx.projectAssignment.findMany({
+          where: { employeeId, cancelledAt: null },
+          select: { projectId: true, startDate: true, endDate: true },
+        }),
+      ]);
+      const projectIds = [
+        ...new Set([
+          ...entries.map((entry) => entry.workLog.projectId),
+          ...assignments.map((assignment) => assignment.projectId),
+        ]),
+      ];
+      const projects = await tx.project.findMany({
+        where: { id: { in: projectIds } },
+        select: { id: true, code: true, name: true },
+      });
+
+      return summarizeEmployeeWork({
+        entries: entries.map((entry) => ({
+          projectId: entry.workLog.projectId,
+          workDate: fromDate(entry.workLog.workDate),
+          minutes: entry.minutes,
+        })),
+        assignments: assignments.map((assignment) => ({
+          projectId: assignment.projectId,
+          startDate: fromDate(assignment.startDate),
+          endDate: fromDate(assignment.endDate),
+        })),
+        projects: new Map(projects.map((project) => [project.id, project])),
+        today: todayInSeoul(now()),
+      });
     }),
 
   get: (companyId, projectId, workDate) =>

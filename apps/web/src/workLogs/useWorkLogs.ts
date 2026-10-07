@@ -80,6 +80,7 @@ export const useSaveWorkLog = (projectId: string) => {
           queryKey: queryKeys.workLogRevisions(projectId, saved.workDate),
         }),
         queryClient.invalidateQueries({ queryKey: ['assignments'] }),
+        queryClient.invalidateQueries({ queryKey: ['work-summary'] }),
       ]);
     },
   });

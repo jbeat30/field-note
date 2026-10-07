@@ -17,6 +17,8 @@ import {
   workLogRevisionsSchema,
   workLogSchema,
   workLogsResponseSchema,
+  workSummarySchema,
+  employeeWorkHistorySchema,
   assignmentsResponseSchema,
   projectPeriodHistorySchema,
   projectStatusHistorySchema,
@@ -1125,6 +1127,69 @@ describe('목업 서버 계약', () => {
     ).toBe(404);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 120_000);
+
+  it('공수 집계: 저장된 일지만 직원별·작업 구분별·주별로 합산하고 직원 이력은 프로젝트별로 나온다', async () => {
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000301' }, query: {} },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const projects = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects')).data,
+    ).items;
+    const a = projects.find((item) => item.code === '2026-001')!;
+    const summary = workSummarySchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary', {
+          params: { path: { id: a.id }, query: {} },
+        })
+      ).data,
+    );
+
+    // 더미 일지: A동은 저장 3건 + 임시 저장 1건
+    expect(summary.savedLogCount).toBe(3);
+    expect(summary.draftLogCount).toBe(1);
+    expect(summary.totalMinutes).toBe(480 * 6 + 240 * 2 + 0);
+    expect(summary.byEmployee.length).toBeGreaterThan(0);
+
+    const ranged = workSummarySchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary', {
+          params: {
+            path: { id: a.id },
+            query: { from: '2026-09-02', to: '2026-09-02', unit: 'month' },
+          },
+        })
+      ).data,
+    );
+
+    expect(ranged.savedLogCount).toBe(1);
+    expect(ranged.byPeriod).toEqual([{ periodStart: '2026-09-01', totalMinutes: 960 }]);
+
+    const employeeId = summary.byEmployee[0]!.employeeId;
+    const history = employeeWorkHistorySchema.parse(
+      (
+        await client.GET('/api/v1/employees/{id}/work-history', {
+          params: { path: { id: employeeId } },
+        })
+      ).data,
+    );
+
+    expect(history.projects.length).toBeGreaterThan(0);
+    expect(history.totalMinutes).toBeGreaterThan(0);
+    expect(
+      (
+        await client.GET('/api/v1/employees/{id}/work-history', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+  }, 60_000);
 
   it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
     await login();
