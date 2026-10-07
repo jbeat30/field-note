@@ -10,6 +10,7 @@ import {
   DEMO_ACCOUNTS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
+  DEMO_PROJECTS,
   DEMO_INVITATION,
   DEMO_LEGAL_DOCUMENTS,
 } from '@field-note/shared/demo';
@@ -26,6 +27,7 @@ export type SeedResult = {
   invitations: number;
   employees: number;
   partners: number;
+  projects: number;
 };
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -138,6 +140,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   const toDate = (value?: string) => (value ? new Date(`${value}T00:00:00.000Z`) : null);
+  const requiredDate = (value: string) => new Date(`${value}T00:00:00.000Z`);
 
   for (const employee of DEMO_EMPLOYEES) {
     const optionId = async (kind: 'JOB_TYPE' | 'WORKER_TYPE', name?: string) =>
@@ -188,6 +191,88 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     });
   }
 
+  // 프로젝트 (고객·담당자·공종은 이름으로 찾아 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
+  for (const project of DEMO_PROJECTS) {
+    const byName = async (kind: 'JOB_TYPE' | 'TRADE', name: string) =>
+      (
+        await prisma.optionItem.findFirstOrThrow({
+          where: { companyId: project.companyId, kind, nameKey: normalizeOptionName(name) },
+        })
+      ).id;
+    const client = await prisma.partner.findFirstOrThrow({
+      where: {
+        companyId: project.companyId,
+        kind: 'CLIENT',
+        nameKey: normalizePartnerName(project.clientName),
+      },
+    });
+    const manager = await prisma.employee.findFirstOrThrow({
+      where: { companyId: project.companyId, name: project.managerName },
+    });
+    const tradeIds = await Promise.all(project.trades.map((name) => byName('TRADE', name)));
+
+    await prisma.project.upsert({
+      where: { companyId_id: { companyId: project.companyId, id: project.id } },
+      update: {},
+      create: {
+        id: project.id,
+        companyId: project.companyId,
+        code: project.code,
+        name: project.name,
+        status: project.status,
+        siteName: project.siteName,
+        siteAddress: project.siteAddress ?? null,
+        siteMapUrl: project.siteMapUrl ?? null,
+        siteContactName: project.siteContactName ?? null,
+        siteContactPhone: project.siteContactPhone ?? null,
+        accessMemo: project.accessMemo ?? null,
+        clientId: client.id,
+        managerId: manager.id,
+        contractDate: requiredDate(project.contractDate),
+        plannedStart: requiredDate(project.plannedStart),
+        plannedEnd: requiredDate(project.plannedEnd),
+        memo: project.memo ?? null,
+      },
+    });
+    await prisma.projectTrade.createMany({
+      data: tradeIds.map((tradeId) => ({
+        companyId: project.companyId,
+        projectId: project.id,
+        tradeId,
+      })),
+      skipDuplicates: true,
+    });
+  }
+
+  // 코드 번호표를 시드의 마지막 번호에 맞춰 화면에서 새로 등록하면 이어서 붙게 함 (이미 더 큰 번호가 있으면 유지)
+  const lastNumbers = new Map<string, { companyId: string; year: number; last: number }>();
+
+  for (const project of DEMO_PROJECTS) {
+    const [year, number] = project.code.split('-').map(Number) as [number, number];
+    const key = `${project.companyId}:${year}`;
+    const known = lastNumbers.get(key);
+
+    lastNumbers.set(key, {
+      companyId: project.companyId,
+      year,
+      last: Math.max(known?.last ?? 0, number),
+    });
+  }
+
+  for (const { companyId, year, last } of lastNumbers.values()) {
+    const current = await prisma.projectCodeSequence.findUnique({
+      where: { companyId_year: { companyId, year } },
+    });
+
+    if (!current || current.lastNumber < last) {
+      await prisma.projectCodeSequence.upsert({
+        where: { companyId_year: { companyId, year } },
+        update: { lastNumber: last },
+        create: { companyId, year, lastNumber: last },
+      });
+    }
+  }
+
   // 가입 전 회사: 운영자 CLI가 만드는 것과 같은 구조(초대 상태 관리자 + 해시만 저장된 초대 링크)
   await prisma.company.upsert({
     where: { id: DEMO_INVITATION.companyId },
@@ -226,5 +311,6 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     invitations: 1,
     employees: DEMO_EMPLOYEES.length,
     partners: DEMO_PARTNERS.length,
+    projects: DEMO_PROJECTS.length,
   };
 };

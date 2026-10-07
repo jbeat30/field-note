@@ -50,13 +50,13 @@ export const purgeCompany = (
     const deleted: Record<string, number> = {};
     const where = { companyId };
 
-    // 외래 키 순서: 메모 → 프로젝트 → 나머지 (소속 행이 먼저)
-    // 직원이 선택 목록 항목을 참조하므로 직원을 먼저 삭제
+    // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
+    deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
+    deleted.projects = (await tx.project.deleteMany({ where })).count;
+    deleted.project_code_sequences = (await tx.projectCodeSequence.deleteMany({ where })).count;
     deleted.employees = (await tx.employee.deleteMany({ where })).count;
     deleted.partners = (await tx.partner.deleteMany({ where })).count;
     deleted.option_items = (await tx.optionItem.deleteMany({ where })).count;
-    deleted.memos = (await tx.memo.deleteMany({ where })).count;
-    deleted.projects = (await tx.project.deleteMany({ where })).count;
     deleted.sessions = (await tx.session.deleteMany({ where })).count;
     deleted.invitations = (await tx.invitation.deleteMany({ where })).count;
     deleted.email_verifications = (await tx.emailVerification.deleteMany({ where })).count;

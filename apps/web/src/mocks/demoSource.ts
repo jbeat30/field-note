@@ -6,6 +6,7 @@ export {
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
   DEMO_PARTNERS,
+  DEMO_PROJECTS,
 } from '@field-note/shared/demo';
 
 // 목업 응답에는 시드 전용 필드(본문 초안, 시행일)를 싣지 않고 화면에 필요한 요약만 사용

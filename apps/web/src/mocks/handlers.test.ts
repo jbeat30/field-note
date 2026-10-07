@@ -11,6 +11,8 @@ import {
   OPTION_KINDS,
   OPTION_PRESETS,
   PARTNER_KINDS,
+  projectDetailSchema,
+  projectsResponseSchema,
   partnerDetailSchema,
   partnersResponseSchema,
   optionItemSchema,
@@ -586,6 +588,126 @@ describe('목업 서버 계약', () => {
     ).toBe(true);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 60_000);
+
+  it('프로젝트: 코드 자동 번호, 필수 항목·참조 검사, 필터와 수정 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/projects')).response.status).toBe(401);
+
+    await login();
+
+    const listed = projectsResponseSchema.parse((await client.GET('/api/v1/projects')).data);
+    const options = optionsResponseSchema.parse(
+      (await client.GET('/api/v1/company/options')).data,
+    ).items;
+    const partners = partnersResponseSchema.parse(
+      (await client.GET('/api/v1/partners')).data,
+    ).items;
+    const employees = employeesResponseSchema.parse(
+      (await client.GET('/api/v1/employees')).data,
+    ).items;
+    const clientId = partners.find((item) => item.kind === 'CLIENT' && item.isActive)!.id;
+    const supplierId = partners.find((item) => item.kind === 'SUPPLIER')!.id;
+    const managerId = employees.find((item) => item.status === 'ACTIVE')!.id;
+    const leftId = employees.find((item) => item.status === 'LEFT')!.id;
+    const trade = options.find((item) => item.kind === 'TRADE')!.id;
+    const body = {
+      name: '  새 프로젝트 ',
+      siteName: '새 현장',
+      clientId,
+      managerId,
+      contractDate: '2026-10-01',
+      plannedStart: '2026-10-10',
+      plannedEnd: '2026-12-31',
+    };
+
+    // 최근 등록순(코드 숫자 순서), 목록에는 현장 연락처·출입 메모·계약일이 없다
+    expect(JSON.stringify(listed)).not.toMatch(/siteContact|accessMemo|contractDate/);
+    expect(listed.items.length).toBeGreaterThan(0);
+
+    const created = await client.POST('/api/v1/projects', { body: { ...body, tradeIds: [trade] } });
+    const card = projectDetailSchema.parse(created.data);
+
+    expect(created.response.status).toBe(201);
+    expect(card).toMatchObject({ name: '새 프로젝트', status: 'PLANNED', tradeIds: [trade] });
+    expect(card.code).toMatch(/^\d{4}-\d{3,}$/);
+
+    const second = projectDetailSchema.parse(
+      (await client.POST('/api/v1/projects', { body: { ...body, name: '둘째' } })).data,
+    );
+
+    expect(Number(second.code.split('-')[1])).toBe(Number(card.code.split('-')[1]) + 1);
+
+    // 필수 항목 누락·기간 순서·참조 규칙 위반은 거부
+    for (const patch of [
+      { name: '   ' },
+      { plannedEnd: '2026-09-01' },
+      { siteMapUrl: 'javascript:alert(1)' },
+      { clientId: supplierId },
+      { managerId: leftId },
+      { tradeIds: [options.find((item) => item.kind === 'JOB_TYPE')!.id] },
+    ]) {
+      expect(
+        (await client.POST('/api/v1/projects', { body: { ...body, ...patch } })).response.status,
+      ).toBe(400);
+    }
+
+    const filtered = projectsResponseSchema.parse(
+      (
+        await client.GET('/api/v1/projects', {
+          params: { query: { status: 'PLANNED', sort: 'name' } },
+        })
+      ).data,
+    );
+
+    expect(filtered.items.every((item) => item.status === 'PLANNED')).toBe(true);
+
+    // 수정: 보낸 항목만 바꾸고 null로 비우며, 코드·상태는 바꿀 수 없다
+    const patched = await client.PATCH('/api/v1/projects/{id}', {
+      params: { path: { id: card.id } },
+      body: { name: '고침', siteAddress: '주소', tradeIds: [] },
+    });
+
+    expect(projectDetailSchema.parse(patched.data)).toMatchObject({
+      name: '고침',
+      siteAddress: '주소',
+      tradeIds: [],
+      code: card.code,
+      status: 'PLANNED',
+    });
+    expect(
+      projectDetailSchema.parse(
+        (
+          await client.PATCH('/api/v1/projects/{id}', {
+            params: { path: { id: card.id } },
+            body: { siteAddress: null },
+          })
+        ).data,
+      ).siteAddress,
+    ).toBeNull();
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          params: { path: { id: card.id } },
+          body: { plannedEnd: '2026-01-01' },
+        })
+      ).response.status,
+    ).toBe(400);
+    expect(
+      (
+        await client.PATCH('/api/v1/projects/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+          body: { name: '가' },
+        })
+      ).response.status,
+    ).toBe(404);
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+        })
+      ).response.status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 90_000);
 
   it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
     await login();

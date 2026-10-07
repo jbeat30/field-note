@@ -3,6 +3,7 @@ import {
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
   DEMO_PARTNERS,
+  DEMO_PROJECTS,
 } from '@field-note/shared/demo';
 
 import { verifyPassword } from '../auth/password';
@@ -181,5 +182,44 @@ describe('seedDemoData', () => {
 
     expect(visible).toHaveLength(count(saeron.companyId));
     expect(visible.every((item) => item.companyId === saeron.companyId)).toBe(true);
+  });
+
+  it('더미 프로젝트를 고객·담당자·공종과 연결해 넣고 코드 번호표가 이어서 붙게 맞춘다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_PROJECTS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.project.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.project.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+
+    const duct = await db.owner.project.findFirstOrThrow({
+      where: { companyId: hanbit.companyId, code: '2026-003' },
+      include: { client: true, manager: true, trades: { include: { trade: true } } },
+    });
+
+    expect(duct.status).toBe('SUSPENDED');
+    expect(duct.client.name).toBe('가나다건설');
+    expect(duct.manager.name).toBe('최설치');
+    expect(duct.trades.map((item) => item.trade.name).sort()).toEqual(['설비', '판금']);
+
+    // 번호표: 한빛판금 2026년은 4번까지, 2025년은 12번까지 썼으므로 다음 번호는 5번·13번
+    const sequences = await db.owner.projectCodeSequence.findMany({
+      where: { companyId: hanbit.companyId },
+      orderBy: { year: 'asc' },
+    });
+
+    expect(sequences.map((item) => [item.year, item.lastNumber])).toEqual([
+      [2025, 12],
+      [2026, 4],
+    ]);
+
+    const visible = await withCompany(db.app, saeron.companyId, (tx) => tx.project.findMany());
+
+    expect(visible).toHaveLength(count(saeron.companyId));
   });
 });
