@@ -1,4 +1,9 @@
-import { DEMO_ACCOUNTS, DEMO_EMPLOYEES, DEMO_INVITATION } from '@field-note/shared/demo';
+import {
+  DEMO_ACCOUNTS,
+  DEMO_EMPLOYEES,
+  DEMO_INVITATION,
+  DEMO_PARTNERS,
+} from '@field-note/shared/demo';
 
 import { verifyPassword } from '../auth/password';
 import { createPrismaInvitationStore } from '../invitation/invitationStore';
@@ -153,5 +158,28 @@ describe('seedDemoData', () => {
 
     expect(phones.length).toBeGreaterThan(0);
     expect(phones.every((phone) => /^010-0000-\d{4}$/.test(phone))).toBe(true);
+  });
+
+  it('더미 명부를 회사별로 넣고 다시 실행해도 늘지 않으며 앱 계정은 자기 회사 것만 본다', async () => {
+    await seedDemoData(db.owner);
+
+    const count = (companyId: string) =>
+      DEMO_PARTNERS.filter((item) => item.companyId === companyId).length;
+
+    expect(await db.owner.partner.count({ where: { companyId: hanbit.companyId } })).toBe(
+      count(hanbit.companyId),
+    );
+    expect(await db.owner.partner.count({ where: { companyId: saeron.companyId } })).toBe(
+      count(saeron.companyId),
+    );
+    // 숨긴 업체도 시드에 있어 화면에서 숨김 표시를 확인할 수 있음
+    expect(
+      await db.owner.partner.count({ where: { companyId: hanbit.companyId, isActive: false } }),
+    ).toBe(1);
+
+    const visible = await withCompany(db.app, saeron.companyId, (tx) => tx.partner.findMany());
+
+    expect(visible).toHaveLength(count(saeron.companyId));
+    expect(visible.every((item) => item.companyId === saeron.companyId)).toBe(true);
   });
 });
