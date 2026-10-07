@@ -51,6 +51,7 @@ export const purgeCompany = (
     const where = { companyId };
 
     // 외래 키 순서: 메모 → 프로젝트 → 나머지 (소속 행이 먼저)
+    deleted.option_items = (await tx.optionItem.deleteMany({ where })).count;
     deleted.memos = (await tx.memo.deleteMany({ where })).count;
     deleted.projects = (await tx.project.deleteMany({ where })).count;
     deleted.sessions = (await tx.session.deleteMany({ where })).count;

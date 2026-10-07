@@ -4682,6 +4682,893 @@
         }
       }
     },
+    "/api/v1/company/options": {
+      "get": {
+        "summary": "선택 목록 전체 조회 (직종·작업 구분·공종·직원 구분, 처음에는 프리셋으로 채움)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "JOB_TYPE",
+                              "WORK_CATEGORY",
+                              "TRADE",
+                              "WORKER_TYPE"
+                            ]
+                          },
+                          "name": {
+                            "type": "string"
+                          },
+                          "isActive": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "kind",
+                          "name",
+                          "isActive"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "post": {
+        "summary": "선택 목록 항목 추가",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "JOB_TYPE",
+                      "WORK_CATEGORY",
+                      "TRADE",
+                      "WORKER_TYPE"
+                    ]
+                  },
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30
+                  }
+                },
+                "required": [
+                  "kind",
+                  "name"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "JOB_TYPE",
+                        "WORK_CATEGORY",
+                        "TRADE",
+                        "WORKER_TYPE"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "name",
+                    "isActive"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/company/options/order": {
+      "put": {
+        "summary": "선택 목록 순서 변경 (해당 종류의 모든 항목을 원하는 순서로)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "kind": {
+                    "type": "string",
+                    "enum": [
+                      "JOB_TYPE",
+                      "WORK_CATEGORY",
+                      "TRADE",
+                      "WORKER_TYPE"
+                    ]
+                  },
+                  "ids": {
+                    "type": "array",
+                    "items": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "minItems": 1,
+                    "maxItems": 100
+                  }
+                },
+                "required": [
+                  "kind",
+                  "ids"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/company/options/{id}": {
+      "patch": {
+        "summary": "선택 목록 항목 이름 변경·숨기기",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 30
+                  },
+                  "isActive": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "kind": {
+                      "type": "string",
+                      "enum": [
+                        "JOB_TYPE",
+                        "WORK_CATEGORY",
+                        "TRADE",
+                        "WORKER_TYPE"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "isActive": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "kind",
+                    "name",
+                    "isActive"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/social/providers": {
       "get": {
         "summary": "사용 가능한 소셜 로그인 제공자",

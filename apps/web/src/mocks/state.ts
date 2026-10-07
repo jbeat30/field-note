@@ -1,4 +1,10 @@
-import type { CompanySettings, Device } from '@field-note/shared';
+import {
+  OPTION_KINDS,
+  OPTION_PRESETS,
+  type CompanySettings,
+  type Device,
+  type OptionItem,
+} from '@field-note/shared';
 
 import { DEMO_ACCOUNTS, DEMO_DEVICES, MOCK_SESSION_STORAGE_KEY, type MockAccount } from './data';
 
@@ -148,6 +154,28 @@ export const cancelClosure = (account: MockAccount) => {
 
 // 취소 링크가 가리키는 해지 중 계정 (시연용 링크는 하나라 해지 중인 첫 계정)
 export const findClosingAccount = () => state.accounts.find((account) => account.closingPurgeAfter);
+
+// 선택 목록: 처음 조회할 때 프리셋으로 채우고 이후에는 계정에 저장된 목록을 그대로 씀 (종류 순서 → 정해진 순서)
+export const getOptions = (account: MockAccount): OptionItem[] => {
+  if (!account.options) {
+    account.options = OPTION_KINDS.flatMap((kind) =>
+      OPTION_PRESETS[kind].map((name) => ({
+        id: crypto.randomUUID(),
+        kind,
+        name,
+        isActive: true,
+      })),
+    );
+    persist();
+  }
+
+  return account.options;
+};
+
+export const saveOptions = (account: MockAccount, options: OptionItem[]) => {
+  account.options = options;
+  persist();
+};
 
 export const isEmailInUse = (email: string) =>
   state.accounts.some((account) => account.email === email);

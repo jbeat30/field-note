@@ -45,6 +45,15 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
   await db.owner.memo.create({
     data: { companyId: account.companyId, projectId: project.id, content: '삭제될 메모' },
   });
+  await db.owner.optionItem.create({
+    data: {
+      companyId: account.companyId,
+      kind: 'TRADE',
+      name: '삭제될 공종',
+      nameKey: '삭제될 공종',
+      sortOrder: 0,
+    },
+  });
   await h.sessionStore.create(account);
   await h.closure.request(account, OLD_PASSWORD);
 
@@ -69,6 +78,7 @@ describe('삭제·익명화', () => {
     expect(result.anonymizedUsers).toBe(1);
     expect(await db.owner.project.count({ where })).toBe(0);
     expect(await db.owner.memo.count({ where })).toBe(0);
+    expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.session.count({ where })).toBe(0);
     expect(await db.owner.userCredential.count({ where })).toBe(0);
     expect(await db.owner.invitation.count({ where })).toBe(0);

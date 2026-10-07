@@ -5,6 +5,10 @@ import {
   errorResponseSchema,
   invitationResponseSchema,
   meResponseSchema,
+  OPTION_KINDS,
+  OPTION_PRESETS,
+  optionItemSchema,
+  optionsResponseSchema,
   signupResponseSchema,
 } from '@field-note/shared';
 import { setupServer } from 'msw/node';
@@ -297,6 +301,89 @@ describe('목업 서버 계약', () => {
         .response.status,
     ).toBe(404);
   });
+
+  it('선택 목록: 처음에는 프리셋, 추가·이름 변경·숨기기·순서 변경과 중복·격리 규칙이 서버와 같다', async () => {
+    expect((await client.GET('/api/v1/company/options')).response.status).toBe(401);
+
+    await login();
+
+    const first = optionsResponseSchema.parse((await client.GET('/api/v1/company/options')).data);
+
+    for (const kind of OPTION_KINDS) {
+      expect(first.items.filter((item) => item.kind === kind).map((item) => item.name)).toEqual(
+        OPTION_PRESETS[kind],
+      );
+    }
+
+    const created = await client.POST('/api/v1/company/options', {
+      body: { kind: 'TRADE', name: '  도장 ' },
+    });
+
+    expect(created.response.status).toBe(201);
+    expect(optionItemSchema.parse(created.data)).toMatchObject({ name: '도장', isActive: true });
+
+    const duplicate = await client.POST('/api/v1/company/options', {
+      body: { kind: 'TRADE', name: ' 판금 ' },
+    });
+
+    expect(duplicate.response.status).toBe(400);
+    expect(errorResponseSchema.parse(duplicate.error).error.details?.[0]?.path).toBe('body.name');
+    expect(
+      (await client.POST('/api/v1/company/options', { body: { kind: 'JOB_TYPE', name: '도장' } }))
+        .response.status,
+    ).toBe(201);
+
+    const id = created.data!.id;
+    const renamed = await client.PATCH('/api/v1/company/options/{id}', {
+      params: { path: { id } },
+      body: { name: '도장공' },
+    });
+
+    expect(optionItemSchema.parse(renamed.data).name).toBe('도장공');
+    expect(
+      (
+        await client.PATCH('/api/v1/company/options/{id}', {
+          params: { path: { id } },
+          body: { isActive: false },
+        })
+      ).data?.isActive,
+    ).toBe(false);
+    expect(
+      (
+        await client.PATCH('/api/v1/company/options/{id}', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000999' } },
+          body: { isActive: false },
+        })
+      ).response.status,
+    ).toBe(404);
+
+    const trades = optionsResponseSchema
+      .parse((await client.GET('/api/v1/company/options')).data)
+      .items.filter((item) => item.kind === 'TRADE');
+    const reversed = [...trades].reverse().map((item) => item.id);
+
+    expect(
+      (
+        await client.PUT('/api/v1/company/options/order', {
+          body: { kind: 'TRADE', ids: reversed },
+        })
+      ).response.status,
+    ).toBe(200);
+    expect(
+      optionsResponseSchema
+        .parse((await client.GET('/api/v1/company/options')).data)
+        .items.filter((item) => item.kind === 'TRADE')
+        .map((item) => item.id),
+    ).toEqual(reversed);
+    expect(
+      (
+        await client.PUT('/api/v1/company/options/order', {
+          body: { kind: 'TRADE', ids: reversed.slice(1) },
+        })
+      ).response.status,
+    ).toBe(400);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 30_000);
 
   it('로그인 상태 비밀번호 변경: 현재 비밀번호가 틀리면 400, 맞으면 새 비밀번호로 로그인', async () => {
     await login();

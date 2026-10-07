@@ -5,6 +5,13 @@ import {
   companySettingsSchema,
   socialStartRequestSchema,
   emailChangeSchema,
+  normalizeOptionName,
+  OPTION_KINDS,
+  OPTION_MAX_PER_KIND,
+  optionCreateSchema,
+  optionParamsSchema,
+  optionReorderSchema,
+  optionUpdateSchema,
   passwordChangeSchema,
   passwordResetConfirmSchema,
   passwordResetParamsSchema,
@@ -39,6 +46,8 @@ import {
   cancelClosure,
   consumeMockReset,
   findClosingAccount,
+  getOptions,
+  saveOptions,
   startClosure,
   getMockResetTarget,
   isEmailInUse,
@@ -387,6 +396,149 @@ export const handlers = [
     setPassword(account, body.data.newPassword);
 
     return HttpResponse.json({ success: true });
+  }),
+
+  http.get('/api/v1/company/options', async () => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    // 종류 순서대로, 같은 종류 안에서는 정해진 순서 그대로
+    const items = getOptions(account);
+
+    return HttpResponse.json({
+      items: OPTION_KINDS.flatMap((kind) => items.filter((item) => item.kind === kind)),
+    });
+  }),
+
+  http.post('/api/v1/company/options', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, optionCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    const items = getOptions(account);
+    const { kind, name } = body.data;
+    const key = normalizeOptionName(name);
+
+    if (items.some((item) => item.kind === kind && normalizeOptionName(item.name) === key)) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.name', message: '이미 같은 이름이 있습니다' },
+      ]);
+    }
+
+    if (items.filter((item) => item.kind === kind).length >= OPTION_MAX_PER_KIND) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.name', message: '항목은 종류마다 100개까지 만들 수 있습니다' },
+      ]);
+    }
+
+    const created = { id: crypto.randomUUID(), kind, name, isActive: true };
+
+    saveOptions(account, [...items, created]);
+
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.put('/api/v1/company/options/order', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, optionReorderSchema);
+
+    if ('response' in body) return body.response;
+
+    const items = getOptions(account);
+    const sameKind = items.filter((item) => item.kind === body.data.kind);
+    const known = new Set(sameKind.map((item) => item.id));
+    const { ids } = body.data;
+
+    // 서버와 같은 규칙: 해당 종류의 모든 항목을 한 번씩만 보내야 함
+    if (
+      new Set(ids).size !== ids.length ||
+      ids.length !== known.size ||
+      ids.some((id) => !known.has(id))
+    ) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.ids', message: '목록이 바뀌었습니다. 새로 고친 뒤 다시 시도해 주세요' },
+      ]);
+    }
+
+    const byId = new Map(sameKind.map((item) => [item.id, item]));
+    const reordered = ids.map((id) => byId.get(id)!);
+    let cursor = 0;
+
+    // 같은 종류 항목이 있던 자리에 새 순서대로 다시 채워 넣음
+    saveOptions(
+      account,
+      items.map((item) => (item.kind === body.data.kind ? reordered[cursor++]! : item)),
+    );
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.patch('/api/v1/company/options/:id', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsedParams = optionParamsSchema.safeParse(params);
+
+    if (!parsedParams.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, optionUpdateSchema);
+
+    if ('response' in body) return body.response;
+
+    const items = getOptions(account);
+    const target = items.find((item) => item.id === parsedParams.data.id);
+
+    if (!target) return apiError('NOT_FOUND');
+
+    const { name, isActive } = body.data;
+
+    if (
+      name !== undefined &&
+      items.some(
+        (item) =>
+          item.id !== target.id &&
+          item.kind === target.kind &&
+          normalizeOptionName(item.name) === normalizeOptionName(name),
+      )
+    ) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.name', message: '이미 같은 이름이 있습니다' },
+      ]);
+    }
+
+    const updated = { ...target, name: name ?? target.name, isActive: isActive ?? target.isActive };
+
+    saveOptions(
+      account,
+      items.map((item) => (item.id === target.id ? updated : item)),
+    );
+
+    return HttpResponse.json(updated);
   }),
 
   http.post('/api/v1/me/closure', async ({ request }) => {

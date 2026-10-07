@@ -55,6 +55,7 @@ model Company {
   settings           CompanySettings?
   socialAccounts     SocialAccount[]
   closure            CompanyClosure?
+  optionItems        OptionItem[]
 
   @@map("companies")
 }
@@ -292,6 +293,36 @@ model CompanySettings {
   company             Company      @relation(fields: [companyId], references: [id])
 
   @@map("company_settings")
+}
+
+// 회사가 관리하는 선택 목록 종류 (직종·작업 구분·공종·직원 구분)
+enum OptionKind {
+  JOB_TYPE
+  WORK_CATEGORY
+  TRADE
+  WORKER_TYPE
+
+  @@map("option_kind")
+}
+
+// 회사별 선택 목록 항목. 쓰지 않는 항목은 삭제하지 않고 숨김(is_active=false)으로 두어 기록에 쓰인 이름이 사라지지 않게 함
+// name_key는 공백·대소문자 차이를 없앤 비교용 값으로 같은 이름의 중복을 막음
+model OptionItem {
+  companyId String     @map("company_id") @db.Uuid
+  id        String     @default(dbgenerated("uuidv7()")) @db.Uuid
+  kind      OptionKind
+  name      String
+  nameKey   String     @map("name_key")
+  sortOrder Int        @map("sort_order")
+  isActive  Boolean    @default(true) @map("is_active")
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime   @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company   Company    @relation(fields: [companyId], references: [id])
+
+  @@id([companyId, id])
+  @@unique([companyId, kind, nameKey])
+  @@index([companyId, kind, sortOrder])
+  @@map("option_items")
 }
 
 // 소셜 로그인 제공자 (초기에는 카카오, 네이버·구글은 5단계)
