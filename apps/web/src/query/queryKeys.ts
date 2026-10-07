@@ -8,4 +8,5 @@ export const queryKeys = {
   socialProviders: () => ['social-providers', 'all', {}] as const,
   socialMethods: () => ['social-methods', 'current', {}] as const,
   devices: () => ['devices', 'all', {}] as const,
+  options: () => ['options', 'all', {}] as const,
 };

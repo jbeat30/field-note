@@ -1,4 +1,4 @@
-import type { CompanySettings, Device, LegalDocumentSummary } from '@field-note/shared';
+import type { CompanySettings, Device, LegalDocumentSummary, OptionItem } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
 
@@ -18,6 +18,8 @@ export type MockAccount = {
   hasPassword?: boolean;
   // 해지 요청 중이면 삭제 예정 시각 (ISO)
   closingPurgeAfter?: string;
+  // 선택 목록(직종·작업 구분·공종·직원 구분). 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
+  options?: OptionItem[];
 };
 
 // 더미 데이터는 DB 시드와 같은 원본(`@field-note/shared/demo`)을 사용
