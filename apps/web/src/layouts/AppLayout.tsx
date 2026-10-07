@@ -8,6 +8,7 @@ import { useUiStore } from '../stores/uiStore';
 
 const NAV_ITEMS = [
   { to: '/', label: '홈', end: true },
+  { to: '/projects', label: '프로젝트', end: false },
   { to: '/employees', label: '직원', end: false },
   { to: '/partners', label: '명부', end: false },
   { to: '/settings', label: '설정', end: false },

@@ -6,11 +6,13 @@ import {
   type Device,
   type EmployeeDetail,
   type OptionItem,
+  normalizePartnerName,
   type PartnerDetail,
+  type ProjectDetail,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS, DEMO_DEVICES, MOCK_SESSION_STORAGE_KEY, type MockAccount } from './data';
-import { DEMO_EMPLOYEES, DEMO_PARTNERS } from './demoSource';
+import { DEMO_EMPLOYEES, DEMO_PARTNERS, DEMO_PROJECTS } from './demoSource';
 
 // 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
@@ -245,6 +247,65 @@ export const getPartners = (account: MockAccount): PartnerDetail[] => {
 
 export const savePartners = (account: MockAccount, partners: PartnerDetail[]) => {
   account.partners = partners;
+  persist();
+};
+
+// 프로젝트: 처음 조회할 때 더미 프로젝트로 채움 (고객·담당자·공종은 이름으로 연결, DB 시드와 같은 방식)
+export const getProjects = (account: MockAccount): ProjectDetail[] => {
+  if (!account.projects) {
+    const options = getOptions(account);
+    const partners = getPartners(account);
+    const employees = getEmployees(account);
+    const tradeId = (name: string) =>
+      options.find(
+        (item) =>
+          item.kind === 'TRADE' && normalizeOptionName(item.name) === normalizeOptionName(name),
+      )?.id;
+
+    account.projects = DEMO_PROJECTS.filter((item) => item.companyId === account.companyId).flatMap(
+      (item) => {
+        const client = partners.find(
+          (partner) =>
+            partner.kind === 'CLIENT' &&
+            normalizePartnerName(partner.name) === normalizePartnerName(item.clientName),
+        );
+        const manager = employees.find((employee) => employee.name === item.managerName);
+
+        if (!client || !manager) return [];
+
+        return [
+          {
+            id: item.id,
+            code: item.code,
+            name: item.name,
+            status: item.status,
+            siteName: item.siteName,
+            siteAddress: item.siteAddress ?? null,
+            siteMapUrl: item.siteMapUrl ?? null,
+            siteContactName: item.siteContactName ?? null,
+            siteContactPhone: item.siteContactPhone ?? null,
+            accessMemo: item.accessMemo ?? null,
+            clientId: client.id,
+            managerId: manager.id,
+            tradeIds: item.trades.flatMap((name) => tradeId(name) ?? []),
+            contractDate: item.contractDate,
+            plannedStart: item.plannedStart,
+            plannedEnd: item.plannedEnd,
+            memo: item.memo ?? null,
+            createdAt: '2026-10-01T00:00:00.000Z',
+            updatedAt: '2026-10-01T00:00:00.000Z',
+          },
+        ];
+      },
+    );
+    persist();
+  }
+
+  return account.projects;
+};
+
+export const saveProjects = (account: MockAccount, projects: ProjectDetail[]) => {
+  account.projects = projects;
   persist();
 };
 

@@ -1,4 +1,5 @@
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { createTestProject } from '../db/testFixtures';
 
 import { createClosureHarness, OLD_PASSWORD } from './closureHarness';
 import { CLOSURE_GRACE_MS } from './closureService';
@@ -36,14 +37,23 @@ afterAll(async () => {
 const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>) => {
   const { account, ...rest } = await h.passwordAccount();
 
-  await db.owner.project.create({ data: { companyId: account.companyId, name: '삭제될 현장' } });
-
-  const project = await db.owner.project.findFirstOrThrow({
-    where: { companyId: account.companyId },
+  // 프로젝트는 고객·담당 직원을 참조하므로 삭제 순서(프로젝트 먼저)까지 함께 확인
+  const { project } = await createTestProject(db.owner, account.companyId, '삭제될 현장');
+  const trade = await db.owner.optionItem.create({
+    data: {
+      companyId: account.companyId,
+      kind: 'TRADE',
+      name: '삭제될 공종',
+      nameKey: '삭제될 공종',
+      sortOrder: 0,
+    },
   });
 
-  await db.owner.memo.create({
-    data: { companyId: account.companyId, projectId: project.id, content: '삭제될 메모' },
+  await db.owner.projectTrade.create({
+    data: { companyId: account.companyId, projectId: project.id, tradeId: trade.id },
+  });
+  await db.owner.projectCodeSequence.create({
+    data: { companyId: account.companyId, year: 2026, lastNumber: 1 },
   });
   const jobType = await db.owner.optionItem.create({
     data: {
@@ -94,7 +104,8 @@ describe('삭제·익명화', () => {
 
     expect(result.anonymizedUsers).toBe(1);
     expect(await db.owner.project.count({ where })).toBe(0);
-    expect(await db.owner.memo.count({ where })).toBe(0);
+    expect(await db.owner.projectTrade.count({ where })).toBe(0);
+    expect(await db.owner.projectCodeSequence.count({ where })).toBe(0);
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.partner.count({ where })).toBe(0);
@@ -174,9 +185,7 @@ describe('삭제·익명화', () => {
 
     expire(h);
 
-    await db.owner.project.create({
-      data: { companyId: other.account.companyId, name: '남는 현장' },
-    });
+    await createTestProject(db.owner, other.account.companyId, '남는 현장');
     await purgeCompany(db.purge, closing.account.companyId, h.now);
 
     expect(await db.owner.project.count({ where: { companyId: other.account.companyId } })).toBe(1);
@@ -189,9 +198,7 @@ describe('삭제·익명화', () => {
     const h = await createClosureHarness(db, documentIds);
     const active = await h.passwordAccount();
 
-    await db.owner.project.create({
-      data: { companyId: active.account.companyId, name: '활성 현장' },
-    });
+    await createTestProject(db.owner, active.account.companyId, '활성 현장');
     await expect(
       db.purge.project.deleteMany({ where: { companyId: active.account.companyId } }),
     ).resolves.toMatchObject({ count: 0 });

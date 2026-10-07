@@ -9,3 +9,4 @@ export * from './optionPresets';
 export * from './employees';
 export * from './employeeRules';
 export * from './partners';
+export * from './projects';
