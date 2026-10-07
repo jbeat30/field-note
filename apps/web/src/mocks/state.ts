@@ -11,6 +11,7 @@ import {
   type ProjectDetail,
   type ProjectPeriodChange,
   type ProjectStatusChange,
+  type WorkLogRevision,
 } from '@field-note/shared';
 
 import {
@@ -19,8 +20,15 @@ import {
   MOCK_SESSION_STORAGE_KEY,
   type AssignmentRow,
   type MockAccount,
+  type MockWorkLog,
 } from './data';
-import { DEMO_ASSIGNMENTS, DEMO_EMPLOYEES, DEMO_PARTNERS, DEMO_PROJECTS } from './demoSource';
+import {
+  DEMO_ASSIGNMENTS,
+  DEMO_EMPLOYEES,
+  DEMO_PARTNERS,
+  DEMO_PROJECTS,
+  DEMO_WORK_LOGS,
+} from './demoSource';
 
 // 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
@@ -421,6 +429,103 @@ export const getAssignments = (account: MockAccount): AssignmentRow[] => {
   }
 
   return account.assignments;
+};
+
+// 작업일지: 처음 조회할 때 더미 일지(DB 시드와 같은 원본)로 채움 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결)
+export const getWorkLogs = (account: MockAccount): MockWorkLog[] => {
+  if (!account.workLogs) {
+    const projects = getProjects(account);
+    const employees = getEmployees(account);
+    const categories = getOptions(account).filter((item) => item.kind === 'WORK_CATEGORY');
+    const revisions: Record<string, WorkLogRevision[]> = {};
+    const toEntries = (
+      items: readonly { employeeName: string; categoryName: string; minutes: number }[],
+    ) =>
+      items.flatMap((item) => {
+        const employee = employees.find((candidate) => candidate.name === item.employeeName);
+        const category = categories.find(
+          (candidate) =>
+            normalizeOptionName(candidate.name) === normalizeOptionName(item.categoryName),
+        );
+
+        return employee && category
+          ? [{ employeeId: employee.id, categoryId: category.id, minutes: item.minutes }]
+          : [];
+      });
+
+    account.workLogs = DEMO_WORK_LOGS.filter(
+      (item) => item.companyId === account.companyId,
+    ).flatMap((item) => {
+      const project = projects.find((candidate) => candidate.code === item.projectCode);
+
+      if (!project) return [];
+
+      const id = crypto.randomUUID();
+      const stamp = `${item.workDate}T10:00:00.000Z`;
+
+      revisions[id] = (item.revisions ?? []).map((revision, index) => ({
+        id: crypto.randomUUID(),
+        version: index + 1,
+        snapshot: {
+          status: 'SAVED' as const,
+          content: revision.content,
+          area: revision.area ?? null,
+          notes: null,
+          isChange: false,
+          isAfterService: false,
+          entries: toEntries(revision.entries),
+        },
+        changedAt: stamp,
+      }));
+
+      return [
+        {
+          id,
+          projectId: project.id,
+          workDate: item.workDate,
+          status: item.status,
+          content: item.content,
+          area: item.area ?? null,
+          notes: item.notes ?? null,
+          isChange: item.isChange ?? false,
+          isAfterService: false,
+          version: 1 + (item.revisions?.length ?? 0),
+          savedAt: item.status === 'SAVED' ? stamp : null,
+          createdAt: stamp,
+          updatedAt: stamp,
+          entries: toEntries(item.entries),
+        },
+      ];
+    });
+    account.workLogRevisions = revisions;
+    persist();
+  }
+
+  return account.workLogs;
+};
+
+export const saveWorkLogs = (account: MockAccount, workLogs: MockWorkLog[]) => {
+  account.workLogs = workLogs;
+  persist();
+};
+
+export const getWorkLogRevisions = (account: MockAccount, workLogId: string): WorkLogRevision[] => {
+  getWorkLogs(account);
+
+  return account.workLogRevisions?.[workLogId] ?? [];
+};
+
+export const addWorkLogRevision = (
+  account: MockAccount,
+  workLogId: string,
+  revision: WorkLogRevision,
+) => {
+  getWorkLogs(account);
+  account.workLogRevisions = {
+    ...account.workLogRevisions,
+    [workLogId]: [...(account.workLogRevisions?.[workLogId] ?? []), revision],
+  };
+  persist();
 };
 
 export const saveAssignments = (account: MockAccount, assignments: AssignmentRow[]) => {

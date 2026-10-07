@@ -8,6 +8,15 @@ import {
   PARTNER_KINDS,
   allowedProjectFields,
   assignmentCancelSchema,
+  checkWorkDate,
+  dailyOverMinutes,
+  isLateInput,
+  validateWorkLogForSave,
+  workLogListQuerySchema,
+  workLogParamsSchema,
+  workLogSaveSchema,
+  workLogStatusCheck,
+  type WorkLogWarning,
   assignmentCreateSchema,
   assignmentParamsSchema,
   assignmentStatusCheck,
@@ -77,6 +86,7 @@ import {
   MOCK_TAKEN_LOGIN_ID,
   type AssignmentRow,
   type MockAccount,
+  type MockWorkLog,
 } from './data';
 import {
   addAccount,
@@ -87,6 +97,10 @@ import {
   getEmployees,
   getOptions,
   addProjectPeriodChange,
+  addWorkLogRevision,
+  getWorkLogRevisions,
+  getWorkLogs,
+  saveWorkLogs,
   addProjectStatusChange,
   getAssignments,
   getProjectPeriodHistory,
@@ -294,6 +308,62 @@ const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
   if (status === 'LEFT') warnings.push({ type: 'LEFT' });
 
   return { ...row, warnings };
+};
+
+// 일지 응답: 경고(하루 합계 초과·휴직·퇴사)는 응답할 때 계산 (서버와 같은 규칙, 저장된 다른 프로젝트 일지만 합계에 포함)
+const toMockWorkLog = (
+  account: MockAccount,
+  log: MockWorkLog,
+  autoAssignedEmployeeIds: string[],
+) => {
+  const employees = getEmployees(account);
+  const projects = getProjects(account);
+  const limit = dailyOverMinutes(account.settings.standardWorkMinutes);
+  const warnings: WorkLogWarning[] = [];
+
+  for (const employeeId of [...new Set(log.entries.map((entry) => entry.employeeId))]) {
+    const own = log.entries
+      .filter((entry) => entry.employeeId === employeeId)
+      .reduce((sum, entry) => sum + entry.minutes, 0);
+    const otherProjects = getWorkLogs(account)
+      .filter(
+        (other) =>
+          other.id !== log.id && other.workDate === log.workDate && other.status === 'SAVED',
+      )
+      .flatMap((other) => {
+        const minutes = other.entries
+          .filter((entry) => entry.employeeId === employeeId)
+          .reduce((sum, entry) => sum + entry.minutes, 0);
+        const project = projects.find((item) => item.id === other.projectId);
+
+        return minutes > 0 && project
+          ? [
+              {
+                projectId: project.id,
+                projectCode: project.code,
+                projectName: project.name,
+                minutes,
+              },
+            ]
+          : [];
+      });
+    const total = own + otherProjects.reduce((sum, item) => sum + item.minutes, 0);
+
+    if (total > limit)
+      warnings.push({ type: 'DAILY_OVER', employeeId, totalMinutes: total, otherProjects });
+
+    const status = employees.find((item) => item.id === employeeId)?.status;
+
+    if (status === 'ON_LEAVE') warnings.push({ type: 'ON_LEAVE', employeeId });
+    if (status === 'LEFT') warnings.push({ type: 'LEFT', employeeId });
+  }
+
+  return {
+    ...log,
+    isLate: isLateInput(log.workDate, log.savedAt ? todayInSeoul(new Date(log.savedAt)) : null),
+    warnings,
+    autoAssignedEmployeeIds,
+  };
 };
 
 export const handlers = [
@@ -1758,6 +1828,294 @@ export const handlers = [
       items: [...getProjectPeriodHistory(account, parsed.data.id)].sort((a, b) =>
         b.changedAt.localeCompare(a.changedAt),
       ),
+    });
+  }),
+
+  http.get('/api/v1/projects/:id/work-logs', async ({ request, params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    const query = workLogListQuerySchema.safeParse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    if (!query.success) {
+      return apiError(
+        'VALIDATION_ERROR',
+        query.error.issues.map((issue) => ({
+          path: ['query', ...issue.path].join('.'),
+          message: issue.message,
+        })),
+      );
+    }
+
+    const { from, to, status } = query.data;
+    const items = getWorkLogs(account)
+      .filter(
+        (item) =>
+          item.projectId === parsed.data.id &&
+          (!status || item.status === status) &&
+          (!from || item.workDate >= from) &&
+          (!to || item.workDate <= to),
+      )
+      .sort((a, b) => b.workDate.localeCompare(a.workDate))
+      .map((item) => ({
+        id: item.id,
+        workDate: item.workDate,
+        status: item.status,
+        isChange: item.isChange,
+        isAfterService: item.isAfterService,
+        isLate: isLateInput(
+          item.workDate,
+          item.savedAt ? todayInSeoul(new Date(item.savedAt)) : null,
+        ),
+        entryCount: item.entries.length,
+        totalMinutes: item.entries.reduce((sum, entry) => sum + entry.minutes, 0),
+        hasContent: item.content.trim().length > 0,
+      }));
+
+    return HttpResponse.json({ items });
+  }),
+
+  http.get('/api/v1/projects/:id/work-logs/:workDate', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = workLogParamsSchema.safeParse({ id: params.id, workDate: params.workDate });
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params', message: 'Invalid' }]);
+    }
+
+    const log = getWorkLogs(account).find(
+      (item) => item.projectId === parsed.data.id && item.workDate === parsed.data.workDate,
+    );
+
+    return log ? HttpResponse.json(toMockWorkLog(account, log, [])) : apiError('NOT_FOUND');
+  }),
+
+  http.put('/api/v1/projects/:id/work-logs/:workDate', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = workLogParamsSchema.safeParse({ id: params.id, workDate: params.workDate });
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params', message: 'Invalid' }]);
+    }
+
+    const body = await parseBody(request, workLogSaveSchema);
+
+    if ('response' in body) return body.response;
+
+    const project = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    const input = body.data;
+    const { workDate } = parsed.data;
+    const invalid = (path: string, message: string) =>
+      apiError('VALIDATION_ERROR', [{ path: `body.${path}`, message }]);
+    const confirmed = input.confirmStatus === true;
+    const statusCheck = workLogStatusCheck(project.status, {
+      confirmStatus: confirmed,
+      isAfterService: input.isAfterService,
+    });
+
+    if (!statusCheck.ok) return invalid(statusCheck.path, statusCheck.message);
+
+    const dateCheck = checkWorkDate(workDate, project, todayInSeoul(new Date()));
+
+    if (!dateCheck.ok) return invalid(dateCheck.path, dateCheck.message);
+
+    const saveCheck = validateWorkLogForSave(input);
+
+    if (!saveCheck.ok) return invalid(saveCheck.path, saveCheck.message);
+
+    const logs = getWorkLogs(account);
+    const existing = logs.find(
+      (item) => item.projectId === project.id && item.workDate === workDate,
+    );
+
+    // 낙관적 잠금 (서버와 같은 규칙)
+    if (!existing && input.expectedVersion != null) return apiError('CONFLICT');
+    if (existing && input.expectedVersion !== existing.version) return apiError('CONFLICT');
+
+    if (existing?.status === 'SAVED' && input.status === 'DRAFT') {
+      return invalid('status', '저장된 일지는 임시 저장으로 되돌릴 수 없습니다');
+    }
+
+    const employees = getEmployees(account);
+    const options = getOptions(account);
+    const usedCategories = new Set(existing?.entries.map((entry) => entry.categoryId) ?? []);
+
+    if (
+      input.entries.some((entry) => !employees.some((employee) => employee.id === entry.employeeId))
+    ) {
+      return invalid('entries', '선택할 수 없는 직원이 있습니다');
+    }
+
+    const categories = input.entries.map((entry) =>
+      options.find((item) => item.id === entry.categoryId && item.kind === 'WORK_CATEGORY'),
+    );
+
+    if (categories.some((category) => !category))
+      return invalid('entries', '선택할 수 없는 작업 구분이 있습니다');
+
+    if (categories.some((category) => !category!.isActive && !usedCategories.has(category!.id))) {
+      return invalid('entries', '숨긴 작업 구분은 새로 고를 수 없습니다');
+    }
+
+    // 투입 등록이 없는 직원: 저장할 때 확인을 요구하고, 확인하면 그날 투입을 자동으로 추가
+    const autoAssigned: string[] = [];
+
+    if (input.status === 'SAVED') {
+      const assignments = getAssignments(account);
+      const missing = [...new Set(input.entries.map((entry) => entry.employeeId))].filter(
+        (employeeId) => {
+          const employee = employees.find((item) => item.id === employeeId)!;
+
+          return (
+            employee.status !== 'LEFT' &&
+            !assignments.some(
+              (item) =>
+                item.projectId === project.id &&
+                item.employeeId === employeeId &&
+                !item.cancelledAt &&
+                item.startDate <= workDate &&
+                item.endDate >= workDate,
+            )
+          );
+        },
+      );
+
+      if (missing.length > 0) {
+        if (input.addMissingAssignments !== true) {
+          const names = missing
+            .map((id) => employees.find((item) => item.id === id)!.name)
+            .join(', ');
+
+          return invalid(
+            'addMissingAssignments',
+            `투입 등록이 안 된 직원이 있습니다 (${names}). 투입을 자동으로 추가할지 확인해 주세요`,
+          );
+        }
+
+        const assignable = assignmentStatusCheck(project.status, confirmed);
+
+        if (!assignable.ok) {
+          return invalid(
+            'addMissingAssignments',
+            `투입을 자동으로 추가할 수 없습니다. ${assignable.message}`,
+          );
+        }
+
+        saveAssignments(account, [
+          ...assignments,
+          ...missing.map((employeeId) => ({
+            id: crypto.randomUUID(),
+            projectId: project.id,
+            employeeId,
+            startDate: workDate,
+            endDate: workDate,
+            plannedMinutes: null,
+            cancelledAt: null,
+          })),
+        ]);
+        autoAssigned.push(...missing);
+      }
+    }
+
+    const nowIso = new Date().toISOString();
+    const entries = input.entries.map(({ employeeId, categoryId, minutes }) => ({
+      employeeId,
+      categoryId,
+      minutes,
+    }));
+    const next: MockWorkLog = {
+      id: existing?.id ?? crypto.randomUUID(),
+      projectId: project.id,
+      workDate,
+      status: input.status,
+      content: input.content,
+      area: input.area || null,
+      notes: input.notes || null,
+      isChange: input.isChange,
+      isAfterService: input.isAfterService,
+      version: existing ? existing.version + 1 : 1,
+      savedAt: existing?.savedAt ?? (input.status === 'SAVED' ? nowIso : null),
+      createdAt: existing?.createdAt ?? nowIso,
+      updatedAt: nowIso,
+      entries,
+    };
+
+    // 저장된 일지를 고치면 고치기 전 값을 이력에 남김
+    if (existing?.status === 'SAVED') {
+      addWorkLogRevision(account, existing.id, {
+        id: crypto.randomUUID(),
+        version: existing.version,
+        snapshot: {
+          status: existing.status,
+          content: existing.content,
+          area: existing.area,
+          notes: existing.notes,
+          isChange: existing.isChange,
+          isAfterService: existing.isAfterService,
+          entries: existing.entries,
+        },
+        changedAt: nowIso,
+      });
+    }
+
+    saveWorkLogs(
+      account,
+      existing ? logs.map((item) => (item.id === existing.id ? next : item)) : [...logs, next],
+    );
+
+    return HttpResponse.json(toMockWorkLog(account, next, autoAssigned));
+  }),
+
+  http.get('/api/v1/projects/:id/work-logs/:workDate/revisions', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = workLogParamsSchema.safeParse({ id: params.id, workDate: params.workDate });
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params', message: 'Invalid' }]);
+    }
+
+    const log = getWorkLogs(account).find(
+      (item) => item.projectId === parsed.data.id && item.workDate === parsed.data.workDate,
+    );
+
+    if (!log) return apiError('NOT_FOUND');
+
+    return HttpResponse.json({
+      items: [...getWorkLogRevisions(account, log.id)].sort((a, b) => b.version - a.version),
     });
   }),
 

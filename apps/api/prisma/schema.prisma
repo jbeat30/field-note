@@ -62,6 +62,9 @@ model Company {
   projectStatusChanges ProjectStatusChange[]
   projectAssignments   ProjectAssignment[]
   projectPeriodChanges ProjectPeriodChange[]
+  workLogs             WorkLog[]
+  workLogEntries       WorkLogEntry[]
+  workLogRevisions     WorkLogRevision[]
 
   @@map("companies")
 }
@@ -114,6 +117,7 @@ model Project {
   statusChanges    ProjectStatusChange[]
   assignments      ProjectAssignment[]
   periodChanges    ProjectPeriodChange[]
+  workLogs         WorkLog[]
 
   @@id([companyId, id])
   @@unique([companyId, code])
@@ -189,6 +193,81 @@ model ProjectPeriodChange {
   @@map("project_period_changes")
 }
 
+// 작업일지 상태: 임시 저장은 집계에서 제외, 저장됨은 집계에 반영 (서비스 기획서 §9.4)
+enum WorkLogStatus {
+  DRAFT
+  SAVED
+
+  @@map("work_log_status")
+}
+
+// 작업일지: 프로젝트 × 날짜마다 한 건. 공통 내용은 여기에, 직원별·작업 구분별 공수는 항목(work_log_entries)에 둠
+// version은 저장(수정)할 때마다 올라가는 낙관적 잠금 값
+model WorkLog {
+  companyId      String            @map("company_id") @db.Uuid
+  id             String            @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId      String            @map("project_id") @db.Uuid
+  workDate       DateTime          @map("work_date") @db.Date
+  status         WorkLogStatus     @default(DRAFT)
+  content        String            @default("")
+  area           String?
+  notes          String?
+  isChange       Boolean           @default(false) @map("is_change")
+  isAfterService Boolean           @default(false) @map("is_after_service")
+  version        Int               @default(1)
+  // 처음 저장(임시 저장 → 저장됨)한 시각. 지연 입력 표시의 기준
+  savedAt        DateTime?         @map("saved_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company        Company           @relation(fields: [companyId], references: [id])
+  project        Project           @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  entries        WorkLogEntry[]
+  revisions      WorkLogRevision[]
+
+  @@id([companyId, id])
+  @@unique([companyId, projectId, workDate])
+  @@index([companyId, workDate])
+  @@map("work_logs")
+}
+
+// 직원별·작업 구분별 공수(분). 같은 일지에 같은 직원·작업 구분 조합은 한 번만
+model WorkLogEntry {
+  companyId  String     @map("company_id") @db.Uuid
+  id         String     @default(dbgenerated("uuidv7()")) @db.Uuid
+  workLogId  String     @map("work_log_id") @db.Uuid
+  employeeId String     @map("employee_id") @db.Uuid
+  categoryId String     @map("category_id") @db.Uuid
+  minutes    Int
+  company    Company    @relation(fields: [companyId], references: [id])
+  workLog    WorkLog    @relation(fields: [companyId, workLogId], references: [companyId, id], onDelete: Restrict)
+  employee   Employee   @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  category   OptionItem @relation("WorkLogEntryCategory", fields: [companyId, categoryId], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@unique([companyId, workLogId, employeeId, categoryId])
+  @@index([companyId, employeeId])
+  @@map("work_log_entries")
+}
+
+// 수정 이력: 저장된 일지를 고칠 때마다 고치기 전 값을 JSON 스냅샷으로 남김. 추가만 가능
+model WorkLogRevision {
+  companyId String   @map("company_id") @db.Uuid
+  id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
+  workLogId String   @map("work_log_id") @db.Uuid
+  // 이 기록이 대체된 버전 (고치기 전 버전)
+  version   Int
+  snapshot  Json
+  changedBy String   @map("changed_by") @db.Uuid
+  changedAt DateTime @default(now()) @map("changed_at") @db.Timestamptz(3)
+  company   Company  @relation(fields: [companyId], references: [id])
+  workLog   WorkLog  @relation(fields: [companyId, workLogId], references: [companyId, id], onDelete: Restrict)
+  user      User     @relation("WorkLogRevisionChangedBy", fields: [companyId, changedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@unique([companyId, workLogId, version])
+  @@map("work_log_revisions")
+}
+
 // 프로젝트의 공종 (복수 선택)
 model ProjectTrade {
   companyId String     @map("company_id") @db.Uuid
@@ -259,6 +338,7 @@ model User {
   socialAccounts       SocialAccount[]
   projectStatusChanges ProjectStatusChange[] @relation("ProjectStatusChangedBy")
   projectPeriodChanges ProjectPeriodChange[] @relation("ProjectPeriodChangedBy")
+  workLogRevisions     WorkLogRevision[]     @relation("WorkLogRevisionChangedBy")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -450,6 +530,7 @@ model OptionItem {
   employeesAsJobType    Employee[]     @relation("EmployeeJobType")
   employeesAsWorkerType Employee[]     @relation("EmployeeWorkerType")
   projectTrades         ProjectTrade[] @relation("ProjectTradeOption")
+  workLogEntries        WorkLogEntry[] @relation("WorkLogEntryCategory")
 
   @@id([companyId, id])
   @@unique([companyId, kind, nameKey])
@@ -487,6 +568,7 @@ model Employee {
   company         Company             @relation(fields: [companyId], references: [id])
   jobType         OptionItem?         @relation("EmployeeJobType", fields: [companyId, jobTypeId], references: [companyId, id], onDelete: Restrict)
   managedProjects Project[]           @relation("ProjectManager")
+  workLogEntries  WorkLogEntry[]
   assignments     ProjectAssignment[]
   workerType      OptionItem?         @relation("EmployeeWorkerType", fields: [companyId, workerTypeId], references: [companyId, id], onDelete: Restrict)
 

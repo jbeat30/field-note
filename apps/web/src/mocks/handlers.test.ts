@@ -14,6 +14,9 @@ import {
   projectDetailSchema,
   projectsResponseSchema,
   assignmentSchema,
+  workLogRevisionsSchema,
+  workLogSchema,
+  workLogsResponseSchema,
   assignmentsResponseSchema,
   projectPeriodHistorySchema,
   projectStatusHistorySchema,
@@ -972,6 +975,153 @@ describe('목업 서버 계약', () => {
           path('0198d000-0000-7000-8000-000000000999'),
         )
       ).response.status,
+    ).toBe(404);
+    // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
+  }, 120_000);
+
+  it('작업일지: 임시 저장·저장, 낙관적 잠금, 수정 이력, 날짜·상태·투입·하루 합계 규칙이 서버와 같다', async () => {
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/work-logs', {
+          params: { path: { id: '0198d000-0000-7000-8000-000000000301' } },
+        })
+      ).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const projects = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects')).data,
+    ).items;
+    const employees = employeesResponseSchema.parse(
+      (await client.GET('/api/v1/employees')).data,
+    ).items;
+    const options = optionsResponseSchema.parse(
+      (await client.GET('/api/v1/company/options')).data,
+    ).items;
+    const running = projects.find((item) => item.code === '2026-001')!;
+    const planned = projects.find((item) => item.status === 'PLANNED')!;
+    const worker = employees.find((item) => item.name === '정판금')!;
+    const stranger = employees.find((item) => item.name === '오전기')!;
+    const category = options.find((item) => item.kind === 'WORK_CATEGORY' && item.name === '설치')!;
+    const path = (workDate: string, id = running.id) => ({ params: { path: { id, workDate } } });
+    const put = (workDate: string, body: object, id = running.id) =>
+      client.PUT('/api/v1/projects/{id}/work-logs/{workDate}', {
+        ...path(workDate, id),
+        body: body as never,
+      });
+    const entries = [{ employeeId: worker.id, categoryId: category.id, minutes: 480 }];
+
+    // 더미 일지: 임시 저장 1건 포함, 최근 날짜 순
+    const listed = workLogsResponseSchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-logs', {
+          params: { path: { id: running.id }, query: {} },
+        })
+      ).data,
+    ).items;
+
+    expect(listed.length).toBeGreaterThanOrEqual(4);
+    expect(listed.map((item) => item.workDate)).toEqual(
+      [...listed.map((item) => item.workDate)].sort().reverse(),
+    );
+    expect(listed.some((item) => item.status === 'DRAFT')).toBe(true);
+
+    // 하루 합계: 같은 날 다른 프로젝트에도 저장된 일지가 있는 직원은 경고
+    const seeded = workLogSchema.parse(
+      (await client.GET('/api/v1/projects/{id}/work-logs/{workDate}', path('2026-09-02'))).data,
+    );
+
+    expect(seeded).toMatchObject({ version: 2, isChange: true });
+    expect(seeded.warnings.some((warning) => warning.type === 'DAILY_OVER')).toBe(true);
+    expect(
+      workLogRevisionsSchema.parse(
+        (
+          await client.GET(
+            '/api/v1/projects/{id}/work-logs/{workDate}/revisions',
+            path('2026-09-02'),
+          )
+        ).data,
+      ).items,
+    ).toHaveLength(1);
+
+    // 날짜·상태 규칙
+    expect(
+      (await put('2026-06-01', { status: 'DRAFT', content: '', entries: [] })).response.status,
+    ).toBe(400);
+    expect(
+      (await put('2999-01-01', { status: 'DRAFT', content: '', entries: [] })).response.status,
+    ).toBe(400);
+    expect(
+      (await put('2026-09-05', { status: 'DRAFT', content: '', entries: [] }, planned.id)).response
+        .status,
+    ).toBe(400);
+    expect(
+      (await put('2026-09-05', { status: 'SAVED', content: '  ', entries })).response.status,
+    ).toBe(400);
+
+    // 임시 저장 → 저장 (낙관적 잠금), 투입 없는 직원은 확인 후 자동 추가
+    const draft = workLogSchema.parse(
+      (
+        await put('2026-09-05', {
+          status: 'DRAFT',
+          content: '초안',
+          entries: [{ employeeId: stranger.id, categoryId: category.id, minutes: 60 }],
+        })
+      ).data,
+    );
+
+    expect(draft).toMatchObject({ version: 1, savedAt: null });
+    expect(
+      (await put('2026-09-05', { status: 'DRAFT', content: '버전 없음', entries: [] })).response
+        .status,
+    ).toBe(409);
+
+    const withStranger = {
+      status: 'SAVED',
+      content: '신규 작업',
+      entries: [{ employeeId: stranger.id, categoryId: category.id, minutes: 60 }],
+      expectedVersion: 1,
+    };
+
+    expect((await put('2026-09-05', withStranger)).response.status).toBe(400);
+
+    const saved = workLogSchema.parse(
+      (await put('2026-09-05', { ...withStranger, addMissingAssignments: true })).data,
+    );
+
+    expect(saved).toMatchObject({
+      status: 'SAVED',
+      version: 2,
+      autoAssignedEmployeeIds: [stranger.id],
+    });
+    expect(saved.savedAt).not.toBeNull();
+    // 저장된 일지를 임시 저장으로 되돌릴 수 없고, 고치면 이력이 남는다
+    expect(
+      (await put('2026-09-05', { status: 'DRAFT', content: '', entries: [], expectedVersion: 2 }))
+        .response.status,
+    ).toBe(400);
+    expect(
+      (await put('2026-09-05', { ...withStranger, content: '수정', expectedVersion: 1 })).response
+        .status,
+    ).toBe(409);
+    expect(
+      (await put('2026-09-05', { ...withStranger, content: '수정', expectedVersion: 2 })).data
+        ?.version,
+    ).toBe(3);
+    expect(
+      workLogRevisionsSchema.parse(
+        (
+          await client.GET(
+            '/api/v1/projects/{id}/work-logs/{workDate}/revisions',
+            path('2026-09-05'),
+          )
+        ).data,
+      ).items[0]!.snapshot.content,
+    ).toBe('신규 작업');
+    expect(
+      (await client.GET('/api/v1/projects/{id}/work-logs/{workDate}', path('2026-09-30'))).response
+        .status,
     ).toBe(404);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 120_000);

@@ -11,6 +11,7 @@ import { createCompanySettingsService } from './company/companySettingsService';
 import { createOptionService } from './company/optionService';
 import { createEmployeeService } from './employee/employeeService';
 import { createAssignmentService } from './assignment/assignmentService';
+import { createWorkLogService } from './workLog/workLogService';
 import { createPartnerService } from './partner/partnerService';
 import { createProjectService } from './project/projectService';
 import { createPrismaClient } from './db/client';
@@ -40,6 +41,7 @@ const main = async () => {
   const partners = createPartnerService(appPrisma);
   const projects = createProjectService(appPrisma);
   const assignments = createAssignmentService(appPrisma);
+  const workLogs = createWorkLogService(appPrisma);
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
@@ -104,6 +106,7 @@ const main = async () => {
     partners,
     projects,
     assignments,
+    workLogs,
     closure,
     social: {
       choice: socialChoice,
