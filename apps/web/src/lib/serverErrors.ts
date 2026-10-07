@@ -1,6 +1,6 @@
 import { errorResponseSchema } from '@field-note/shared';
 
-import { getErrorMessage } from '../lib/apiError';
+import { getErrorMessage } from './apiError';
 
 /**
  * @description 서버의 검증 오류를 입력칸별 문구로 나눔 (`body.phone` → phone), 입력칸에 연결할 수 없는 오류는 root로 모음

@@ -13,7 +13,7 @@ import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
-import { splitServerErrors } from '../employees/errors';
+import { splitServerErrors } from '../lib/serverErrors';
 import { OptionSelect } from '../employees/OptionSelect';
 import { useEmployee, useUpdateEmployee } from '../employees/useEmployees';
 import { useOptions } from '../settings/useOptions';

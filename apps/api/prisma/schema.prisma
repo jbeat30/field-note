@@ -57,6 +57,7 @@ model Company {
   closure            CompanyClosure?
   optionItems        OptionItem[]
   employees          Employee[]
+  partners           Partner[]
 
   @@map("companies")
 }
@@ -363,6 +364,38 @@ model Employee {
   @@index([companyId, status])
   @@index([companyId, name])
   @@map("employees")
+}
+
+// 명부 구분: 고객(발주처·원청), 협력업체(타 공종 팀·외주), 자재 공급처 (서비스 기획서 §10.1)
+enum PartnerKind {
+  CLIENT
+  SUBCONTRACTOR
+  SUPPLIER
+
+  @@map("partner_kind")
+}
+
+// 고객·협력업체·자재 공급처 명부. 금액·거래 내역은 다루지 않음
+// 쓰지 않는 업체는 삭제하지 않고 숨김(is_active=false)으로 두어 프로젝트·자재 기록에 쓰인 상호가 사라지지 않게 함
+model Partner {
+  companyId   String      @map("company_id") @db.Uuid
+  id          String      @default(dbgenerated("uuidv7()")) @db.Uuid
+  kind        PartnerKind
+  name        String
+  // 같은 구분 안에서 공백·대소문자만 다른 상호를 중복으로 막기 위한 비교용 값
+  nameKey     String      @map("name_key")
+  contactName String?     @map("contact_name")
+  phone       String?
+  memo        String?
+  isActive    Boolean     @default(true) @map("is_active")
+  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company     Company     @relation(fields: [companyId], references: [id])
+
+  @@id([companyId, id])
+  @@unique([companyId, kind, nameKey])
+  @@index([companyId, kind])
+  @@map("partners")
 }
 
 // 소셜 로그인 제공자 (초기에는 카카오, 네이버·구글은 5단계)

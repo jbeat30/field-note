@@ -16,6 +16,7 @@ export const PURGE_POLICY = {
   projects: 'DELETE',
   memos: 'DELETE',
   employees: 'DELETE',
+  partners: 'DELETE',
   option_items: 'DELETE',
   consents: 'KEEP',
   operator_actions: 'KEEP',

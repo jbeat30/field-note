@@ -1,21 +1,25 @@
-import { employeeNameSchema } from '@field-note/shared';
+import {
+  PARTNER_KINDS,
+  PARTNER_KIND_HINTS,
+  PARTNER_KIND_LABELS,
+  partnerNameSchema,
+  type PartnerKind,
+} from '@field-note/shared';
 import { useState, type FormEvent } from 'react';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
-import { useOptions } from '../settings/useOptions';
-
+import { Select } from '../components/ui/select';
 import { splitServerErrors } from '../lib/serverErrors';
-import { OptionSelect } from './OptionSelect';
-import { useCreateEmployee } from './useEmployees';
 
-// 간편 등록: 이름과 직종만 넣으면 된다 (일용·협력 인력용). 나머지는 직원 카드에서 나중에 채운다
-export const EmployeeQuickAdd = () => {
-  const options = useOptions();
-  const create = useCreateEmployee();
+import { useCreatePartner } from './usePartners';
+
+// 간편 등록: 구분과 상호만 넣으면 된다. 담당자·연락처·메모는 카드에서 나중에 채운다
+export const PartnerQuickAdd = () => {
+  const create = useCreatePartner();
+  const [kind, setKind] = useState<PartnerKind>('CLIENT');
   const [name, setName] = useState('');
-  const [jobTypeId, setJobTypeId] = useState('');
   const [message, setMessage] = useState('');
   const [saved, setSaved] = useState('');
 
@@ -23,7 +27,7 @@ export const EmployeeQuickAdd = () => {
     event.preventDefault();
     setSaved('');
 
-    const parsed = employeeNameSchema.safeParse(name);
+    const parsed = partnerNameSchema.safeParse(name);
 
     if (!parsed.success) {
       setMessage(parsed.error.issues[0]?.message ?? '');
@@ -32,17 +36,17 @@ export const EmployeeQuickAdd = () => {
 
     setMessage('');
     create.mutate(
-      { name: parsed.data, jobTypeId: jobTypeId || null },
+      { kind, name: parsed.data },
       {
-        // 같은 직종을 이어서 등록하는 경우가 많아 직종은 그대로 두고 이름만 비움
-        onSuccess: (employee) => {
+        // 같은 구분을 이어서 등록하는 경우가 많아 구분은 그대로 두고 상호만 비움
+        onSuccess: (partner) => {
           setName('');
-          setSaved(`${employee.name} 등록했습니다`);
+          setSaved(`${partner.name} 등록했습니다`);
         },
         onError: (error) => {
-          const { byField, root } = splitServerErrors(error, ['jobTypeId', 'name']);
+          const { byField, root } = splitServerErrors(error, ['name']);
 
-          setMessage(root || Object.values(byField)[0] || '');
+          setMessage(root || byField.name || '');
         },
       },
     );
@@ -58,19 +62,22 @@ export const EmployeeQuickAdd = () => {
       {message && <Alert>{message}</Alert>}
       {saved && <Alert variant="info">{saved}</Alert>}
       <div className="flex flex-col gap-2 sm:flex-row">
+        <Select
+          aria-label="구분"
+          value={kind}
+          onChange={(event) => setKind(event.target.value as PartnerKind)}
+        >
+          {PARTNER_KINDS.map((item) => (
+            <option key={item} value={item}>
+              {PARTNER_KIND_LABELS[item]} ({PARTNER_KIND_HINTS[item]})
+            </option>
+          ))}
+        </Select>
         <Input
-          aria-label="이름"
-          placeholder="이름"
+          aria-label="상호"
+          placeholder="상호"
           value={name}
           onChange={(event) => setName(event.target.value)}
-        />
-        <OptionSelect
-          aria-label="직종"
-          kind="JOB_TYPE"
-          options={options.data ?? []}
-          value={jobTypeId}
-          emptyLabel="직종 선택 안 함"
-          onChange={(event) => setJobTypeId(event.target.value)}
         />
         <Button type="submit" className="shrink-0 whitespace-nowrap" disabled={create.isPending}>
           등록

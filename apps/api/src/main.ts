@@ -10,6 +10,7 @@ import { createClosureService, registerClosureWorker } from './closure/closureSe
 import { createCompanySettingsService } from './company/companySettingsService';
 import { createOptionService } from './company/optionService';
 import { createEmployeeService } from './employee/employeeService';
+import { createPartnerService } from './partner/partnerService';
 import { createPrismaClient } from './db/client';
 import { createSmtpMailer } from './email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
@@ -34,6 +35,7 @@ const main = async () => {
   const companySettings = createCompanySettingsService(appPrisma);
   const options = createOptionService(appPrisma);
   const employees = createEmployeeService(appPrisma);
+  const partners = createPartnerService(appPrisma);
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
@@ -95,6 +97,7 @@ const main = async () => {
     companySettings,
     options,
     employees,
+    partners,
     closure,
     social: {
       choice: socialChoice,

@@ -5,6 +5,14 @@ import {
   companySettingsSchema,
   socialStartRequestSchema,
   EMPLOYEE_MAX_PER_COMPANY,
+  PARTNER_KINDS,
+  PARTNER_MAX_PER_COMPANY,
+  normalizePartnerName,
+  partnerCreateSchema,
+  partnerListQuerySchema,
+  partnerParamsSchema,
+  partnerUpdateSchema,
+  type PartnerDetail,
   EMPLOYEE_STATUSES,
   emailChangeSchema,
   employeeCreateSchema,
@@ -58,6 +66,8 @@ import {
   findClosingAccount,
   getEmployees,
   getOptions,
+  getPartners,
+  savePartners,
   saveEmployees,
   saveOptions,
   startClosure,
@@ -795,6 +805,183 @@ export const handlers = [
     saveEmployees(
       account,
       employees.map((item) => (item.id === current.id ? updated : item)),
+    );
+
+    return HttpResponse.json(updated);
+  }),
+
+  http.get('/api/v1/partners', async ({ request }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const query = partnerListQuerySchema.safeParse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    if (!query.success) {
+      return apiError(
+        'VALIDATION_ERROR',
+        query.error.issues.map((issue) => ({
+          path: ['query', ...issue.path].join('.'),
+          message: issue.message,
+        })),
+      );
+    }
+
+    const { kind, q } = query.data;
+    const needle = q?.toLowerCase();
+    // 서버와 같은 규칙: 목록에는 연락처·메모를 싣지 않고, 구분 순서에 이름순
+    const items = getPartners(account)
+      .filter(
+        (item) =>
+          (!kind || item.kind === kind) &&
+          (!needle ||
+            item.name.toLowerCase().includes(needle) ||
+            (item.contactName ?? '').toLowerCase().includes(needle)),
+      )
+      .sort(
+        (a, b) =>
+          PARTNER_KINDS.indexOf(a.kind) - PARTNER_KINDS.indexOf(b.kind) ||
+          a.name.localeCompare(b.name, 'ko'),
+      )
+      .map((item) => ({
+        id: item.id,
+        kind: item.kind,
+        name: item.name,
+        contactName: item.contactName,
+        isActive: item.isActive,
+      }));
+
+    return HttpResponse.json({ items });
+  }),
+
+  http.post('/api/v1/partners', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, partnerCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    const partners = getPartners(account);
+    const input = body.data;
+
+    if (partners.length >= PARTNER_MAX_PER_COMPANY) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body', message: '명부는 회사마다 1000곳까지 등록할 수 있습니다' },
+      ]);
+    }
+
+    if (
+      partners.some(
+        (item) =>
+          item.kind === input.kind &&
+          normalizePartnerName(item.name) === normalizePartnerName(input.name),
+      )
+    ) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.name', message: '같은 구분에 이미 같은 상호가 있습니다' },
+      ]);
+    }
+
+    const now = new Date().toISOString();
+    const created: PartnerDetail = {
+      id: crypto.randomUUID(),
+      kind: input.kind,
+      name: input.name,
+      contactName: input.contactName ?? null,
+      phone: input.phone ?? null,
+      memo: input.memo || null,
+      isActive: true,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    savePartners(account, [...partners, created]);
+
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.get('/api/v1/partners/:id', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = partnerParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const found = getPartners(account).find((item) => item.id === parsed.data.id);
+
+    return found ? HttpResponse.json(found) : apiError('NOT_FOUND');
+  }),
+
+  http.patch('/api/v1/partners/:id', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = partnerParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, partnerUpdateSchema);
+
+    if ('response' in body) return body.response;
+
+    const partners = getPartners(account);
+    const current = partners.find((item) => item.id === parsed.data.id);
+
+    if (!current) return apiError('NOT_FOUND');
+
+    const input = body.data;
+
+    if (
+      input.name !== undefined &&
+      partners.some(
+        (item) =>
+          item.id !== current.id &&
+          item.kind === current.kind &&
+          normalizePartnerName(item.name) === normalizePartnerName(input.name!),
+      )
+    ) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.name', message: '같은 구분에 이미 같은 상호가 있습니다' },
+      ]);
+    }
+
+    // 보낸 항목만 바꾸고, 보내지 않은(undefined) 항목은 그대로 둠 (구분은 바꿀 수 없음)
+    const updated: PartnerDetail = {
+      ...current,
+      name: input.name ?? current.name,
+      contactName: input.contactName === undefined ? current.contactName : input.contactName,
+      phone: input.phone === undefined ? current.phone : input.phone,
+      memo: input.memo === undefined ? current.memo : input.memo || null,
+      isActive: input.isActive ?? current.isActive,
+      updatedAt: new Date().toISOString(),
+    };
+
+    savePartners(
+      account,
+      partners.map((item) => (item.id === current.id ? updated : item)),
     );
 
     return HttpResponse.json(updated);
