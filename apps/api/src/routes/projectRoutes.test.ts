@@ -3,6 +3,7 @@ import {
   optionsResponseSchema,
   projectDetailSchema,
   projectsResponseSchema,
+  projectStatusHistorySchema,
 } from '@field-note/shared';
 import request from 'supertest';
 
@@ -102,6 +103,9 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     get: (id: string) => request(instance).get(`/api/v1/projects/${id}`).set('Cookie', cookie),
     create: (body: object) => send('post', '/projects', body),
     update: (id: string, body: object) => send('patch', `/projects/${id}`, body),
+    transition: (id: string, body: object) => send('post', `/projects/${id}/status`, body),
+    history: (id: string) =>
+      request(instance).get(`/api/v1/projects/${id}/status-history`).set('Cookie', cookie),
     createPartner: async (kind: string, name: string) =>
       (await send('post', '/partners', { kind, name })).body.id as string,
     createEmployee: async (name: string) =>
@@ -365,11 +369,10 @@ describe('목록·조회', () => {
       plannedEnd: '2026-12-31',
     });
 
-    // 상태는 아직 API로 바꿀 수 없어(P1-6) 소유 계정으로 직접 바꿔 준비
-    await db.ownerPool.query(`UPDATE projects SET status = 'IN_PROGRESS' WHERE id = $1`, [
-      c.body.id,
-    ]);
-    await db.ownerPool.query(`UPDATE projects SET status = 'COMPLETED' WHERE id = $1`, [a.body.id]);
+    // 상태는 전환 API로 바꿈: c는 진행, a는 진행을 거쳐 완료
+    await client.transition(c.body.id, { toStatus: 'IN_PROGRESS' });
+    await client.transition(a.body.id, { toStatus: 'IN_PROGRESS' });
+    await client.transition(a.body.id, { toStatus: 'COMPLETED' });
 
     const names = async (query: string) => namesOf(await client.list(query));
 
@@ -610,5 +613,369 @@ describe('DB 제약 (API를 거치지 않아도 지켜진다)', () => {
       ),
     ).rejects.toThrow(/project_trades_company_id_trade_id_fkey/);
     await expect(db.app.$executeRawUnsafe('DELETE FROM projects')).rejects.toThrow();
+  });
+});
+
+describe('상태 전환', () => {
+  it('예정 → 진행: 날짜를 생략하면 오늘(서울)이 실제 시작일이 되고 이력이 남는다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const created = await client.create(body);
+    const res = await client.transition(created.body.id, { toStatus: 'IN_PROGRESS' });
+
+    expect(res.status).toBe(200);
+    expect(projectDetailSchema.parse(res.body)).toMatchObject({
+      status: 'IN_PROGRESS',
+      actualStart: '2026-10-07',
+      actualEnd: null,
+      code: '2026-001',
+    });
+
+    const history = projectStatusHistorySchema.parse(
+      (await client.history(created.body.id)).body,
+    ).items;
+
+    expect(history).toHaveLength(1);
+    expect(history[0]).toMatchObject({
+      fromStatus: 'PLANNED',
+      toStatus: 'IN_PROGRESS',
+      effectiveOn: '2026-10-07',
+      reason: null,
+    });
+  });
+
+  it('지난 날짜를 시작일로 입력할 수 있고 미래 날짜는 거부한다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const created = await client.create(body);
+    const future = await client.transition(created.body.id, {
+      toStatus: 'IN_PROGRESS',
+      effectiveOn: '2026-10-08',
+    });
+
+    expect(future.status).toBe(400);
+    expect(errorResponseSchema.parse(future.body).error.details?.[0]?.path).toBe(
+      'body.effectiveOn',
+    );
+    expect((await client.get(created.body.id)).body.status).toBe('PLANNED');
+    expect(
+      (
+        await client.transition(created.body.id, {
+          toStatus: 'IN_PROGRESS',
+          effectiveOn: '2026-10-01',
+        })
+      ).body.actualStart,
+    ).toBe('2026-10-01');
+  });
+
+  it('진행 → 중단은 사유가 필수이고, 재개해도 실제 시작일은 그대로다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' });
+
+    const noReason = await client.transition(id, {
+      toStatus: 'SUSPENDED',
+      effectiveOn: '2026-10-03',
+    });
+
+    expect(noReason.status).toBe(400);
+    expect(errorResponseSchema.parse(noReason.body).error.details?.[0]?.path).toBe('body.reason');
+    expect(
+      (
+        await client.transition(id, {
+          toStatus: 'SUSPENDED',
+          effectiveOn: '2026-10-03',
+          reason: '   ',
+        })
+      ).status,
+    ).toBe(400);
+    expect(
+      (
+        await client.transition(id, {
+          toStatus: 'SUSPENDED',
+          effectiveOn: '2026-10-03',
+          reason: ' 우천으로 중단 ',
+        })
+      ).body,
+    ).toMatchObject({ status: 'SUSPENDED', actualStart: '2026-10-01' });
+
+    const resumed = await client.transition(id, {
+      toStatus: 'IN_PROGRESS',
+      effectiveOn: '2026-10-05',
+    });
+
+    expect(resumed.body).toMatchObject({ status: 'IN_PROGRESS', actualStart: '2026-10-01' });
+
+    const history = projectStatusHistorySchema.parse((await client.history(id)).body).items;
+
+    // 최근이 맨 앞, 사유는 앞뒤 공백을 지운 값
+    expect(history.map((item) => `${item.fromStatus}>${item.toStatus}`)).toEqual([
+      'SUSPENDED>IN_PROGRESS',
+      'IN_PROGRESS>SUSPENDED',
+      'PLANNED>IN_PROGRESS',
+    ]);
+    expect(history[1]).toMatchObject({ effectiveOn: '2026-10-03', reason: '우천으로 중단' });
+  });
+
+  it('진행 → 완료는 실제 완료일을 기록하고 그 뒤에는 더 바꿀 수 없다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-02' });
+    // 완료일이 시작일보다 빠르면 거부
+    expect(
+      (await client.transition(id, { toStatus: 'COMPLETED', effectiveOn: '2026-10-01' })).status,
+    ).toBe(400);
+
+    const done = await client.transition(id, { toStatus: 'COMPLETED', effectiveOn: '2026-10-06' });
+
+    expect(done.body).toMatchObject({
+      status: 'COMPLETED',
+      actualStart: '2026-10-02',
+      actualEnd: '2026-10-06',
+    });
+
+    for (const toStatus of ['IN_PROGRESS', 'SUSPENDED', 'CANCELLED', 'PLANNED']) {
+      expect((await client.transition(id, { toStatus, reason: '사유' })).status).toBe(400);
+    }
+  });
+
+  it('예정·진행·중단은 사유와 함께 취소할 수 있고 완료는 취소할 수 없다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const planned = (await client.create(body)).body.id;
+    const running = (await client.create(body)).body.id;
+    const suspended = (await client.create(body)).body.id;
+    const completed = (await client.create(body)).body.id;
+
+    await client.transition(running, { toStatus: 'IN_PROGRESS' });
+    await client.transition(suspended, { toStatus: 'IN_PROGRESS' });
+    await client.transition(suspended, { toStatus: 'SUSPENDED', reason: '자재 지연' });
+    await client.transition(completed, { toStatus: 'IN_PROGRESS' });
+    await client.transition(completed, { toStatus: 'COMPLETED' });
+
+    for (const id of [planned, running, suspended]) {
+      expect((await client.transition(id, { toStatus: 'CANCELLED' })).status).toBe(400);
+      expect(
+        (await client.transition(id, { toStatus: 'CANCELLED', reason: '계약 해지' })).body.status,
+      ).toBe('CANCELLED');
+    }
+
+    expect(
+      (await client.transition(completed, { toStatus: 'CANCELLED', reason: '사유' })).status,
+    ).toBe(400);
+    // 시작하지 않고 취소하면 실제 시작일은 없다
+    expect((await client.get(planned)).body).toMatchObject({
+      status: 'CANCELLED',
+      actualStart: null,
+      actualEnd: null,
+    });
+    // 시작했다가 취소하면 실제 시작일은 남고 완료일은 없다
+    expect((await client.get(running)).body).toMatchObject({
+      status: 'CANCELLED',
+      actualStart: '2026-10-07',
+      actualEnd: null,
+    });
+  });
+
+  it('허용되지 않은 전환과 이전 변경일보다 빠른 날짜는 거부한다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    for (const toStatus of ['COMPLETED', 'SUSPENDED', 'PLANNED', 'WARRANTY', 'CLOSED']) {
+      const res = await client.transition(id, { toStatus, reason: '사유' });
+
+      expect(res.status).toBe(400);
+      expect(errorResponseSchema.parse(res.body).error.details?.[0]?.path).toBe('body.toStatus');
+    }
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-05' });
+
+    const early = await client.transition(id, {
+      toStatus: 'SUSPENDED',
+      effectiveOn: '2026-10-04',
+      reason: '우천',
+    });
+
+    expect(early.status).toBe(400);
+    expect(errorResponseSchema.parse(early.body).error.details?.[0]?.message).toContain(
+      '2026-10-05',
+    );
+    expect(
+      (
+        await client.transition(id, {
+          toStatus: 'SUSPENDED',
+          effectiveOn: '2026-10-05',
+          reason: '우천',
+        })
+      ).status,
+    ).toBe(200);
+    expect((await client.transition(id, { toStatus: 'NOPE' })).status).toBe(400);
+    expect(
+      (await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-13-01' })).status,
+    ).toBe(400);
+  });
+
+  it('같은 전환을 동시에 여러 번 요청하면 한 번만 적용되고 이력도 한 건이다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+    const results = await Promise.all([
+      client.transition(id, { toStatus: 'IN_PROGRESS' }),
+      client.transition(id, { toStatus: 'IN_PROGRESS' }),
+      client.transition(id, { toStatus: 'IN_PROGRESS' }),
+    ]);
+
+    expect(results.map((res) => res.status).sort()).toEqual([200, 400, 400]);
+    expect(projectStatusHistorySchema.parse((await client.history(id)).body).items).toHaveLength(1);
+  });
+
+  it('변경자와 시각이 기록되고 이력 응답에는 변경자 식별값이 내려가지 않는다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS' });
+
+    const { rows } = await db.ownerPool.query<{ changed_by: string; user_id: string }>(
+      `SELECT c.changed_by, u.id AS user_id
+         FROM project_status_changes c JOIN users u ON u.company_id = c.company_id AND u.id = c.changed_by
+        WHERE c.project_id = $1`,
+      [id],
+    );
+    const history = await client.history(id);
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0]!.changed_by).toBe(rows[0]!.user_id);
+    expect(JSON.stringify(history.body)).not.toContain(rows[0]!.changed_by);
+    expect(history.body.items[0].changedAt).toMatch(/^\d{4}-\d{2}-\d{2}T/);
+  });
+
+  it('로그인하지 않으면 전환·이력을 쓸 수 없고 없는 프로젝트는 404다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    expect(
+      (
+        await request(instance)
+          .post(`/api/v1/projects/${id}/status`)
+          .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+          .send({ toStatus: 'IN_PROGRESS' })
+      ).status,
+    ).toBe(401);
+    expect((await request(instance).get(`/api/v1/projects/${id}/status-history`)).status).toBe(401);
+    expect(
+      (await client.transition('0198d000-0000-7000-8000-000000000999', { toStatus: 'IN_PROGRESS' }))
+        .status,
+    ).toBe(404);
+    expect((await client.history('0198d000-0000-7000-8000-000000000999')).status).toBe(404);
+  });
+});
+
+describe('상태별 수정 제한', () => {
+  it('진행·중단·완료 상태에서는 기본정보를 계속 수정할 수 있다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS' });
+    expect((await client.update(id, { name: '진행 중 수정' })).status).toBe(200);
+    await client.transition(id, { toStatus: 'COMPLETED' });
+    expect((await client.update(id, { name: '완료 후 수정' })).body.name).toBe('완료 후 수정');
+  });
+
+  it('취소된 프로젝트는 수정할 수 없고 그대로 조회된다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'CANCELLED', reason: '계약 해지' });
+
+    const res = await client.update(id, { name: '취소 후 수정' });
+
+    expect(res.status).toBe(400);
+    expect(errorResponseSchema.parse(res.body).error.details?.[0]?.message).toContain(
+      '수정할 수 없습니다',
+    );
+    expect((await client.get(id)).body.name).toBe(body.name);
+  });
+
+  it('종료된 프로젝트는 수정할 수 없고, 보증 중에는 담당자·메모만 수정할 수 있다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const closed = (await client.create(body)).body.id;
+    const warranty = (await client.create(body)).body.id;
+    const otherManager = await client.createEmployee('새담당');
+
+    // 보증 중·종료는 아직 전환 기능이 없어(4단계) 소유 계정으로 상태를 맞춰 준비
+    await db.ownerPool.query(
+      `UPDATE projects SET status = 'CLOSED', actual_start = '2026-10-01', actual_end = '2026-10-02' WHERE id = $1`,
+      [closed],
+    );
+    await db.ownerPool.query(
+      `UPDATE projects SET status = 'WARRANTY', actual_start = '2026-10-01', actual_end = '2026-10-02' WHERE id = $1`,
+      [warranty],
+    );
+
+    expect((await client.update(closed, { memo: '메모' })).status).toBe(400);
+
+    const blocked = await client.update(warranty, { name: '이름 변경', memo: '보증 메모' });
+
+    expect(blocked.status).toBe(400);
+    expect(errorResponseSchema.parse(blocked.body).error.details?.[0]?.path).toBe('body.name');
+    expect(
+      (await client.update(warranty, { managerId: otherManager, memo: '보증 메모' })).body,
+    ).toMatchObject({
+      managerId: otherManager,
+      memo: '보증 메모',
+    });
+  });
+});
+
+describe('상태 전환 격리·DB 제약', () => {
+  it('다른 회사의 프로젝트는 전환·이력 조회가 되지 않는다', async () => {
+    const instance = app();
+    const a = await setup(instance);
+    const b = await setup(instance);
+    const id = (await a.client.create(a.body)).body.id;
+
+    expect((await b.client.transition(id, { toStatus: 'IN_PROGRESS' })).status).toBe(404);
+    expect((await b.client.history(id)).status).toBe(404);
+    expect((await a.client.get(id)).body.status).toBe('PLANNED');
+  });
+
+  it('이력은 앱 계정이 수정·삭제할 수 없고, 중단·취소의 사유 누락과 실제일 불일치를 DB가 거부한다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS' });
+
+    await expect(db.app.$executeRawUnsafe('DELETE FROM project_status_changes')).rejects.toThrow();
+    await expect(
+      db.app.$executeRawUnsafe(`UPDATE project_status_changes SET reason = 'x'`),
+    ).rejects.toThrow();
+    // 시작한 적 있는 상태에 실제 시작일이 없거나, 완료 상태에 완료일이 없는 행
+    await expect(
+      db.ownerPool.query(
+        `UPDATE projects SET status = 'IN_PROGRESS', actual_start = NULL WHERE id = $1`,
+        [id],
+      ),
+    ).rejects.toThrow(/projects_actual_start_consistency/);
+    await expect(
+      db.ownerPool.query(`UPDATE projects SET status = 'COMPLETED' WHERE id = $1`, [id]),
+    ).rejects.toThrow(/projects_actual_end_consistency/);
+    await expect(
+      db.ownerPool.query(
+        `INSERT INTO project_status_changes (company_id, project_id, from_status, to_status, effective_on, changed_by)
+         SELECT company_id, id, 'IN_PROGRESS', 'SUSPENDED', '2026-10-07', (SELECT id FROM users WHERE company_id = projects.company_id) FROM projects WHERE id = $1`,
+        [id],
+      ),
+    ).rejects.toThrow(/project_status_changes_reason_required/);
   });
 });

@@ -6,7 +6,11 @@ import {
   socialStartRequestSchema,
   EMPLOYEE_MAX_PER_COMPANY,
   PARTNER_KINDS,
+  allowedProjectFields,
   formatProjectCode,
+  PROJECT_STATUS_LABELS,
+  projectTransitionSchema,
+  validateProjectTransition,
   projectCreateSchema,
   projectListQuerySchema,
   projectParamsSchema,
@@ -72,7 +76,9 @@ import {
   findClosingAccount,
   getEmployees,
   getOptions,
+  addProjectStatusChange,
   getPartners,
+  getProjectHistory,
   getProjects,
   saveProjects,
   savePartners,
@@ -1157,6 +1163,8 @@ export const handlers = [
       contractDate: input.contractDate,
       plannedStart: input.plannedStart,
       plannedEnd: input.plannedEnd,
+      actualStart: null,
+      actualEnd: null,
       memo: input.memo || null,
       createdAt: now,
       updatedAt: now,
@@ -1210,6 +1218,30 @@ export const handlers = [
     if (!current) return apiError('NOT_FOUND');
 
     const input = body.data;
+
+    // 서버와 같은 규칙: 종료·취소는 수정 불가, 보증 중은 담당자·메모만
+    const allowed = allowedProjectFields(current.status);
+
+    if (allowed !== 'all') {
+      const blocked = Object.entries(input).find(
+        ([key, value]) => value !== undefined && !allowed.includes(key),
+      );
+
+      if (blocked) {
+        return apiError('VALIDATION_ERROR', [
+          allowed.length === 0
+            ? {
+                path: 'body',
+                message: `'${PROJECT_STATUS_LABELS[current.status]}' 상태의 프로젝트는 수정할 수 없습니다`,
+              }
+            : {
+                path: `body.${blocked[0]}`,
+                message: `'${PROJECT_STATUS_LABELS[current.status]}' 상태에서는 담당자와 메모만 수정할 수 있습니다`,
+              },
+        ]);
+      }
+    }
+
     const referenceError =
       (input.clientId !== undefined
         ? checkClient(account, input.clientId, current.clientId)
@@ -1261,6 +1293,108 @@ export const handlers = [
     );
 
     return HttpResponse.json(updated);
+  }),
+
+  http.post('/api/v1/projects/:id/status', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, projectTransitionSchema);
+
+    if ('response' in body) return body.response;
+
+    const projects = getProjects(account);
+    const current = projects.find((item) => item.id === parsed.data.id);
+
+    if (!current) return apiError('NOT_FOUND');
+
+    // 서버와 같은 규칙: 허용된 전환·날짜·사유를 공유 검사 함수로 확인
+    const today = todayInSeoul(new Date());
+    const effectiveOn = body.data.effectiveOn ?? today;
+    const reason = body.data.reason?.trim() || null;
+    const history = getProjectHistory(account, current.id);
+    const lastEffectiveOn = history.reduce<string | null>(
+      (latest, item) => (latest === null || item.effectiveOn > latest ? item.effectiveOn : latest),
+      null,
+    );
+    const checked = validateProjectTransition({
+      from: current.status,
+      to: body.data.toStatus,
+      effectiveOn,
+      reason,
+      actualStart: current.actualStart,
+      lastEffectiveOn,
+      today,
+    });
+
+    if (!checked.ok) {
+      return apiError('VALIDATION_ERROR', [
+        { path: `body.${checked.path}`, message: checked.message },
+      ]);
+    }
+
+    const updated: ProjectDetail = {
+      ...current,
+      status: body.data.toStatus,
+      // 처음 시작할 때만 실제 시작일을 기록하고, 완료할 때 실제 완료일을 기록
+      actualStart:
+        current.status === 'PLANNED' && body.data.toStatus === 'IN_PROGRESS'
+          ? effectiveOn
+          : current.actualStart,
+      actualEnd: body.data.toStatus === 'COMPLETED' ? effectiveOn : current.actualEnd,
+      updatedAt: new Date().toISOString(),
+    };
+
+    saveProjects(
+      account,
+      projects.map((item) => (item.id === current.id ? updated : item)),
+    );
+    addProjectStatusChange(account, current.id, {
+      id: crypto.randomUUID(),
+      fromStatus: current.status,
+      toStatus: body.data.toStatus,
+      effectiveOn,
+      reason,
+      changedAt: new Date().toISOString(),
+    });
+
+    return HttpResponse.json(updated);
+  }),
+
+  http.get('/api/v1/projects/:id/status-history', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id)) {
+      return apiError('NOT_FOUND');
+    }
+
+    // 최근 변경이 맨 앞
+    return HttpResponse.json({
+      items: [...getProjectHistory(account, parsed.data.id)].sort((a, b) =>
+        b.changedAt.localeCompare(a.changedAt),
+      ),
+    });
   }),
 
   http.post('/api/v1/me/closure', async ({ request }) => {

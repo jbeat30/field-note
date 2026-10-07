@@ -231,9 +231,37 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         contractDate: requiredDate(project.contractDate),
         plannedStart: requiredDate(project.plannedStart),
         plannedEnd: requiredDate(project.plannedEnd),
+        actualStart: project.actualStart ? requiredDate(project.actualStart) : null,
+        actualEnd: project.actualEnd ? requiredDate(project.actualEnd) : null,
         memo: project.memo ?? null,
       },
     });
+
+    // 상태 변경 이력은 처음 한 번만 넣음 (변경자는 그 회사의 관리자)
+    if (
+      project.history &&
+      (await prisma.projectStatusChange.count({
+        where: { companyId: project.companyId, projectId: project.id },
+      })) === 0
+    ) {
+      const admin = DEMO_ACCOUNTS.find((account) => account.companyId === project.companyId);
+
+      if (admin) {
+        for (const change of project.history) {
+          await prisma.projectStatusChange.create({
+            data: {
+              companyId: project.companyId,
+              projectId: project.id,
+              fromStatus: change.fromStatus,
+              toStatus: change.toStatus,
+              effectiveOn: requiredDate(change.effectiveOn),
+              reason: change.reason ?? null,
+              changedBy: admin.userId,
+            },
+          });
+        }
+      }
+    }
     await prisma.projectTrade.createMany({
       data: tradeIds.map((tradeId) => ({
         companyId: project.companyId,
