@@ -1,12 +1,15 @@
 import {
   OPTION_KINDS,
   OPTION_PRESETS,
+  normalizeOptionName,
   type CompanySettings,
   type Device,
+  type EmployeeDetail,
   type OptionItem,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS, DEMO_DEVICES, MOCK_SESSION_STORAGE_KEY, type MockAccount } from './data';
+import { DEMO_EMPLOYEES } from './demoSource';
 
 // 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
@@ -174,6 +177,46 @@ export const getOptions = (account: MockAccount): OptionItem[] => {
 
 export const saveOptions = (account: MockAccount, options: OptionItem[]) => {
   account.options = options;
+  persist();
+};
+
+// 직원 카드: 처음 조회할 때 더미 직원으로 채움 (직종·구분은 선택 목록 항목과 이름으로 연결, DB 시드와 같은 방식)
+export const getEmployees = (account: MockAccount): EmployeeDetail[] => {
+  if (!account.employees) {
+    const options = getOptions(account);
+    const idOf = (kind: OptionItem['kind'], name?: string) =>
+      name
+        ? (options.find(
+            (item) =>
+              item.kind === kind && normalizeOptionName(item.name) === normalizeOptionName(name),
+          )?.id ?? null)
+        : null;
+
+    account.employees = DEMO_EMPLOYEES.filter((item) => item.companyId === account.companyId).map(
+      (item) => ({
+        id: item.id,
+        name: item.name,
+        title: item.title ?? null,
+        jobTypeId: idOf('JOB_TYPE', item.jobType),
+        workerTypeId: idOf('WORKER_TYPE', item.workerType),
+        status: item.status,
+        hiredOn: item.hiredOn ?? null,
+        leftOn: item.leftOn ?? null,
+        birthDate: item.birthDate ?? null,
+        phone: item.phone ?? null,
+        memo: item.memo ?? null,
+        createdAt: '2026-10-01T00:00:00.000Z',
+        updatedAt: '2026-10-01T00:00:00.000Z',
+      }),
+    );
+    persist();
+  }
+
+  return account.employees;
+};
+
+export const saveEmployees = (account: MockAccount, employees: EmployeeDetail[]) => {
+  account.employees = employees;
   persist();
 };
 

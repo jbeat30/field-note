@@ -1,4 +1,5 @@
 import { type CompanySettings, type LegalDocumentSummary, type LegalDocumentType } from './account';
+import type { EmployeeStatus } from './employees';
 import { LEGAL_DOCUMENT_CONTENTS, legalDocumentText } from './legal';
 
 // 로컬 개발 전용 더미 데이터: 목업 서버(웹)와 DB 시드(api)가 같은 값을 쓰도록 한 곳에 둔다
@@ -52,6 +53,152 @@ export const DEMO_ACCOUNTS: readonly DemoAccount[] = [
     email: 'newbie@example.com',
     isEmailVerified: false,
     settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
+  },
+];
+
+export type DemoEmployee = {
+  // 다시 실행해도 같은 직원이 되도록 고정한 식별자
+  id: string;
+  companyId: string;
+  name: string;
+  title?: string;
+  // 선택 목록 항목의 이름 (식별자는 환경마다 달라 이름으로 연결)
+  jobType?: string;
+  workerType?: string;
+  status: EmployeeStatus;
+  hiredOn?: string;
+  leftOn?: string;
+  birthDate?: string;
+  phone?: string;
+  memo?: string;
+};
+
+const HANBIT = '0198d000-0000-7000-8000-0000000000a1';
+const SAERON = '0198d000-0000-7000-8000-0000000000a2';
+const employeeId = (n: number) => `0198d000-0000-7000-8000-0000000001${String(n).padStart(2, '0')}`;
+
+// 가상의 인물과 번호만 사용한다 (연락처는 실제로 쓰이지 않는 0000 대역)
+export const DEMO_EMPLOYEES: readonly DemoEmployee[] = [
+  {
+    id: employeeId(1),
+    companyId: HANBIT,
+    name: '정판금',
+    title: '반장',
+    jobType: '판금공',
+    workerType: '정직원',
+    status: 'ACTIVE',
+    hiredOn: '2019-03-04',
+    birthDate: '1978-04-12',
+    phone: '010-0000-0001',
+    memo: '절곡 가공 담당. 현장 설치 경험 많음',
+  },
+  {
+    id: employeeId(2),
+    companyId: HANBIT,
+    name: '최설치',
+    title: '기공',
+    jobType: '설치공',
+    workerType: '정직원',
+    status: 'ACTIVE',
+    hiredOn: '2021-06-14',
+    birthDate: '1989-11-02',
+    phone: '010-0000-0002',
+  },
+  {
+    id: employeeId(3),
+    companyId: HANBIT,
+    name: '한용접',
+    title: '기공',
+    jobType: '용접공',
+    workerType: '계약직',
+    status: 'ACTIVE',
+    hiredOn: '2023-02-20',
+    birthDate: '1985-08-30',
+    phone: '010-0000-0003',
+    memo: '아르곤 용접 가능',
+  },
+  {
+    id: employeeId(4),
+    companyId: HANBIT,
+    name: '오전기',
+    jobType: '전기공',
+    workerType: '협력(외부) 인력',
+    status: 'ACTIVE',
+  },
+  {
+    id: employeeId(5),
+    companyId: HANBIT,
+    name: '김일용',
+    jobType: '보통인부',
+    workerType: '일용',
+    status: 'ACTIVE',
+  },
+  {
+    id: employeeId(6),
+    companyId: HANBIT,
+    name: '이조공',
+    title: '조공',
+    jobType: '보통인부',
+    workerType: '정직원',
+    status: 'ON_LEAVE',
+    hiredOn: '2022-09-01',
+    birthDate: '1995-01-18',
+    phone: '010-0000-0006',
+    memo: '2026년 11월 복귀 예정',
+  },
+  {
+    id: employeeId(7),
+    companyId: HANBIT,
+    name: '박퇴사',
+    title: '기공',
+    jobType: '목수',
+    workerType: '정직원',
+    status: 'LEFT',
+    hiredOn: '2020-01-06',
+    leftOn: '2026-08-31',
+    birthDate: '1981-07-07',
+    phone: '010-0000-0007',
+  },
+  {
+    id: employeeId(8),
+    companyId: HANBIT,
+    name: '송소장',
+    title: '소장',
+    jobType: '현장소장',
+    workerType: '정직원',
+    status: 'ACTIVE',
+    hiredOn: '2018-05-02',
+    birthDate: '1972-12-25',
+    phone: '010-0000-0008',
+  },
+  {
+    id: employeeId(9),
+    companyId: SAERON,
+    name: '배전기',
+    title: '반장',
+    jobType: '전기공',
+    workerType: '정직원',
+    status: 'ACTIVE',
+    hiredOn: '2020-10-12',
+    birthDate: '1980-02-14',
+    phone: '010-0000-0009',
+  },
+  {
+    id: employeeId(10),
+    companyId: SAERON,
+    name: '노배선',
+    jobType: '전기공',
+    workerType: '계약직',
+    status: 'ACTIVE',
+    hiredOn: '2024-04-01',
+  },
+  {
+    id: employeeId(11),
+    companyId: SAERON,
+    name: '유사무',
+    jobType: '사무',
+    workerType: '정직원',
+    status: 'ACTIVE',
   },
 ];
 

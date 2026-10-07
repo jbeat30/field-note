@@ -60,6 +60,14 @@ export const routes = [
         Component: AppLayout,
         children: [
           { path: '/', ...page(() => import('./routes/HomePage'), 'HomePage') },
+          {
+            path: '/employees',
+            ...page(() => import('./routes/EmployeeListPage'), 'EmployeeListPage'),
+          },
+          {
+            path: '/employees/:id',
+            ...page(() => import('./routes/EmployeeCardPage'), 'EmployeeCardPage'),
+          },
           { path: '/settings', ...page(() => import('./routes/SettingsPage'), 'SettingsPage') },
           {
             path: '/settings/lists',

@@ -11,9 +11,11 @@ import type { AuthResolver } from './http/types';
 import type { AccountService } from './auth/accountService';
 import type { ClosureService } from './closure/closureService';
 import { registerClosureRoutes } from './routes/closure';
+import { registerEmployeeRoutes } from './routes/employees';
 import { registerOptionRoutes } from './routes/options';
 import type { CompanySettingsService } from './company/companySettingsService';
 import type { OptionService } from './company/optionService';
+import type { EmployeeService } from './employee/employeeService';
 import type { EmailVerificationService } from './auth/emailVerification';
 import type { PasswordService } from './auth/passwordService';
 import type { SecurityNotifier } from './email/securityNotice';
@@ -48,6 +50,7 @@ export type AppOptions = {
   // 없으면 회사 설정 API는 501
   companySettings?: CompanySettingsService;
   options?: OptionService;
+  employees?: EmployeeService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
   social?: {
     choice: SocialProviderChoice;
@@ -95,6 +98,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   });
   registerClosureRoutes(registry, options.closure);
   registerOptionRoutes(registry, options.options);
+  registerEmployeeRoutes(registry, options.employees);
   registerSocialRoutes(
     registry,
     options.social && options.accountService

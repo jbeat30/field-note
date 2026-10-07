@@ -4,7 +4,17 @@ import {
   closureTokenParamsSchema,
   companySettingsSchema,
   socialStartRequestSchema,
+  EMPLOYEE_MAX_PER_COMPANY,
+  EMPLOYEE_STATUSES,
   emailChangeSchema,
+  employeeCreateSchema,
+  employeeListQuerySchema,
+  employeeParamsSchema,
+  employeeUpdateSchema,
+  resolveEmployeeStatus,
+  todayInSeoul,
+  type EmployeeDetail,
+  type OptionKind,
   normalizeOptionName,
   OPTION_KINDS,
   OPTION_MAX_PER_KIND,
@@ -46,7 +56,9 @@ import {
   cancelClosure,
   consumeMockReset,
   findClosingAccount,
+  getEmployees,
   getOptions,
+  saveEmployees,
   saveOptions,
   startClosure,
   getMockResetTarget,
@@ -114,6 +126,28 @@ const toMe = (account: MockAccount): MeResponse => ({
 
 // 쓰기 요청에 CSRF 헤더가 빠지면 서버처럼 거부해 웹 클라이언트 회귀를 잡는다
 const hasCsrfHeader = (request: Request) => request.headers.get(CSRF_HEADER) === 'web';
+
+// 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있고, 숨긴 항목은 새로 고를 수 없음 (서버와 같은 규칙)
+const checkOption = (
+  account: MockAccount,
+  kind: OptionKind,
+  path: string,
+  label: string,
+  id: string | null | undefined,
+  currentId: string | null,
+) => {
+  if (!id || id === currentId) return null;
+
+  const option = getOptions(account).find((item) => item.id === id && item.kind === kind);
+
+  if (!option) {
+    return apiError('VALIDATION_ERROR', [{ path, message: `선택할 수 없는 ${label}입니다` }]);
+  }
+
+  return option.isActive
+    ? null
+    : apiError('VALIDATION_ERROR', [{ path, message: `숨긴 ${label}은 새로 고를 수 없습니다` }]);
+};
 
 export const handlers = [
   http.get('/api/v1/health', async () => {
@@ -536,6 +570,231 @@ export const handlers = [
     saveOptions(
       account,
       items.map((item) => (item.id === target.id ? updated : item)),
+    );
+
+    return HttpResponse.json(updated);
+  }),
+
+  http.get('/api/v1/employees', async ({ request }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const query = employeeListQuerySchema.safeParse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    if (!query.success) {
+      return apiError(
+        'VALIDATION_ERROR',
+        query.error.issues.map((issue) => ({
+          path: ['query', ...issue.path].join('.'),
+          message: issue.message,
+        })),
+      );
+    }
+
+    const { status, jobTypeId, workerTypeId, q } = query.data;
+    // 서버와 같은 규칙: 목록에는 생년월일·연락처·메모를 싣지 않고, 재직 → 휴직 → 퇴사 순에 이름순
+    const items = getEmployees(account)
+      .filter(
+        (item) =>
+          (!status || item.status === status) &&
+          (!jobTypeId || item.jobTypeId === jobTypeId) &&
+          (!workerTypeId || item.workerTypeId === workerTypeId) &&
+          (!q || item.name.toLowerCase().includes(q.toLowerCase())),
+      )
+      .sort(
+        (a, b) =>
+          EMPLOYEE_STATUSES.indexOf(a.status) - EMPLOYEE_STATUSES.indexOf(b.status) ||
+          a.name.localeCompare(b.name, 'ko'),
+      )
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        title: item.title,
+        jobTypeId: item.jobTypeId,
+        workerTypeId: item.workerTypeId,
+        status: item.status,
+        hiredOn: item.hiredOn,
+        leftOn: item.leftOn,
+      }));
+
+    return HttpResponse.json({ items });
+  }),
+
+  http.post('/api/v1/employees', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, employeeCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    const employees = getEmployees(account);
+    const input = body.data;
+
+    if (employees.length >= EMPLOYEE_MAX_PER_COMPANY) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body', message: '직원은 회사마다 500명까지 등록할 수 있습니다' },
+      ]);
+    }
+
+    const optionError =
+      checkOption(account, 'JOB_TYPE', 'body.jobTypeId', '직종', input.jobTypeId, null) ??
+      checkOption(
+        account,
+        'WORKER_TYPE',
+        'body.workerTypeId',
+        '직원 구분',
+        input.workerTypeId,
+        null,
+      );
+
+    if (optionError) return optionError;
+
+    if (input.birthDate && input.birthDate > todayInSeoul(new Date())) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.birthDate', message: '생년월일은 오늘 이전이어야 합니다' },
+      ]);
+    }
+
+    const now = new Date().toISOString();
+    const created: EmployeeDetail = {
+      id: crypto.randomUUID(),
+      name: input.name,
+      title: input.title ?? null,
+      jobTypeId: input.jobTypeId ?? null,
+      workerTypeId: input.workerTypeId ?? null,
+      status: input.status ?? 'ACTIVE',
+      hiredOn: input.hiredOn ?? null,
+      leftOn: null,
+      birthDate: input.birthDate ?? null,
+      phone: input.phone ?? null,
+      memo: input.memo || null,
+      createdAt: now,
+      updatedAt: now,
+    };
+
+    saveEmployees(account, [...employees, created]);
+
+    return HttpResponse.json(created, { status: 201 });
+  }),
+
+  http.get('/api/v1/employees/:id', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = employeeParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const found = getEmployees(account).find((item) => item.id === parsed.data.id);
+
+    return found ? HttpResponse.json(found) : apiError('NOT_FOUND');
+  }),
+
+  http.patch('/api/v1/employees/:id', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = employeeParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, employeeUpdateSchema);
+
+    if ('response' in body) return body.response;
+
+    const employees = getEmployees(account);
+    const current = employees.find((item) => item.id === parsed.data.id);
+
+    if (!current) return apiError('NOT_FOUND');
+
+    const input = body.data;
+    const today = todayInSeoul(new Date());
+    const resolved = resolveEmployeeStatus(
+      { status: current.status, leftOn: current.leftOn },
+      { status: input.status, leftOn: input.leftOn },
+      today,
+    );
+
+    if (!resolved.ok) {
+      return apiError('VALIDATION_ERROR', [{ path: 'body.leftOn', message: resolved.message }]);
+    }
+
+    const optionError =
+      checkOption(
+        account,
+        'JOB_TYPE',
+        'body.jobTypeId',
+        '직종',
+        input.jobTypeId,
+        current.jobTypeId,
+      ) ??
+      checkOption(
+        account,
+        'WORKER_TYPE',
+        'body.workerTypeId',
+        '직원 구분',
+        input.workerTypeId,
+        current.workerTypeId,
+      );
+
+    if (optionError) return optionError;
+
+    if (input.birthDate && input.birthDate > today) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.birthDate', message: '생년월일은 오늘 이전이어야 합니다' },
+      ]);
+    }
+
+    const hiredOn = input.hiredOn === undefined ? current.hiredOn : input.hiredOn;
+
+    if (hiredOn && resolved.leftOn && resolved.leftOn < hiredOn) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.leftOn', message: '퇴사일은 입사일보다 빠를 수 없습니다' },
+      ]);
+    }
+
+    // 보낸 항목만 바꾸고, 보내지 않은(undefined) 항목은 그대로 둠
+    const updated: EmployeeDetail = {
+      ...current,
+      name: input.name ?? current.name,
+      title: input.title === undefined ? current.title : input.title,
+      jobTypeId: input.jobTypeId === undefined ? current.jobTypeId : input.jobTypeId,
+      workerTypeId: input.workerTypeId === undefined ? current.workerTypeId : input.workerTypeId,
+      status: resolved.status,
+      hiredOn,
+      leftOn: resolved.leftOn,
+      birthDate: input.birthDate === undefined ? current.birthDate : input.birthDate,
+      phone: input.phone === undefined ? current.phone : input.phone,
+      memo: input.memo === undefined ? current.memo : input.memo || null,
+      updatedAt: new Date().toISOString(),
+    };
+
+    saveEmployees(
+      account,
+      employees.map((item) => (item.id === current.id ? updated : item)),
     );
 
     return HttpResponse.json(updated);

@@ -45,13 +45,22 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
   await db.owner.memo.create({
     data: { companyId: account.companyId, projectId: project.id, content: '삭제될 메모' },
   });
-  await db.owner.optionItem.create({
+  const jobType = await db.owner.optionItem.create({
     data: {
       companyId: account.companyId,
-      kind: 'TRADE',
-      name: '삭제될 공종',
-      nameKey: '삭제될 공종',
+      kind: 'JOB_TYPE',
+      name: '삭제될 직종',
+      nameKey: '삭제될 직종',
       sortOrder: 0,
+    },
+  });
+  // 직원이 선택 목록 항목을 참조하므로 삭제 순서(직원 먼저)까지 함께 확인
+  await db.owner.employee.create({
+    data: {
+      companyId: account.companyId,
+      name: '삭제될 직원',
+      jobTypeId: jobType.id,
+      phone: '010-0000-0000',
     },
   });
   await h.sessionStore.create(account);
@@ -79,6 +88,7 @@ describe('삭제·익명화', () => {
     expect(await db.owner.project.count({ where })).toBe(0);
     expect(await db.owner.memo.count({ where })).toBe(0);
     expect(await db.owner.optionItem.count({ where })).toBe(0);
+    expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.session.count({ where })).toBe(0);
     expect(await db.owner.userCredential.count({ where })).toBe(0);
     expect(await db.owner.invitation.count({ where })).toBe(0);
