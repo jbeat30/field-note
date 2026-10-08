@@ -23,7 +23,7 @@ export const AppLayout = () => {
 
   return (
     <div className="flex min-h-dvh flex-col">
-      <header className="flex items-center justify-between border-b border-border px-4">
+      <header className="flex items-center justify-between border-b border-border px-4 print:hidden">
         <p className="shrink-0 pr-2 text-sm font-bold text-primary">{APP_NAME}</p>
         <nav aria-label="주 메뉴" className="flex">
           {NAV_ITEMS.map((item) => (
@@ -43,10 +43,10 @@ export const AppLayout = () => {
           ))}
         </nav>
       </header>
-      <main className="flex-1 px-4 pt-4 pb-24">
+      <main className="flex-1 px-4 pt-4 pb-24 print:p-0">
         <Outlet />
       </main>
-      <div className="fixed inset-x-0 bottom-0 flex justify-end p-4">
+      <div className="fixed inset-x-0 bottom-0 flex justify-end p-4 print:hidden">
         <Button aria-label="빠른 추가" onClick={() => setQuickAddOpen(true)}>
           <Plus aria-hidden className="size-5" />
           추가

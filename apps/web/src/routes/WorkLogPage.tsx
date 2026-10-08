@@ -146,7 +146,13 @@ export const WorkLogPage = () => {
             <Link className="text-primary underline" to={`/projects/${project.data.id}`}>
               {project.data.name}
             </Link>{' '}
-            · {project.data.plannedStart} ~ {project.data.plannedEnd}
+            · {project.data.plannedStart} ~ {project.data.plannedEnd} ·{' '}
+            <Link
+              className="text-primary underline"
+              to={`/projects/${project.data.id}/daily-report?date=${date}`}
+            >
+              작업일보 보기
+            </Link>
           </p>
           {problem && <Alert>{problem}</Alert>}
           {!problem && settings.data && log.isSuccess && isDraftReady && (

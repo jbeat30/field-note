@@ -180,6 +180,10 @@ const seed = (account: MockAccount) => {
   }
 };
 
+// 작업일보 목업이 쓰는 사진 조회 (썸네일 주소 포함, 지운 사진 제외)
+export const listMockPhotos = (account: MockAccount, projectId: string) =>
+  livePhotos(account, projectId).map(toPhoto);
+
 const livePhotos = (account: MockAccount, projectId?: string) => {
   seed(account);
 

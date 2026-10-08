@@ -21,6 +21,7 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createReportService } from '../report/reportService';
 import { createSearchService } from '../search/searchService';
 import { createPhotoService } from '../photo/photoService';
 import { createMemoryQueue } from '../queue/jobQueue';
@@ -82,6 +83,7 @@ const instance = () =>
     memos: createMemoService(db.app, () => NOW),
     materials: createMaterialService(db.app, () => NOW),
     search: createSearchService(db.app),
+    reports: createReportService(db.app, createMemoryStorage().storage, () => NOW),
     documents: createDocumentService(db.app, createMemoryStorage().storage, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
@@ -302,6 +304,16 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /memos/{id}', 'get', `/memos/${a.memoId}`],
     ['PATCH /memos/{id}', 'patch', `/memos/${a.memoId}`, { content: '침투' }],
     ['DELETE /memos/{id}', 'delete', `/memos/${a.memoId}`],
+    [
+      'GET /projects/{projectId}/daily-reports/{date}',
+      'get',
+      `/projects/${a.projectId}/daily-reports/${DAY}`,
+    ],
+    [
+      'GET /projects/{projectId}/daily-reports.xlsx',
+      'get',
+      `/projects/${a.projectId}/daily-reports.xlsx?from=${DAY}&to=${DAY}`,
+    ],
     ['GET /search', 'get', `/search?q=A&projectId=${a.projectId}`],
     ['GET /documents/{id}', 'get', `/documents/${a.documentId}`],
     ['PATCH /documents/{id}', 'patch', `/documents/${a.documentId}`, { title: '침투' }],
