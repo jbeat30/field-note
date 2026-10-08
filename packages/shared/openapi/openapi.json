@@ -142,6 +142,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -210,6 +211,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -278,6 +280,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -434,6 +437,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -502,6 +506,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -570,6 +575,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -734,6 +740,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -802,6 +809,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -870,6 +878,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -938,6 +947,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1071,6 +1081,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1139,6 +1150,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1207,6 +1219,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1306,6 +1319,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1374,6 +1388,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1512,6 +1527,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1580,6 +1596,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1648,6 +1665,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1716,6 +1734,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1830,6 +1849,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -1944,6 +1964,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2090,6 +2111,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2158,6 +2180,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2280,6 +2303,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2392,6 +2416,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2460,6 +2485,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2528,6 +2554,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2645,6 +2672,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2713,6 +2741,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2822,6 +2851,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2890,6 +2920,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -2958,6 +2989,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3081,6 +3113,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3149,6 +3182,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3217,6 +3251,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3343,6 +3378,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3411,6 +3447,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3479,6 +3516,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3547,6 +3585,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3671,6 +3710,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3739,6 +3779,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3807,6 +3848,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3875,6 +3917,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -3990,6 +4033,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4058,6 +4102,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4126,6 +4171,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4194,6 +4240,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4301,6 +4348,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4369,6 +4417,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4437,6 +4486,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4554,6 +4604,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4622,6 +4673,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4690,6 +4742,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4818,6 +4871,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -4963,6 +5017,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5031,6 +5086,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5166,6 +5222,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5234,6 +5291,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5302,6 +5360,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5450,6 +5509,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5518,6 +5578,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5586,6 +5647,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5790,6 +5852,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -5858,6 +5921,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6118,6 +6182,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6186,6 +6251,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6380,6 +6446,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6448,6 +6515,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6516,6 +6584,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6792,6 +6861,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6860,6 +6930,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -6928,6 +6999,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7086,6 +7158,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7154,6 +7227,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7352,6 +7426,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7420,6 +7495,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7578,6 +7654,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7646,6 +7723,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7714,6 +7792,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7914,6 +7993,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -7982,6 +8062,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8050,6 +8131,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8299,6 +8381,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8367,6 +8450,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8696,6 +8780,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -8764,6 +8849,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9000,6 +9086,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9068,6 +9155,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9136,6 +9224,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9474,6 +9563,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9542,6 +9632,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9610,6 +9701,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9884,6 +9976,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -9952,6 +10045,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10020,6 +10114,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10184,6 +10279,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10252,6 +10348,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10320,6 +10417,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10473,6 +10571,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10541,6 +10640,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10609,6 +10709,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10849,6 +10950,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10917,6 +11019,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -10985,6 +11088,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11241,6 +11345,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11309,6 +11414,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11377,6 +11483,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11635,6 +11742,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11703,6 +11811,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -11771,6 +11880,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12013,6 +12123,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12081,6 +12192,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12149,6 +12261,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12337,6 +12450,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12405,6 +12519,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12473,6 +12588,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12702,6 +12818,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12770,6 +12887,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -12838,6 +12956,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13011,6 +13130,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13079,6 +13199,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13147,6 +13268,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13468,6 +13590,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13536,6 +13659,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -13604,6 +13728,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14013,6 +14138,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14081,6 +14207,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14149,6 +14276,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14217,6 +14345,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14425,6 +14554,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14493,6 +14623,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14561,6 +14692,1403 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/projects/{projectId}/files": {
+      "post": {
+        "summary": "파일 업로드 신청 (형식·크기·회사 용량 확인 후 짧은 만료의 업로드 주소 발급)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "name": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  },
+                  "purpose": {
+                    "type": "string",
+                    "enum": [
+                      "PHOTO",
+                      "DOCUMENT"
+                    ]
+                  },
+                  "contentType": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "size": {
+                    "type": "integer",
+                    "minimum": 1
+                  }
+                },
+                "required": [
+                  "name",
+                  "purpose",
+                  "contentType",
+                  "size"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "file": {
+                      "type": "object",
+                      "properties": {
+                        "id": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "projectId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "purpose": {
+                          "type": "string",
+                          "enum": [
+                            "PHOTO",
+                            "DOCUMENT"
+                          ]
+                        },
+                        "name": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "status": {
+                          "type": "string",
+                          "enum": [
+                            "PENDING",
+                            "PROCESSING",
+                            "READY",
+                            "REJECTED"
+                          ]
+                        },
+                        "rejectReason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "CONTENT_MISMATCH",
+                            "SIZE_MISMATCH",
+                            "NOT_UPLOADED",
+                            "UNREADABLE_IMAGE",
+                            null
+                          ]
+                        },
+                        "hasThumbnail": {
+                          "type": "boolean"
+                        },
+                        "sha256": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "uploadedBy": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        },
+                        "readyAt": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "id",
+                        "projectId",
+                        "purpose",
+                        "name",
+                        "contentType",
+                        "size",
+                        "status",
+                        "rejectReason",
+                        "hasThumbnail",
+                        "sha256",
+                        "uploadedBy",
+                        "createdAt",
+                        "readyAt"
+                      ]
+                    },
+                    "upload": {
+                      "type": "object",
+                      "properties": {
+                        "url": {
+                          "type": "string",
+                          "format": "uri"
+                        },
+                        "method": {
+                          "type": "string",
+                          "enum": [
+                            "PUT"
+                          ]
+                        },
+                        "headers": {
+                          "type": "object",
+                          "additionalProperties": {
+                            "type": "string"
+                          }
+                        },
+                        "expiresAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "url",
+                        "method",
+                        "headers",
+                        "expiresAt"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "file",
+                    "upload"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "STORAGE_QUOTA_EXCEEDED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/files/{id}/complete": {
+      "post": {
+        "summary": "업로드 완료 알림 (내용 검사·썸네일 작업 시작, 여러 번 보내도 안전)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "purpose": {
+                      "type": "string",
+                      "enum": [
+                        "PHOTO",
+                        "DOCUMENT"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "contentType": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "READY",
+                        "REJECTED"
+                      ]
+                    },
+                    "rejectReason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "CONTENT_MISMATCH",
+                        "SIZE_MISMATCH",
+                        "NOT_UPLOADED",
+                        "UNREADABLE_IMAGE",
+                        null
+                      ]
+                    },
+                    "hasThumbnail": {
+                      "type": "boolean"
+                    },
+                    "sha256": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "uploadedBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "readyAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "purpose",
+                    "name",
+                    "contentType",
+                    "size",
+                    "status",
+                    "rejectReason",
+                    "hasThumbnail",
+                    "sha256",
+                    "uploadedBy",
+                    "createdAt",
+                    "readyAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/files/{id}": {
+      "get": {
+        "summary": "파일 정보와 검사 상태 (거부되면 사유 포함)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "purpose": {
+                      "type": "string",
+                      "enum": [
+                        "PHOTO",
+                        "DOCUMENT"
+                      ]
+                    },
+                    "name": {
+                      "type": "string"
+                    },
+                    "contentType": {
+                      "type": "string"
+                    },
+                    "size": {
+                      "type": "integer"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "PENDING",
+                        "PROCESSING",
+                        "READY",
+                        "REJECTED"
+                      ]
+                    },
+                    "rejectReason": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "enum": [
+                        "CONTENT_MISMATCH",
+                        "SIZE_MISMATCH",
+                        "NOT_UPLOADED",
+                        "UNREADABLE_IMAGE",
+                        null
+                      ]
+                    },
+                    "hasThumbnail": {
+                      "type": "boolean"
+                    },
+                    "sha256": {
+                      "type": [
+                        "string",
+                        "null"
+                      ]
+                    },
+                    "uploadedBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "readyAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "purpose",
+                    "name",
+                    "contentType",
+                    "size",
+                    "status",
+                    "rejectReason",
+                    "hasThumbnail",
+                    "sha256",
+                    "uploadedBy",
+                    "createdAt",
+                    "readyAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/files/{id}/url": {
+      "get": {
+        "summary": "내려받기·미리보기 주소 발급 (검사가 끝난 파일만, 짧은 만료)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "original",
+                "thumbnail"
+              ],
+              "default": "original"
+            },
+            "required": false,
+            "name": "variant",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "expiresAt"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14754,6 +16282,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14822,6 +16351,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14890,6 +16420,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -14958,6 +16489,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15057,6 +16589,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15125,6 +16658,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15193,6 +16727,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15301,6 +16836,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15369,6 +16905,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15479,6 +17016,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15580,6 +17118,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15648,6 +17187,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
@@ -15749,6 +17289,7 @@
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
                             "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
                             "IDEMPOTENCY_KEY_REQUIRED",
                             "IDEMPOTENCY_KEY_REUSED",
                             "IDEMPOTENCY_IN_PROGRESS",
