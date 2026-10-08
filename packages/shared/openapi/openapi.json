@@ -19705,6 +19705,13 @@
                               "null"
                             ],
                             "format": "date"
+                          },
+                          "lastRecordedAt": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date-time"
                           }
                         },
                         "required": [
@@ -19714,7 +19721,8 @@
                           "unit",
                           "category",
                           "isActive",
-                          "lastUsedOn"
+                          "lastUsedOn",
+                          "lastRecordedAt"
                         ]
                       }
                     }
@@ -19956,6 +19964,13 @@
                         "null"
                       ],
                       "format": "date"
+                    },
+                    "lastRecordedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
                     }
                   },
                   "required": [
@@ -19965,7 +19980,8 @@
                     "unit",
                     "category",
                     "isActive",
-                    "lastUsedOn"
+                    "lastUsedOn",
+                    "lastRecordedAt"
                   ]
                 }
               }
@@ -20215,6 +20231,13 @@
                         "null"
                       ],
                       "format": "date"
+                    },
+                    "lastRecordedAt": {
+                      "type": [
+                        "string",
+                        "null"
+                      ],
+                      "format": "date-time"
                     }
                   },
                   "required": [
@@ -20224,7 +20247,8 @@
                     "unit",
                     "category",
                     "isActive",
-                    "lastUsedOn"
+                    "lastUsedOn",
+                    "lastRecordedAt"
                   ]
                 }
               }

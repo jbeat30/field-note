@@ -1,6 +1,6 @@
 import { Dialog } from 'radix-ui';
 import { useState } from 'react';
-import { Link, useMatch } from 'react-router';
+import { Link, useLocation, useMatch } from 'react-router';
 
 import { Button } from '../components/ui/button';
 import { MemoForm } from '../memos/MemoForm';
@@ -20,8 +20,13 @@ export const QuickAddSheet = () => {
   const [mode, setMode] = useState<Mode>('MENU');
   const create = useCreateMemo();
   const projectId = useMatch('/projects/:id/*')?.params.id;
+  const { pathname, search } = useLocation();
+  // 일지 화면(/work-logs?project=)에서도 지금 보고 있는 프로젝트로 이어 감
+  const workLogProject =
+    pathname === '/work-logs' ? new URLSearchParams(search).get('project') : null;
   // 프로젝트 등록 화면(/projects/new)은 프로젝트가 아님
-  const currentProject = projectId && projectId !== 'new' ? projectId : undefined;
+  const currentProject =
+    projectId && projectId !== 'new' ? projectId : (workLogProject ?? undefined);
 
   const close = () => {
     setOpen(false);

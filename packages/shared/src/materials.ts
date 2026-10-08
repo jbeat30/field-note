@@ -128,17 +128,23 @@ export const materialSchema = z.object({
   isActive: z.boolean(),
   // 가장 최근에 기록한 날짜 (회사 전체 기준, 없으면 null). 최근 쓴 자재를 위에 보여 주는 기준
   lastUsedOn: dateSchema.nullable(),
+  // 가장 최근에 기록을 입력한 시각. 같은 날 쓴 자재끼리는 방금 입력한 자재가 먼저 오게 하는 기준
+  lastRecordedAt: z.iso.datetime().nullable(),
 });
 
 export type Material = z.infer<typeof materialSchema>;
 
-// 최근 쓴 자재가 먼저, 그다음 이름순 (서버와 목업이 같은 순서를 쓴다)
+// 최근 쓴 자재가 먼저(같은 날이면 방금 입력한 자재가 먼저), 그다음 이름순 (서버와 목업이 같은 순서를 쓴다)
 export const compareMaterials = (a: Material, b: Material) => {
   if (a.lastUsedOn !== b.lastUsedOn) {
     if (a.lastUsedOn === null) return 1;
     if (b.lastUsedOn === null) return -1;
 
     return b.lastUsedOn.localeCompare(a.lastUsedOn);
+  }
+
+  if (a.lastRecordedAt !== b.lastRecordedAt && a.lastRecordedAt && b.lastRecordedAt) {
+    return b.lastRecordedAt.localeCompare(a.lastRecordedAt);
   }
 
   return (
