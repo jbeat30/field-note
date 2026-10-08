@@ -41,6 +41,8 @@ model Company {
   id                   String                @id @default(dbgenerated("uuidv7()")) @db.Uuid
   name                 String
   status               CompanyStatus         @default(ACTIVE)
+  // 회사별 저장 용량 한도(바이트). 운영자가 서버 용량에 맞춰 조정 (서비스 기획서 §12.1)
+  storageQuotaBytes    BigInt                @default(5368709120) @map("storage_quota_bytes")
   createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   users                User[]
   sessions             Session[]
@@ -63,6 +65,7 @@ model Company {
   projectAssignments   ProjectAssignment[]
   projectPeriodChanges ProjectPeriodChange[]
   workLogs             WorkLog[]
+  files                StoredFile[]
   workLogEntries       WorkLogEntry[]
   workLogRevisions     WorkLogRevision[]
 
@@ -118,6 +121,7 @@ model Project {
   assignments      ProjectAssignment[]
   periodChanges    ProjectPeriodChange[]
   workLogs         WorkLog[]
+  files            StoredFile[]
 
   @@id([companyId, id])
   @@unique([companyId, code])
@@ -339,6 +343,7 @@ model User {
   projectStatusChanges ProjectStatusChange[] @relation("ProjectStatusChangedBy")
   projectPeriodChanges ProjectPeriodChange[] @relation("ProjectPeriodChangedBy")
   workLogRevisions     WorkLogRevision[]     @relation("WorkLogRevisionChangedBy")
+  uploadedFiles        StoredFile[]          @relation("FileUploadedBy")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -650,4 +655,62 @@ model CompanyClosure {
   company         Company   @relation(fields: [companyId], references: [id])
 
   @@map("company_closures")
+}
+
+// 업로드 파일 용도: 현장 사진, 작업자료(문서함)
+enum FilePurpose {
+  PHOTO
+  DOCUMENT
+
+  @@map("file_purpose")
+}
+
+// 업로드 신청(PENDING) → 올라온 뒤 내용 검사·썸네일 작업 중(PROCESSING) → 사용 가능(READY) 또는 거부(REJECTED)
+enum FileStatus {
+  PENDING
+  PROCESSING
+  READY
+  REJECTED
+
+  @@map("file_status")
+}
+
+enum FileRejectReason {
+  CONTENT_MISMATCH
+  SIZE_MISMATCH
+  NOT_UPLOADED
+  UNREADABLE_IMAGE
+
+  @@map("file_reject_reason")
+}
+
+// 업로드 파일의 메타데이터 (실제 내용은 객체 저장소). 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남긴다 (서비스 기획서 §12.1)
+model StoredFile {
+  companyId    String            @map("company_id") @db.Uuid
+  id           String            @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId    String            @map("project_id") @db.Uuid
+  purpose      FilePurpose
+  status       FileStatus        @default(PENDING)
+  originalName String            @map("original_name")
+  // 신청 때는 브라우저가 알려 준 형식, 사용 가능해진 뒤에는 내용으로 판별한 형식
+  contentType  String            @map("content_type")
+  // 신청한 크기. 올라온 크기와 다르면 거부
+  sizeBytes    BigInt            @map("size_bytes")
+  objectKey    String            @map("object_key")
+  thumbnailKey String?           @map("thumbnail_key")
+  sha256       String?
+  rejectReason FileRejectReason? @map("reject_reason")
+  uploadedBy   String            @map("uploaded_by") @db.Uuid
+  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  readyAt      DateTime?         @map("ready_at") @db.Timestamptz(3)
+  company      Company           @relation(fields: [companyId], references: [id])
+  project      Project           @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  uploader     User              @relation("FileUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@unique([objectKey])
+  @@index([companyId, projectId, purpose])
+  @@index([companyId, status])
+  @@map("files")
 }

@@ -1,4 +1,5 @@
 import type { PrismaClient } from '../db/client';
+import type { ObjectStorage } from '../storage/objectStorage';
 
 import { ANONYMIZED_COMPANY_NAME, ANONYMIZED_USER_NAME } from './purgePolicy';
 
@@ -20,10 +21,11 @@ export type PurgeResult = {
 /**
  * @description 해지 유예가 끝난 회사의 데이터 삭제·익명화 (삭제 전용 계정 전용)
  * 한 트랜잭션이라 중간에 실패하면 아무것도 바뀌지 않는다. `PURGE_POLICY`의 DELETE는 삭제, ANONYMIZE는 개인 식별 항목 제거, KEEP은 건드리지 않음
- * 업로드 파일(객체 저장소)은 파일 기능이 생기는 2단계에서 이 함수에 삭제 단계를 추가한다
+ * 업로드 파일은 저장소를 넘기면 회사 경로(`company/{회사ID}/`) 아래 객체를 먼저 지운다 (삭제 시기 확인 뒤, 중간에 실패해도 다시 실행하면 이어서 처리)
  * @param prisma 삭제 전용 계정(DATABASE_PURGE_URL) Prisma 클라이언트
  * @param companyId 대상 회사
  * @param now 현재 시각
+ * @param storage 객체 저장소 (없으면 파일 객체는 건드리지 않음)
  * @returns 삭제·익명화 결과 (개수)
  * @throws 유예가 끝나지 않았거나 이미 취소·삭제된 경우
  */
@@ -31,6 +33,7 @@ export const purgeCompany = (
   prisma: PrismaClient,
   companyId: string,
   now: Clock = () => new Date(),
+  storage?: ObjectStorage,
 ): Promise<PurgeResult> =>
   prisma.$transaction(async (tx) => {
     const at = now();
@@ -50,8 +53,13 @@ export const purgeCompany = (
     const deleted: Record<string, number> = {};
     const where = { companyId };
 
+    if (storage) {
+      deleted.file_objects = await storage.removePrefix(`company/${companyId}/`);
+    }
+
     // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
     // 일지의 수정 이력 → 공수 항목 → 일지 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
+    deleted.files = (await tx.storedFile.deleteMany({ where })).count;
     deleted.work_log_revisions = (await tx.workLogRevision.deleteMany({ where })).count;
     deleted.work_log_entries = (await tx.workLogEntry.deleteMany({ where })).count;
     deleted.work_logs = (await tx.workLog.deleteMany({ where })).count;
@@ -127,17 +135,19 @@ export type PurgeDueSummary = {
  * @description 삭제 시기가 된 모든 회사를 처리 (점검 작업이 주기적으로 호출, 여러 번 실행해도 안전)
  * @param prisma 삭제 전용 계정 Prisma 클라이언트
  * @param now 현재 시각
+ * @param storage 객체 저장소 (없으면 파일 객체는 건드리지 않음)
  * @returns 처리·실패 요약
  */
 export const purgeDueCompanies = async (
   prisma: PrismaClient,
   now: Clock = () => new Date(),
+  storage?: ObjectStorage,
 ): Promise<PurgeDueSummary> => {
   const summary: PurgeDueSummary = { purged: [], failed: [] };
 
   for (const due of await listDueClosures(prisma, now)) {
     try {
-      summary.purged.push(await purgeCompany(prisma, due.companyId, now));
+      summary.purged.push(await purgeCompany(prisma, due.companyId, now, storage));
     } catch (error) {
       summary.failed.push({
         companyId: due.companyId,

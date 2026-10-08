@@ -18,11 +18,13 @@ import { createPrismaClient } from './db/client';
 import { createSmtpMailer } from './email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
 import { parseEnv } from './env';
+import { createFileService, registerFileWorker } from './file/fileService';
 import { createPrismaInvitationStore } from './invitation/invitationStore';
 import { createLogger } from './logger';
 import { chooseSocialProvider } from './social/provider';
 import { createPgBossQueue } from './queue/jobQueue';
 import { createPrismaSessionStore } from './session/sessionStore';
+import { createS3Storage } from './storage/objectStorage';
 
 const main = async () => {
   const env = parseEnv();
@@ -45,6 +47,20 @@ const main = async () => {
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
+  // 객체 저장소 (로컬은 버킷이 없으면 만든다. 운영은 운영자가 버킷을 미리 준비)
+  const { storage, ensureBucket } = createS3Storage({
+    endpoint: env.S3_ENDPOINT,
+    region: env.S3_REGION,
+    bucket: env.S3_BUCKET,
+    accessKey: env.S3_ACCESS_KEY,
+    secretKey: env.S3_SECRET_KEY,
+  });
+
+  if (env.NODE_ENV !== 'production') {
+    await ensureBucket();
+  }
+
+  const files = createFileService({ app: appPrisma, storage, queue });
   const mailer = createSmtpMailer({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
@@ -89,6 +105,7 @@ const main = async () => {
   });
 
   await registerClosureWorker(queue, closure);
+  await registerFileWorker(queue, files);
   await registerEmailVerificationWorker(queue, emailVerification);
   await registerPasswordResetWorker(queue, passwordService);
   await registerSecurityNoticeWorker(queue, mailer);
@@ -107,6 +124,7 @@ const main = async () => {
     projects,
     assignments,
     workLogs,
+    files,
     closure,
     social: {
       choice: socialChoice,

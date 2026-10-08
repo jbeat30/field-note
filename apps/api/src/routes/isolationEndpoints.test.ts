@@ -16,6 +16,9 @@ import { createAccountService } from '../auth/accountService';
 import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createEmployeeService } from '../employee/employeeService';
+import { createFileService } from '../file/fileService';
+import { createMemoryQueue } from '../queue/jobQueue';
+import { createMemoryStorage } from '../storage/objectStorage';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createCompanyWithInvitation } from '../operator/operatorService';
 import { createPartnerService } from '../partner/partnerService';
@@ -63,6 +66,12 @@ const instance = () =>
     projects: createProjectService(db.app, () => NOW),
     assignments: createAssignmentService(db.app),
     workLogs: createWorkLogService(db.app, () => NOW),
+    files: createFileService({
+      app: db.app,
+      storage: createMemoryStorage().storage,
+      queue: createMemoryQueue().queue,
+      now: () => NOW,
+    }),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -108,6 +117,8 @@ const client = (cookie: string) => {
     id: async (path: string, body: object) => (await call('post', path, body)).body.id as string,
   };
 };
+
+const FILE_REQUEST = { name: '현장.jpg', contentType: 'image/jpeg', purpose: 'PHOTO', size: 1000 };
 
 // 회사 A: 거래처·직원·프로젝트·투입·일지·선택 목록 항목을 한 벌씩
 const buildCompany = async () => {
@@ -159,7 +170,22 @@ const buildCompany = async () => {
     periodChangeReason: '기간 연장',
   });
 
-  return { cookie, c, clientId, managerId, worker, category, jobType, projectId, assignment };
+  // 업로드를 신청해 둔 파일 한 건 (검사 전 상태여도 다른 회사에는 보이지 않아야 함)
+  const fileId = (await c.call('post', `/projects/${projectId}/files`, FILE_REQUEST)).body.file
+    .id as string;
+
+  return {
+    cookie,
+    c,
+    clientId,
+    managerId,
+    worker,
+    category,
+    jobType,
+    projectId,
+    assignment,
+    fileId,
+  };
 };
 
 // B에게 A의 ID로 접근하는 요청 전부. 하나라도 성공하면 격리가 깨진 것이다
@@ -219,10 +245,20 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'get',
       `/projects/${a.projectId}/work-logs/${DAY}/revisions`,
     ],
+    ['POST /projects/{projectId}/files', 'post', `/projects/${a.projectId}/files`, FILE_REQUEST],
+    ['GET /files/{id}', 'get', `/files/${a.fileId}`],
+    ['POST /files/{id}/complete', 'post', `/files/${a.fileId}/complete`],
+    ['GET /files/{id}/url', 'get', `/files/${a.fileId}/url`],
   ] as const;
 
 // 이 접두사 아래의 인증 필요 엔드포인트는 모두 위 목록에 있어야 한다 (새 엔드포인트가 격리 검사를 빠뜨리지 않게 함)
-const ID_BOUND = ['/company/options/{id}', '/employees/{id}', '/partners/{id}', '/projects/{id}'];
+const ID_BOUND = [
+  '/company/options/{id}',
+  '/employees/{id}',
+  '/files/{id}',
+  '/partners/{id}',
+  '/projects/{id}',
+];
 // ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다
 const COLLECTIONS = [
   'GET /company/options',
@@ -247,8 +283,8 @@ describe('회사 격리: 1단계 엔드포인트', () => {
         .map(([method]) => `${method.toUpperCase()} ${path.replace('/api/v1', '')}`),
     );
     const stepOne = found.filter((entry) =>
-      [...ID_BOUND, '/company/options', '/employees', '/partners', '/projects'].some((prefix) =>
-        entry.split(' ')[1]!.startsWith(prefix.replace('/{id}', '')),
+      [...ID_BOUND, '/company/options', '/employees', '/files', '/partners', '/projects'].some(
+        (prefix) => entry.split(' ')[1]!.startsWith(prefix.replace('/{id}', '')),
       ),
     );
     const dummy = {
@@ -261,6 +297,7 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       jobType: '{id}',
       projectId: '{id}',
       assignment: '{assignmentId}',
+      fileId: '{id}',
     };
     const covered = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const missing = stepOne.filter((entry) => !covered.has(entry));
