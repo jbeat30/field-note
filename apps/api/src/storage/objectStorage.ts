@@ -6,6 +6,7 @@ import {
   HeadBucketCommand,
   HeadObjectCommand,
   ListObjectsV2Command,
+  PutBucketCorsCommand,
   PutObjectCommand,
   S3Client,
   S3ServiceException,
@@ -140,8 +141,8 @@ export const createS3Storage = (config: S3Config) => {
     },
   };
 
-  // 버킷이 없으면 만든다 (로컬 개발용. 운영은 운영자가 버킷을 미리 준비)
-  const ensureBucket = async () => {
+  // 버킷이 없으면 만들고, 웹 주소에서 브라우저가 직접 올리고 볼 수 있게 CORS를 설정한다 (로컬 개발용. 운영은 운영자가 버킷과 CORS를 미리 준비)
+  const ensureBucket = async (webOrigin: string) => {
     try {
       await client.send(new HeadBucketCommand({ Bucket }));
     } catch (error) {
@@ -151,6 +152,22 @@ export const createS3Storage = (config: S3Config) => {
 
       await client.send(new CreateBucketCommand({ Bucket }));
     }
+
+    await client.send(
+      new PutBucketCorsCommand({
+        Bucket,
+        CORSConfiguration: {
+          CORSRules: [
+            {
+              AllowedOrigins: [webOrigin],
+              AllowedMethods: ['PUT', 'GET', 'HEAD'],
+              AllowedHeaders: ['Content-Type'],
+              MaxAgeSeconds: 3600,
+            },
+          ],
+        },
+      }),
+    );
   };
 
   return { storage, ensureBucket };
