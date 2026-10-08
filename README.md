@@ -211,6 +211,8 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 업무 쿼리는 반드시 `withCompany(prisma, 회사ID, (tx) => …)`가 넘겨주는 `tx`로만 실행한다. 이 밖에서 조회하면 아무 행도 보이지 않는다
 - `pnpm test`의 격리·스키마 검사 테스트는 Docker로 임시 PostgreSQL을 띄운다. Docker가 꺼져 있으면 실패한다
 - Prisma 클라이언트는 `pnpm typecheck`·`pnpm test`가 자동으로 생성한다 (`src/generated`, Git 제외)
+- **새 기능을 만들 때 격리 시험을 빠뜨릴 수 없다**: 로그인이 필요한 엔드포인트를 새로 만들면 `isolationEndpoints.test.ts`의 격리 시험 목록(다른 회사의 ID로 요청해 404인지)에 넣어야 하고, 안 넣으면 시험이 실패한다. 본인 계정·세션만 다루는 것만 `OWN_ACCOUNT_ONLY`에 둘 수 있다. 새 테이블은 `company_id`·RLS·해지 삭제 정책이 없으면 실패하고, 운영자·로그인 전용·작업 큐 계정이 접근할 수 있는 테이블은 목록으로 고정되어 있다
+- 파일은 저장소 경로가 `company/{회사 ID}/`로 시작해야 하며, DB가 다른 회사 경로를 가리키는 파일 행을 거부한다. 내려받기·열람 주소는 회사 범위에서 찾은 파일에만 발급한다
 
 ## API 규칙
 

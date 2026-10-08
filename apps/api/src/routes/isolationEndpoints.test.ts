@@ -373,21 +373,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['DELETE /material-records/{id}', 'delete', `/material-records/${a.materialRecordId}`],
   ] as const;
 
-// 이 접두사 아래의 인증 필요 엔드포인트는 모두 위 목록에 있어야 한다 (새 엔드포인트가 격리 검사를 빠뜨리지 않게 함)
-const ID_BOUND = [
-  '/search',
-  '/company/options/{id}',
-  '/employees/{id}',
-  '/files/{id}',
-  '/documents/{id}',
-  '/materials/{id}',
-  '/material-records/{id}',
-  '/memos/{id}',
-  '/photos/{id}',
-  '/partners/{id}',
-  '/projects/{id}',
-];
-// ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다
+// ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다 (로그인이 필요한 엔드포인트는 전부 이 목록·위의 공격 목록·본인 계정 전용 목록 중 하나에 있어야 함)
 const COLLECTIONS = [
   'GET /company/options',
   'POST /company/options',
@@ -405,26 +391,38 @@ const COLLECTIONS = [
   'POST /projects',
 ];
 
-describe('회사 격리: 1단계 엔드포인트', () => {
-  it('새로 만든 1단계 엔드포인트는 모두 격리 시험 목록에 있다', async () => {
+// 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트.
+// 회사 업무 데이터를 다루는 새 엔드포인트는 여기에 넣지 말고 위의 시험 목록(attacks·COLLECTIONS)에 넣는다.
+// 각자 전용 시험이 있다: 계정(accountRoutes)·기기(deviceRoutes: 다른 회사 사용자의 기기 로그아웃 불가)·소셜(socialRoutes)·회사 설정(companySettingsRoutes: 두 회사의 설정은 서로 독립)
+const OWN_ACCOUNT_ONLY = [
+  // 틀 검증용 샘플 쓰기 API (업무 데이터 없음)
+  'POST /samples',
+  'POST /auth/email/verify',
+  'POST /auth/email/resend',
+  'POST /auth/logout',
+  'GET /me',
+  'POST /me/password',
+  'POST /me/email/change',
+  'POST /me/closure',
+  'GET /me/devices',
+  'DELETE /me/devices/{id}',
+  'GET /me/social',
+  'POST /me/social/kakao/start',
+  'DELETE /me/social/kakao',
+  'GET /company/settings',
+  'PUT /company/settings',
+];
+
+describe('회사 격리: 전 엔드포인트', () => {
+  it('로그인이 필요한 모든 엔드포인트는 격리 시험 목록 또는 본인 계정 전용 목록에 있다', async () => {
     const spec = JSON.parse(
       readFileSync(join(__dirname, '../../../../packages/shared/openapi/openapi.json'), 'utf8'),
-    ) as { paths: Record<string, Record<string, { security?: unknown }>> };
-    const found = Object.entries(spec.paths).flatMap(([path, methods]) =>
+    ) as { paths: Record<string, Record<string, { security?: unknown[] }>> };
+    // 접두사로 대상을 고르지 않고 로그인이 필요한 모든 엔드포인트를 본다 (새 기능이 어느 경로에 생겨도 빠지지 않게)
+    const authenticated = Object.entries(spec.paths).flatMap(([path, methods]) =>
       Object.entries(methods)
-        .filter(([, operation]) => operation.security)
+        .filter(([, operation]) => (operation.security?.length ?? 0) > 0)
         .map(([method]) => `${method.toUpperCase()} ${path.replace('/api/v1', '')}`),
-    );
-    const stepOne = found.filter((entry) =>
-      [
-        ...ID_BOUND,
-        '/company/options',
-        '/employees',
-        '/files',
-        '/photos',
-        '/partners',
-        '/projects',
-      ].some((prefix) => entry.split(' ')[1]!.startsWith(prefix.replace('/{id}', ''))),
     );
     const dummy = {
       cookie: '',
@@ -444,12 +442,19 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       docFileId: '{id}',
       documentId: '{id}',
     };
-    const covered = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
-    const missing = stepOne.filter((entry) => !covered.has(entry));
+    const tested = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
+    const exempt = new Set(OWN_ACCOUNT_ONLY);
+    const missing = authenticated.filter((entry) => !tested.has(entry) && !exempt.has(entry));
 
-    expect(stepOne.length).toBeGreaterThan(25);
-
+    expect(authenticated.length).toBeGreaterThan(60);
     expect(missing).toEqual([]);
+
+    // 목록이 낡지 않게: 시험·예외 목록의 모든 항목은 실제 엔드포인트여야 한다 (지운 엔드포인트가 남아 있으면 실패)
+    const known = new Set(authenticated);
+
+    expect([...tested, ...exempt].filter((entry) => !known.has(entry))).toEqual([]);
+    // 같은 엔드포인트가 두 목록에 동시에 있으면 안 됨 (업무 데이터를 예외로 숨기는 실수 방지)
+    expect([...exempt].filter((entry) => tested.has(entry))).toEqual([]);
   });
 
   it('회사 B는 회사 A의 ID로 조회·수정·전환·취소·저장 어느 것도 할 수 없다', async () => {
@@ -736,6 +741,14 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       'work_logs',
       'work_log_entries',
       'work_log_revisions',
+      // 2단계 테이블 (파일·사진·메모·자재·문서)
+      'files',
+      'photos',
+      'memos',
+      'materials',
+      'material_records',
+      'documents',
+      'document_versions',
     ]) {
       expect({ table, own: seen[table]?.own }).toEqual({ table, own: expect.any(Number) });
       expect(seen[table]!.own).toBeGreaterThan(0);
