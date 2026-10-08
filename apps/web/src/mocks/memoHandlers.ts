@@ -114,6 +114,9 @@ const live = (account: MockAccount) => {
   return [...memos.values()].filter((memo) => memo.scope === scopeOf(account) && !memo.deletedAt);
 };
 
+// 검색 목업이 쓰는 메모 조회 (지운 메모 제외)
+export const listMockMemos = (account: MockAccount) => live(account).map(toMemo);
+
 const newestFirst = (a: MockMemo, b: MockMemo) =>
   b.memoDate.localeCompare(a.memoDate) || b.id.localeCompare(a.id);
 

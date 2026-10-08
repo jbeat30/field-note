@@ -6,6 +6,7 @@ import {
   optionsResponseSchema,
   partnersResponseSchema,
   projectsResponseSchema,
+  searchResponseSchema,
   workLogsResponseSchema,
 } from '@field-note/shared';
 import request from 'supertest';
@@ -20,6 +21,7 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createSearchService } from '../search/searchService';
 import { createPhotoService } from '../photo/photoService';
 import { createMemoryQueue } from '../queue/jobQueue';
 import { createMemoryStorage } from '../storage/objectStorage';
@@ -79,6 +81,7 @@ const instance = () =>
     photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
     memos: createMemoService(db.app, () => NOW),
     materials: createMaterialService(db.app, () => NOW),
+    search: createSearchService(db.app),
     documents: createDocumentService(db.app, createMemoryStorage().storage, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
@@ -299,6 +302,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /memos/{id}', 'get', `/memos/${a.memoId}`],
     ['PATCH /memos/{id}', 'patch', `/memos/${a.memoId}`, { content: '침투' }],
     ['DELETE /memos/{id}', 'delete', `/memos/${a.memoId}`],
+    ['GET /search', 'get', `/search?q=A&projectId=${a.projectId}`],
     ['GET /documents/{id}', 'get', `/documents/${a.documentId}`],
     ['PATCH /documents/{id}', 'patch', `/documents/${a.documentId}`, { title: '침투' }],
     ['DELETE /documents/{id}', 'delete', `/documents/${a.documentId}`],
@@ -359,6 +363,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
 
 // 이 접두사 아래의 인증 필요 엔드포인트는 모두 위 목록에 있어야 한다 (새 엔드포인트가 격리 검사를 빠뜨리지 않게 함)
 const ID_BOUND = [
+  '/search',
   '/company/options/{id}',
   '/employees/{id}',
   '/files/{id}',
@@ -480,6 +485,43 @@ describe('회사 격리: 1단계 엔드포인트', () => {
     expect(employees.items.map((item) => item.id)).not.toContain(a.worker);
     expect(partners.items.map((item) => item.id)).not.toContain(a.clientId);
     expect(projects.items.map((item) => item.id)).not.toContain(a.projectId);
+
+    // 통합 검색에도 다른 회사 데이터가 섞이지 않음
+    const hits = async (q: string) =>
+      searchResponseSchema.parse(
+        (await b.c.call('get', `/search?q=${encodeURIComponent(q)}&limit=20`)).body,
+      );
+
+    // 회사 A에만 있는 말을 직원·메모에 심어 둠 (회사마다 같은 더미 데이터가 있으므로 A 전용 값을 따로 만든다)
+    await a.c.call('post', '/employees', { name: '에이전용직원' });
+    await a.c.call('post', '/memos', { content: '에이전용메모키워드' });
+
+    for (const term of ['에이전용직원', '에이전용메모키워드']) {
+      const result = await hits(term);
+      const total = [
+        result.employees,
+        result.memos,
+        result.documents,
+        result.workLogs,
+        result.projects,
+      ].flatMap((group) => group.items);
+
+      expect({ term, total }).toEqual({ term, total: [] });
+    }
+
+    // A는 자기 데이터를 찾음 (검색 자체가 막힌 것이 아님)
+    const own = searchResponseSchema.parse(
+      (await a.c.call('get', `/search?q=${encodeURIComponent('에이전용직원')}`)).body,
+    );
+
+    expect(own.employees.items).toHaveLength(1);
+
+    // 같은 이름의 프로젝트는 회사마다 따로: B의 검색에는 B의 프로젝트만
+    const found = (await hits('판금')).projects.items.map((item) => item.id);
+
+    expect(found).toContain(b.projectId);
+    expect(found).not.toContain(a.projectId);
+    expect(a.projectId).not.toBe(b.projectId);
   });
 
   it('자기 데이터를 만들 때 다른 회사의 ID를 끼워 넣어도 거부된다', async () => {

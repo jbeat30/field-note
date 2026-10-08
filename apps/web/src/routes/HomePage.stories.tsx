@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { draftKey, serializeDraft } from '../drafts/formDraft';
 import { DEMO_PROJECTS } from '../mocks/demoSource';
@@ -66,5 +66,28 @@ export const NoDraftsNoSection: Story = {
 
     await canvas.findByText(/정리 안 된 메모/);
     await expect(canvas.queryByRole('heading', { name: '이어서 작성' })).not.toBeInTheDocument();
+  },
+};
+
+// 홈의 검색창에서 찾으면 검색 화면으로 이동 (이동한 곳에는 검색어가 이어짐)
+export const SearchFormNavigates: Story = {
+  // 홈 경로만 이 화면으로 두어, 다른 경로로 이동하면 스토리의 이동 표시가 나타나게 함
+  parameters: { router: { initialEntries: ['/'], path: '/' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('찾기'), '배관{Enter}');
+    // 라우터가 정의하지 않은 경로로 이동하면 스토리의 이동 표시가 나타남
+    await expect(await within(document.body).findByTestId('navigated')).toBeInTheDocument();
+  },
+};
+
+export const EmptySearchDoesNothing: Story = {
+  parameters: { router: { initialEntries: ['/'], path: '/' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.type(canvas.getByLabelText('찾기'), '   {Enter}');
+    await expect(within(document.body).queryByTestId('navigated')).not.toBeInTheDocument();
   },
 };

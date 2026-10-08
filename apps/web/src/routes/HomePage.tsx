@@ -1,9 +1,12 @@
-import { Link } from 'react-router';
+import { Link, useNavigate } from 'react-router';
+import { useState } from 'react';
 
 import { useMe } from '../auth/useMe';
 import { listResumable } from '../drafts/formDraft';
 import { ResumeDrafts } from '../drafts/ResumeDrafts';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
+import { Button } from '../components/ui/button';
+import { Input } from '../components/ui/input';
 import { useMemoSummary } from '../memos/useMemos';
 import { useProjects } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
@@ -12,6 +15,8 @@ import { useDraftStore } from '../stores/draftStore';
 export const HomePage = () => {
   const me = useMe();
   const summary = useMemoSummary();
+  const navigate = useNavigate();
+  const [searchText, setSearchText] = useState('');
   const projects = useProjects({});
   const drafts = useDraftStore((state) => state.drafts);
   const isDraftReady = useDraftHydrated();
@@ -22,6 +27,27 @@ export const HomePage = () => {
         <h1 className="text-2xl font-bold">{me.data?.companyName ?? '홈'}</h1>
         <p className="mt-2 text-sm">{me.data?.displayName}님, 안녕하세요</p>
       </div>
+      <form
+        role="search"
+        className="flex gap-2"
+        onSubmit={(event) => {
+          event.preventDefault();
+
+          if (searchText.trim())
+            void navigate(`/search?q=${encodeURIComponent(searchText.trim())}`);
+        }}
+      >
+        <Input
+          type="search"
+          className="min-w-0 flex-1"
+          aria-label="찾기"
+          placeholder="프로젝트·직원·메모·자료·일지 찾기"
+          maxLength={50}
+          value={searchText}
+          onChange={(event) => setSearchText(event.target.value)}
+        />
+        <Button type="submit">찾기</Button>
+      </form>
       <Link
         to="/inbox"
         className="flex min-h-touch flex-col gap-1 rounded-md border border-border p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

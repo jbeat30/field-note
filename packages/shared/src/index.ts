@@ -19,3 +19,4 @@ export * from './photos';
 export * from './memos';
 export * from './materials';
 export * from './documents';
+export * from './search';
