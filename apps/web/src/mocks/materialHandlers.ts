@@ -32,7 +32,7 @@ type Helpers = {
   ) => Promise<{ data: T } | { response: Response }>;
 };
 
-type MockMaterial = Omit<Material, 'lastUsedOn'> & {
+type MockMaterial = Omit<Material, 'lastUsedOn' | 'lastRecordedAt'> & {
   scope: string;
   nameKey: string;
   specKey: string;
@@ -207,20 +207,28 @@ const ownMaterials = (account: MockAccount) => {
 };
 
 // 응답에는 목업 내부 값(회사 구분, 비교용 값)을 싣지 않음
-const toMaterial = (account: MockAccount, material: MockMaterial): Material => ({
-  id: material.id,
-  name: material.name,
-  spec: material.spec,
-  unit: material.unit,
-  category: material.category,
-  isActive: material.isActive,
-  lastUsedOn:
-    liveRecords(account)
-      .filter((record) => record.materialId === material.id)
-      .map((record) => record.recordDate)
-      .sort()
-      .at(-1) ?? null,
-});
+const toMaterial = (account: MockAccount, material: MockMaterial): Material => {
+  const records = liveRecords(account).filter((record) => record.materialId === material.id);
+
+  return {
+    id: material.id,
+    name: material.name,
+    spec: material.spec,
+    unit: material.unit,
+    category: material.category,
+    isActive: material.isActive,
+    lastUsedOn:
+      records
+        .map((record) => record.recordDate)
+        .sort()
+        .at(-1) ?? null,
+    lastRecordedAt:
+      records
+        .map((record) => record.createdAt)
+        .sort()
+        .at(-1) ?? null,
+  };
+};
 
 const toRecord = (record: MockRecord): MaterialRecord => ({
   id: record.id,

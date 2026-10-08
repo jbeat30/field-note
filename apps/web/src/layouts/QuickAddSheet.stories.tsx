@@ -73,3 +73,24 @@ export const InsideProject: Story = {
     await expect(dialog.getByText('이 프로젝트의 메모 노트에 저장합니다')).toBeInTheDocument();
   },
 };
+
+// 일지 화면에서도 보고 있는 프로젝트로 바로 연결 (일지를 쓰다가 사진·메모를 더하는 흐름)
+export const InsideWorkLogScreen: Story = {
+  parameters: {
+    router: {
+      initialEntries: [`/work-logs?project=${projectId}&date=2026-10-08`],
+      path: '/work-logs',
+    },
+  },
+  play: async () => {
+    const dialog = within(await screen.findByRole('dialog'));
+
+    await expect(dialog.getByRole('link', { name: '사진' })).toHaveAttribute(
+      'href',
+      `/projects/${projectId}/photos`,
+    );
+
+    await userEvent.click(dialog.getByRole('button', { name: '메모' }));
+    await expect(dialog.getByText('이 프로젝트의 메모 노트에 저장합니다')).toBeInTheDocument();
+  },
+};
