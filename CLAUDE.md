@@ -22,7 +22,7 @@
 
 ## 작업 진행 절차
 
-사용자가 "머지했어 다음 진행해줘"처럼 요청하면 아래 순서로 이어서 진행한다. 새 세션이면 먼저 `docs/03-progress.md`의 "다음 작업"과 `git log`·`gh pr list`로 현재 위치를 확인한다
+사용자가 이전 작업(PR)을 확인·승인하고 다음 진행을 요청하면 ("머지했어", "확인했어", "승인", "다음 진행해줘" 등 표현은 무관) 아래 순서로 이어서 진행한다. 사용자의 컨펌이 곧 진행 신호이며, 머지 여부는 `gh pr view`·`git log`로 직접 확인한다. 새 세션이면 먼저 `docs/03-progress.md`의 "다음 작업"과 `git log`·`gh pr list`로 현재 위치를 확인한다
 
 1. **상태 확인**: 머지된 PR을 반영해 `git checkout feature/<버전> && git pull origin feature/<버전>`로 최신화한다. 릴리즈 흐름 중이면 `docs/02-git-workflow.md`의 4~6번 순서를 따른다 (`release/<버전>` 생성 → feature → release PR → 버전 올림 `fix-release-version-<버전>` PR(squash) → release → main PR(merge commit), 태그·Release는 main 머지 시 자동 생성)
 2. **브랜치**: `feature/<버전>`에서 `<타입>-<작업명>` 브랜치를 만든다
@@ -30,7 +30,7 @@
 4. **검증**: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm build && pnpm test && pnpm test:stories`를 모두 통과시키고, 화면이 있으면 실제 API·DB와 Chromium(Playwright)으로 직접 확인한다. 새 화면·컴포넌트에는 Storybook 스토리를 만든다
 5. **문서**: README, `docs/04-data-model.md`(스키마 변경 시), `docs/03-progress.md`(완료·다음 작업·메모)를 같은 PR에서 갱신한다. 문서만 바꾸는 PR을 따로 쌓지 않는다
 6. **커밋·PR**: `타입: 한국어 설명 (작업 ID)` 커밋(첨부 문구 없음) → 푸시 → `gh pr create --base feature/<버전>` (본문은 개요·변경 사항·검증·참고, 개조식). PR 본문은 임시 파일로 만들어 `--body-file`로 넘긴다
-7. **보고**: 한국어로 구현 내용·검증 결과·남은 일을 짧게 보고하고, 사용자가 "머지했어"라고 할 때까지 기다린다. 다음 작업을 미리 시작하지 않는다
+7. **보고**: 한국어로 구현 내용·검증 결과·남은 일을 짧게 보고하고, 사용자의 컨펌(PR 확인·승인) 전에는 다음 작업을 시작하지 않는다. 보고 끝에 "확인 후 알려 주세요"라고 요청한다.
 8. **합의가 필요한 일**: GitHub 저장소 보호 설정 변경, 운영 서버·카카오 앱 등록(운영 서버 작업 때로 미룸)은 사용자와 합의 후에만 한다
 
 ### 로컬 실행 요령
