@@ -16,6 +16,8 @@ import { registerAssignmentRoutes } from './routes/assignments';
 import { registerOptionRoutes } from './routes/options';
 import { registerWorkLogRoutes } from './routes/workLogs';
 import { registerFileRoutes } from './routes/files';
+import { registerPhotoRoutes } from './routes/photos';
+import type { PhotoService } from './photo/photoService';
 import type { FileService } from './file/fileService';
 import { registerPartnerRoutes } from './routes/partners';
 import { registerProjectRoutes } from './routes/projects';
@@ -67,6 +69,8 @@ export type AppOptions = {
   workLogs?: WorkLogService;
   // 없으면 파일 업로드 API는 501
   files?: FileService;
+  // 없으면 사진 API는 501
+  photos?: PhotoService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
   social?: {
     choice: SocialProviderChoice;
@@ -120,6 +124,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerAssignmentRoutes(registry, options.assignments);
   registerWorkLogRoutes(registry, options.workLogs);
   registerFileRoutes(registry, options.files);
+  registerPhotoRoutes(registry, options.photos);
   registerSocialRoutes(
     registry,
     options.social && options.accountService

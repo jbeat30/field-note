@@ -163,8 +163,8 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       nameKey: '삭제될 고객',
     },
   });
-  // 업로드 파일은 프로젝트·계정을 참조하므로 삭제 순서(파일 먼저)까지 함께 확인
-  await db.owner.storedFile.create({
+  // 사진 → 업로드 파일 순서(사진이 파일을 참조)와, 둘 다 프로젝트·계정을 참조하므로 그보다 먼저 지우는지까지 함께 확인
+  const file = await db.owner.storedFile.create({
     data: {
       companyId: account.companyId,
       projectId: project.id,
@@ -173,6 +173,16 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       contentType: 'image/jpeg',
       sizeBytes: 100n,
       objectKey: `company/${account.companyId}/project/${project.id}/file/original`,
+      uploadedBy: account.userId,
+    },
+  });
+  await db.owner.photo.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      fileId: file.id,
+      takenAt: new Date('2026-10-02T01:00:00Z'),
+      workDate: new Date('2026-10-02T00:00:00Z'),
       uploadedBy: account.userId,
     },
   });
@@ -210,6 +220,7 @@ describe('삭제·익명화', () => {
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.partner.count({ where })).toBe(0);
+    expect(await db.owner.photo.count({ where })).toBe(0);
     expect(await db.owner.storedFile.count({ where })).toBe(0);
     expect(await db.owner.session.count({ where })).toBe(0);
     expect(await db.owner.userCredential.count({ where })).toBe(0);
