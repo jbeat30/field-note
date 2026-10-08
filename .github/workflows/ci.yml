@@ -76,15 +76,43 @@ jobs:
       - run: pnpm --filter @field-note/web exec playwright install --with-deps chromium
       - run: pnpm test:stories
 
+  # 화면 전체 흐름(Playwright): 실제 DB·객체 저장소·API·웹을 띄워 핵심 흐름과 하루 일지 입력 시간을 확인
+  e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - uses: pnpm/action-setup@v6.1.0
+      - uses: actions/setup-node@v7.0.0
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @field-note/web exec playwright install --with-deps chromium
+      - run: pnpm env:init
+      - run: pnpm infra:up
+      - run: pnpm db:setup
+      - run: pnpm db:seed
+      - run: pnpm e2e
+      - name: 실패 시 보고서·추적 파일 보관
+        if: failure()
+        uses: actions/upload-artifact@v7.0.2
+        with:
+          name: e2e-report
+          path: |
+            apps/web/playwright-report
+            apps/web/test-results
+          retention-days: 7
+
   verify:
-    needs: [static, test, stories]
+    needs: [static, test, stories, e2e]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: 검사 결과 판정
         run: |
-          echo "static=${{ needs.static.result }} test=${{ needs.test.result }} stories=${{ needs.stories.result }}"
-          if [[ "${{ needs.static.result }}" != "success" || "${{ needs.test.result }}" != "success" || "${{ needs.stories.result }}" != "success" ]]; then
+          echo "static=${{ needs.static.result }} test=${{ needs.test.result }} stories=${{ needs.stories.result }} e2e=${{ needs.e2e.result }}"
+          if [[ "${{ needs.static.result }}" != "success" || "${{ needs.test.result }}" != "success" || "${{ needs.stories.result }}" != "success" || "${{ needs.e2e.result }}" != "success" ]]; then
             echo "실패한 검사가 있음"
             exit 1
           fi
