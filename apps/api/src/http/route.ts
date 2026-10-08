@@ -22,6 +22,8 @@ export type RouteSpec = {
   response: { status: number; schema: ZodType };
   // true면 핸들러가 돌려준 주소로 이동시키는 라우트 (소셜 로그인 콜백처럼 브라우저 이동 응답), 응답 스키마는 쓰지 않음
   redirect?: boolean;
+  // 파일을 내려주는 라우트 (엑셀 등). 핸들러는 { filename, body }를 돌려주고 응답 스키마는 쓰지 않음
+  file?: { contentType: string };
   // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능)
   idempotent?: boolean;
   rateLimit?: RateLimitOptions;
@@ -104,6 +106,22 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
 
       if (spec.redirect) {
         res.redirect(302, String(data));
+        return;
+      }
+
+      if (spec.file) {
+        const { filename, body } = data as { filename: string; body: Buffer };
+
+        // 한글 파일 이름도 깨지지 않게 RFC 5987 형식으로 보내고, 업무 파일이라 캐시하지 않음
+        res
+          .status(spec.response.status)
+          .type(spec.file.contentType)
+          .setHeader(
+            'Content-Disposition',
+            `attachment; filename*=UTF-8''${encodeURIComponent(filename)}`,
+          )
+          .setHeader('Cache-Control', 'no-store')
+          .send(body);
         return;
       }
 

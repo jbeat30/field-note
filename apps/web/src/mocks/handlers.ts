@@ -136,6 +136,12 @@ import {
   updateSettings,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
+import { createDocumentHandlers } from './documentHandlers';
+import { createMaterialHandlers } from './materialHandlers';
+import { createReportHandlers } from './reportHandlers';
+import { createSearchHandlers } from './searchHandlers';
+import { createMemoHandlers } from './memoHandlers';
+import { createPhotoHandlers } from './photoHandlers';
 
 // 실제 API와 같은 상태 코드·오류 형식을 쓴다 (공유 패키지의 같은 표 사용)
 const STATUS = ERROR_STATUS;
@@ -370,6 +376,13 @@ const toMockWorkLog = (
 };
 
 export const handlers = [
+  ...createPhotoHandlers({ apiError, parseBody }),
+  ...createMemoHandlers({ apiError, parseBody }),
+  ...createMaterialHandlers({ apiError, parseBody }),
+  ...createDocumentHandlers({ apiError, parseBody }),
+  ...createSearchHandlers({ apiError }),
+  ...createReportHandlers({ apiError }),
+
   http.get('/api/v1/health', async () => {
     await simulateLatency();
 

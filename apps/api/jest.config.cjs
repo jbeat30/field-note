@@ -1,6 +1,6 @@
 const base = require('@field-note/config/jest');
 
-// ESM 전용 패키지(pg-boss 계열)는 swc로 CommonJS 변환해서 사용 (기술 기획서 §13.1)
+// ESM 전용 패키지(pg-boss 계열, file-type 계열)는 swc로 CommonJS 변환해서 사용 (기술 기획서 §13.1)
 const ESM_ONLY_PACKAGES = [
   'pg-boss',
   'cron-parser',
@@ -9,6 +9,12 @@ const ESM_ONLY_PACKAGES = [
   'non-error',
   'arctic',
   '@oslojs',
+  'file-type',
+  'strtok3',
+  'token-types',
+  'uint8array-extras',
+  '@tokenizer',
+  '@borewit',
 ];
 
 module.exports = {

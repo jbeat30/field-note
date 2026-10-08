@@ -123,6 +123,48 @@ describe('스키마 검사', () => {
     await expect(db.operator.$queryRaw`SELECT * FROM consents`).rejects.toThrow();
   });
 
+  // 계정별로 접근할 수 있는 테이블을 목록으로 고정한다: 새 테이블이 실수로 운영자·로그인 전용·작업 큐 계정에 열리면 이 시험이 실패하고,
+  // 정말 필요하면 목록을 고치는 변경이 리뷰에 드러난다 (서비스 기획서 §5.1: 운영자도 회사 업무 데이터를 열람하지 않음)
+  const grantedTables = async (role: string) => {
+    const { rows } = await db.ownerPool.query<{ table_name: string }>(
+      `SELECT DISTINCT table_name FROM information_schema.role_table_grants
+        WHERE table_schema = 'public' AND grantee = $1 ORDER BY table_name`,
+      [role],
+    );
+
+    return rows.map((row) => row.table_name);
+  };
+
+  it('운영자 계정이 접근할 수 있는 테이블은 정해진 목록뿐이다 (회사 업무 데이터는 하나도 없음)', async () => {
+    expect(await grantedTables('field_note_operator')).toEqual([
+      'companies',
+      'invitations',
+      'legal_documents',
+      'operator_actions',
+      'users',
+    ]);
+  });
+
+  it('회사 범위 밖 전용 계정이 접근할 수 있는 테이블은 정해진 목록뿐이다 (업무 데이터는 하나도 없음)', async () => {
+    expect(await grantedTables('field_note_auth')).toEqual([
+      'companies',
+      'company_closures',
+      'consents',
+      'email_verifications',
+      'invitations',
+      'legal_documents',
+      'password_resets',
+      'sessions',
+      'social_accounts',
+      'user_credentials',
+      'users',
+    ]);
+  });
+
+  it('작업 큐 계정은 업무 테이블에 접근할 수 없다', async () => {
+    expect(await grantedTables('field_note_queue')).toEqual([]);
+  });
+
   it('운영자 작업 기록은 추가만 가능하다 (수정·삭제 권한 없음)', async () => {
     const { rows } = await db.ownerPool.query<{ privilege_type: string }>(
       `SELECT privilege_type FROM information_schema.role_table_grants
