@@ -69,6 +69,9 @@ model Company {
   photos               Photo[]
   memos                Memo[]
   materials            Material[]
+  documents            Document[]
+  documentVersions     DocumentVersion[]
+  auditLogs            AuditLog[]
   materialRecords      MaterialRecord[]
   workLogEntries       WorkLogEntry[]
   workLogRevisions     WorkLogRevision[]
@@ -129,6 +132,7 @@ model Project {
   photos           Photo[]
   memos            Memo[]
   materialRecords  MaterialRecord[]
+  documents        Document[]
 
   @@id([companyId, id])
   @@unique([companyId, code])
@@ -354,6 +358,9 @@ model User {
   uploadedPhotos       Photo[]               @relation("PhotoUploadedBy")
   memos                Memo[]                @relation("MemoCreatedBy")
   materialRecords      MaterialRecord[]      @relation("MaterialRecordCreatedBy")
+  documents            Document[]            @relation("DocumentCreatedBy")
+  documentVersions     DocumentVersion[]     @relation("DocumentVersionUploadedBy")
+  auditLogs            AuditLog[]            @relation("AuditLogActor")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -698,28 +705,29 @@ enum FileRejectReason {
 
 // 업로드 파일의 메타데이터 (실제 내용은 객체 저장소). 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남긴다 (서비스 기획서 §12.1)
 model StoredFile {
-  companyId    String            @map("company_id") @db.Uuid
-  id           String            @default(dbgenerated("uuidv7()")) @db.Uuid
-  projectId    String            @map("project_id") @db.Uuid
-  purpose      FilePurpose
-  status       FileStatus        @default(PENDING)
-  originalName String            @map("original_name")
+  companyId       String            @map("company_id") @db.Uuid
+  id              String            @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId       String            @map("project_id") @db.Uuid
+  purpose         FilePurpose
+  status          FileStatus        @default(PENDING)
+  originalName    String            @map("original_name")
   // 신청 때는 브라우저가 알려 준 형식, 사용 가능해진 뒤에는 내용으로 판별한 형식
-  contentType  String            @map("content_type")
+  contentType     String            @map("content_type")
   // 신청한 크기. 올라온 크기와 다르면 거부
-  sizeBytes    BigInt            @map("size_bytes")
-  objectKey    String            @map("object_key")
-  thumbnailKey String?           @map("thumbnail_key")
-  sha256       String?
-  rejectReason FileRejectReason? @map("reject_reason")
-  uploadedBy   String            @map("uploaded_by") @db.Uuid
-  createdAt    DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt    DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  readyAt      DateTime?         @map("ready_at") @db.Timestamptz(3)
-  company      Company           @relation(fields: [companyId], references: [id])
-  project      Project           @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
-  uploader     User              @relation("FileUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
-  photo        Photo?
+  sizeBytes       BigInt            @map("size_bytes")
+  objectKey       String            @map("object_key")
+  thumbnailKey    String?           @map("thumbnail_key")
+  sha256          String?
+  rejectReason    FileRejectReason? @map("reject_reason")
+  uploadedBy      String            @map("uploaded_by") @db.Uuid
+  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  readyAt         DateTime?         @map("ready_at") @db.Timestamptz(3)
+  company         Company           @relation(fields: [companyId], references: [id])
+  project         Project           @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  uploader        User              @relation("FileUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
+  photo           Photo?
+  documentVersion DocumentVersion?
 
   @@id([companyId, id])
   @@unique([objectKey])
@@ -879,4 +887,88 @@ model MaterialRecord {
   @@index([companyId, projectId, recordDate(sort: Desc), id(sort: Desc)])
   @@index([companyId, materialId])
   @@map("material_records")
+}
+
+// 작업자료 분류 (서비스 기획서 §12.3)
+enum DocumentCategory {
+  DRAWING
+  SPEC
+  WORK_ORDER
+  CONTRACT
+  SAFETY
+  OTHER
+
+  @@map("document_category")
+}
+
+// 감사 기록 종류 (서비스 기획서 §13.1). 지금은 민감 자료 열람·내려받기만
+enum AuditAction {
+  DOCUMENT_VIEWED
+  DOCUMENT_DOWNLOADED
+
+  @@map("audit_action")
+}
+
+// 작업자료 문서: 프로젝트에 붙는 개정되는 문서. 파일은 버전(document_versions)에 있고 최신 버전이 기본으로 보임
+// 민감 자료(is_sensitive)는 열람·다운로드를 감사 기록으로 남김. 지우면 deleted_at만 채우는 소프트 삭제
+model Document {
+  companyId   String            @map("company_id") @db.Uuid
+  id          String            @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId   String            @map("project_id") @db.Uuid
+  category    DocumentCategory  @default(OTHER)
+  title       String
+  isSensitive Boolean           @default(false) @map("is_sensitive")
+  isPinned    Boolean           @default(false) @map("is_pinned")
+  createdBy   String            @map("created_by") @db.Uuid
+  createdAt   DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt   DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt   DateTime?         @map("deleted_at") @db.Timestamptz(3)
+  company     Company           @relation(fields: [companyId], references: [id])
+  project     Project           @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  creator     User              @relation("DocumentCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+  versions    DocumentVersion[]
+
+  @@id([companyId, id])
+  @@index([companyId, projectId, category])
+  @@map("documents")
+}
+
+// 문서의 버전: 새 버전은 새 파일로 추가하고 이전 버전은 보존 (덮어쓰지 않음). 추가만 가능
+model DocumentVersion {
+  companyId    String     @map("company_id") @db.Uuid
+  id           String     @default(dbgenerated("uuidv7()")) @db.Uuid
+  documentId   String     @map("document_id") @db.Uuid
+  versionNo    Int        @map("version_no")
+  fileId       String     @map("file_id") @db.Uuid
+  revisionDate DateTime   @map("revision_date") @db.Date
+  reason       String?
+  uploadedBy   String     @map("uploaded_by") @db.Uuid
+  createdAt    DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  company      Company    @relation(fields: [companyId], references: [id])
+  document     Document   @relation(fields: [companyId, documentId], references: [companyId, id], onDelete: Restrict)
+  file         StoredFile @relation(fields: [companyId, fileId], references: [companyId, id], onDelete: Restrict)
+  uploader     User       @relation("DocumentVersionUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@unique([companyId, documentId, versionNo])
+  @@unique([companyId, fileId])
+  @@map("document_versions")
+}
+
+// 회사 감사 기록: 수정·삭제할 수 없고 추가만 가능 (서비스 기획서 §13.1). 운영자 기록(operator_actions)과 분리
+model AuditLog {
+  companyId String      @map("company_id") @db.Uuid
+  id        String      @default(dbgenerated("uuidv7()")) @db.Uuid
+  action    AuditAction
+  actorId   String      @map("actor_id") @db.Uuid
+  // 대상 문서 id (문서를 지워도 기록은 남도록 외래 키 없이 값만 보관)
+  targetId  String      @map("target_id") @db.Uuid
+  detail    Json
+  createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company     @relation(fields: [companyId], references: [id])
+  actor     User        @relation("AuditLogActor", fields: [companyId, actorId], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, action, targetId, createdAt(sort: Desc)])
+  @@map("audit_logs")
 }
