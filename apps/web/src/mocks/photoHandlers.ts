@@ -30,13 +30,44 @@ type Helpers = {
   ) => Promise<{ data: T } | { response: Response }>;
 };
 
-type MockFile = StoredFile & { companyId: string; uploaded: boolean };
+export type MockFile = StoredFile & { companyId: string; uploaded: boolean };
 type MockPhoto = Omit<Photo, 'file' | 'thumbnailUrl'> & { companyId: string; deletedAt?: string };
 
 // 목업 저장소: 회사별 파일·사진 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
 const files = new Map<string, MockFile>();
 const photos = new Map<string, MockPhoto>();
 const seeded = new Set<string>();
+
+// 문서 목업이 쓰는 파일 조회·생성 (파일 업로드 목업과 같은 저장소를 공유)
+export const getMockFile = (id: string) => files.get(id);
+
+export const addMockReadyFile = (
+  companyId: string,
+  projectId: string,
+  input: { name: string; contentType: string; size: number; createdAt: string },
+) => {
+  const id = crypto.randomUUID();
+
+  files.set(id, {
+    id,
+    companyId,
+    projectId,
+    purpose: 'DOCUMENT',
+    name: input.name,
+    contentType: input.contentType,
+    size: input.size,
+    status: 'READY',
+    rejectReason: null,
+    hasThumbnail: false,
+    sha256: 'c'.repeat(64),
+    uploadedBy: '0198d000-0000-7000-8000-000000000001',
+    createdAt: input.createdAt,
+    readyAt: input.createdAt,
+    uploaded: true,
+  });
+
+  return id;
+};
 
 export const resetMockPhotos = () => {
   files.clear();

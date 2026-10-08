@@ -136,6 +136,7 @@ import {
   updateSettings,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
+import { createDocumentHandlers } from './documentHandlers';
 import { createMaterialHandlers } from './materialHandlers';
 import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
@@ -376,6 +377,7 @@ export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
   ...createMemoHandlers({ apiError, parseBody }),
   ...createMaterialHandlers({ apiError, parseBody }),
+  ...createDocumentHandlers({ apiError, parseBody }),
 
   http.get('/api/v1/health', async () => {
     await simulateLatency();

@@ -37,5 +37,9 @@ export const queryKeys = {
   materialRecords: (projectId: string, filter: object = {}) =>
     ['materials', 'records', { projectId, ...filter }] as const,
   materialBalance: (projectId: string) => ['materials', 'balance', { projectId }] as const,
+  documents: (projectId: string, filter: object = {}) =>
+    ['documents', 'list', { projectId, ...filter }] as const,
+  document: (id: string) => ['documents', 'detail', { id }] as const,
+  documentAccessLogs: (id: string) => ['documents', 'access-logs', { id }] as const,
   employee: (id: string) => ['employees', 'detail', { id }] as const,
 };
