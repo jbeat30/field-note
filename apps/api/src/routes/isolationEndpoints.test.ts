@@ -17,6 +17,7 @@ import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
+import { createMemoService } from '../memo/memoService';
 import { createPhotoService } from '../photo/photoService';
 import { createMemoryQueue } from '../queue/jobQueue';
 import { createMemoryStorage } from '../storage/objectStorage';
@@ -74,6 +75,7 @@ const instance = () =>
       now: () => NOW,
     }),
     photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
+    memos: createMemoService(db.app, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -176,6 +178,7 @@ const buildCompany = async () => {
   const fileId = (await c.call('post', `/projects/${projectId}/files`, FILE_REQUEST)).body.file
     .id as string;
   const photoId = await c.id(`/projects/${projectId}/photos`, { fileId });
+  const memoId = await c.id('/memos', { content: '회사 A의 메모', projectId });
 
   return {
     cookie,
@@ -189,6 +192,7 @@ const buildCompany = async () => {
     assignment,
     fileId,
     photoId,
+    memoId,
   };
 };
 
@@ -263,6 +267,9 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /photos/{id}', 'get', `/photos/${a.photoId}`],
     ['PATCH /photos/{id}', 'patch', `/photos/${a.photoId}`, { category: 'AFTER' }],
     ['DELETE /photos/{id}', 'delete', `/photos/${a.photoId}`],
+    ['GET /memos/{id}', 'get', `/memos/${a.memoId}`],
+    ['PATCH /memos/{id}', 'patch', `/memos/${a.memoId}`, { content: '침투' }],
+    ['DELETE /memos/{id}', 'delete', `/memos/${a.memoId}`],
   ] as const;
 
 // 이 접두사 아래의 인증 필요 엔드포인트는 모두 위 목록에 있어야 한다 (새 엔드포인트가 격리 검사를 빠뜨리지 않게 함)
@@ -270,6 +277,7 @@ const ID_BOUND = [
   '/company/options/{id}',
   '/employees/{id}',
   '/files/{id}',
+  '/memos/{id}',
   '/photos/{id}',
   '/partners/{id}',
   '/projects/{id}',
@@ -281,6 +289,9 @@ const COLLECTIONS = [
   'PUT /company/options/order',
   'GET /employees',
   'POST /employees',
+  'GET /memos',
+  'POST /memos',
+  'GET /memos/summary',
   'GET /partners',
   'POST /partners',
   'GET /projects',
@@ -320,6 +331,7 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       assignment: '{assignmentId}',
       fileId: '{id}',
       photoId: '{id}',
+      memoId: '{id}',
     };
     const covered = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const missing = stepOne.filter((entry) => !covered.has(entry));
@@ -400,6 +412,16 @@ describe('회사 격리: 1단계 엔드포인트', () => {
     await record(
       '프로젝트 담당자',
       await b.c.call('post', '/projects', { ...bOwn, managerId: a.managerId }),
+    );
+    await record(
+      '메모 프로젝트',
+      await b.c.call('post', '/memos', { content: '침투', projectId: a.projectId }),
+    );
+    await record(
+      '메모 연결',
+      await b.c.call('patch', `/memos/${await b.c.id('/memos', { content: 'B 메모' })}`, {
+        projectId: a.projectId,
+      }),
     );
     await record(
       '직원 직종',

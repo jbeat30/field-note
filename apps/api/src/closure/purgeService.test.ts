@@ -186,6 +186,24 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       uploadedBy: account.userId,
     },
   });
+  // 메모는 프로젝트(없을 수도 있음)·계정을 참조
+  await db.owner.memo.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      content: '삭제될 메모',
+      memoDate: new Date('2026-10-02T00:00:00Z'),
+      createdBy: account.userId,
+    },
+  });
+  await db.owner.memo.create({
+    data: {
+      companyId: account.companyId,
+      content: '삭제될 메모함 메모',
+      memoDate: new Date('2026-10-02T00:00:00Z'),
+      createdBy: account.userId,
+    },
+  });
   await h.sessionStore.create(account);
   await h.closure.request(account, OLD_PASSWORD);
 
@@ -220,6 +238,7 @@ describe('삭제·익명화', () => {
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.partner.count({ where })).toBe(0);
+    expect(await db.owner.memo.count({ where })).toBe(0);
     expect(await db.owner.photo.count({ where })).toBe(0);
     expect(await db.owner.storedFile.count({ where })).toBe(0);
     expect(await db.owner.session.count({ where })).toBe(0);
