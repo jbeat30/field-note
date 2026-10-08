@@ -76,6 +76,10 @@ export const routes = [
             path: '/projects/:id/memos',
             ...page(() => import('./routes/ProjectMemosPage'), 'ProjectMemosPage'),
           },
+          {
+            path: '/projects/:id/materials',
+            ...page(() => import('./routes/ProjectMaterialsPage'), 'ProjectMaterialsPage'),
+          },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
           {
             path: '/projects/:id/photos',
