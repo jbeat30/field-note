@@ -22657,6 +22657,3148 @@
         }
       }
     },
+    "/api/v1/projects/{projectId}/documents": {
+      "post": {
+        "summary": "올린 파일로 문서 만들기 (첫 버전, 계약·행정은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "DRAWING",
+                      "SPEC",
+                      "WORK_ORDER",
+                      "CONTRACT",
+                      "SAFETY",
+                      "OTHER"
+                    ],
+                    "default": "OTHER"
+                  },
+                  "isSensitive": {
+                    "type": "boolean"
+                  },
+                  "revisionDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "fileId",
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "DRAWING",
+                        "SPEC",
+                        "WORK_ORDER",
+                        "CONTRACT",
+                        "SAFETY",
+                        "OTHER"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "isSensitive": {
+                      "type": "boolean"
+                    },
+                    "isPinned": {
+                      "type": "boolean"
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "versionCount": {
+                      "type": "integer"
+                    },
+                    "latest": {
+                      "type": "object",
+                      "properties": {
+                        "versionNo": {
+                          "type": "integer"
+                        },
+                        "fileId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "fileStatus": {
+                          "type": "string",
+                          "enum": [
+                            "PENDING",
+                            "PROCESSING",
+                            "READY",
+                            "REJECTED"
+                          ]
+                        },
+                        "rejectReason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "CONTENT_MISMATCH",
+                            "SIZE_MISMATCH",
+                            "NOT_UPLOADED",
+                            "UNREADABLE_IMAGE",
+                            null
+                          ]
+                        },
+                        "revisionDate": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "uploadedBy": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "versionNo",
+                        "fileId",
+                        "fileName",
+                        "contentType",
+                        "size",
+                        "fileStatus",
+                        "rejectReason",
+                        "revisionDate",
+                        "reason",
+                        "uploadedBy",
+                        "createdAt"
+                      ]
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "versionNo": {
+                            "type": "integer"
+                          },
+                          "fileId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fileName": {
+                            "type": "string"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "integer"
+                          },
+                          "fileStatus": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "PROCESSING",
+                              "READY",
+                              "REJECTED"
+                            ]
+                          },
+                          "rejectReason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "CONTENT_MISMATCH",
+                              "SIZE_MISMATCH",
+                              "NOT_UPLOADED",
+                              "UNREADABLE_IMAGE",
+                              null
+                            ]
+                          },
+                          "revisionDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "reason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "uploadedBy": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "versionNo",
+                          "fileId",
+                          "fileName",
+                          "contentType",
+                          "size",
+                          "fileStatus",
+                          "rejectReason",
+                          "revisionDate",
+                          "reason",
+                          "uploadedBy",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "category",
+                    "title",
+                    "isSensitive",
+                    "isPinned",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "versionCount",
+                    "latest",
+                    "versions"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "summary": "프로젝트 문서함 (고정한 문서가 먼저, 분류·이름·고정 필터, 문서마다 최신본)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "projectId",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAWING",
+                "SPEC",
+                "WORK_ORDER",
+                "CONTRACT",
+                "SAFETY",
+                "OTHER"
+              ]
+            },
+            "required": false,
+            "name": "category",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "maxLength": 50
+            },
+            "required": false,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "true",
+                "false"
+              ]
+            },
+            "required": false,
+            "name": "pinned",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "projectId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "DRAWING",
+                              "SPEC",
+                              "WORK_ORDER",
+                              "CONTRACT",
+                              "SAFETY",
+                              "OTHER"
+                            ]
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "isSensitive": {
+                            "type": "boolean"
+                          },
+                          "isPinned": {
+                            "type": "boolean"
+                          },
+                          "createdBy": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "updatedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "versionCount": {
+                            "type": "integer"
+                          },
+                          "latest": {
+                            "type": "object",
+                            "properties": {
+                              "versionNo": {
+                                "type": "integer"
+                              },
+                              "fileId": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "fileName": {
+                                "type": "string"
+                              },
+                              "contentType": {
+                                "type": "string"
+                              },
+                              "size": {
+                                "type": "integer"
+                              },
+                              "fileStatus": {
+                                "type": "string",
+                                "enum": [
+                                  "PENDING",
+                                  "PROCESSING",
+                                  "READY",
+                                  "REJECTED"
+                                ]
+                              },
+                              "rejectReason": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "CONTENT_MISMATCH",
+                                  "SIZE_MISMATCH",
+                                  "NOT_UPLOADED",
+                                  "UNREADABLE_IMAGE",
+                                  null
+                                ]
+                              },
+                              "revisionDate": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "reason": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "uploadedBy": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "versionNo",
+                              "fileId",
+                              "fileName",
+                              "contentType",
+                              "size",
+                              "fileStatus",
+                              "rejectReason",
+                              "revisionDate",
+                              "reason",
+                              "uploadedBy",
+                              "createdAt"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "projectId",
+                          "category",
+                          "title",
+                          "isSensitive",
+                          "isPinned",
+                          "createdBy",
+                          "createdAt",
+                          "updatedAt",
+                          "versionCount",
+                          "latest"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}": {
+      "get": {
+        "summary": "문서 한 건 (최신본과 이전 버전 전체)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "DRAWING",
+                        "SPEC",
+                        "WORK_ORDER",
+                        "CONTRACT",
+                        "SAFETY",
+                        "OTHER"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "isSensitive": {
+                      "type": "boolean"
+                    },
+                    "isPinned": {
+                      "type": "boolean"
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "versionCount": {
+                      "type": "integer"
+                    },
+                    "latest": {
+                      "type": "object",
+                      "properties": {
+                        "versionNo": {
+                          "type": "integer"
+                        },
+                        "fileId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "fileStatus": {
+                          "type": "string",
+                          "enum": [
+                            "PENDING",
+                            "PROCESSING",
+                            "READY",
+                            "REJECTED"
+                          ]
+                        },
+                        "rejectReason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "CONTENT_MISMATCH",
+                            "SIZE_MISMATCH",
+                            "NOT_UPLOADED",
+                            "UNREADABLE_IMAGE",
+                            null
+                          ]
+                        },
+                        "revisionDate": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "uploadedBy": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "versionNo",
+                        "fileId",
+                        "fileName",
+                        "contentType",
+                        "size",
+                        "fileStatus",
+                        "rejectReason",
+                        "revisionDate",
+                        "reason",
+                        "uploadedBy",
+                        "createdAt"
+                      ]
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "versionNo": {
+                            "type": "integer"
+                          },
+                          "fileId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fileName": {
+                            "type": "string"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "integer"
+                          },
+                          "fileStatus": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "PROCESSING",
+                              "READY",
+                              "REJECTED"
+                            ]
+                          },
+                          "rejectReason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "CONTENT_MISMATCH",
+                              "SIZE_MISMATCH",
+                              "NOT_UPLOADED",
+                              "UNREADABLE_IMAGE",
+                              null
+                            ]
+                          },
+                          "revisionDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "reason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "uploadedBy": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "versionNo",
+                          "fileId",
+                          "fileName",
+                          "contentType",
+                          "size",
+                          "fileStatus",
+                          "rejectReason",
+                          "revisionDate",
+                          "reason",
+                          "uploadedBy",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "category",
+                    "title",
+                    "isSensitive",
+                    "isPinned",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "versionCount",
+                    "latest",
+                    "versions"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "patch": {
+        "summary": "문서 이름·분류·민감 표시·프로젝트 첫 화면 고정 수정",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "category": {
+                    "type": "string",
+                    "enum": [
+                      "DRAWING",
+                      "SPEC",
+                      "WORK_ORDER",
+                      "CONTRACT",
+                      "SAFETY",
+                      "OTHER"
+                    ]
+                  },
+                  "isSensitive": {
+                    "type": "boolean"
+                  },
+                  "isPinned": {
+                    "type": "boolean"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "DRAWING",
+                        "SPEC",
+                        "WORK_ORDER",
+                        "CONTRACT",
+                        "SAFETY",
+                        "OTHER"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "isSensitive": {
+                      "type": "boolean"
+                    },
+                    "isPinned": {
+                      "type": "boolean"
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "versionCount": {
+                      "type": "integer"
+                    },
+                    "latest": {
+                      "type": "object",
+                      "properties": {
+                        "versionNo": {
+                          "type": "integer"
+                        },
+                        "fileId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "fileStatus": {
+                          "type": "string",
+                          "enum": [
+                            "PENDING",
+                            "PROCESSING",
+                            "READY",
+                            "REJECTED"
+                          ]
+                        },
+                        "rejectReason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "CONTENT_MISMATCH",
+                            "SIZE_MISMATCH",
+                            "NOT_UPLOADED",
+                            "UNREADABLE_IMAGE",
+                            null
+                          ]
+                        },
+                        "revisionDate": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "uploadedBy": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "versionNo",
+                        "fileId",
+                        "fileName",
+                        "contentType",
+                        "size",
+                        "fileStatus",
+                        "rejectReason",
+                        "revisionDate",
+                        "reason",
+                        "uploadedBy",
+                        "createdAt"
+                      ]
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "versionNo": {
+                            "type": "integer"
+                          },
+                          "fileId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fileName": {
+                            "type": "string"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "integer"
+                          },
+                          "fileStatus": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "PROCESSING",
+                              "READY",
+                              "REJECTED"
+                            ]
+                          },
+                          "rejectReason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "CONTENT_MISMATCH",
+                              "SIZE_MISMATCH",
+                              "NOT_UPLOADED",
+                              "UNREADABLE_IMAGE",
+                              null
+                            ]
+                          },
+                          "revisionDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "reason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "uploadedBy": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "versionNo",
+                          "fileId",
+                          "fileName",
+                          "contentType",
+                          "size",
+                          "fileStatus",
+                          "rejectReason",
+                          "revisionDate",
+                          "reason",
+                          "uploadedBy",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "category",
+                    "title",
+                    "isSensitive",
+                    "isPinned",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "versionCount",
+                    "latest",
+                    "versions"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "delete": {
+        "summary": "문서 삭제 (소프트 삭제: 파일·버전·열람 기록은 보존)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "success": {
+                      "type": "boolean",
+                      "enum": [
+                        true
+                      ]
+                    }
+                  },
+                  "required": [
+                    "success"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/versions": {
+      "post": {
+        "summary": "새 버전 추가 (최신본이 기본으로 보이고 이전본은 보존, 개정일·사유 기록)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "revisionDate": {
+                    "type": "string",
+                    "format": "date"
+                  },
+                  "reason": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 200
+                  }
+                },
+                "required": [
+                  "fileId"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "category": {
+                      "type": "string",
+                      "enum": [
+                        "DRAWING",
+                        "SPEC",
+                        "WORK_ORDER",
+                        "CONTRACT",
+                        "SAFETY",
+                        "OTHER"
+                      ]
+                    },
+                    "title": {
+                      "type": "string"
+                    },
+                    "isSensitive": {
+                      "type": "boolean"
+                    },
+                    "isPinned": {
+                      "type": "boolean"
+                    },
+                    "createdBy": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "versionCount": {
+                      "type": "integer"
+                    },
+                    "latest": {
+                      "type": "object",
+                      "properties": {
+                        "versionNo": {
+                          "type": "integer"
+                        },
+                        "fileId": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "fileName": {
+                          "type": "string"
+                        },
+                        "contentType": {
+                          "type": "string"
+                        },
+                        "size": {
+                          "type": "integer"
+                        },
+                        "fileStatus": {
+                          "type": "string",
+                          "enum": [
+                            "PENDING",
+                            "PROCESSING",
+                            "READY",
+                            "REJECTED"
+                          ]
+                        },
+                        "rejectReason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ],
+                          "enum": [
+                            "CONTENT_MISMATCH",
+                            "SIZE_MISMATCH",
+                            "NOT_UPLOADED",
+                            "UNREADABLE_IMAGE",
+                            null
+                          ]
+                        },
+                        "revisionDate": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "reason": {
+                          "type": [
+                            "string",
+                            "null"
+                          ]
+                        },
+                        "uploadedBy": {
+                          "type": "string",
+                          "format": "uuid"
+                        },
+                        "createdAt": {
+                          "type": "string",
+                          "format": "date-time"
+                        }
+                      },
+                      "required": [
+                        "versionNo",
+                        "fileId",
+                        "fileName",
+                        "contentType",
+                        "size",
+                        "fileStatus",
+                        "rejectReason",
+                        "revisionDate",
+                        "reason",
+                        "uploadedBy",
+                        "createdAt"
+                      ]
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "versionNo": {
+                            "type": "integer"
+                          },
+                          "fileId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fileName": {
+                            "type": "string"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
+                          "size": {
+                            "type": "integer"
+                          },
+                          "fileStatus": {
+                            "type": "string",
+                            "enum": [
+                              "PENDING",
+                              "PROCESSING",
+                              "READY",
+                              "REJECTED"
+                            ]
+                          },
+                          "rejectReason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "enum": [
+                              "CONTENT_MISMATCH",
+                              "SIZE_MISMATCH",
+                              "NOT_UPLOADED",
+                              "UNREADABLE_IMAGE",
+                              null
+                            ]
+                          },
+                          "revisionDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "reason": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "uploadedBy": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "versionNo",
+                          "fileId",
+                          "fileName",
+                          "contentType",
+                          "size",
+                          "fileStatus",
+                          "rejectReason",
+                          "revisionDate",
+                          "reason",
+                          "uploadedBy",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "category",
+                    "title",
+                    "isSensitive",
+                    "isPinned",
+                    "createdBy",
+                    "createdAt",
+                    "updatedAt",
+                    "versionCount",
+                    "latest",
+                    "versions"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/versions/{versionNo}/url": {
+      "get": {
+        "summary": "열람·내려받기 주소 발급 (짧은 만료, 민감 자료는 열람 기록을 남긴 뒤에만 발급)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1
+            },
+            "required": true,
+            "name": "versionNo",
+            "in": "path"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "view",
+                "download"
+              ],
+              "default": "view"
+            },
+            "required": false,
+            "name": "mode",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "url": {
+                      "type": "string",
+                      "format": "uri"
+                    },
+                    "expiresAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "isLogged": {
+                      "type": "boolean"
+                    }
+                  },
+                  "required": [
+                    "url",
+                    "expiresAt",
+                    "isLogged"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/documents/{id}/access-logs": {
+      "get": {
+        "summary": "민감 자료 열람·내려받기 기록 (최근순, 수정·삭제할 수 없는 감사 기록)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "action": {
+                            "type": "string",
+                            "enum": [
+                              "DOCUMENT_VIEWED",
+                              "DOCUMENT_DOWNLOADED"
+                            ]
+                          },
+                          "actorId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "actorName": {
+                            "type": "string"
+                          },
+                          "versionNo": {
+                            "type": "integer"
+                          },
+                          "createdAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "action",
+                          "actorId",
+                          "actorName",
+                          "versionNo",
+                          "createdAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/social/providers": {
       "get": {
         "summary": "사용 가능한 소셜 로그인 제공자",

@@ -17,6 +17,7 @@ import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
+import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
 import { createPhotoService } from '../photo/photoService';
@@ -78,6 +79,7 @@ const instance = () =>
     photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
     memos: createMemoService(db.app, () => NOW),
     materials: createMaterialService(db.app, () => NOW),
+    documents: createDocumentService(db.app, createMemoryStorage().storage, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -181,6 +183,20 @@ const buildCompany = async () => {
     .id as string;
   const photoId = await c.id(`/projects/${projectId}/photos`, { fileId });
   const memoId = await c.id('/memos', { content: '회사 A의 메모', projectId });
+  // 문서용 파일을 올려 신청해 두고(검사 전이어도 됨) 민감 문서를 한 건 만든다
+  const docFileId = (
+    await c.call('post', `/projects/${projectId}/files`, {
+      name: '계약서.pdf',
+      contentType: 'application/pdf',
+      purpose: 'DOCUMENT',
+      size: 1000,
+    })
+  ).body.file.id as string;
+  const documentId = await c.id(`/projects/${projectId}/documents`, {
+    fileId: docFileId,
+    title: '회사 A의 계약서',
+    category: 'CONTRACT',
+  });
   const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
   const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
     materialId,
@@ -204,6 +220,8 @@ const buildCompany = async () => {
     memoId,
     materialId,
     materialRecordId,
+    docFileId,
+    documentId,
   };
 };
 
@@ -281,6 +299,28 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /memos/{id}', 'get', `/memos/${a.memoId}`],
     ['PATCH /memos/{id}', 'patch', `/memos/${a.memoId}`, { content: '침투' }],
     ['DELETE /memos/{id}', 'delete', `/memos/${a.memoId}`],
+    ['GET /documents/{id}', 'get', `/documents/${a.documentId}`],
+    ['PATCH /documents/{id}', 'patch', `/documents/${a.documentId}`, { title: '침투' }],
+    ['DELETE /documents/{id}', 'delete', `/documents/${a.documentId}`],
+    [
+      'POST /documents/{id}/versions',
+      'post',
+      `/documents/${a.documentId}/versions`,
+      { fileId: a.docFileId },
+    ],
+    [
+      'GET /documents/{id}/versions/{versionNo}/url',
+      'get',
+      `/documents/${a.documentId}/versions/1/url`,
+    ],
+    ['GET /documents/{id}/access-logs', 'get', `/documents/${a.documentId}/access-logs`],
+    [
+      'POST /projects/{projectId}/documents',
+      'post',
+      `/projects/${a.projectId}/documents`,
+      { fileId: a.docFileId, title: '침투' },
+    ],
+    ['GET /projects/{projectId}/documents', 'get', `/projects/${a.projectId}/documents`],
     ['PATCH /materials/{id}', 'patch', `/materials/${a.materialId}`, { name: '침투' }],
     [
       'POST /projects/{projectId}/material-records',
@@ -322,6 +362,7 @@ const ID_BOUND = [
   '/company/options/{id}',
   '/employees/{id}',
   '/files/{id}',
+  '/documents/{id}',
   '/materials/{id}',
   '/material-records/{id}',
   '/memos/{id}',
@@ -383,6 +424,8 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       memoId: '{id}',
       materialId: '{id}',
       materialRecordId: '{id}',
+      docFileId: '{id}',
+      documentId: '{id}',
     };
     const covered = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const missing = stepOne.filter((entry) => !covered.has(entry));
@@ -482,6 +525,13 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       quantity: 1,
     };
 
+    await record(
+      '문서 파일',
+      await b.c.call('post', `/projects/${bProjectOwn}/documents`, {
+        fileId: a.docFileId,
+        title: '침투',
+      }),
+    );
     await record(
       '기록 자재',
       await b.c.call('post', `/projects/${bProjectOwn}/material-records`, {

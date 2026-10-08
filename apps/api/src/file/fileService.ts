@@ -210,6 +210,11 @@ export const createFileService = ({
         throw new FileError('NOT_READY');
       }
 
+      // 작업자료 문서 파일은 문서 API로만 열람한다 (민감 자료 열람 기록을 거치지 않고 열 수 없게 함)
+      if (row.purpose === 'DOCUMENT') {
+        throw new FileError('NOT_FOUND');
+      }
+
       const key = variant === 'thumbnail' ? row.thumbnailKey : row.objectKey;
 
       if (!key) {

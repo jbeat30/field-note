@@ -59,6 +59,10 @@ export const purgeCompany = (
 
     // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
     // 일지의 수정 이력 → 공수 항목 → 일지 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
+    // 감사 기록 → 문서 버전 → 문서 순서 (버전이 파일·문서를, 문서가 프로젝트·계정을 참조하므로 파일·프로젝트보다 먼저)
+    deleted.audit_logs = (await tx.auditLog.deleteMany({ where })).count;
+    deleted.document_versions = (await tx.documentVersion.deleteMany({ where })).count;
+    deleted.documents = (await tx.document.deleteMany({ where })).count;
     // 자재 기록이 프로젝트·자재·작업 구분·업체를 참조하므로 그보다 먼저 지움
     deleted.material_records = (await tx.materialRecord.deleteMany({ where })).count;
     deleted.materials = (await tx.material.deleteMany({ where })).count;

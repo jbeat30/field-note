@@ -401,7 +401,7 @@ describe('내려받기 주소', () => {
     expect(original.expiresAt).toBe('2026-10-08T03:05:00.000Z');
   });
 
-  it('검사 중이거나 거부된 파일, 썸네일 없는 문서의 썸네일은 발급하지 않는다', async () => {
+  it('검사 중이거나 거부된 파일, 문서 파일은 파일 주소로 발급하지 않는다', async () => {
     const s = await setup();
     const rejected = await s.upload(Buffer.alloc(100, 1), {
       name: '현장.jpg',
@@ -415,7 +415,8 @@ describe('내려받기 주소', () => {
 
     expect((await s.get(`/files/${rejected.ticket.file.id}/url`)).status).toBe(400);
     expect((await s.get(`/files/${pdf.ticket.file.id}/url?variant=thumbnail`)).status).toBe(404);
-    expect((await s.get(`/files/${pdf.ticket.file.id}/url`)).status).toBe(200);
+    // 문서 파일은 문서 API로만 열람 (민감 자료 열람 기록을 우회하지 못하게 파일 주소로는 열 수 없음)
+    expect((await s.get(`/files/${pdf.ticket.file.id}/url`)).status).toBe(404);
   });
 
   it('다른 회사의 파일은 정보·주소·완료 알림 모두 존재하지 않는 것처럼 보인다', async () => {
