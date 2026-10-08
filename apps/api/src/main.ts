@@ -19,6 +19,7 @@ import { createSmtpMailer } from './email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
 import { parseEnv } from './env';
 import { createFileService, registerFileWorker } from './file/fileService';
+import { createPhotoService } from './photo/photoService';
 import { createPrismaInvitationStore } from './invitation/invitationStore';
 import { createLogger } from './logger';
 import { chooseSocialProvider } from './social/provider';
@@ -61,6 +62,7 @@ const main = async () => {
   }
 
   const files = createFileService({ app: appPrisma, storage, queue });
+  const photos = createPhotoService(appPrisma, storage);
   const mailer = createSmtpMailer({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
@@ -125,6 +127,7 @@ const main = async () => {
     assignments,
     workLogs,
     files,
+    photos,
     closure,
     social: {
       choice: socialChoice,

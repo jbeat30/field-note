@@ -17,6 +17,7 @@ import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
+import { createPhotoService } from '../photo/photoService';
 import { createMemoryQueue } from '../queue/jobQueue';
 import { createMemoryStorage } from '../storage/objectStorage';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
@@ -72,6 +73,7 @@ const instance = () =>
       queue: createMemoryQueue().queue,
       now: () => NOW,
     }),
+    photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -103,7 +105,7 @@ const signUp = async () => {
   )!;
 };
 
-type Method = 'get' | 'post' | 'put' | 'patch';
+type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 const client = (cookie: string) => {
   const call = (method: Method, path: string, body?: object) => {
@@ -173,6 +175,7 @@ const buildCompany = async () => {
   // 업로드를 신청해 둔 파일 한 건 (검사 전 상태여도 다른 회사에는 보이지 않아야 함)
   const fileId = (await c.call('post', `/projects/${projectId}/files`, FILE_REQUEST)).body.file
     .id as string;
+  const photoId = await c.id(`/projects/${projectId}/photos`, { fileId });
 
   return {
     cookie,
@@ -185,6 +188,7 @@ const buildCompany = async () => {
     projectId,
     assignment,
     fileId,
+    photoId,
   };
 };
 
@@ -249,6 +253,16 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /files/{id}', 'get', `/files/${a.fileId}`],
     ['POST /files/{id}/complete', 'post', `/files/${a.fileId}/complete`],
     ['GET /files/{id}/url', 'get', `/files/${a.fileId}/url`],
+    [
+      'POST /projects/{projectId}/photos',
+      'post',
+      `/projects/${a.projectId}/photos`,
+      { fileId: a.fileId },
+    ],
+    ['GET /projects/{projectId}/photos', 'get', `/projects/${a.projectId}/photos`],
+    ['GET /photos/{id}', 'get', `/photos/${a.photoId}`],
+    ['PATCH /photos/{id}', 'patch', `/photos/${a.photoId}`, { category: 'AFTER' }],
+    ['DELETE /photos/{id}', 'delete', `/photos/${a.photoId}`],
   ] as const;
 
 // 이 접두사 아래의 인증 필요 엔드포인트는 모두 위 목록에 있어야 한다 (새 엔드포인트가 격리 검사를 빠뜨리지 않게 함)
@@ -256,6 +270,7 @@ const ID_BOUND = [
   '/company/options/{id}',
   '/employees/{id}',
   '/files/{id}',
+  '/photos/{id}',
   '/partners/{id}',
   '/projects/{id}',
 ];
@@ -283,9 +298,15 @@ describe('회사 격리: 1단계 엔드포인트', () => {
         .map(([method]) => `${method.toUpperCase()} ${path.replace('/api/v1', '')}`),
     );
     const stepOne = found.filter((entry) =>
-      [...ID_BOUND, '/company/options', '/employees', '/files', '/partners', '/projects'].some(
-        (prefix) => entry.split(' ')[1]!.startsWith(prefix.replace('/{id}', '')),
-      ),
+      [
+        ...ID_BOUND,
+        '/company/options',
+        '/employees',
+        '/files',
+        '/photos',
+        '/partners',
+        '/projects',
+      ].some((prefix) => entry.split(' ')[1]!.startsWith(prefix.replace('/{id}', ''))),
     );
     const dummy = {
       cookie: '',
@@ -298,6 +319,7 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       projectId: '{id}',
       assignment: '{assignmentId}',
       fileId: '{id}',
+      photoId: '{id}',
     };
     const covered = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const missing = stepOne.filter((entry) => !covered.has(entry));
