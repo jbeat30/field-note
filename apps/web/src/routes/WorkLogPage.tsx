@@ -18,6 +18,7 @@ import { useAssignments } from '../projects/useAssignments';
 import { useProject, useProjects } from '../projects/useProjects';
 import { useCompanySettings } from '../settings/useCompanySettings';
 import { useOptions } from '../settings/useOptions';
+import { useDraftHydrated } from '../drafts/useLocalDraft';
 import { MaterialDayPanel } from '../materials/MaterialDayPanel';
 import { WorkLogEditor } from '../workLogs/WorkLogEditor';
 import { useWorkLog, useWorkLogList } from '../workLogs/useWorkLogs';
@@ -41,6 +42,8 @@ export const WorkLogPage = () => {
   const list = useWorkLogList(projectId);
   // 저장·불러오기 뒤 편집 상태를 새로 만들기 위한 값
   const [reloadToken, setReloadToken] = useState(0);
+  // 기기에 저장된 초안을 읽어 온 뒤에 폼을 그려야 복구할 수 있음
+  const isDraftReady = useDraftHydrated();
 
   const update = (patch: Record<string, string>) => {
     const next = new URLSearchParams(params);
@@ -146,7 +149,7 @@ export const WorkLogPage = () => {
             · {project.data.plannedStart} ~ {project.data.plannedEnd}
           </p>
           {problem && <Alert>{problem}</Alert>}
-          {!problem && settings.data && log.isSuccess && (
+          {!problem && settings.data && log.isSuccess && isDraftReady && (
             <WorkLogEditor
               key={`${projectId}:${date}:${reloadToken}`}
               project={project.data}
@@ -163,7 +166,7 @@ export const WorkLogPage = () => {
               }}
             />
           )}
-          {!problem && (
+          {!problem && isDraftReady && (
             <MaterialDayPanel
               key={`materials:${projectId}:${date}`}
               projectId={projectId}

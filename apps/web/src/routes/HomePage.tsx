@@ -1,12 +1,20 @@
 import { Link } from 'react-router';
 
 import { useMe } from '../auth/useMe';
+import { listResumable } from '../drafts/formDraft';
+import { ResumeDrafts } from '../drafts/ResumeDrafts';
+import { useDraftHydrated } from '../drafts/useLocalDraft';
 import { useMemoSummary } from '../memos/useMemos';
+import { useProjects } from '../projects/useProjects';
+import { useDraftStore } from '../stores/draftStore';
 
 // 로그인 후 첫 화면: 정리 안 된 메모함과 끝내지 않은 할 일을 알려 준다 (대시보드의 나머지는 이후 단계)
 export const HomePage = () => {
   const me = useMe();
   const summary = useMemoSummary();
+  const projects = useProjects({});
+  const drafts = useDraftStore((state) => state.drafts);
+  const isDraftReady = useDraftHydrated();
 
   return (
     <section className="flex flex-col gap-4">
@@ -28,6 +36,12 @@ export const HomePage = () => {
           <span className="text-sm text-foreground/70">불러오는 중</span>
         )}
       </Link>
+      {isDraftReady && (
+        <ResumeDrafts
+          drafts={listResumable(drafts)}
+          projectNames={new Map((projects.data ?? []).map((project) => [project.id, project.name]))}
+        />
+      )}
     </section>
   );
 };

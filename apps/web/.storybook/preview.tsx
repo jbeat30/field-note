@@ -11,6 +11,7 @@ import { resetMockPhotos } from '../src/mocks/photoHandlers';
 import { resetMockState } from '../src/mocks/state';
 import { AppProviders } from '../src/AppProviders';
 import { createQueryClient } from '../src/query/queryClient';
+import { resetDraftStore } from '../src/stores/draftStore';
 import '../src/index.css';
 
 // 비동기 조회(findBy*)의 기본 대기는 1초라 CI처럼 느린 환경에서 흔들린다. 요청이 많은 화면을 위해 넉넉하게 둔다
@@ -27,6 +28,9 @@ const preview: Preview = {
       resetMockMaterials();
       resetMockDocuments();
     },
+    // 스토리끼리 기기에 저장한 초안(IndexedDB)이 섞이지 않게 초기화
+    // (스토리가 미리 넣어 두는 초안은 로더와 겹치지 않도록 스토리의 beforeEach에서 넣는다)
+    () => resetDraftStore(),
     mswLoader(),
   ],
   decorators: [
