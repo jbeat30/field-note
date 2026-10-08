@@ -1,5 +1,6 @@
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createTestProject } from '../db/testFixtures';
+import { createMemoryStorage } from '../storage/objectStorage';
 
 import { createClosureHarness, OLD_PASSWORD } from './closureHarness';
 import { CLOSURE_GRACE_MS } from './closureService';
@@ -162,6 +163,19 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       nameKey: '삭제될 고객',
     },
   });
+  // 업로드 파일은 프로젝트·계정을 참조하므로 삭제 순서(파일 먼저)까지 함께 확인
+  await db.owner.storedFile.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      purpose: 'PHOTO',
+      originalName: '삭제될 사진.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 100n,
+      objectKey: `company/${account.companyId}/project/${project.id}/file/original`,
+      uploadedBy: account.userId,
+    },
+  });
   await h.sessionStore.create(account);
   await h.closure.request(account, OLD_PASSWORD);
 
@@ -196,6 +210,7 @@ describe('삭제·익명화', () => {
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.partner.count({ where })).toBe(0);
+    expect(await db.owner.storedFile.count({ where })).toBe(0);
     expect(await db.owner.session.count({ where })).toBe(0);
     expect(await db.owner.userCredential.count({ where })).toBe(0);
     expect(await db.owner.invitation.count({ where })).toBe(0);
@@ -298,6 +313,34 @@ describe('삭제·익명화', () => {
     expect(
       await db.owner.userCredential.count({ where: { companyId: active.account.companyId } }),
     ).toBe(1);
+  });
+});
+
+describe('파일 객체 삭제', () => {
+  it('회사 경로 아래 객체만 지우고 다른 회사의 객체와 유예 중인 회사의 객체는 남긴다', async () => {
+    const h = await createClosureHarness(db, documentIds);
+    const { account } = await closeAccount(h);
+    const other = await closeAccount(h);
+    const memory = createMemoryStorage();
+    const mine = `company/${account.companyId}/project/p/f/original`;
+    const theirs = `company/${other.account.companyId}/project/p/f/original`;
+
+    memory.upload(mine, Buffer.from('a'));
+    memory.upload(`company/${account.companyId}/project/p/f/thumbnail`, Buffer.from('b'));
+    memory.upload(theirs, Buffer.from('c'));
+
+    // 유예 중에는 삭제하지 않음
+    await expect(
+      purgeCompany(db.purge, account.companyId, h.now, memory.storage),
+    ).rejects.toBeInstanceOf(NotDueForPurgeError);
+    expect(memory.objects.size).toBe(3);
+
+    expire(h);
+
+    const result = await purgeCompany(db.purge, account.companyId, h.now, memory.storage);
+
+    expect(result.deleted.file_objects).toBe(2);
+    expect([...memory.objects.keys()]).toEqual([theirs]);
   });
 });
 

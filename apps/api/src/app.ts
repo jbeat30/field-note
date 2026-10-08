@@ -15,6 +15,8 @@ import { registerEmployeeRoutes } from './routes/employees';
 import { registerAssignmentRoutes } from './routes/assignments';
 import { registerOptionRoutes } from './routes/options';
 import { registerWorkLogRoutes } from './routes/workLogs';
+import { registerFileRoutes } from './routes/files';
+import type { FileService } from './file/fileService';
 import { registerPartnerRoutes } from './routes/partners';
 import { registerProjectRoutes } from './routes/projects';
 import type { CompanySettingsService } from './company/companySettingsService';
@@ -63,6 +65,8 @@ export type AppOptions = {
   projects?: ProjectService;
   assignments?: AssignmentService;
   workLogs?: WorkLogService;
+  // 없으면 파일 업로드 API는 501
+  files?: FileService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
   social?: {
     choice: SocialProviderChoice;
@@ -115,6 +119,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerProjectRoutes(registry, options.projects);
   registerAssignmentRoutes(registry, options.assignments);
   registerWorkLogRoutes(registry, options.workLogs);
+  registerFileRoutes(registry, options.files);
   registerSocialRoutes(
     registry,
     options.social && options.accountService
