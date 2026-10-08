@@ -16,3 +16,4 @@ export * from './workLogs';
 export * from './workSummary';
 export * from './files';
 export * from './photos';
+export * from './memos';

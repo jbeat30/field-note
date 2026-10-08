@@ -67,6 +67,7 @@ model Company {
   workLogs             WorkLog[]
   files                StoredFile[]
   photos               Photo[]
+  memos                Memo[]
   workLogEntries       WorkLogEntry[]
   workLogRevisions     WorkLogRevision[]
 
@@ -124,6 +125,7 @@ model Project {
   workLogs         WorkLog[]
   files            StoredFile[]
   photos           Photo[]
+  memos            Memo[]
 
   @@id([companyId, id])
   @@unique([companyId, code])
@@ -347,6 +349,7 @@ model User {
   workLogRevisions     WorkLogRevision[]     @relation("WorkLogRevisionChangedBy")
   uploadedFiles        StoredFile[]          @relation("FileUploadedBy")
   uploadedPhotos       Photo[]               @relation("PhotoUploadedBy")
+  memos                Memo[]                @relation("MemoCreatedBy")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -759,4 +762,39 @@ model Photo {
   @@index([companyId, projectId, takenAt(sort: Desc), id(sort: Desc)])
   @@index([companyId, projectId, workDate])
   @@map("photos")
+}
+
+// 메모 태그 (서비스 기획서 §10.9)
+enum MemoTag {
+  NEGOTIATION
+  INSTRUCTION
+  ISSUE
+  TODO
+  OTHER
+
+  @@map("memo_tag")
+}
+
+// 프로젝트 메모 노트 / 메모함: projectId가 없으면 메모함(아직 정리하지 않은 메모). 날짜별로 쌓이고, 지우면 deleted_at만 채우는 소프트 삭제
+// 완료 표시는 "할 일" 메모에만 (done_at이 있어야 완료)
+model Memo {
+  companyId String    @map("company_id") @db.Uuid
+  id        String    @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId String?   @map("project_id") @db.Uuid
+  content   String
+  tag       MemoTag   @default(OTHER)
+  memoDate  DateTime  @map("memo_date") @db.Date
+  doneAt    DateTime? @map("done_at") @db.Timestamptz(3)
+  createdBy String    @map("created_by") @db.Uuid
+  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt DateTime? @map("deleted_at") @db.Timestamptz(3)
+  company   Company   @relation(fields: [companyId], references: [id])
+  project   Project?  @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  creator   User      @relation("MemoCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, projectId, memoDate(sort: Desc), id(sort: Desc)])
+  @@index([companyId, tag, doneAt])
+  @@map("memos")
 }
