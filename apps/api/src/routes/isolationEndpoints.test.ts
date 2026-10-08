@@ -17,6 +17,7 @@ import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
+import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
 import { createPhotoService } from '../photo/photoService';
 import { createMemoryQueue } from '../queue/jobQueue';
@@ -76,6 +77,7 @@ const instance = () =>
     }),
     photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
     memos: createMemoService(db.app, () => NOW),
+    materials: createMaterialService(db.app, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -179,6 +181,13 @@ const buildCompany = async () => {
     .id as string;
   const photoId = await c.id(`/projects/${projectId}/photos`, { fileId });
   const memoId = await c.id('/memos', { content: '회사 A의 메모', projectId });
+  const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
+  const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
+    materialId,
+    recordDate: '2026-10-05',
+    kind: 'RECEIVED',
+    quantity: 10,
+  });
 
   return {
     cookie,
@@ -193,6 +202,8 @@ const buildCompany = async () => {
     fileId,
     photoId,
     memoId,
+    materialId,
+    materialRecordId,
   };
 };
 
@@ -270,6 +281,40 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /memos/{id}', 'get', `/memos/${a.memoId}`],
     ['PATCH /memos/{id}', 'patch', `/memos/${a.memoId}`, { content: '침투' }],
     ['DELETE /memos/{id}', 'delete', `/memos/${a.memoId}`],
+    ['PATCH /materials/{id}', 'patch', `/materials/${a.materialId}`, { name: '침투' }],
+    [
+      'POST /projects/{projectId}/material-records',
+      'post',
+      `/projects/${a.projectId}/material-records`,
+      { materialId: a.materialId, recordDate: '2026-10-05', kind: 'USED', quantity: 1 },
+    ],
+    [
+      'POST /projects/{projectId}/material-records/batch',
+      'post',
+      `/projects/${a.projectId}/material-records/batch`,
+      {
+        records: [
+          { materialId: a.materialId, recordDate: '2026-10-05', kind: 'USED', quantity: 1 },
+        ],
+      },
+    ],
+    [
+      'GET /projects/{projectId}/material-records',
+      'get',
+      `/projects/${a.projectId}/material-records`,
+    ],
+    [
+      'GET /projects/{projectId}/material-balance',
+      'get',
+      `/projects/${a.projectId}/material-balance`,
+    ],
+    [
+      'PATCH /material-records/{id}',
+      'patch',
+      `/material-records/${a.materialRecordId}`,
+      { quantity: 99 },
+    ],
+    ['DELETE /material-records/{id}', 'delete', `/material-records/${a.materialRecordId}`],
   ] as const;
 
 // 이 접두사 아래의 인증 필요 엔드포인트는 모두 위 목록에 있어야 한다 (새 엔드포인트가 격리 검사를 빠뜨리지 않게 함)
@@ -277,6 +322,8 @@ const ID_BOUND = [
   '/company/options/{id}',
   '/employees/{id}',
   '/files/{id}',
+  '/materials/{id}',
+  '/material-records/{id}',
   '/memos/{id}',
   '/photos/{id}',
   '/partners/{id}',
@@ -289,6 +336,8 @@ const COLLECTIONS = [
   'PUT /company/options/order',
   'GET /employees',
   'POST /employees',
+  'GET /materials',
+  'POST /materials',
   'GET /memos',
   'POST /memos',
   'GET /memos/summary',
@@ -332,6 +381,8 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       fileId: '{id}',
       photoId: '{id}',
       memoId: '{id}',
+      materialId: '{id}',
+      materialRecordId: '{id}',
     };
     const covered = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const missing = stepOne.filter((entry) => !covered.has(entry));
@@ -421,6 +472,37 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       '메모 연결',
       await b.c.call('patch', `/memos/${await b.c.id('/memos', { content: 'B 메모' })}`, {
         projectId: a.projectId,
+      }),
+    );
+    const bProjectOwn = await b.c.id('/projects', bOwn);
+    const bMaterial = await b.c.id('/materials', { name: 'B 자재', unit: '개' });
+    const bRecord = {
+      recordDate: '2026-10-05',
+      kind: 'USED',
+      quantity: 1,
+    };
+
+    await record(
+      '기록 자재',
+      await b.c.call('post', `/projects/${bProjectOwn}/material-records`, {
+        ...bRecord,
+        materialId: a.materialId,
+      }),
+    );
+    await record(
+      '기록 작업 구분',
+      await b.c.call('post', `/projects/${bProjectOwn}/material-records`, {
+        ...bRecord,
+        materialId: bMaterial,
+        categoryId: a.category,
+      }),
+    );
+    await record(
+      '기록 업체',
+      await b.c.call('post', `/projects/${bProjectOwn}/material-records`, {
+        ...bRecord,
+        materialId: bMaterial,
+        partnerId: a.clientId,
       }),
     );
     await record(

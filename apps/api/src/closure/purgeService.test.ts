@@ -186,6 +186,22 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       uploadedBy: account.userId,
     },
   });
+  // 자재 기록은 프로젝트·자재·작업 구분·업체·계정을 참조
+  const material = await db.owner.material.create({
+    data: { companyId: account.companyId, name: '삭제될 자재', nameKey: '삭제될자재', unit: '장' },
+  });
+  await db.owner.materialRecord.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      materialId: material.id,
+      recordDate: new Date('2026-10-02T00:00:00Z'),
+      kind: 'RECEIVED',
+      quantity: 10,
+      categoryId: category.id,
+      createdBy: account.userId,
+    },
+  });
   // 메모는 프로젝트(없을 수도 있음)·계정을 참조
   await db.owner.memo.create({
     data: {
@@ -238,6 +254,8 @@ describe('삭제·익명화', () => {
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.partner.count({ where })).toBe(0);
+    expect(await db.owner.materialRecord.count({ where })).toBe(0);
+    expect(await db.owner.material.count({ where })).toBe(0);
     expect(await db.owner.memo.count({ where })).toBe(0);
     expect(await db.owner.photo.count({ where })).toBe(0);
     expect(await db.owner.storedFile.count({ where })).toBe(0);
