@@ -2,6 +2,7 @@ import { PROJECT_STATUS_LABELS } from '@field-note/shared';
 import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
+import { PinnedDocuments } from '../documents/PinnedDocuments';
 import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
 import { ProjectForm } from '../projects/ProjectForm';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
@@ -81,6 +82,13 @@ export const ProjectCardPage = () => {
       >
         자재 현황
       </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/documents`}
+      >
+        문서함
+      </Link>
+      <PinnedDocuments projectId={project.data.id} />
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
       <ProjectWorkSummaryPanel projectId={project.data.id} />
