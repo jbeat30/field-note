@@ -28,5 +28,21 @@ export const queryKeys = {
     ['work-summary', 'employee', { employeeId }] as const,
   projectPeriodHistory: (id: string) => ['project-period-history', 'all', { id }] as const,
   projectHistory: (id: string) => ['project-history', 'all', { id }] as const,
+  photos: (projectId: string, filter: object = {}) =>
+    ['photos', 'list', { projectId, ...filter }] as const,
+  photo: (id: string) => ['photos', 'detail', { id }] as const,
+  memos: (filter: object = {}) => ['memos', 'list', filter] as const,
+  memoSummary: () => ['memos', 'summary', {}] as const,
+  materials: (filter: object = {}) => ['materials', 'list', filter] as const,
+  materialRecords: (projectId: string, filter: object = {}) =>
+    ['materials', 'records', { projectId, ...filter }] as const,
+  materialBalance: (projectId: string) => ['materials', 'balance', { projectId }] as const,
+  documents: (projectId: string, filter: object = {}) =>
+    ['documents', 'list', { projectId, ...filter }] as const,
+  document: (id: string) => ['documents', 'detail', { id }] as const,
+  documentAccessLogs: (id: string) => ['documents', 'access-logs', { id }] as const,
+  search: (q: string, projectId?: string) => ['search', 'results', { q, projectId }] as const,
+  dailyReport: (projectId: string, date: string) =>
+    ['reports', 'daily', { projectId, date }] as const,
   employee: (id: string) => ['employees', 'detail', { id }] as const,
 };

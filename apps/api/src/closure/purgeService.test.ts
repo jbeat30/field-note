@@ -1,5 +1,6 @@
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createTestProject } from '../db/testFixtures';
+import { createMemoryStorage } from '../storage/objectStorage';
 
 import { createClosureHarness, OLD_PASSWORD } from './closureHarness';
 import { CLOSURE_GRACE_MS } from './closureService';
@@ -162,6 +163,105 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       nameKey: '삭제될 고객',
     },
   });
+  // 사진 → 업로드 파일 순서(사진이 파일을 참조)와, 둘 다 프로젝트·계정을 참조하므로 그보다 먼저 지우는지까지 함께 확인
+  const file = await db.owner.storedFile.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      purpose: 'PHOTO',
+      originalName: '삭제될 사진.jpg',
+      contentType: 'image/jpeg',
+      sizeBytes: 100n,
+      objectKey: `company/${account.companyId}/project/${project.id}/file/original`,
+      uploadedBy: account.userId,
+    },
+  });
+  await db.owner.photo.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      fileId: file.id,
+      takenAt: new Date('2026-10-02T01:00:00Z'),
+      workDate: new Date('2026-10-02T00:00:00Z'),
+      uploadedBy: account.userId,
+    },
+  });
+  // 문서 → 버전 → 파일, 열람 기록은 문서·계정을 참조 (프로젝트·파일보다 먼저 지워야 함)
+  const docFile = await db.owner.storedFile.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      purpose: 'DOCUMENT',
+      originalName: '삭제될 계약서.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 100n,
+      objectKey: `company/${account.companyId}/project/${project.id}/doc/original`,
+      uploadedBy: account.userId,
+    },
+  });
+  const document = await db.owner.document.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      title: '삭제될 문서',
+      isSensitive: true,
+      createdBy: account.userId,
+    },
+  });
+
+  await db.owner.documentVersion.create({
+    data: {
+      companyId: account.companyId,
+      documentId: document.id,
+      versionNo: 1,
+      fileId: docFile.id,
+      revisionDate: new Date('2026-10-02T00:00:00Z'),
+      uploadedBy: account.userId,
+    },
+  });
+  await db.owner.auditLog.create({
+    data: {
+      companyId: account.companyId,
+      action: 'DOCUMENT_VIEWED',
+      actorId: account.userId,
+      targetId: document.id,
+      detail: { versionNo: 1 },
+    },
+  });
+  // 자재 기록은 프로젝트·자재·작업 구분·업체·계정을 참조
+  const material = await db.owner.material.create({
+    data: { companyId: account.companyId, name: '삭제될 자재', nameKey: '삭제될자재', unit: '장' },
+  });
+  await db.owner.materialRecord.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      materialId: material.id,
+      recordDate: new Date('2026-10-02T00:00:00Z'),
+      kind: 'RECEIVED',
+      quantity: 10,
+      categoryId: category.id,
+      createdBy: account.userId,
+    },
+  });
+  // 메모는 프로젝트(없을 수도 있음)·계정을 참조
+  await db.owner.memo.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      content: '삭제될 메모',
+      memoDate: new Date('2026-10-02T00:00:00Z'),
+      createdBy: account.userId,
+    },
+  });
+  await db.owner.memo.create({
+    data: {
+      companyId: account.companyId,
+      content: '삭제될 메모함 메모',
+      memoDate: new Date('2026-10-02T00:00:00Z'),
+      createdBy: account.userId,
+    },
+  });
   await h.sessionStore.create(account);
   await h.closure.request(account, OLD_PASSWORD);
 
@@ -196,6 +296,14 @@ describe('삭제·익명화', () => {
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.partner.count({ where })).toBe(0);
+    expect(await db.owner.auditLog.count({ where })).toBe(0);
+    expect(await db.owner.documentVersion.count({ where })).toBe(0);
+    expect(await db.owner.document.count({ where })).toBe(0);
+    expect(await db.owner.materialRecord.count({ where })).toBe(0);
+    expect(await db.owner.material.count({ where })).toBe(0);
+    expect(await db.owner.memo.count({ where })).toBe(0);
+    expect(await db.owner.photo.count({ where })).toBe(0);
+    expect(await db.owner.storedFile.count({ where })).toBe(0);
     expect(await db.owner.session.count({ where })).toBe(0);
     expect(await db.owner.userCredential.count({ where })).toBe(0);
     expect(await db.owner.invitation.count({ where })).toBe(0);
@@ -298,6 +406,34 @@ describe('삭제·익명화', () => {
     expect(
       await db.owner.userCredential.count({ where: { companyId: active.account.companyId } }),
     ).toBe(1);
+  });
+});
+
+describe('파일 객체 삭제', () => {
+  it('회사 경로 아래 객체만 지우고 다른 회사의 객체와 유예 중인 회사의 객체는 남긴다', async () => {
+    const h = await createClosureHarness(db, documentIds);
+    const { account } = await closeAccount(h);
+    const other = await closeAccount(h);
+    const memory = createMemoryStorage();
+    const mine = `company/${account.companyId}/project/p/f/original`;
+    const theirs = `company/${other.account.companyId}/project/p/f/original`;
+
+    memory.upload(mine, Buffer.from('a'));
+    memory.upload(`company/${account.companyId}/project/p/f/thumbnail`, Buffer.from('b'));
+    memory.upload(theirs, Buffer.from('c'));
+
+    // 유예 중에는 삭제하지 않음
+    await expect(
+      purgeCompany(db.purge, account.companyId, h.now, memory.storage),
+    ).rejects.toBeInstanceOf(NotDueForPurgeError);
+    expect(memory.objects.size).toBe(3);
+
+    expire(h);
+
+    const result = await purgeCompany(db.purge, account.companyId, h.now, memory.storage);
+
+    expect(result.deleted.file_objects).toBe(2);
+    expect([...memory.objects.keys()]).toEqual([theirs]);
   });
 });
 

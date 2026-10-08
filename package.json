@@ -1,6 +1,6 @@
 {
   "name": "field-note",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "현장 팀 프로젝트 관리 서비스",
@@ -30,7 +30,8 @@
     "db:seed": "pnpm --filter @field-note/api db:seed",
     "db:reset": "docker compose down -v && pnpm infra:up && pnpm db:setup && pnpm db:seed",
     "operator": "pnpm --filter @field-note/api operator",
-    "backup": "pnpm --filter @field-note/api backup"
+    "backup": "pnpm --filter @field-note/api backup",
+    "e2e": "pnpm --filter @field-note/web e2e"
   },
   "devDependencies": {
     "@field-note/config": "workspace:*",

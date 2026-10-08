@@ -12,3 +12,5 @@ storybook-static/
 .idea/
 apps/api/src/generated
 backups/
+apps/web/test-results/
+apps/web/playwright-report/
