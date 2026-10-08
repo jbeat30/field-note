@@ -70,6 +70,8 @@ const addDocument = (
   account: MockAccount,
   projectId: string,
   input: {
+    // 정해 두면 그 ID를 씀 (더미 문서의 고정 ID)
+    id?: string;
     title: string;
     category: Document['category'];
     isSensitive?: boolean;
@@ -77,7 +79,7 @@ const addDocument = (
     versions: { name: string; date: string; reason?: string; fileId?: string }[];
   },
 ) => {
-  const id = crypto.randomUUID();
+  const id = input.id ?? crypto.randomUUID();
   const versions: MockVersion[] = input.versions.map((version, index) => ({
     versionNo: index + 1,
     fileId:
@@ -112,6 +114,10 @@ const addDocument = (
   return id;
 };
 
+// 더미 문서는 프로젝트와 순서로 정한 고정된 ID를 써서 화면·스토리가 문서 주소를 알 수 있게 함
+export const seedDocumentId = (projectId: string, index: number) =>
+  `0198d0dc-0000-7000-8000-${projectId.replaceAll('-', '').slice(-10)}${String(index).padStart(2, '0')}`;
+
 // 더미 문서: 개정이 쌓인 도면(고정), 민감 계약서, 일반 시방서 (화면 확인용)
 const seed = (account: MockAccount) => {
   if (seeded.has(scopeOf(account))) return;
@@ -120,6 +126,7 @@ const seed = (account: MockAccount) => {
 
   for (const project of getProjects(account)) {
     addDocument(account, project.id, {
+      id: seedDocumentId(project.id, 0),
       title: '1층 시공도',
       category: 'DRAWING',
       isPinned: true,
@@ -129,11 +136,13 @@ const seed = (account: MockAccount) => {
       ],
     });
     addDocument(account, project.id, {
+      id: seedDocumentId(project.id, 1),
       title: '도급 계약서',
       category: 'CONTRACT',
       versions: [{ name: '도급계약서.pdf', date: '2026-09-01' }],
     });
     addDocument(account, project.id, {
+      id: seedDocumentId(project.id, 2),
       title: '외장 판금 시방서',
       category: 'SPEC',
       versions: [{ name: '시방서.pdf', date: '2026-09-10' }],
@@ -151,6 +160,10 @@ const live = (account: MockAccount, projectId?: string) => {
       (!projectId || document.projectId === projectId),
   );
 };
+
+// 검색 목업이 쓰는 문서 조회 (지운 문서 제외)
+export const listMockDocuments = (account: MockAccount) =>
+  live(account).map((document) => toDocument(document));
 
 const toVersion = (version: MockVersion): DocumentVersion => {
   const file = getMockFile(version.fileId)!;

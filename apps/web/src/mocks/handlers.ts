@@ -138,6 +138,7 @@ import {
 } from './state';
 import { createDocumentHandlers } from './documentHandlers';
 import { createMaterialHandlers } from './materialHandlers';
+import { createSearchHandlers } from './searchHandlers';
 import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
 
@@ -378,6 +379,7 @@ export const handlers = [
   ...createMemoHandlers({ apiError, parseBody }),
   ...createMaterialHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
+  ...createSearchHandlers({ apiError }),
 
   http.get('/api/v1/health', async () => {
     await simulateLatency();

@@ -1,6 +1,6 @@
 import { DOCUMENT_CATEGORIES, DOCUMENT_CATEGORY_LABELS } from '@field-note/shared';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Input } from '../components/ui/input';
@@ -19,7 +19,9 @@ export const ProjectDocumentsPage = () => {
   const project = useProject(id);
   const [category, setCategory] = useState('');
   const [q, setQ] = useState('');
-  const [detailId, setDetailId] = useState<string | null>(null);
+  const [params, setParams] = useSearchParams();
+  // 검색 결과에서 들어오면(?doc=) 그 문서의 상세를 바로 연다
+  const [detailId, setDetailId] = useState<string | null>(params.get('doc'));
   const documents = useDocuments(id, { category, q });
   const create = useCreateDocument(id);
   const update = useUpdateDocument();
@@ -108,7 +110,21 @@ export const ProjectDocumentsPage = () => {
           }
         />
       )}
-      {detailId && <DocumentDetailDialog documentId={detailId} onClose={() => setDetailId(null)} />}
+      {detailId && (
+        <DocumentDetailDialog
+          documentId={detailId}
+          onClose={() => {
+            setDetailId(null);
+
+            if (params.has('doc')) {
+              const next = new URLSearchParams(params);
+
+              next.delete('doc');
+              setParams(next, { replace: true });
+            }
+          }}
+        />
+      )}
       {opener.dialog}
     </div>
   );

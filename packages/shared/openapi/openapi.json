@@ -25799,6 +25799,700 @@
         }
       }
     },
+    "/api/v1/search": {
+      "get": {
+        "summary": "통합 검색 (프로젝트·직원·메모·자료·일지, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "minLength": 1,
+              "maxLength": 50
+            },
+            "required": true,
+            "name": "q",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "projectId",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "integer",
+              "minimum": 1,
+              "maximum": 20,
+              "default": 5
+            },
+            "required": false,
+            "name": "limit",
+            "in": "query"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "q": {
+                      "type": "string"
+                    },
+                    "projects": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "PROJECT",
+                                  "EMPLOYEE",
+                                  "MEMO",
+                                  "DOCUMENT",
+                                  "WORK_LOG"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "snippet": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "projectId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "uuid"
+                              },
+                              "projectName": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "date"
+                              },
+                              "badge": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "SENSITIVE",
+                                  "LEFT",
+                                  null
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "id",
+                              "title",
+                              "snippet",
+                              "projectId",
+                              "projectName",
+                              "date",
+                              "badge"
+                            ]
+                          }
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "hasMore"
+                      ]
+                    },
+                    "employees": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "PROJECT",
+                                  "EMPLOYEE",
+                                  "MEMO",
+                                  "DOCUMENT",
+                                  "WORK_LOG"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "snippet": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "projectId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "uuid"
+                              },
+                              "projectName": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "date"
+                              },
+                              "badge": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "SENSITIVE",
+                                  "LEFT",
+                                  null
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "id",
+                              "title",
+                              "snippet",
+                              "projectId",
+                              "projectName",
+                              "date",
+                              "badge"
+                            ]
+                          }
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "hasMore"
+                      ]
+                    },
+                    "memos": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "PROJECT",
+                                  "EMPLOYEE",
+                                  "MEMO",
+                                  "DOCUMENT",
+                                  "WORK_LOG"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "snippet": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "projectId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "uuid"
+                              },
+                              "projectName": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "date"
+                              },
+                              "badge": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "SENSITIVE",
+                                  "LEFT",
+                                  null
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "id",
+                              "title",
+                              "snippet",
+                              "projectId",
+                              "projectName",
+                              "date",
+                              "badge"
+                            ]
+                          }
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "hasMore"
+                      ]
+                    },
+                    "documents": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "PROJECT",
+                                  "EMPLOYEE",
+                                  "MEMO",
+                                  "DOCUMENT",
+                                  "WORK_LOG"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "snippet": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "projectId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "uuid"
+                              },
+                              "projectName": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "date"
+                              },
+                              "badge": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "SENSITIVE",
+                                  "LEFT",
+                                  null
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "id",
+                              "title",
+                              "snippet",
+                              "projectId",
+                              "projectName",
+                              "date",
+                              "badge"
+                            ]
+                          }
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "hasMore"
+                      ]
+                    },
+                    "workLogs": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "type": {
+                                "type": "string",
+                                "enum": [
+                                  "PROJECT",
+                                  "EMPLOYEE",
+                                  "MEMO",
+                                  "DOCUMENT",
+                                  "WORK_LOG"
+                                ]
+                              },
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "title": {
+                                "type": "string"
+                              },
+                              "snippet": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "projectId": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "uuid"
+                              },
+                              "projectName": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ]
+                              },
+                              "date": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "format": "date"
+                              },
+                              "badge": {
+                                "type": [
+                                  "string",
+                                  "null"
+                                ],
+                                "enum": [
+                                  "SENSITIVE",
+                                  "LEFT",
+                                  null
+                                ]
+                              }
+                            },
+                            "required": [
+                              "type",
+                              "id",
+                              "title",
+                              "snippet",
+                              "projectId",
+                              "projectName",
+                              "date",
+                              "badge"
+                            ]
+                          }
+                        },
+                        "hasMore": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "items",
+                        "hasMore"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "q",
+                    "projects",
+                    "employees",
+                    "memos",
+                    "documents",
+                    "workLogs"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/auth/social/providers": {
       "get": {
         "summary": "사용 가능한 소셜 로그인 제공자",

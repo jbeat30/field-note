@@ -88,6 +88,12 @@ export const ProjectCardPage = () => {
       >
         문서함
       </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/search?project=${project.data.id}`}
+      >
+        프로젝트 안에서 찾기
+      </Link>
       <PinnedDocuments projectId={project.data.id} />
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
