@@ -31,5 +31,7 @@ export const queryKeys = {
   photos: (projectId: string, filter: object = {}) =>
     ['photos', 'list', { projectId, ...filter }] as const,
   photo: (id: string) => ['photos', 'detail', { id }] as const,
+  memos: (filter: object = {}) => ['memos', 'list', filter] as const,
+  memoSummary: () => ['memos', 'summary', {}] as const,
   employee: (id: string) => ['employees', 'detail', { id }] as const,
 };

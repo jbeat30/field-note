@@ -136,6 +136,7 @@ import {
   updateSettings,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
+import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
 
 // 실제 API와 같은 상태 코드·오류 형식을 쓴다 (공유 패키지의 같은 표 사용)
@@ -372,6 +373,7 @@ const toMockWorkLog = (
 
 export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
+  ...createMemoHandlers({ apiError, parseBody }),
 
   http.get('/api/v1/health', async () => {
     await simulateLatency();

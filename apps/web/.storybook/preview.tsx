@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { configure } from 'storybook/test';
 
 import { handlers } from '../src/mocks/handlers';
+import { resetMockMemos } from '../src/mocks/memoHandlers';
 import { resetMockPhotos } from '../src/mocks/photoHandlers';
 import { resetMockState } from '../src/mocks/state';
 import { AppProviders } from '../src/AppProviders';
@@ -20,6 +21,7 @@ const preview: Preview = {
       // 스토리끼리 가짜 서버 상태(로그인·가입)가 섞이지 않게 초기화
       resetMockState();
       resetMockPhotos();
+      resetMockMemos();
     },
     mswLoader(),
   ],

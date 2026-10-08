@@ -6,6 +6,8 @@ import { Button } from '../components/ui/button';
 import { cn } from '../lib/cn';
 import { useUiStore } from '../stores/uiStore';
 
+import { QuickAddSheet } from './QuickAddSheet';
+
 const NAV_ITEMS = [
   { to: '/', label: '홈', end: true },
   { to: '/projects', label: '프로젝트', end: false },
@@ -50,6 +52,7 @@ export const AppLayout = () => {
           추가
         </Button>
       </div>
+      <QuickAddSheet />
     </div>
   );
 };

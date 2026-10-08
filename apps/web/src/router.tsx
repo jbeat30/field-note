@@ -73,6 +73,11 @@ export const routes = [
             ...page(() => import('./routes/ProjectCardPage'), 'ProjectCardPage'),
           },
           {
+            path: '/projects/:id/memos',
+            ...page(() => import('./routes/ProjectMemosPage'), 'ProjectMemosPage'),
+          },
+          { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
+          {
             path: '/projects/:id/photos',
             ...page(() => import('./routes/ProjectPhotosPage'), 'ProjectPhotosPage'),
           },
