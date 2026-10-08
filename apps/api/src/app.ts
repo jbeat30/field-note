@@ -18,6 +18,8 @@ import { registerWorkLogRoutes } from './routes/workLogs';
 import { registerFileRoutes } from './routes/files';
 import { registerPhotoRoutes } from './routes/photos';
 import { registerMemoRoutes } from './routes/memos';
+import { registerDocumentRoutes } from './routes/documents';
+import type { DocumentService } from './document/documentService';
 import { registerMaterialRoutes } from './routes/materials';
 import type { MaterialService } from './material/materialService';
 import type { MemoService } from './memo/memoService';
@@ -79,6 +81,8 @@ export type AppOptions = {
   memos?: MemoService;
   // 없으면 자재 API는 501
   materials?: MaterialService;
+  // 없으면 작업자료 문서함 API는 501
+  documents?: DocumentService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
   social?: {
     choice: SocialProviderChoice;
@@ -135,6 +139,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerPhotoRoutes(registry, options.photos);
   registerMemoRoutes(registry, options.memos);
   registerMaterialRoutes(registry, options.materials);
+  registerDocumentRoutes(registry, options.documents);
   registerSocialRoutes(
     registry,
     options.social && options.accountService

@@ -186,6 +186,48 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       uploadedBy: account.userId,
     },
   });
+  // 문서 → 버전 → 파일, 열람 기록은 문서·계정을 참조 (프로젝트·파일보다 먼저 지워야 함)
+  const docFile = await db.owner.storedFile.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      purpose: 'DOCUMENT',
+      originalName: '삭제될 계약서.pdf',
+      contentType: 'application/pdf',
+      sizeBytes: 100n,
+      objectKey: `company/${account.companyId}/project/${project.id}/doc/original`,
+      uploadedBy: account.userId,
+    },
+  });
+  const document = await db.owner.document.create({
+    data: {
+      companyId: account.companyId,
+      projectId: project.id,
+      title: '삭제될 문서',
+      isSensitive: true,
+      createdBy: account.userId,
+    },
+  });
+
+  await db.owner.documentVersion.create({
+    data: {
+      companyId: account.companyId,
+      documentId: document.id,
+      versionNo: 1,
+      fileId: docFile.id,
+      revisionDate: new Date('2026-10-02T00:00:00Z'),
+      uploadedBy: account.userId,
+    },
+  });
+  await db.owner.auditLog.create({
+    data: {
+      companyId: account.companyId,
+      action: 'DOCUMENT_VIEWED',
+      actorId: account.userId,
+      targetId: document.id,
+      detail: { versionNo: 1 },
+    },
+  });
   // 자재 기록은 프로젝트·자재·작업 구분·업체·계정을 참조
   const material = await db.owner.material.create({
     data: { companyId: account.companyId, name: '삭제될 자재', nameKey: '삭제될자재', unit: '장' },
@@ -254,6 +296,9 @@ describe('삭제·익명화', () => {
     expect(await db.owner.optionItem.count({ where })).toBe(0);
     expect(await db.owner.employee.count({ where })).toBe(0);
     expect(await db.owner.partner.count({ where })).toBe(0);
+    expect(await db.owner.auditLog.count({ where })).toBe(0);
+    expect(await db.owner.documentVersion.count({ where })).toBe(0);
+    expect(await db.owner.document.count({ where })).toBe(0);
     expect(await db.owner.materialRecord.count({ where })).toBe(0);
     expect(await db.owner.material.count({ where })).toBe(0);
     expect(await db.owner.memo.count({ where })).toBe(0);
