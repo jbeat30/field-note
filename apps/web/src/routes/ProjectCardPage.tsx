@@ -69,6 +69,12 @@ export const ProjectCardPage = () => {
       >
         사진첩
       </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/memos`}
+      >
+        메모 노트
+      </Link>
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
       <ProjectWorkSummaryPanel projectId={project.data.id} />
