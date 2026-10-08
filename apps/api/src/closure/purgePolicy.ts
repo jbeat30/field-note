@@ -21,6 +21,8 @@ export const PURGE_POLICY = {
   work_logs: 'DELETE',
   work_log_entries: 'DELETE',
   work_log_revisions: 'DELETE',
+  material_records: 'DELETE',
+  materials: 'DELETE',
   memos: 'DELETE',
   photos: 'DELETE',
   files: 'DELETE',

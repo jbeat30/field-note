@@ -68,6 +68,8 @@ model Company {
   files                StoredFile[]
   photos               Photo[]
   memos                Memo[]
+  materials            Material[]
+  materialRecords      MaterialRecord[]
   workLogEntries       WorkLogEntry[]
   workLogRevisions     WorkLogRevision[]
 
@@ -126,6 +128,7 @@ model Project {
   files            StoredFile[]
   photos           Photo[]
   memos            Memo[]
+  materialRecords  MaterialRecord[]
 
   @@id([companyId, id])
   @@unique([companyId, code])
@@ -350,6 +353,7 @@ model User {
   uploadedFiles        StoredFile[]          @relation("FileUploadedBy")
   uploadedPhotos       Photo[]               @relation("PhotoUploadedBy")
   memos                Memo[]                @relation("MemoCreatedBy")
+  materialRecords      MaterialRecord[]      @relation("MaterialRecordCreatedBy")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -528,20 +532,21 @@ enum OptionKind {
 // 회사별 선택 목록 항목. 쓰지 않는 항목은 삭제하지 않고 숨김(is_active=false)으로 두어 기록에 쓰인 이름이 사라지지 않게 함
 // name_key는 공백·대소문자 차이를 없앤 비교용 값으로 같은 이름의 중복을 막음
 model OptionItem {
-  companyId             String         @map("company_id") @db.Uuid
-  id                    String         @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId             String           @map("company_id") @db.Uuid
+  id                    String           @default(dbgenerated("uuidv7()")) @db.Uuid
   kind                  OptionKind
   name                  String
-  nameKey               String         @map("name_key")
-  sortOrder             Int            @map("sort_order")
-  isActive              Boolean        @default(true) @map("is_active")
-  createdAt             DateTime       @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt             DateTime       @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company               Company        @relation(fields: [companyId], references: [id])
-  employeesAsJobType    Employee[]     @relation("EmployeeJobType")
-  employeesAsWorkerType Employee[]     @relation("EmployeeWorkerType")
-  projectTrades         ProjectTrade[] @relation("ProjectTradeOption")
-  workLogEntries        WorkLogEntry[] @relation("WorkLogEntryCategory")
+  nameKey               String           @map("name_key")
+  sortOrder             Int              @map("sort_order")
+  isActive              Boolean          @default(true) @map("is_active")
+  createdAt             DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company               Company          @relation(fields: [companyId], references: [id])
+  employeesAsJobType    Employee[]       @relation("EmployeeJobType")
+  employeesAsWorkerType Employee[]       @relation("EmployeeWorkerType")
+  projectTrades         ProjectTrade[]   @relation("ProjectTradeOption")
+  workLogEntries        WorkLogEntry[]   @relation("WorkLogEntryCategory")
+  materialRecords       MaterialRecord[] @relation("MaterialRecordCategory")
 
   @@id([companyId, id])
   @@unique([companyId, kind, nameKey])
@@ -601,20 +606,21 @@ enum PartnerKind {
 // 고객·협력업체·자재 공급처 명부. 금액·거래 내역은 다루지 않음
 // 쓰지 않는 업체는 삭제하지 않고 숨김(is_active=false)으로 두어 프로젝트·자재 기록에 쓰인 상호가 사라지지 않게 함
 model Partner {
-  companyId   String      @map("company_id") @db.Uuid
-  id          String      @default(dbgenerated("uuidv7()")) @db.Uuid
-  kind        PartnerKind
-  name        String
+  companyId       String           @map("company_id") @db.Uuid
+  id              String           @default(dbgenerated("uuidv7()")) @db.Uuid
+  kind            PartnerKind
+  name            String
   // 같은 구분 안에서 공백·대소문자만 다른 상호를 중복으로 막기 위한 비교용 값
-  nameKey     String      @map("name_key")
-  contactName String?     @map("contact_name")
-  phone       String?
-  memo        String?
-  isActive    Boolean     @default(true) @map("is_active")
-  createdAt   DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company     Company     @relation(fields: [companyId], references: [id])
-  projects    Project[]   @relation("ProjectClient")
+  nameKey         String           @map("name_key")
+  contactName     String?          @map("contact_name")
+  phone           String?
+  memo            String?
+  isActive        Boolean          @default(true) @map("is_active")
+  createdAt       DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company          @relation(fields: [companyId], references: [id])
+  projects        Project[]        @relation("ProjectClient")
+  materialRecords MaterialRecord[] @relation("MaterialRecordPartner")
 
   @@id([companyId, id])
   @@unique([companyId, kind, nameKey])
@@ -797,4 +803,80 @@ model Memo {
   @@index([companyId, projectId, memoDate(sort: Desc), id(sort: Desc)])
   @@index([companyId, tag, doneAt])
   @@map("memos")
+}
+
+// 자재 분류 (서비스 기획서 §11.2)
+enum MaterialCategory {
+  RAW
+  SUB
+  FINISH
+  CONSUMABLE
+
+  @@map("material_category")
+}
+
+// 자재 기록 구분: 반입 / 사용 / 반출 / 폐기 (서비스 기획서 §11.3)
+enum MaterialRecordKind {
+  RECEIVED
+  USED
+  RETURNED
+  DISCARDED
+
+  @@map("material_record_kind")
+}
+
+// 회사 자재 목록. 같은 이름도 규격이 다르면 별도 자재(예: 아연도강판 0.8T / 1.0T). 쓰지 않는 자재는 삭제하지 않고 숨김
+// name_key·spec_key는 공백·대소문자 차이를 없앤 비교용 값 (규격이 없으면 빈 문자열)
+model Material {
+  companyId String           @map("company_id") @db.Uuid
+  id        String           @default(dbgenerated("uuidv7()")) @db.Uuid
+  name      String
+  nameKey   String           @map("name_key")
+  spec      String?
+  specKey   String           @default("") @map("spec_key")
+  unit      String
+  category  MaterialCategory @default(CONSUMABLE)
+  isActive  Boolean          @default(true) @map("is_active")
+  createdAt DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company   Company          @relation(fields: [companyId], references: [id])
+  records   MaterialRecord[]
+
+  @@id([companyId, id])
+  @@unique([companyId, nameKey, specKey])
+  @@map("materials")
+}
+
+// 프로젝트별 자재 기록. 잔량 = 반입 - 사용 - 반출 - 폐기. 지우면 deleted_at만 채우는 소프트 삭제
+// 작업일지는 프로젝트 × record_date로 연결 (일지가 아직 없어도 기록 가능)
+model MaterialRecord {
+  companyId      String             @map("company_id") @db.Uuid
+  id             String             @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId      String             @map("project_id") @db.Uuid
+  materialId     String             @map("material_id") @db.Uuid
+  recordDate     DateTime           @map("record_date") @db.Date
+  kind           MaterialRecordKind
+  quantity       Decimal            @db.Decimal(12, 3)
+  categoryId     String?            @map("category_id") @db.Uuid
+  area           String?
+  partnerId      String?            @map("partner_id") @db.Uuid
+  sourceText     String?            @map("source_text")
+  isChange       Boolean            @default(false) @map("is_change")
+  isAfterService Boolean            @default(false) @map("is_after_service")
+  memo           String?
+  createdBy      String             @map("created_by") @db.Uuid
+  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?          @map("deleted_at") @db.Timestamptz(3)
+  company        Company            @relation(fields: [companyId], references: [id])
+  project        Project            @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  material       Material           @relation(fields: [companyId, materialId], references: [companyId, id], onDelete: Restrict)
+  category       OptionItem?        @relation("MaterialRecordCategory", fields: [companyId, categoryId], references: [companyId, id], onDelete: Restrict)
+  partner        Partner?           @relation("MaterialRecordPartner", fields: [companyId, partnerId], references: [companyId, id], onDelete: Restrict)
+  creator        User               @relation("MaterialRecordCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, projectId, recordDate(sort: Desc), id(sort: Desc)])
+  @@index([companyId, materialId])
+  @@map("material_records")
 }
