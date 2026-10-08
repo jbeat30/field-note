@@ -28,5 +28,8 @@ export const queryKeys = {
     ['work-summary', 'employee', { employeeId }] as const,
   projectPeriodHistory: (id: string) => ['project-period-history', 'all', { id }] as const,
   projectHistory: (id: string) => ['project-history', 'all', { id }] as const,
+  photos: (projectId: string, filter: object = {}) =>
+    ['photos', 'list', { projectId, ...filter }] as const,
+  photo: (id: string) => ['photos', 'detail', { id }] as const,
   employee: (id: string) => ['employees', 'detail', { id }] as const,
 };

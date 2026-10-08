@@ -58,7 +58,7 @@ const main = async () => {
   });
 
   if (env.NODE_ENV !== 'production') {
-    await ensureBucket();
+    await ensureBucket(env.APP_ORIGIN);
   }
 
   const files = createFileService({ app: appPrisma, storage, queue });
