@@ -19,6 +19,7 @@ import { createSmtpMailer } from './email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
 import { parseEnv } from './env';
 import { createFileService, registerFileWorker } from './file/fileService';
+import { createReportService } from './report/reportService';
 import { createSearchService } from './search/searchService';
 import { createDocumentService } from './document/documentService';
 import { createMaterialService } from './material/materialService';
@@ -71,6 +72,7 @@ const main = async () => {
   const materials = createMaterialService(appPrisma);
   const documents = createDocumentService(appPrisma, storage);
   const search = createSearchService(appPrisma);
+  const reports = createReportService(appPrisma, storage);
   const mailer = createSmtpMailer({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
@@ -140,6 +142,7 @@ const main = async () => {
     materials,
     documents,
     search,
+    reports,
     closure,
     social: {
       choice: socialChoice,

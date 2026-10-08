@@ -20,3 +20,17 @@ body {
   color: var(--color-foreground);
   font-family: var(--font-sans);
 }
+
+/* 인쇄(작업일보 출력): A4 세로, 화면 메뉴는 숨기고 색은 그대로 인쇄 */
+@page {
+  size: A4;
+  margin: 12mm;
+}
+
+@media print {
+  body {
+    background: #fff;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+}
