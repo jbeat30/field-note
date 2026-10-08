@@ -6,6 +6,7 @@ import {
   optionsResponseSchema,
   partnersResponseSchema,
   projectsResponseSchema,
+  searchResponseSchema,
   workLogsResponseSchema,
 } from '@field-note/shared';
 import request from 'supertest';
@@ -16,6 +17,15 @@ import { createAccountService } from '../auth/accountService';
 import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createEmployeeService } from '../employee/employeeService';
+import { createFileService } from '../file/fileService';
+import { createDocumentService } from '../document/documentService';
+import { createMaterialService } from '../material/materialService';
+import { createMemoService } from '../memo/memoService';
+import { createReportService } from '../report/reportService';
+import { createSearchService } from '../search/searchService';
+import { createPhotoService } from '../photo/photoService';
+import { createMemoryQueue } from '../queue/jobQueue';
+import { createMemoryStorage } from '../storage/objectStorage';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createCompanyWithInvitation } from '../operator/operatorService';
 import { createPartnerService } from '../partner/partnerService';
@@ -63,6 +73,18 @@ const instance = () =>
     projects: createProjectService(db.app, () => NOW),
     assignments: createAssignmentService(db.app),
     workLogs: createWorkLogService(db.app, () => NOW),
+    files: createFileService({
+      app: db.app,
+      storage: createMemoryStorage().storage,
+      queue: createMemoryQueue().queue,
+      now: () => NOW,
+    }),
+    photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
+    memos: createMemoService(db.app, () => NOW),
+    materials: createMaterialService(db.app, () => NOW),
+    search: createSearchService(db.app),
+    reports: createReportService(db.app, createMemoryStorage().storage, () => NOW),
+    documents: createDocumentService(db.app, createMemoryStorage().storage, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -94,7 +116,7 @@ const signUp = async () => {
   )!;
 };
 
-type Method = 'get' | 'post' | 'put' | 'patch';
+type Method = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
 const client = (cookie: string) => {
   const call = (method: Method, path: string, body?: object) => {
@@ -108,6 +130,8 @@ const client = (cookie: string) => {
     id: async (path: string, body: object) => (await call('post', path, body)).body.id as string,
   };
 };
+
+const FILE_REQUEST = { name: '현장.jpg', contentType: 'image/jpeg', purpose: 'PHOTO', size: 1000 };
 
 // 회사 A: 거래처·직원·프로젝트·투입·일지·선택 목록 항목을 한 벌씩
 const buildCompany = async () => {
@@ -159,7 +183,51 @@ const buildCompany = async () => {
     periodChangeReason: '기간 연장',
   });
 
-  return { cookie, c, clientId, managerId, worker, category, jobType, projectId, assignment };
+  // 업로드를 신청해 둔 파일 한 건 (검사 전 상태여도 다른 회사에는 보이지 않아야 함)
+  const fileId = (await c.call('post', `/projects/${projectId}/files`, FILE_REQUEST)).body.file
+    .id as string;
+  const photoId = await c.id(`/projects/${projectId}/photos`, { fileId });
+  const memoId = await c.id('/memos', { content: '회사 A의 메모', projectId });
+  // 문서용 파일을 올려 신청해 두고(검사 전이어도 됨) 민감 문서를 한 건 만든다
+  const docFileId = (
+    await c.call('post', `/projects/${projectId}/files`, {
+      name: '계약서.pdf',
+      contentType: 'application/pdf',
+      purpose: 'DOCUMENT',
+      size: 1000,
+    })
+  ).body.file.id as string;
+  const documentId = await c.id(`/projects/${projectId}/documents`, {
+    fileId: docFileId,
+    title: '회사 A의 계약서',
+    category: 'CONTRACT',
+  });
+  const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
+  const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
+    materialId,
+    recordDate: '2026-10-05',
+    kind: 'RECEIVED',
+    quantity: 10,
+  });
+
+  return {
+    cookie,
+    c,
+    clientId,
+    managerId,
+    worker,
+    category,
+    jobType,
+    projectId,
+    assignment,
+    fileId,
+    photoId,
+    memoId,
+    materialId,
+    materialRecordId,
+    docFileId,
+    documentId,
+  };
 };
 
 // B에게 A의 ID로 접근하는 요청 전부. 하나라도 성공하면 격리가 깨진 것이다
@@ -219,37 +287,142 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'get',
       `/projects/${a.projectId}/work-logs/${DAY}/revisions`,
     ],
+    ['POST /projects/{projectId}/files', 'post', `/projects/${a.projectId}/files`, FILE_REQUEST],
+    ['GET /files/{id}', 'get', `/files/${a.fileId}`],
+    ['POST /files/{id}/complete', 'post', `/files/${a.fileId}/complete`],
+    ['GET /files/{id}/url', 'get', `/files/${a.fileId}/url`],
+    [
+      'POST /projects/{projectId}/photos',
+      'post',
+      `/projects/${a.projectId}/photos`,
+      { fileId: a.fileId },
+    ],
+    ['GET /projects/{projectId}/photos', 'get', `/projects/${a.projectId}/photos`],
+    ['GET /photos/{id}', 'get', `/photos/${a.photoId}`],
+    ['PATCH /photos/{id}', 'patch', `/photos/${a.photoId}`, { category: 'AFTER' }],
+    ['DELETE /photos/{id}', 'delete', `/photos/${a.photoId}`],
+    ['GET /memos/{id}', 'get', `/memos/${a.memoId}`],
+    ['PATCH /memos/{id}', 'patch', `/memos/${a.memoId}`, { content: '침투' }],
+    ['DELETE /memos/{id}', 'delete', `/memos/${a.memoId}`],
+    [
+      'GET /projects/{projectId}/daily-reports/{date}',
+      'get',
+      `/projects/${a.projectId}/daily-reports/${DAY}`,
+    ],
+    [
+      'GET /projects/{projectId}/daily-reports.xlsx',
+      'get',
+      `/projects/${a.projectId}/daily-reports.xlsx?from=${DAY}&to=${DAY}`,
+    ],
+    ['GET /search', 'get', `/search?q=A&projectId=${a.projectId}`],
+    ['GET /documents/{id}', 'get', `/documents/${a.documentId}`],
+    ['PATCH /documents/{id}', 'patch', `/documents/${a.documentId}`, { title: '침투' }],
+    ['DELETE /documents/{id}', 'delete', `/documents/${a.documentId}`],
+    [
+      'POST /documents/{id}/versions',
+      'post',
+      `/documents/${a.documentId}/versions`,
+      { fileId: a.docFileId },
+    ],
+    [
+      'GET /documents/{id}/versions/{versionNo}/url',
+      'get',
+      `/documents/${a.documentId}/versions/1/url`,
+    ],
+    ['GET /documents/{id}/access-logs', 'get', `/documents/${a.documentId}/access-logs`],
+    [
+      'POST /projects/{projectId}/documents',
+      'post',
+      `/projects/${a.projectId}/documents`,
+      { fileId: a.docFileId, title: '침투' },
+    ],
+    ['GET /projects/{projectId}/documents', 'get', `/projects/${a.projectId}/documents`],
+    ['PATCH /materials/{id}', 'patch', `/materials/${a.materialId}`, { name: '침투' }],
+    [
+      'POST /projects/{projectId}/material-records',
+      'post',
+      `/projects/${a.projectId}/material-records`,
+      { materialId: a.materialId, recordDate: '2026-10-05', kind: 'USED', quantity: 1 },
+    ],
+    [
+      'POST /projects/{projectId}/material-records/batch',
+      'post',
+      `/projects/${a.projectId}/material-records/batch`,
+      {
+        records: [
+          { materialId: a.materialId, recordDate: '2026-10-05', kind: 'USED', quantity: 1 },
+        ],
+      },
+    ],
+    [
+      'GET /projects/{projectId}/material-records',
+      'get',
+      `/projects/${a.projectId}/material-records`,
+    ],
+    [
+      'GET /projects/{projectId}/material-balance',
+      'get',
+      `/projects/${a.projectId}/material-balance`,
+    ],
+    [
+      'PATCH /material-records/{id}',
+      'patch',
+      `/material-records/${a.materialRecordId}`,
+      { quantity: 99 },
+    ],
+    ['DELETE /material-records/{id}', 'delete', `/material-records/${a.materialRecordId}`],
   ] as const;
 
-// 이 접두사 아래의 인증 필요 엔드포인트는 모두 위 목록에 있어야 한다 (새 엔드포인트가 격리 검사를 빠뜨리지 않게 함)
-const ID_BOUND = ['/company/options/{id}', '/employees/{id}', '/partners/{id}', '/projects/{id}'];
-// ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다
+// ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다 (로그인이 필요한 엔드포인트는 전부 이 목록·위의 공격 목록·본인 계정 전용 목록 중 하나에 있어야 함)
 const COLLECTIONS = [
   'GET /company/options',
   'POST /company/options',
   'PUT /company/options/order',
   'GET /employees',
   'POST /employees',
+  'GET /materials',
+  'POST /materials',
+  'GET /memos',
+  'POST /memos',
+  'GET /memos/summary',
   'GET /partners',
   'POST /partners',
   'GET /projects',
   'POST /projects',
 ];
 
-describe('회사 격리: 1단계 엔드포인트', () => {
-  it('새로 만든 1단계 엔드포인트는 모두 격리 시험 목록에 있다', async () => {
+// 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트.
+// 회사 업무 데이터를 다루는 새 엔드포인트는 여기에 넣지 말고 위의 시험 목록(attacks·COLLECTIONS)에 넣는다.
+// 각자 전용 시험이 있다: 계정(accountRoutes)·기기(deviceRoutes: 다른 회사 사용자의 기기 로그아웃 불가)·소셜(socialRoutes)·회사 설정(companySettingsRoutes: 두 회사의 설정은 서로 독립)
+const OWN_ACCOUNT_ONLY = [
+  // 틀 검증용 샘플 쓰기 API (업무 데이터 없음)
+  'POST /samples',
+  'POST /auth/email/verify',
+  'POST /auth/email/resend',
+  'POST /auth/logout',
+  'GET /me',
+  'POST /me/password',
+  'POST /me/email/change',
+  'POST /me/closure',
+  'GET /me/devices',
+  'DELETE /me/devices/{id}',
+  'GET /me/social',
+  'POST /me/social/kakao/start',
+  'DELETE /me/social/kakao',
+  'GET /company/settings',
+  'PUT /company/settings',
+];
+
+describe('회사 격리: 전 엔드포인트', () => {
+  it('로그인이 필요한 모든 엔드포인트는 격리 시험 목록 또는 본인 계정 전용 목록에 있다', async () => {
     const spec = JSON.parse(
       readFileSync(join(__dirname, '../../../../packages/shared/openapi/openapi.json'), 'utf8'),
-    ) as { paths: Record<string, Record<string, { security?: unknown }>> };
-    const found = Object.entries(spec.paths).flatMap(([path, methods]) =>
+    ) as { paths: Record<string, Record<string, { security?: unknown[] }>> };
+    // 접두사로 대상을 고르지 않고 로그인이 필요한 모든 엔드포인트를 본다 (새 기능이 어느 경로에 생겨도 빠지지 않게)
+    const authenticated = Object.entries(spec.paths).flatMap(([path, methods]) =>
       Object.entries(methods)
-        .filter(([, operation]) => operation.security)
+        .filter(([, operation]) => (operation.security?.length ?? 0) > 0)
         .map(([method]) => `${method.toUpperCase()} ${path.replace('/api/v1', '')}`),
-    );
-    const stepOne = found.filter((entry) =>
-      [...ID_BOUND, '/company/options', '/employees', '/partners', '/projects'].some((prefix) =>
-        entry.split(' ')[1]!.startsWith(prefix.replace('/{id}', '')),
-      ),
     );
     const dummy = {
       cookie: '',
@@ -261,13 +434,27 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       jobType: '{id}',
       projectId: '{id}',
       assignment: '{assignmentId}',
+      fileId: '{id}',
+      photoId: '{id}',
+      memoId: '{id}',
+      materialId: '{id}',
+      materialRecordId: '{id}',
+      docFileId: '{id}',
+      documentId: '{id}',
     };
-    const covered = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
-    const missing = stepOne.filter((entry) => !covered.has(entry));
+    const tested = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
+    const exempt = new Set(OWN_ACCOUNT_ONLY);
+    const missing = authenticated.filter((entry) => !tested.has(entry) && !exempt.has(entry));
 
-    expect(stepOne.length).toBeGreaterThan(25);
-
+    expect(authenticated.length).toBeGreaterThan(60);
     expect(missing).toEqual([]);
+
+    // 목록이 낡지 않게: 시험·예외 목록의 모든 항목은 실제 엔드포인트여야 한다 (지운 엔드포인트가 남아 있으면 실패)
+    const known = new Set(authenticated);
+
+    expect([...tested, ...exempt].filter((entry) => !known.has(entry))).toEqual([]);
+    // 같은 엔드포인트가 두 목록에 동시에 있으면 안 됨 (업무 데이터를 예외로 숨기는 실수 방지)
+    expect([...exempt].filter((entry) => tested.has(entry))).toEqual([]);
   });
 
   it('회사 B는 회사 A의 ID로 조회·수정·전환·취소·저장 어느 것도 할 수 없다', async () => {
@@ -315,6 +502,43 @@ describe('회사 격리: 1단계 엔드포인트', () => {
     expect(employees.items.map((item) => item.id)).not.toContain(a.worker);
     expect(partners.items.map((item) => item.id)).not.toContain(a.clientId);
     expect(projects.items.map((item) => item.id)).not.toContain(a.projectId);
+
+    // 통합 검색에도 다른 회사 데이터가 섞이지 않음
+    const hits = async (q: string) =>
+      searchResponseSchema.parse(
+        (await b.c.call('get', `/search?q=${encodeURIComponent(q)}&limit=20`)).body,
+      );
+
+    // 회사 A에만 있는 말을 직원·메모에 심어 둠 (회사마다 같은 더미 데이터가 있으므로 A 전용 값을 따로 만든다)
+    await a.c.call('post', '/employees', { name: '에이전용직원' });
+    await a.c.call('post', '/memos', { content: '에이전용메모키워드' });
+
+    for (const term of ['에이전용직원', '에이전용메모키워드']) {
+      const result = await hits(term);
+      const total = [
+        result.employees,
+        result.memos,
+        result.documents,
+        result.workLogs,
+        result.projects,
+      ].flatMap((group) => group.items);
+
+      expect({ term, total }).toEqual({ term, total: [] });
+    }
+
+    // A는 자기 데이터를 찾음 (검색 자체가 막힌 것이 아님)
+    const own = searchResponseSchema.parse(
+      (await a.c.call('get', `/search?q=${encodeURIComponent('에이전용직원')}`)).body,
+    );
+
+    expect(own.employees.items).toHaveLength(1);
+
+    // 같은 이름의 프로젝트는 회사마다 따로: B의 검색에는 B의 프로젝트만
+    const found = (await hits('판금')).projects.items.map((item) => item.id);
+
+    expect(found).toContain(b.projectId);
+    expect(found).not.toContain(a.projectId);
+    expect(a.projectId).not.toBe(b.projectId);
   });
 
   it('자기 데이터를 만들 때 다른 회사의 ID를 끼워 넣어도 거부된다', async () => {
@@ -341,6 +565,54 @@ describe('회사 격리: 1단계 엔드포인트', () => {
     await record(
       '프로젝트 담당자',
       await b.c.call('post', '/projects', { ...bOwn, managerId: a.managerId }),
+    );
+    await record(
+      '메모 프로젝트',
+      await b.c.call('post', '/memos', { content: '침투', projectId: a.projectId }),
+    );
+    await record(
+      '메모 연결',
+      await b.c.call('patch', `/memos/${await b.c.id('/memos', { content: 'B 메모' })}`, {
+        projectId: a.projectId,
+      }),
+    );
+    const bProjectOwn = await b.c.id('/projects', bOwn);
+    const bMaterial = await b.c.id('/materials', { name: 'B 자재', unit: '개' });
+    const bRecord = {
+      recordDate: '2026-10-05',
+      kind: 'USED',
+      quantity: 1,
+    };
+
+    await record(
+      '문서 파일',
+      await b.c.call('post', `/projects/${bProjectOwn}/documents`, {
+        fileId: a.docFileId,
+        title: '침투',
+      }),
+    );
+    await record(
+      '기록 자재',
+      await b.c.call('post', `/projects/${bProjectOwn}/material-records`, {
+        ...bRecord,
+        materialId: a.materialId,
+      }),
+    );
+    await record(
+      '기록 작업 구분',
+      await b.c.call('post', `/projects/${bProjectOwn}/material-records`, {
+        ...bRecord,
+        materialId: bMaterial,
+        categoryId: a.category,
+      }),
+    );
+    await record(
+      '기록 업체',
+      await b.c.call('post', `/projects/${bProjectOwn}/material-records`, {
+        ...bRecord,
+        materialId: bMaterial,
+        partnerId: a.clientId,
+      }),
     );
     await record(
       '직원 직종',
@@ -469,6 +741,14 @@ describe('회사 격리: 1단계 엔드포인트', () => {
       'work_logs',
       'work_log_entries',
       'work_log_revisions',
+      // 2단계 테이블 (파일·사진·메모·자재·문서)
+      'files',
+      'photos',
+      'memos',
+      'materials',
+      'material_records',
+      'documents',
+      'document_versions',
     ]) {
       expect({ table, own: seen[table]?.own }).toEqual({ table, own: expect.any(Number) });
       expect(seen[table]!.own).toBeGreaterThan(0);

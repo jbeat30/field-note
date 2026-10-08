@@ -15,6 +15,20 @@ import { registerEmployeeRoutes } from './routes/employees';
 import { registerAssignmentRoutes } from './routes/assignments';
 import { registerOptionRoutes } from './routes/options';
 import { registerWorkLogRoutes } from './routes/workLogs';
+import { registerFileRoutes } from './routes/files';
+import { registerPhotoRoutes } from './routes/photos';
+import { registerMemoRoutes } from './routes/memos';
+import { registerDocumentRoutes } from './routes/documents';
+import { registerReportRoutes } from './routes/reports';
+import type { ReportService } from './report/reportService';
+import { registerSearchRoutes } from './routes/search';
+import type { SearchService } from './search/searchService';
+import type { DocumentService } from './document/documentService';
+import { registerMaterialRoutes } from './routes/materials';
+import type { MaterialService } from './material/materialService';
+import type { MemoService } from './memo/memoService';
+import type { PhotoService } from './photo/photoService';
+import type { FileService } from './file/fileService';
 import { registerPartnerRoutes } from './routes/partners';
 import { registerProjectRoutes } from './routes/projects';
 import type { CompanySettingsService } from './company/companySettingsService';
@@ -63,6 +77,20 @@ export type AppOptions = {
   projects?: ProjectService;
   assignments?: AssignmentService;
   workLogs?: WorkLogService;
+  // 없으면 파일 업로드 API는 501
+  files?: FileService;
+  // 없으면 사진 API는 501
+  photos?: PhotoService;
+  // 없으면 메모·메모함 API는 501
+  memos?: MemoService;
+  // 없으면 자재 API는 501
+  materials?: MaterialService;
+  // 없으면 작업자료 문서함 API는 501
+  documents?: DocumentService;
+  // 없으면 통합 검색 API는 501
+  search?: SearchService;
+  // 없으면 작업일보·엑셀 내보내기 API는 501
+  reports?: ReportService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
   social?: {
     choice: SocialProviderChoice;
@@ -115,6 +143,13 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerProjectRoutes(registry, options.projects);
   registerAssignmentRoutes(registry, options.assignments);
   registerWorkLogRoutes(registry, options.workLogs);
+  registerFileRoutes(registry, options.files);
+  registerPhotoRoutes(registry, options.photos);
+  registerMemoRoutes(registry, options.memos);
+  registerMaterialRoutes(registry, options.materials);
+  registerDocumentRoutes(registry, options.documents);
+  registerSearchRoutes(registry, options.search);
+  registerReportRoutes(registry, options.reports);
   registerSocialRoutes(
     registry,
     options.social && options.accountService

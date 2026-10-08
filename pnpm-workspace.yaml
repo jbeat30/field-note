@@ -15,3 +15,8 @@ allowBuilds:
   ssh2: false
   '@scarf/scarf': false
   argon2: true
+
+# 보안 경고가 있는 하위 의존성을 패치 버전으로 고정 (pnpm audit --prod 통과용)
+# exceljs 4.4.0이 uuid 8을 쓰는데 v3/v5/v6의 버퍼 범위 검사 누락 경고(GHSA-w5hq-g745-h8pq)가 있어 11.1.1로 올림. exceljs는 v4만 쓰므로 호환
+overrides:
+  'uuid@<11.1.1': 11.1.1

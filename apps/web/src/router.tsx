@@ -73,6 +73,28 @@ export const routes = [
             ...page(() => import('./routes/ProjectCardPage'), 'ProjectCardPage'),
           },
           {
+            path: '/projects/:id/memos',
+            ...page(() => import('./routes/ProjectMemosPage'), 'ProjectMemosPage'),
+          },
+          {
+            path: '/projects/:id/daily-report',
+            ...page(() => import('./routes/DailyReportPage'), 'DailyReportPage'),
+          },
+          {
+            path: '/projects/:id/documents',
+            ...page(() => import('./routes/ProjectDocumentsPage'), 'ProjectDocumentsPage'),
+          },
+          {
+            path: '/projects/:id/materials',
+            ...page(() => import('./routes/ProjectMaterialsPage'), 'ProjectMaterialsPage'),
+          },
+          { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
+          { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
+          {
+            path: '/projects/:id/photos',
+            ...page(() => import('./routes/ProjectPhotosPage'), 'ProjectPhotosPage'),
+          },
+          {
             path: '/work-logs',
             ...page(() => import('./routes/WorkLogPage'), 'WorkLogPage'),
           },

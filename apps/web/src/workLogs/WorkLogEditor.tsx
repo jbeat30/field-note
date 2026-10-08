@@ -12,7 +12,7 @@ import {
   type WorkLogWarning,
 } from '@field-note/shared';
 import { useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -20,6 +20,8 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
+import { draftKey } from '../drafts/formDraft';
+import { useLocalDraft } from '../drafts/useLocalDraft';
 import { addDays, formatDay } from '../lib/dates';
 import { getErrorCode } from '../lib/apiError';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -63,6 +65,28 @@ type Props = {
   onReload: () => void;
 };
 
+// 작성 중 초안으로 저장하는 폼 값 (화면에서만 쓰는 값은 제외)
+type EditorSnapshot = {
+  lines: EntryLine[];
+  content: string;
+  area: string;
+  notes: string;
+  isChange: boolean;
+  isAfterService: boolean;
+};
+
+// 비교용 글자: 줄의 임의 키(key)는 빼서, 같은 내용이면 같은 글자가 되게 함
+const signatureOf = (snapshot: EditorSnapshot) =>
+  JSON.stringify({
+    ...snapshot,
+    lines: snapshot.lines.map(({ employeeId, categoryId, value, included }) => ({
+      employeeId,
+      categoryId,
+      value,
+      included,
+    })),
+  });
+
 type SaveResult = {
   status: WorkLogStatus;
   version: number;
@@ -94,8 +118,9 @@ export const WorkLogEditor = ({
   const names = new Map(employees.map((employee) => [employee.id, employee.name]));
   const unit = unitLabel(settings);
 
-  const [lines, setLines] = useState<EntryLine[]>(() =>
-    log
+  // 서버 내용(또는 투입 직원)만으로 만든 처음 값
+  const [initial] = useState<EditorSnapshot>(() => ({
+    lines: log
       ? entriesToLines(log.entries, settings)
       : assignedEmployeeIds.map((employeeId) => ({
           key: newLineKey(),
@@ -104,12 +129,30 @@ export const WorkLogEditor = ({
           value: quickValue(1, settings),
           included: true,
         })),
+    content: log?.content ?? '',
+    area: log?.area ?? '',
+    notes: log?.notes ?? '',
+    isChange: log?.isChange ?? false,
+    isAfterService: log?.isAfterService ?? false,
+  }));
+  // 저장하기 전의 입력을 기기에 자동 임시 저장하고, 다시 열면 복구 (앱을 닫거나 연결이 끊겨도 유실되지 않게)
+  const draft = useLocalDraft<EditorSnapshot>({
+    key: draftKey('workLog', project.id, date),
+    baseVersion: log?.version ?? null,
+    initialSignature: signatureOf(initial),
+    signatureOf,
+  });
+  const restored = draft.status === 'restored' ? draft.value : undefined;
+  const [lines, setLines] = useState<EntryLine[]>(restored?.lines ?? initial.lines);
+  const [content, setContent] = useState(restored?.content ?? initial.content);
+  const [area, setArea] = useState(restored?.area ?? initial.area);
+  const [notes, setNotes] = useState(restored?.notes ?? initial.notes);
+  const [isChange, setChange] = useState(restored?.isChange ?? initial.isChange);
+  const [isAfterService, setAfterService] = useState(
+    restored?.isAfterService ?? initial.isAfterService,
   );
-  const [content, setContent] = useState(log?.content ?? '');
-  const [area, setArea] = useState(log?.area ?? '');
-  const [notes, setNotes] = useState(log?.notes ?? '');
-  const [isChange, setChange] = useState(log?.isChange ?? false);
-  const [isAfterService, setAfterService] = useState(log?.isAfterService ?? false);
+  // 복구했다는 안내를 보이는 동안(사용자가 닫거나 저장하기 전까지)
+  const [isRestoredNoticeOpen, setRestoredNoticeOpen] = useState(draft.status === 'restored');
   const [confirmStatus, setConfirmStatus] = useState(false);
   const [version, setVersion] = useState<number | null>(log?.version ?? null);
   const [bulkCategory, setBulkCategory] = useState('');
@@ -125,6 +168,31 @@ export const WorkLogEditor = ({
   } | null>(null);
   const [notice, setNotice] = useState('');
   const [result, setResult] = useState<SaveResult | null>(null);
+
+  const applySnapshot = (snapshot: EditorSnapshot) => {
+    setLines(snapshot.lines);
+    setContent(snapshot.content);
+    setArea(snapshot.area);
+    setNotes(snapshot.notes);
+    setChange(snapshot.isChange);
+    setAfterService(snapshot.isAfterService);
+  };
+
+  const discardDraft = () => {
+    applySnapshot(initial);
+    draft.clear();
+    setRestoredNoticeOpen(false);
+  };
+
+  const snapshot: EditorSnapshot = { lines, content, area, notes, isChange, isAfterService };
+  const snapshotSignature = signatureOf(snapshot);
+
+  // 입력이 바뀔 때마다 (잠깐 멈추면) 기기에 저장. 서버 내용과 같아지면 초안을 지움
+  useEffect(() => {
+    draft.write(snapshot);
+    // 값이 바뀐 것만 보면 되므로 비교용 글자에만 반응
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [snapshotSignature]);
 
   const statusAllowed = workLogStatusCheck(project.status, { confirmStatus, isAfterService });
   const needsConfirm = project.status === 'SUSPENDED' || project.status === 'COMPLETED';
@@ -295,6 +363,9 @@ export const WorkLogEditor = ({
         }
       }
 
+      // 서버에 저장되었으므로 기기의 초안은 필요 없음
+      draft.clear();
+      setRestoredNoticeOpen(false);
       setVersion(saved.version);
       setExtraDates([]);
       setResult({
@@ -413,6 +484,44 @@ export const WorkLogEditor = ({
         </div>
       )}
       {rootError && <Alert>{rootError}</Alert>}
+      {isRestoredNoticeOpen && draft.status === 'restored' && (
+        <Alert variant="info" className="flex flex-col gap-2">
+          <span>
+            저장하지 않고 닫았던 작성 내용을 복구했습니다
+            {draft.savedAt
+              ? ` (${new Date(draft.savedAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul', dateStyle: 'medium', timeStyle: 'short' })})`
+              : ''}
+          </span>
+          <Button type="button" variant="secondary" onClick={discardDraft}>
+            복구한 내용 버리기
+          </Button>
+        </Alert>
+      )}
+      {draft.status === 'stale' && draft.value && (
+        <Alert variant="info" className="flex flex-col gap-2">
+          <span>
+            이 기기에 저장해 둔 작성 내용이 있지만, 그 뒤에 서버의 일지가 바뀌어 자동으로 불러오지
+            않았습니다
+          </span>
+          <div className="flex gap-2">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                applySnapshot(draft.value!);
+                setNotice(
+                  '저장해 둔 내용을 불러왔습니다. 서버의 최신 내용과 비교해 확인한 뒤 저장해 주세요',
+                );
+              }}
+            >
+              저장해 둔 내용 불러오기
+            </Button>
+            <Button type="button" variant="secondary" onClick={draft.clear}>
+              버리기
+            </Button>
+          </div>
+        </Alert>
+      )}
       {notice && <Alert variant="info">{notice}</Alert>}
 
       <section className="flex flex-col gap-3" aria-labelledby="entries-heading">
