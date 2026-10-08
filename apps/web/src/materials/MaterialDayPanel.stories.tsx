@@ -1,8 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
+import { draftKey, serializeDraft } from '../drafts/formDraft';
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
+import { useDraftStore } from '../stores/draftStore';
 
 import { MaterialDayPanel } from './MaterialDayPanel';
 
@@ -89,5 +91,55 @@ export const CreateOnTheSpotThenSave: Story = {
     await expect(await canvas.findByText('사용 2장')).toBeInTheDocument();
     // 기록 목록과 최근 쓴 자재 버튼에 모두 나옴
     await expect(canvas.getAllByText('리벳').length).toBeGreaterThanOrEqual(1);
+  },
+};
+
+// 입력하던 자재 행을 저장하지 않고 닫았다가 다시 열면 그대로 복구
+export const RestoresUnsavedRows: Story = {
+  args: { date: '2026-10-08' },
+  beforeEach: () => {
+    useDraftStore.getState().setDraft(
+      draftKey('materials', projectId, '2026-10-08'),
+      serializeDraft({
+        value: {
+          rows: [{ key: 'row-x', materialId: '', kind: 'RECEIVED', quantity: '12' }],
+          common: { categoryId: '', area: '3층', isChange: false, isAfterService: false },
+        },
+        baseVersion: null,
+        savedAt: '2026-10-08T01:00:00.000Z',
+      }),
+    );
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      await canvas.findByText('저장하지 않고 닫았던 자재 입력을 복구했습니다'),
+    ).toBeInTheDocument();
+    await expect(canvas.getByLabelText('수량')).toHaveValue('12');
+    await expect(canvas.getByLabelText('구분')).toHaveValue('RECEIVED');
+
+    await userEvent.click(canvas.getByRole('button', { name: '복구한 입력 버리기' }));
+    await waitFor(() => expect(canvas.queryByLabelText('수량')).not.toBeInTheDocument());
+    await expect(
+      useDraftStore.getState().drafts[draftKey('materials', projectId, '2026-10-08')],
+    ).toBeUndefined();
+  },
+};
+
+// 행을 만들면 기기에 저장되고, 저장하면 지워짐
+export const AutoSavesRowsAndClearsOnSave: Story = {
+  args: { date: '2026-10-08' },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const key = draftKey('materials', projectId, '2026-10-08');
+
+    await userEvent.click(await canvas.findByRole('button', { name: '아연도강판 1.0T' }));
+    await userEvent.type(canvas.getByLabelText('수량'), '6');
+    await waitFor(() => expect(useDraftStore.getState().drafts[key]).toBeDefined());
+
+    await userEvent.click(canvas.getByRole('button', { name: '자재 1건 저장' }));
+    await expect(await canvas.findByText('사용 6장')).toBeInTheDocument();
+    await waitFor(() => expect(useDraftStore.getState().drafts[key]).toBeUndefined());
   },
 };

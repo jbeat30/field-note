@@ -11,13 +11,14 @@ import {
   type MaterialRecordCreate,
   type MaterialRecordKind,
 } from '@field-note/shared';
-import { useId, useState } from 'react';
+import { useEffect, useId, useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
+import { useLocalDraft } from '../drafts/useLocalDraft';
 import { getErrorDetailMessage } from '../lib/apiError';
 
 import {
@@ -34,6 +35,8 @@ import {
 
 type MaterialEntryFormProps = {
   date: string;
+  // 입력 중인 행을 기기에 임시 저장하는 키 (없으면 저장하지 않음). 앱을 닫아도 이어서 입력할 수 있게
+  draftKey?: string;
   // 서버가 준 순서(최근 기록한 자재가 먼저)의 쓸 수 있는 자재
   materials: readonly Material[];
   categories: readonly { id: string; name: string }[];
@@ -49,16 +52,34 @@ const materialLabel = (material: Material) =>
   `${material.name}${material.spec ? ` ${material.spec}` : ''} (${material.unit})`;
 
 // 일지 안 자재 입력: 최근 쓴 자재를 한 번 눌러 추가하고 큰 숫자로 수량만 적는다. 여러 자재를 목록으로 한꺼번에 저장 (서비스 기획서 §11.6)
+type EntrySnapshot = { rows: MaterialRow[]; common: MaterialCommon };
+
+// 비교용 글자: 행의 임시 키는 빼고 내용만 비교
+const signatureOf = ({ rows, common }: EntrySnapshot) =>
+  JSON.stringify({
+    rows: rows.map(({ materialId, kind, quantity }) => ({ materialId, kind, quantity })),
+    common,
+  });
+
 export const MaterialEntryForm = ({
   date,
+  draftKey,
   materials,
   categories,
   previousRecords = [],
   onSubmit,
   onCreateMaterial,
 }: MaterialEntryFormProps) => {
-  const [rows, setRows] = useState<MaterialRow[]>([]);
-  const [common, setCommon] = useState<MaterialCommon>(EMPTY_COMMON);
+  const saved = useLocalDraft<EntrySnapshot>({
+    key: draftKey ?? '',
+    baseVersion: null,
+    initialSignature: signatureOf({ rows: [], common: EMPTY_COMMON }),
+    signatureOf,
+  });
+  const restored = draftKey && saved.status !== 'none' ? saved.value : undefined;
+  const [rows, setRows] = useState<MaterialRow[]>(restored?.rows ?? []);
+  const [common, setCommon] = useState<MaterialCommon>(restored?.common ?? EMPTY_COMMON);
+  const [isRestoredNoticeOpen, setRestoredNoticeOpen] = useState(Boolean(restored));
   const [isCommonOpen, setIsCommonOpen] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [isSaving, setIsSaving] = useState(false);
@@ -72,6 +93,15 @@ export const MaterialEntryForm = ({
   const [createError, setCreateError] = useState<string | null>(null);
   const [problems, setProblems] = useState<Record<string, string>>({});
   const unitListId = useId();
+
+  // 입력이 바뀔 때마다 (잠깐 멈추면) 기기에 저장하고, 비우면 초안을 지움
+  const signature = signatureOf({ rows, common });
+
+  useEffect(() => {
+    if (draftKey) saved.write({ rows, common });
+    // 값이 바뀐 것만 보면 되므로 비교용 글자에만 반응
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [signature]);
 
   const recent = recentMaterials(materials);
   const { savable } = checkRows(rows);
@@ -122,6 +152,9 @@ export const MaterialEntryForm = ({
     try {
       await onSubmit(toRecords(rows, date, common));
       setRows([]);
+      setCommon(EMPTY_COMMON);
+      setRestoredNoticeOpen(false);
+      saved.clear();
     } catch (caught) {
       // 실패해도 입력한 행은 그대로 두고 사유를 알림
       setError(getErrorDetailMessage(caught));
@@ -363,6 +396,23 @@ export const MaterialEntryForm = ({
         </>
       )}
 
+      {isRestoredNoticeOpen && rows.length > 0 && (
+        <Alert variant="info" className="flex flex-col gap-2">
+          <span>저장하지 않고 닫았던 자재 입력을 복구했습니다</span>
+          <Button
+            type="button"
+            variant="secondary"
+            onClick={() => {
+              setRows([]);
+              setCommon(EMPTY_COMMON);
+              setRestoredNoticeOpen(false);
+              saved.clear();
+            }}
+          >
+            복구한 입력 버리기
+          </Button>
+        </Alert>
+      )}
       {error && <Alert>{error}</Alert>}
       <Button type="button" disabled={isSaving || rows.length === 0} onClick={() => void submit()}>
         {isSaving ? '저장하는 중' : savable > 0 ? `자재 ${savable}건 저장` : '자재 저장'}

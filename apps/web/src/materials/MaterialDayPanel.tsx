@@ -1,4 +1,5 @@
 import { Alert } from '../components/ui/alert';
+import { draftKey } from '../drafts/formDraft';
 
 import { MaterialEntryForm } from './MaterialEntryForm';
 import { MaterialRecordList } from './MaterialRecordList';
@@ -64,6 +65,7 @@ export const MaterialDayPanel = ({ projectId, date, categories }: MaterialDayPan
       {materials.isSuccess && (
         <MaterialEntryForm
           date={date}
+          draftKey={draftKey('materials', projectId, date)}
           materials={list}
           categories={categories}
           previousRecords={previousRecords}
