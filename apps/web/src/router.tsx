@@ -84,6 +84,7 @@ export const routes = [
             path: '/projects/:id/materials',
             ...page(() => import('./routes/ProjectMaterialsPage'), 'ProjectMaterialsPage'),
           },
+          { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
           {
             path: '/projects/:id/photos',

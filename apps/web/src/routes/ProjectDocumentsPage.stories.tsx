@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { seedDocumentId } from '../mocks/documentHandlers';
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
 
@@ -202,5 +203,27 @@ export const DetailAddVersionAndDelete: Story = {
       expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
     );
     await waitFor(() => expect(canvas.queryByText('외장 판금 시방서')).not.toBeInTheDocument());
+  },
+};
+
+// 검색 결과에서 들어오면(?doc=) 그 문서의 상세가 바로 열리고, 닫으면 주소에서 doc이 빠진다
+export const OpensDetailFromSearchLink: Story = {
+  parameters: {
+    router: {
+      initialEntries: [`/projects/${projectId}/documents?doc=${seedDocumentId(projectId, 1)}`],
+      path: '/projects/:id/documents',
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    await expect(await dialog.findByText('도급 계약서', { selector: 'h2' })).toBeInTheDocument();
+    await userEvent.click(dialog.getByRole('button', { name: '닫기' }));
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    await expect(
+      within(canvasElement).getByRole('button', { name: '도급 계약서 상세' }),
+    ).toBeInTheDocument();
   },
 };
