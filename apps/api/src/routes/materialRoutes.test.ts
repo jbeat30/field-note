@@ -234,6 +234,30 @@ describe('자재 목록', () => {
     expect(await names('?includeInactive=true')).toHaveLength(3);
   });
 
+  it('같은 날 쓴 자재는 방금 기록한 것이 먼저 나온다', async () => {
+    const s = await setup();
+    const projectId = await s.project();
+    const a = await s.material({ name: '가 자재', unit: '개' });
+    const b = await s.material({ name: '나 자재', unit: '개' });
+    const c = await s.material({ name: '다 자재', unit: '개' });
+
+    // 이름순이면 가·나·다지만 입력한 순서(다 → 가 → 나)의 반대가 최근순
+    for (const material of [c, a, b]) {
+      await s.record(projectId, {
+        materialId: material.id,
+        kind: 'USED',
+        quantity: 1,
+        recordDate: '2026-10-06',
+      });
+    }
+
+    const names = materialsResponseSchema
+      .parse((await s.get('/materials')).body)
+      .items.map((item) => item.name);
+
+    expect(names).toEqual(['나 자재', '가 자재', '다 자재']);
+  });
+
   it('이름·규격·분류를 고치고 다른 자재와 겹치게는 못 고친다', async () => {
     const s = await setup();
     const a = await s.material({ name: '강판', spec: '1.0T', unit: '장' });

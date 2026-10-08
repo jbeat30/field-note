@@ -90,14 +90,18 @@ const toRecord = (row: RecordRow): MaterialRecord => ({
   updatedAt: row.updatedAt.toISOString(),
 });
 
-const toMaterial = (row: MaterialRow, lastUsedOn: Date | null): Material => ({
+const toMaterial = (
+  row: MaterialRow,
+  last: { lastUsedOn: Date | null; lastRecordedAt: Date | null } | undefined,
+): Material => ({
   id: row.id,
   name: row.name,
   spec: row.spec,
   unit: row.unit,
   category: row.category,
   isActive: row.isActive,
-  lastUsedOn: lastUsedOn ? isoDate(lastUsedOn) : null,
+  lastUsedOn: last?.lastUsedOn ? isoDate(last.lastUsedOn) : null,
+  lastRecordedAt: last?.lastRecordedAt?.toISOString() ?? null,
 });
 
 const encodeCursor = (row: RecordRow) =>
@@ -143,10 +147,15 @@ export const createMaterialService = (
     const groups = await tx.materialRecord.groupBy({
       by: ['materialId'],
       where: { deletedAt: null },
-      _max: { recordDate: true },
+      _max: { recordDate: true, createdAt: true },
     });
 
-    return new Map(groups.map((group) => [group.materialId, group._max.recordDate]));
+    return new Map(
+      groups.map((group) => [
+        group.materialId,
+        { lastUsedOn: group._max.recordDate, lastRecordedAt: group._max.createdAt },
+      ]),
+    );
   };
 
   // 기록 한 건의 참조(프로젝트·자재·작업 구분·업체)가 이 회사에서 쓸 수 있는지 확인
@@ -249,7 +258,7 @@ export const createMaterialService = (
         });
         const last = await lastUsedMap(tx);
 
-        return rows.map((row) => toMaterial(row, last.get(row.id) ?? null)).sort(compareMaterials);
+        return rows.map((row) => toMaterial(row, last.get(row.id))).sort(compareMaterials);
       }),
 
     create: (companyId, input) =>
@@ -278,7 +287,7 @@ export const createMaterialService = (
                 category: input.category,
               },
             }),
-            null,
+            undefined,
           );
         } catch (error) {
           // 같은 자재가 동시에 들어온 경우의 안전망 (사전 조회 이후 고유 제약에 걸림)
@@ -332,7 +341,7 @@ export const createMaterialService = (
           },
         });
 
-        return toMaterial(row, (await lastUsedMap(tx)).get(id) ?? null);
+        return toMaterial(row, (await lastUsedMap(tx)).get(id));
       }),
 
     createRecord: (companyId, userId, projectId, input) =>

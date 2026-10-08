@@ -9,6 +9,7 @@ export const storyMaterial = (index: number, patch: Partial<Material> = {}): Mat
   category: 'RAW',
   isActive: true,
   lastUsedOn: null,
+  lastRecordedAt: null,
   ...patch,
 });
 

@@ -131,7 +131,11 @@ describe('자재 입력 검증', () => {
 });
 
 describe('자재 정렬', () => {
-  const make = (name: string, lastUsedOn: string | null): Material => ({
+  const make = (
+    name: string,
+    lastUsedOn: string | null,
+    lastRecordedAt: string | null = null,
+  ): Material => ({
     id: `0198d000-0000-7000-8000-${String(name.length).padStart(12, '0')}`,
     name,
     spec: null,
@@ -139,6 +143,7 @@ describe('자재 정렬', () => {
     category: 'RAW',
     isActive: true,
     lastUsedOn,
+    lastRecordedAt,
   });
 
   it('최근 쓴 자재가 먼저이고 쓴 적 없는 자재는 이름순으로 뒤에 둔다', () => {
@@ -150,5 +155,20 @@ describe('자재 정렬', () => {
     ].sort(compareMaterials);
 
     expect(sorted.map((item) => item.name)).toEqual(['라', '다', '가', '나']);
+  });
+
+  it('같은 날 쓴 자재는 방금 입력한 것이 먼저이고 입력 시각을 모르면 이름순이다', () => {
+    const sorted = [
+      make('가', '2026-10-05', '2026-10-05T01:00:00.000Z'),
+      make('다', '2026-10-05', '2026-10-05T03:00:00.000Z'),
+      make('나', '2026-10-05', '2026-10-05T02:00:00.000Z'),
+    ].sort(compareMaterials);
+
+    expect(sorted.map((item) => item.name)).toEqual(['다', '나', '가']);
+    expect(
+      [make('나', '2026-10-05'), make('가', '2026-10-05')]
+        .sort(compareMaterials)
+        .map((item) => item.name),
+    ).toEqual(['가', '나']);
   });
 });

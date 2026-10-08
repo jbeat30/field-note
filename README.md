@@ -158,7 +158,7 @@ pnpm operator purge-due [--dry-run]                                 # 유예(14�
 ## 화면 전체 시험 (E2E)
 
 - 실제 DB·객체 저장소·API·웹을 띄워 Chromium(모바일 크기)으로 **핵심 흐름**(로그인 → 프로젝트 → 투입 → 일지 → 자재 → 사진 → 작업일보)과 **하루 일지 입력 시간**을 확인한다. 위치는 `apps/web/e2e`다
-- 실행: `pnpm infra:up && pnpm db:setup && pnpm db:seed` 후 `pnpm e2e` (API는 3001번, 웹은 5173번으로 시험이 직접 띄우며 이미 떠 있으면 재사용). 처음에는 `pnpm --filter @field-note/web exec playwright install chromium`이 필요하다
+- 실행: `pnpm --filter @field-note/api db:generate && pnpm infra:up && pnpm db:setup && pnpm db:seed` 후 `pnpm e2e` (API는 3001번, 웹은 5173번으로 시험이 직접 띄우며 이미 떠 있으면 재사용). 처음에는 `pnpm --filter @field-note/web exec playwright install chromium`이 필요하다
 - 하루 일지 입력 시간은 스크립트가 사람 속도를 흉내 낸 값(누르기 전 0.8초, 글자 0.2초/자)이라 **참고용 측정**이다. 실제 사람의 시간은 실사용 시험에서 재다
 - CI의 `e2e` 잡이 같은 순서로 준비해 돌리고, 실패하면 보고서와 추적 파일(`playwright-report`, `test-results`)을 보관한다
 

@@ -90,6 +90,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @field-note/web exec playwright install --with-deps chromium
       - run: pnpm env:init
+      # Prisma 클라이언트는 저장소에 없는 생성물이라 DB 준비·API 실행 전에 만들어야 함
+      - run: pnpm --filter @field-note/api db:generate
       - run: pnpm infra:up
       - run: pnpm db:setup
       - run: pnpm db:seed

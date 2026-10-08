@@ -5,6 +5,8 @@ import { login, photoFile, seoulDate, selectByText, uniqueName } from './helpers
 // 핵심 흐름(기술 기획서 §13): 로그인 → 프로젝트 → 투입 → 일지 일괄 입력(공수·자재) → 사진 업로드 → 저장 → 작업일보
 test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어진다', async ({ page }) => {
   const projectName = uniqueName('E2E 판금 공사');
+  // 자재 이름은 회사 안에서 겹칠 수 없으므로 시험마다 다르게 (같은 DB로 다시 돌려도 되게)
+  const materialName = uniqueName('E2E 강판');
   const today = seoulDate();
 
   await login(page);
@@ -60,14 +62,14 @@ test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어�
 
   await test.step('같은 화면에서 자재를 새로 만들어 반입·사용을 입력', async () => {
     await page.getByRole('button', { name: '새 자재' }).click();
-    await page.getByLabel('자재명').fill('E2E 강판');
+    await page.getByLabel('자재명').fill(materialName);
     await page.getByRole('button', { name: '자재 추가하고 입력 행에 넣기' }).click();
     await page.getByLabel('구분', { exact: true }).selectOption({ label: '반입' });
     await page.getByLabel('수량').fill('100');
     await page.getByRole('button', { name: '자재 1건 저장' }).click();
     await expect(page.getByText('반입 100장')).toBeVisible();
 
-    await page.getByRole('button', { name: 'E2E 강판' }).click();
+    await page.getByRole('button', { name: materialName }).click();
     await page.getByLabel('수량').fill('12.5');
     await page.getByRole('button', { name: '자재 1건 저장' }).click();
     await expect(page.getByText('사용 12.5장')).toBeVisible();
@@ -94,7 +96,7 @@ test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어�
 
     await expect(report.getByText('3층 외장 패널 설치')).toBeVisible();
     await expect(report.getByText('합계 (2명)')).toBeVisible();
-    await expect(report.getByText('E2E 강판', { exact: false }).first()).toBeVisible();
+    await expect(report.getByText(materialName, { exact: false }).first()).toBeVisible();
     await expect(report.getByText('12.5장')).toBeVisible();
     // 사진 검사가 끝나 썸네일이 실리면 이미지가 나타남
     await expect(report.locator('img')).toHaveCount(2, { timeout: 30_000 });

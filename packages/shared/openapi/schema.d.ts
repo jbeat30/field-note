@@ -6933,6 +6933,8 @@ export interface paths {
                                 isActive: boolean;
                                 /** Format: date */
                                 lastUsedOn: string | null;
+                                /** Format: date-time */
+                                lastRecordedAt: string | null;
                             }[];
                         };
                     };
@@ -7018,6 +7020,8 @@ export interface paths {
                             isActive: boolean;
                             /** Format: date */
                             lastUsedOn: string | null;
+                            /** Format: date-time */
+                            lastRecordedAt: string | null;
                         };
                     };
                 };
@@ -7120,6 +7124,8 @@ export interface paths {
                             isActive: boolean;
                             /** Format: date */
                             lastUsedOn: string | null;
+                            /** Format: date-time */
+                            lastRecordedAt: string | null;
                         };
                     };
                 };

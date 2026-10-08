@@ -31,7 +31,7 @@ const createUser = (page: Page, watch: Stopwatch) => ({
   },
 });
 
-// 시험 준비는 서버에 직접 만들어 둔다(측정 대상이 아님): 진행 중 프로젝트, 투입 직원 3명, 지난 반입이 있는 자재
+// 시험 준비는 서버에 직접 만들어 둔다(측정 대상이 아님): 진행 중 프로젝트, 투입 직원 3명, 오늘 반입한 자재
 const prepare = async (page: Page) => {
   const headers = { 'X-Field-Note-Client': 'web', Origin: 'http://localhost:5173' };
   const post = async (path: string, data: object) => {
@@ -75,7 +75,8 @@ const prepare = async (page: Page) => {
 
   await post(`/projects/${project.id}/material-records`, {
     materialId: material.id,
-    recordDate: seoulDate(-1),
+    // 오늘 반입한 자재: 같은 날 쓴 자재끼리는 방금 입력한 것이 "최근 쓴 자재" 맨 앞에 온다
+    recordDate: seoulDate(),
     kind: 'RECEIVED',
     quantity: 100,
   });
