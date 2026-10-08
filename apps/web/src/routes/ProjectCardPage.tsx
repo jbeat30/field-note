@@ -75,6 +75,12 @@ export const ProjectCardPage = () => {
       >
         메모 노트
       </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/materials`}
+      >
+        자재 현황
+      </Link>
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
       <ProjectWorkSummaryPanel projectId={project.data.id} />

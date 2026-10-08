@@ -18,6 +18,7 @@ import { useAssignments } from '../projects/useAssignments';
 import { useProject, useProjects } from '../projects/useProjects';
 import { useCompanySettings } from '../settings/useCompanySettings';
 import { useOptions } from '../settings/useOptions';
+import { MaterialDayPanel } from '../materials/MaterialDayPanel';
 import { WorkLogEditor } from '../workLogs/WorkLogEditor';
 import { useWorkLog, useWorkLogList } from '../workLogs/useWorkLogs';
 
@@ -160,6 +161,14 @@ export const WorkLogPage = () => {
               onReload={() => {
                 void log.refetch().then(() => setReloadToken((value) => value + 1));
               }}
+            />
+          )}
+          {!problem && (
+            <MaterialDayPanel
+              key={`materials:${projectId}:${date}`}
+              projectId={projectId}
+              date={date}
+              categories={categories}
             />
           )}
         </>

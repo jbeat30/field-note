@@ -64,6 +64,10 @@ export const InsideProject: Story = {
       'href',
       `/work-logs?project=${projectId}`,
     );
+    await expect(dialog.getByRole('link', { name: '자재 (일지에서 입력)' })).toHaveAttribute(
+      'href',
+      `/work-logs?project=${projectId}`,
+    );
 
     await userEvent.click(dialog.getByRole('button', { name: '메모' }));
     await expect(dialog.getByText('이 프로젝트의 메모 노트에 저장합니다')).toBeInTheDocument();

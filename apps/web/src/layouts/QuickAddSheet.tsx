@@ -65,6 +65,13 @@ export const QuickAddSheet = () => {
               >
                 오늘 일지
               </Link>
+              <Link
+                className={linkClass}
+                to={currentProject ? `/work-logs?project=${currentProject}` : '/work-logs'}
+                onClick={close}
+              >
+                자재 (일지에서 입력)
+              </Link>
             </div>
           ) : (
             <>

@@ -136,6 +136,7 @@ import {
   updateSettings,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
+import { createMaterialHandlers } from './materialHandlers';
 import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
 
@@ -374,6 +375,7 @@ const toMockWorkLog = (
 export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
   ...createMemoHandlers({ apiError, parseBody }),
+  ...createMaterialHandlers({ apiError, parseBody }),
 
   http.get('/api/v1/health', async () => {
     await simulateLatency();
