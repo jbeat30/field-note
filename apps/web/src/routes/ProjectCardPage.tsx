@@ -2,6 +2,7 @@ import { PROJECT_STATUS_LABELS } from '@field-note/shared';
 import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
+import { PinnedDocuments } from '../documents/PinnedDocuments';
 import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
 import { ProjectForm } from '../projects/ProjectForm';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
@@ -63,6 +64,43 @@ export const ProjectCardPage = () => {
       >
         일지 입력
       </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/photos`}
+      >
+        사진첩
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/memos`}
+      >
+        메모 노트
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/materials`}
+      >
+        자재 현황
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/documents`}
+      >
+        문서함
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/daily-report`}
+      >
+        작업일보 출력
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/search?project=${project.data.id}`}
+      >
+        프로젝트 안에서 찾기
+      </Link>
+      <PinnedDocuments projectId={project.data.id} />
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
       <ProjectWorkSummaryPanel projectId={project.data.id} />
