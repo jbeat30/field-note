@@ -42,5 +42,7 @@ export const queryKeys = {
   document: (id: string) => ['documents', 'detail', { id }] as const,
   documentAccessLogs: (id: string) => ['documents', 'access-logs', { id }] as const,
   search: (q: string, projectId?: string) => ['search', 'results', { q, projectId }] as const,
+  dailyReport: (projectId: string, date: string) =>
+    ['reports', 'daily', { projectId, date }] as const,
   employee: (id: string) => ['employees', 'detail', { id }] as const,
 };

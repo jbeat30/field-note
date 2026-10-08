@@ -901,10 +901,11 @@ enum DocumentCategory {
   @@map("document_category")
 }
 
-// 감사 기록 종류 (서비스 기획서 §13.1). 지금은 민감 자료 열람·내려받기만
+// 감사 기록 종류 (서비스 기획서 §13.1): 민감 자료 열람·내려받기, 내보내기(§7.3)
 enum AuditAction {
   DOCUMENT_VIEWED
   DOCUMENT_DOWNLOADED
+  REPORT_EXPORTED
 
   @@map("audit_action")
 }

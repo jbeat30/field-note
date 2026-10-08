@@ -90,6 +90,12 @@ export const ProjectCardPage = () => {
       </Link>
       <Link
         className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/daily-report`}
+      >
+        작업일보 출력
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
         to={`/search?project=${project.data.id}`}
       >
         프로젝트 안에서 찾기

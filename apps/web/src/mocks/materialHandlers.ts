@@ -185,6 +185,21 @@ const liveRecords = (account: MockAccount, projectId?: string) => {
   );
 };
 
+// 작업일보 목업이 쓰는 자재 기록 조회 (자재 이름·규격·단위를 붙여 돌려줌, 지운 기록 제외)
+export const listMockMaterialRecords = (account: MockAccount, projectId: string) =>
+  liveRecords(account, projectId)
+    .sort((a, b) => a.createdAt.localeCompare(b.createdAt))
+    .map((record) => {
+      const material = materials.get(record.materialId);
+
+      return {
+        ...toRecord(record),
+        materialName: material?.name ?? '',
+        spec: material?.spec ?? null,
+        unit: material?.unit ?? '',
+      };
+    });
+
 const ownMaterials = (account: MockAccount) => {
   seed(account);
 
