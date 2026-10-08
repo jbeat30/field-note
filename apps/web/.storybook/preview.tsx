@@ -4,6 +4,7 @@ import { MemoryRouter, Route, Routes } from 'react-router';
 import { configure } from 'storybook/test';
 
 import { handlers } from '../src/mocks/handlers';
+import { resetMockDocuments } from '../src/mocks/documentHandlers';
 import { resetMockMaterials } from '../src/mocks/materialHandlers';
 import { resetMockMemos } from '../src/mocks/memoHandlers';
 import { resetMockPhotos } from '../src/mocks/photoHandlers';
@@ -24,6 +25,7 @@ const preview: Preview = {
       resetMockPhotos();
       resetMockMemos();
       resetMockMaterials();
+      resetMockDocuments();
     },
     mswLoader(),
   ],
