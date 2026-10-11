@@ -88,6 +88,10 @@ export const routes = [
             path: '/projects/:id/materials',
             ...page(() => import('./routes/ProjectMaterialsPage'), 'ProjectMaterialsPage'),
           },
+          {
+            path: '/projects/:id/change-works',
+            ...page(() => import('./routes/ProjectChangeWorksPage'), 'ProjectChangeWorksPage'),
+          },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
           {

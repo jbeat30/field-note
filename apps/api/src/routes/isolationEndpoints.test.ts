@@ -22,6 +22,7 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createLaborService } from '../labor/laborService';
 import { createProgressService } from '../progress/progressService';
 import { createReportService } from '../report/reportService';
@@ -77,6 +78,7 @@ const instance = () =>
     assignments: createAssignmentService(db.app),
     progress: createProgressService(db.app, () => NOW),
     labor: createLaborService(db.app, () => NOW),
+    changeWorks: createChangeWorkService(db.app, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
       app: db.app,
@@ -217,6 +219,19 @@ const buildCompany = async () => {
     title: '회사 A의 계약서',
     category: 'CONTRACT',
   });
+  // 변경·추가 작업 한 건: 상태를 한 번 바꾸고 증빙 문서를 연결해 둔다
+  const changeWorkId = await c.id(`/projects/${projectId}/change-works`, {
+    requestedOn: DAY,
+    requester: '회사 A의 고객',
+    content: '회사 A의 변경 요청',
+  });
+
+  await c.call('post', `/change-works/${changeWorkId}/status`, {
+    toStatus: 'AGREED',
+    effectiveOn: DAY,
+  });
+  await c.call('post', `/change-works/${changeWorkId}/documents`, { documentId });
+
   const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
   const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
     materialId,
@@ -242,6 +257,7 @@ const buildCompany = async () => {
     materialRecordId,
     docFileId,
     documentId,
+    changeWorkId,
   };
 };
 
@@ -291,6 +307,33 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       { payType: 'DAILY', amount: 999_999, effectiveFrom: '2026-10-01' },
     ],
     ['GET /projects/{id}/labor-cost', 'get', `/projects/${a.projectId}/labor-cost`],
+    ['GET /projects/{id}/change-works', 'get', `/projects/${a.projectId}/change-works`],
+    [
+      'POST /projects/{id}/change-works',
+      'post',
+      `/projects/${a.projectId}/change-works`,
+      { requester: '침투', content: '침투' },
+    ],
+    ['GET /projects/{id}/change-usage', 'get', `/projects/${a.projectId}/change-usage`],
+    ['GET /change-works/{id}', 'get', `/change-works/${a.changeWorkId}`],
+    ['PATCH /change-works/{id}', 'patch', `/change-works/${a.changeWorkId}`, { content: '침투' }],
+    [
+      'POST /change-works/{id}/status',
+      'post',
+      `/change-works/${a.changeWorkId}/status`,
+      { toStatus: 'WITHDRAWN', note: '침투' },
+    ],
+    [
+      'POST /change-works/{id}/documents',
+      'post',
+      `/change-works/${a.changeWorkId}/documents`,
+      { documentId: a.documentId },
+    ],
+    [
+      'DELETE /change-works/{id}/documents/{documentId}',
+      'delete',
+      `/change-works/${a.changeWorkId}/documents/${a.documentId}`,
+    ],
     ['GET /projects/{id}/progress', 'get', `/projects/${a.projectId}/progress`],
     [
       'POST /projects/{id}/progress',
@@ -473,6 +516,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       materialRecordId: '{id}',
       docFileId: '{id}',
       documentId: '{id}',
+      changeWorkId: '{id}',
     };
     const tested = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const exempt = new Set(OWN_ACCOUNT_ONLY);
@@ -515,6 +559,18 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(logs.items).toHaveLength(1);
     expect(log.body).toMatchObject({ content: '회사 A의 일지 (수정)', version: 2 });
     expect(assignments.body.items[0].cancelledAt).toBeNull();
+
+    // 변경·추가 작업도 그대로: B의 침투 요청·철회·증빙 해제가 반영되지 않았다
+    const changeWork = await a.c.call('get', `/change-works/${a.changeWorkId}`);
+
+    expect(changeWork.body).toMatchObject({
+      status: 'AGREED',
+      content: '회사 A의 변경 요청',
+      documentCount: 1,
+    });
+    expect(
+      (await a.c.call('get', `/projects/${a.projectId}/change-works`)).body.items,
+    ).toHaveLength(1);
 
     // 단가도 그대로: B의 침투 단가(999,999원)가 들어가지 않았다
     const rates = await a.c.call('get', `/employees/${a.worker}/pay-rates`);
@@ -674,6 +730,18 @@ describe('회사 격리: 전 엔드포인트', () => {
       '직원 직종',
       await b.c.call('post', '/employees', { name: '침투', jobTypeId: a.jobType }),
     );
+    // B의 변경 작업에 A의 문서를 증빙으로 연결
+    const bChangeWork = await b.c.id(`/projects/${bProjectOwn}/change-works`, {
+      requester: 'B 고객',
+      content: 'B 변경',
+    });
+
+    await record(
+      '증빙 문서',
+      await b.c.call('post', `/change-works/${bChangeWork}/documents`, {
+        documentId: a.documentId,
+      }),
+    );
     await record(
       '옵션 순서',
       await b.c.call('put', '/company/options/order', {
@@ -795,6 +863,9 @@ describe('회사 격리: 전 엔드포인트', () => {
       'project_period_changes',
       'project_progress_records',
       'employee_pay_rates',
+      'change_works',
+      'change_work_status_changes',
+      'change_work_documents',
       'project_assignments',
       'work_logs',
       'work_log_entries',

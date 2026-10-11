@@ -826,3 +826,60 @@ export const DEMO_PAY_RATES: readonly DemoPayRate[] = [
     effectiveFrom: '2026-01-01',
   },
 ];
+
+export type DemoChangeWork = {
+  id: string;
+  companyId: string;
+  // 프로젝트 코드로 연결
+  projectCode: string;
+  seq: number;
+  requestedOn: string;
+  requester: string;
+  content: string;
+  status: 'NEGOTIATING' | 'AGREED' | 'WITHDRAWN';
+  statusChangedOn: string;
+  // 상태 변경 이력 (오래된 것부터)
+  history?: {
+    fromStatus: 'NEGOTIATING' | 'AGREED' | 'WITHDRAWN';
+    toStatus: 'NEGOTIATING' | 'AGREED' | 'WITHDRAWN';
+    effectiveOn: string;
+    note?: string;
+  }[];
+};
+
+const changeWorkId = (n: number) =>
+  `0198d000-0000-7000-8000-0000000009${String(n).padStart(2, '0')}`;
+
+// A동 변경·추가 작업 두 건: 합의된 건(이력 포함)과 오래 협의 중으로 남은 건(7일 넘게 방치 알림 확인용)
+export const DEMO_CHANGE_WORKS: readonly DemoChangeWork[] = [
+  {
+    id: changeWorkId(1),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    seq: 1,
+    requestedOn: '2026-08-20',
+    requester: '고객사 현장소장',
+    content: '외벽 코너 판금 두께 변경 요청 (1.2T → 1.6T)',
+    status: 'AGREED',
+    statusChangedOn: '2026-08-25',
+    history: [
+      {
+        fromStatus: 'NEGOTIATING',
+        toStatus: 'AGREED',
+        effectiveOn: '2026-08-25',
+        note: '현장에서 구두 합의, 카카오톡으로 재확인',
+      },
+    ],
+  },
+  {
+    id: changeWorkId(2),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    seq: 2,
+    requestedOn: '2026-09-28',
+    requester: '고객사 담당 김과장',
+    content: '옥상 배수구 주변 방수 판금 추가 시공',
+    status: 'NEGOTIATING',
+    statusChangedOn: '2026-09-28',
+  },
+];

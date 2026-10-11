@@ -9,6 +9,7 @@ import {
 import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
+  DEMO_CHANGE_WORKS,
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
   DEMO_EMPLOYEES,
@@ -328,6 +329,50 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         cancelledAt: assignment.cancelled ? new Date() : null,
       },
     });
+  }
+
+  // 변경·추가 작업 (프로젝트 코드로 연결, 기록자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  for (const item of DEMO_CHANGE_WORKS) {
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: item.companyId, code: item.projectCode },
+    });
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+
+    if (
+      admin &&
+      !(await prisma.changeWork.findUnique({
+        where: { companyId_id: { companyId: item.companyId, id: item.id } },
+      }))
+    ) {
+      await prisma.changeWork.create({
+        data: {
+          id: item.id,
+          companyId: item.companyId,
+          projectId: project.id,
+          seq: item.seq,
+          requestedOn: requiredDate(item.requestedOn),
+          requester: item.requester,
+          content: item.content,
+          status: item.status,
+          statusChangedOn: requiredDate(item.statusChangedOn),
+          createdBy: admin.userId,
+        },
+      });
+
+      for (const change of item.history ?? []) {
+        await prisma.changeWorkStatusChange.create({
+          data: {
+            companyId: item.companyId,
+            changeWorkId: item.id,
+            fromStatus: change.fromStatus,
+            toStatus: change.toStatus,
+            effectiveOn: requiredDate(change.effectiveOn),
+            note: change.note ?? null,
+            changedBy: admin.userId,
+          },
+        });
+      }
+    }
   }
 
   // 직원 단가 (직원 이름으로 연결, 입력자는 그 회사의 데모 관리자, 처음 한 번만 만든다. 화면 확인용 가짜 금액)
