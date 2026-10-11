@@ -1,4 +1,5 @@
 import type {
+  AlertKind,
   CompanySettings,
   Device,
   EmployeeDetail,
@@ -76,6 +77,8 @@ export type MockAccount = {
   projectHistory?: Record<string, ProjectStatusChange[]>;
   // 프로젝트별 예정 기간 변경 이력 (프로젝트 id → 오래된 것부터)
   projectPeriodHistory?: Record<string, ProjectPeriodChange[]>;
+  // 알림 종류별 켜짐 여부 (설정하지 않은 종류는 켜짐)
+  alertSettings?: Partial<Record<AlertKind, boolean>>;
   // 프로젝트별 진행률 기록 (프로젝트 id → 오래된 것부터)
   progressRecords?: Record<string, ProgressRecord[]>;
   // 직원별 단가 기록 (직원 id → 입력 순서)
