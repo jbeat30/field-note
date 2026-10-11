@@ -75,6 +75,7 @@ export const purgeCompany = (
     deleted.project_assignments = (await tx.projectAssignment.deleteMany({ where })).count;
     deleted.project_period_changes = (await tx.projectPeriodChange.deleteMany({ where })).count;
     deleted.project_status_changes = (await tx.projectStatusChange.deleteMany({ where })).count;
+    deleted.project_progress_records = (await tx.projectProgressRecord.deleteMany({ where })).count;
     deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
     deleted.projects = (await tx.project.deleteMany({ where })).count;
     deleted.project_code_sequences = (await tx.projectCodeSequence.deleteMany({ where })).count;

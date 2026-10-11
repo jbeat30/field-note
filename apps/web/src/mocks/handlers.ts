@@ -15,6 +15,9 @@ import {
   summarizeEmployeeWork,
   summarizeProjectWork,
   workLogListQuerySchema,
+  canRecordProgress,
+  evaluateProjectHealth,
+  progressRecordCreateSchema,
   staffingCalendarQuerySchema,
   workSummaryQuerySchema,
   workLogParamsSchema,
@@ -29,6 +32,7 @@ import {
   overlapRange,
   periodChangeNeedsReason,
   type AssignmentWarning,
+  type ProgressRecord,
   formatProjectCode,
   PROJECT_STATUS_LABELS,
   projectTransitionSchema,
@@ -105,8 +109,10 @@ import {
   getWorkLogRevisions,
   getWorkLogs,
   saveWorkLogs,
+  addProgressRecord,
   addProjectStatusChange,
   getAssignments,
+  getProgressRecords,
   getProjectPeriodHistory,
   saveAssignments,
   getPartners,
@@ -282,6 +288,12 @@ const findSameProjectOverlap = (
     ? `같은 직원이 이 프로젝트에 ${clash.startDate} ~ ${clash.endDate}로 이미 투입되어 있습니다. 기존 투입의 기간을 수정해 주세요`
     : null;
 };
+
+// 진행률 기록은 기준일 최근순, 같은 기준일이면 나중에 입력한 것이 먼저 (서버와 같은 순서)
+const sortedProgress = (records: ProgressRecord[]) =>
+  [...records].sort(
+    (a, b) => b.recordedOn.localeCompare(a.recordedOn) || b.createdAt.localeCompare(a.createdAt),
+  );
 
 // 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음)
 const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
@@ -1906,6 +1918,116 @@ export const handlers = [
       .sort((a, b) => a.name.localeCompare(b.name, 'ko') || a.id.localeCompare(b.id));
 
     return HttpResponse.json({ from, to, employees, assignments });
+  }),
+
+  http.get('/api/v1/projects/:id/progress', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    return HttpResponse.json({
+      items: sortedProgress(getProgressRecords(account, parsed.data.id)),
+    });
+  }),
+
+  http.post('/api/v1/projects/:id/progress', async ({ request, params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, progressRecordCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    const project = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    if (!canRecordProgress(project.status)) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'projectId', message: '이 상태의 프로젝트에는 진행률을 입력할 수 없습니다' },
+      ]);
+    }
+
+    const today = todayInSeoul(new Date());
+    const recordedOn = body.data.recordedOn ?? today;
+
+    if (recordedOn > today) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.recordedOn', message: '기준일은 오늘 이후로 정할 수 없습니다' },
+      ]);
+    }
+
+    const record = {
+      id: crypto.randomUUID(),
+      percent: body.data.percent,
+      recordedOn,
+      note: body.data.note ?? null,
+      createdAt: new Date().toISOString(),
+    };
+
+    addProgressRecord(account, project.id, record);
+
+    return HttpResponse.json(record, { status: 201 });
+  }),
+
+  http.get('/api/v1/projects/:id/health', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const project = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    const planned = getAssignments(account)
+      .filter((item) => item.projectId === project.id && !item.cancelledAt)
+      .flatMap((item) => (item.plannedMinutes === null ? [] : [item.plannedMinutes]));
+    const used = getWorkLogs(account)
+      .filter((log) => log.projectId === project.id && log.status === 'SAVED')
+      .flatMap((log) => log.entries)
+      .reduce((sum, entry) => sum + entry.minutes, 0);
+    const latest = sortedProgress(getProgressRecords(account, project.id))[0];
+
+    return HttpResponse.json(
+      evaluateProjectHealth({
+        status: project.status,
+        plannedMinutes: planned.length > 0 ? planned.reduce((sum, value) => sum + value, 0) : null,
+        usedMinutes: used,
+        progressPercent: latest?.percent ?? null,
+        progressRecordedOn: latest?.recordedOn ?? null,
+        plannedStart: project.plannedStart,
+        plannedEnd: project.plannedEnd,
+        today: todayInSeoul(new Date()),
+      }),
+    );
   }),
 
   http.get('/api/v1/projects/:id/work-summary', async ({ request, params }) => {

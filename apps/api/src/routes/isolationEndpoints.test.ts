@@ -22,6 +22,7 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createProgressService } from '../progress/progressService';
 import { createReportService } from '../report/reportService';
 import { createSearchService } from '../search/searchService';
 import { createPhotoService } from '../photo/photoService';
@@ -73,6 +74,7 @@ const instance = () =>
     partners: createPartnerService(db.app),
     projects: createProjectService(db.app, () => NOW),
     assignments: createAssignmentService(db.app),
+    progress: createProgressService(db.app, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
       app: db.app,
@@ -172,6 +174,9 @@ const buildCompany = async () => {
     entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
   });
 
+  // 진행률 기록 한 건
+  await c.call('post', `/projects/${projectId}/progress`, { percent: 40, recordedOn: DAY });
+
   // 수정 이력·기간 변경 이력도 한 건씩 만든다
   await c.call('put', `/projects/${projectId}/work-logs/${DAY}`, {
     status: 'SAVED',
@@ -269,6 +274,14 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       `/projects/${a.projectId}/assignments/${a.assignment}/cancel`,
       {},
     ],
+    ['GET /projects/{id}/progress', 'get', `/projects/${a.projectId}/progress`],
+    [
+      'POST /projects/{id}/progress',
+      'post',
+      `/projects/${a.projectId}/progress`,
+      { percent: 99, note: '침투' },
+    ],
+    ['GET /projects/{id}/health', 'get', `/projects/${a.projectId}/health`],
     ['GET /projects/{id}/work-logs', 'get', `/projects/${a.projectId}/work-logs`],
     ['GET /projects/{id}/work-summary', 'get', `/projects/${a.projectId}/work-summary`],
     ['GET /projects/{id}/work-logs/{workDate}', 'get', `/projects/${a.projectId}/work-logs/${DAY}`],
@@ -485,6 +498,12 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(logs.items).toHaveLength(1);
     expect(log.body).toMatchObject({ content: '회사 A의 일지 (수정)', version: 2 });
     expect(assignments.body.items[0].cancelledAt).toBeNull();
+
+    // 진행률도 그대로: B의 침투 기록(99%)이 들어가지 않았다
+    const progress = await a.c.call('get', `/projects/${a.projectId}/progress`);
+
+    expect(progress.body.items).toHaveLength(1);
+    expect(progress.body.items[0]).toMatchObject({ percent: 40, recordedOn: DAY });
   });
 
   it('목록과 선택 목록에는 다른 회사 데이터가 섞여 나오지 않는다', async () => {
@@ -751,6 +770,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       'projects',
       'project_status_changes',
       'project_period_changes',
+      'project_progress_records',
       'project_assignments',
       'work_logs',
       'work_log_entries',
