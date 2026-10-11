@@ -7361,6 +7361,321 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/dashboard": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 홈 대시보드 (오늘 투입·진행 프로젝트·위험·이번 주 인력·할 일과 켜 둔 알림) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            dashboard: {
+                                /** Format: date */
+                                today: string;
+                                alerts: ({
+                                    /** @enum {string} */
+                                    kind: "NO_LOG_TODAY";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "INBOX_STALE";
+                                    count: number;
+                                    oldestDays: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "BURN_REACHED";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                    /** @enum {string} */
+                                    level: "WARN" | "LIMIT";
+                                    burnPercent: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "BURN_AHEAD";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                    burnPercent: number;
+                                    progressPercent: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "PROJECT_OVERDUE";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                    /** Format: date */
+                                    plannedEnd: string;
+                                    daysLate: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "DOUBLE_ASSIGNED";
+                                    /** Format: uuid */
+                                    employeeId: string;
+                                    employeeName: string;
+                                    dateCount: number;
+                                    /** Format: date */
+                                    firstDate: string;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "CHANGE_STALE";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                    /** Format: uuid */
+                                    changeWorkId: string;
+                                    seq: number;
+                                    days: number;
+                                })[];
+                                todayAssignments: {
+                                    headcount: number;
+                                    projects: {
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        code: string;
+                                        name: string;
+                                        headcount: number;
+                                        hasLog: boolean;
+                                    }[];
+                                };
+                                projectCounts: {
+                                    planned: number;
+                                    inProgress: number;
+                                    suspended: number;
+                                };
+                                activeProjects: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    code: string;
+                                    name: string;
+                                    /** @enum {string} */
+                                    status: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                    progressPercent: number | null;
+                                    burnPercent: number | null;
+                                    warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
+                                }[];
+                                risks: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    code: string;
+                                    name: string;
+                                    /** @enum {string} */
+                                    status: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                    progressPercent: number | null;
+                                    burnPercent: number | null;
+                                    warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
+                                }[];
+                                week: {
+                                    /** Format: date */
+                                    from: string;
+                                    /** Format: date */
+                                    to: string;
+                                    conflicts: {
+                                        /** Format: uuid */
+                                        employeeId: string;
+                                        name: string;
+                                        dateCount: number;
+                                    }[];
+                                    freeCount: number;
+                                    freeNames: string[];
+                                };
+                                todos: {
+                                    draftLogCount: number;
+                                    staleInboxCount: number;
+                                };
+                            };
+                            settings: {
+                                items: {
+                                    /** @enum {string} */
+                                    kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                                    enabled: boolean;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/company/alert-settings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 알림 종류별 켜짐 여부 (설정하지 않은 종류는 켜짐) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @enum {string} */
+                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                                enabled: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        /** 알림 종류별 켜고 끄기 (보낸 종류만 바꿈) */
+        put: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        items: {
+                            /** @enum {string} */
+                            kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                            enabled: boolean;
+                        }[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** @enum {string} */
+                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                                enabled: boolean;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/files": {
         parameters: {
             query?: never;

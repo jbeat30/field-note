@@ -2,6 +2,7 @@ import {
   OPTION_KINDS,
   OPTION_PRESETS,
   normalizeOptionName,
+  type AlertKind,
   type CompanySettings,
   type Device,
   type EmployeeDetail,
@@ -620,6 +621,18 @@ export const saveProjects = (account: MockAccount, projects: ProjectDetail[]) =>
 
 export const isEmailInUse = (email: string) =>
   state.accounts.some((account) => account.email === email);
+
+// 알림 설정: 보낸 종류만 바꾸고 나머지는 그대로 (설정하지 않은 종류는 켜짐)
+export const saveAlertSettings = (
+  account: MockAccount,
+  items: { kind: AlertKind; enabled: boolean }[],
+) => {
+  account.alertSettings = {
+    ...account.alertSettings,
+    ...Object.fromEntries(items.map((item) => [item.kind, item.enabled])),
+  };
+  persist();
+};
 
 export const updateSettings = (account: MockAccount, settings: CompanySettings) => {
   account.settings = settings;

@@ -22,6 +22,7 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createDashboardService } from '../dashboard/dashboardService';
 import { createCompletionService } from '../completion/completionService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createLaborService } from '../labor/laborService';
@@ -77,6 +78,7 @@ const instance = () =>
     partners: createPartnerService(db.app),
     projects: createProjectService(db.app, () => NOW),
     assignments: createAssignmentService(db.app),
+    dashboard: createDashboardService(db.app, createAssignmentService(db.app), () => NOW),
     progress: createProgressService(db.app, () => NOW),
     labor: createLaborService(db.app, () => NOW),
     changeWorks: createChangeWorkService(db.app, () => NOW),
@@ -178,6 +180,11 @@ const buildCompany = async () => {
     status: 'SAVED',
     content: '회사 A의 일지',
     entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
+  });
+
+  // 알림 설정 한 건 (끈 알림)
+  await c.call('put', '/company/alert-settings', {
+    items: [{ kind: 'INBOX_STALE', enabled: false }],
   });
 
   // 직원 단가 한 건 (민감 정보)
@@ -472,6 +479,7 @@ const COLLECTIONS = [
   'GET /projects',
   'POST /projects',
   'GET /staffing-calendar',
+  'GET /dashboard',
 ];
 
 // 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트.
@@ -494,6 +502,8 @@ const OWN_ACCOUNT_ONLY = [
   'DELETE /me/social/kakao',
   'GET /company/settings',
   'PUT /company/settings',
+  'GET /company/alert-settings',
+  'PUT /company/alert-settings',
 ];
 
 describe('회사 격리: 전 엔드포인트', () => {
@@ -610,6 +620,29 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(employees.items.map((item) => item.id)).not.toContain(a.worker);
     expect(partners.items.map((item) => item.id)).not.toContain(a.clientId);
     expect(projects.items.map((item) => item.id)).not.toContain(a.projectId);
+
+    // 대시보드에도 다른 회사의 프로젝트·알림 설정이 섞이지 않음 (A는 자기 프로젝트를 보고, 알림을 끈 종류는 B에서 켜짐)
+    const dashboardOf = async (company: typeof a) =>
+      (await company.c.call('get', '/dashboard')).body as {
+        dashboard: { activeProjects: { id: string }[] };
+        settings: { items: { kind: string; enabled: boolean }[] };
+      };
+    // 두 회사 모두 같은 더미를 만들었으므로 B만 다시 켜서 A의 설정이 B에 영향을 주지 않는지 본다
+    await b.c.call('put', '/company/alert-settings', {
+      items: [{ kind: 'INBOX_STALE', enabled: true }],
+    });
+
+    const aDashboard = await dashboardOf(a);
+    const bDashboard = await dashboardOf(b);
+
+    expect(aDashboard.dashboard.activeProjects.map((item) => item.id)).toContain(a.projectId);
+    expect(bDashboard.dashboard.activeProjects.map((item) => item.id)).not.toContain(a.projectId);
+    expect(aDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+      false,
+    );
+    expect(bDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+      true,
+    );
 
     // 인력 배치 캘린더에도 다른 회사의 직원·투입이 섞이지 않음 (A는 자기 투입을 봄)
     const calendarOf = async (company: typeof a) =>
@@ -871,6 +904,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       'project_period_changes',
       'project_progress_records',
       'employee_pay_rates',
+      'alert_preferences',
       'change_works',
       'change_work_status_changes',
       'change_work_documents',

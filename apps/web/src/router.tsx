@@ -128,6 +128,10 @@ export const routes = [
           },
           { path: '/settings', ...page(() => import('./routes/SettingsPage'), 'SettingsPage') },
           {
+            path: '/settings/alerts',
+            ...page(() => import('./routes/AlertSettingsPage'), 'AlertSettingsPage'),
+          },
+          {
             path: '/settings/lists',
             ...page(() => import('./routes/OptionListsPage'), 'OptionListsPage'),
           },
