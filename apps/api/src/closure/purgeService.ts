@@ -79,6 +79,7 @@ export const purgeCompany = (
     deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
     deleted.projects = (await tx.project.deleteMany({ where })).count;
     deleted.project_code_sequences = (await tx.projectCodeSequence.deleteMany({ where })).count;
+    deleted.employee_pay_rates = (await tx.employeePayRate.deleteMany({ where })).count;
     deleted.employees = (await tx.employee.deleteMany({ where })).count;
     deleted.partners = (await tx.partner.deleteMany({ where })).count;
     deleted.option_items = (await tx.optionItem.deleteMany({ where })).count;

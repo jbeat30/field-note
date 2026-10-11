@@ -63,6 +63,7 @@ model Company {
   projectCodeSequences   ProjectCodeSequence[]
   projectStatusChanges   ProjectStatusChange[]
   projectProgressRecords ProjectProgressRecord[]
+  employeePayRates       EmployeePayRate[]
   projectAssignments     ProjectAssignment[]
   projectPeriodChanges   ProjectPeriodChange[]
   workLogs               WorkLog[]
@@ -184,6 +185,37 @@ model ProjectProgressRecord {
   @@id([companyId, id])
   @@index([companyId, projectId, recordedOn, createdAt])
   @@map("project_progress_records")
+}
+
+// 단가 종류: 일급제·시급제·월급제·연봉제
+enum PayType {
+  DAILY
+  HOURLY
+  MONTHLY
+  ANNUAL
+
+  @@map("pay_type")
+}
+
+// 직원 단가표 (민감 정보). 단가를 바꾸면 기존 행을 고치지 않고 적용 시작일과 함께 새 행을 추가하므로
+// 근무일에 적용되는 단가는 그 날짜 이전에 시작한 가장 최근 행이다 (같은 시작일이면 나중에 입력한 행). 추가만 가능
+model EmployeePayRate {
+  companyId     String   @map("company_id") @db.Uuid
+  id            String   @default(dbgenerated("uuidv7()")) @db.Uuid
+  employeeId    String   @map("employee_id") @db.Uuid
+  payType       PayType  @map("pay_type")
+  // 원 단위 금액 (일급·시급·월급·연봉)
+  amount        Int
+  effectiveFrom DateTime @map("effective_from") @db.Date
+  createdBy     String   @map("created_by") @db.Uuid
+  createdAt     DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  company       Company  @relation(fields: [companyId], references: [id])
+  employee      Employee @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  user          User     @relation("EmployeePayRateCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, employeeId, effectiveFrom, createdAt])
+  @@map("employee_pay_rates")
 }
 
 // 투입: 직원을 프로젝트 기간 안의 일정 기간에 배정 (서비스 기획서 §9.1)
@@ -376,6 +408,7 @@ model User {
   socialAccounts         SocialAccount[]
   projectStatusChanges   ProjectStatusChange[]   @relation("ProjectStatusChangedBy")
   projectProgressRecords ProjectProgressRecord[] @relation("ProjectProgressRecordedBy")
+  employeePayRates       EmployeePayRate[]       @relation("EmployeePayRateCreatedBy")
   projectPeriodChanges   ProjectPeriodChange[]   @relation("ProjectPeriodChangedBy")
   workLogRevisions       WorkLogRevision[]       @relation("WorkLogRevisionChangedBy")
   uploadedFiles          StoredFile[]            @relation("FileUploadedBy")
@@ -617,6 +650,7 @@ model Employee {
   managedProjects Project[]           @relation("ProjectManager")
   workLogEntries  WorkLogEntry[]
   assignments     ProjectAssignment[]
+  payRates        EmployeePayRate[]
   workerType      OptionItem?         @relation("EmployeeWorkerType", fields: [companyId, workerTypeId], references: [companyId, id], onDelete: Restrict)
 
   @@id([companyId, id])
@@ -930,6 +964,9 @@ enum AuditAction {
   DOCUMENT_VIEWED
   DOCUMENT_DOWNLOADED
   REPORT_EXPORTED
+  PAY_RATE_VIEWED
+  PAY_RATE_CHANGED
+  LABOR_COST_VIEWED
 
   @@map("audit_action")
 }
