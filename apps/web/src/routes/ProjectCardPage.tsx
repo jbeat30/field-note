@@ -98,6 +98,12 @@ export const ProjectCardPage = () => {
       </Link>
       <Link
         className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/change-works`}
+      >
+        변경·추가 작업
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
         to={`/search?project=${project.data.id}`}
       >
         프로젝트 안에서 찾기

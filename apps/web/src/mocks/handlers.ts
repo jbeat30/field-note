@@ -148,6 +148,7 @@ import {
   updateSettings,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
+import { createChangeWorkHandlers } from './changeWorkHandlers';
 import { createDocumentHandlers } from './documentHandlers';
 import { createMaterialHandlers } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
@@ -405,6 +406,7 @@ export const handlers = [
   ...createMemoHandlers({ apiError, parseBody }),
   ...createMaterialHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
+  ...createChangeWorkHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
   ...createReportHandlers({ apiError }),
 

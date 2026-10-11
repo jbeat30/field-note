@@ -14,6 +14,7 @@ import { registerClosureRoutes } from './routes/closure';
 import { registerEmployeeRoutes } from './routes/employees';
 import { registerAssignmentRoutes } from './routes/assignments';
 import { registerOptionRoutes } from './routes/options';
+import { registerChangeWorkRoutes } from './routes/changeWorks';
 import { registerLaborRoutes } from './routes/labor';
 import { registerProgressRoutes } from './routes/progress';
 import { registerWorkLogRoutes } from './routes/workLogs';
@@ -37,6 +38,7 @@ import type { CompanySettingsService } from './company/companySettingsService';
 import type { OptionService } from './company/optionService';
 import type { EmployeeService } from './employee/employeeService';
 import type { AssignmentService } from './assignment/assignmentService';
+import type { ChangeWorkService } from './changeWork/changeWorkService';
 import type { LaborService } from './labor/laborService';
 import type { ProgressService } from './progress/progressService';
 import type { WorkLogService } from './workLog/workLogService';
@@ -83,6 +85,7 @@ export type AppOptions = {
   workLogs?: WorkLogService;
   progress?: ProgressService;
   labor?: LaborService;
+  changeWorks?: ChangeWorkService;
   // 없으면 파일 업로드 API는 501
   files?: FileService;
   // 없으면 사진 API는 501
@@ -151,6 +154,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerWorkLogRoutes(registry, options.workLogs);
   registerProgressRoutes(registry, options.progress);
   registerLaborRoutes(registry, options.labor);
+  registerChangeWorkRoutes(registry, options.changeWorks);
   registerFileRoutes(registry, options.files);
   registerPhotoRoutes(registry, options.photos);
   registerMemoRoutes(registry, options.memos);
