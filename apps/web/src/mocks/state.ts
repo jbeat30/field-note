@@ -8,6 +8,7 @@ import {
   type OptionItem,
   normalizePartnerName,
   type PartnerDetail,
+  type ProgressRecord,
   type ProjectDetail,
   type ProjectPeriodChange,
   type ProjectStatusChange,
@@ -26,6 +27,7 @@ import {
   DEMO_ASSIGNMENTS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
+  DEMO_PROGRESS,
   DEMO_PROJECTS,
   DEMO_WORK_LOGS,
 } from './demoSource';
@@ -356,6 +358,46 @@ export const addProjectStatusChange = (
   account.projectHistory = {
     ...account.projectHistory,
     [projectId]: [...(account.projectHistory?.[projectId] ?? []), change],
+  };
+  persist();
+};
+
+// 진행률 기록: 처음 조회할 때 더미 기록(DB 시드와 같은 원본)으로 채움
+export const getProgressRecords = (account: MockAccount, projectId: string): ProgressRecord[] => {
+  if (!account.progressRecords) {
+    const projects = getProjects(account);
+    const records: Record<string, ProgressRecord[]> = {};
+
+    for (const item of DEMO_PROGRESS.filter((demo) => demo.companyId === account.companyId)) {
+      const project = projects.find((candidate) => candidate.code === item.projectCode);
+
+      if (project) {
+        (records[project.id] ??= []).push({
+          id: item.id,
+          percent: item.percent,
+          recordedOn: item.recordedOn,
+          note: item.note ?? null,
+          createdAt: `${item.recordedOn}T09:00:00.000Z`,
+        });
+      }
+    }
+
+    account.progressRecords = records;
+    persist();
+  }
+
+  return account.progressRecords[projectId] ?? [];
+};
+
+export const addProgressRecord = (
+  account: MockAccount,
+  projectId: string,
+  record: ProgressRecord,
+) => {
+  getProgressRecords(account, projectId);
+  account.progressRecords = {
+    ...account.progressRecords,
+    [projectId]: [...(account.progressRecords?.[projectId] ?? []), record],
   };
   persist();
 };

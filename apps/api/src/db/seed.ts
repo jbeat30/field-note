@@ -9,6 +9,7 @@ import {
 import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
+  DEMO_PROGRESS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
   DEMO_PROJECTS,
@@ -326,6 +327,30 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         cancelledAt: assignment.cancelled ? new Date() : null,
       },
     });
+  }
+
+  // 진행률 기록 (프로젝트 코드로 연결, 기록자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  for (const record of DEMO_PROGRESS) {
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: record.companyId, code: record.projectCode },
+    });
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === record.companyId);
+
+    if (admin) {
+      await prisma.projectProgressRecord.upsert({
+        where: { companyId_id: { companyId: record.companyId, id: record.id } },
+        update: {},
+        create: {
+          id: record.id,
+          companyId: record.companyId,
+          projectId: project.id,
+          percent: record.percent,
+          recordedOn: requiredDate(record.recordedOn),
+          note: record.note ?? null,
+          recordedBy: admin.userId,
+        },
+      });
+    }
   }
 
   // 작업일지 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)

@@ -22,3 +22,4 @@ export * from './materials';
 export * from './documents';
 export * from './search';
 export * from './reports';
+export * from './projectHealth';

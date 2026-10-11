@@ -7,6 +7,7 @@ export {
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
   DEMO_PARTNERS,
+  DEMO_PROGRESS,
   DEMO_PROJECTS,
   DEMO_WORK_LOGS,
 } from '@field-note/shared/demo';
