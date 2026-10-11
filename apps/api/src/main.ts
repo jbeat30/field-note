@@ -11,6 +11,7 @@ import { createCompanySettingsService } from './company/companySettingsService';
 import { createOptionService } from './company/optionService';
 import { createEmployeeService } from './employee/employeeService';
 import { createAssignmentService } from './assignment/assignmentService';
+import { createCompletionService } from './completion/completionService';
 import { createChangeWorkService } from './changeWork/changeWorkService';
 import { createLaborService } from './labor/laborService';
 import { createProgressService } from './progress/progressService';
@@ -79,6 +80,7 @@ const main = async () => {
   const documents = createDocumentService(appPrisma, storage);
   const search = createSearchService(appPrisma);
   const reports = createReportService(appPrisma, storage);
+  const completion = createCompletionService(appPrisma, storage);
   const mailer = createSmtpMailer({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
@@ -145,6 +147,7 @@ const main = async () => {
     progress,
     labor,
     changeWorks,
+    completion,
     files,
     photos,
     memos,

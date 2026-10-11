@@ -25,3 +25,4 @@ export * from './reports';
 export * from './projectHealth';
 export * from './laborCost';
 export * from './changeWorks';
+export * from './projectCompletion';
