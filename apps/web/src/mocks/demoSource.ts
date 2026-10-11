@@ -4,6 +4,7 @@ import { DEMO_LEGAL_DOCUMENTS } from '@field-note/shared/demo';
 export {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
+  DEMO_CHANGE_WORKS,
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
   DEMO_PARTNERS,
