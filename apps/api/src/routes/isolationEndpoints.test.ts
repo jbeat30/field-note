@@ -22,6 +22,7 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createCompletionService } from '../completion/completionService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createLaborService } from '../labor/laborService';
 import { createProgressService } from '../progress/progressService';
@@ -79,6 +80,7 @@ const instance = () =>
     progress: createProgressService(db.app, () => NOW),
     labor: createLaborService(db.app, () => NOW),
     changeWorks: createChangeWorkService(db.app, () => NOW),
+    completion: createCompletionService(db.app, createMemoryStorage().storage, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
       app: db.app,
@@ -314,6 +316,12 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       `/projects/${a.projectId}/change-works`,
       { requester: '침투', content: '침투' },
     ],
+    [
+      'GET /projects/{id}/transition-notices',
+      'get',
+      `/projects/${a.projectId}/transition-notices?to=COMPLETED`,
+    ],
+    ['GET /projects/{id}/summary', 'get', `/projects/${a.projectId}/summary`],
     ['GET /projects/{id}/change-usage', 'get', `/projects/${a.projectId}/change-usage`],
     ['GET /change-works/{id}', 'get', `/change-works/${a.changeWorkId}`],
     ['PATCH /change-works/{id}', 'patch', `/change-works/${a.changeWorkId}`, { content: '침투' }],

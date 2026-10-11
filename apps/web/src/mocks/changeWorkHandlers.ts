@@ -99,6 +99,13 @@ const mine = (account: MockAccount) => {
   return [...works.values()].filter((work) => work.scope === scopeOf(account));
 };
 
+// 프로젝트 요약·전환 안내 목업이 쓰는 변경·추가 작업 조회 (번호 오름차순)
+export const listMockChangeWorks = (account: MockAccount, projectId: string) =>
+  mine(account)
+    .filter((work) => work.projectId === projectId)
+    .sort((a, b) => a.seq - b.seq)
+    .map((work) => toSummary(account, work));
+
 const liveLinks = (account: MockAccount, work: MockChangeWork) => {
   const documents = new Map(listMockDocuments(account).map((document) => [document.id, document]));
 

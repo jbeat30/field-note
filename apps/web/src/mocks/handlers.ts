@@ -149,6 +149,7 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
+import { createCompletionHandlers } from './completionHandlers';
 import { createDocumentHandlers } from './documentHandlers';
 import { createMaterialHandlers } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
@@ -407,6 +408,7 @@ export const handlers = [
   ...createMaterialHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
   ...createChangeWorkHandlers({ apiError, parseBody }),
+  ...createCompletionHandlers({ apiError }),
   ...createSearchHandlers({ apiError }),
   ...createReportHandlers({ apiError }),
 
