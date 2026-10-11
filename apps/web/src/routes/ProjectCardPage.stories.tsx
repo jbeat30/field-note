@@ -267,6 +267,27 @@ export const CompleteProject: Story = {
   },
 };
 
+// 완료 전에 확인할 것을 알려 주되 막지는 않는다 (§10.3)
+export const CompleteShowsNotices: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '완료 처리' }));
+
+    const form = within(await canvas.findByRole('form', { name: '완료 처리 확인' }));
+    const notices = within(await form.findByRole('list', { name: '확인할 것' }));
+
+    // 더미: 임시 저장 일지 1건, 진행률 40%, 협의 중 변경 작업 1건
+    await expect(notices.getByText(/임시 저장된 작업일지가 1건/)).toBeInTheDocument();
+    await expect(notices.getByText(/진행률이 40%입니다/)).toBeInTheDocument();
+    await expect(notices.getByText(/협의 중인 변경·추가 작업이 1건/)).toBeInTheDocument();
+
+    // 안내가 있어도 완료할 수 있다
+    await userEvent.click(form.getByRole('button', { name: '확인' }));
+    await expect(await canvas.findByText("'완료' 상태로 바꿨습니다")).toBeInTheDocument();
+  },
+};
+
 export const CancelMakesProjectReadOnly: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);

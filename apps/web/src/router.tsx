@@ -92,6 +92,10 @@ export const routes = [
             path: '/projects/:id/change-works',
             ...page(() => import('./routes/ProjectChangeWorksPage'), 'ProjectChangeWorksPage'),
           },
+          {
+            path: '/projects/:id/summary',
+            ...page(() => import('./routes/ProjectSummaryPage'), 'ProjectSummaryPage'),
+          },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
           {

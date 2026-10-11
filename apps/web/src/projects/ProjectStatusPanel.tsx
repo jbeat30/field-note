@@ -4,6 +4,7 @@ import {
   PROJECT_TRANSITIONS,
   transitionDateLabel,
   todayInSeoul,
+  transitionNoticeMessage,
   validateProjectTransition,
   type ProjectDetail,
   type ProjectStatus,
@@ -16,6 +17,8 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
+
+import { useTransitionNotices } from '../completion/useCompletion';
 
 import { useProjectHistory, useTransitionProject } from './useProjects';
 
@@ -58,6 +61,8 @@ const TransitionForm = ({
 }) => {
   const transition = useTransitionProject(project.id);
   const history = useProjectHistory(project.id);
+  // 완료·재개처럼 확인할 것이 있는 전환은 확인 전에 알려 준다 (막지는 않음, §10.3)
+  const notices = useTransitionNotices(project.id, to);
   const today = todayInSeoul(new Date());
   const [effectiveOn, setEffectiveOn] = useState(today);
   const [reason, setReason] = useState('');
@@ -115,6 +120,15 @@ const TransitionForm = ({
         &apos;{PROJECT_STATUS_LABELS[to]}&apos;
       </p>
       {CONFIRM_HINTS[to] && <p className="text-sm text-foreground/70">{CONFIRM_HINTS[to]}</p>}
+      {notices.data && notices.data.length > 0 && (
+        <ul className="flex flex-col gap-1 text-sm" aria-label="확인할 것">
+          {notices.data.map((notice) => (
+            <li key={notice.type} className="rounded-md bg-muted px-3 py-2">
+              {transitionNoticeMessage(notice)}
+            </li>
+          ))}
+        </ul>
+      )}
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label={dateLabel} error={errors.effectiveOn}>
         <Input
