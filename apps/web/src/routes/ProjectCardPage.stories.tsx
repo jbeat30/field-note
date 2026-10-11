@@ -725,6 +725,6 @@ export const ProgressPanel: Story = {
     await waitFor(() =>
       expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('55%'),
     );
-    await expect(panel.getByText(/도장 시작/)).toBeInTheDocument();
+    await expect(await panel.findByText(/도장 시작/)).toBeInTheDocument();
   },
 };
