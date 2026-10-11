@@ -103,6 +103,10 @@ export const routes = [
             ...page(() => import('./routes/EmployeeListPage'), 'EmployeeListPage'),
           },
           {
+            path: '/staffing',
+            ...page(() => import('./routes/StaffingCalendarPage'), 'StaffingCalendarPage'),
+          },
+          {
             path: '/employees/:id',
             ...page(() => import('./routes/EmployeeCardPage'), 'EmployeeCardPage'),
           },

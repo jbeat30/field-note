@@ -15,6 +15,7 @@ import {
   summarizeEmployeeWork,
   summarizeProjectWork,
   workLogListQuerySchema,
+  staffingCalendarQuerySchema,
   workSummaryQuerySchema,
   workLogParamsSchema,
   workLogSaveSchema,
@@ -1845,6 +1846,66 @@ export const handlers = [
         b.changedAt.localeCompare(a.changedAt),
       ),
     });
+  }),
+
+  http.get('/api/v1/staffing-calendar', async ({ request }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const query = staffingCalendarQuerySchema.safeParse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    if (!query.success) {
+      return apiError(
+        'VALIDATION_ERROR',
+        query.error.issues.map((issue) => ({
+          path: ['query', ...issue.path].join('.'),
+          message: issue.message,
+        })),
+      );
+    }
+
+    const { from, to } = query.data;
+    const projects = getProjects(account);
+    const assignments = getAssignments(account).flatMap((row) => {
+      const project = projects.find((item) => item.id === row.projectId);
+
+      return !row.cancelledAt &&
+        project &&
+        project.status !== 'CANCELLED' &&
+        row.startDate <= to &&
+        row.endDate >= from
+        ? [
+            {
+              id: row.id,
+              employeeId: row.employeeId,
+              projectId: row.projectId,
+              projectCode: project.code,
+              projectName: project.name,
+              projectStatus: project.status,
+              startDate: row.startDate,
+              endDate: row.endDate,
+            },
+          ]
+        : [];
+    });
+    const assigned = new Set(assignments.map((item) => item.employeeId));
+    const employees = getEmployees(account)
+      .filter((item) => item.status !== 'LEFT' || assigned.has(item.id))
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        title: item.title ?? null,
+        status: item.status,
+        leftOn: item.leftOn ?? null,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ko') || a.id.localeCompare(b.id));
+
+    return HttpResponse.json({ from, to, employees, assignments });
   }),
 
   http.get('/api/v1/projects/:id/work-summary', async ({ request, params }) => {
