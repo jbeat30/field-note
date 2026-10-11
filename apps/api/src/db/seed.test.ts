@@ -1,6 +1,7 @@
 import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
+  DEMO_PAY_RATES,
   DEMO_PROGRESS,
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
@@ -262,6 +263,17 @@ describe('seedDemoData', () => {
     expect((await history('2026-003')).every((item) => item.changedBy === hanbit.userId)).toBe(
       true,
     );
+  });
+
+  it('더미 단가를 넣고 다시 실행해도 늘지 않으며 단가는 다른 회사 직원에게 붙지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.employeePayRate.count()).toBe(DEMO_PAY_RATES.length);
+
+    const rates = await db.owner.employeePayRate.findMany({ include: { employee: true } });
+
+    expect(rates.every((rate) => rate.employee.companyId === rate.companyId)).toBe(true);
   });
 
   it('더미 진행률 기록을 넣고 다시 실행해도 늘지 않는다', async () => {

@@ -5,6 +5,7 @@ import type {
   LegalDocumentSummary,
   OptionItem,
   PartnerDetail,
+  PayRate,
   ProgressRecord,
   ProjectDetail,
   ProjectPeriodChange,
@@ -77,6 +78,8 @@ export type MockAccount = {
   projectPeriodHistory?: Record<string, ProjectPeriodChange[]>;
   // 프로젝트별 진행률 기록 (프로젝트 id → 오래된 것부터)
   progressRecords?: Record<string, ProgressRecord[]>;
+  // 직원별 단가 기록 (직원 id → 입력 순서)
+  payRates?: Record<string, PayRate[]>;
   // 투입 (취소한 것 포함)
   assignments?: AssignmentRow[];
   // 작업일지와 일지별 수정 이력 (일지 id → 오래된 것부터)

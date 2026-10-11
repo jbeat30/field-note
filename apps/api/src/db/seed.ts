@@ -9,6 +9,7 @@ import {
 import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
+  DEMO_PAY_RATES,
   DEMO_PROGRESS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
@@ -327,6 +328,30 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         cancelledAt: assignment.cancelled ? new Date() : null,
       },
     });
+  }
+
+  // 직원 단가 (직원 이름으로 연결, 입력자는 그 회사의 데모 관리자, 처음 한 번만 만든다. 화면 확인용 가짜 금액)
+  for (const rate of DEMO_PAY_RATES) {
+    const employee = await prisma.employee.findFirstOrThrow({
+      where: { companyId: rate.companyId, name: rate.employeeName },
+    });
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === rate.companyId);
+
+    if (admin) {
+      await prisma.employeePayRate.upsert({
+        where: { companyId_id: { companyId: rate.companyId, id: rate.id } },
+        update: {},
+        create: {
+          id: rate.id,
+          companyId: rate.companyId,
+          employeeId: employee.id,
+          payType: rate.payType,
+          amount: rate.amount,
+          effectiveFrom: requiredDate(rate.effectiveFrom),
+          createdBy: admin.userId,
+        },
+      });
+    }
   }
 
   // 진행률 기록 (프로젝트 코드로 연결, 기록자는 그 회사의 데모 관리자, 처음 한 번만 만든다)

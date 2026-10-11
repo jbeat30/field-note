@@ -18,6 +18,8 @@ export const queryKeys = {
     ['assignments', 'staffing', { from, to }] as const,
   projectProgress: (projectId: string) => ['progress', 'list', { projectId }] as const,
   projectHealth: (projectId: string) => ['progress', 'health', { projectId }] as const,
+  payRates: (employeeId: string) => ['labor', 'pay-rates', { employeeId }] as const,
+  laborCost: (projectId: string) => ['labor', 'cost', { projectId }] as const,
   assignments: (projectId: string, includeCancelled = false) =>
     ['assignments', 'all', { projectId, includeCancelled }] as const,
   workLogs: (projectId: string, filter: object = {}) =>

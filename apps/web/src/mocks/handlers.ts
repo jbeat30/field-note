@@ -16,6 +16,9 @@ import {
   summarizeProjectWork,
   workLogListQuerySchema,
   canRecordProgress,
+  payRateCreateSchema,
+  summarizeLaborCost,
+  type PayRate,
   evaluateProjectHealth,
   progressRecordCreateSchema,
   staffingCalendarQuerySchema,
@@ -109,7 +112,9 @@ import {
   getWorkLogRevisions,
   getWorkLogs,
   saveWorkLogs,
+  addPayRate,
   addProgressRecord,
+  getPayRates,
   addProjectStatusChange,
   getAssignments,
   getProgressRecords,
@@ -288,6 +293,13 @@ const findSameProjectOverlap = (
     ? `같은 직원이 이 프로젝트에 ${clash.startDate} ~ ${clash.endDate}로 이미 투입되어 있습니다. 기존 투입의 기간을 수정해 주세요`
     : null;
 };
+
+// 단가 기록은 적용 시작일 최근순, 같은 시작일이면 나중에 입력한 것이 먼저 (서버와 같은 순서)
+const sortedPayRates = (rates: PayRate[]) =>
+  [...rates].sort(
+    (a, b) =>
+      b.effectiveFrom.localeCompare(a.effectiveFrom) || b.createdAt.localeCompare(a.createdAt),
+  );
 
 // 진행률 기록은 기준일 최근순, 같은 기준일이면 나중에 입력한 것이 먼저 (서버와 같은 순서)
 const sortedProgress = (records: ProgressRecord[]) =>
@@ -2028,6 +2040,121 @@ export const handlers = [
         today: todayInSeoul(new Date()),
       }),
     );
+  }),
+
+  http.get('/api/v1/employees/:id/pay-rates', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = employeeParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getEmployees(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    return HttpResponse.json({ items: sortedPayRates(getPayRates(account, parsed.data.id)) });
+  }),
+
+  http.post('/api/v1/employees/:id/pay-rates', async ({ request, params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = employeeParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, payRateCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    if (!getEmployees(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    const today = todayInSeoul(new Date());
+    const limit = new Date(Date.parse(`${today}T00:00:00Z`) + 366 * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    if (body.data.effectiveFrom < '2000-01-01' || body.data.effectiveFrom > limit) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.effectiveFrom', message: '적용 시작일이 너무 먼 날짜입니다' },
+      ]);
+    }
+
+    const rate: PayRate = {
+      id: crypto.randomUUID(),
+      payType: body.data.payType,
+      amount: body.data.amount,
+      effectiveFrom: body.data.effectiveFrom,
+      createdAt: new Date().toISOString(),
+    };
+
+    addPayRate(account, parsed.data.id, rate);
+
+    return HttpResponse.json(rate, { status: 201 });
+  }),
+
+  http.get('/api/v1/projects/:id/labor-cost', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    const projectId = parsed.data.id;
+    const items = getWorkLogs(account)
+      .filter((log) => log.projectId === projectId && log.status === 'SAVED')
+      .flatMap((log) =>
+        log.entries.map((entry) => ({
+          employeeId: entry.employeeId,
+          date: log.workDate,
+          minutes: entry.minutes,
+        })),
+      );
+    const assignments = getAssignments(account).filter(
+      (item) => item.projectId === projectId && !item.cancelledAt && item.plannedMinutes !== null,
+    );
+    const today = todayInSeoul(new Date());
+    const rates = new Map(
+      [...new Set([...items, ...assignments].map((item) => item.employeeId))].map((id) => [
+        id,
+        getPayRates(account, id),
+      ]),
+    );
+
+    return HttpResponse.json({
+      actual: summarizeLaborCost(items, rates, account.settings),
+      planned: summarizeLaborCost(
+        assignments.map((item) => ({
+          employeeId: item.employeeId,
+          date:
+            today < item.startDate ? item.startDate : today > item.endDate ? item.endDate : today,
+          minutes: item.plannedMinutes!,
+        })),
+        rates,
+        account.settings,
+      ),
+    });
   }),
 
   http.get('/api/v1/projects/:id/work-summary', async ({ request, params }) => {

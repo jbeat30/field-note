@@ -22,6 +22,7 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createLaborService } from '../labor/laborService';
 import { createProgressService } from '../progress/progressService';
 import { createReportService } from '../report/reportService';
 import { createSearchService } from '../search/searchService';
@@ -75,6 +76,7 @@ const instance = () =>
     projects: createProjectService(db.app, () => NOW),
     assignments: createAssignmentService(db.app),
     progress: createProgressService(db.app, () => NOW),
+    labor: createLaborService(db.app, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
       app: db.app,
@@ -172,6 +174,13 @@ const buildCompany = async () => {
     status: 'SAVED',
     content: '회사 A의 일지',
     entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
+  });
+
+  // 직원 단가 한 건 (민감 정보)
+  await c.call('post', `/employees/${worker}/pay-rates`, {
+    payType: 'DAILY',
+    amount: 200_000,
+    effectiveFrom: '2026-01-01',
   });
 
   // 진행률 기록 한 건
@@ -274,6 +283,14 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       `/projects/${a.projectId}/assignments/${a.assignment}/cancel`,
       {},
     ],
+    ['GET /employees/{id}/pay-rates', 'get', `/employees/${a.worker}/pay-rates`],
+    [
+      'POST /employees/{id}/pay-rates',
+      'post',
+      `/employees/${a.worker}/pay-rates`,
+      { payType: 'DAILY', amount: 999_999, effectiveFrom: '2026-10-01' },
+    ],
+    ['GET /projects/{id}/labor-cost', 'get', `/projects/${a.projectId}/labor-cost`],
     ['GET /projects/{id}/progress', 'get', `/projects/${a.projectId}/progress`],
     [
       'POST /projects/{id}/progress',
@@ -498,6 +515,12 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(logs.items).toHaveLength(1);
     expect(log.body).toMatchObject({ content: '회사 A의 일지 (수정)', version: 2 });
     expect(assignments.body.items[0].cancelledAt).toBeNull();
+
+    // 단가도 그대로: B의 침투 단가(999,999원)가 들어가지 않았다
+    const rates = await a.c.call('get', `/employees/${a.worker}/pay-rates`);
+
+    expect(rates.body.items).toHaveLength(1);
+    expect(rates.body.items[0]).toMatchObject({ payType: 'DAILY', amount: 200_000 });
 
     // 진행률도 그대로: B의 침투 기록(99%)이 들어가지 않았다
     const progress = await a.c.call('get', `/projects/${a.projectId}/progress`);
@@ -771,6 +794,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       'project_status_changes',
       'project_period_changes',
       'project_progress_records',
+      'employee_pay_rates',
       'project_assignments',
       'work_logs',
       'work_log_entries',

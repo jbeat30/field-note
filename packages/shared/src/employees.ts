@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // 직원 카드 (서비스 기획서 §8). 직원은 서비스에 로그인하지 않고 관리자가 기록한다
-// 주민등록번호·계좌번호·급여는 저장하지 않는다. 생년월일·연락처는 카드(상세)에서만 내려 준다
+// 주민등록번호·계좌번호는 저장하지 않는다(급여는 단가표만, `laborCost.ts`). 생년월일·연락처는 카드(상세)에서만 내려 준다
 export const EMPLOYEE_STATUSES = ['ACTIVE', 'ON_LEAVE', 'LEFT'] as const;
 
 export const employeeStatusSchema = z.enum(EMPLOYEE_STATUSES);
