@@ -7,6 +7,7 @@ import {
   partnersResponseSchema,
   projectsResponseSchema,
   searchResponseSchema,
+  staffingCalendarSchema,
   workLogsResponseSchema,
 } from '@field-note/shared';
 import request from 'supertest';
@@ -389,6 +390,7 @@ const COLLECTIONS = [
   'POST /partners',
   'GET /projects',
   'POST /projects',
+  'GET /staffing-calendar',
 ];
 
 // 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트.
@@ -502,6 +504,18 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(employees.items.map((item) => item.id)).not.toContain(a.worker);
     expect(partners.items.map((item) => item.id)).not.toContain(a.clientId);
     expect(projects.items.map((item) => item.id)).not.toContain(a.projectId);
+
+    // 인력 배치 캘린더에도 다른 회사의 직원·투입이 섞이지 않음 (A는 자기 투입을 봄)
+    const calendarOf = async (company: typeof a) =>
+      staffingCalendarSchema.parse(
+        (await company.c.call('get', '/staffing-calendar?from=2026-10-01&to=2026-10-31')).body,
+      );
+    const bCalendar = await calendarOf(b);
+    const aCalendar = await calendarOf(a);
+
+    expect(bCalendar.employees.map((item) => item.id)).not.toContain(a.worker);
+    expect(bCalendar.assignments.map((item) => item.id)).not.toContain(a.assignment);
+    expect(aCalendar.assignments.map((item) => item.id)).toContain(a.assignment);
 
     // 통합 검색에도 다른 회사 데이터가 섞이지 않음
     const hits = async (q: string) =>
