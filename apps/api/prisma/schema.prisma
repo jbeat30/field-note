@@ -67,6 +67,7 @@ model Company {
   changeWorks             ChangeWork[]
   changeWorkStatusChanges ChangeWorkStatusChange[]
   changeWorkDocuments     ChangeWorkDocument[]
+  alertPreferences        AlertPreference[]
   projectAssignments      ProjectAssignment[]
   projectPeriodChanges    ProjectPeriodChange[]
   workLogs                WorkLog[]
@@ -1121,4 +1122,29 @@ model ChangeWorkDocument {
   @@index([companyId, changeWorkId])
   @@index([companyId, documentId])
   @@map("change_work_documents")
+}
+
+// 알림 종류 (서비스 기획서 §15.3). 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산하며, 종류별로 켜고 끈다
+enum AlertKind {
+  NO_LOG_TODAY
+  INBOX_STALE
+  BURN_REACHED
+  BURN_AHEAD
+  PROJECT_OVERDUE
+  DOUBLE_ASSIGNED
+  CHANGE_STALE
+
+  @@map("alert_kind")
+}
+
+// 회사별 알림 설정. 행이 없는 종류는 켜짐(기본값). 삭제 없이 켜짐 여부만 바꾼다
+model AlertPreference {
+  companyId String    @map("company_id") @db.Uuid
+  kind      AlertKind
+  enabled   Boolean
+  updatedAt DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company   Company   @relation(fields: [companyId], references: [id])
+
+  @@id([companyId, kind])
+  @@map("alert_preferences")
 }

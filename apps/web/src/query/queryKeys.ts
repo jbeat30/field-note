@@ -27,6 +27,8 @@ export const queryKeys = {
   transitionNotices: (projectId: string, to: string) =>
     ['completion', 'notices', { projectId, to }] as const,
   projectSummary: (projectId: string) => ['completion', 'summary', { projectId }] as const,
+  dashboard: () => ['dashboard', 'all', {}] as const,
+  alertSettings: () => ['dashboard', 'alert-settings', {}] as const,
   assignments: (projectId: string, includeCancelled = false) =>
     ['assignments', 'all', { projectId, includeCancelled }] as const,
   workLogs: (projectId: string, filter: object = {}) =>

@@ -150,6 +150,7 @@ import {
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
 import { createCompletionHandlers } from './completionHandlers';
+import { createDashboardHandlers } from './dashboardHandlers';
 import { createDocumentHandlers } from './documentHandlers';
 import { createMaterialHandlers } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
@@ -409,6 +410,7 @@ export const handlers = [
   ...createDocumentHandlers({ apiError, parseBody }),
   ...createChangeWorkHandlers({ apiError, parseBody }),
   ...createCompletionHandlers({ apiError }),
+  ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
   ...createReportHandlers({ apiError }),
 

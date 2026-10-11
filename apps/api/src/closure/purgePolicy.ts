@@ -19,6 +19,7 @@ export const PURGE_POLICY = {
   project_progress_records: 'DELETE',
   employee_pay_rates: 'DELETE',
   change_works: 'DELETE',
+  alert_preferences: 'DELETE',
   change_work_status_changes: 'DELETE',
   change_work_documents: 'DELETE',
   project_period_changes: 'DELETE',

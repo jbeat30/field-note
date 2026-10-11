@@ -21018,6 +21018,988 @@
         }
       }
     },
+    "/api/v1/dashboard": {
+      "get": {
+        "summary": "홈 대시보드 (오늘 투입·진행 프로젝트·위험·이번 주 인력·할 일과 켜 둔 알림)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "dashboard": {
+                      "type": "object",
+                      "properties": {
+                        "today": {
+                          "type": "string",
+                          "format": "date"
+                        },
+                        "alerts": {
+                          "type": "array",
+                          "items": {
+                            "oneOf": [
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "NO_LOG_TODAY"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "INBOX_STALE"
+                                    ]
+                                  },
+                                  "count": {
+                                    "type": "integer"
+                                  },
+                                  "oldestDays": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "count",
+                                  "oldestDays"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "BURN_REACHED"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "level": {
+                                    "type": "string",
+                                    "enum": [
+                                      "WARN",
+                                      "LIMIT"
+                                    ]
+                                  },
+                                  "burnPercent": {
+                                    "type": "number"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName",
+                                  "level",
+                                  "burnPercent"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "BURN_AHEAD"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "burnPercent": {
+                                    "type": "number"
+                                  },
+                                  "progressPercent": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName",
+                                  "burnPercent",
+                                  "progressPercent"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "PROJECT_OVERDUE"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "plannedEnd": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "daysLate": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName",
+                                  "plannedEnd",
+                                  "daysLate"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "DOUBLE_ASSIGNED"
+                                    ]
+                                  },
+                                  "employeeId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "employeeName": {
+                                    "type": "string"
+                                  },
+                                  "dateCount": {
+                                    "type": "integer"
+                                  },
+                                  "firstDate": {
+                                    "type": "string",
+                                    "format": "date"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "employeeId",
+                                  "employeeName",
+                                  "dateCount",
+                                  "firstDate"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "CHANGE_STALE"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "changeWorkId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "seq": {
+                                    "type": "integer"
+                                  },
+                                  "days": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName",
+                                  "changeWorkId",
+                                  "seq",
+                                  "days"
+                                ]
+                              }
+                            ]
+                          }
+                        },
+                        "todayAssignments": {
+                          "type": "object",
+                          "properties": {
+                            "headcount": {
+                              "type": "integer"
+                            },
+                            "projects": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "headcount": {
+                                    "type": "integer"
+                                  },
+                                  "hasLog": {
+                                    "type": "boolean"
+                                  }
+                                },
+                                "required": [
+                                  "projectId",
+                                  "code",
+                                  "name",
+                                  "headcount",
+                                  "hasLog"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "headcount",
+                            "projects"
+                          ]
+                        },
+                        "projectCounts": {
+                          "type": "object",
+                          "properties": {
+                            "planned": {
+                              "type": "integer"
+                            },
+                            "inProgress": {
+                              "type": "integer"
+                            },
+                            "suspended": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "planned",
+                            "inProgress",
+                            "suspended"
+                          ]
+                        },
+                        "activeProjects": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "PLANNED",
+                                  "IN_PROGRESS",
+                                  "SUSPENDED",
+                                  "COMPLETED",
+                                  "WARRANTY",
+                                  "CLOSED",
+                                  "CANCELLED"
+                                ]
+                              },
+                              "progressPercent": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "burnPercent": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "warnings": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "BURN_WARN",
+                                    "BURN_LIMIT",
+                                    "BURN_AHEAD",
+                                    "OVERDUE",
+                                    "BEHIND_SCHEDULE"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "code",
+                              "name",
+                              "status",
+                              "progressPercent",
+                              "burnPercent",
+                              "warnings"
+                            ]
+                          }
+                        },
+                        "risks": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "code": {
+                                "type": "string"
+                              },
+                              "name": {
+                                "type": "string"
+                              },
+                              "status": {
+                                "type": "string",
+                                "enum": [
+                                  "PLANNED",
+                                  "IN_PROGRESS",
+                                  "SUSPENDED",
+                                  "COMPLETED",
+                                  "WARRANTY",
+                                  "CLOSED",
+                                  "CANCELLED"
+                                ]
+                              },
+                              "progressPercent": {
+                                "type": [
+                                  "integer",
+                                  "null"
+                                ]
+                              },
+                              "burnPercent": {
+                                "type": [
+                                  "number",
+                                  "null"
+                                ]
+                              },
+                              "warnings": {
+                                "type": "array",
+                                "items": {
+                                  "type": "string",
+                                  "enum": [
+                                    "BURN_WARN",
+                                    "BURN_LIMIT",
+                                    "BURN_AHEAD",
+                                    "OVERDUE",
+                                    "BEHIND_SCHEDULE"
+                                  ]
+                                }
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "code",
+                              "name",
+                              "status",
+                              "progressPercent",
+                              "burnPercent",
+                              "warnings"
+                            ]
+                          }
+                        },
+                        "week": {
+                          "type": "object",
+                          "properties": {
+                            "from": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "to": {
+                              "type": "string",
+                              "format": "date"
+                            },
+                            "conflicts": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "employeeId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "dateCount": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "employeeId",
+                                  "name",
+                                  "dateCount"
+                                ]
+                              }
+                            },
+                            "freeCount": {
+                              "type": "integer"
+                            },
+                            "freeNames": {
+                              "type": "array",
+                              "items": {
+                                "type": "string"
+                              }
+                            }
+                          },
+                          "required": [
+                            "from",
+                            "to",
+                            "conflicts",
+                            "freeCount",
+                            "freeNames"
+                          ]
+                        },
+                        "todos": {
+                          "type": "object",
+                          "properties": {
+                            "draftLogCount": {
+                              "type": "integer"
+                            },
+                            "staleInboxCount": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "draftLogCount",
+                            "staleInboxCount"
+                          ]
+                        }
+                      },
+                      "required": [
+                        "today",
+                        "alerts",
+                        "todayAssignments",
+                        "projectCounts",
+                        "activeProjects",
+                        "risks",
+                        "week",
+                        "todos"
+                      ]
+                    },
+                    "settings": {
+                      "type": "object",
+                      "properties": {
+                        "items": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "kind": {
+                                "type": "string",
+                                "enum": [
+                                  "NO_LOG_TODAY",
+                                  "INBOX_STALE",
+                                  "BURN_REACHED",
+                                  "BURN_AHEAD",
+                                  "PROJECT_OVERDUE",
+                                  "DOUBLE_ASSIGNED",
+                                  "CHANGE_STALE"
+                                ]
+                              },
+                              "enabled": {
+                                "type": "boolean"
+                              }
+                            },
+                            "required": [
+                              "kind",
+                              "enabled"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "items"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "dashboard",
+                    "settings"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/company/alert-settings": {
+      "get": {
+        "summary": "알림 종류별 켜짐 여부 (설정하지 않은 종류는 켜짐)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "NO_LOG_TODAY",
+                              "INBOX_STALE",
+                              "BURN_REACHED",
+                              "BURN_AHEAD",
+                              "PROJECT_OVERDUE",
+                              "DOUBLE_ASSIGNED",
+                              "CHANGE_STALE"
+                            ]
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "enabled"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "알림 종류별 켜고 끄기 (보낸 종류만 바꿈)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "items": {
+                    "type": "array",
+                    "items": {
+                      "type": "object",
+                      "properties": {
+                        "kind": {
+                          "type": "string",
+                          "enum": [
+                            "NO_LOG_TODAY",
+                            "INBOX_STALE",
+                            "BURN_REACHED",
+                            "BURN_AHEAD",
+                            "PROJECT_OVERDUE",
+                            "DOUBLE_ASSIGNED",
+                            "CHANGE_STALE"
+                          ]
+                        },
+                        "enabled": {
+                          "type": "boolean"
+                        }
+                      },
+                      "required": [
+                        "kind",
+                        "enabled"
+                      ]
+                    },
+                    "minItems": 1
+                  }
+                },
+                "required": [
+                  "items"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "NO_LOG_TODAY",
+                              "INBOX_STALE",
+                              "BURN_REACHED",
+                              "BURN_AHEAD",
+                              "PROJECT_OVERDUE",
+                              "DOUBLE_ASSIGNED",
+                              "CHANGE_STALE"
+                            ]
+                          },
+                          "enabled": {
+                            "type": "boolean"
+                          }
+                        },
+                        "required": [
+                          "kind",
+                          "enabled"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/projects/{projectId}/files": {
       "post": {
         "summary": "파일 업로드 신청 (형식·크기·회사 용량 확인 후 짧은 만료의 업로드 주소 발급)",
