@@ -14,6 +14,8 @@ export const queryKeys = {
   partner: (id: string) => ['partners', 'detail', { id }] as const,
   projects: (filter: object = {}) => ['projects', 'list', filter] as const,
   project: (id: string) => ['projects', 'detail', { id }] as const,
+  staffingCalendar: (from: string, to: string) =>
+    ['assignments', 'staffing', { from, to }] as const,
   assignments: (projectId: string, includeCancelled = false) =>
     ['assignments', 'all', { projectId, includeCancelled }] as const,
   workLogs: (projectId: string, filter: object = {}) =>

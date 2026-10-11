@@ -12,6 +12,7 @@ export * from './partners';
 export * from './projects';
 export * from './projectTransitions';
 export * from './assignments';
+export * from './staffing';
 export * from './workLogs';
 export * from './workSummary';
 export * from './files';

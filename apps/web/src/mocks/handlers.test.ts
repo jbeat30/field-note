@@ -17,6 +17,7 @@ import {
   workLogRevisionsSchema,
   workLogSchema,
   workLogsResponseSchema,
+  staffingCalendarSchema,
   workSummarySchema,
   employeeWorkHistorySchema,
   assignmentsResponseSchema,
@@ -1127,6 +1128,45 @@ describe('목업 서버 계약', () => {
     ).toBe(404);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 120_000);
+
+  it('인력 배치 캘린더: 기간과 겹치는 투입만 나오고 로그인과 기간을 검사한다', async () => {
+    const query = { from: '2026-10-05', to: '2026-10-11' };
+
+    expect(
+      (await client.GET('/api/v1/staffing-calendar', { params: { query } })).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const calendar = staffingCalendarSchema.parse(
+      (await client.GET('/api/v1/staffing-calendar', { params: { query } })).data,
+    );
+
+    expect(calendar.assignments.length).toBeGreaterThan(0);
+    expect(
+      calendar.assignments.every(
+        (item) => item.startDate <= query.to && item.endDate >= query.from,
+      ),
+    ).toBe(true);
+    expect(calendar.employees.length).toBeGreaterThan(0);
+
+    const empty = staffingCalendarSchema.parse(
+      (
+        await client.GET('/api/v1/staffing-calendar', {
+          params: { query: { from: '2030-01-01', to: '2030-01-07' } },
+        })
+      ).data,
+    );
+
+    expect(empty.assignments).toEqual([]);
+    expect(
+      (
+        await client.GET('/api/v1/staffing-calendar', {
+          params: { query: { from: '2026-10-05', to: '2026-12-31' } },
+        })
+      ).response.status,
+    ).toBe(400);
+  });
 
   it('공수 집계: 저장된 일지만 직원별·작업 구분별·주별로 합산하고 직원 이력은 프로젝트별로 나온다', async () => {
     expect(

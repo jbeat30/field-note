@@ -7,6 +7,8 @@ import {
   type AssignmentCreate,
   type AssignmentUpdate,
   type AssignmentWarning,
+  type StaffingCalendar,
+  type StaffingCalendarQuery,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -23,6 +25,8 @@ export class AssignmentError extends Error {
 }
 
 export type AssignmentService = {
+  // 인력 배치 캘린더: 기간 안의 직원과 투입 (취소한 투입·취소된 프로젝트 제외)
+  calendar: (companyId: string, query: StaffingCalendarQuery) => Promise<StaffingCalendar>;
   // 프로젝트의 투입 목록 (기본은 취소하지 않은 것만). 겹침·휴직·퇴사 경고가 함께 붙음
   list: (companyId: string, projectId: string, includeCancelled: boolean) => Promise<Assignment[]>;
   create: (companyId: string, projectId: string, input: AssignmentCreate) => Promise<Assignment>;
@@ -184,6 +188,48 @@ const assertStatus = (
  * @returns 투입 서비스
  */
 export const createAssignmentService = (app: PrismaClient): AssignmentService => ({
+  calendar: (companyId, query) =>
+    withCompany(app, companyId, async (tx) => {
+      const from = toDate(query.from);
+      const to = toDate(query.to);
+      const rows = await tx.projectAssignment.findMany({
+        where: {
+          cancelledAt: null,
+          startDate: { lte: to },
+          endDate: { gte: from },
+          project: { status: { not: 'CANCELLED' } },
+        },
+        include: { project: { select: { code: true, name: true, status: true } } },
+        orderBy: [{ startDate: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
+      });
+      const assigned = new Set(rows.map((row) => row.employeeId));
+      // 퇴사 직원은 기간 안에 투입이 있을 때만 보여 준다
+      const employees = await tx.employee.findMany({
+        where: { OR: [{ status: { not: 'LEFT' } }, { id: { in: [...assigned] } }] },
+        select: { id: true, name: true, title: true, status: true, leftOn: true },
+        orderBy: [{ name: 'asc' }, { id: 'asc' }],
+      });
+
+      return {
+        from: query.from,
+        to: query.to,
+        employees: employees.map((employee) => ({
+          ...employee,
+          leftOn: employee.leftOn ? fromDate(employee.leftOn) : null,
+        })),
+        assignments: rows.map((row) => ({
+          id: row.id,
+          employeeId: row.employeeId,
+          projectId: row.projectId,
+          projectCode: row.project.code,
+          projectName: row.project.name,
+          projectStatus: row.project.status,
+          startDate: fromDate(row.startDate),
+          endDate: fromDate(row.endDate),
+        })),
+      };
+    }),
+
   list: (companyId, projectId, includeCancelled) =>
     withCompany(app, companyId, async (tx) => {
       if (!(await tx.project.findFirst({ where: { id: projectId }, select: { id: true } }))) {
