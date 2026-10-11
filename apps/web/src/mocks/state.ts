@@ -8,6 +8,7 @@ import {
   type OptionItem,
   normalizePartnerName,
   type PartnerDetail,
+  type PayRate,
   type ProgressRecord,
   type ProjectDetail,
   type ProjectPeriodChange,
@@ -27,6 +28,7 @@ import {
   DEMO_ASSIGNMENTS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
+  DEMO_PAY_RATES,
   DEMO_PROGRESS,
   DEMO_PROJECTS,
   DEMO_WORK_LOGS,
@@ -358,6 +360,42 @@ export const addProjectStatusChange = (
   account.projectHistory = {
     ...account.projectHistory,
     [projectId]: [...(account.projectHistory?.[projectId] ?? []), change],
+  };
+  persist();
+};
+
+// 직원 단가 기록: 처음 조회할 때 더미 단가(DB 시드와 같은 원본)로 채움
+export const getPayRates = (account: MockAccount, employeeId: string): PayRate[] => {
+  if (!account.payRates) {
+    const employees = getEmployees(account);
+    const rates: Record<string, PayRate[]> = {};
+
+    for (const item of DEMO_PAY_RATES.filter((demo) => demo.companyId === account.companyId)) {
+      const employee = employees.find((candidate) => candidate.name === item.employeeName);
+
+      if (employee) {
+        (rates[employee.id] ??= []).push({
+          id: item.id,
+          payType: item.payType,
+          amount: item.amount,
+          effectiveFrom: item.effectiveFrom,
+          createdAt: `${item.effectiveFrom}T09:00:00.000Z`,
+        });
+      }
+    }
+
+    account.payRates = rates;
+    persist();
+  }
+
+  return account.payRates[employeeId] ?? [];
+};
+
+export const addPayRate = (account: MockAccount, employeeId: string, rate: PayRate) => {
+  getPayRates(account, employeeId);
+  account.payRates = {
+    ...account.payRates,
+    [employeeId]: [...(account.payRates?.[employeeId] ?? []), rate],
   };
   persist();
 };

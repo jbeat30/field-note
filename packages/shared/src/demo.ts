@@ -769,3 +769,60 @@ export const DEMO_PROGRESS: readonly DemoProgress[] = [
     recordedOn: '2026-10-01',
   },
 ];
+
+export type DemoPayRate = {
+  id: string;
+  companyId: string;
+  // 직원 이름으로 연결
+  employeeName: string;
+  payType: 'DAILY' | 'HOURLY' | 'MONTHLY' | 'ANNUAL';
+  amount: number;
+  effectiveFrom: string;
+};
+
+const payRateId = (n: number) => `0198d000-0000-7000-8000-0000000008${String(n).padStart(2, '0')}`;
+
+// 화면 확인용 가짜 단가 (실제 급여와 무관). 정판금은 중간에 단가가 올라 변경 이력을 볼 수 있고,
+// 일급·시급·월급·연봉제가 한 번씩 들어 있으며 나머지 직원은 단가 미등록 사례로 비워 둔다
+export const DEMO_PAY_RATES: readonly DemoPayRate[] = [
+  {
+    id: payRateId(1),
+    companyId: HANBIT,
+    employeeName: '정판금',
+    payType: 'DAILY',
+    amount: 230_000,
+    effectiveFrom: '2026-01-01',
+  },
+  {
+    id: payRateId(2),
+    companyId: HANBIT,
+    employeeName: '정판금',
+    payType: 'DAILY',
+    amount: 250_000,
+    effectiveFrom: '2026-09-01',
+  },
+  {
+    id: payRateId(3),
+    companyId: HANBIT,
+    employeeName: '최설치',
+    payType: 'HOURLY',
+    amount: 28_000,
+    effectiveFrom: '2026-01-01',
+  },
+  {
+    id: payRateId(4),
+    companyId: HANBIT,
+    employeeName: '한용접',
+    payType: 'MONTHLY',
+    amount: 4_800_000,
+    effectiveFrom: '2026-01-01',
+  },
+  {
+    id: payRateId(5),
+    companyId: HANBIT,
+    employeeName: '송소장',
+    payType: 'ANNUAL',
+    amount: 72_000_000,
+    effectiveFrom: '2026-01-01',
+  },
+];

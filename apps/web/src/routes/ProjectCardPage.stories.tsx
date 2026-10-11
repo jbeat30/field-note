@@ -728,3 +728,17 @@ export const ProgressPanel: Story = {
     await expect(await panel.findByText(/도장 시작/)).toBeInTheDocument();
   },
 };
+
+export const LaborCostPanel: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '인건비 (최소 추정)' }));
+
+    // 금액이 계산되고 포함하지 않는 항목을 알려 준다
+    await expect(await panel.findByText('지금까지 인건비')).toBeInTheDocument();
+    await expect(panel.getByText(/4대보험·수당·퇴직금·세금은 포함하지/)).toBeInTheDocument();
+    // 더미 단가가 없는 직원의 공수는 합계에서 빠지고 안내된다
+    await expect(await panel.findByText(/단가가 없어 합계에서 빠진 공수/)).toBeInTheDocument();
+    await expect(panel.getAllByText(/\d원$/).length).toBeGreaterThan(0);
+  },
+};
