@@ -738,3 +738,34 @@ export const DEMO_INVITATION = {
   adminName: '최미래',
   expiresInDays: 7,
 };
+
+export type DemoProgress = {
+  id: string;
+  companyId: string;
+  // 프로젝트 코드로 연결
+  projectCode: string;
+  percent: number;
+  recordedOn: string;
+  note?: string;
+};
+
+const progressId = (n: number) => `0198d000-0000-7000-8000-0000000007${String(n).padStart(2, '0')}`;
+
+// A동 판금 공사의 진행률 기록 (공수 소진율과 비교해 볼 수 있게 두 건)
+export const DEMO_PROGRESS: readonly DemoProgress[] = [
+  {
+    id: progressId(1),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    percent: 25,
+    recordedOn: '2026-09-01',
+    note: '외장 패널 가공 시작',
+  },
+  {
+    id: progressId(2),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    percent: 40,
+    recordedOn: '2026-10-01',
+  },
+];

@@ -699,3 +699,32 @@ export const WorkSummaryDateRangeAndMonthly: Story = {
     await expect(await summary.findByText('2026-09월')).toBeInTheDocument();
   },
 };
+
+export const ProgressPanel: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 더미 진행률 기록 두 건(25%, 40%)이 최근순으로 보이고 현재 진행률은 40%
+    const panel = within(await canvas.findByRole('region', { name: '진행 현황' }));
+
+    await expect(await panel.findByText('진행률 이력')).toBeInTheDocument();
+    await expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('40%');
+
+    // 범위를 벗어난 값은 서버에 보내기 전에 막는다
+    await userEvent.type(panel.getByLabelText('진행률 (%)'), '120');
+    await userEvent.click(panel.getByRole('button', { name: '진행률 기록' }));
+    await expect(
+      await panel.findByText('0부터 100 사이의 정수를 입력해 주세요'),
+    ).toBeInTheDocument();
+
+    // 정상 값은 기록되어 현재 진행률과 이력이 바뀐다
+    await userEvent.clear(panel.getByLabelText('진행률 (%)'));
+    await userEvent.type(panel.getByLabelText('진행률 (%)'), '55');
+    await userEvent.type(panel.getByLabelText('메모 (선택)'), '도장 시작');
+    await userEvent.click(panel.getByRole('button', { name: '진행률 기록' }));
+    await waitFor(() =>
+      expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('55%'),
+    );
+    await expect(panel.getByText(/도장 시작/)).toBeInTheDocument();
+  },
+};
