@@ -2,6 +2,7 @@ import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
   DEMO_CHANGE_WORKS,
+  DEMO_REPAIRS,
   DEMO_WARRANTIES,
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
@@ -279,6 +280,21 @@ describe('seedDemoData', () => {
     const works = await db.owner.changeWork.findMany({ include: { project: true } });
 
     expect(works.every((work) => work.project.companyId === work.companyId)).toBe(true);
+  });
+
+  it('더미 보수 요청을 이력과 함께 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.repairRequest.count()).toBe(DEMO_REPAIRS.length);
+    expect(await db.owner.repairRequestStatusChange.count()).toBe(
+      DEMO_REPAIRS.reduce((sum, item) => sum + (item.history?.length ?? 0), 0),
+    );
+
+    const rows = await db.owner.repairRequest.findMany({ include: { project: true } });
+
+    expect(rows.every((row) => row.project.companyId === row.companyId)).toBe(true);
+    expect(rows.every((row) => row.status === 'DONE' && row.resolvedOn !== null)).toBe(true);
   });
 
   it('더미 보증 설정을 이력과 함께 넣고 다시 실행해도 늘지 않는다', async () => {
