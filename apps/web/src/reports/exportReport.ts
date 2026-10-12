@@ -20,22 +20,12 @@ export const filenameFromDisposition = (disposition: string | null, fallback: st
   }
 };
 
-/**
- * @description 기간 안의 작업일보를 엑셀로 내려받음. 내보내기는 서버에 기록으로 남는다. 오류는 파일 대신 JSON으로 오므로 화면이 바뀌지 않게 직접 받아 처리한다
- * @param projectId 프로젝트 ID
- * @param from 시작 날짜
- * @param to 끝 날짜
- * @returns 내려받은 파일 이름
- * @throws 기간이 잘못됐거나 서버 오류일 때 사유와 함께
- */
-export const downloadReportXlsx = async (projectId: string, from: string, to: string) => {
+// 엑셀 내려받기 공통: 오류는 파일 대신 JSON으로 오므로 화면이 바뀌지 않게 직접 받아 처리한다
+const downloadXlsx = async (url: string, fallbackName: string) => {
   let response: Response;
 
   try {
-    response = await fetch(
-      `/api/v1/projects/${projectId}/daily-reports.xlsx?${new URLSearchParams({ from, to })}`,
-      { credentials: 'same-origin' },
-    );
+    response = await fetch(url, { credentials: 'same-origin' });
   } catch {
     throw new ReportExportError('연결이 끊겼습니다. 연결을 확인하고 다시 시도해 주세요');
   }
@@ -46,21 +36,47 @@ export const downloadReportXlsx = async (projectId: string, from: string, to: st
 
   const filename = filenameFromDisposition(
     response.headers.get('Content-Disposition'),
-    `작업일보_${from}_${to}.xlsx`,
+    fallbackName,
   );
-  const url = URL.createObjectURL(await response.blob());
+  const objectUrl = URL.createObjectURL(await response.blob());
   const link = document.createElement('a');
 
-  link.href = url;
+  link.href = objectUrl;
   link.download = filename;
   document.body.append(link);
   link.click();
   link.remove();
   // 내려받기가 시작된 뒤에 주소를 풀어 줌
-  setTimeout(() => URL.revokeObjectURL(url), 10_000);
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
 
   return filename;
 };
+
+/**
+ * @description 기간 안의 작업일보를 엑셀로 내려받음. 내보내기는 서버에 기록으로 남는다
+ * @param projectId 프로젝트 ID
+ * @param from 시작 날짜
+ * @param to 끝 날짜
+ * @returns 내려받은 파일 이름
+ * @throws 기간이 잘못됐거나 서버 오류일 때 사유와 함께
+ */
+export const downloadReportXlsx = (projectId: string, from: string, to: string) =>
+  downloadXlsx(
+    `/api/v1/projects/${projectId}/daily-reports.xlsx?${new URLSearchParams({ from, to })}`,
+    `작업일보_${from}_${to}.xlsx`,
+  );
+
+/**
+ * @description 월 공수표를 엑셀로 내려받음 (급여·정산 담당에게 전달하는 용도). 내보내기는 서버에 기록으로 남는다
+ * @param month YYYY-MM
+ * @returns 내려받은 파일 이름
+ * @throws 서버 오류일 때 사유와 함께
+ */
+export const downloadMonthlyXlsx = (month: string) =>
+  downloadXlsx(
+    `/api/v1/monthly-hours.xlsx?${new URLSearchParams({ month })}`,
+    `월공수표_${month}.xlsx`,
+  );
 
 /**
  * @description 사진이 모두 불러와진 뒤에 인쇄 창을 엶 (사진이 빠진 채 인쇄·PDF 저장되지 않게). 5초 안에 못 불러오면 그대로 연다

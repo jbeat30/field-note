@@ -25,6 +25,11 @@ import { createMemoService } from '../memo/memoService';
 import { createDashboardService } from '../dashboard/dashboardService';
 import { createCompletionService } from '../completion/completionService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
+import { createWarrantyService } from '../warranty/warrantyService';
+import { createAuditService } from '../audit/auditService';
+import { createCredentialService } from '../credential/credentialService';
+import { createRepairService } from '../repair/repairService';
+import { createMonthlyService } from '../monthly/monthlyService';
 import { createLaborService } from '../labor/laborService';
 import { createProgressService } from '../progress/progressService';
 import { createReportService } from '../report/reportService';
@@ -82,6 +87,15 @@ const instance = () =>
     progress: createProgressService(db.app, () => NOW),
     labor: createLaborService(db.app, () => NOW),
     changeWorks: createChangeWorkService(db.app, () => NOW),
+    warranty: createWarrantyService(db.app, () => NOW),
+    repairs: createRepairService(db.app, () => NOW),
+    monthly: createMonthlyService(db.app, () => NOW),
+    audit: createAuditService(db.app),
+    credentials: createCredentialService({
+      app: db.app,
+      storage: createMemoryStorage().storage,
+      now: () => NOW,
+    }),
     completion: createCompletionService(db.app, createMemoryStorage().storage, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
@@ -241,6 +255,82 @@ const buildCompany = async () => {
   });
   await c.call('post', `/change-works/${changeWorkId}/documents`, { documentId });
 
+  // 보증: 완료한 두 번째 프로젝트에 보증 설정과 보증서를 한 건씩 만든다
+  const warrantyProjectId = await c.id('/projects', {
+    name: '회사 A의 완료 공사',
+    siteName: 'A동 현장',
+    clientId,
+    managerId,
+    contractDate: '2026-08-01',
+    plannedStart: '2026-09-01',
+    plannedEnd: '2026-12-31',
+  });
+
+  await c.call('post', `/projects/${warrantyProjectId}/status`, {
+    toStatus: 'IN_PROGRESS',
+    effectiveOn: '2026-09-01',
+  });
+  await c.call('post', `/projects/${warrantyProjectId}/status`, {
+    toStatus: 'COMPLETED',
+    effectiveOn: '2026-09-20',
+  });
+  await c.call('put', `/projects/${warrantyProjectId}/warranty`, {
+    months: 12,
+    startBasis: 'ACTUAL_END',
+  });
+
+  const warrantyFileId = (
+    await c.call('post', `/projects/${warrantyProjectId}/files`, {
+      name: '보증증권.pdf',
+      contentType: 'application/pdf',
+      purpose: 'DOCUMENT',
+      size: 1000,
+    })
+  ).body.file.id as string;
+  const warrantyDocumentId = await c.id(`/projects/${warrantyProjectId}/documents`, {
+    fileId: warrantyFileId,
+    title: '회사 A의 보증증권',
+    category: 'OTHER',
+  });
+  const certificateId = (
+    await c.call('post', `/projects/${warrantyProjectId}/warranty/certificates`, {
+      documentId: warrantyDocumentId,
+      expiresOn: '2027-09-20',
+    })
+  ).body.certificates[0].id as string;
+
+  // 보수 요청: 완료한 프로젝트를 보증 중으로 올린 뒤 한 건 접수하고 상태를 한 번 바꿔 둔다
+  await c.call('post', `/projects/${warrantyProjectId}/status`, {
+    toStatus: 'WARRANTY',
+    effectiveOn: '2026-09-21',
+    confirmSummary: true,
+  });
+
+  const repairId = await c.id(`/projects/${warrantyProjectId}/repair-requests`, {
+    receivedOn: '2026-10-01',
+    requester: '회사 A의 고객',
+    content: '회사 A의 보수 요청',
+  });
+
+  await c.call('post', `/repair-requests/${repairId}/status`, {
+    toStatus: 'IN_PROGRESS',
+    effectiveOn: '2026-10-02',
+  });
+
+  // 직원 서류: 서류 한 건과 직원 서류용 파일 신청 한 건
+  const credentialTypeId = options.find((item) => item.kind === 'CREDENTIAL_TYPE')!.id;
+  const credentialId = await c.id(`/employees/${worker}/credentials`, {
+    typeId: credentialTypeId,
+    expiresOn: '2030-01-01',
+  });
+  const employeeFileId = (
+    await c.call('post', `/employees/${worker}/files`, {
+      name: '자격증.pdf',
+      contentType: 'application/pdf',
+      size: 1000,
+    })
+  ).body.file.id as string;
+
   const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
   const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
     materialId,
@@ -267,6 +357,13 @@ const buildCompany = async () => {
     docFileId,
     documentId,
     changeWorkId,
+    warrantyProjectId,
+    warrantyDocumentId,
+    certificateId,
+    repairId,
+    credentialTypeId,
+    credentialId,
+    employeeFileId,
   };
 };
 
@@ -348,6 +445,105 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'DELETE /change-works/{id}/documents/{documentId}',
       'delete',
       `/change-works/${a.changeWorkId}/documents/${a.documentId}`,
+    ],
+    ['GET /employees/{id}/credentials', 'get', `/employees/${a.worker}/credentials`],
+    [
+      'POST /employees/{id}/credentials',
+      'post',
+      `/employees/${a.worker}/credentials`,
+      { typeId: a.credentialTypeId },
+    ],
+    [
+      'PATCH /employees/{id}/credentials/{credentialId}',
+      'patch',
+      `/employees/${a.worker}/credentials/${a.credentialId}`,
+      { expiresOn: '2031-01-01' },
+    ],
+    [
+      'DELETE /employees/{id}/credentials/{credentialId}',
+      'delete',
+      `/employees/${a.worker}/credentials/${a.credentialId}`,
+    ],
+    [
+      'GET /employees/{id}/credentials/{credentialId}/file-url',
+      'get',
+      `/employees/${a.worker}/credentials/${a.credentialId}/file-url`,
+    ],
+    [
+      'POST /employees/{employeeId}/files',
+      'post',
+      `/employees/${a.worker}/files`,
+      { name: '침투.pdf', contentType: 'application/pdf', size: 1000 },
+    ],
+    [
+      'GET /projects/{id}/required-credentials',
+      'get',
+      `/projects/${a.projectId}/required-credentials`,
+    ],
+    [
+      'PUT /projects/{id}/required-credentials',
+      'put',
+      `/projects/${a.projectId}/required-credentials`,
+      { typeIds: [a.credentialTypeId] },
+    ],
+    ['GET /projects/{id}/warranty', 'get', `/projects/${a.warrantyProjectId}/warranty`],
+    [
+      'PUT /projects/{id}/warranty',
+      'put',
+      `/projects/${a.warrantyProjectId}/warranty`,
+      { months: 0, startBasis: 'ACTUAL_END', reason: '침투' },
+    ],
+    [
+      'POST /projects/{id}/warranty/certificates',
+      'post',
+      `/projects/${a.warrantyProjectId}/warranty/certificates`,
+      { documentId: a.warrantyDocumentId, expiresOn: '2030-01-01' },
+    ],
+    [
+      'PATCH /projects/{id}/warranty/certificates/{certificateId}',
+      'patch',
+      `/projects/${a.warrantyProjectId}/warranty/certificates/${a.certificateId}`,
+      { expiresOn: '2030-01-01' },
+    ],
+    [
+      'DELETE /projects/{id}/warranty/certificates/{certificateId}',
+      'delete',
+      `/projects/${a.warrantyProjectId}/warranty/certificates/${a.certificateId}`,
+    ],
+    [
+      'GET /projects/{id}/repair-requests',
+      'get',
+      `/projects/${a.warrantyProjectId}/repair-requests`,
+    ],
+    [
+      'POST /projects/{id}/repair-requests',
+      'post',
+      `/projects/${a.warrantyProjectId}/repair-requests`,
+      { requester: '침투', content: '침투' },
+    ],
+    [
+      'GET /projects/{id}/after-service-usage',
+      'get',
+      `/projects/${a.warrantyProjectId}/after-service-usage`,
+    ],
+    ['GET /repair-requests/{id}', 'get', `/repair-requests/${a.repairId}`],
+    ['PATCH /repair-requests/{id}', 'patch', `/repair-requests/${a.repairId}`, { content: '침투' }],
+    [
+      'POST /repair-requests/{id}/status',
+      'post',
+      `/repair-requests/${a.repairId}/status`,
+      { toStatus: 'DONE' },
+    ],
+    [
+      'POST /repair-requests/{id}/links',
+      'post',
+      `/repair-requests/${a.repairId}/links`,
+      { workLogId: a.worker },
+    ],
+    [
+      'DELETE /repair-requests/{id}/links/{linkId}',
+      'delete',
+      `/repair-requests/${a.repairId}/links/${a.worker}`,
     ],
     ['GET /projects/{id}/progress', 'get', `/projects/${a.projectId}/progress`],
     [
@@ -470,6 +666,11 @@ const COLLECTIONS = [
   'GET /employees',
   'POST /employees',
   'GET /materials',
+  'GET /audit-logs',
+  'GET /monthly-hours',
+  'POST /monthly-hours/close',
+  'POST /monthly-hours/reopen',
+  'GET /monthly-hours.xlsx',
   'POST /materials',
   'GET /memos',
   'POST /memos',
@@ -535,6 +736,13 @@ describe('회사 격리: 전 엔드포인트', () => {
       docFileId: '{id}',
       documentId: '{id}',
       changeWorkId: '{id}',
+      warrantyProjectId: '{id}',
+      warrantyDocumentId: '{id}',
+      certificateId: '{certificateId}',
+      repairId: '{id}',
+      credentialTypeId: '{typeId}',
+      credentialId: '{credentialId}',
+      employeeFileId: '{id}',
     };
     const tested = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const exempt = new Set(OWN_ACCOUNT_ONLY);
@@ -589,6 +797,43 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(
       (await a.c.call('get', `/projects/${a.projectId}/change-works`)).body.items,
     ).toHaveLength(1);
+
+    // 보증도 그대로: B의 침투(0개월 변경, 보증서 삭제·만료일 변경)가 반영되지 않았다
+    const warranty = await a.c.call('get', `/projects/${a.warrantyProjectId}/warranty`);
+
+    expect(warranty.body).toMatchObject({ configured: true, months: 12, endOn: '2027-09-20' });
+    expect(warranty.body.certificates).toHaveLength(1);
+    expect(warranty.body.certificates[0]).toMatchObject({ expiresOn: '2027-09-20' });
+    expect(warranty.body.changes).toHaveLength(1);
+
+    // 보수 요청도 그대로: B의 침투(완료 처리·내용 수정)가 반영되지 않았다
+    const repair = await a.c.call('get', `/repair-requests/${a.repairId}`);
+
+    expect(repair.body).toMatchObject({
+      status: 'IN_PROGRESS',
+      content: '회사 A의 보수 요청',
+      seq: 1,
+    });
+    expect(repair.body.history).toHaveLength(1);
+
+    // 월 공수표·확정도 회사마다 따로: 각자 자기 일지만 집계되고, A가 확정해도 B는 확정되지 않으며 B는 A의 확정을 재오픈할 수 없다
+    const month = DAY.slice(0, 7);
+    const monthOf = async (c: typeof a.c) =>
+      (await c.call('get', `/monthly-hours?month=${month}`)).body;
+    const aMonth = await monthOf(a.c);
+    const bMonth = await monthOf(b.c);
+
+    expect(aMonth.rows.map((row: { projectId: string }) => row.projectId)).toEqual([a.projectId]);
+    expect(bMonth.rows.map((row: { projectId: string }) => row.projectId)).toEqual([b.projectId]);
+    expect(
+      (await a.c.call('post', '/monthly-hours/close', { month, confirmDrafts: true })).status,
+    ).toBe(200);
+    expect(await monthOf(a.c)).toMatchObject({ isClosed: true });
+    expect(await monthOf(b.c)).toMatchObject({ isClosed: false, events: [] });
+    expect(
+      (await b.c.call('post', '/monthly-hours/reopen', { month, reason: '침투' })).status,
+    ).toBe(400);
+    expect(await monthOf(a.c)).toMatchObject({ isClosed: true });
 
     // 단가도 그대로: B의 침투 단가(999,999원)가 들어가지 않았다
     const rates = await a.c.call('get', `/employees/${a.worker}/pay-rates`);
