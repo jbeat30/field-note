@@ -34,6 +34,10 @@ export const transitionNoticeSchema = z.discriminatedUnion('type', [
   }),
   // 아직 합의되지 않은(협의 중) 변경·추가 작업
   z.object({ type: z.literal('NEGOTIATING_CHANGES'), count: z.number().int() }),
+  // 종료 전환: 접수·처리 중인 보수 요청 (남아 있으면 종료할 수 없음)
+  z.object({ type: z.literal('OPEN_REPAIRS'), count: z.number().int() }),
+  // 종료 전환: 보류 중인 보수 요청 (종료는 막지 않고 알림)
+  z.object({ type: z.literal('HOLD_REPAIRS'), count: z.number().int() }),
   // 중단 뒤 재개하는데 종료 예정일이 이미 지남
   z.object({ type: z.literal('PERIOD_OVER'), plannedEnd: dateSchema }),
 ]);
@@ -57,6 +61,8 @@ type CheckInput = {
     remaining: number;
   }[];
   negotiatingCount: number;
+  openRepairCount: number;
+  holdRepairCount: number;
   plannedEnd: string;
   today: string;
 };
@@ -91,6 +97,14 @@ export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[]
     }
   }
 
+  if (input.to === 'CLOSED' && input.openRepairCount > 0) {
+    checks.push({ type: 'OPEN_REPAIRS', count: input.openRepairCount });
+  }
+
+  if (input.to === 'CLOSED' && input.holdRepairCount > 0) {
+    checks.push({ type: 'HOLD_REPAIRS', count: input.holdRepairCount });
+  }
+
   if (input.from === 'SUSPENDED' && input.to === 'IN_PROGRESS' && input.today > input.plannedEnd) {
     checks.push({ type: 'PERIOD_OVER', plannedEnd: input.plannedEnd });
   }
@@ -118,6 +132,10 @@ export const transitionNoticeMessage = (check: TransitionNotice): string => {
         .join(', ')}${check.items.length > 3 ? ' 등' : ''})`;
     case 'NEGOTIATING_CHANGES':
       return `아직 협의 중인 변경·추가 작업이 ${check.count}건 있습니다. 합의 또는 철회로 정리해 주세요`;
+    case 'OPEN_REPAIRS':
+      return `접수·처리 중인 보수 요청이 ${check.count}건 있어 종료할 수 없습니다. 완료하거나 보류로 정리해 주세요`;
+    case 'HOLD_REPAIRS':
+      return `보류 중인 보수 요청이 ${check.count}건 있습니다. 종료하면 더 처리할 수 없으니 확인해 주세요`;
     case 'PERIOD_OVER':
       return `종료 예정일(${check.plannedEnd})이 이미 지났습니다. 필요하면 기본정보에서 기간을 연장해 주세요`;
   }

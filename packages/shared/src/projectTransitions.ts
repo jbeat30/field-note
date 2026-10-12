@@ -84,6 +84,8 @@ export type TransitionCheckInput = {
   // 보증 기간(개월)과 종료 예정일. 설정이 없으면 기본 기간과 null
   warrantyMonths: number;
   warrantyEndOn: string | null;
+  // 접수·처리 중인 보수 요청 건수 (보증 중 → 종료에서는 0이어야 함)
+  openRepairCount: number;
 };
 
 export type TransitionCheck =
@@ -173,6 +175,14 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
       ok: false,
       path: 'toStatus',
       message: `보증 기간이 ${input.warrantyMonths}개월입니다. 보증을 시작하거나 보증 기간을 0개월로 바꾼 뒤 종료해 주세요`,
+    };
+  }
+
+  if (from === 'WARRANTY' && to === 'CLOSED' && input.openRepairCount > 0) {
+    return {
+      ok: false,
+      path: 'toStatus',
+      message: `접수·처리 중인 보수 요청이 ${input.openRepairCount}건 있어 종료할 수 없습니다. 완료하거나 보류로 정리한 뒤 다시 시도해 주세요`,
     };
   }
 

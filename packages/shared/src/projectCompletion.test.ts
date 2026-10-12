@@ -7,6 +7,8 @@ const base = {
   progressPercent: 100,
   materials: [],
   negotiatingCount: 0,
+  openRepairCount: 0,
+  holdRepairCount: 0,
   plannedEnd: '2026-12-31',
   today: '2026-10-11',
 };
@@ -58,6 +60,19 @@ describe('evaluateTransitionNotices (§10.3)', () => {
     expect(evaluateTransitionNotices({ ...close, draftLogCount: 1 })).toEqual([
       { type: 'DRAFT_LOGS', count: 1 },
     ]);
+  });
+
+  it('종료 전환에서는 접수·처리 중과 보류 중인 보수 요청을 알린다', () => {
+    const close = { ...base, from: 'WARRANTY' as const, to: 'CLOSED' as const };
+    const checks = evaluateTransitionNotices({ ...close, openRepairCount: 2, holdRepairCount: 1 });
+
+    expect(checks).toEqual([
+      { type: 'OPEN_REPAIRS', count: 2 },
+      { type: 'HOLD_REPAIRS', count: 1 },
+    ]);
+    expect(transitionNoticeMessage(checks[0]!)).toContain('종료할 수 없습니다');
+    // 완료 전환에서는 보수 요청을 묻지 않는다
+    expect(evaluateTransitionNotices({ ...base, openRepairCount: 2 })).toEqual([]);
   });
 
   it('진행률 기록이 없으면 기록을 요청한다', () => {

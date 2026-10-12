@@ -22,6 +22,7 @@ const check = (patch: Partial<TransitionCheckInput> & Pick<TransitionCheckInput,
     draftLogCount: 0,
     warrantyMonths: 12,
     warrantyEndOn: null,
+    openRepairCount: 0,
     ...patch,
   });
 
@@ -201,6 +202,13 @@ describe('보증·종료 전환 조건 (§10.3)', () => {
       }),
     ).toMatchObject({ ok: false, path: 'toStatus' });
     expect(check({ from: 'COMPLETED', to: 'CLOSED', warrantyMonths: 0 }).ok).toBe(true);
+  });
+
+  it('보증 중 → 종료는 접수·처리 중인 보수 요청이 남아 있으면 막는다', () => {
+    const base = { from: 'WARRANTY', to: 'CLOSED', reason: '조기 종료' } as const;
+
+    expect(check({ ...base, openRepairCount: 2 })).toMatchObject({ ok: false, path: 'toStatus' });
+    expect(check({ ...base, openRepairCount: 0 }).ok).toBe(true);
   });
 
   it('완료일 이후 날짜만 보증 시작일로 입력할 수 있다', () => {
