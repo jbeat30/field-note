@@ -139,6 +139,46 @@ export const mockCredentialWarnings = (
   }));
 };
 
+/**
+ * @description 대시보드가 읽는 직원 서류: 퇴사하지 않은 직원의 지우지 않은 서류 중 같은 직원·종류의 가장 늦은 만료일 (만료 없는 서류가 있으면 제외, 서버와 같은 규칙)
+ * @param account 현재 계정
+ * @returns 만료일이 있는 서류 목록
+ */
+export const listMockCredentialExpiries = (account: MockAccount) => {
+  const employees = new Map(getEmployees(account).map((item) => [item.id, item]));
+  const options = new Map(getOptions(account).map((item) => [item.id, item]));
+  const latest = new Map<
+    string,
+    { employeeId: string; employeeName: string; typeName: string; expiresOn: string | null }
+  >();
+
+  for (const row of storeOf(account).credentials) {
+    const employee = employees.get(row.employeeId);
+
+    if (row.removedAt || !employee || employee.status === 'LEFT') continue;
+
+    const key = `${row.employeeId}:${row.typeId}`;
+    const current = latest.get(key);
+
+    if (
+      !current ||
+      row.expiresOn === null ||
+      (current.expiresOn !== null && row.expiresOn > current.expiresOn)
+    ) {
+      latest.set(key, {
+        employeeId: row.employeeId,
+        employeeName: employee.name,
+        typeName: options.get(row.typeId)?.name ?? '',
+        expiresOn: row.expiresOn,
+      });
+    }
+  }
+
+  return [...latest.values()].flatMap((item) =>
+    item.expiresOn ? [{ ...item, expiresOn: item.expiresOn }] : [],
+  );
+};
+
 const toCredential = (account: MockAccount, row: MockCredential): EmployeeCredential => {
   const today = todayInSeoul(new Date());
   const type = getOptions(account).find((item) => item.id === row.typeId);

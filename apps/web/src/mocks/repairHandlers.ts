@@ -122,6 +122,32 @@ export const countMockRepairs = (account: MockAccount, projectId: string) => {
   };
 };
 
+/**
+ * @description 대시보드가 읽는 접수·처리 중 보수 요청 (프로젝트 이름 포함)
+ * @param account 현재 계정
+ * @returns 보수 요청 목록
+ */
+export const listMockOpenRepairs = (account: MockAccount) => {
+  const projects = new Map(getProjects(account).map((project) => [project.id, project]));
+
+  return mine(account).flatMap((repair) => {
+    const project = projects.get(repair.projectId);
+
+    return (repair.status === 'RECEIVED' || repair.status === 'IN_PROGRESS') && project
+      ? [
+          {
+            id: repair.id,
+            projectId: repair.projectId,
+            projectName: project.name,
+            seq: repair.seq,
+            receivedOn: repair.receivedOn,
+            status: repair.status,
+          },
+        ]
+      : [];
+  });
+};
+
 // 삭제된 자재 기록·임시 저장 일지에 걸린 연결은 세지 않는다
 const liveLinks = (account: MockAccount, repair: MockRepair): RepairLinkItem[] => {
   const logs = new Map(getWorkLogs(account).map((log) => [log.id, log]));
