@@ -353,30 +353,48 @@ export const StartWarrantyNeedsSummaryConfirm: Story = {
   },
 };
 
-// 종료와 재오픈은 사유가 필요하고, 종료된 프로젝트는 다시 보증 중으로 열 수 있다
-export const CloseAndReopen: Story = {
+// 보증 기간이 남아 있으면 완료에서 바로 종료할 수 없다 (보증 기간 0개월일 때만)
+export const CloseFromCompletedNeedsNoWarranty: Story = {
   parameters: { router: routerFor('옛날상가 간판 교체') },
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
     await userEvent.click(await canvas.findByRole('button', { name: '종료 처리' }));
 
-    const closeForm = within(await canvas.findByRole('form', { name: '종료 처리 확인' }));
+    const form = within(await canvas.findByRole('form', { name: '종료 처리 확인' }));
 
-    await userEvent.click(closeForm.getByRole('button', { name: '확인' }));
-    await expect(await closeForm.findByText('사유를 입력해 주세요')).toBeInTheDocument();
+    await userEvent.click(form.getByRole('button', { name: '확인' }));
+    await expect(
+      await form.findByText(/보증 기간이 12개월입니다/, { exact: false }),
+    ).toBeInTheDocument();
+  },
+};
 
-    await userEvent.type(closeForm.getByLabelText('사유 (필수)'), '보증 없는 계약');
-    await userEvent.click(closeForm.getByRole('button', { name: '확인' }));
-    await expect(await canvas.findByText("'종료' 상태로 바꿨습니다")).toBeInTheDocument();
+// 재오픈은 사유가 필요하고, 보증 종료 예정일이 지난 뒤의 종료는 사유 없이 할 수 있다
+export const ReopenThenCloseAfterWarrantyEnd: Story = {
+  parameters: { router: routerFor('C동 환기 설비') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
 
     await userEvent.click(await canvas.findByRole('button', { name: '재오픈' }));
 
     const reopenForm = within(await canvas.findByRole('form', { name: '재오픈 확인' }));
 
+    await userEvent.click(reopenForm.getByRole('button', { name: '확인' }));
+    await expect(await reopenForm.findByText('사유를 입력해 주세요')).toBeInTheDocument();
+
     await userEvent.type(reopenForm.getByLabelText('사유 (필수)'), '고객 재보수 요청');
     await userEvent.click(reopenForm.getByRole('button', { name: '확인' }));
     await expect(await canvas.findByText("'보증 중' 상태로 바꿨습니다")).toBeInTheDocument();
+
+    await userEvent.click(await canvas.findByRole('button', { name: '종료 처리' }));
+
+    const closeForm = within(await canvas.findByRole('form', { name: '종료 처리 확인' }));
+
+    // 종료 예정일(2026-06-18)이 지났으므로 사유는 선택
+    await expect(closeForm.getByLabelText('사유 (선택)')).toBeInTheDocument();
+    await userEvent.click(closeForm.getByRole('button', { name: '확인' }));
+    await expect(await canvas.findByText("'종료' 상태로 바꿨습니다")).toBeInTheDocument();
   },
 };
 
