@@ -38,57 +38,59 @@ enum LegalDocumentType {
 }
 
 model Company {
-  id                      String                      @id @default(dbgenerated("uuidv7()")) @db.Uuid
-  name                    String
-  status                  CompanyStatus               @default(ACTIVE)
+  id                         String                      @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  name                       String
+  status                     CompanyStatus               @default(ACTIVE)
   // 회사별 저장 용량 한도(바이트). 운영자가 서버 용량에 맞춰 조정 (서비스 기획서 §12.1)
-  storageQuotaBytes       BigInt                      @default(5368709120) @map("storage_quota_bytes")
-  createdAt               DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
-  users                   User[]
-  sessions                Session[]
-  consents                Consent[]
-  credentials             UserCredential[]
-  invitations             Invitation[]
-  operatorActions         OperatorAction[]
-  emailVerifications      EmailVerification[]
-  passwordResets          PasswordReset[]
-  settings                CompanySettings?
-  socialAccounts          SocialAccount[]
-  closure                 CompanyClosure?
-  optionItems             OptionItem[]
-  employees               Employee[]
-  partners                Partner[]
-  projects                Project[]
-  projectTrades           ProjectTrade[]
-  projectCodeSequences    ProjectCodeSequence[]
-  projectStatusChanges    ProjectStatusChange[]
-  projectProgressRecords  ProjectProgressRecord[]
-  employeePayRates        EmployeePayRate[]
-  changeWorks             ChangeWork[]
-  changeWorkStatusChanges ChangeWorkStatusChange[]
-  changeWorkDocuments     ChangeWorkDocument[]
-  projectWarranties       ProjectWarranty[]
-  projectWarrantyChanges  ProjectWarrantyChange[]
-  warrantyCertificates    WarrantyCertificate[]
-  repairRequests          RepairRequest[]
-  repairStatusChanges     RepairRequestStatusChange[]
-  repairLinks             RepairRequestLink[]
-  monthlyCloses           MonthlyClose[]
-  monthlyCloseEvents      MonthlyCloseEvent[]
-  alertPreferences        AlertPreference[]
-  projectAssignments      ProjectAssignment[]
-  projectPeriodChanges    ProjectPeriodChange[]
-  workLogs                WorkLog[]
-  files                   StoredFile[]
-  photos                  Photo[]
-  memos                   Memo[]
-  materials               Material[]
-  documents               Document[]
-  documentVersions        DocumentVersion[]
-  auditLogs               AuditLog[]
-  materialRecords         MaterialRecord[]
-  workLogEntries          WorkLogEntry[]
-  workLogRevisions        WorkLogRevision[]
+  storageQuotaBytes          BigInt                      @default(5368709120) @map("storage_quota_bytes")
+  createdAt                  DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  users                      User[]
+  sessions                   Session[]
+  consents                   Consent[]
+  credentials                UserCredential[]
+  invitations                Invitation[]
+  operatorActions            OperatorAction[]
+  emailVerifications         EmailVerification[]
+  passwordResets             PasswordReset[]
+  settings                   CompanySettings?
+  socialAccounts             SocialAccount[]
+  closure                    CompanyClosure?
+  optionItems                OptionItem[]
+  employees                  Employee[]
+  partners                   Partner[]
+  projects                   Project[]
+  projectTrades              ProjectTrade[]
+  projectCodeSequences       ProjectCodeSequence[]
+  projectStatusChanges       ProjectStatusChange[]
+  projectProgressRecords     ProjectProgressRecord[]
+  employeePayRates           EmployeePayRate[]
+  changeWorks                ChangeWork[]
+  changeWorkStatusChanges    ChangeWorkStatusChange[]
+  changeWorkDocuments        ChangeWorkDocument[]
+  projectWarranties          ProjectWarranty[]
+  projectWarrantyChanges     ProjectWarrantyChange[]
+  warrantyCertificates       WarrantyCertificate[]
+  repairRequests             RepairRequest[]
+  repairStatusChanges        RepairRequestStatusChange[]
+  repairLinks                RepairRequestLink[]
+  monthlyCloses              MonthlyClose[]
+  monthlyCloseEvents         MonthlyCloseEvent[]
+  alertPreferences           AlertPreference[]
+  projectAssignments         ProjectAssignment[]
+  projectPeriodChanges       ProjectPeriodChange[]
+  workLogs                   WorkLog[]
+  files                      StoredFile[]
+  photos                     Photo[]
+  memos                      Memo[]
+  materials                  Material[]
+  documents                  Document[]
+  documentVersions           DocumentVersion[]
+  auditLogs                  AuditLog[]
+  materialRecords            MaterialRecord[]
+  workLogEntries             WorkLogEntry[]
+  workLogRevisions           WorkLogRevision[]
+  employeeCredentials        EmployeeCredential[]
+  projectRequiredCredentials ProjectRequiredCredential[]
 
   @@map("companies")
 }
@@ -109,34 +111,34 @@ enum ProjectStatus {
 // 프로젝트 (서비스 기획서 §10.2). 계약 금액은 저장하지 않음
 // 고객·담당자·공종은 같은 회사의 명부·직원·선택 목록만 복합 키로 가리킬 수 있음
 model Project {
-  companyId            String                  @map("company_id") @db.Uuid
-  id                   String                  @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId            String                      @map("company_id") @db.Uuid
+  id                   String                      @default(dbgenerated("uuidv7()")) @db.Uuid
   // 회사별 자동 번호 (예: 2026-012). 등록 때 정해지고 수정할 수 없음
   code                 String
   name                 String
-  status               ProjectStatus           @default(PLANNED)
-  siteName             String                  @map("site_name")
-  siteAddress          String?                 @map("site_address")
-  siteMapUrl           String?                 @map("site_map_url")
-  siteContactName      String?                 @map("site_contact_name")
-  siteContactPhone     String?                 @map("site_contact_phone")
+  status               ProjectStatus               @default(PLANNED)
+  siteName             String                      @map("site_name")
+  siteAddress          String?                     @map("site_address")
+  siteMapUrl           String?                     @map("site_map_url")
+  siteContactName      String?                     @map("site_contact_name")
+  siteContactPhone     String?                     @map("site_contact_phone")
   // 출입 방법, 주차, 작업 시간 제한 등
-  accessMemo           String?                 @map("access_memo")
-  clientId             String                  @map("client_id") @db.Uuid
-  managerId            String                  @map("manager_id") @db.Uuid
-  contractDate         DateTime                @map("contract_date") @db.Date
+  accessMemo           String?                     @map("access_memo")
+  clientId             String                      @map("client_id") @db.Uuid
+  managerId            String                      @map("manager_id") @db.Uuid
+  contractDate         DateTime                    @map("contract_date") @db.Date
   // 시작·종료 예정일은 작업일지를 입력할 수 있는 기간이 됨
-  plannedStart         DateTime                @map("planned_start") @db.Date
-  plannedEnd           DateTime                @map("planned_end") @db.Date
+  plannedStart         DateTime                    @map("planned_start") @db.Date
+  plannedEnd           DateTime                    @map("planned_end") @db.Date
   // 실제 시작일·완료일은 상태를 바꿀 때 기록됨 (직접 수정하지 않음)
-  actualStart          DateTime?               @map("actual_start") @db.Date
-  actualEnd            DateTime?               @map("actual_end") @db.Date
+  actualStart          DateTime?                   @map("actual_start") @db.Date
+  actualEnd            DateTime?                   @map("actual_end") @db.Date
   memo                 String?
-  createdAt            DateTime                @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt            DateTime                @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company              Company                 @relation(fields: [companyId], references: [id])
-  client               Partner                 @relation("ProjectClient", fields: [companyId, clientId], references: [companyId, id], onDelete: Restrict)
-  manager              Employee                @relation("ProjectManager", fields: [companyId, managerId], references: [companyId, id], onDelete: Restrict)
+  createdAt            DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt            DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company              Company                     @relation(fields: [companyId], references: [id])
+  client               Partner                     @relation("ProjectClient", fields: [companyId, clientId], references: [companyId, id], onDelete: Restrict)
+  manager              Employee                    @relation("ProjectManager", fields: [companyId, managerId], references: [companyId, id], onDelete: Restrict)
   trades               ProjectTrade[]
   statusChanges        ProjectStatusChange[]
   progressRecords      ProjectProgressRecord[]
@@ -145,6 +147,7 @@ model Project {
   warrantyChanges      ProjectWarrantyChange[]
   warrantyCertificates WarrantyCertificate[]
   repairRequests       RepairRequest[]
+  requiredCredentials  ProjectRequiredCredential[]
   assignments          ProjectAssignment[]
   periodChanges        ProjectPeriodChange[]
   workLogs             WorkLog[]
@@ -433,6 +436,7 @@ model User {
   projectWarranties       ProjectWarranty[]           @relation("ProjectWarrantyUpdatedBy")
   projectWarrantyChanges  ProjectWarrantyChange[]     @relation("ProjectWarrantyChangedBy")
   warrantyCertificates    WarrantyCertificate[]       @relation("WarrantyCertificateCreatedBy")
+  employeeCredentials     EmployeeCredential[]        @relation("EmployeeCredentialCreatedBy")
   repairRequests          RepairRequest[]             @relation("RepairRequestCreatedBy")
   repairStatusChanges     RepairRequestStatusChange[] @relation("RepairStatusChangedBy")
   repairLinks             RepairRequestLink[]         @relation("RepairLinkLinkedBy")
@@ -618,6 +622,7 @@ enum OptionKind {
   WORK_CATEGORY
   TRADE
   WORKER_TYPE
+  CREDENTIAL_TYPE
 
   @@map("option_kind")
 }
@@ -625,21 +630,23 @@ enum OptionKind {
 // 회사별 선택 목록 항목. 쓰지 않는 항목은 삭제하지 않고 숨김(is_active=false)으로 두어 기록에 쓰인 이름이 사라지지 않게 함
 // name_key는 공백·대소문자 차이를 없앤 비교용 값으로 같은 이름의 중복을 막음
 model OptionItem {
-  companyId             String           @map("company_id") @db.Uuid
-  id                    String           @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId             String                      @map("company_id") @db.Uuid
+  id                    String                      @default(dbgenerated("uuidv7()")) @db.Uuid
   kind                  OptionKind
   name                  String
-  nameKey               String           @map("name_key")
-  sortOrder             Int              @map("sort_order")
-  isActive              Boolean          @default(true) @map("is_active")
-  createdAt             DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt             DateTime         @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company               Company          @relation(fields: [companyId], references: [id])
-  employeesAsJobType    Employee[]       @relation("EmployeeJobType")
-  employeesAsWorkerType Employee[]       @relation("EmployeeWorkerType")
-  projectTrades         ProjectTrade[]   @relation("ProjectTradeOption")
-  workLogEntries        WorkLogEntry[]   @relation("WorkLogEntryCategory")
-  materialRecords       MaterialRecord[] @relation("MaterialRecordCategory")
+  nameKey               String                      @map("name_key")
+  sortOrder             Int                         @map("sort_order")
+  isActive              Boolean                     @default(true) @map("is_active")
+  createdAt             DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company               Company                     @relation(fields: [companyId], references: [id])
+  employeesAsJobType    Employee[]                  @relation("EmployeeJobType")
+  employeesAsWorkerType Employee[]                  @relation("EmployeeWorkerType")
+  projectTrades         ProjectTrade[]              @relation("ProjectTradeOption")
+  workLogEntries        WorkLogEntry[]              @relation("WorkLogEntryCategory")
+  materialRecords       MaterialRecord[]            @relation("MaterialRecordCategory")
+  credentials           EmployeeCredential[]        @relation("CredentialType")
+  requiredByProjects    ProjectRequiredCredential[] @relation("RequiredCredentialType")
 
   @@id([companyId, id])
   @@unique([companyId, kind, nameKey])
@@ -659,28 +666,30 @@ enum EmployeeStatus {
 // 직원 카드. 직원은 서비스에 로그인하지 않으며 관리자가 기록한다 (서비스 기획서 §8)
 // 주민등록번호·계좌번호·급여는 저장하지 않음. 목록 API에는 생년월일·연락처를 내보내지 않고 카드(상세)에서만 보여 줌
 model Employee {
-  companyId       String              @map("company_id") @db.Uuid
-  id              String              @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId       String               @map("company_id") @db.Uuid
+  id              String               @default(dbgenerated("uuidv7()")) @db.Uuid
   name            String
   // 직책(표시용: 반장, 기공, 조공 등)
   title           String?
-  jobTypeId       String?             @map("job_type_id") @db.Uuid
-  workerTypeId    String?             @map("worker_type_id") @db.Uuid
-  status          EmployeeStatus      @default(ACTIVE)
-  hiredOn         DateTime?           @map("hired_on") @db.Date
-  leftOn          DateTime?           @map("left_on") @db.Date
-  birthDate       DateTime?           @map("birth_date") @db.Date
+  jobTypeId       String?              @map("job_type_id") @db.Uuid
+  workerTypeId    String?              @map("worker_type_id") @db.Uuid
+  status          EmployeeStatus       @default(ACTIVE)
+  hiredOn         DateTime?            @map("hired_on") @db.Date
+  leftOn          DateTime?            @map("left_on") @db.Date
+  birthDate       DateTime?            @map("birth_date") @db.Date
   phone           String?
   memo            String?
-  createdAt       DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company         Company             @relation(fields: [companyId], references: [id])
-  jobType         OptionItem?         @relation("EmployeeJobType", fields: [companyId, jobTypeId], references: [companyId, id], onDelete: Restrict)
-  managedProjects Project[]           @relation("ProjectManager")
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company              @relation(fields: [companyId], references: [id])
+  jobType         OptionItem?          @relation("EmployeeJobType", fields: [companyId, jobTypeId], references: [companyId, id], onDelete: Restrict)
+  managedProjects Project[]            @relation("ProjectManager")
   workLogEntries  WorkLogEntry[]
   assignments     ProjectAssignment[]
   payRates        EmployeePayRate[]
-  workerType      OptionItem?         @relation("EmployeeWorkerType", fields: [companyId, workerTypeId], references: [companyId, id], onDelete: Restrict)
+  files           StoredFile[]
+  credentials     EmployeeCredential[]
+  workerType      OptionItem?          @relation("EmployeeWorkerType", fields: [companyId, workerTypeId], references: [companyId, id], onDelete: Restrict)
 
   @@id([companyId, id])
   @@index([companyId, status])
@@ -767,6 +776,7 @@ model CompanyClosure {
 enum FilePurpose {
   PHOTO
   DOCUMENT
+  EMPLOYEE_DOCUMENT
 
   @@map("file_purpose")
 }
@@ -792,33 +802,38 @@ enum FileRejectReason {
 
 // 업로드 파일의 메타데이터 (실제 내용은 객체 저장소). 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남긴다 (서비스 기획서 §12.1)
 model StoredFile {
-  companyId       String            @map("company_id") @db.Uuid
-  id              String            @default(dbgenerated("uuidv7()")) @db.Uuid
-  projectId       String            @map("project_id") @db.Uuid
+  companyId       String               @map("company_id") @db.Uuid
+  id              String               @default(dbgenerated("uuidv7()")) @db.Uuid
+  // 직원 서류 파일은 프로젝트가 아니라 직원에 붙는다 (둘 중 하나만 채움)
+  projectId       String?              @map("project_id") @db.Uuid
+  employeeId      String?              @map("employee_id") @db.Uuid
   purpose         FilePurpose
-  status          FileStatus        @default(PENDING)
-  originalName    String            @map("original_name")
+  status          FileStatus           @default(PENDING)
+  originalName    String               @map("original_name")
   // 신청 때는 브라우저가 알려 준 형식, 사용 가능해진 뒤에는 내용으로 판별한 형식
-  contentType     String            @map("content_type")
+  contentType     String               @map("content_type")
   // 신청한 크기. 올라온 크기와 다르면 거부
-  sizeBytes       BigInt            @map("size_bytes")
-  objectKey       String            @map("object_key")
-  thumbnailKey    String?           @map("thumbnail_key")
+  sizeBytes       BigInt               @map("size_bytes")
+  objectKey       String               @map("object_key")
+  thumbnailKey    String?              @map("thumbnail_key")
   sha256          String?
-  rejectReason    FileRejectReason? @map("reject_reason")
-  uploadedBy      String            @map("uploaded_by") @db.Uuid
-  createdAt       DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt       DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  readyAt         DateTime?         @map("ready_at") @db.Timestamptz(3)
-  company         Company           @relation(fields: [companyId], references: [id])
-  project         Project           @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
-  uploader        User              @relation("FileUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
+  rejectReason    FileRejectReason?    @map("reject_reason")
+  uploadedBy      String               @map("uploaded_by") @db.Uuid
+  createdAt       DateTime             @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime             @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  readyAt         DateTime?            @map("ready_at") @db.Timestamptz(3)
+  company         Company              @relation(fields: [companyId], references: [id])
+  project         Project?             @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  employee        Employee?            @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  uploader        User                 @relation("FileUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
   photo           Photo?
   documentVersion DocumentVersion?
+  credentials     EmployeeCredential[]
 
   @@id([companyId, id])
   @@unique([objectKey])
   @@index([companyId, projectId, purpose])
+  @@index([companyId, employeeId])
   @@index([companyId, status])
   @@map("files")
 }
@@ -997,6 +1012,7 @@ enum AuditAction {
   PAY_RATE_VIEWED
   PAY_RATE_CHANGED
   LABOR_COST_VIEWED
+  EMPLOYEE_DOCUMENT_VIEWED
 
   @@map("audit_action")
 }
@@ -1354,6 +1370,47 @@ model MonthlyCloseEvent {
   @@id([companyId, id])
   @@index([companyId, month, createdAt])
   @@map("monthly_close_events")
+}
+
+// 직원 서류·자격 (서비스 기획서 §8.4): 자격증·안전교육 이수증·건강검진 서류 등. 종류는 회사가 관리하는 목록(CREDENTIAL_TYPE)
+// 만료일이 없으면 만료 없는 서류. 지울 때는 removed_at만 기록하고, 파일은 직원 서류 용도로 올린 것을 연결
+model EmployeeCredential {
+  companyId  String      @map("company_id") @db.Uuid
+  id         String      @default(dbgenerated("uuidv7()")) @db.Uuid
+  employeeId String      @map("employee_id") @db.Uuid
+  typeId     String      @map("type_id") @db.Uuid
+  issuedOn   DateTime?   @map("issued_on") @db.Date
+  expiresOn  DateTime?   @map("expires_on") @db.Date
+  fileId     String?     @map("file_id") @db.Uuid
+  memo       String?
+  createdBy  String      @map("created_by") @db.Uuid
+  createdAt  DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt  DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  removedAt  DateTime?   @map("removed_at") @db.Timestamptz(3)
+  company    Company     @relation(fields: [companyId], references: [id])
+  employee   Employee    @relation(fields: [companyId, employeeId], references: [companyId, id], onDelete: Restrict)
+  type       OptionItem  @relation("CredentialType", fields: [companyId, typeId], references: [companyId, id], onDelete: Restrict)
+  file       StoredFile? @relation(fields: [companyId, fileId], references: [companyId, id], onDelete: Restrict)
+  user       User        @relation("EmployeeCredentialCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, employeeId])
+  @@index([companyId, expiresOn])
+  @@map("employee_credentials")
+}
+
+// 프로젝트의 필요 자격 (서비스 기획서 §10.1): 투입 배정 때 자격이 없거나 만료된 직원을 경고하는 기준
+model ProjectRequiredCredential {
+  companyId String     @map("company_id") @db.Uuid
+  projectId String     @map("project_id") @db.Uuid
+  typeId    String     @map("type_id") @db.Uuid
+  createdAt DateTime   @default(now()) @map("created_at") @db.Timestamptz(3)
+  company   Company    @relation(fields: [companyId], references: [id])
+  project   Project    @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  type      OptionItem @relation("RequiredCredentialType", fields: [companyId, typeId], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, projectId, typeId])
+  @@map("project_required_credentials")
 }
 
 // 알림 종류 (서비스 기획서 §15.3). 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산하며, 종류별로 켜고 끈다

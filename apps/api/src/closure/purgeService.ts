@@ -63,6 +63,11 @@ export const purgeCompany = (
     // 변경 작업의 증빙 연결·상태 이력은 문서·변경 작업을 참조하므로 그보다 먼저 지움
     deleted.monthly_close_events = (await tx.monthlyCloseEvent.deleteMany({ where })).count;
     deleted.monthly_closes = (await tx.monthlyClose.deleteMany({ where })).count;
+    // 직원 서류는 파일·직원·선택 목록을, 필요 자격은 프로젝트·선택 목록을 참조하므로 그보다 먼저 지움
+    deleted.employee_credentials = (await tx.employeeCredential.deleteMany({ where })).count;
+    deleted.project_required_credentials = (
+      await tx.projectRequiredCredential.deleteMany({ where })
+    ).count;
     // 보수 요청의 연결·상태 이력은 일지·자재 기록·보수 요청을 참조하므로 그보다 먼저 지움
     deleted.repair_request_links = (await tx.repairRequestLink.deleteMany({ where })).count;
     deleted.repair_request_status_changes = (

@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
+import { resetMockCredentials } from '../mocks/credentialHandlers';
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { findAccount, getProjects, saveProjects, signIn } from '../mocks/state';
 
@@ -15,7 +16,13 @@ const meta = {
   title: 'Pages/프로젝트 카드',
   component: ProjectCardPage,
   parameters: { router: routerFor('A동 외장 판금 공사') },
-  loaders: [() => signIn('hanbit')],
+  loaders: [
+    () => {
+      // 스토리가 다시 그려져도 필요 자격 상태가 이어지지 않게 처음으로 되돌림
+      resetMockCredentials();
+      signIn('hanbit');
+    },
+  ],
 } satisfies Meta<typeof ProjectCardPage>;
 
 export default meta;
@@ -828,5 +835,36 @@ export const LaborCostPanel: Story = {
     // 더미 단가가 없는 직원의 공수는 합계에서 빠지고 안내된다
     await expect(await panel.findByText(/단가가 없어 합계에서 빠진 공수/)).toBeInTheDocument();
     await expect(panel.getAllByText(/\d원$/).length).toBeGreaterThan(0);
+  },
+};
+
+export const RequiredCredentials: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '필요 자격' }));
+
+    // 더미: A동은 안전교육 이수증이 필요. 저장하기 전에는 버튼이 꺼져 있다
+    const safety = await panel.findByRole('checkbox', { name: '안전교육 이수증' });
+
+    await expect(safety).toBeChecked();
+    await expect(panel.getByRole('checkbox', { name: '용접 기능사' })).not.toBeChecked();
+    await expect(panel.getByRole('button', { name: '필요 자격 저장' })).toBeDisabled();
+
+    await userEvent.click(panel.getByRole('checkbox', { name: '용접 기능사' }));
+    await userEvent.click(panel.getByRole('button', { name: '필요 자격 저장' }));
+
+    await expect(await panel.findByText('필요 자격을 저장했습니다')).toBeInTheDocument();
+    await expect(panel.getByRole('checkbox', { name: '용접 기능사' })).toBeChecked();
+  },
+};
+
+export const CredentialWarnings: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 필요 자격(안전교육 이수증)이 없는 투입 직원에게 경고가 붙는다
+    await expect(
+      (await canvas.findAllByText(/필요 자격 '안전교육 이수증': 자격 없음/)).length,
+    ).toBeGreaterThan(0);
   },
 };

@@ -191,6 +191,7 @@ export const AUDIT_ACTIONS = [
   'PAY_RATE_VIEWED',
   'PAY_RATE_CHANGED',
   'LABOR_COST_VIEWED',
+  'EMPLOYEE_DOCUMENT_VIEWED',
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
@@ -204,6 +205,7 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   PAY_RATE_VIEWED: '단가 조회',
   PAY_RATE_CHANGED: '단가 변경',
   LABOR_COST_VIEWED: '인건비 조회',
+  EMPLOYEE_DOCUMENT_VIEWED: '직원 서류 열람',
 };
 
 // 민감 자료 열람 기록 (수정·삭제할 수 없는 감사 기록, 서비스 기획서 §13.1)

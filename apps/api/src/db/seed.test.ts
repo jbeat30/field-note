@@ -3,6 +3,8 @@ import {
   DEMO_ASSIGNMENTS,
   DEMO_CHANGE_WORKS,
   DEMO_REPAIRS,
+  DEMO_CREDENTIALS,
+  DEMO_REQUIRED_CREDENTIALS,
   DEMO_WARRANTIES,
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
@@ -295,6 +297,23 @@ describe('seedDemoData', () => {
 
     expect(rows.every((row) => row.project.companyId === row.companyId)).toBe(true);
     expect(rows.every((row) => row.status === 'DONE' && row.resolvedOn !== null)).toBe(true);
+  });
+
+  it('더미 직원 서류와 필요 자격을 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.employeeCredential.count()).toBe(DEMO_CREDENTIALS.length);
+    expect(await db.owner.projectRequiredCredential.count()).toBe(
+      DEMO_REQUIRED_CREDENTIALS.reduce((sum, item) => sum + item.typeNames.length, 0),
+    );
+
+    const rows = await db.owner.employeeCredential.findMany({
+      include: { employee: true, type: true },
+    });
+
+    expect(rows.every((row) => row.employee.companyId === row.companyId)).toBe(true);
+    expect(rows.every((row) => row.type.kind === 'CREDENTIAL_TYPE')).toBe(true);
   });
 
   it('더미 보증 설정을 이력과 함께 넣고 다시 실행해도 늘지 않는다', async () => {

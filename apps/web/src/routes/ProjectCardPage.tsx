@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { PinnedDocuments } from '../documents/PinnedDocuments';
+import { RequiredCredentialsPanel } from '../credentials/RequiredCredentialsPanel';
 import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
 import { ProjectForm } from '../projects/ProjectForm';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
@@ -135,6 +136,7 @@ export const ProjectCardPage = () => {
       </Link>
       <PinnedDocuments projectId={project.data.id} />
       <ProjectStatusPanel project={project.data} />
+      <RequiredCredentialsPanel projectId={project.data.id} />
       <ProjectAssignmentsPanel project={project.data} />
       <ProjectProgressPanel projectId={project.data.id} status={project.data.status} />
 

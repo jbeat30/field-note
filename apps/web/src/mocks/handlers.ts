@@ -149,6 +149,7 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
+import { createCredentialHandlers, mockCredentialWarnings } from './credentialHandlers';
 import { createMonthlyHandlers, mockMonthLockCheck } from './monthlyHandlers';
 import { countMockRepairs, createRepairHandlers } from './repairHandlers';
 import {
@@ -317,7 +318,7 @@ const sortedProgress = (records: ProgressRecord[]) =>
     (a, b) => b.recordedOn.localeCompare(a.recordedOn) || b.createdAt.localeCompare(a.createdAt),
   );
 
-// 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음)
+// 같은 날 다른 프로젝트에 겹쳐 배정되거나 필요 자격이 없는·휴직·퇴사 직원이면 경고 (막지는 않음)
 const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
   if (row.cancelledAt) return { ...row, warnings: [] as AssignmentWarning[] };
 
@@ -345,6 +346,14 @@ const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
       });
     }
   }
+
+  // 프로젝트 필요 자격이 없거나 만료된 직원 (서비스 기획서 §8.4)
+  warnings.push(
+    ...mockCredentialWarnings(account, row.projectId, row.employeeId, {
+      from: row.startDate,
+      to: row.endDate,
+    }),
+  );
 
   const status = getEmployees(account).find((item) => item.id === row.employeeId)?.status;
 
@@ -419,6 +428,7 @@ export const handlers = [
   ...createWarrantyHandlers({ apiError, parseBody }),
   ...createRepairHandlers({ apiError, parseBody }),
   ...createMonthlyHandlers({ apiError, parseBody }),
+  ...createCredentialHandlers({ apiError, parseBody }),
   ...createCompletionHandlers({ apiError }),
   ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),

@@ -1,6 +1,7 @@
 import {
   assignmentStatusCheck,
   checkAssignmentPeriod,
+  findCredentialGaps,
   overlapRange,
   type Assignment,
   type AssignmentCancel,
@@ -63,7 +64,7 @@ const warningsFor = async (tx: Prisma.TransactionClient, rows: Row[]) => {
     return warnings;
   }
 
-  const [employees, others] = await Promise.all([
+  const [employees, others, required, held] = await Promise.all([
     tx.employee.findMany({
       where: { id: { in: employeeIds } },
       select: { id: true, status: true },
@@ -76,6 +77,15 @@ const warningsFor = async (tx: Prisma.TransactionClient, rows: Row[]) => {
         project: { status: { not: 'CANCELLED' } },
       },
       include: { project: { select: { id: true, code: true, name: true } } },
+    }),
+    // 프로젝트 필요 자격과 직원의 서류 (지운 서류 제외)
+    tx.projectRequiredCredential.findMany({
+      where: { projectId: { in: [...new Set(rows.map((row) => row.projectId))] } },
+      include: { type: { select: { name: true } } },
+    }),
+    tx.employeeCredential.findMany({
+      where: { employeeId: { in: employeeIds }, removedAt: null },
+      select: { employeeId: true, typeId: true, expiresOn: true },
     }),
   ]);
   const status = new Map(employees.map((employee) => [employee.id, employee.status]));
@@ -98,6 +108,31 @@ const warningsFor = async (tx: Prisma.TransactionClient, rows: Row[]) => {
           projectCode: other.project.code,
           projectName: other.project.name,
           ...range,
+        });
+      }
+    }
+
+    // 필요 자격이 없거나 만료된 직원 (취소한 투입은 제외, 서비스 기획서 §8.4)
+    if (!row.cancelledAt) {
+      const needed = required.filter((item) => item.projectId === row.projectId);
+      const gaps = findCredentialGaps(
+        needed.map((item) => item.typeId),
+        held
+          .filter((item) => item.employeeId === row.employeeId)
+          .map((item) => ({
+            typeId: item.typeId,
+            expiresOn: item.expiresOn ? fromDate(item.expiresOn) : null,
+          })),
+        { from: fromDate(row.startDate), to: fromDate(row.endDate) },
+      );
+
+      for (const gap of gaps) {
+        list.push({
+          type: 'CREDENTIAL',
+          typeId: gap.typeId,
+          typeName: needed.find((item) => item.typeId === gap.typeId)!.type.name,
+          reason: gap.reason,
+          expiresOn: gap.expiresOn,
         });
       }
     }
