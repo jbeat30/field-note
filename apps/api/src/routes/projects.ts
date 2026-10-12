@@ -121,7 +121,8 @@ export const registerProjectRoutes = (registry: RouteRegistry, projects?: Projec
     {
       method: 'post',
       path: '/projects/{id}/status',
-      summary: '프로젝트 상태 전환 (예정 → 진행 → 중단·완료, 취소). 날짜·사유와 함께 이력에 남음',
+      summary:
+        '프로젝트 상태 전환 (예정 → 진행 → 중단·완료 → 보증 중 → 종료, 취소, 종료 재오픈). 날짜·사유와 함께 이력에 남음',
       auth: 'required',
       request: { params: projectParamsSchema, body: projectTransitionSchema },
       response: { status: 200, schema: projectDetailSchema },

@@ -246,11 +246,13 @@ export const projectUpdateSchema = z
 
 export type ProjectUpdate = z.infer<typeof projectUpdateSchema>;
 
-// 상태 전환 요청: 바꿀 상태와 그 일이 실제로 일어난 날(생략하면 오늘), 중단·취소는 사유 필수
+// 상태 전환 요청: 바꿀 상태와 그 일이 실제로 일어난 날(생략하면 오늘), 중단·취소·종료·재오픈은 사유 필수
+// 완료 → 보증 중은 프로젝트 요약을 확인했다는 표시(confirmSummary)가 필요
 export const projectTransitionSchema = z.object({
   toStatus: projectStatusSchema,
   effectiveOn: dateSchema.optional(),
   reason: z.string().trim().max(500, '사유는 500자까지 입력할 수 있습니다').nullish(),
+  confirmSummary: z.boolean().optional(),
 });
 
 export type ProjectTransition = z.infer<typeof projectTransitionSchema>;

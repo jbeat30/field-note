@@ -11,6 +11,14 @@ import { createAssignmentService } from '../assignment/assignmentService';
 import { createAccountService } from '../auth/accountService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createOptionService } from '../company/optionService';
+import { createCredentialService } from '../credential/credentialService';
+import { createDocumentService } from '../document/documentService';
+import { createFileService } from '../file/fileService';
+import { createMonthlyService } from '../monthly/monthlyService';
+import { createRepairService } from '../repair/repairService';
+import { createWarrantyService } from '../warranty/warrantyService';
+import { createMemoryQueue } from '../queue/jobQueue';
+import { createMemoryStorage } from '../storage/objectStorage';
 import { createDashboardService } from '../dashboard/dashboardService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createEmployeeService } from '../employee/employeeService';
@@ -51,6 +59,7 @@ afterAll(async () => {
 
 const app = () => {
   const assignments = createAssignmentService(db.app);
+  const memory = createMemoryStorage();
 
   return createApp({
     sessionStore: createPrismaSessionStore(db.auth),
@@ -64,6 +73,17 @@ const app = () => {
     memos: createMemoService(db.app, () => NOW),
     progress: createProgressService(db.app, () => NOW),
     changeWorks: createChangeWorkService(db.app, () => NOW),
+    files: createFileService({
+      app: db.app,
+      storage: memory.storage,
+      queue: createMemoryQueue().queue,
+      now: () => NOW,
+    }),
+    documents: createDocumentService(db.app, memory.storage, () => NOW),
+    warranty: createWarrantyService(db.app, () => NOW),
+    repairs: createRepairService(db.app, () => NOW),
+    monthly: createMonthlyService(db.app, () => NOW),
+    credentials: createCredentialService({ app: db.app, storage: memory.storage, now: () => NOW }),
     dashboard: createDashboardService(db.app, assignments, () => NOW),
     appOrigin: 'http://localhost:5173',
   });
@@ -190,11 +210,13 @@ describe('GET /dashboard', () => {
       activeProjects: [],
       risks: [],
       week: { from: '2026-10-05', to: '2026-10-11', conflicts: [] },
-      todos: { draftLogCount: 0, staleInboxCount: 0 },
+      todos: { draftLogCount: 0, staleInboxCount: 0, unclosedMonth: null },
+      warranty: { ending: [], openRepairCount: 0 },
+      expiring: { certificates: [], credentials: [] },
     });
     // 직원 세 명(박소장·김작업·이작업)은 이번 주 내내 비어 있다
     expect(dashboard.week.freeCount).toBe(3);
-    expect(settings.items).toHaveLength(7);
+    expect(settings.items).toHaveLength(12);
     expect(settings.items.every((item) => item.enabled)).toBe(true);
   });
 
@@ -411,7 +433,7 @@ describe('알림 설정', () => {
     });
     // 보내지 않은 종류는 그대로 켜짐
     expect(alertSettingsSchema.parse(saved.body).items.filter((item) => item.enabled)).toHaveLength(
-      6,
+      11,
     );
 
     const off = await client.dashboard();
@@ -470,5 +492,146 @@ describe('알림 설정', () => {
     await expect(
       db.app.$executeRawUnsafe(`UPDATE alert_preferences SET kind = 'NO_LOG_TODAY'`),
     ).rejects.toThrow();
+  });
+});
+
+describe('4단계 알림·위젯', () => {
+  it('보증 종료 임박·미처리 보수·보증서·직원 서류 만료·월 미확정을 알리고 해결하면 사라진다', async () => {
+    const { client, worker, make, assign, category } = await setup();
+
+    // 보증 중 프로젝트: 완료 → 보증 중, 보증 2개월(종료 예정일 2026-11-20)
+    const warranty = await make(client, 'A동 판금 공사');
+
+    await client.send('post', `/projects/${warranty}/status`, {
+      toStatus: 'COMPLETED',
+      effectiveOn: '2026-09-20',
+    });
+    await client.send('post', `/projects/${warranty}/status`, {
+      toStatus: 'WARRANTY',
+      effectiveOn: '2026-09-21',
+      confirmSummary: true,
+    });
+    await client.send('put', `/projects/${warranty}/warranty`, {
+      months: 2,
+      startBasis: 'ACTUAL_END',
+      reason: '시험',
+    });
+    await client.send('post', `/projects/${warranty}/repair-requests`, {
+      receivedOn: '2026-10-05',
+      requester: '고객',
+      content: '누수',
+    });
+
+    const fileId = (
+      await client.send('post', `/projects/${warranty}/files`, {
+        name: '보증증권.pdf',
+        contentType: 'application/pdf',
+        purpose: 'DOCUMENT',
+        size: 1000,
+      })
+    ).body.file.id as string;
+    const documentId = await client.id(`/projects/${warranty}/documents`, {
+      fileId,
+      title: '보증증권',
+      category: 'OTHER',
+    });
+
+    await client.send('post', `/projects/${warranty}/warranty/certificates`, {
+      documentId,
+      expiresOn: '2026-10-25',
+    });
+
+    // 직원 서류: 용접 기능사 만료 임박, 같은 종류의 갱신본이 있는 안전교육은 알리지 않는다
+    const types = optionsResponseSchema
+      .parse((await client.get('/company/options')).body)
+      .items.filter((item) => item.kind === 'CREDENTIAL_TYPE');
+    const typeId = (name: string) => types.find((item) => item.name === name)!.id;
+
+    await client.send('post', `/employees/${worker}/credentials`, {
+      typeId: typeId('용접 기능사'),
+      expiresOn: '2026-10-20',
+    });
+    await client.send('post', `/employees/${worker}/credentials`, {
+      typeId: typeId('안전교육 이수증'),
+      expiresOn: '2026-10-01',
+    });
+    await client.send('post', `/employees/${worker}/credentials`, {
+      typeId: typeId('안전교육 이수증'),
+      expiresOn: '2027-10-01',
+    });
+
+    // 지난달(2026-09)에 저장한 일지가 있는데 확정하지 않음
+    const running = await make(client, 'B동 덕트 설치');
+
+    await assign(running, worker);
+    await client.saveLog(running, '2026-09-15', {
+      status: 'SAVED',
+      content: '9월 작업',
+      entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
+    });
+
+    const result = await client.dashboard();
+
+    expect(new Set(kinds(result))).toEqual(
+      new Set([
+        'WARRANTY_ENDING',
+        'REPAIR_UNHANDLED',
+        'CERTIFICATE_EXPIRING',
+        'CREDENTIAL_EXPIRING',
+        'MONTH_UNCLOSED',
+        'NO_LOG_TODAY',
+      ]),
+    );
+    expect(result.dashboard.warranty).toMatchObject({
+      ending: [{ projectId: warranty, endOn: '2026-11-20', daysLeft: 40 }],
+      openRepairCount: 1,
+    });
+    expect(result.dashboard.expiring.certificates).toMatchObject([
+      { title: '보증증권', expiresOn: '2026-10-25', daysLeft: 14 },
+    ]);
+    expect(result.dashboard.expiring.credentials).toMatchObject([
+      { employeeName: '김작업', typeName: '용접 기능사', daysLeft: 9 },
+    ]);
+    expect(result.dashboard.todos.unclosedMonth).toBe('2026-09');
+
+    // 월 공수를 확정하면 월 미확정이 사라지고 서류를 지우면 서류 알림도 사라진다
+    await client.send('post', '/monthly-hours/close', { month: '2026-09' });
+
+    const after = await client.dashboard();
+
+    expect(kinds(after)).not.toContain('MONTH_UNCLOSED');
+    expect(after.dashboard.todos.unclosedMonth).toBeNull();
+
+    // 알림을 끄면 알림에서만 빠지고 위젯은 그대로
+    await client.send('put', '/company/alert-settings', {
+      items: [
+        { kind: 'WARRANTY_ENDING', enabled: false },
+        { kind: 'CREDENTIAL_EXPIRING', enabled: false },
+      ],
+    });
+
+    const off = await client.dashboard();
+
+    expect(kinds(off)).not.toContain('WARRANTY_ENDING');
+    expect(kinds(off)).not.toContain('CREDENTIAL_EXPIRING');
+    expect(off.dashboard.warranty.ending).toHaveLength(1);
+    expect(off.dashboard.expiring.credentials).toHaveLength(1);
+  });
+
+  it('퇴사한 직원의 서류는 알리지 않는다', async () => {
+    const { client, worker2 } = await setup();
+    const types = optionsResponseSchema
+      .parse((await client.get('/company/options')).body)
+      .items.filter((item) => item.kind === 'CREDENTIAL_TYPE');
+    await client.send('post', `/employees/${worker2}/credentials`, {
+      typeId: types[0]!.id,
+      expiresOn: '2026-10-12',
+    });
+
+    expect(kinds(await client.dashboard())).toEqual(['CREDENTIAL_EXPIRING']);
+
+    await client.send('patch', `/employees/${worker2}`, { status: 'LEFT' });
+
+    expect(kinds(await client.dashboard())).toEqual([]);
   });
 });

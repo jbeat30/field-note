@@ -1,7 +1,11 @@
 import {
   ALERT_KINDS,
   INBOX_STALE_DAYS,
+  CERTIFICATE_EXPIRING_DAYS,
   assembleDashboard,
+  monthRange,
+  previousMonth,
+  shiftDate,
   todayInSeoul,
   weekRange,
   type AlertKind,
@@ -67,46 +71,121 @@ export const createDashboardService = (
           },
         });
         const ids = projects.map((project) => project.id);
-        const [plans, logs, records, todayRows, todayLogs, staleInbox, draftLogCount, changes] =
-          await Promise.all([
-            tx.projectAssignment.findMany({
-              where: { projectId: { in: ids }, cancelledAt: null, plannedMinutes: { not: null } },
-              select: { projectId: true, plannedMinutes: true },
-            }),
-            tx.workLog.findMany({
-              where: { projectId: { in: ids }, status: 'SAVED' },
-              select: { projectId: true, entries: { select: { minutes: true } } },
-            }),
-            tx.projectProgressRecord.findMany({
-              where: { projectId: { in: ids } },
-              orderBy: [{ recordedOn: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
-              select: { projectId: true, percent: true, recordedOn: true },
-            }),
-            tx.projectAssignment.findMany({
-              where: {
-                cancelledAt: null,
-                startDate: { lte: new Date(`${today}T00:00:00.000Z`) },
-                endDate: { gte: new Date(`${today}T00:00:00.000Z`) },
-                project: { status: 'IN_PROGRESS' },
-                employee: { status: 'ACTIVE' },
+        const prevMonth = previousMonth(today);
+        const prevRange = monthRange(prevMonth);
+        const [
+          plans,
+          logs,
+          records,
+          todayRows,
+          todayLogs,
+          staleInbox,
+          draftLogCount,
+          changes,
+          warranties,
+          openRepairs,
+          certificates,
+          credentials,
+          prevClose,
+          prevLogCount,
+        ] = await Promise.all([
+          tx.projectAssignment.findMany({
+            where: { projectId: { in: ids }, cancelledAt: null, plannedMinutes: { not: null } },
+            select: { projectId: true, plannedMinutes: true },
+          }),
+          tx.workLog.findMany({
+            where: { projectId: { in: ids }, status: 'SAVED' },
+            select: { projectId: true, entries: { select: { minutes: true } } },
+          }),
+          tx.projectProgressRecord.findMany({
+            where: { projectId: { in: ids } },
+            orderBy: [{ recordedOn: 'desc' }, { createdAt: 'desc' }, { id: 'desc' }],
+            select: { projectId: true, percent: true, recordedOn: true },
+          }),
+          tx.projectAssignment.findMany({
+            where: {
+              cancelledAt: null,
+              startDate: { lte: new Date(`${today}T00:00:00.000Z`) },
+              endDate: { gte: new Date(`${today}T00:00:00.000Z`) },
+              project: { status: 'IN_PROGRESS' },
+              employee: { status: 'ACTIVE' },
+            },
+            select: { projectId: true, employeeId: true },
+          }),
+          tx.workLog.findMany({
+            where: { workDate: new Date(`${today}T00:00:00.000Z`), status: 'SAVED' },
+            select: { projectId: true },
+          }),
+          tx.memo.aggregate({
+            where: { deletedAt: null, projectId: null, createdAt: { lte: staleBefore } },
+            _count: true,
+            _min: { createdAt: true },
+          }),
+          tx.workLog.count({ where: { status: 'DRAFT' } }),
+          tx.changeWork.findMany({
+            where: { status: 'NEGOTIATING' },
+            select: { id: true, projectId: true, seq: true, statusChangedOn: true },
+          }),
+          // 보증 중 프로젝트의 종료 예정일, 접수·처리 중 보수 요청
+          tx.projectWarranty.findMany({
+            where: { project: { status: 'WARRANTY' } },
+            select: {
+              endOn: true,
+              project: { select: { id: true, code: true, name: true } },
+            },
+          }),
+          tx.repairRequest.findMany({
+            where: { status: { in: ['RECEIVED', 'IN_PROGRESS'] } },
+            select: {
+              id: true,
+              projectId: true,
+              seq: true,
+              receivedOn: true,
+              status: true,
+              project: { select: { name: true } },
+            },
+          }),
+          // 보증서: 완료·보증 중 프로젝트의 지우지 않은 보증서 중 만료가 가까운 것
+          tx.warrantyCertificate.findMany({
+            where: {
+              removedAt: null,
+              expiresOn: {
+                lte: new Date(`${shiftDate(today, CERTIFICATE_EXPIRING_DAYS)}T00:00:00.000Z`),
               },
-              select: { projectId: true, employeeId: true },
-            }),
-            tx.workLog.findMany({
-              where: { workDate: new Date(`${today}T00:00:00.000Z`), status: 'SAVED' },
-              select: { projectId: true },
-            }),
-            tx.memo.aggregate({
-              where: { deletedAt: null, projectId: null, createdAt: { lte: staleBefore } },
-              _count: true,
-              _min: { createdAt: true },
-            }),
-            tx.workLog.count({ where: { status: 'DRAFT' } }),
-            tx.changeWork.findMany({
-              where: { status: 'NEGOTIATING' },
-              select: { id: true, projectId: true, seq: true, statusChangedOn: true },
-            }),
-          ]);
+              project: { status: { in: ['COMPLETED', 'WARRANTY'] } },
+              document: { deletedAt: null },
+            },
+            select: {
+              projectId: true,
+              expiresOn: true,
+              project: { select: { name: true } },
+              document: { select: { title: true } },
+            },
+          }),
+          // 직원 서류: 퇴사하지 않은 직원의 지우지 않은 서류 (갱신본이 있는지 보려고 만료일이 없는 것까지 모두)
+          tx.employeeCredential.findMany({
+            where: { removedAt: null, employee: { status: { not: 'LEFT' } } },
+            select: {
+              employeeId: true,
+              typeId: true,
+              expiresOn: true,
+              employee: { select: { name: true } },
+              type: { select: { name: true } },
+            },
+          }),
+          tx.monthlyClose.findFirst({
+            where: { month: new Date(`${prevRange.from}T00:00:00.000Z`) },
+          }),
+          tx.workLog.count({
+            where: {
+              status: 'SAVED',
+              workDate: {
+                gte: new Date(`${prevRange.from}T00:00:00.000Z`),
+                lte: new Date(`${prevRange.to}T00:00:00.000Z`),
+              },
+            },
+          }),
+        ]);
 
         return {
           projects,
@@ -118,8 +197,37 @@ export const createDashboardService = (
           staleInbox,
           draftLogCount,
           changes,
+          warranties,
+          openRepairs,
+          certificates,
+          credentials,
+          unclosedMonth: !prevClose?.isClosed && prevLogCount > 0 ? prevMonth : null,
         };
       });
+      // 같은 직원·종류의 서류는 만료 없는 것이 있거나 더 늦게 만료되는 갱신본이 있으면 가장 늦은 것만 본다
+      const latestCredentials = new Map<
+        string,
+        { employeeId: string; employeeName: string; typeName: string; expiresOn: string | null }
+      >();
+
+      for (const row of data.credentials) {
+        const key = `${row.employeeId}:${row.typeId}`;
+        const expiresOn = row.expiresOn ? fromDate(row.expiresOn) : null;
+        const current = latestCredentials.get(key);
+
+        if (
+          !current ||
+          expiresOn === null ||
+          (current.expiresOn !== null && expiresOn > current.expiresOn)
+        ) {
+          latestCredentials.set(key, {
+            employeeId: row.employeeId,
+            employeeName: row.employee.name,
+            typeName: row.type.name,
+            expiresOn,
+          });
+        }
+      }
       const planned = new Map<string, number>();
       const used = new Map<string, number>();
       const latest = new Map<string, { percent: number; recordedOn: string }>();
@@ -186,6 +294,30 @@ export const createDashboardService = (
             seq: change.seq,
             statusChangedOn: fromDate(change.statusChangedOn),
           })),
+          warrantyProjects: data.warranties.map((row) => ({
+            id: row.project.id,
+            code: row.project.code,
+            name: row.project.name,
+            endOn: fromDate(row.endOn),
+          })),
+          openRepairs: data.openRepairs.map((row) => ({
+            id: row.id,
+            projectId: row.projectId,
+            projectName: row.project.name,
+            seq: row.seq,
+            receivedOn: fromDate(row.receivedOn),
+            status: row.status as 'RECEIVED' | 'IN_PROGRESS',
+          })),
+          certificates: data.certificates.map((row) => ({
+            projectId: row.projectId,
+            projectName: row.project.name,
+            title: row.document.title,
+            expiresOn: fromDate(row.expiresOn),
+          })),
+          credentials: [...latestCredentials.values()].flatMap((item) =>
+            item.expiresOn ? [{ ...item, expiresOn: item.expiresOn }] : [],
+          ),
+          unclosedMonth: data.unclosedMonth,
           enabled: new Set(settings.items.filter((item) => item.enabled).map((item) => item.kind)),
         }),
         settings,

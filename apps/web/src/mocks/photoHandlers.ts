@@ -1,5 +1,7 @@
 import {
   PHOTO_CATEGORY_LABELS,
+  employeeFileParamsSchema,
+  employeeFileUploadRequestSchema,
   fileParamsSchema,
   fileUploadRequestSchema,
   fileUrlQuerySchema,
@@ -18,7 +20,7 @@ import { delay, http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import type { MockAccount } from './data';
-import { getCurrentAccount, getProjects } from './state';
+import { getCurrentAccount, getEmployees, getProjects } from './state';
 
 type ApiError = (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
 
@@ -52,6 +54,7 @@ export const addMockReadyFile = (
     id,
     companyId,
     projectId,
+    employeeId: null,
     purpose: 'DOCUMENT',
     name: input.name,
     contentType: input.contentType,
@@ -140,6 +143,7 @@ const seedProject = (account: MockAccount, projectId: string) => {
       id: fileId,
       companyId: scopeOf(account),
       projectId,
+      employeeId: null,
       purpose: 'PHOTO',
       name: `더미${index + 1}.jpg`,
       contentType: 'image/jpeg',
@@ -231,7 +235,64 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
         id,
         companyId: scopeOf(account),
         projectId: path.data.projectId,
+        employeeId: null,
         purpose: body.data.purpose,
+        name: body.data.name,
+        contentType: body.data.contentType,
+        size: body.data.size,
+        status: 'PENDING',
+        rejectReason: null,
+        hasThumbnail: false,
+        sha256: null,
+        uploadedBy: MOCK_USER_ID,
+        createdAt: new Date().toISOString(),
+        readyAt: null,
+        uploaded: false,
+      };
+
+      files.set(id, file);
+
+      return HttpResponse.json(
+        {
+          file: toStoredFile(file),
+          upload: {
+            url: `${location.origin}/mock-storage/${id}`,
+            method: 'PUT',
+            headers: { 'Content-Type': body.data.contentType },
+            expiresAt: new Date(Date.now() + 15 * 60_000).toISOString(),
+          },
+        },
+        { status: 201 },
+      );
+    }),
+
+    // 직원 서류 파일 업로드 신청 (직원 카드에 붙는 파일, 열람은 서류 API로만)
+    http.post('/api/v1/employees/:employeeId/files', async ({ request, params }) => {
+      await latency();
+
+      const account = getCurrentAccount();
+
+      if (!account) return apiError('UNAUTHORIZED');
+
+      const path = employeeFileParamsSchema.safeParse(params);
+
+      if (!path.success) return apiError('VALIDATION_ERROR');
+
+      const body = await parseBody(request, employeeFileUploadRequestSchema);
+
+      if ('response' in body) return body.response;
+
+      if (!getEmployees(account).some((employee) => employee.id === path.data.employeeId)) {
+        return apiError('NOT_FOUND');
+      }
+
+      const id = uuid();
+      const file: MockFile = {
+        id,
+        companyId: scopeOf(account),
+        projectId: null,
+        employeeId: path.data.employeeId,
+        purpose: 'EMPLOYEE_DOCUMENT',
         name: body.data.name,
         contentType: body.data.contentType,
         size: body.data.size,
@@ -334,7 +395,13 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
       );
       const file = parsed.success ? files.get(parsed.data.id) : undefined;
 
-      if (!file || file.companyId !== scopeOf(account) || !query.success) {
+      // 직원 서류 파일은 서류 API로만 연다 (서버와 같은 규칙)
+      if (
+        !file ||
+        file.companyId !== scopeOf(account) ||
+        file.purpose === 'EMPLOYEE_DOCUMENT' ||
+        !query.success
+      ) {
         return apiError('NOT_FOUND');
       }
 
@@ -520,6 +587,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
 const toStoredFile = (file: MockFile): StoredFile => ({
   id: file.id,
   projectId: file.projectId,
+  employeeId: file.employeeId,
   purpose: file.purpose,
   name: file.name,
   contentType: file.contentType,

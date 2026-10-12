@@ -34,6 +34,10 @@ export const transitionNoticeSchema = z.discriminatedUnion('type', [
   }),
   // 아직 합의되지 않은(협의 중) 변경·추가 작업
   z.object({ type: z.literal('NEGOTIATING_CHANGES'), count: z.number().int() }),
+  // 종료 전환: 접수·처리 중인 보수 요청 (남아 있으면 종료할 수 없음)
+  z.object({ type: z.literal('OPEN_REPAIRS'), count: z.number().int() }),
+  // 종료 전환: 보류 중인 보수 요청 (종료는 막지 않고 알림)
+  z.object({ type: z.literal('HOLD_REPAIRS'), count: z.number().int() }),
   // 중단 뒤 재개하는데 종료 예정일이 이미 지남
   z.object({ type: z.literal('PERIOD_OVER'), plannedEnd: dateSchema }),
 ]);
@@ -57,12 +61,14 @@ type CheckInput = {
     remaining: number;
   }[];
   negotiatingCount: number;
+  openRepairCount: number;
+  holdRepairCount: number;
   plannedEnd: string;
   today: string;
 };
 
 /**
- * @description 이 전환에서 확인할 것을 모은다. 진행 → 완료는 임시 저장 일지·진행률 100%·남은 자재·협의 중 변경 작업,
+ * @description 이 전환에서 확인할 것을 모은다. 진행 → 완료는 임시 저장 일지(종료 전환에서도)·진행률 100%·남은 자재·협의 중 변경 작업,
  * 중단 → 진행은 종료 예정일 경과를 알린다 (§10.3). 막는 조건이 아니라 안내이다
  * @param input 현재·변경할 상태와 프로젝트 현황
  * @returns 확인할 항목 (없으면 빈 목록)
@@ -70,11 +76,12 @@ type CheckInput = {
 export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[] => {
   const checks: TransitionNotice[] = [];
 
-  if (input.to === 'COMPLETED') {
-    if (input.draftLogCount > 0) {
-      checks.push({ type: 'DRAFT_LOGS', count: input.draftLogCount });
-    }
+  // 종료는 임시 저장 일지가 남아 있으면 막힌다 (§10.3). 안내를 먼저 보여 줌
+  if ((input.to === 'COMPLETED' || input.to === 'CLOSED') && input.draftLogCount > 0) {
+    checks.push({ type: 'DRAFT_LOGS', count: input.draftLogCount });
+  }
 
+  if (input.to === 'COMPLETED') {
     if (input.progressPercent === null || input.progressPercent < 100) {
       checks.push({ type: 'PROGRESS_BELOW_100', percent: input.progressPercent });
     }
@@ -88,6 +95,14 @@ export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[]
     if (input.negotiatingCount > 0) {
       checks.push({ type: 'NEGOTIATING_CHANGES', count: input.negotiatingCount });
     }
+  }
+
+  if (input.to === 'CLOSED' && input.openRepairCount > 0) {
+    checks.push({ type: 'OPEN_REPAIRS', count: input.openRepairCount });
+  }
+
+  if (input.to === 'CLOSED' && input.holdRepairCount > 0) {
+    checks.push({ type: 'HOLD_REPAIRS', count: input.holdRepairCount });
   }
 
   if (input.from === 'SUSPENDED' && input.to === 'IN_PROGRESS' && input.today > input.plannedEnd) {
@@ -105,7 +120,7 @@ export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[]
 export const transitionNoticeMessage = (check: TransitionNotice): string => {
   switch (check.type) {
     case 'DRAFT_LOGS':
-      return `임시 저장된 작업일지가 ${check.count}건 있습니다. 집계에는 저장된 일지만 반영되니 완료 전에 저장하거나 정리해 주세요`;
+      return `임시 저장된 작업일지가 ${check.count}건 있습니다. 집계에는 저장된 일지만 반영되니 전환 전에 저장하거나 정리해 주세요`;
     case 'PROGRESS_BELOW_100':
       return check.percent === null
         ? '진행률 기록이 없습니다. 완료하기 전에 진행률을 기록해 주세요'
@@ -117,6 +132,10 @@ export const transitionNoticeMessage = (check: TransitionNotice): string => {
         .join(', ')}${check.items.length > 3 ? ' 등' : ''})`;
     case 'NEGOTIATING_CHANGES':
       return `아직 협의 중인 변경·추가 작업이 ${check.count}건 있습니다. 합의 또는 철회로 정리해 주세요`;
+    case 'OPEN_REPAIRS':
+      return `접수·처리 중인 보수 요청이 ${check.count}건 있어 종료할 수 없습니다. 완료하거나 보류로 정리해 주세요`;
+    case 'HOLD_REPAIRS':
+      return `보류 중인 보수 요청이 ${check.count}건 있습니다. 종료하면 더 처리할 수 없으니 확인해 주세요`;
     case 'PERIOD_OVER':
       return `종료 예정일(${check.plannedEnd})이 이미 지났습니다. 필요하면 기본정보에서 기간을 연장해 주세요`;
   }

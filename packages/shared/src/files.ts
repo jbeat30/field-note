@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 // 파일 업로드 공통 규칙 (서비스 기획서 §12.1, 기술 기획서 §10). 서버와 웹 목업이 같은 규칙을 쓴다
-export const FILE_PURPOSES = ['PHOTO', 'DOCUMENT'] as const;
+export const FILE_PURPOSES = ['PHOTO', 'DOCUMENT', 'EMPLOYEE_DOCUMENT'] as const;
 
 export const filePurposeSchema = z.enum(FILE_PURPOSES);
 
@@ -42,6 +42,7 @@ const MEGABYTE = 1024 * 1024;
 export const FILE_MAX_BYTES: Record<FilePurpose, number> = {
   PHOTO: 20 * MEGABYTE,
   DOCUMENT: 50 * MEGABYTE,
+  EMPLOYEE_DOCUMENT: 20 * MEGABYTE,
 };
 
 // 회사별 저장 용량 한도의 기본값 (운영자가 서버 용량에 맞춰 회사마다 조정)
@@ -60,10 +61,22 @@ export const ALLOWED_FILE_TYPES: readonly {
   extensions: readonly string[];
   purposes: readonly FilePurpose[];
 }[] = [
-  { mime: 'image/jpeg', extensions: ['jpg', 'jpeg'], purposes: ['PHOTO', 'DOCUMENT'] },
-  { mime: 'image/png', extensions: ['png'], purposes: ['PHOTO', 'DOCUMENT'] },
-  { mime: 'image/webp', extensions: ['webp'], purposes: ['PHOTO', 'DOCUMENT'] },
-  { mime: 'application/pdf', extensions: ['pdf'], purposes: ['DOCUMENT'] },
+  {
+    mime: 'image/jpeg',
+    extensions: ['jpg', 'jpeg'],
+    purposes: ['PHOTO', 'DOCUMENT', 'EMPLOYEE_DOCUMENT'],
+  },
+  {
+    mime: 'image/png',
+    extensions: ['png'],
+    purposes: ['PHOTO', 'DOCUMENT', 'EMPLOYEE_DOCUMENT'],
+  },
+  {
+    mime: 'image/webp',
+    extensions: ['webp'],
+    purposes: ['PHOTO', 'DOCUMENT', 'EMPLOYEE_DOCUMENT'],
+  },
+  { mime: 'application/pdf', extensions: ['pdf'], purposes: ['DOCUMENT', 'EMPLOYEE_DOCUMENT'] },
   {
     mime: 'application/vnd.openxmlformats-officedocument.wordprocessingml.document',
     extensions: ['docx'],
@@ -125,9 +138,26 @@ export const fileObjectKey = (
   variant: 'original' | 'thumbnail',
 ) => `company/${companyId}/project/${projectId}/${fileId}/${variant}`;
 
+/**
+ * @description 직원 서류 파일의 객체 저장소 경로
+ * @param companyId 회사 ID
+ * @param employeeId 직원 ID
+ * @param fileId 파일 ID
+ * @param variant 원본 또는 썸네일
+ * @returns 객체 키
+ */
+export const employeeFileObjectKey = (
+  companyId: string,
+  employeeId: string,
+  fileId: string,
+  variant: 'original' | 'thumbnail',
+) => `company/${companyId}/employee/${employeeId}/${fileId}/${variant}`;
+
 export const fileParamsSchema = z.object({ id: z.uuid() });
 
 export const projectFileParamsSchema = z.object({ projectId: z.uuid() });
+
+export const employeeFileParamsSchema = z.object({ employeeId: z.uuid() });
 
 const hasForbiddenNameChar = (name: string) =>
   [...name].some((char) => {
@@ -144,37 +174,57 @@ const fileNameSchema = z
   .max(FILE_NAME_MAX_LENGTH, `파일 이름은 ${FILE_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`)
   .refine((value) => !hasForbiddenNameChar(value), '파일 이름에 사용할 수 없는 문자가 있습니다');
 
-export const fileUploadRequestSchema = z
-  .object({
-    name: fileNameSchema,
-    purpose: filePurposeSchema,
-    // 브라우저가 알려 준 형식 (신뢰하지 않고 허용 목록과 업로드 후 내용 검사로 다시 확인)
-    contentType: z.string().trim().min(1).max(100),
-    size: z.number().int().min(1, '빈 파일은 올릴 수 없습니다'),
-  })
-  .superRefine((value, context) => {
-    if (!isAllowedFileType(value.purpose, value.contentType, value.name)) {
-      context.addIssue({
-        code: 'custom',
-        path: ['contentType'],
-        message: '올릴 수 없는 파일 형식입니다 (이미지, PDF, Word·Excel·PowerPoint만 가능)',
-      });
-    }
+// 프로젝트에 올리는 파일의 용도 (직원 서류는 직원 서류 업로드 신청으로만 올림)
+export const projectFilePurposeSchema = z.enum(['PHOTO', 'DOCUMENT']);
 
-    if (value.size > FILE_MAX_BYTES[value.purpose]) {
-      context.addIssue({
-        code: 'custom',
-        path: ['size'],
-        message: `파일 하나는 ${FILE_MAX_BYTES[value.purpose] / MEGABYTE}MB까지 올릴 수 있습니다`,
-      });
-    }
-  });
+const uploadFields = {
+  name: fileNameSchema,
+  // 브라우저가 알려 준 형식 (신뢰하지 않고 허용 목록과 업로드 후 내용 검사로 다시 확인)
+  contentType: z.string().trim().min(1).max(100),
+  size: z.number().int().min(1, '빈 파일은 올릴 수 없습니다'),
+};
+
+const checkUpload = (
+  value: { purpose: FilePurpose; name: string; contentType: string; size: number },
+  context: z.RefinementCtx,
+) => {
+  if (!isAllowedFileType(value.purpose, value.contentType, value.name)) {
+    context.addIssue({
+      code: 'custom',
+      path: ['contentType'],
+      message: '올릴 수 없는 파일 형식입니다 (이미지, PDF, Word·Excel·PowerPoint만 가능)',
+    });
+  }
+
+  if (value.size > FILE_MAX_BYTES[value.purpose]) {
+    context.addIssue({
+      code: 'custom',
+      path: ['size'],
+      message: `파일 하나는 ${FILE_MAX_BYTES[value.purpose] / MEGABYTE}MB까지 올릴 수 있습니다`,
+    });
+  }
+};
+
+export const fileUploadRequestSchema = z
+  .object({ ...uploadFields, purpose: projectFilePurposeSchema })
+  .superRefine(checkUpload);
+
+// 직원 서류 업로드 신청: 용도는 직원 서류로 정해져 있고 이미지·PDF만 올릴 수 있다
+export const employeeFileUploadRequestSchema = z
+  .object(uploadFields)
+  .superRefine((value, context) =>
+    checkUpload({ ...value, purpose: 'EMPLOYEE_DOCUMENT' }, context),
+  );
+
+export type EmployeeFileUploadRequest = z.infer<typeof employeeFileUploadRequestSchema>;
 
 export type FileUploadRequest = z.infer<typeof fileUploadRequestSchema>;
 
 export const storedFileSchema = z.object({
   id: z.uuid(),
-  projectId: z.uuid(),
+  // 직원 서류 파일이면 프로젝트가 아니라 직원에 붙으므로 프로젝트가 없음
+  projectId: z.uuid().nullable(),
+  employeeId: z.uuid().nullable(),
   purpose: filePurposeSchema,
   name: z.string(),
   // 사용 가능해진 뒤에는 내용으로 판별한 형식

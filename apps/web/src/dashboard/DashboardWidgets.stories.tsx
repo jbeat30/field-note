@@ -18,7 +18,9 @@ const dashboard = (alertCount: number): Dashboard => ({
   activeProjects: [],
   risks: [],
   week: { from: '2026-10-05', to: '2026-10-11', conflicts: [], freeCount: 0, freeNames: [] },
-  todos: { draftLogCount: 0, staleInboxCount: 0 },
+  todos: { draftLogCount: 0, staleInboxCount: 0, unclosedMonth: null },
+  warranty: { ending: [], openRepairCount: 0 },
+  expiring: { certificates: [], credentials: [] },
 });
 
 const meta = {
@@ -65,5 +67,78 @@ export const FewAlertsNoToggle: Story = {
 
     await expect(canvas.getAllByText(/일지가 아직 없습니다/)).toHaveLength(3);
     await expect(canvas.queryByRole('button', { name: /더 보기/ })).not.toBeInTheDocument();
+  },
+};
+
+export const WarrantyAndExpiring: Story = {
+  args: {
+    dashboard: {
+      ...dashboard(0),
+      todos: { draftLogCount: 0, staleInboxCount: 0, unclosedMonth: '2026-09' },
+      warranty: {
+        ending: [
+          {
+            projectId: ID,
+            code: '2026-001',
+            name: 'A동 판금 공사',
+            endOn: '2026-10-15',
+            daysLeft: 4,
+          },
+          { projectId: ID, code: '2026-002', name: 'B동 덕트', endOn: '2026-12-01', daysLeft: 51 },
+        ],
+        openRepairCount: 2,
+      },
+      expiring: {
+        certificates: [
+          {
+            projectId: ID,
+            projectName: 'A동 판금 공사',
+            title: '보증증권',
+            expiresOn: '2026-10-25',
+            daysLeft: 14,
+          },
+        ],
+        credentials: [
+          {
+            employeeId: ID,
+            employeeName: '정판금',
+            typeName: '건강검진',
+            expiresOn: '2026-09-30',
+            daysLeft: -11,
+          },
+        ],
+      },
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const warranty = within(canvas.getByRole('region', { name: '보증 종료 임박' }));
+
+    await expect(warranty.getByText('처리하지 않은 보수 요청 2건')).toBeInTheDocument();
+    await expect(warranty.getByText(/4일 남음 \(2026-10-15\)/)).toBeInTheDocument();
+
+    const expiring = within(canvas.getByRole('region', { name: '만료 임박' }));
+
+    await expect(expiring.getByText(/보증서 보증증권 · A동 판금 공사/)).toBeInTheDocument();
+    await expect(expiring.getByText(/11일 지남 \(2026-09-30\)/)).toBeInTheDocument();
+    await expect(canvas.getByRole('link', { name: '2026-09 월 공수 확정 전' })).toHaveAttribute(
+      'href',
+      '/monthly-hours?month=2026-09',
+    );
+  },
+};
+
+export const NothingExpiring: Story = {
+  args: { dashboard: dashboard(0) },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      canvas.getByText('60일 안에 보증이 끝나는 프로젝트가 없습니다'),
+    ).toBeInTheDocument();
+    await expect(
+      canvas.getByText('30일 안에 만료되는 보증서·직원 서류가 없습니다'),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText('확정하지 않은 지난달 월 공수 없음')).toBeInTheDocument();
   },
 };

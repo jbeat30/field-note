@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
+import { resetMockCredentials } from '../mocks/credentialHandlers';
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { findAccount, getProjects, saveProjects, signIn } from '../mocks/state';
 
@@ -15,7 +16,13 @@ const meta = {
   title: 'Pages/프로젝트 카드',
   component: ProjectCardPage,
   parameters: { router: routerFor('A동 외장 판금 공사') },
-  loaders: [() => signIn('hanbit')],
+  loaders: [
+    () => {
+      // 스토리가 다시 그려져도 필요 자격 상태가 이어지지 않게 처음으로 되돌림
+      resetMockCredentials();
+      signIn('hanbit');
+    },
+  ],
 } satisfies Meta<typeof ProjectCardPage>;
 
 export default meta;
@@ -258,10 +265,9 @@ export const CompleteProject: Story = {
     );
 
     await expect(await canvas.findByText("'완료' 상태로 바꿨습니다")).toBeInTheDocument();
-    // 완료하면 더 바꿀 수 있는 상태가 없고 안내가 보임 (기본정보는 계속 수정 가능)
-    await expect(
-      await canvas.findByText(/보증·종료 처리는 이후 단계에서 추가됩니다/),
-    ).toBeInTheDocument();
+    // 완료하면 보증 시작·종료 처리로 이어갈 수 있다 (기본정보는 계속 수정 가능)
+    await expect(await canvas.findByRole('button', { name: '보증 시작' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '종료 처리' })).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: '작업 중단' })).not.toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '저장' })).toBeInTheDocument();
   },
@@ -331,6 +337,74 @@ export const SuspendedProjectHistory: Story = {
   },
 };
 
+// 완료 → 보증 중은 프로젝트 요약을 확인해야 한다 (§10.3)
+export const StartWarrantyNeedsSummaryConfirm: Story = {
+  parameters: { router: routerFor('옛날상가 간판 교체') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '보증 시작' }));
+
+    const form = within(await canvas.findByRole('form', { name: '보증 시작 확인' }));
+
+    await userEvent.click(form.getByRole('button', { name: '확인' }));
+    await expect(
+      await form.findByText('보증 중으로 바꾸려면 프로젝트 요약을 확인해 주세요'),
+    ).toBeInTheDocument();
+
+    await userEvent.click(form.getByRole('checkbox', { name: '프로젝트 요약을 확인했습니다' }));
+    await userEvent.click(form.getByRole('button', { name: '확인' }));
+
+    await expect(await canvas.findByText("'보증 중' 상태로 바꿨습니다")).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '종료 처리' })).toBeInTheDocument();
+  },
+};
+
+// 보증 기간이 남아 있으면 완료에서 바로 종료할 수 없다 (보증 기간 0개월일 때만)
+export const CloseFromCompletedNeedsNoWarranty: Story = {
+  parameters: { router: routerFor('옛날상가 간판 교체') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '종료 처리' }));
+
+    const form = within(await canvas.findByRole('form', { name: '종료 처리 확인' }));
+
+    await userEvent.click(form.getByRole('button', { name: '확인' }));
+    await expect(
+      await form.findByText(/보증 기간이 12개월입니다/, { exact: false }),
+    ).toBeInTheDocument();
+  },
+};
+
+// 재오픈은 사유가 필요하고, 보증 종료 예정일이 지난 뒤의 종료는 사유 없이 할 수 있다
+export const ReopenThenCloseAfterWarrantyEnd: Story = {
+  parameters: { router: routerFor('C동 환기 설비') },
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '재오픈' }));
+
+    const reopenForm = within(await canvas.findByRole('form', { name: '재오픈 확인' }));
+
+    await userEvent.click(reopenForm.getByRole('button', { name: '확인' }));
+    await expect(await reopenForm.findByText('사유를 입력해 주세요')).toBeInTheDocument();
+
+    await userEvent.type(reopenForm.getByLabelText('사유 (필수)'), '고객 재보수 요청');
+    await userEvent.click(reopenForm.getByRole('button', { name: '확인' }));
+    await expect(await canvas.findByText("'보증 중' 상태로 바꿨습니다")).toBeInTheDocument();
+
+    await userEvent.click(await canvas.findByRole('button', { name: '종료 처리' }));
+
+    const closeForm = within(await canvas.findByRole('form', { name: '종료 처리 확인' }));
+
+    // 종료 예정일(2026-06-18)이 지났으므로 사유는 선택
+    await expect(closeForm.getByLabelText('사유 (선택)')).toBeInTheDocument();
+    await userEvent.click(closeForm.getByRole('button', { name: '확인' }));
+    await expect(await canvas.findByText("'종료' 상태로 바꿨습니다")).toBeInTheDocument();
+  },
+};
+
 export const ClosedProjectReadOnly: Story = {
   parameters: { router: routerFor('C동 환기 설비') },
   play: async ({ canvasElement }) => {
@@ -346,7 +420,7 @@ export const ClosedProjectReadOnly: Story = {
   },
 };
 
-// 보증 중에는 담당자와 메모만 수정할 수 있음 (보증 전환 기능은 4단계라 상태를 직접 맞춰 확인)
+// 보증 중에는 담당자와 메모만 수정할 수 있음
 export const WarrantyEditsOnlyManagerAndMemo: Story = {
   parameters: { router: routerFor('옛날상가 간판 교체') },
   loaders: [
@@ -761,5 +835,36 @@ export const LaborCostPanel: Story = {
     // 더미 단가가 없는 직원의 공수는 합계에서 빠지고 안내된다
     await expect(await panel.findByText(/단가가 없어 합계에서 빠진 공수/)).toBeInTheDocument();
     await expect(panel.getAllByText(/\d원$/).length).toBeGreaterThan(0);
+  },
+};
+
+export const RequiredCredentials: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '필요 자격' }));
+
+    // 더미: A동은 안전교육 이수증이 필요. 저장하기 전에는 버튼이 꺼져 있다
+    const safety = await panel.findByRole('checkbox', { name: '안전교육 이수증' });
+
+    await expect(safety).toBeChecked();
+    await expect(panel.getByRole('checkbox', { name: '용접 기능사' })).not.toBeChecked();
+    await expect(panel.getByRole('button', { name: '필요 자격 저장' })).toBeDisabled();
+
+    await userEvent.click(panel.getByRole('checkbox', { name: '용접 기능사' }));
+    await userEvent.click(panel.getByRole('button', { name: '필요 자격 저장' }));
+
+    await expect(await panel.findByText('필요 자격을 저장했습니다')).toBeInTheDocument();
+    await expect(panel.getByRole('checkbox', { name: '용접 기능사' })).toBeChecked();
+  },
+};
+
+export const CredentialWarnings: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 필요 자격(안전교육 이수증)이 없는 투입 직원에게 경고가 붙는다
+    await expect(
+      (await canvas.findAllByText(/필요 자격 '안전교육 이수증': 자격 없음/)).length,
+    ).toBeGreaterThan(0);
   },
 };

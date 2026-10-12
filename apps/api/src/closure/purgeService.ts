@@ -61,6 +61,23 @@ export const purgeCompany = (
     // 일지의 수정 이력 → 공수 항목 → 일지 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
     // 감사 기록 → 문서 버전 → 문서 순서 (버전이 파일·문서를, 문서가 프로젝트·계정을 참조하므로 파일·프로젝트보다 먼저)
     // 변경 작업의 증빙 연결·상태 이력은 문서·변경 작업을 참조하므로 그보다 먼저 지움
+    deleted.monthly_close_events = (await tx.monthlyCloseEvent.deleteMany({ where })).count;
+    deleted.monthly_closes = (await tx.monthlyClose.deleteMany({ where })).count;
+    // 직원 서류는 파일·직원·선택 목록을, 필요 자격은 프로젝트·선택 목록을 참조하므로 그보다 먼저 지움
+    deleted.employee_credentials = (await tx.employeeCredential.deleteMany({ where })).count;
+    deleted.project_required_credentials = (
+      await tx.projectRequiredCredential.deleteMany({ where })
+    ).count;
+    // 보수 요청의 연결·상태 이력은 일지·자재 기록·보수 요청을 참조하므로 그보다 먼저 지움
+    deleted.repair_request_links = (await tx.repairRequestLink.deleteMany({ where })).count;
+    deleted.repair_request_status_changes = (
+      await tx.repairRequestStatusChange.deleteMany({ where })
+    ).count;
+    deleted.repair_requests = (await tx.repairRequest.deleteMany({ where })).count;
+    // 보증서는 문서·프로젝트를 참조하므로 그보다 먼저, 보증 설정·변경 이력은 프로젝트를 참조하므로 프로젝트보다 먼저 지움
+    deleted.warranty_certificates = (await tx.warrantyCertificate.deleteMany({ where })).count;
+    deleted.project_warranty_changes = (await tx.projectWarrantyChange.deleteMany({ where })).count;
+    deleted.project_warranties = (await tx.projectWarranty.deleteMany({ where })).count;
     deleted.change_work_documents = (await tx.changeWorkDocument.deleteMany({ where })).count;
     deleted.change_work_status_changes = (
       await tx.changeWorkStatusChange.deleteMany({ where })
