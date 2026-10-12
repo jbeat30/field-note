@@ -88,6 +88,14 @@ export const routes = [
             path: '/projects/:id/materials',
             ...page(() => import('./routes/ProjectMaterialsPage'), 'ProjectMaterialsPage'),
           },
+          {
+            path: '/projects/:id/change-works',
+            ...page(() => import('./routes/ProjectChangeWorksPage'), 'ProjectChangeWorksPage'),
+          },
+          {
+            path: '/projects/:id/summary',
+            ...page(() => import('./routes/ProjectSummaryPage'), 'ProjectSummaryPage'),
+          },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
           {
@@ -103,6 +111,10 @@ export const routes = [
             ...page(() => import('./routes/EmployeeListPage'), 'EmployeeListPage'),
           },
           {
+            path: '/staffing',
+            ...page(() => import('./routes/StaffingCalendarPage'), 'StaffingCalendarPage'),
+          },
+          {
             path: '/employees/:id',
             ...page(() => import('./routes/EmployeeCardPage'), 'EmployeeCardPage'),
           },
@@ -115,6 +127,10 @@ export const routes = [
             ...page(() => import('./routes/PartnerCardPage'), 'PartnerCardPage'),
           },
           { path: '/settings', ...page(() => import('./routes/SettingsPage'), 'SettingsPage') },
+          {
+            path: '/settings/alerts',
+            ...page(() => import('./routes/AlertSettingsPage'), 'AlertSettingsPage'),
+          },
           {
             path: '/settings/lists',
             ...page(() => import('./routes/OptionListsPage'), 'OptionListsPage'),

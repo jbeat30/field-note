@@ -2,12 +2,15 @@ import {
   OPTION_KINDS,
   OPTION_PRESETS,
   normalizeOptionName,
+  type AlertKind,
   type CompanySettings,
   type Device,
   type EmployeeDetail,
   type OptionItem,
   normalizePartnerName,
   type PartnerDetail,
+  type PayRate,
+  type ProgressRecord,
   type ProjectDetail,
   type ProjectPeriodChange,
   type ProjectStatusChange,
@@ -26,6 +29,8 @@ import {
   DEMO_ASSIGNMENTS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
+  DEMO_PAY_RATES,
+  DEMO_PROGRESS,
   DEMO_PROJECTS,
   DEMO_WORK_LOGS,
 } from './demoSource';
@@ -360,6 +365,82 @@ export const addProjectStatusChange = (
   persist();
 };
 
+// 직원 단가 기록: 처음 조회할 때 더미 단가(DB 시드와 같은 원본)로 채움
+export const getPayRates = (account: MockAccount, employeeId: string): PayRate[] => {
+  if (!account.payRates) {
+    const employees = getEmployees(account);
+    const rates: Record<string, PayRate[]> = {};
+
+    for (const item of DEMO_PAY_RATES.filter((demo) => demo.companyId === account.companyId)) {
+      const employee = employees.find((candidate) => candidate.name === item.employeeName);
+
+      if (employee) {
+        (rates[employee.id] ??= []).push({
+          id: item.id,
+          payType: item.payType,
+          amount: item.amount,
+          effectiveFrom: item.effectiveFrom,
+          createdAt: `${item.effectiveFrom}T09:00:00.000Z`,
+        });
+      }
+    }
+
+    account.payRates = rates;
+    persist();
+  }
+
+  return account.payRates[employeeId] ?? [];
+};
+
+export const addPayRate = (account: MockAccount, employeeId: string, rate: PayRate) => {
+  getPayRates(account, employeeId);
+  account.payRates = {
+    ...account.payRates,
+    [employeeId]: [...(account.payRates?.[employeeId] ?? []), rate],
+  };
+  persist();
+};
+
+// 진행률 기록: 처음 조회할 때 더미 기록(DB 시드와 같은 원본)으로 채움
+export const getProgressRecords = (account: MockAccount, projectId: string): ProgressRecord[] => {
+  if (!account.progressRecords) {
+    const projects = getProjects(account);
+    const records: Record<string, ProgressRecord[]> = {};
+
+    for (const item of DEMO_PROGRESS.filter((demo) => demo.companyId === account.companyId)) {
+      const project = projects.find((candidate) => candidate.code === item.projectCode);
+
+      if (project) {
+        (records[project.id] ??= []).push({
+          id: item.id,
+          percent: item.percent,
+          recordedOn: item.recordedOn,
+          note: item.note ?? null,
+          createdAt: `${item.recordedOn}T09:00:00.000Z`,
+        });
+      }
+    }
+
+    account.progressRecords = records;
+    persist();
+  }
+
+  return account.progressRecords[projectId] ?? [];
+};
+
+export const addProgressRecord = (
+  account: MockAccount,
+  projectId: string,
+  record: ProgressRecord,
+) => {
+  getProgressRecords(account, projectId);
+  account.progressRecords = {
+    ...account.progressRecords,
+    [projectId]: [...(account.progressRecords?.[projectId] ?? []), record],
+  };
+  persist();
+};
+
 // 프로젝트 예정 기간 변경 이력: 처음 조회할 때 더미 이력(DB 시드와 같은 원본)으로 채움
 export const getProjectPeriodHistory = (
   account: MockAccount,
@@ -540,6 +621,18 @@ export const saveProjects = (account: MockAccount, projects: ProjectDetail[]) =>
 
 export const isEmailInUse = (email: string) =>
   state.accounts.some((account) => account.email === email);
+
+// 알림 설정: 보낸 종류만 바꾸고 나머지는 그대로 (설정하지 않은 종류는 켜짐)
+export const saveAlertSettings = (
+  account: MockAccount,
+  items: { kind: AlertKind; enabled: boolean }[],
+) => {
+  account.alertSettings = {
+    ...account.alertSettings,
+    ...Object.fromEntries(items.map((item) => [item.kind, item.enabled])),
+  };
+  persist();
+};
 
 export const updateSettings = (account: MockAccount, settings: CompanySettings) => {
   account.settings = settings;

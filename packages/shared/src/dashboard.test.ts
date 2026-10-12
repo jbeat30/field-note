@@ -1,0 +1,287 @@
+import {
+  ALERT_KINDS,
+  alertSettingsUpdateSchema,
+  assembleDashboard,
+  dashboardAlertMessage,
+  dashboardAlertPath,
+  weekRange,
+  type AlertKind,
+  type DashboardInput,
+} from './dashboard';
+
+const P1 = '0198d000-0000-7000-8000-0000000000a1';
+const P2 = '0198d000-0000-7000-8000-0000000000a2';
+const P3 = '0198d000-0000-7000-8000-0000000000a3';
+const E1 = '0198d000-0000-7000-8000-000000000001';
+const E2 = '0198d000-0000-7000-8000-000000000002';
+const E3 = '0198d000-0000-7000-8000-000000000003';
+const C1 = '0198d000-0000-7000-8000-0000000000c1';
+
+// 2026-10-11(일): 이번 주는 10/5(월) ~ 10/11(일)
+const TODAY = '2026-10-11';
+
+const project = (id: string, code: string, patch: object = {}) => ({
+  id,
+  code,
+  name: `프로젝트 ${code}`,
+  status: 'IN_PROGRESS' as const,
+  plannedStart: '2026-09-01',
+  plannedEnd: '2026-12-31',
+  plannedMinutes: 80 * 480,
+  usedMinutes: 0,
+  progressPercent: null,
+  progressRecordedOn: null,
+  ...patch,
+});
+
+const base = (patch: Partial<DashboardInput> = {}): DashboardInput => ({
+  today: TODAY,
+  projects: [project(P1, '2026-001')],
+  todayAssignments: [],
+  todayLogProjectIds: [],
+  staleInbox: { count: 0, oldestDays: 0 },
+  draftLogCount: 0,
+  calendar: { from: '2026-10-05', to: '2026-10-11', employees: [], assignments: [] },
+  negotiatingChanges: [],
+  enabled: new Set<AlertKind>(ALERT_KINDS),
+  ...patch,
+});
+
+describe('weekRange', () => {
+  it('월요일부터 일요일까지', () => {
+    expect(weekRange('2026-10-11')).toEqual({ from: '2026-10-05', to: '2026-10-11' });
+    expect(weekRange('2026-10-05')).toEqual({ from: '2026-10-05', to: '2026-10-11' });
+    expect(weekRange('2026-10-07')).toEqual({ from: '2026-10-05', to: '2026-10-11' });
+  });
+});
+
+describe('assembleDashboard: 오늘 투입', () => {
+  it('프로젝트마다 오늘 나가는 인원을 한 번씩만 세고 일지가 없는 프로젝트를 먼저 보여 준다', () => {
+    const dashboard = assembleDashboard(
+      base({
+        projects: [project(P1, '2026-001'), project(P2, '2026-002')],
+        todayAssignments: [
+          { projectId: P1, employeeId: E1 },
+          { projectId: P1, employeeId: E1 },
+          { projectId: P1, employeeId: E2 },
+          { projectId: P2, employeeId: E1 },
+        ],
+        todayLogProjectIds: [P1],
+      }),
+    );
+
+    expect(dashboard.todayAssignments.headcount).toBe(2);
+    expect(dashboard.todayAssignments.projects).toEqual([
+      expect.objectContaining({ projectId: P2, headcount: 1, hasLog: false }),
+      expect.objectContaining({ projectId: P1, headcount: 2, hasLog: true }),
+    ]);
+  });
+
+  it('일지가 없는 프로젝트마다 알림이 나온다', () => {
+    const dashboard = assembleDashboard(
+      base({ todayAssignments: [{ projectId: P1, employeeId: E1 }] }),
+    );
+
+    expect(dashboard.alerts).toEqual([
+      { kind: 'NO_LOG_TODAY', projectId: P1, projectName: '프로젝트 2026-001' },
+    ]);
+  });
+});
+
+describe('assembleDashboard: 프로젝트와 위험', () => {
+  it('상태별 건수를 세고 경고가 있는 프로젝트를 먼저 보여 준다', () => {
+    const dashboard = assembleDashboard(
+      base({
+        projects: [
+          project(P1, '2026-001'),
+          project(P2, '2026-002', { usedMinutes: 70 * 480, progressPercent: 30 }),
+          project(P3, '2026-003', { status: 'PLANNED' }),
+        ],
+      }),
+    );
+
+    expect(dashboard.projectCounts).toEqual({ planned: 1, inProgress: 2, suspended: 0 });
+    expect(dashboard.activeProjects.map((item) => item.id)).toEqual([P2, P1, P3]);
+    expect(dashboard.risks.map((item) => item.id)).toEqual([P2]);
+    expect(dashboard.risks[0]!.warnings).toEqual(
+      expect.arrayContaining(['BURN_WARN', 'BURN_AHEAD']),
+    );
+  });
+
+  it('소진율 도달·진행률 대비 과다·종료 예정일 경과 알림을 만든다 (기획서 §10.4 예시: 70%·진행률 45%)', () => {
+    const dashboard = assembleDashboard(
+      base({
+        projects: [
+          project(P1, '2026-001', { usedMinutes: 56 * 480, progressPercent: 45 }),
+          project(P2, '2026-002', { usedMinutes: 80 * 480, progressPercent: 90 }),
+          project(P3, '2026-003', { plannedEnd: '2026-10-05', progressPercent: 90 }),
+        ],
+      }),
+    );
+    const byKind = (kind: string) => dashboard.alerts.filter((alert) => alert.kind === kind);
+
+    expect(byKind('BURN_AHEAD')).toEqual([
+      expect.objectContaining({ projectId: P1, burnPercent: 70, progressPercent: 45 }),
+    ]);
+    expect(byKind('BURN_REACHED')).toEqual([
+      expect.objectContaining({ projectId: P2, level: 'LIMIT' }),
+    ]);
+    expect(byKind('PROJECT_OVERDUE')).toEqual([
+      expect.objectContaining({ projectId: P3, plannedEnd: '2026-10-05', daysLate: 6 }),
+    ]);
+  });
+});
+
+describe('assembleDashboard: 이번 주 인력', () => {
+  const calendar = {
+    from: '2026-10-05',
+    to: '2026-10-11',
+    employees: [
+      { id: E1, name: '김겹침', title: null, status: 'ACTIVE' as const, leftOn: null },
+      { id: E2, name: '이한가', title: null, status: 'ACTIVE' as const, leftOn: null },
+      { id: E3, name: '박휴직', title: null, status: 'ON_LEAVE' as const, leftOn: null },
+    ],
+    assignments: [
+      {
+        id: '0198d000-0000-7000-8000-0000000000b1',
+        employeeId: E1,
+        projectId: P1,
+        projectCode: '2026-001',
+        projectName: 'A',
+        projectStatus: 'IN_PROGRESS' as const,
+        startDate: '2026-10-05',
+        endDate: '2026-10-07',
+      },
+      {
+        id: '0198d000-0000-7000-8000-0000000000b2',
+        employeeId: E1,
+        projectId: P2,
+        projectCode: '2026-002',
+        projectName: 'B',
+        projectStatus: 'IN_PROGRESS' as const,
+        startDate: '2026-10-06',
+        endDate: '2026-10-08',
+      },
+    ],
+  };
+
+  it('겹치는 직원과 일수, 비는 사람을 알려 준다 (휴직은 비는 사람이 아님)', () => {
+    const dashboard = assembleDashboard(base({ calendar }));
+
+    expect(dashboard.week).toMatchObject({
+      from: '2026-10-05',
+      to: '2026-10-11',
+      conflicts: [{ employeeId: E1, name: '김겹침', dateCount: 2 }],
+      freeCount: 1,
+      freeNames: ['이한가'],
+    });
+    expect(dashboard.alerts).toEqual([
+      {
+        kind: 'DOUBLE_ASSIGNED',
+        employeeId: E1,
+        employeeName: '김겹침',
+        dateCount: 2,
+        firstDate: '2026-10-06',
+      },
+    ]);
+  });
+});
+
+describe('assembleDashboard: 메모함·변경 작업·할 일', () => {
+  it('메모함 방치와 협의 중 변경 작업 7일 경과를 알린다', () => {
+    const dashboard = assembleDashboard(
+      base({
+        staleInbox: { count: 4, oldestDays: 9 },
+        draftLogCount: 2,
+        negotiatingChanges: [
+          { id: C1, projectId: P1, seq: 2, statusChangedOn: '2026-10-04' },
+          { id: C1, projectId: P1, seq: 3, statusChangedOn: '2026-10-05' },
+        ],
+      }),
+    );
+
+    expect(dashboard.todos).toEqual({ draftLogCount: 2, staleInboxCount: 4 });
+    expect(dashboard.alerts).toEqual([
+      { kind: 'INBOX_STALE', count: 4, oldestDays: 9 },
+      expect.objectContaining({ kind: 'CHANGE_STALE', seq: 2, days: 7 }),
+    ]);
+  });
+});
+
+describe('알림 켜고 끄기', () => {
+  it('꺼 둔 종류는 알림에서 빠지지만 위젯은 그대로 나온다', () => {
+    const input = base({
+      todayAssignments: [{ projectId: P1, employeeId: E1 }],
+      staleInbox: { count: 1, oldestDays: 4 },
+      projects: [project(P1, '2026-001', { usedMinutes: 80 * 480, progressPercent: 90 })],
+    });
+    const on = assembleDashboard(input);
+    const off = assembleDashboard({
+      ...input,
+      enabled: new Set<AlertKind>(['BURN_REACHED']),
+    });
+
+    expect(on.alerts.map((alert) => alert.kind).sort()).toEqual(
+      ['BURN_REACHED', 'INBOX_STALE', 'NO_LOG_TODAY'].sort(),
+    );
+    expect(off.alerts.map((alert) => alert.kind)).toEqual(['BURN_REACHED']);
+    expect(off.todayAssignments).toEqual(on.todayAssignments);
+    expect(off.risks).toEqual(on.risks);
+    expect(assembleDashboard({ ...input, enabled: new Set() }).alerts).toEqual([]);
+  });
+});
+
+describe('알림 문장·이동 주소', () => {
+  it('모든 종류가 문장과 주소를 갖는다', () => {
+    const alerts = [
+      { kind: 'NO_LOG_TODAY', projectId: P1, projectName: 'A' },
+      { kind: 'INBOX_STALE', count: 3, oldestDays: 5 },
+      { kind: 'BURN_REACHED', projectId: P1, projectName: 'A', level: 'WARN', burnPercent: 82 },
+      { kind: 'BURN_AHEAD', projectId: P1, projectName: 'A', burnPercent: 70, progressPercent: 45 },
+      {
+        kind: 'PROJECT_OVERDUE',
+        projectId: P1,
+        projectName: 'A',
+        plannedEnd: '2026-10-05',
+        daysLate: 6,
+      },
+      {
+        kind: 'DOUBLE_ASSIGNED',
+        employeeId: E1,
+        employeeName: '김',
+        dateCount: 2,
+        firstDate: '2026-10-06',
+      },
+      { kind: 'CHANGE_STALE', projectId: P1, projectName: 'A', changeWorkId: C1, seq: 2, days: 8 },
+    ] as const;
+
+    for (const alert of alerts) {
+      expect(dashboardAlertMessage(alert).length).toBeGreaterThan(5);
+      expect(dashboardAlertPath(alert).startsWith('/')).toBe(true);
+    }
+
+    expect(dashboardAlertPath(alerts[6])).toBe(`/projects/${P1}/change-works`);
+    expect(dashboardAlertMessage(alerts[2])).toContain('82%에 도달');
+  });
+});
+
+describe('alertSettingsUpdateSchema', () => {
+  it('바꿀 알림이 하나는 있어야 하고 같은 종류를 두 번 보낼 수 없다', () => {
+    expect(alertSettingsUpdateSchema.safeParse({ items: [] }).success).toBe(false);
+    expect(
+      alertSettingsUpdateSchema.safeParse({
+        items: [
+          { kind: 'INBOX_STALE', enabled: false },
+          { kind: 'INBOX_STALE', enabled: true },
+        ],
+      }).success,
+    ).toBe(false);
+    expect(
+      alertSettingsUpdateSchema.safeParse({ items: [{ kind: 'NOPE', enabled: false }] }).success,
+    ).toBe(false);
+    expect(
+      alertSettingsUpdateSchema.safeParse({ items: [{ kind: 'INBOX_STALE', enabled: false }] })
+        .success,
+    ).toBe(true);
+  });
+});

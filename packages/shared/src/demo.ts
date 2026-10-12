@@ -738,3 +738,148 @@ export const DEMO_INVITATION = {
   adminName: '최미래',
   expiresInDays: 7,
 };
+
+export type DemoProgress = {
+  id: string;
+  companyId: string;
+  // 프로젝트 코드로 연결
+  projectCode: string;
+  percent: number;
+  recordedOn: string;
+  note?: string;
+};
+
+const progressId = (n: number) => `0198d000-0000-7000-8000-0000000007${String(n).padStart(2, '0')}`;
+
+// A동 판금 공사의 진행률 기록 (공수 소진율과 비교해 볼 수 있게 두 건)
+export const DEMO_PROGRESS: readonly DemoProgress[] = [
+  {
+    id: progressId(1),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    percent: 25,
+    recordedOn: '2026-09-01',
+    note: '외장 패널 가공 시작',
+  },
+  {
+    id: progressId(2),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    percent: 40,
+    recordedOn: '2026-10-01',
+  },
+];
+
+export type DemoPayRate = {
+  id: string;
+  companyId: string;
+  // 직원 이름으로 연결
+  employeeName: string;
+  payType: 'DAILY' | 'HOURLY' | 'MONTHLY' | 'ANNUAL';
+  amount: number;
+  effectiveFrom: string;
+};
+
+const payRateId = (n: number) => `0198d000-0000-7000-8000-0000000008${String(n).padStart(2, '0')}`;
+
+// 화면 확인용 가짜 단가 (실제 급여와 무관). 정판금은 중간에 단가가 올라 변경 이력을 볼 수 있고,
+// 일급·시급·월급·연봉제가 한 번씩 들어 있으며 나머지 직원은 단가 미등록 사례로 비워 둔다
+export const DEMO_PAY_RATES: readonly DemoPayRate[] = [
+  {
+    id: payRateId(1),
+    companyId: HANBIT,
+    employeeName: '정판금',
+    payType: 'DAILY',
+    amount: 230_000,
+    effectiveFrom: '2026-01-01',
+  },
+  {
+    id: payRateId(2),
+    companyId: HANBIT,
+    employeeName: '정판금',
+    payType: 'DAILY',
+    amount: 250_000,
+    effectiveFrom: '2026-09-01',
+  },
+  {
+    id: payRateId(3),
+    companyId: HANBIT,
+    employeeName: '최설치',
+    payType: 'HOURLY',
+    amount: 28_000,
+    effectiveFrom: '2026-01-01',
+  },
+  {
+    id: payRateId(4),
+    companyId: HANBIT,
+    employeeName: '한용접',
+    payType: 'MONTHLY',
+    amount: 4_800_000,
+    effectiveFrom: '2026-01-01',
+  },
+  {
+    id: payRateId(5),
+    companyId: HANBIT,
+    employeeName: '송소장',
+    payType: 'ANNUAL',
+    amount: 72_000_000,
+    effectiveFrom: '2026-01-01',
+  },
+];
+
+export type DemoChangeWork = {
+  id: string;
+  companyId: string;
+  // 프로젝트 코드로 연결
+  projectCode: string;
+  seq: number;
+  requestedOn: string;
+  requester: string;
+  content: string;
+  status: 'NEGOTIATING' | 'AGREED' | 'WITHDRAWN';
+  statusChangedOn: string;
+  // 상태 변경 이력 (오래된 것부터)
+  history?: {
+    fromStatus: 'NEGOTIATING' | 'AGREED' | 'WITHDRAWN';
+    toStatus: 'NEGOTIATING' | 'AGREED' | 'WITHDRAWN';
+    effectiveOn: string;
+    note?: string;
+  }[];
+};
+
+const changeWorkId = (n: number) =>
+  `0198d000-0000-7000-8000-0000000009${String(n).padStart(2, '0')}`;
+
+// A동 변경·추가 작업 두 건: 합의된 건(이력 포함)과 오래 협의 중으로 남은 건(7일 넘게 방치 알림 확인용)
+export const DEMO_CHANGE_WORKS: readonly DemoChangeWork[] = [
+  {
+    id: changeWorkId(1),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    seq: 1,
+    requestedOn: '2026-08-20',
+    requester: '고객사 현장소장',
+    content: '외벽 코너 판금 두께 변경 요청 (1.2T → 1.6T)',
+    status: 'AGREED',
+    statusChangedOn: '2026-08-25',
+    history: [
+      {
+        fromStatus: 'NEGOTIATING',
+        toStatus: 'AGREED',
+        effectiveOn: '2026-08-25',
+        note: '현장에서 구두 합의, 카카오톡으로 재확인',
+      },
+    ],
+  },
+  {
+    id: changeWorkId(2),
+    companyId: HANBIT,
+    projectCode: '2026-001',
+    seq: 2,
+    requestedOn: '2026-09-28',
+    requester: '고객사 담당 김과장',
+    content: '옥상 배수구 주변 방수 판금 추가 시공',
+    status: 'NEGOTIATING',
+    statusChangedOn: '2026-09-28',
+  },
+];

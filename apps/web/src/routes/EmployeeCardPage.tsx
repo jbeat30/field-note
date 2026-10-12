@@ -14,6 +14,7 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
+import { EmployeePayPanel } from '../labor/EmployeePayPanel';
 import { OptionSelect } from '../employees/OptionSelect';
 import { useEmployee, useUpdateEmployee } from '../employees/useEmployees';
 import { useOptions } from '../settings/useOptions';
@@ -165,6 +166,8 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
 
       <EmployeeWorkHistoryPanel employeeId={employee.id} />
 
+      <EmployeePayPanel employeeId={employee.id} />
+
       {saved && <Alert variant="info">{saved}</Alert>}
       {errors.root && <Alert>{errors.root.message}</Alert>}
 
@@ -220,7 +223,9 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
         >
           <Textarea {...register('memo')} />
         </FormField>
-        <p className="text-sm text-foreground/70">주민등록번호·계좌번호·급여는 저장하지 않습니다</p>
+        <p className="text-sm text-foreground/70">
+          주민등록번호·계좌번호는 저장하지 않습니다. 급여는 아래 단가만 기록합니다
+        </p>
         <Button type="submit" disabled={!isDirty || update.isPending}>
           {update.isPending ? '저장 중' : '저장'}
         </Button>

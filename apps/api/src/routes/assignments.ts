@@ -7,10 +7,13 @@ import {
   assignmentUpdateSchema,
   assignmentsResponseSchema,
   projectParamsSchema,
+  staffingCalendarQuerySchema,
+  staffingCalendarSchema,
   type AssignmentCancel,
   type AssignmentCreate,
   type AssignmentListQuery,
   type AssignmentUpdate,
+  type StaffingCalendarQuery,
 } from '@field-note/shared';
 
 import { AssignmentError, type AssignmentService } from '../assignment/assignmentService';
@@ -43,6 +46,20 @@ export const registerAssignmentRoutes = (
 ) => {
   const add: RouteRegistry['add'] = (spec, handler) =>
     registry.add(spec, assignments ? handler : notImplemented);
+
+  add(
+    {
+      method: 'get',
+      path: '/staffing-calendar',
+      summary: '인력 배치 캘린더 (기간 안의 직원과 투입, 최대 42일)',
+      auth: 'required',
+      request: { query: staffingCalendarQuerySchema },
+      response: { status: 200, schema: staffingCalendarSchema },
+      errors: [],
+    },
+    async ({ auth, query }) =>
+      assignments!.calendar(auth!.companyId, query as StaffingCalendarQuery),
+  );
 
   add(
     {

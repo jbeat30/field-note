@@ -15,6 +15,13 @@ import {
   summarizeEmployeeWork,
   summarizeProjectWork,
   workLogListQuerySchema,
+  canRecordProgress,
+  payRateCreateSchema,
+  summarizeLaborCost,
+  type PayRate,
+  evaluateProjectHealth,
+  progressRecordCreateSchema,
+  staffingCalendarQuerySchema,
   workSummaryQuerySchema,
   workLogParamsSchema,
   workLogSaveSchema,
@@ -28,6 +35,7 @@ import {
   overlapRange,
   periodChangeNeedsReason,
   type AssignmentWarning,
+  type ProgressRecord,
   formatProjectCode,
   PROJECT_STATUS_LABELS,
   projectTransitionSchema,
@@ -104,8 +112,12 @@ import {
   getWorkLogRevisions,
   getWorkLogs,
   saveWorkLogs,
+  addPayRate,
+  addProgressRecord,
+  getPayRates,
   addProjectStatusChange,
   getAssignments,
+  getProgressRecords,
   getProjectPeriodHistory,
   saveAssignments,
   getPartners,
@@ -136,6 +148,9 @@ import {
   updateSettings,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
+import { createChangeWorkHandlers } from './changeWorkHandlers';
+import { createCompletionHandlers } from './completionHandlers';
+import { createDashboardHandlers } from './dashboardHandlers';
 import { createDocumentHandlers } from './documentHandlers';
 import { createMaterialHandlers } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
@@ -282,6 +297,19 @@ const findSameProjectOverlap = (
     : null;
 };
 
+// 단가 기록은 적용 시작일 최근순, 같은 시작일이면 나중에 입력한 것이 먼저 (서버와 같은 순서)
+const sortedPayRates = (rates: PayRate[]) =>
+  [...rates].sort(
+    (a, b) =>
+      b.effectiveFrom.localeCompare(a.effectiveFrom) || b.createdAt.localeCompare(a.createdAt),
+  );
+
+// 진행률 기록은 기준일 최근순, 같은 기준일이면 나중에 입력한 것이 먼저 (서버와 같은 순서)
+const sortedProgress = (records: ProgressRecord[]) =>
+  [...records].sort(
+    (a, b) => b.recordedOn.localeCompare(a.recordedOn) || b.createdAt.localeCompare(a.createdAt),
+  );
+
 // 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음)
 const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
   if (row.cancelledAt) return { ...row, warnings: [] as AssignmentWarning[] };
@@ -380,6 +408,9 @@ export const handlers = [
   ...createMemoHandlers({ apiError, parseBody }),
   ...createMaterialHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
+  ...createChangeWorkHandlers({ apiError, parseBody }),
+  ...createCompletionHandlers({ apiError }),
+  ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
   ...createReportHandlers({ apiError }),
 
@@ -1843,6 +1874,291 @@ export const handlers = [
     return HttpResponse.json({
       items: [...getProjectPeriodHistory(account, parsed.data.id)].sort((a, b) =>
         b.changedAt.localeCompare(a.changedAt),
+      ),
+    });
+  }),
+
+  http.get('/api/v1/staffing-calendar', async ({ request }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const query = staffingCalendarQuerySchema.safeParse(
+      Object.fromEntries(new URL(request.url).searchParams),
+    );
+
+    if (!query.success) {
+      return apiError(
+        'VALIDATION_ERROR',
+        query.error.issues.map((issue) => ({
+          path: ['query', ...issue.path].join('.'),
+          message: issue.message,
+        })),
+      );
+    }
+
+    const { from, to } = query.data;
+    const projects = getProjects(account);
+    const assignments = getAssignments(account).flatMap((row) => {
+      const project = projects.find((item) => item.id === row.projectId);
+
+      return !row.cancelledAt &&
+        project &&
+        project.status !== 'CANCELLED' &&
+        row.startDate <= to &&
+        row.endDate >= from
+        ? [
+            {
+              id: row.id,
+              employeeId: row.employeeId,
+              projectId: row.projectId,
+              projectCode: project.code,
+              projectName: project.name,
+              projectStatus: project.status,
+              startDate: row.startDate,
+              endDate: row.endDate,
+            },
+          ]
+        : [];
+    });
+    const assigned = new Set(assignments.map((item) => item.employeeId));
+    const employees = getEmployees(account)
+      .filter((item) => item.status !== 'LEFT' || assigned.has(item.id))
+      .map((item) => ({
+        id: item.id,
+        name: item.name,
+        title: item.title ?? null,
+        status: item.status,
+        leftOn: item.leftOn ?? null,
+      }))
+      .sort((a, b) => a.name.localeCompare(b.name, 'ko') || a.id.localeCompare(b.id));
+
+    return HttpResponse.json({ from, to, employees, assignments });
+  }),
+
+  http.get('/api/v1/projects/:id/progress', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    return HttpResponse.json({
+      items: sortedProgress(getProgressRecords(account, parsed.data.id)),
+    });
+  }),
+
+  http.post('/api/v1/projects/:id/progress', async ({ request, params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, progressRecordCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    const project = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    if (!canRecordProgress(project.status)) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'projectId', message: '이 상태의 프로젝트에는 진행률을 입력할 수 없습니다' },
+      ]);
+    }
+
+    const today = todayInSeoul(new Date());
+    const recordedOn = body.data.recordedOn ?? today;
+
+    if (recordedOn > today) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.recordedOn', message: '기준일은 오늘 이후로 정할 수 없습니다' },
+      ]);
+    }
+
+    const record = {
+      id: crypto.randomUUID(),
+      percent: body.data.percent,
+      recordedOn,
+      note: body.data.note ?? null,
+      createdAt: new Date().toISOString(),
+    };
+
+    addProgressRecord(account, project.id, record);
+
+    return HttpResponse.json(record, { status: 201 });
+  }),
+
+  http.get('/api/v1/projects/:id/health', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const project = getProjects(account).find((item) => item.id === parsed.data.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    const planned = getAssignments(account)
+      .filter((item) => item.projectId === project.id && !item.cancelledAt)
+      .flatMap((item) => (item.plannedMinutes === null ? [] : [item.plannedMinutes]));
+    const used = getWorkLogs(account)
+      .filter((log) => log.projectId === project.id && log.status === 'SAVED')
+      .flatMap((log) => log.entries)
+      .reduce((sum, entry) => sum + entry.minutes, 0);
+    const latest = sortedProgress(getProgressRecords(account, project.id))[0];
+
+    return HttpResponse.json(
+      evaluateProjectHealth({
+        status: project.status,
+        plannedMinutes: planned.length > 0 ? planned.reduce((sum, value) => sum + value, 0) : null,
+        usedMinutes: used,
+        progressPercent: latest?.percent ?? null,
+        progressRecordedOn: latest?.recordedOn ?? null,
+        plannedStart: project.plannedStart,
+        plannedEnd: project.plannedEnd,
+        today: todayInSeoul(new Date()),
+      }),
+    );
+  }),
+
+  http.get('/api/v1/employees/:id/pay-rates', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = employeeParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getEmployees(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    return HttpResponse.json({ items: sortedPayRates(getPayRates(account, parsed.data.id)) });
+  }),
+
+  http.post('/api/v1/employees/:id/pay-rates', async ({ request, params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = employeeParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const body = await parseBody(request, payRateCreateSchema);
+
+    if ('response' in body) return body.response;
+
+    if (!getEmployees(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    const today = todayInSeoul(new Date());
+    const limit = new Date(Date.parse(`${today}T00:00:00Z`) + 366 * 86_400_000)
+      .toISOString()
+      .slice(0, 10);
+
+    if (body.data.effectiveFrom < '2000-01-01' || body.data.effectiveFrom > limit) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body.effectiveFrom', message: '적용 시작일이 너무 먼 날짜입니다' },
+      ]);
+    }
+
+    const rate: PayRate = {
+      id: crypto.randomUUID(),
+      payType: body.data.payType,
+      amount: body.data.amount,
+      effectiveFrom: body.data.effectiveFrom,
+      createdAt: new Date().toISOString(),
+    };
+
+    addPayRate(account, parsed.data.id, rate);
+
+    return HttpResponse.json(rate, { status: 201 });
+  }),
+
+  http.get('/api/v1/projects/:id/labor-cost', async ({ params }) => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = projectParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    if (!getProjects(account).some((item) => item.id === parsed.data.id))
+      return apiError('NOT_FOUND');
+
+    const projectId = parsed.data.id;
+    const items = getWorkLogs(account)
+      .filter((log) => log.projectId === projectId && log.status === 'SAVED')
+      .flatMap((log) =>
+        log.entries.map((entry) => ({
+          employeeId: entry.employeeId,
+          date: log.workDate,
+          minutes: entry.minutes,
+        })),
+      );
+    const assignments = getAssignments(account).filter(
+      (item) => item.projectId === projectId && !item.cancelledAt && item.plannedMinutes !== null,
+    );
+    const today = todayInSeoul(new Date());
+    const rates = new Map(
+      [...new Set([...items, ...assignments].map((item) => item.employeeId))].map((id) => [
+        id,
+        getPayRates(account, id),
+      ]),
+    );
+
+    return HttpResponse.json({
+      actual: summarizeLaborCost(items, rates, account.settings),
+      planned: summarizeLaborCost(
+        assignments.map((item) => ({
+          employeeId: item.employeeId,
+          date:
+            today < item.startDate ? item.startDate : today > item.endDate ? item.endDate : today,
+          minutes: item.plannedMinutes!,
+        })),
+        rates,
+        account.settings,
       ),
     });
   }),

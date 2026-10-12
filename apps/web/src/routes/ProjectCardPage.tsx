@@ -6,6 +6,8 @@ import { PinnedDocuments } from '../documents/PinnedDocuments';
 import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
 import { ProjectForm } from '../projects/ProjectForm';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
+import { ProjectLaborCostPanel } from '../labor/ProjectLaborCostPanel';
+import { ProjectProgressPanel } from '../progress/ProjectProgressPanel';
 import { ProjectStatusPanel } from '../projects/ProjectStatusPanel';
 import { useProject } from '../projects/useProjects';
 import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel';
@@ -96,6 +98,18 @@ export const ProjectCardPage = () => {
       </Link>
       <Link
         className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/change-works`}
+      >
+        변경·추가 작업
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
+        to={`/projects/${project.data.id}/summary`}
+      >
+        프로젝트 요약
+      </Link>
+      <Link
+        className="min-h-touch content-center text-primary underline"
         to={`/search?project=${project.data.id}`}
       >
         프로젝트 안에서 찾기
@@ -103,7 +117,11 @@ export const ProjectCardPage = () => {
       <PinnedDocuments projectId={project.data.id} />
       <ProjectStatusPanel project={project.data} />
       <ProjectAssignmentsPanel project={project.data} />
+      <ProjectProgressPanel projectId={project.data.id} status={project.data.status} />
+
       <ProjectWorkSummaryPanel projectId={project.data.id} />
+
+      <ProjectLaborCostPanel projectId={project.data.id} />
       <section className="flex flex-col gap-3" aria-labelledby="info-heading">
         <h2 id="info-heading" className="text-lg font-bold">
           기본정보

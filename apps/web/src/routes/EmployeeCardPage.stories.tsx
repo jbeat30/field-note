@@ -34,7 +34,7 @@ export const Default: Story = {
     await expect(canvas.getByLabelText('직종')).toHaveDisplayValue('판금공');
     await expect(canvas.getByLabelText('직원 구분')).toHaveDisplayValue('정직원');
     await expect(
-      canvas.getByText(/주민등록번호·계좌번호·급여는 저장하지 않습니다/),
+      canvas.getByText(/주민등록번호·계좌번호는 저장하지 않습니다. 급여는 아래 단가만 기록합니다/),
     ).toBeInTheDocument();
     // 바꾸기 전에는 저장할 수 없음
     await expect(canvas.getByRole('button', { name: '저장' })).toBeDisabled();
@@ -214,5 +214,36 @@ export const WorkHistoryEmpty: Story = {
     const history = within(await canvas.findByRole('region', { name: '투입 이력' }));
 
     await expect(await history.findByText(/아직 투입된 프로젝트가 없습니다/)).toBeInTheDocument();
+  },
+};
+
+export const PayRates: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '단가' }));
+
+    // 더미 단가: 2026-09-01부터 일급 25만원, 그 전에는 23만원 (이력이 남아 있음)
+    await expect(await panel.findByText(/일급제 250,000원/)).toBeInTheDocument();
+    const history = () => panel.getAllByRole('listitem').map((item) => item.textContent ?? '');
+
+    await expect(history()).toEqual([
+      expect.stringContaining('일급제 250,000원'),
+      expect.stringContaining('일급제 230,000원'),
+    ]);
+
+    // 금액을 비우면 서버에 보내기 전에 막는다
+    await userEvent.click(panel.getByRole('button', { name: '단가 저장' }));
+    await expect(await panel.findByText('금액을 입력해 주세요')).toBeInTheDocument();
+
+    // 월급제로 바꿔 저장하면 새 이력이 맨 앞에 쌓이고 기존 이력은 그대로
+    await userEvent.selectOptions(panel.getByLabelText('단가 종류'), 'MONTHLY');
+    await userEvent.type(panel.getByLabelText('월급 (원)'), '5500000');
+    await userEvent.click(panel.getByRole('button', { name: '단가 저장' }));
+    await waitFor(() => expect(history()).toHaveLength(3));
+    await expect(history()).toEqual([
+      expect.stringContaining('월급제 5,500,000원'),
+      expect.stringContaining('일급제 250,000원'),
+      expect.stringContaining('일급제 230,000원'),
+    ]);
   },
 };
