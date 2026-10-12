@@ -114,6 +114,14 @@ export const ProjectCardPage = () => {
       {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
         <Link
           className="min-h-touch content-center text-primary underline"
+          to={`/projects/${project.data.id}/repairs`}
+        >
+          보수 요청
+        </Link>
+      ) : null}
+      {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
+        <Link
+          className="min-h-touch content-center text-primary underline"
           to={`/projects/${project.data.id}/warranty`}
         >
           보증

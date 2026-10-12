@@ -15,6 +15,7 @@ import { createDashboardService } from './dashboard/dashboardService';
 import { createCompletionService } from './completion/completionService';
 import { createChangeWorkService } from './changeWork/changeWorkService';
 import { createWarrantyService } from './warranty/warrantyService';
+import { createRepairService } from './repair/repairService';
 import { createLaborService } from './labor/laborService';
 import { createProgressService } from './progress/progressService';
 import { createWorkLogService } from './workLog/workLogService';
@@ -60,6 +61,7 @@ const main = async () => {
   const labor = createLaborService(appPrisma);
   const changeWorks = createChangeWorkService(appPrisma);
   const warranty = createWarrantyService(appPrisma);
+  const repairs = createRepairService(appPrisma);
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
@@ -152,6 +154,7 @@ const main = async () => {
     labor,
     changeWorks,
     warranty,
+    repairs,
     completion,
     dashboard,
     files,

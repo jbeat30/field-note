@@ -18,6 +18,7 @@ import { registerDashboardRoutes } from './routes/dashboard';
 import { registerCompletionRoutes } from './routes/completion';
 import { registerChangeWorkRoutes } from './routes/changeWorks';
 import { registerWarrantyRoutes } from './routes/warranty';
+import { registerRepairRoutes } from './routes/repairs';
 import { registerLaborRoutes } from './routes/labor';
 import { registerProgressRoutes } from './routes/progress';
 import { registerWorkLogRoutes } from './routes/workLogs';
@@ -45,6 +46,7 @@ import type { DashboardService } from './dashboard/dashboardService';
 import type { CompletionService } from './completion/completionService';
 import type { ChangeWorkService } from './changeWork/changeWorkService';
 import type { WarrantyService } from './warranty/warrantyService';
+import type { RepairService } from './repair/repairService';
 import type { LaborService } from './labor/laborService';
 import type { ProgressService } from './progress/progressService';
 import type { WorkLogService } from './workLog/workLogService';
@@ -93,6 +95,7 @@ export type AppOptions = {
   labor?: LaborService;
   changeWorks?: ChangeWorkService;
   warranty?: WarrantyService;
+  repairs?: RepairService;
   completion?: CompletionService;
   dashboard?: DashboardService;
   // 없으면 파일 업로드 API는 501
@@ -165,6 +168,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerLaborRoutes(registry, options.labor);
   registerChangeWorkRoutes(registry, options.changeWorks);
   registerWarrantyRoutes(registry, options.warranty);
+  registerRepairRoutes(registry, options.repairs);
   registerCompletionRoutes(registry, options.completion);
   registerDashboardRoutes(registry, options.dashboard);
   registerFileRoutes(registry, options.files);

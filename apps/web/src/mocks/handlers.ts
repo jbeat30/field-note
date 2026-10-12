@@ -149,6 +149,7 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
+import { countMockRepairs, createRepairHandlers } from './repairHandlers';
 import {
   createWarrantyHandlers,
   ensureMockDefaultWarranty,
@@ -415,6 +416,7 @@ export const handlers = [
   ...createDocumentHandlers({ apiError, parseBody }),
   ...createChangeWorkHandlers({ apiError, parseBody }),
   ...createWarrantyHandlers({ apiError, parseBody }),
+  ...createRepairHandlers({ apiError, parseBody }),
   ...createCompletionHandlers({ apiError }),
   ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
@@ -1582,6 +1584,7 @@ export const handlers = [
       ).length,
       warrantyMonths: warranty.months,
       warrantyEndOn: warranty.endOn,
+      openRepairCount: countMockRepairs(account, current.id).open,
     });
 
     if (!checked.ok) {

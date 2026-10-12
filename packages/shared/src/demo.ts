@@ -905,3 +905,64 @@ export const DEMO_WARRANTIES: readonly DemoWarranty[] = [
     endOn: '2026-06-18',
   },
 ];
+
+type DemoRepairStatus = 'RECEIVED' | 'IN_PROGRESS' | 'ON_HOLD' | 'DONE';
+
+export type DemoRepair = {
+  id: string;
+  companyId: string;
+  // 프로젝트 코드로 연결
+  projectCode: string;
+  seq: number;
+  receivedOn: string;
+  requester: string;
+  content: string;
+  location?: string;
+  status: DemoRepairStatus;
+  statusChangedOn: string;
+  resolvedOn?: string;
+  // 상태 변경 이력 (오래된 것부터)
+  history?: {
+    fromStatus: DemoRepairStatus;
+    toStatus: DemoRepairStatus;
+    effectiveOn: string;
+    note?: string;
+  }[];
+};
+
+const repairId = (n: number) => `0198d000-0000-7000-8000-0000000011${String(n).padStart(2, '0')}`;
+
+// C동 환기 설비(종료)의 보증 기간 중 처리를 마친 보수 요청 두 건 (이력 조회용)
+export const DEMO_REPAIRS: readonly DemoRepair[] = [
+  {
+    id: repairId(1),
+    companyId: HANBIT,
+    projectCode: '2025-012',
+    seq: 1,
+    receivedOn: '2025-12-26',
+    requester: '관리사무소 김과장',
+    content: '옥상 환기구 연결부 빗물 누수',
+    location: '옥상 B구역',
+    status: 'DONE',
+    statusChangedOn: '2026-01-05',
+    resolvedOn: '2026-01-05',
+    history: [
+      { fromStatus: 'RECEIVED', toStatus: 'IN_PROGRESS', effectiveOn: '2025-12-29' },
+      { fromStatus: 'IN_PROGRESS', toStatus: 'DONE', effectiveOn: '2026-01-05' },
+    ],
+  },
+  {
+    id: repairId(2),
+    companyId: HANBIT,
+    projectCode: '2025-012',
+    seq: 2,
+    receivedOn: '2026-03-10',
+    requester: '입주사 총무',
+    content: '환기 덕트 진동 소음 점검 요청',
+    location: '3층 복도',
+    status: 'DONE',
+    statusChangedOn: '2026-03-12',
+    resolvedOn: '2026-03-12',
+    history: [{ fromStatus: 'RECEIVED', toStatus: 'DONE', effectiveOn: '2026-03-12' }],
+  },
+];

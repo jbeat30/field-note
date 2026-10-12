@@ -28,3 +28,4 @@ export * from './changeWorks';
 export * from './projectCompletion';
 export * from './dashboard';
 export * from './warranty';
+export * from './repairs';
