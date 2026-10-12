@@ -1,4 +1,5 @@
 import {
+  CREDENTIAL_GAP_LABELS,
   assignmentCreateSchema,
   assignmentStatusCheck,
   assignmentUpdateSchema,
@@ -74,6 +75,14 @@ const plannedText = (minutes: number | null, settings: CompanySettings) =>
 const warningText = (warning: AssignmentWarning) => {
   if (warning.type === 'OVERLAP') {
     return `${warning.from === warning.to ? warning.from : `${warning.from} ~ ${warning.to}`}에 '${warning.projectName}'(${warning.projectCode})에도 투입되어 있습니다`;
+  }
+
+  if (warning.type === 'CREDENTIAL') {
+    const label = CREDENTIAL_GAP_LABELS[warning.reason];
+
+    return warning.expiresOn
+      ? `필요 자격 '${warning.typeName}': ${label} (만료일 ${warning.expiresOn})`
+      : `필요 자격 '${warning.typeName}': ${label}`;
   }
 
   return warning.type === 'ON_LEAVE' ? '휴직 중인 직원입니다' : '퇴사한 직원입니다';

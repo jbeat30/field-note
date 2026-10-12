@@ -6,4 +6,5 @@ export const OPTION_PRESETS: Record<OptionKind, readonly string[]> = {
   WORK_CATEGORY: ['생산·가공', '운반', '설치', '철거', '배선', '마감', '기타'],
   TRADE: ['판금', '인테리어', '전기', '설비', '기타'],
   WORKER_TYPE: ['정직원', '계약직', '일용', '협력(외부) 인력'],
+  CREDENTIAL_TYPE: ['용접 기능사', '판금 기능사', '전기기능사', '안전교육 이수증', '건강검진'],
 };

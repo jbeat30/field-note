@@ -29,6 +29,8 @@ export const PURGE_POLICY = {
   repair_request_status_changes: 'DELETE',
   repair_request_links: 'DELETE',
   monthly_closes: 'DELETE',
+  employee_credentials: 'DELETE',
+  project_required_credentials: 'DELETE',
   monthly_close_events: 'DELETE',
   project_period_changes: 'DELETE',
   project_assignments: 'DELETE',

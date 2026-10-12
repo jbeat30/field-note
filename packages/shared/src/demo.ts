@@ -906,6 +906,65 @@ export const DEMO_WARRANTIES: readonly DemoWarranty[] = [
   },
 ];
 
+export type DemoCredential = {
+  companyId: string;
+  // 직원 이름 대신 데모 직원 번호(employeeId 규칙)로 연결
+  employeeId: string;
+  typeName: string;
+  issuedOn?: string;
+  expiresOn?: string;
+  memo?: string;
+};
+
+// 직원 서류: 유효·만료 임박·만료·만료 없음을 한 번씩 보여 주는 더미 (파일은 붙이지 않음)
+export const DEMO_CREDENTIALS: readonly DemoCredential[] = [
+  {
+    companyId: HANBIT,
+    employeeId: employeeId(1),
+    typeName: '판금 기능사',
+    issuedOn: '2012-05-10',
+  },
+  {
+    companyId: HANBIT,
+    employeeId: employeeId(1),
+    typeName: '건강검진',
+    issuedOn: '2024-09-30',
+    expiresOn: '2026-09-30',
+    memo: '재검진 필요',
+  },
+  {
+    companyId: HANBIT,
+    employeeId: employeeId(3),
+    typeName: '용접 기능사',
+    issuedOn: '2020-04-01',
+    expiresOn: '2027-03-31',
+  },
+  {
+    companyId: HANBIT,
+    employeeId: employeeId(3),
+    typeName: '안전교육 이수증',
+    issuedOn: '2025-10-28',
+    expiresOn: '2026-10-28',
+  },
+  {
+    companyId: HANBIT,
+    employeeId: employeeId(4),
+    typeName: '전기기능사',
+    issuedOn: '2018-11-20',
+  },
+];
+
+export type DemoRequiredCredential = {
+  companyId: string;
+  // 프로젝트 코드로 연결
+  projectCode: string;
+  typeNames: readonly string[];
+};
+
+export const DEMO_REQUIRED_CREDENTIALS: readonly DemoRequiredCredential[] = [
+  { companyId: HANBIT, projectCode: '2026-001', typeNames: ['안전교육 이수증'] },
+];
+
 type DemoRepairStatus = 'RECEIVED' | 'IN_PROGRESS' | 'ON_HOLD' | 'DONE';
 
 export type DemoRepair = {

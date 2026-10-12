@@ -26,6 +26,7 @@ import { createDashboardService } from '../dashboard/dashboardService';
 import { createCompletionService } from '../completion/completionService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createWarrantyService } from '../warranty/warrantyService';
+import { createCredentialService } from '../credential/credentialService';
 import { createRepairService } from '../repair/repairService';
 import { createMonthlyService } from '../monthly/monthlyService';
 import { createLaborService } from '../labor/laborService';
@@ -88,6 +89,11 @@ const instance = () =>
     warranty: createWarrantyService(db.app, () => NOW),
     repairs: createRepairService(db.app, () => NOW),
     monthly: createMonthlyService(db.app, () => NOW),
+    credentials: createCredentialService({
+      app: db.app,
+      storage: createMemoryStorage().storage,
+      now: () => NOW,
+    }),
     completion: createCompletionService(db.app, createMemoryStorage().storage, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
@@ -309,6 +315,20 @@ const buildCompany = async () => {
     effectiveOn: '2026-10-02',
   });
 
+  // 직원 서류: 서류 한 건과 직원 서류용 파일 신청 한 건
+  const credentialTypeId = options.find((item) => item.kind === 'CREDENTIAL_TYPE')!.id;
+  const credentialId = await c.id(`/employees/${worker}/credentials`, {
+    typeId: credentialTypeId,
+    expiresOn: '2030-01-01',
+  });
+  const employeeFileId = (
+    await c.call('post', `/employees/${worker}/files`, {
+      name: '자격증.pdf',
+      contentType: 'application/pdf',
+      size: 1000,
+    })
+  ).body.file.id as string;
+
   const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
   const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
     materialId,
@@ -339,6 +359,9 @@ const buildCompany = async () => {
     warrantyDocumentId,
     certificateId,
     repairId,
+    credentialTypeId,
+    credentialId,
+    employeeFileId,
   };
 };
 
@@ -420,6 +443,46 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'DELETE /change-works/{id}/documents/{documentId}',
       'delete',
       `/change-works/${a.changeWorkId}/documents/${a.documentId}`,
+    ],
+    ['GET /employees/{id}/credentials', 'get', `/employees/${a.worker}/credentials`],
+    [
+      'POST /employees/{id}/credentials',
+      'post',
+      `/employees/${a.worker}/credentials`,
+      { typeId: a.credentialTypeId },
+    ],
+    [
+      'PATCH /employees/{id}/credentials/{credentialId}',
+      'patch',
+      `/employees/${a.worker}/credentials/${a.credentialId}`,
+      { expiresOn: '2031-01-01' },
+    ],
+    [
+      'DELETE /employees/{id}/credentials/{credentialId}',
+      'delete',
+      `/employees/${a.worker}/credentials/${a.credentialId}`,
+    ],
+    [
+      'GET /employees/{id}/credentials/{credentialId}/file-url',
+      'get',
+      `/employees/${a.worker}/credentials/${a.credentialId}/file-url`,
+    ],
+    [
+      'POST /employees/{employeeId}/files',
+      'post',
+      `/employees/${a.worker}/files`,
+      { name: '침투.pdf', contentType: 'application/pdf', size: 1000 },
+    ],
+    [
+      'GET /projects/{id}/required-credentials',
+      'get',
+      `/projects/${a.projectId}/required-credentials`,
+    ],
+    [
+      'PUT /projects/{id}/required-credentials',
+      'put',
+      `/projects/${a.projectId}/required-credentials`,
+      { typeIds: [a.credentialTypeId] },
     ],
     ['GET /projects/{id}/warranty', 'get', `/projects/${a.warrantyProjectId}/warranty`],
     [
@@ -674,6 +737,9 @@ describe('회사 격리: 전 엔드포인트', () => {
       warrantyDocumentId: '{id}',
       certificateId: '{certificateId}',
       repairId: '{id}',
+      credentialTypeId: '{typeId}',
+      credentialId: '{credentialId}',
+      employeeFileId: '{id}',
     };
     const tested = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const exempt = new Set(OWN_ACCOUNT_ONLY);

@@ -11,9 +11,11 @@ import {
   DEMO_ASSIGNMENTS,
   DEMO_CHANGE_WORKS,
   DEMO_REPAIRS,
+  DEMO_REQUIRED_CREDENTIALS,
   DEMO_WARRANTIES,
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
+  DEMO_CREDENTIALS,
   DEMO_EMPLOYEES,
   DEMO_PARTNERS,
   DEMO_PROJECTS,
@@ -413,6 +415,62 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
           startOn: requiredDate(item.startOn),
           changedBy: admin.userId,
         },
+      });
+    }
+  }
+
+  // 직원 서류·필요 자격 (자격 종류는 선택 목록 이름으로 연결, 서류는 직원에게 한 건도 없을 때만 처음 한 번 만든다)
+  const credentialTypeId = async (companyId: string, name: string) =>
+    (
+      await prisma.optionItem.findFirstOrThrow({
+        where: { companyId, kind: 'CREDENTIAL_TYPE', nameKey: normalizeOptionName(name) },
+      })
+    ).id;
+
+  for (const item of DEMO_CREDENTIALS) {
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+
+    if (
+      admin &&
+      !(await prisma.employeeCredential.findFirst({
+        where: { companyId: item.companyId, employeeId: item.employeeId },
+      }))
+    ) {
+      // 같은 직원의 서류는 한꺼번에 만든다 (일부만 만들어진 채로 남지 않게 첫 서류 기준으로 판단)
+      for (const own of DEMO_CREDENTIALS.filter(
+        (candidate) =>
+          candidate.companyId === item.companyId && candidate.employeeId === item.employeeId,
+      )) {
+        await prisma.employeeCredential.create({
+          data: {
+            companyId: own.companyId,
+            employeeId: own.employeeId,
+            typeId: await credentialTypeId(own.companyId, own.typeName),
+            issuedOn: toDate(own.issuedOn),
+            expiresOn: toDate(own.expiresOn),
+            memo: own.memo ?? null,
+            createdBy: admin.userId,
+          },
+        });
+      }
+    }
+  }
+
+  for (const item of DEMO_REQUIRED_CREDENTIALS) {
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: item.companyId, code: item.projectCode },
+    });
+
+    for (const name of item.typeNames) {
+      await prisma.projectRequiredCredential.createMany({
+        data: [
+          {
+            companyId: item.companyId,
+            projectId: project.id,
+            typeId: await credentialTypeId(item.companyId, name),
+          },
+        ],
+        skipDuplicates: true,
       });
     }
   }
