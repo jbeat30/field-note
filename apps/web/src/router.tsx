@@ -104,6 +104,10 @@ export const routes = [
             path: '/projects/:id/summary',
             ...page(() => import('./routes/ProjectSummaryPage'), 'ProjectSummaryPage'),
           },
+          {
+            path: '/monthly-hours',
+            ...page(() => import('./routes/MonthlyHoursPage'), 'MonthlyHoursPage'),
+          },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
           {

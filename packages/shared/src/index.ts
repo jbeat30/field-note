@@ -29,3 +29,4 @@ export * from './projectCompletion';
 export * from './dashboard';
 export * from './warranty';
 export * from './repairs';
+export * from './monthlyHours';

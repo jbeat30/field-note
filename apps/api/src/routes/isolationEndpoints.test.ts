@@ -27,6 +27,7 @@ import { createCompletionService } from '../completion/completionService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createWarrantyService } from '../warranty/warrantyService';
 import { createRepairService } from '../repair/repairService';
+import { createMonthlyService } from '../monthly/monthlyService';
 import { createLaborService } from '../labor/laborService';
 import { createProgressService } from '../progress/progressService';
 import { createReportService } from '../report/reportService';
@@ -86,6 +87,7 @@ const instance = () =>
     changeWorks: createChangeWorkService(db.app, () => NOW),
     warranty: createWarrantyService(db.app, () => NOW),
     repairs: createRepairService(db.app, () => NOW),
+    monthly: createMonthlyService(db.app, () => NOW),
     completion: createCompletionService(db.app, createMemoryStorage().storage, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
@@ -599,6 +601,10 @@ const COLLECTIONS = [
   'GET /employees',
   'POST /employees',
   'GET /materials',
+  'GET /monthly-hours',
+  'POST /monthly-hours/close',
+  'POST /monthly-hours/reopen',
+  'GET /monthly-hours.xlsx',
   'POST /materials',
   'GET /memos',
   'POST /memos',
@@ -740,6 +746,25 @@ describe('회사 격리: 전 엔드포인트', () => {
       seq: 1,
     });
     expect(repair.body.history).toHaveLength(1);
+
+    // 월 공수표·확정도 회사마다 따로: 각자 자기 일지만 집계되고, A가 확정해도 B는 확정되지 않으며 B는 A의 확정을 재오픈할 수 없다
+    const month = DAY.slice(0, 7);
+    const monthOf = async (c: typeof a.c) =>
+      (await c.call('get', `/monthly-hours?month=${month}`)).body;
+    const aMonth = await monthOf(a.c);
+    const bMonth = await monthOf(b.c);
+
+    expect(aMonth.rows.map((row: { projectId: string }) => row.projectId)).toEqual([a.projectId]);
+    expect(bMonth.rows.map((row: { projectId: string }) => row.projectId)).toEqual([b.projectId]);
+    expect(
+      (await a.c.call('post', '/monthly-hours/close', { month, confirmDrafts: true })).status,
+    ).toBe(200);
+    expect(await monthOf(a.c)).toMatchObject({ isClosed: true });
+    expect(await monthOf(b.c)).toMatchObject({ isClosed: false, events: [] });
+    expect(
+      (await b.c.call('post', '/monthly-hours/reopen', { month, reason: '침투' })).status,
+    ).toBe(400);
+    expect(await monthOf(a.c)).toMatchObject({ isClosed: true });
 
     // 단가도 그대로: B의 침투 단가(999,999원)가 들어가지 않았다
     const rates = await a.c.call('get', `/employees/${a.worker}/pay-rates`);

@@ -149,6 +149,7 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
+import { createMonthlyHandlers, mockMonthLockCheck } from './monthlyHandlers';
 import { countMockRepairs, createRepairHandlers } from './repairHandlers';
 import {
   createWarrantyHandlers,
@@ -417,6 +418,7 @@ export const handlers = [
   ...createChangeWorkHandlers({ apiError, parseBody }),
   ...createWarrantyHandlers({ apiError, parseBody }),
   ...createRepairHandlers({ apiError, parseBody }),
+  ...createMonthlyHandlers({ apiError, parseBody }),
   ...createCompletionHandlers({ apiError }),
   ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
@@ -2397,6 +2399,11 @@ export const handlers = [
     const dateCheck = checkWorkDate(workDate, project, todayInSeoul(new Date()));
 
     if (!dateCheck.ok) return invalid(dateCheck.path, dateCheck.message);
+
+    // 월 공수가 확정된 달의 일지는 재오픈 전까지 고칠 수 없다 (서버와 같은 규칙)
+    const lockCheck = mockMonthLockCheck(account, workDate);
+
+    if (!lockCheck.ok) return invalid(lockCheck.path, lockCheck.message);
 
     const saveCheck = validateWorkLogForSave(input);
 

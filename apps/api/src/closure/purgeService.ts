@@ -61,6 +61,8 @@ export const purgeCompany = (
     // 일지의 수정 이력 → 공수 항목 → 일지 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
     // 감사 기록 → 문서 버전 → 문서 순서 (버전이 파일·문서를, 문서가 프로젝트·계정을 참조하므로 파일·프로젝트보다 먼저)
     // 변경 작업의 증빙 연결·상태 이력은 문서·변경 작업을 참조하므로 그보다 먼저 지움
+    deleted.monthly_close_events = (await tx.monthlyCloseEvent.deleteMany({ where })).count;
+    deleted.monthly_closes = (await tx.monthlyClose.deleteMany({ where })).count;
     // 보수 요청의 연결·상태 이력은 일지·자재 기록·보수 요청을 참조하므로 그보다 먼저 지움
     deleted.repair_request_links = (await tx.repairRequestLink.deleteMany({ where })).count;
     deleted.repair_request_status_changes = (
