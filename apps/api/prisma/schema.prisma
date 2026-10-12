@@ -1013,6 +1013,8 @@ enum AuditAction {
   PAY_RATE_CHANGED
   LABOR_COST_VIEWED
   EMPLOYEE_DOCUMENT_VIEWED
+  MONTH_CLOSED
+  MONTH_REOPENED
 
   @@map("audit_action")
 }

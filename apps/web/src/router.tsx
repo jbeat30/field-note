@@ -144,6 +144,10 @@ export const routes = [
             ...page(() => import('./routes/AlertSettingsPage'), 'AlertSettingsPage'),
           },
           {
+            path: '/settings/records',
+            ...page(() => import('./routes/AuditLogsPage'), 'AuditLogsPage'),
+          },
+          {
             path: '/settings/lists',
             ...page(() => import('./routes/OptionListsPage'), 'OptionListsPage'),
           },

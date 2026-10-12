@@ -287,6 +287,19 @@ export const SettingsPage = () => {
         </Button>
       </section>
 
+      <section className="flex flex-col gap-3" aria-labelledby="records-heading">
+        <h2 id="records-heading" className="text-lg font-bold">
+          기록 조회
+        </h2>
+        <p className="text-sm text-foreground/70">
+          민감 자료·직원 서류 열람, 내보내기, 단가·인건비 조회, 월 공수 확정·재오픈 기록을 봅니다
+          (조회만 가능하고 수정·삭제할 수 없습니다)
+        </p>
+        <Button variant="secondary" asChild>
+          <Link to="/settings/records">기록 조회 열기</Link>
+        </Button>
+      </section>
+
       <section className="flex flex-col gap-3" aria-labelledby="devices-heading">
         <h2 id="devices-heading" className="text-lg font-bold">
           로그인한 기기

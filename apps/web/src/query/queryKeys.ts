@@ -24,6 +24,7 @@ export const queryKeys = {
     ['change-works', 'list', { projectId, status }] as const,
   changeWork: (id: string) => ['change-works', 'detail', { id }] as const,
   changeUsage: (projectId: string) => ['change-works', 'usage', { projectId }] as const,
+  auditLogs: (filter: object = {}) => ['audit', 'list', filter] as const,
   credentials: (employeeId: string) => ['credentials', 'list', { employeeId }] as const,
   requiredCredentials: (projectId: string) => ['credentials', 'required', { projectId }] as const,
   warranty: (projectId: string) => ['warranty', 'detail', { projectId }] as const,

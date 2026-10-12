@@ -15,6 +15,7 @@ export * from './assignments';
 export * from './staffing';
 export * from './workLogs';
 export * from './workSummary';
+export * from './auditLogs';
 export * from './credentials';
 export * from './files';
 export * from './photos';
