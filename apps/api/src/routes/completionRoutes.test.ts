@@ -1,0 +1,498 @@
+import {
+  optionsResponseSchema,
+  projectCompletionSummarySchema,
+  transitionNoticesSchema,
+} from '@field-note/shared';
+import request from 'supertest';
+
+import { createApp } from '../app';
+import { createAssignmentService } from '../assignment/assignmentService';
+import { createAccountService } from '../auth/accountService';
+import { createChangeWorkService } from '../changeWork/changeWorkService';
+import { createCompletionService } from '../completion/completionService';
+import { createOptionService } from '../company/optionService';
+import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { createDocumentService } from '../document/documentService';
+import { createEmployeeService } from '../employee/employeeService';
+import { createFileService } from '../file/fileService';
+import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
+import { createMaterialService } from '../material/materialService';
+import { createCompanyWithInvitation } from '../operator/operatorService';
+import { createPartnerService } from '../partner/partnerService';
+import { createProgressService } from '../progress/progressService';
+import { createProjectService } from '../project/projectService';
+import { createMemoryQueue } from '../queue/jobQueue';
+import { SESSION_COOKIE } from '../session/cookie';
+import { createPrismaSessionStore } from '../session/sessionStore';
+import { createMemoryStorage } from '../storage/objectStorage';
+import { createWorkLogService } from '../workLog/workLogService';
+
+let db: TestDatabase;
+let documentIds: string[];
+
+jest.setTimeout(240_000);
+
+// 서울 기준 2026-10-11
+const NOW = new Date('2026-10-11T03:00:00Z');
+
+beforeAll(async () => {
+  db = await startTestDatabase();
+
+  const { rows } = await db.ownerPool.query<{ id: string }>(
+    `INSERT INTO legal_documents (type, version, effective_at, content_hash, is_required) VALUES
+      ('TERMS_OF_SERVICE', '2026-10-01', '2026-10-01', 'h1', true),
+      ('PRIVACY_POLICY', '2026-10-01', '2026-10-01', 'h2', true)
+     RETURNING id`,
+  );
+
+  documentIds = rows.map((row) => row.id);
+});
+
+afterAll(async () => {
+  await db.stop();
+});
+
+const app = () => {
+  const storage = createMemoryStorage().storage;
+
+  return createApp({
+    sessionStore: createPrismaSessionStore(db.auth),
+    accountService: createAccountService({ auth: db.auth, app: db.app }),
+    options: createOptionService(db.app),
+    employees: createEmployeeService(db.app, () => NOW),
+    partners: createPartnerService(db.app),
+    projects: createProjectService(db.app, () => NOW),
+    assignments: createAssignmentService(db.app),
+    workLogs: createWorkLogService(db.app, () => NOW),
+    files: createFileService({
+      app: db.app,
+      storage,
+      queue: createMemoryQueue().queue,
+      now: () => NOW,
+    }),
+    materials: createMaterialService(db.app, () => NOW),
+    documents: createDocumentService(db.app, storage, () => NOW),
+    progress: createProgressService(db.app, () => NOW),
+    changeWorks: createChangeWorkService(db.app, () => NOW),
+    completion: createCompletionService(db.app, storage, () => NOW),
+    appOrigin: 'http://localhost:5173',
+  });
+};
+
+let sequence = 0;
+
+const signedUp = async (instance: ReturnType<typeof app>) => {
+  sequence += 1;
+
+  const invitation = await createCompanyWithInvitation(db.operator, {
+    companyName: `요약회사${sequence}`,
+    adminName: '요약관리자',
+    operator: 'test',
+  });
+  const res = await request(instance)
+    .post('/api/v1/auth/signup')
+    .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+    .send({
+      inviteToken: invitation.token,
+      loginId: `sum-user-${sequence}`,
+      password: 'Correct-horse-2026!',
+      email: `sum${sequence}@example.com`,
+      isAgeConfirmed: true,
+      consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
+    });
+
+  return (res.headers['set-cookie'] as unknown as string[]).find((value) =>
+    value.startsWith(`${SESSION_COOKIE}=`),
+  )!;
+};
+
+const api = (instance: ReturnType<typeof app>, cookie: string) => {
+  const send = (method: 'post' | 'put', path: string, body: object) =>
+    (method === 'post'
+      ? request(instance).post(`/api/v1${path}`)
+      : request(instance).put(`/api/v1${path}`)
+    )
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+      .set('Cookie', cookie)
+      .send(body);
+  const get = (path: string) => request(instance).get(`/api/v1${path}`).set('Cookie', cookie);
+
+  return {
+    get,
+    send,
+    id: async (path: string, body: object) => (await send('post', path, body)).body.id as string,
+    notices: (projectId: string, to: string) =>
+      get(`/projects/${projectId}/transition-notices?to=${to}`),
+    summary: (projectId: string) => get(`/projects/${projectId}/summary`),
+    saveLog: (projectId: string, date: string, body: object) =>
+      send('put', `/projects/${projectId}/work-logs/${date}`, body),
+    makeDocument: async (
+      projectId: string,
+      title: string,
+      category: string,
+      extra: object = {},
+    ) => {
+      const fileId = (
+        await send('post', `/projects/${projectId}/files`, {
+          name: `${title}.pdf`,
+          contentType: 'application/pdf',
+          purpose: 'DOCUMENT',
+          size: 1000,
+        })
+      ).body.file.id as string;
+
+      return (
+        await send('post', `/projects/${projectId}/documents`, {
+          fileId,
+          title,
+          category,
+          ...extra,
+        })
+      ).body.id as string;
+    },
+  };
+};
+
+// 진행 중 프로젝트(2026-09-01 ~ 2026-12-31)와 직원 두 명(계획 공수 김작업 10일)
+const setup = async (plannedEnd = '2026-12-31') => {
+  const instance = app();
+  const cookie = await signedUp(instance);
+  const client = api(instance, cookie);
+  const clientId = await client.id('/partners', { kind: 'CLIENT', name: '가나다건설' });
+  const managerId = await client.id('/employees', { name: '박소장' });
+  const worker = await client.id('/employees', { name: '김작업' });
+  const worker2 = await client.id('/employees', { name: '이작업' });
+  const options = optionsResponseSchema.parse((await client.get('/company/options')).body).items;
+  const categories = options.filter((item) => item.kind === 'WORK_CATEGORY');
+  const project = await client.id('/projects', {
+    name: 'A동 판금 공사',
+    siteName: 'A동 현장',
+    siteAddress: '서울시 중구',
+    clientId,
+    managerId,
+    contractDate: '2026-08-01',
+    plannedStart: '2026-09-01',
+    plannedEnd,
+  });
+
+  await client.id(`/projects/${project}/status`, {
+    toStatus: 'IN_PROGRESS',
+    effectiveOn: '2026-09-01',
+  });
+  await client.id(`/projects/${project}/assignments`, {
+    employeeId: worker,
+    startDate: '2026-09-01',
+    endDate: plannedEnd,
+    plannedMinutes: 10 * 480,
+  });
+  await client.id(`/projects/${project}/assignments`, {
+    employeeId: worker2,
+    startDate: '2026-09-01',
+    endDate: plannedEnd,
+  });
+
+  return { instance, client, project, worker, worker2, categories, managerId };
+};
+
+const names = (items: { type: string }[]) => items.map((item) => item.type);
+
+describe('상태 전환 안내', () => {
+  it('로그인하지 않으면 접근할 수 없다', async () => {
+    const { instance, project } = await setup();
+
+    expect(
+      (await request(instance).get(`/api/v1/projects/${project}/transition-notices?to=COMPLETED`))
+        .status,
+    ).toBe(401);
+    expect((await request(instance).get(`/api/v1/projects/${project}/summary`)).status).toBe(401);
+  });
+
+  it('기록이 깨끗하면 완료 전에도 진행률 기록 요청만 나온다', async () => {
+    const { client, project } = await setup();
+    const notices = transitionNoticesSchema.parse(
+      (await client.notices(project, 'COMPLETED')).body,
+    );
+
+    expect(notices.items).toEqual([{ type: 'PROGRESS_BELOW_100', percent: null }]);
+
+    await client.send('post', `/projects/${project}/progress`, { percent: 100 });
+    expect(
+      transitionNoticesSchema.parse((await client.notices(project, 'COMPLETED')).body).items,
+    ).toEqual([]);
+  });
+
+  it('임시 저장 일지·진행률·남은 자재·협의 중 변경 작업을 모두 알린다', async () => {
+    const { client, project, worker, categories } = await setup();
+    const category = categories[0]!.id;
+    const entries = [{ employeeId: worker, categoryId: category, minutes: 480 }];
+
+    await client.saveLog(project, '2026-10-05', { status: 'SAVED', content: '일반', entries });
+    await client.saveLog(project, '2026-10-06', { status: 'DRAFT', content: '임시', entries });
+    await client.saveLog(project, '2026-10-07', { status: 'DRAFT', content: '임시2', entries });
+    await client.send('post', `/projects/${project}/progress`, { percent: 85 });
+
+    const duct = await client.id('/materials', { name: '덕트', unit: '장' });
+    const bolt = await client.id('/materials', { name: '볼트', unit: '개' });
+    const record = (materialId: string, kind: string, quantity: number) =>
+      client.send('post', `/projects/${project}/material-records`, {
+        materialId,
+        recordDate: '2026-10-05',
+        kind,
+        quantity,
+      });
+
+    await record(duct, 'RECEIVED', 100);
+    await record(duct, 'USED', 85);
+    // 잔량이 0이면 알리지 않는다
+    await record(bolt, 'RECEIVED', 10);
+    await record(bolt, 'USED', 10);
+    await client.send('post', `/projects/${project}/change-works`, {
+      requester: '고객',
+      content: '협의 중 변경',
+    });
+
+    const notices = transitionNoticesSchema.parse(
+      (await client.notices(project, 'COMPLETED')).body,
+    );
+
+    expect(names(notices.items)).toEqual([
+      'DRAFT_LOGS',
+      'PROGRESS_BELOW_100',
+      'REMAINING_MATERIALS',
+      'NEGOTIATING_CHANGES',
+    ]);
+    expect(notices.items[0]).toEqual({ type: 'DRAFT_LOGS', count: 2 });
+    expect(notices.items[1]).toEqual({ type: 'PROGRESS_BELOW_100', percent: 85 });
+    expect(notices.items[2]).toMatchObject({
+      items: [{ name: '덕트', unit: '장', remaining: 15 }],
+    });
+    expect(notices.items[3]).toEqual({ type: 'NEGOTIATING_CHANGES', count: 1 });
+  });
+
+  it('중단 뒤 재개는 종료 예정일이 지났을 때만 기간 연장을 알린다', async () => {
+    const late = await setup('2026-10-05');
+
+    await late.client.send('post', `/projects/${late.project}/status`, {
+      toStatus: 'SUSPENDED',
+      reason: '자재 지연',
+    });
+
+    expect(
+      transitionNoticesSchema.parse((await late.client.notices(late.project, 'IN_PROGRESS')).body)
+        .items,
+    ).toEqual([{ type: 'PERIOD_OVER', plannedEnd: '2026-10-05' }]);
+
+    const ok = await setup();
+
+    await ok.client.send('post', `/projects/${ok.project}/status`, {
+      toStatus: 'SUSPENDED',
+      reason: '자재 지연',
+    });
+    expect(
+      transitionNoticesSchema.parse((await ok.client.notices(ok.project, 'IN_PROGRESS')).body)
+        .items,
+    ).toEqual([]);
+  });
+
+  it('안내가 없는 전환은 빈 목록이고 잘못된 목표 상태·없는 프로젝트는 거부한다', async () => {
+    const { client, project } = await setup();
+
+    expect(
+      transitionNoticesSchema.parse((await client.notices(project, 'SUSPENDED')).body).items,
+    ).toEqual([]);
+    expect((await client.notices(project, 'NOPE')).status).toBe(400);
+    expect((await client.get(`/projects/${project}/transition-notices`)).status).toBe(400);
+    expect((await client.notices('0198d000-0000-7000-8000-00000000dead', 'COMPLETED')).status).toBe(
+      404,
+    );
+  });
+});
+
+describe('프로젝트 요약', () => {
+  it('없는 프로젝트는 404다', async () => {
+    const { client } = await setup();
+
+    expect((await client.summary('0198d000-0000-7000-8000-00000000dead')).status).toBe(404);
+  });
+
+  it('기록이 없어도 기본정보와 빈 집계로 요약이 만들어진다', async () => {
+    const { client, project } = await setup();
+    const summary = projectCompletionSummarySchema.parse((await client.summary(project)).body);
+
+    expect(summary).toMatchObject({
+      generatedOn: '2026-10-11',
+      project: {
+        name: 'A동 판금 공사',
+        status: 'IN_PROGRESS',
+        clientName: '가나다건설',
+        managerName: '박소장',
+        siteAddress: '서울시 중구',
+        plannedStart: '2026-09-01',
+        actualStart: '2026-09-01',
+        actualEnd: null,
+      },
+      progressPercent: null,
+      work: {
+        totalMinutes: 0,
+        plannedMinutes: 4800,
+        workedDays: 0,
+        byEmployee: [],
+        byCategory: [],
+      },
+      materials: [],
+      changeWorks: { items: [], minutes: 0, workLogCount: 0 },
+      afterService: { minutes: 0, workLogCount: 0 },
+      photos: { total: 0, items: [] },
+      documents: { sensitiveExcluded: 0, items: [] },
+    });
+    expect(summary.companyName).toMatch(/^요약회사/);
+  });
+
+  it('공수는 저장된 일지만 직원별·작업 구분별로 합산하고 변경·사후 표시를 따로 센다', async () => {
+    const { client, project, worker, worker2, categories } = await setup();
+    const [a, b] = categories;
+    const log = (date: string, entries: object[], extra: object = {}) =>
+      client.saveLog(project, date, {
+        status: 'SAVED',
+        content: `작업 ${date}`,
+        entries,
+        ...extra,
+      });
+
+    await log('2026-10-05', [
+      { employeeId: worker, categoryId: a!.id, minutes: 480 },
+      { employeeId: worker2, categoryId: b!.id, minutes: 240 },
+    ]);
+    await log('2026-10-06', [{ employeeId: worker, categoryId: a!.id, minutes: 480 }], {
+      isChange: true,
+    });
+    await log('2026-10-07', [{ employeeId: worker2, categoryId: b!.id, minutes: 120 }], {
+      isAfterService: true,
+    });
+    // 임시 저장은 제외
+    await log('2026-10-08', [{ employeeId: worker, categoryId: a!.id, minutes: 480 }], {
+      status: 'DRAFT',
+    });
+
+    const { work, changeWorks, afterService } = projectCompletionSummarySchema.parse(
+      (await client.summary(project)).body,
+    );
+
+    expect(work).toMatchObject({ totalMinutes: 1320, workedDays: 3, savedLogCount: 3 });
+    expect(work.byEmployee).toEqual([
+      { employeeId: worker, name: '김작업', workedDays: 2, minutes: 960 },
+      { employeeId: worker2, name: '이작업', workedDays: 2, minutes: 360 },
+    ]);
+    expect(work.byCategory.map((row) => row.minutes)).toEqual([960, 360]);
+    expect(changeWorks).toMatchObject({ minutes: 480, workLogCount: 1 });
+    expect(afterService).toEqual({ minutes: 120, workLogCount: 1 });
+  });
+
+  it('자재 현황과 변경·추가 작업 목록, 최신 진행률이 들어간다', async () => {
+    const { client, project } = await setup();
+    const duct = await client.id('/materials', { name: '덕트', unit: '장' });
+    const record = (kind: string, quantity: number) =>
+      client.send('post', `/projects/${project}/material-records`, {
+        materialId: duct,
+        recordDate: '2026-10-05',
+        kind,
+        quantity,
+      });
+
+    await record('RECEIVED', 100);
+    await record('USED', 72);
+    await client.send('post', `/projects/${project}/progress`, {
+      percent: 30,
+      recordedOn: '2026-10-01',
+    });
+    await client.send('post', `/projects/${project}/progress`, { percent: 55 });
+    await client.send('post', `/projects/${project}/change-works`, {
+      requestedOn: '2026-10-02',
+      requester: '고객 담당',
+      content: '덕트 추가',
+    });
+
+    const summary = projectCompletionSummarySchema.parse((await client.summary(project)).body);
+
+    expect(summary.progressPercent).toBe(55);
+    expect(summary.materials).toEqual([
+      expect.objectContaining({ name: '덕트', received: 100, used: 72, remaining: 28 }),
+    ]);
+    expect(summary.changeWorks.items).toEqual([
+      {
+        seq: 1,
+        requestedOn: '2026-10-02',
+        requester: '고객 담당',
+        content: '덕트 추가',
+        status: 'NEGOTIATING',
+      },
+    ]);
+  });
+
+  it('민감 문서는 목록에서 빼고 건수만 알리며 문서마다 버전 수와 최신 개정일을 보여 준다', async () => {
+    const { client, project } = await setup();
+
+    await client.makeDocument(project, '도면', 'DRAWING');
+    await client.makeDocument(project, '도급 계약서', 'CONTRACT');
+    // 계약은 기본이 민감, 다른 분류도 직접 민감으로 표시할 수 있다
+    await client.makeDocument(project, '안전 점검표', 'SAFETY', { isSensitive: true });
+
+    const { documents } = projectCompletionSummarySchema.parse(
+      (await client.summary(project)).body,
+    );
+
+    expect(documents.sensitiveExcluded).toBe(2);
+    expect(documents.items).toEqual([
+      expect.objectContaining({ title: '도면', category: 'DRAWING', versionCount: 1 }),
+    ]);
+    expect(JSON.stringify(documents)).not.toContain('계약서');
+  });
+
+  it('대표 사진이 먼저이고 6장까지만 싣고 검사에서 거부된 사진은 세지 않는다', async () => {
+    const { client, project } = await setup();
+    const row = await db.owner.project.findFirstOrThrow({ where: { id: project } });
+    const user = await db.owner.user.findFirstOrThrow({ where: { companyId: row.companyId } });
+    const photo = async (index: number, status: 'READY' | 'REJECTED', isCover = false) => {
+      const file = await db.owner.storedFile.create({
+        data: {
+          companyId: row.companyId,
+          projectId: project,
+          purpose: 'PHOTO',
+          status,
+          originalName: `p${index}.jpg`,
+          contentType: 'image/jpeg',
+          sizeBytes: 10n,
+          objectKey: `company/${row.companyId}/project/${project}/p${index}/original`,
+          thumbnailKey:
+            status === 'READY'
+              ? `company/${row.companyId}/project/${project}/p${index}/thumb`
+              : null,
+          sha256: 'a'.repeat(64),
+          uploadedBy: user.id,
+          ...(status === 'READY' ? { readyAt: new Date() } : { rejectReason: 'CONTENT_MISMATCH' }),
+        },
+      });
+
+      return db.owner.photo.create({
+        data: {
+          companyId: row.companyId,
+          projectId: project,
+          fileId: file.id,
+          takenAt: new Date(`2026-10-0${(index % 9) + 1}T03:00:00Z`),
+          workDate: new Date('2026-10-05T00:00:00Z'),
+          uploadedBy: user.id,
+          isCover,
+        },
+      });
+    };
+
+    for (let index = 0; index < 8; index += 1) await photo(index, 'READY', index === 0);
+    await photo(20, 'REJECTED');
+
+    const { photos } = projectCompletionSummarySchema.parse((await client.summary(project)).body);
+
+    expect(photos.total).toBe(8);
+    expect(photos.items).toHaveLength(6);
+    expect(photos.items[0]!.thumbnailUrl).toContain('/thumb?download');
+  });
+});

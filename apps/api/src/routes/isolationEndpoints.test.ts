@@ -7,6 +7,7 @@ import {
   partnersResponseSchema,
   projectsResponseSchema,
   searchResponseSchema,
+  staffingCalendarSchema,
   workLogsResponseSchema,
 } from '@field-note/shared';
 import request from 'supertest';
@@ -21,6 +22,11 @@ import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
 import { createMemoService } from '../memo/memoService';
+import { createDashboardService } from '../dashboard/dashboardService';
+import { createCompletionService } from '../completion/completionService';
+import { createChangeWorkService } from '../changeWork/changeWorkService';
+import { createLaborService } from '../labor/laborService';
+import { createProgressService } from '../progress/progressService';
 import { createReportService } from '../report/reportService';
 import { createSearchService } from '../search/searchService';
 import { createPhotoService } from '../photo/photoService';
@@ -72,6 +78,11 @@ const instance = () =>
     partners: createPartnerService(db.app),
     projects: createProjectService(db.app, () => NOW),
     assignments: createAssignmentService(db.app),
+    dashboard: createDashboardService(db.app, createAssignmentService(db.app), () => NOW),
+    progress: createProgressService(db.app, () => NOW),
+    labor: createLaborService(db.app, () => NOW),
+    changeWorks: createChangeWorkService(db.app, () => NOW),
+    completion: createCompletionService(db.app, createMemoryStorage().storage, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
       app: db.app,
@@ -171,6 +182,21 @@ const buildCompany = async () => {
     entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
   });
 
+  // 알림 설정 한 건 (끈 알림)
+  await c.call('put', '/company/alert-settings', {
+    items: [{ kind: 'INBOX_STALE', enabled: false }],
+  });
+
+  // 직원 단가 한 건 (민감 정보)
+  await c.call('post', `/employees/${worker}/pay-rates`, {
+    payType: 'DAILY',
+    amount: 200_000,
+    effectiveFrom: '2026-01-01',
+  });
+
+  // 진행률 기록 한 건
+  await c.call('post', `/projects/${projectId}/progress`, { percent: 40, recordedOn: DAY });
+
   // 수정 이력·기간 변경 이력도 한 건씩 만든다
   await c.call('put', `/projects/${projectId}/work-logs/${DAY}`, {
     status: 'SAVED',
@@ -202,6 +228,19 @@ const buildCompany = async () => {
     title: '회사 A의 계약서',
     category: 'CONTRACT',
   });
+  // 변경·추가 작업 한 건: 상태를 한 번 바꾸고 증빙 문서를 연결해 둔다
+  const changeWorkId = await c.id(`/projects/${projectId}/change-works`, {
+    requestedOn: DAY,
+    requester: '회사 A의 고객',
+    content: '회사 A의 변경 요청',
+  });
+
+  await c.call('post', `/change-works/${changeWorkId}/status`, {
+    toStatus: 'AGREED',
+    effectiveOn: DAY,
+  });
+  await c.call('post', `/change-works/${changeWorkId}/documents`, { documentId });
+
   const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
   const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
     materialId,
@@ -227,6 +266,7 @@ const buildCompany = async () => {
     materialRecordId,
     docFileId,
     documentId,
+    changeWorkId,
   };
 };
 
@@ -268,6 +308,55 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       `/projects/${a.projectId}/assignments/${a.assignment}/cancel`,
       {},
     ],
+    ['GET /employees/{id}/pay-rates', 'get', `/employees/${a.worker}/pay-rates`],
+    [
+      'POST /employees/{id}/pay-rates',
+      'post',
+      `/employees/${a.worker}/pay-rates`,
+      { payType: 'DAILY', amount: 999_999, effectiveFrom: '2026-10-01' },
+    ],
+    ['GET /projects/{id}/labor-cost', 'get', `/projects/${a.projectId}/labor-cost`],
+    ['GET /projects/{id}/change-works', 'get', `/projects/${a.projectId}/change-works`],
+    [
+      'POST /projects/{id}/change-works',
+      'post',
+      `/projects/${a.projectId}/change-works`,
+      { requester: '침투', content: '침투' },
+    ],
+    [
+      'GET /projects/{id}/transition-notices',
+      'get',
+      `/projects/${a.projectId}/transition-notices?to=COMPLETED`,
+    ],
+    ['GET /projects/{id}/summary', 'get', `/projects/${a.projectId}/summary`],
+    ['GET /projects/{id}/change-usage', 'get', `/projects/${a.projectId}/change-usage`],
+    ['GET /change-works/{id}', 'get', `/change-works/${a.changeWorkId}`],
+    ['PATCH /change-works/{id}', 'patch', `/change-works/${a.changeWorkId}`, { content: '침투' }],
+    [
+      'POST /change-works/{id}/status',
+      'post',
+      `/change-works/${a.changeWorkId}/status`,
+      { toStatus: 'WITHDRAWN', note: '침투' },
+    ],
+    [
+      'POST /change-works/{id}/documents',
+      'post',
+      `/change-works/${a.changeWorkId}/documents`,
+      { documentId: a.documentId },
+    ],
+    [
+      'DELETE /change-works/{id}/documents/{documentId}',
+      'delete',
+      `/change-works/${a.changeWorkId}/documents/${a.documentId}`,
+    ],
+    ['GET /projects/{id}/progress', 'get', `/projects/${a.projectId}/progress`],
+    [
+      'POST /projects/{id}/progress',
+      'post',
+      `/projects/${a.projectId}/progress`,
+      { percent: 99, note: '침투' },
+    ],
+    ['GET /projects/{id}/health', 'get', `/projects/${a.projectId}/health`],
     ['GET /projects/{id}/work-logs', 'get', `/projects/${a.projectId}/work-logs`],
     ['GET /projects/{id}/work-summary', 'get', `/projects/${a.projectId}/work-summary`],
     ['GET /projects/{id}/work-logs/{workDate}', 'get', `/projects/${a.projectId}/work-logs/${DAY}`],
@@ -389,6 +478,8 @@ const COLLECTIONS = [
   'POST /partners',
   'GET /projects',
   'POST /projects',
+  'GET /staffing-calendar',
+  'GET /dashboard',
 ];
 
 // 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트.
@@ -411,6 +502,8 @@ const OWN_ACCOUNT_ONLY = [
   'DELETE /me/social/kakao',
   'GET /company/settings',
   'PUT /company/settings',
+  'GET /company/alert-settings',
+  'PUT /company/alert-settings',
 ];
 
 describe('회사 격리: 전 엔드포인트', () => {
@@ -441,6 +534,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       materialRecordId: '{id}',
       docFileId: '{id}',
       documentId: '{id}',
+      changeWorkId: '{id}',
     };
     const tested = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const exempt = new Set(OWN_ACCOUNT_ONLY);
@@ -483,6 +577,30 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(logs.items).toHaveLength(1);
     expect(log.body).toMatchObject({ content: '회사 A의 일지 (수정)', version: 2 });
     expect(assignments.body.items[0].cancelledAt).toBeNull();
+
+    // 변경·추가 작업도 그대로: B의 침투 요청·철회·증빙 해제가 반영되지 않았다
+    const changeWork = await a.c.call('get', `/change-works/${a.changeWorkId}`);
+
+    expect(changeWork.body).toMatchObject({
+      status: 'AGREED',
+      content: '회사 A의 변경 요청',
+      documentCount: 1,
+    });
+    expect(
+      (await a.c.call('get', `/projects/${a.projectId}/change-works`)).body.items,
+    ).toHaveLength(1);
+
+    // 단가도 그대로: B의 침투 단가(999,999원)가 들어가지 않았다
+    const rates = await a.c.call('get', `/employees/${a.worker}/pay-rates`);
+
+    expect(rates.body.items).toHaveLength(1);
+    expect(rates.body.items[0]).toMatchObject({ payType: 'DAILY', amount: 200_000 });
+
+    // 진행률도 그대로: B의 침투 기록(99%)이 들어가지 않았다
+    const progress = await a.c.call('get', `/projects/${a.projectId}/progress`);
+
+    expect(progress.body.items).toHaveLength(1);
+    expect(progress.body.items[0]).toMatchObject({ percent: 40, recordedOn: DAY });
   });
 
   it('목록과 선택 목록에는 다른 회사 데이터가 섞여 나오지 않는다', async () => {
@@ -502,6 +620,41 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(employees.items.map((item) => item.id)).not.toContain(a.worker);
     expect(partners.items.map((item) => item.id)).not.toContain(a.clientId);
     expect(projects.items.map((item) => item.id)).not.toContain(a.projectId);
+
+    // 대시보드에도 다른 회사의 프로젝트·알림 설정이 섞이지 않음 (A는 자기 프로젝트를 보고, 알림을 끈 종류는 B에서 켜짐)
+    const dashboardOf = async (company: typeof a) =>
+      (await company.c.call('get', '/dashboard')).body as {
+        dashboard: { activeProjects: { id: string }[] };
+        settings: { items: { kind: string; enabled: boolean }[] };
+      };
+    // 두 회사 모두 같은 더미를 만들었으므로 B만 다시 켜서 A의 설정이 B에 영향을 주지 않는지 본다
+    await b.c.call('put', '/company/alert-settings', {
+      items: [{ kind: 'INBOX_STALE', enabled: true }],
+    });
+
+    const aDashboard = await dashboardOf(a);
+    const bDashboard = await dashboardOf(b);
+
+    expect(aDashboard.dashboard.activeProjects.map((item) => item.id)).toContain(a.projectId);
+    expect(bDashboard.dashboard.activeProjects.map((item) => item.id)).not.toContain(a.projectId);
+    expect(aDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+      false,
+    );
+    expect(bDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+      true,
+    );
+
+    // 인력 배치 캘린더에도 다른 회사의 직원·투입이 섞이지 않음 (A는 자기 투입을 봄)
+    const calendarOf = async (company: typeof a) =>
+      staffingCalendarSchema.parse(
+        (await company.c.call('get', '/staffing-calendar?from=2026-10-01&to=2026-10-31')).body,
+      );
+    const bCalendar = await calendarOf(b);
+    const aCalendar = await calendarOf(a);
+
+    expect(bCalendar.employees.map((item) => item.id)).not.toContain(a.worker);
+    expect(bCalendar.assignments.map((item) => item.id)).not.toContain(a.assignment);
+    expect(aCalendar.assignments.map((item) => item.id)).toContain(a.assignment);
 
     // 통합 검색에도 다른 회사 데이터가 섞이지 않음
     const hits = async (q: string) =>
@@ -617,6 +770,18 @@ describe('회사 격리: 전 엔드포인트', () => {
     await record(
       '직원 직종',
       await b.c.call('post', '/employees', { name: '침투', jobTypeId: a.jobType }),
+    );
+    // B의 변경 작업에 A의 문서를 증빙으로 연결
+    const bChangeWork = await b.c.id(`/projects/${bProjectOwn}/change-works`, {
+      requester: 'B 고객',
+      content: 'B 변경',
+    });
+
+    await record(
+      '증빙 문서',
+      await b.c.call('post', `/change-works/${bChangeWork}/documents`, {
+        documentId: a.documentId,
+      }),
     );
     await record(
       '옵션 순서',
@@ -737,6 +902,12 @@ describe('회사 격리: 전 엔드포인트', () => {
       'projects',
       'project_status_changes',
       'project_period_changes',
+      'project_progress_records',
+      'employee_pay_rates',
+      'alert_preferences',
+      'change_works',
+      'change_work_status_changes',
+      'change_work_documents',
       'project_assignments',
       'work_logs',
       'work_log_entries',
