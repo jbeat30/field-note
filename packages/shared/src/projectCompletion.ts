@@ -62,7 +62,7 @@ type CheckInput = {
 };
 
 /**
- * @description 이 전환에서 확인할 것을 모은다. 진행 → 완료는 임시 저장 일지·진행률 100%·남은 자재·협의 중 변경 작업,
+ * @description 이 전환에서 확인할 것을 모은다. 진행 → 완료는 임시 저장 일지(종료 전환에서도)·진행률 100%·남은 자재·협의 중 변경 작업,
  * 중단 → 진행은 종료 예정일 경과를 알린다 (§10.3). 막는 조건이 아니라 안내이다
  * @param input 현재·변경할 상태와 프로젝트 현황
  * @returns 확인할 항목 (없으면 빈 목록)
@@ -70,11 +70,12 @@ type CheckInput = {
 export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[] => {
   const checks: TransitionNotice[] = [];
 
-  if (input.to === 'COMPLETED') {
-    if (input.draftLogCount > 0) {
-      checks.push({ type: 'DRAFT_LOGS', count: input.draftLogCount });
-    }
+  // 종료는 임시 저장 일지가 남아 있으면 막힌다 (§10.3). 안내를 먼저 보여 줌
+  if ((input.to === 'COMPLETED' || input.to === 'CLOSED') && input.draftLogCount > 0) {
+    checks.push({ type: 'DRAFT_LOGS', count: input.draftLogCount });
+  }
 
+  if (input.to === 'COMPLETED') {
     if (input.progressPercent === null || input.progressPercent < 100) {
       checks.push({ type: 'PROGRESS_BELOW_100', percent: input.progressPercent });
     }
@@ -105,7 +106,7 @@ export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[]
 export const transitionNoticeMessage = (check: TransitionNotice): string => {
   switch (check.type) {
     case 'DRAFT_LOGS':
-      return `임시 저장된 작업일지가 ${check.count}건 있습니다. 집계에는 저장된 일지만 반영되니 완료 전에 저장하거나 정리해 주세요`;
+      return `임시 저장된 작업일지가 ${check.count}건 있습니다. 집계에는 저장된 일지만 반영되니 전환 전에 저장하거나 정리해 주세요`;
     case 'PROGRESS_BELOW_100':
       return check.percent === null
         ? '진행률 기록이 없습니다. 완료하기 전에 진행률을 기록해 주세요'

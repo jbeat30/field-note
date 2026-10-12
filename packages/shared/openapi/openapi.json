@@ -9749,7 +9749,7 @@
     },
     "/api/v1/projects/{id}/status": {
       "post": {
-        "summary": "프로젝트 상태 전환 (예정 → 진행 → 중단·완료, 취소). 날짜·사유와 함께 이력에 남음",
+        "summary": "프로젝트 상태 전환 (예정 → 진행 → 중단·완료 → 보증 중 → 종료, 취소, 종료 재오픈). 날짜·사유와 함께 이력에 남음",
         "security": [
           {
             "sessionCookie": []
@@ -9795,6 +9795,9 @@
                       "null"
                     ],
                     "maxLength": 500
+                  },
+                  "confirmSummary": {
+                    "type": "boolean"
                   }
                 },
                 "required": [

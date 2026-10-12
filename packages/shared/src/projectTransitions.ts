@@ -1,21 +1,41 @@
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from './projects';
 
 // 프로젝트 상태 전환 규칙 (서비스 기획서 §10.3). 서버와 목업 서버가 같은 규칙을 쓴다
-// 완료 → 보증 중 → 종료와 종료 재오픈은 보증 기능(4단계)과 함께 만든다. 그래서 지금은 완료에서 더 바꿀 수 없다
-// 진행 → 완료의 "임시 저장 일지 확인·진행률 100% 안내·남은 자재 확인"은 일지·자재가 생긴 뒤 이 검사에 더한다
+// 완료 → 보증 중 → 종료, 종료 재오픈 (보증 중으로 되돌림)
+// 완료 → 종료는 보증 없이 끝내는 경우. 보증 기간 설정(P4-2)이 생기면 보증 기간 0일 때로 좁힌다
 export const PROJECT_TRANSITIONS: Record<ProjectStatus, readonly ProjectStatus[]> = {
   PLANNED: ['IN_PROGRESS', 'CANCELLED'],
   IN_PROGRESS: ['SUSPENDED', 'COMPLETED', 'CANCELLED'],
   SUSPENDED: ['IN_PROGRESS', 'CANCELLED'],
-  COMPLETED: [],
-  WARRANTY: [],
-  CLOSED: [],
+  COMPLETED: ['WARRANTY', 'CLOSED'],
+  WARRANTY: ['CLOSED'],
+  CLOSED: ['WARRANTY'],
   CANCELLED: [],
 };
 
-// 사유가 반드시 필요한 전환 (기록의 신뢰성: 왜 멈췄고 왜 취소했는지)
-export const PROJECT_REASON_REQUIRED: readonly ProjectStatus[] = ['SUSPENDED', 'CANCELLED'];
 export const PROJECT_REASON_MAX_LENGTH = 500;
+
+/**
+ * @description 사유가 반드시 필요한 전환인지 (기록의 신뢰성: 왜 멈췄고 왜 취소했고 왜 종료·재오픈했는지)
+ * 보증 중 → 종료는 보증 기간 종료 여부를 아직 알 수 없어 조기 종료로 보고 사유를 받는다 (보증 기간 설정 P4-2 이후 조기 종료만으로 좁힘)
+ * @param from 현재 상태
+ * @param to 바꿀 상태
+ * @returns 사유 필수 여부
+ */
+export const transitionNeedsReason = (from: ProjectStatus, to: ProjectStatus) =>
+  to === 'SUSPENDED' ||
+  to === 'CANCELLED' ||
+  to === 'CLOSED' ||
+  (from === 'CLOSED' && to === 'WARRANTY');
+
+/**
+ * @description 완료 → 보증 중에서 프로젝트 요약을 확인해야 하는지 (§10.3 전환 조건)
+ * @param from 현재 상태
+ * @param to 바꿀 상태
+ * @returns 요약 확인 필수 여부
+ */
+export const transitionNeedsSummaryConfirm = (from: ProjectStatus, to: ProjectStatus) =>
+  from === 'COMPLETED' && to === 'WARRANTY';
 
 /**
  * @description 전환에 입력하는 날짜의 이름 (예: 예정 → 진행은 "실제 시작일", 중단 → 진행은 "재개일")
@@ -28,6 +48,8 @@ export const transitionDateLabel = (from: ProjectStatus, to: ProjectStatus) => {
   if (to === 'SUSPENDED') return '중단일';
   if (to === 'COMPLETED') return '실제 완료일';
   if (to === 'CANCELLED') return '취소일';
+  if (to === 'CLOSED') return '종료일';
+  if (to === 'WARRANTY') return from === 'CLOSED' ? '재오픈일' : '보증 시작일';
 
   return '변경일';
 };
@@ -44,10 +66,19 @@ export type TransitionCheckInput = {
   lastEffectiveOn: string | null;
   // 서울 기준 오늘
   today: string;
+  // 프로젝트 요약을 확인했는지 (완료 → 보증 중에서만 필요)
+  confirmSummary: boolean;
+  // 임시 저장된 작업일지 건수 (종료에서는 0이어야 함)
+  draftLogCount: number;
 };
 
 export type TransitionCheck =
-  { ok: true } | { ok: false; path: 'toStatus' | 'effectiveOn' | 'reason'; message: string };
+  | { ok: true }
+  | {
+      ok: false;
+      path: 'toStatus' | 'effectiveOn' | 'reason' | 'confirmSummary';
+      message: string;
+    };
 
 /**
  * @description 상태 전환이 규칙에 맞는지 검사 (허용된 전환, 날짜 순서, 사유)
@@ -92,7 +123,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
 
   const trimmed = reason?.trim() ?? '';
 
-  if (PROJECT_REASON_REQUIRED.includes(to) && trimmed.length === 0) {
+  if (transitionNeedsReason(from, to) && trimmed.length === 0) {
     return { ok: false, path: 'reason', message: '사유를 입력해 주세요' };
   }
 
@@ -101,6 +132,22 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
       ok: false,
       path: 'reason',
       message: `사유는 ${PROJECT_REASON_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    };
+  }
+
+  if (transitionNeedsSummaryConfirm(from, to) && !input.confirmSummary) {
+    return {
+      ok: false,
+      path: 'confirmSummary',
+      message: '보증 중으로 바꾸려면 프로젝트 요약을 확인해 주세요',
+    };
+  }
+
+  if (to === 'CLOSED' && input.draftLogCount > 0) {
+    return {
+      ok: false,
+      path: 'toStatus',
+      message: `임시 저장된 작업일지가 ${input.draftLogCount}건 있어 종료할 수 없습니다. 저장하거나 삭제한 뒤 다시 시도해 주세요`,
     };
   }
 

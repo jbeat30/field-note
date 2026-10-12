@@ -3560,7 +3560,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 프로젝트 상태 전환 (예정 → 진행 → 중단·완료, 취소). 날짜·사유와 함께 이력에 남음 */
+        /** 프로젝트 상태 전환 (예정 → 진행 → 중단·완료 → 보증 중 → 종료, 취소, 종료 재오픈). 날짜·사유와 함께 이력에 남음 */
         post: {
             parameters: {
                 query?: never;
@@ -3578,6 +3578,7 @@ export interface paths {
                         /** Format: date */
                         effectiveOn?: string;
                         reason?: string | null;
+                        confirmSummary?: boolean;
                     };
                 };
             };
