@@ -20,6 +20,8 @@ const check = (patch: Partial<TransitionCheckInput> & Pick<TransitionCheckInput,
     today: TODAY,
     confirmSummary: false,
     draftLogCount: 0,
+    warrantyMonths: 12,
+    warrantyEndOn: null,
     ...patch,
   });
 
@@ -140,21 +142,43 @@ describe('사유', () => {
 });
 
 describe('보증·종료 전환 조건 (§10.3)', () => {
-  it('종료와 재오픈은 사유가 필수이고 보증 시작은 선택이다', () => {
-    expect(transitionNeedsReason('COMPLETED', 'CLOSED')).toBe(true);
-    expect(transitionNeedsReason('WARRANTY', 'CLOSED')).toBe(true);
+  it('재오픈은 사유가 필수이고 보증 시작은 선택이다', () => {
     expect(transitionNeedsReason('CLOSED', 'WARRANTY')).toBe(true);
     expect(transitionNeedsReason('COMPLETED', 'WARRANTY')).toBe(false);
-    expect(check({ from: 'WARRANTY', to: 'CLOSED', reason: null })).toMatchObject({
-      ok: false,
-      path: 'reason',
-    });
     expect(check({ from: 'CLOSED', to: 'WARRANTY', reason: null })).toMatchObject({
       ok: false,
       path: 'reason',
     });
-    expect(check({ from: 'WARRANTY', to: 'CLOSED', reason: '보증 만료' }).ok).toBe(true);
     expect(check({ from: 'CLOSED', to: 'WARRANTY', reason: '재보수 요청' }).ok).toBe(true);
+  });
+
+  it('보증 중 → 종료는 종료 예정일 전(조기 종료)일 때만 사유가 필요하다', () => {
+    const base = { from: 'WARRANTY', to: 'CLOSED', warrantyEndOn: '2026-10-05' } as const;
+
+    expect(check({ ...base, effectiveOn: '2026-10-04', reason: null })).toMatchObject({
+      ok: false,
+      path: 'reason',
+    });
+    expect(check({ ...base, effectiveOn: '2026-10-04', reason: '고객 요청' }).ok).toBe(true);
+    // 종료 예정일 당일·이후는 사유 없이 종료할 수 있다
+    expect(check({ ...base, effectiveOn: '2026-10-05', reason: null }).ok).toBe(true);
+    // 종료 예정일을 모르면 사유를 받는다
+    expect(check({ ...base, warrantyEndOn: null, reason: null }).ok).toBe(false);
+    expect(transitionNeedsReason('WARRANTY', 'CLOSED')).toBe(true);
+  });
+
+  it('완료 → 종료는 보증 기간이 0개월일 때만, 완료 → 보증 중은 0개월이 아닐 때만 가능하다', () => {
+    expect(check({ from: 'COMPLETED', to: 'CLOSED', warrantyMonths: 0 }).ok).toBe(true);
+    expect(check({ from: 'COMPLETED', to: 'CLOSED', warrantyMonths: 12 })).toMatchObject({
+      ok: false,
+      path: 'toStatus',
+    });
+    expect(
+      check({ from: 'COMPLETED', to: 'WARRANTY', warrantyMonths: 0, confirmSummary: true }),
+    ).toMatchObject({ ok: false, path: 'toStatus' });
+    expect(
+      check({ from: 'COMPLETED', to: 'WARRANTY', warrantyMonths: 12, confirmSummary: true }).ok,
+    ).toBe(true);
   });
 
   it('완료 → 보증 중은 프로젝트 요약을 확인해야 한다', () => {
@@ -169,9 +193,14 @@ describe('보증·종료 전환 조건 (§10.3)', () => {
 
   it('종료는 임시 저장된 작업일지가 남아 있으면 막는다', () => {
     expect(
-      check({ from: 'WARRANTY', to: 'CLOSED', reason: '만료', draftLogCount: 2 }),
+      check({
+        from: 'WARRANTY',
+        to: 'CLOSED',
+        reason: '만료',
+        draftLogCount: 2,
+      }),
     ).toMatchObject({ ok: false, path: 'toStatus' });
-    expect(check({ from: 'COMPLETED', to: 'CLOSED', reason: '보증 없음' }).ok).toBe(true);
+    expect(check({ from: 'COMPLETED', to: 'CLOSED', warrantyMonths: 0 }).ok).toBe(true);
   });
 
   it('완료일 이후 날짜만 보증 시작일로 입력할 수 있다', () => {

@@ -149,6 +149,11 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
+import {
+  createWarrantyHandlers,
+  ensureMockDefaultWarranty,
+  getMockWarrantyForTransition,
+} from './warrantyHandlers';
 import { createCompletionHandlers } from './completionHandlers';
 import { createDashboardHandlers } from './dashboardHandlers';
 import { createDocumentHandlers } from './documentHandlers';
@@ -409,6 +414,7 @@ export const handlers = [
   ...createMaterialHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
   ...createChangeWorkHandlers({ apiError, parseBody }),
+  ...createWarrantyHandlers({ apiError, parseBody }),
   ...createCompletionHandlers({ apiError }),
   ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
@@ -1561,6 +1567,7 @@ export const handlers = [
       (latest, item) => (latest === null || item.effectiveOn > latest ? item.effectiveOn : latest),
       null,
     );
+    const warranty = getMockWarrantyForTransition(account, current.id);
     const checked = validateProjectTransition({
       from: current.status,
       to: body.data.toStatus,
@@ -1573,6 +1580,8 @@ export const handlers = [
       draftLogCount: getWorkLogs(account).filter(
         (log) => log.projectId === current.id && log.status === 'DRAFT',
       ).length,
+      warrantyMonths: warranty.months,
+      warrantyEndOn: warranty.endOn,
     });
 
     if (!checked.ok) {
@@ -1597,6 +1606,10 @@ export const handlers = [
       account,
       projects.map((item) => (item.id === current.id ? updated : item)),
     );
+
+    // 처음 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 만든다
+    if (body.data.toStatus === 'WARRANTY') ensureMockDefaultWarranty(account, updated);
+
     addProjectStatusChange(account, current.id, {
       id: crypto.randomUUID(),
       fromStatus: current.status,
