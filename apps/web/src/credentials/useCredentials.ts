@@ -20,6 +20,13 @@ export const useCredentials = (employeeId: string) =>
 
       return data.items;
     },
+    // 서버가 파일 검사를 마칠 때까지 "검사 중"으로 보이므로 끝날 때까지 다시 불러옴
+    refetchInterval: (query) =>
+      query.state.data?.some(
+        (item) => item.file && item.file.status !== 'READY' && item.file.status !== 'REJECTED',
+      )
+        ? 2000
+        : false,
   });
 
 // 서류가 바뀌면 투입 경고(필요 자격)도 달라지므로 투입 목록을 함께 다시 불러옴

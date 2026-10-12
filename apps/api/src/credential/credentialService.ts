@@ -288,7 +288,7 @@ export const createCredentialService = ({
 
     fileUrl: async (companyId, userId, employeeId, credentialId) => {
       const at = now();
-      const { key, fileName } = await withCompany(app, companyId, async (tx) => {
+      const { key } = await withCompany(app, companyId, async (tx) => {
         const row = await requireCredential(tx, employeeId, credentialId);
 
         if (!row.file) {
@@ -310,13 +310,13 @@ export const createCredentialService = ({
           },
         });
 
-        return { key: row.file.objectKey, fileName: row.file.originalName };
+        return { key: row.file.objectKey };
       });
 
       return {
         url: await storage.presignDownload(key, {
+          // 첨부 파일이 아니라 브라우저가 바로 보여 줌 (열기)
           expiresInSeconds: FILE_DOWNLOAD_URL_TTL_SECONDS,
-          fileName,
         }),
         expiresAt: new Date(at.getTime() + FILE_DOWNLOAD_URL_TTL_SECONDS * 1000).toISOString(),
       };
