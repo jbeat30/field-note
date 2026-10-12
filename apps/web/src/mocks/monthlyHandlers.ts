@@ -16,6 +16,7 @@ import {
 import { delay, http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
+import { addMockAudit } from './auditHandlers';
 import type { MockAccount } from './data';
 import { getCurrentAccount, getEmployees, getProjects, getWorkLogs } from './state';
 
@@ -240,6 +241,17 @@ export const createMonthlyHandlers = ({ apiError, parseBody }: Helpers) => {
         },
       ]);
 
+      addMockAudit(account, {
+        action: 'MONTH_CLOSED',
+        targetType: 'COMPANY',
+        targetId: account.companyId ?? account.loginId,
+        targetName: null,
+        summary:
+          drafts.count > 0
+            ? `${body.data.month} · 임시 저장 일지 ${drafts.count}건 확인`
+            : body.data.month,
+      });
+
       return HttpResponse.json(toHours(account, body.data.month));
     }),
 
@@ -274,6 +286,14 @@ export const createMonthlyHandlers = ({ apiError, parseBody }: Helpers) => {
         },
       ]);
 
+      addMockAudit(account, {
+        action: 'MONTH_REOPENED',
+        targetType: 'COMPANY',
+        targetId: account.companyId ?? account.loginId,
+        targetName: null,
+        summary: `${body.data.month} · ${body.data.reason.trim()}`,
+      });
+
       return HttpResponse.json(toHours(account, body.data.month));
     }),
 
@@ -287,6 +307,14 @@ export const createMonthlyHandlers = ({ apiError, parseBody }: Helpers) => {
       const query = queryOf(request);
 
       if ('response' in query) return query.response;
+
+      addMockAudit(account, {
+        action: 'REPORT_EXPORTED',
+        targetType: 'COMPANY',
+        targetId: account.companyId ?? account.loginId,
+        targetName: null,
+        summary: `월 공수표 엑셀 · ${query.month}`,
+      });
 
       // 서버와 같은 파일 이름 규칙. 내용은 자리 파일 (실제 엑셀 서식은 서버가 만든다)
       return new HttpResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04]), {
