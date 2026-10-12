@@ -489,7 +489,7 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
       { fromStatus: 'PLANNED', toStatus: 'IN_PROGRESS', effectiveOn: '2025-09-02' },
       { fromStatus: 'IN_PROGRESS', toStatus: 'COMPLETED', effectiveOn: '2025-12-18' },
       { fromStatus: 'COMPLETED', toStatus: 'WARRANTY', effectiveOn: '2025-12-19' },
-      { fromStatus: 'WARRANTY', toStatus: 'CLOSED', effectiveOn: '2025-12-20' },
+      { fromStatus: 'WARRANTY', toStatus: 'CLOSED', effectiveOn: '2026-06-19' },
     ],
   },
   {
@@ -881,5 +881,27 @@ export const DEMO_CHANGE_WORKS: readonly DemoChangeWork[] = [
     content: '옥상 배수구 주변 방수 판금 추가 시공',
     status: 'NEGOTIATING',
     statusChangedOn: '2026-09-28',
+  },
+];
+
+export type DemoWarranty = {
+  companyId: string;
+  // 프로젝트 코드로 연결
+  projectCode: string;
+  months: number;
+  startBasis: 'ACTUAL_END' | 'INSPECTION' | 'MANUAL';
+  startOn: string;
+  endOn: string;
+};
+
+// C동 환기 설비(종료)의 보증 설정: 6개월 보증이 끝난 뒤 종료. 옛날상가 간판 교체(완료)는 보증을 아직 설정하지 않은 상태로 둔다
+export const DEMO_WARRANTIES: readonly DemoWarranty[] = [
+  {
+    companyId: HANBIT,
+    projectCode: '2025-012',
+    months: 6,
+    startBasis: 'ACTUAL_END',
+    startOn: '2025-12-18',
+    endOn: '2026-06-18',
   },
 ];

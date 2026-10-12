@@ -17,6 +17,7 @@ import {
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { createDefaultWarranty, loadWarrantyForTransition } from '../warranty/warrantyService';
 
 type Clock = () => Date;
 
@@ -418,6 +419,7 @@ export const createProjectService = (
       const today = todayInSeoul(now());
       const effectiveOn = input.effectiveOn ?? today;
       const reason = input.reason?.trim() || null;
+      const warranty = await loadWarrantyForTransition(tx, id);
       const checked = validateProjectTransition({
         from: current.status,
         to: input.toStatus,
@@ -431,6 +433,8 @@ export const createProjectService = (
           input.toStatus === 'CLOSED'
             ? await tx.workLog.count({ where: { projectId: id, status: 'DRAFT' } })
             : 0,
+        warrantyMonths: warranty.months,
+        warrantyEndOn: warranty.endOn,
       });
 
       if (!checked.ok) {
@@ -469,6 +473,11 @@ export const createProjectService = (
           changedBy: userId,
         },
       });
+
+      // 처음 보증 중이 될 때 보증 설정이 없으면 기본값(실제 완료일 기준)으로 종료 예정일을 계산해 둔다 (§10.3)
+      if (input.toStatus === 'WARRANTY' && !warranty.exists && current.actualEnd) {
+        await createDefaultWarranty(tx, companyId, userId, id, fromDate(current.actualEnd));
+      }
 
       return toDetail(
         await tx.project.findFirstOrThrow({ where: { id }, include: INCLUDE_TRADES }),

@@ -812,7 +812,7 @@ describe('상태 전환', () => {
     expect(history[0]).toMatchObject({ reason: '고객 재보수 요청', effectiveOn: '2026-10-06' });
   });
 
-  it('완료에서 보증 없이 바로 종료할 수 있다 (사유 필수)', async () => {
+  it('보증 기간이 설정되지 않았거나 있으면 완료에서 바로 종료할 수 없다 (보증 0개월은 보증 시험에서 확인)', async () => {
     const instance = app();
     const { client, body } = await setup(instance);
     const id = (await client.create(body)).body.id;
@@ -820,10 +820,10 @@ describe('상태 전환', () => {
     await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' });
     await client.transition(id, { toStatus: 'COMPLETED', effectiveOn: '2026-10-03' });
 
-    expect((await client.transition(id, { toStatus: 'CLOSED' })).status).toBe(400);
-    expect(
-      (await client.transition(id, { toStatus: 'CLOSED', reason: '보증 없는 계약' })).body,
-    ).toMatchObject({ status: 'CLOSED' });
+    const res = await client.transition(id, { toStatus: 'CLOSED', reason: '보증 없는 계약' });
+
+    expect(res.status).toBe(400);
+    expect(errorResponseSchema.parse(res.body).error.details?.[0]?.path).toBe('body.toStatus');
   });
 
   it('예정·진행·중단은 사유와 함께 취소할 수 있고 완료는 취소할 수 없다', async () => {

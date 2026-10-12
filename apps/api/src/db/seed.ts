@@ -10,6 +10,7 @@ import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
   DEMO_CHANGE_WORKS,
+  DEMO_WARRANTIES,
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
   DEMO_EMPLOYEES,
@@ -372,6 +373,46 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
           },
         });
       }
+    }
+  }
+
+  // 보증 설정 (프로젝트 코드로 연결, 입력자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  for (const item of DEMO_WARRANTIES) {
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: item.companyId, code: item.projectCode },
+    });
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+
+    if (
+      admin &&
+      !(await prisma.projectWarranty.findUnique({
+        where: { companyId_projectId: { companyId: item.companyId, projectId: project.id } },
+      }))
+    ) {
+      await prisma.projectWarranty.create({
+        data: {
+          companyId: item.companyId,
+          projectId: project.id,
+          months: item.months,
+          startBasis: item.startBasis,
+          startOn: requiredDate(item.startOn),
+          endOn: requiredDate(item.endOn),
+          updatedBy: admin.userId,
+        },
+      });
+      await prisma.projectWarrantyChange.create({
+        data: {
+          companyId: item.companyId,
+          projectId: project.id,
+          fromMonths: null,
+          toMonths: item.months,
+          fromEndOn: null,
+          toEndOn: requiredDate(item.endOn),
+          startBasis: item.startBasis,
+          startOn: requiredDate(item.startOn),
+          changedBy: admin.userId,
+        },
+      });
     }
   }
 
