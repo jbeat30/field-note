@@ -23,7 +23,7 @@ export const Default: Story = {
 
     // 설정하지 않은 알림은 모두 켜져 있다
     await expect(await canvas.findByRole('checkbox', { name: LABEL })).toBeChecked();
-    await expect(canvas.getAllByRole('checkbox')).toHaveLength(7);
+    await expect(canvas.getAllByRole('checkbox')).toHaveLength(12);
     await expect(
       canvas.getAllByRole('checkbox').every((box) => box.getAttribute('data-state') === 'checked'),
     ).toBe(true);
@@ -39,7 +39,7 @@ export const TurnOffOne: Story = {
     // 다른 알림은 그대로 켜져 있다
     await expect(
       canvas.getAllByRole('checkbox').filter((box) => box.getAttribute('data-state') === 'checked'),
-    ).toHaveLength(6);
+    ).toHaveLength(11);
 
     // 다시 켠다
     await userEvent.click(canvas.getByRole('checkbox', { name: LABEL }));
