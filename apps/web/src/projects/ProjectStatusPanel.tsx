@@ -1,8 +1,9 @@
 import {
-  PROJECT_REASON_REQUIRED,
   PROJECT_STATUS_LABELS,
   PROJECT_TRANSITIONS,
   transitionDateLabel,
+  transitionNeedsReason,
+  transitionNeedsSummaryConfirm,
   todayInSeoul,
   transitionNoticeMessage,
   validateProjectTransition,
@@ -10,9 +11,11 @@ import {
   type ProjectStatus,
 } from '@field-note/shared';
 import { useState, type FormEvent } from 'react';
+import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
+import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -27,15 +30,26 @@ const actionLabel = (from: ProjectStatus, to: ProjectStatus) => {
   if (to === 'IN_PROGRESS') return from === 'SUSPENDED' ? '작업 재개' : '작업 시작';
   if (to === 'SUSPENDED') return '작업 중단';
   if (to === 'COMPLETED') return '완료 처리';
+  if (to === 'WARRANTY') return from === 'CLOSED' ? '재오픈' : '보증 시작';
+  if (to === 'CLOSED') return '종료 처리';
 
   return '프로젝트 취소';
 };
 
-const CONFIRM_HINTS: Partial<Record<ProjectStatus, string>> = {
-  IN_PROGRESS: '작업일지를 입력할 수 있게 됩니다',
-  SUSPENDED: '중단 중에는 새 투입이 막힙니다. 사유를 남겨 주세요',
-  COMPLETED: '완료하면 상태를 더 바꿀 수 없습니다 (보증·종료는 이후 단계에서 추가됩니다)',
-  CANCELLED: '취소해도 지금까지의 기록은 그대로 남지만, 이 프로젝트는 더 수정할 수 없습니다',
+const confirmHint = (from: ProjectStatus, to: ProjectStatus) => {
+  if (to === 'IN_PROGRESS') return '작업일지를 입력할 수 있게 됩니다';
+  if (to === 'SUSPENDED') return '중단 중에는 새 투입이 막힙니다. 사유를 남겨 주세요';
+  if (to === 'COMPLETED') return '완료하면 보증 중 또는 종료로 이어서 관리할 수 있습니다';
+  if (to === 'CANCELLED') {
+    return '취소해도 지금까지의 기록은 그대로 남지만, 이 프로젝트는 더 수정할 수 없습니다';
+  }
+  if (to === 'WARRANTY') {
+    return from === 'CLOSED'
+      ? '종료된 프로젝트를 다시 열어 보증 중으로 되돌립니다. 사유를 남겨 주세요'
+      : '이후 작업은 사후 작업으로 구분해 기록합니다';
+  }
+
+  return '종료하면 프로젝트가 잠겨 조회만 할 수 있습니다 (재오픈 가능). 보증 기간이 끝나기 전에 종료한다면 사유를 남겨 주세요';
 };
 
 const formatChangedAt = (iso: string) =>
@@ -66,9 +80,11 @@ const TransitionForm = ({
   const today = todayInSeoul(new Date());
   const [effectiveOn, setEffectiveOn] = useState(today);
   const [reason, setReason] = useState('');
+  const [confirmSummary, setConfirmSummary] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rootError, setRootError] = useState('');
-  const needsReason = PROJECT_REASON_REQUIRED.includes(to);
+  const needsReason = transitionNeedsReason(project.status, to);
+  const needsSummary = transitionNeedsSummaryConfirm(project.status, to);
   const dateLabel = transitionDateLabel(project.status, to);
 
   const submit = (event: FormEvent) => {
@@ -89,6 +105,8 @@ const TransitionForm = ({
       actualStart: project.actualStart,
       lastEffectiveOn,
       today,
+      confirmSummary,
+      draftLogCount: notices.data?.find((notice) => notice.type === 'DRAFT_LOGS')?.count ?? 0,
     });
 
     if (!checked.ok) {
@@ -98,10 +116,20 @@ const TransitionForm = ({
 
     // mutate의 개별 콜백은 성공으로 상태가 바뀌어 이 폼이 다시 그려지면(key 변경) 호출되지 못하므로 Promise로 처리
     void transition
-      .mutateAsync({ toStatus: to, effectiveOn, reason: reason.trim() || null })
+      .mutateAsync({
+        toStatus: to,
+        effectiveOn,
+        reason: reason.trim() || null,
+        ...(needsSummary ? { confirmSummary } : {}),
+      })
       .then(() => onDone(`'${PROJECT_STATUS_LABELS[to]}' 상태로 바꿨습니다`))
       .catch((error: unknown) => {
-        const { byField, root } = splitServerErrors(error, ['effectiveOn', 'reason', 'toStatus']);
+        const { byField, root } = splitServerErrors(error, [
+          'effectiveOn',
+          'reason',
+          'toStatus',
+          'confirmSummary',
+        ]);
 
         setErrors(byField);
         setRootError(root || byField.toStatus || '');
@@ -119,7 +147,7 @@ const TransitionForm = ({
         {actionLabel(project.status, to)}: &apos;{PROJECT_STATUS_LABELS[project.status]}&apos; →
         &apos;{PROJECT_STATUS_LABELS[to]}&apos;
       </p>
-      {CONFIRM_HINTS[to] && <p className="text-sm text-foreground/70">{CONFIRM_HINTS[to]}</p>}
+      <p className="text-sm text-foreground/70">{confirmHint(project.status, to)}</p>
       {notices.data && notices.data.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm" aria-label="확인할 것">
           {notices.data.map((notice) => (
@@ -141,6 +169,25 @@ const TransitionForm = ({
       <FormField label={needsReason ? '사유 (필수)' : '사유 (선택)'} error={errors.reason}>
         <Textarea value={reason} onChange={(event) => setReason(event.target.value)} />
       </FormField>
+      {needsSummary && (
+        <div className="flex flex-col gap-1">
+          <Link to={`/projects/${project.id}/summary`} className="text-sm text-primary underline">
+            프로젝트 요약 보기
+          </Link>
+          <label className="flex min-h-touch items-center gap-3 text-base">
+            <Checkbox
+              checked={confirmSummary}
+              onCheckedChange={(checked) => setConfirmSummary(checked === true)}
+            />
+            프로젝트 요약을 확인했습니다
+          </label>
+          {errors.confirmSummary && (
+            <p role="alert" className="text-sm text-danger">
+              {errors.confirmSummary}
+            </p>
+          )}
+        </div>
+      )}
       <div className="flex gap-2">
         <Button
           type="submit"
@@ -218,9 +265,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
         <p className="text-sm text-foreground/70">
           {project.status === 'CANCELLED'
             ? '취소된 프로젝트입니다. 기록은 그대로 조회할 수 있고 더 수정할 수 없습니다'
-            : project.status === 'COMPLETED'
-              ? '완료된 프로젝트입니다. 보증·종료 처리는 이후 단계에서 추가됩니다'
-              : '더 바꿀 수 있는 상태가 없습니다'}
+            : '더 바꿀 수 있는 상태가 없습니다'}
         </p>
       )}
 
