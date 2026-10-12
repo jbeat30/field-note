@@ -10640,6 +10640,49 @@ export interface paths {
                                     changeWorkId: string;
                                     seq: number;
                                     days: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "WARRANTY_ENDING";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                    /** Format: date */
+                                    endOn: string;
+                                    daysLeft: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "REPAIR_UNHANDLED";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                    /** Format: uuid */
+                                    repairId: string;
+                                    seq: number;
+                                    days: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "CERTIFICATE_EXPIRING";
+                                    /** Format: uuid */
+                                    projectId: string;
+                                    projectName: string;
+                                    title: string;
+                                    /** Format: date */
+                                    expiresOn: string;
+                                    daysLeft: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "CREDENTIAL_EXPIRING";
+                                    /** Format: uuid */
+                                    employeeId: string;
+                                    employeeName: string;
+                                    typeName: string;
+                                    /** Format: date */
+                                    expiresOn: string;
+                                    daysLeft: number;
+                                } | {
+                                    /** @enum {string} */
+                                    kind: "MONTH_UNCLOSED";
+                                    month: string;
                                 })[];
                                 todayAssignments: {
                                     headcount: number;
@@ -10696,12 +10739,45 @@ export interface paths {
                                 todos: {
                                     draftLogCount: number;
                                     staleInboxCount: number;
+                                    unclosedMonth: string | null;
+                                };
+                                warranty: {
+                                    ending: {
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        code: string;
+                                        name: string;
+                                        /** Format: date */
+                                        endOn: string;
+                                        daysLeft: number;
+                                    }[];
+                                    openRepairCount: number;
+                                };
+                                expiring: {
+                                    certificates: {
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        title: string;
+                                        /** Format: date */
+                                        expiresOn: string;
+                                        daysLeft: number;
+                                    }[];
+                                    credentials: {
+                                        /** Format: uuid */
+                                        employeeId: string;
+                                        employeeName: string;
+                                        typeName: string;
+                                        /** Format: date */
+                                        expiresOn: string;
+                                        daysLeft: number;
+                                    }[];
                                 };
                             };
                             settings: {
                                 items: {
                                     /** @enum {string} */
-                                    kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                                    kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                     enabled: boolean;
                                 }[];
                             };
@@ -10763,7 +10839,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                 enabled: boolean;
                             }[];
                         };
@@ -10803,7 +10879,7 @@ export interface paths {
                     "application/json": {
                         items: {
                             /** @enum {string} */
-                            kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                            kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                             enabled: boolean;
                         }[];
                     };
@@ -10819,7 +10895,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE";
+                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                 enabled: boolean;
                             }[];
                         };
