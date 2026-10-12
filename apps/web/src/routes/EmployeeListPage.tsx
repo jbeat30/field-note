@@ -26,7 +26,12 @@ export const EmployeeListPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">직원</h1>
+      <div className="flex items-center justify-between gap-2">
+        <h1 className="text-2xl font-bold">직원</h1>
+        <Link to="/staffing" className="flex min-h-touch items-center text-primary underline">
+          인력 배치 보기
+        </Link>
+      </div>
 
       <EmployeeQuickAdd />
 

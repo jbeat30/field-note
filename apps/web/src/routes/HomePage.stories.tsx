@@ -91,3 +91,39 @@ export const EmptySearchDoesNothing: Story = {
     await expect(within(document.body).queryByTestId('navigated')).not.toBeInTheDocument();
   },
 };
+
+// 대시보드 위젯: 알림, 오늘 투입, 위험 프로젝트, 진행 프로젝트, 이번 주 인력, 할 일 (§15.2)
+export const DashboardWidgets: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    for (const title of [
+      '알림',
+      '오늘의 투입',
+      '위험 프로젝트',
+      '진행 프로젝트',
+      '이번 주 인력',
+      '할 일',
+    ]) {
+      await expect(await canvas.findByRole('region', { name: title })).toBeInTheDocument();
+    }
+
+    // 더미: 진행 프로젝트가 있고 A동 변경·추가 작업 #2는 오래 협의 중이라 알림이 뜨며 알림에서 해당 화면으로 이동한다
+    const alerts = within(canvas.getByRole('region', { name: '알림' }));
+
+    await expect(
+      await alerts.findByText(/변경·추가 작업 #2이 \d+일째 협의 중/),
+    ).toBeInTheDocument();
+    await expect(alerts.getByRole('link', { name: /변경·추가 작업 #2/ })).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/projects\/.+\/change-works$/),
+    );
+    await expect(alerts.getByRole('link', { name: '알림 설정' })).toHaveAttribute(
+      'href',
+      '/settings/alerts',
+    );
+    await expect(
+      within(canvas.getByRole('region', { name: '진행 프로젝트' })).getByText(/진행 \d+건/),
+    ).toBeInTheDocument();
+  },
+};

@@ -3,6 +3,7 @@ import {
   assignmentsResponseSchema,
   errorResponseSchema,
   projectPeriodHistorySchema,
+  staffingCalendarSchema,
 } from '@field-note/shared';
 import request from 'supertest';
 
@@ -105,6 +106,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     updateEmployee: (id: string, body: object) => send('patch', `/employees/${id}`, body),
     createPartner: async (kind: string, name: string) =>
       (await send('post', '/partners', { kind, name })).body.id as string,
+    calendar: (query: string) => get(`/staffing-calendar${query}`),
     list: (projectId: string, query = '') => get(`/projects/${projectId}/assignments${query}`),
     assign: (projectId: string, body: object) =>
       send('post', `/projects/${projectId}/assignments`, body),
@@ -823,5 +825,104 @@ describe('회사 격리·DB 제약', () => {
     await expect(
       db.app.$executeRawUnsafe(`UPDATE project_period_changes SET reason = 'x'`),
     ).rejects.toThrow();
+  });
+});
+
+describe('인력 배치 캘린더', () => {
+  const RANGE = '?from=2026-10-05&to=2026-10-11';
+
+  it('로그인하지 않으면 접근할 수 없고 기간이 잘못되면 거부한다', async () => {
+    const instance = app();
+    const { client } = await setup(instance);
+
+    expect((await request(instance).get(`/api/v1/staffing-calendar${RANGE}`)).status).toBe(401);
+    expect((await client.calendar('')).status).toBe(400);
+    expect((await client.calendar('?from=2026-10-11&to=2026-10-05')).status).toBe(400);
+    expect((await client.calendar('?from=2026-10-01&to=2026-11-30')).status).toBe(400);
+  });
+
+  it('기간과 겹치는 투입만 프로젝트 정보와 함께 돌려주고 직원은 이름순이다', async () => {
+    const instance = app();
+    const { client, project, worker, worker2 } = await setup(instance);
+
+    await client.assign(project, {
+      employeeId: worker,
+      startDate: '2026-10-01',
+      endDate: '2026-10-06',
+    });
+    await client.assign(project, {
+      employeeId: worker2,
+      startDate: '2026-10-20',
+      endDate: '2026-10-25',
+    });
+
+    const res = await client.calendar(RANGE);
+    const calendar = staffingCalendarSchema.parse(res.body);
+
+    expect(res.status).toBe(200);
+    expect(calendar.assignments).toEqual([
+      expect.objectContaining({
+        employeeId: worker,
+        projectId: project,
+        projectName: 'A동 판금 공사',
+        projectStatus: 'PLANNED',
+        startDate: '2026-10-01',
+        endDate: '2026-10-06',
+      }),
+    ]);
+    expect(calendar.employees.map((item) => item.name)).toEqual(['김작업', '박소장', '이작업']);
+  });
+
+  it('취소한 투입과 취소된 프로젝트의 투입은 빠지고, 같은 날 두 프로젝트는 둘 다 담긴다', async () => {
+    const instance = app();
+    const { client, project, worker, projectBody } = await setup(instance);
+    const other = (await client.createProject({ ...projectBody, name: 'B동 덕트' })).body
+      .id as string;
+    const cancelledProject = (await client.createProject({ ...projectBody, name: 'C동 취소' })).body
+      .id as string;
+    const period = { employeeId: worker, startDate: '2026-10-05', endDate: '2026-10-09' };
+
+    await client.assign(project, period);
+    await client.assign(other, period);
+    await client.assign(cancelledProject, period);
+    await client.transition(cancelledProject, { toStatus: 'CANCELLED', reason: '해지' });
+
+    const toCancel = (
+      await client.assign(other, { ...period, startDate: '2026-10-10', endDate: '2026-10-11' })
+    ).body.id as string;
+
+    await client.cancel(other, toCancel);
+
+    const calendar = staffingCalendarSchema.parse((await client.calendar(RANGE)).body);
+
+    expect(calendar.assignments.map((item) => item.projectName).sort()).toEqual([
+      'A동 판금 공사',
+      'B동 덕트',
+    ]);
+  });
+
+  it('퇴사 직원은 기간 안에 투입이 있을 때만 나오고 휴직 직원은 상태와 함께 나온다', async () => {
+    const instance = app();
+    const { client, project, worker, worker2 } = await setup(instance);
+
+    await client.assign(project, {
+      employeeId: worker,
+      startDate: '2026-10-05',
+      endDate: '2026-10-09',
+    });
+    await client.updateEmployee(worker, { status: 'LEFT', leftOn: '2026-10-07' });
+    await client.updateEmployee(worker2, { status: 'ON_LEAVE' });
+
+    const calendar = staffingCalendarSchema.parse((await client.calendar(RANGE)).body);
+    const left = calendar.employees.find((item) => item.id === worker);
+
+    expect(left).toMatchObject({ status: 'LEFT', leftOn: '2026-10-07' });
+    expect(calendar.employees.find((item) => item.id === worker2)?.status).toBe('ON_LEAVE');
+
+    const later = staffingCalendarSchema.parse(
+      (await client.calendar('?from=2026-11-01&to=2026-11-07')).body,
+    );
+
+    expect(later.employees.map((item) => item.id)).not.toContain(worker);
   });
 });

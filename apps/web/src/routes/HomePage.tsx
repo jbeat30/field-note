@@ -7,14 +7,19 @@ import { ResumeDrafts } from '../drafts/ResumeDrafts';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Alert } from '../components/ui/alert';
+import { DashboardWidgets } from '../dashboard/DashboardWidgets';
+import { useDashboard } from '../dashboard/useDashboard';
 import { useMemoSummary } from '../memos/useMemos';
 import { useProjects } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
 
-// 로그인 후 첫 화면: 정리 안 된 메모함과 끝내지 않은 할 일을 알려 준다 (대시보드의 나머지는 이후 단계)
+// 로그인 후 첫 화면 (서비스 기획서 §15.2): 검색, 알림·오늘 투입·위험 프로젝트·진행 프로젝트·이번 주 인력·할 일 위젯,
+// 정리 안 된 메모함, 이어서 작성할 초안
 export const HomePage = () => {
   const me = useMe();
   const summary = useMemoSummary();
+  const dashboard = useDashboard();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
   const projects = useProjects({});
@@ -48,6 +53,9 @@ export const HomePage = () => {
         />
         <Button type="submit">찾기</Button>
       </form>
+      {dashboard.isError && <Alert>대시보드를 불러오지 못했습니다</Alert>}
+      {dashboard.isPending && <p className="text-sm text-foreground/70">대시보드를 불러오는 중</p>}
+      {dashboard.data && <DashboardWidgets dashboard={dashboard.data.dashboard} />}
       <Link
         to="/inbox"
         className="flex min-h-touch flex-col gap-1 rounded-md border border-border p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"

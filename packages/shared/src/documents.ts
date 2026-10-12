@@ -184,7 +184,14 @@ export const documentAccessUrlSchema = z.object({
 
 export type DocumentAccessUrl = z.infer<typeof documentAccessUrlSchema>;
 
-export const AUDIT_ACTIONS = ['DOCUMENT_VIEWED', 'DOCUMENT_DOWNLOADED', 'REPORT_EXPORTED'] as const;
+export const AUDIT_ACTIONS = [
+  'DOCUMENT_VIEWED',
+  'DOCUMENT_DOWNLOADED',
+  'REPORT_EXPORTED',
+  'PAY_RATE_VIEWED',
+  'PAY_RATE_CHANGED',
+  'LABOR_COST_VIEWED',
+] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
 
@@ -194,6 +201,9 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   DOCUMENT_VIEWED: '열람',
   DOCUMENT_DOWNLOADED: '내려받기',
   REPORT_EXPORTED: '작업일보 내보내기',
+  PAY_RATE_VIEWED: '단가 조회',
+  PAY_RATE_CHANGED: '단가 변경',
+  LABOR_COST_VIEWED: '인건비 조회',
 };
 
 // 민감 자료 열람 기록 (수정·삭제할 수 없는 감사 기록, 서비스 기획서 §13.1)

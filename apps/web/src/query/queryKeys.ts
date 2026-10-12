@@ -14,6 +14,21 @@ export const queryKeys = {
   partner: (id: string) => ['partners', 'detail', { id }] as const,
   projects: (filter: object = {}) => ['projects', 'list', filter] as const,
   project: (id: string) => ['projects', 'detail', { id }] as const,
+  staffingCalendar: (from: string, to: string) =>
+    ['assignments', 'staffing', { from, to }] as const,
+  projectProgress: (projectId: string) => ['progress', 'list', { projectId }] as const,
+  projectHealth: (projectId: string) => ['progress', 'health', { projectId }] as const,
+  payRates: (employeeId: string) => ['labor', 'pay-rates', { employeeId }] as const,
+  laborCost: (projectId: string) => ['labor', 'cost', { projectId }] as const,
+  changeWorks: (projectId: string, status?: string) =>
+    ['change-works', 'list', { projectId, status }] as const,
+  changeWork: (id: string) => ['change-works', 'detail', { id }] as const,
+  changeUsage: (projectId: string) => ['change-works', 'usage', { projectId }] as const,
+  transitionNotices: (projectId: string, to: string) =>
+    ['completion', 'notices', { projectId, to }] as const,
+  projectSummary: (projectId: string) => ['completion', 'summary', { projectId }] as const,
+  dashboard: () => ['dashboard', 'all', {}] as const,
+  alertSettings: () => ['dashboard', 'alert-settings', {}] as const,
   assignments: (projectId: string, includeCancelled = false) =>
     ['assignments', 'all', { projectId, includeCancelled }] as const,
   workLogs: (projectId: string, filter: object = {}) =>
