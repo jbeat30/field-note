@@ -62,7 +62,14 @@ describe('대시보드·알림 설정 목업', () => {
     expect(data.activeProjects.length).toBeGreaterThan(0);
     expect(data.alerts).toContainEqual(expect.objectContaining({ kind: 'CHANGE_STALE', seq: 2 }));
     expect(data.todos.draftLogCount).toBe(1);
-    expect(settings.items).toHaveLength(7);
+    expect(settings.items).toHaveLength(12);
+    // 더미 직원 서류: 정판금의 건강검진은 이미 만료 (날짜가 지나도 계속 알림)
+    expect(data.expiring.credentials).toContainEqual(
+      expect.objectContaining({ employeeName: '정판금', typeName: '건강검진' }),
+    );
+    expect(data.alerts).toContainEqual(
+      expect.objectContaining({ kind: 'CREDENTIAL_EXPIRING', typeName: '건강검진' }),
+    );
     expect(settings.items.every((item) => item.enabled)).toBe(true);
   });
 
@@ -76,7 +83,7 @@ describe('대시보드·알림 설정 목업', () => {
 
     expect(saved.response.status).toBe(200);
     expect(alertSettingsSchema.parse(saved.data).items.filter((item) => item.enabled)).toHaveLength(
-      6,
+      11,
     );
 
     const after = await dashboard();

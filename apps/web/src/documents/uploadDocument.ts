@@ -6,7 +6,7 @@ import { documentContentType } from './documentFile';
 export class DocumentUploadError extends Error {}
 
 // 저장소로 직접 올림. 진행률을 알리기 위해 fetch 대신 XMLHttpRequest 사용
-const putWithProgress = (
+export const putWithProgress = (
   url: string,
   headers: Record<string, string>,
   file: File,

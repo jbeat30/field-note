@@ -2,6 +2,10 @@ import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
   DEMO_CHANGE_WORKS,
+  DEMO_REPAIRS,
+  DEMO_CREDENTIALS,
+  DEMO_REQUIRED_CREDENTIALS,
+  DEMO_WARRANTIES,
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
   DEMO_EMPLOYEES,
@@ -278,6 +282,51 @@ describe('seedDemoData', () => {
     const works = await db.owner.changeWork.findMany({ include: { project: true } });
 
     expect(works.every((work) => work.project.companyId === work.companyId)).toBe(true);
+  });
+
+  it('더미 보수 요청을 이력과 함께 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.repairRequest.count()).toBe(DEMO_REPAIRS.length);
+    expect(await db.owner.repairRequestStatusChange.count()).toBe(
+      DEMO_REPAIRS.reduce((sum, item) => sum + (item.history?.length ?? 0), 0),
+    );
+
+    const rows = await db.owner.repairRequest.findMany({ include: { project: true } });
+
+    expect(rows.every((row) => row.project.companyId === row.companyId)).toBe(true);
+    expect(rows.every((row) => row.status === 'DONE' && row.resolvedOn !== null)).toBe(true);
+  });
+
+  it('더미 직원 서류와 필요 자격을 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.employeeCredential.count()).toBe(DEMO_CREDENTIALS.length);
+    expect(await db.owner.projectRequiredCredential.count()).toBe(
+      DEMO_REQUIRED_CREDENTIALS.reduce((sum, item) => sum + item.typeNames.length, 0),
+    );
+
+    const rows = await db.owner.employeeCredential.findMany({
+      include: { employee: true, type: true },
+    });
+
+    expect(rows.every((row) => row.employee.companyId === row.companyId)).toBe(true);
+    expect(rows.every((row) => row.type.kind === 'CREDENTIAL_TYPE')).toBe(true);
+  });
+
+  it('더미 보증 설정을 이력과 함께 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.projectWarranty.count()).toBe(DEMO_WARRANTIES.length);
+    expect(await db.owner.projectWarrantyChange.count()).toBe(DEMO_WARRANTIES.length);
+
+    const rows = await db.owner.projectWarranty.findMany({ include: { project: true } });
+
+    expect(rows.every((row) => row.project.companyId === row.companyId)).toBe(true);
+    expect(rows[0]).toMatchObject({ months: 6, project: { status: 'CLOSED' } });
   });
 
   it('더미 단가를 넣고 다시 실행해도 늘지 않으며 단가는 다른 회사 직원에게 붙지 않는다', async () => {

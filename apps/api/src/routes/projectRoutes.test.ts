@@ -743,6 +743,89 @@ describe('상태 전환', () => {
     }
   });
 
+  it('완료 → 보증 중(요약 확인) → 종료(사유) → 재오픈(사유)이 이력과 함께 이어진다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' });
+    await client.transition(id, { toStatus: 'COMPLETED', effectiveOn: '2026-10-03' });
+
+    // 요약 확인 없이 보증 중으로 바꿀 수 없다
+    const unconfirmed = await client.transition(id, {
+      toStatus: 'WARRANTY',
+      effectiveOn: '2026-10-04',
+    });
+
+    expect(unconfirmed.status).toBe(400);
+    expect(errorResponseSchema.parse(unconfirmed.body).error.details?.[0]?.path).toBe(
+      'body.confirmSummary',
+    );
+
+    const warranty = await client.transition(id, {
+      toStatus: 'WARRANTY',
+      effectiveOn: '2026-10-04',
+      confirmSummary: true,
+    });
+
+    expect(warranty.body).toMatchObject({
+      status: 'WARRANTY',
+      actualStart: '2026-10-01',
+      actualEnd: '2026-10-03',
+    });
+
+    // 종료는 사유 필수
+    expect(
+      (await client.transition(id, { toStatus: 'CLOSED', effectiveOn: '2026-10-05' })).status,
+    ).toBe(400);
+
+    const closed = await client.transition(id, {
+      toStatus: 'CLOSED',
+      effectiveOn: '2026-10-05',
+      reason: '보증 기간 만료',
+    });
+
+    expect(closed.body).toMatchObject({ status: 'CLOSED', actualEnd: '2026-10-03' });
+    // 종료 상태에서는 취소·완료로 바꿀 수 없고, 재오픈은 사유가 있어야 한다
+    expect((await client.transition(id, { toStatus: 'CANCELLED', reason: '사유' })).status).toBe(
+      400,
+    );
+    expect((await client.transition(id, { toStatus: 'WARRANTY' })).status).toBe(400);
+
+    const reopened = await client.transition(id, {
+      toStatus: 'WARRANTY',
+      effectiveOn: '2026-10-06',
+      reason: '고객 재보수 요청',
+    });
+
+    expect(reopened.body).toMatchObject({ status: 'WARRANTY', actualEnd: '2026-10-03' });
+
+    const history = projectStatusHistorySchema.parse((await client.history(id)).body).items;
+
+    expect(history.map((item) => `${item.fromStatus}>${item.toStatus}`)).toEqual([
+      'CLOSED>WARRANTY',
+      'WARRANTY>CLOSED',
+      'COMPLETED>WARRANTY',
+      'IN_PROGRESS>COMPLETED',
+      'PLANNED>IN_PROGRESS',
+    ]);
+    expect(history[0]).toMatchObject({ reason: '고객 재보수 요청', effectiveOn: '2026-10-06' });
+  });
+
+  it('보증 기간이 설정되지 않았거나 있으면 완료에서 바로 종료할 수 없다 (보증 0개월은 보증 시험에서 확인)', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const id = (await client.create(body)).body.id;
+
+    await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' });
+    await client.transition(id, { toStatus: 'COMPLETED', effectiveOn: '2026-10-03' });
+
+    const res = await client.transition(id, { toStatus: 'CLOSED', reason: '보증 없는 계약' });
+
+    expect(res.status).toBe(400);
+    expect(errorResponseSchema.parse(res.body).error.details?.[0]?.path).toBe('body.toStatus');
+  });
+
   it('예정·진행·중단은 사유와 함께 취소할 수 있고 완료는 취소할 수 없다', async () => {
     const instance = app();
     const { client, body } = await setup(instance);

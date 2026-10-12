@@ -1,6 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
 
+import { resetMockCredentials } from '../mocks/credentialHandlers';
 import { DEMO_EMPLOYEES } from '../mocks/demoSource';
 import { findAccount, getEmployees, getOptions, saveOptions, signIn } from '../mocks/state';
 
@@ -16,7 +17,13 @@ const meta = {
   title: 'Pages/직원 카드',
   component: EmployeeCardPage,
   parameters: { router: routerFor('정판금') },
-  loaders: [() => signIn('hanbit')],
+  loaders: [
+    () => {
+      // 스토리가 다시 그려져도 서류 상태가 이어지지 않게 처음으로 되돌림
+      resetMockCredentials();
+      signIn('hanbit');
+    },
+  ],
 } satisfies Meta<typeof EmployeeCardPage>;
 
 export default meta;
@@ -245,5 +252,85 @@ export const PayRates: Story = {
       expect.stringContaining('일급제 250,000원'),
       expect.stringContaining('일급제 230,000원'),
     ]);
+  },
+};
+
+export const Credentials: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
+
+    // 더미 서류: 건강검진은 만료, 판금 기능사는 만료 없음 (만료가 빠른 순)
+    const rows = await panel.findAllByRole('listitem');
+
+    await expect(rows).toHaveLength(2);
+    await expect(rows[0]).toHaveTextContent('건강검진');
+    await expect(rows[0]).toHaveTextContent('만료');
+    await expect(rows[0]).toHaveTextContent('2026-09-30');
+    await expect(rows[1]).toHaveTextContent('판금 기능사');
+    await expect(rows[1]).toHaveTextContent('만료 없음');
+    await expect(panel.getByText(/주민등록번호가 보이면 가리고 올려 주세요/)).toBeInTheDocument();
+  },
+};
+
+export const AddCredential: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
+    const form = within(await panel.findByRole('form', { name: '서류 등록' }));
+
+    // 종류를 고르지 않으면 서버에 보내기 전에 막는다
+    await userEvent.click(form.getByRole('button', { name: '서류 등록' }));
+    await expect(await form.findByText('서류 종류를 선택해 주세요')).toBeInTheDocument();
+
+    // 만료일이 취득일보다 빠르면 막는다
+    await userEvent.selectOptions(form.getByLabelText('서류 종류'), '전기기능사');
+    fireEvent.change(form.getByLabelText('취득일 (선택)'), { target: { value: '2026-05-01' } });
+    fireEvent.change(form.getByLabelText('만료일 (선택)'), { target: { value: '2026-04-30' } });
+    await userEvent.click(form.getByRole('button', { name: '서류 등록' }));
+    await expect(await form.findByText('만료일은 취득일보다 빠를 수 없습니다')).toBeInTheDocument();
+
+    fireEvent.change(form.getByLabelText('만료일 (선택)'), { target: { value: '2030-01-01' } });
+    await userEvent.click(form.getByRole('button', { name: '서류 등록' }));
+
+    await waitFor(() => expect(panel.getAllByRole('listitem')).toHaveLength(3));
+    await expect(panel.getByText(/전기기능사/, { selector: 'li span' })).toBeInTheDocument();
+    // 등록하면 입력칸이 비워진다
+    await expect(form.getByLabelText('서류 종류')).toHaveValue('');
+  },
+};
+
+export const RenewCredential: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
+    const [expired] = await panel.findAllByRole('listitem');
+
+    await expect(expired).toHaveTextContent('만료');
+
+    await userEvent.click(within(expired!).getByRole('button', { name: '수정·갱신' }));
+    fireEvent.change(within(expired!).getByLabelText('만료일'), {
+      target: { value: '2028-09-30' },
+    });
+    await userEvent.click(within(expired!).getByRole('button', { name: '저장' }));
+
+    // 갱신하면 상태가 유효로 바뀌고 만료가 빠른 순이라 판금 기능사(만료 없음) 앞에 그대로 있다
+    await waitFor(() => expect(panel.getAllByRole('listitem')[0]).toHaveTextContent('2028-09-30'));
+    await expect(panel.getAllByRole('listitem')[0]).toHaveTextContent('유효');
+  },
+};
+
+export const RemoveCredential: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
+
+    await userEvent.click(await panel.findByRole('button', { name: '건강검진 삭제' }));
+    // 한 번 더 확인해야 삭제된다
+    await expect(panel.getAllByRole('listitem')).toHaveLength(2);
+    await userEvent.click(panel.getByRole('button', { name: '삭제 확인' }));
+
+    await waitFor(() => expect(panel.getAllByRole('listitem')).toHaveLength(1));
+    await expect(panel.getAllByRole('listitem')[0]).not.toHaveTextContent('건강검진');
   },
 };

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { credentialGapReasonSchema } from './credentials';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
 // 투입 (서비스 기획서 §9.1, §9.4). 직원을 프로젝트 예정 기간 안의 일정 기간에 배정한다
@@ -17,6 +18,14 @@ export const assignmentWarningSchema = z.discriminatedUnion('type', [
     // 겹치는 구간
     from: z.iso.date(),
     to: z.iso.date(),
+  }),
+  // 프로젝트 필요 자격 대비 직원의 서류가 없거나 만료됨 (§8.4)
+  z.object({
+    type: z.literal('CREDENTIAL'),
+    typeId: z.uuid(),
+    typeName: z.string(),
+    reason: credentialGapReasonSchema,
+    expiresOn: z.iso.date().nullable(),
   }),
   z.object({ type: z.literal('ON_LEAVE') }),
   z.object({ type: z.literal('LEFT') }),

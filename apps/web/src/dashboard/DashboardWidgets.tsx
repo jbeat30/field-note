@@ -33,6 +33,10 @@ const Widget = ({
   </section>
 );
 
+// 남은 일수 문구 (지났으면 "N일 지남")
+const daysLabel = (daysLeft: number) =>
+  daysLeft < 0 ? `${-daysLeft}일 지남` : daysLeft === 0 ? '오늘' : `${daysLeft}일 남음`;
+
 const Empty = ({ children }: { children: React.ReactNode }) => (
   <p className="text-sm text-foreground/70">{children}</p>
 );
@@ -63,10 +67,20 @@ const ProjectRow = ({ project }: { project: DashboardProject }) => (
   </li>
 );
 
-// 홈 대시보드 (서비스 기획서 §15.2): 알림, 오늘 투입, 위험 프로젝트, 진행 프로젝트, 이번 주 인력, 할 일.
-// 보증 종료 임박·만료 임박·월 공수 미확정은 해당 기능이 생기는 4단계에서 추가한다
+// 홈 대시보드 (서비스 기획서 §15.2): 알림, 오늘 투입, 위험 프로젝트, 진행 프로젝트, 이번 주 인력,
+// 보증 종료 임박, 만료 임박(보증서·직원 서류), 할 일(임시 저장 일지·방치 메모·월 공수 미확정)
 export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
-  const { alerts, todayAssignments, projectCounts, activeProjects, risks, week, todos } = dashboard;
+  const {
+    alerts,
+    todayAssignments,
+    projectCounts,
+    activeProjects,
+    risks,
+    week,
+    todos,
+    warranty,
+    expiring,
+  } = dashboard;
   const [showAllAlerts, setShowAllAlerts] = useState(false);
   const shownAlerts = showAllAlerts ? alerts : alerts.slice(0, ALERTS_COLLAPSED);
 
@@ -184,10 +198,92 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
         </Link>
       </Widget>
 
+      <Widget title="보증 종료 임박" id="warranty-heading">
+        <p className="text-sm">처리하지 않은 보수 요청 {warranty.openRepairCount}건</p>
+        {warranty.ending.length === 0 ? (
+          <Empty>60일 안에 보증이 끝나는 프로젝트가 없습니다</Empty>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {warranty.ending.map((item) => (
+              <li key={item.projectId}>
+                <Link
+                  to={`/projects/${item.projectId}/warranty`}
+                  className="flex min-h-touch items-center justify-between gap-2 underline-offset-2 hover:underline"
+                >
+                  <span>
+                    {item.code} {item.name}
+                  </span>
+                  <span
+                    className={item.daysLeft <= 7 ? 'text-sm font-medium text-danger' : 'text-sm'}
+                  >
+                    {daysLabel(item.daysLeft)} ({item.endOn})
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Widget>
+
+      <Widget title="만료 임박" id="expiring-heading">
+        {expiring.certificates.length === 0 && expiring.credentials.length === 0 ? (
+          <Empty>30일 안에 만료되는 보증서·직원 서류가 없습니다</Empty>
+        ) : (
+          <ul className="flex flex-col gap-1">
+            {expiring.certificates.map((item, index) => (
+              <li key={`certificate-${index}`}>
+                <Link
+                  to={`/projects/${item.projectId}/warranty`}
+                  className="flex min-h-touch items-center justify-between gap-2 underline-offset-2 hover:underline"
+                >
+                  <span>
+                    보증서 {item.title} · {item.projectName}
+                  </span>
+                  <span
+                    className={item.daysLeft < 0 ? 'text-sm font-medium text-danger' : 'text-sm'}
+                  >
+                    {daysLabel(item.daysLeft)} ({item.expiresOn})
+                  </span>
+                </Link>
+              </li>
+            ))}
+            {expiring.credentials.map((item, index) => (
+              <li key={`credential-${index}`}>
+                <Link
+                  to={`/employees/${item.employeeId}`}
+                  className="flex min-h-touch items-center justify-between gap-2 underline-offset-2 hover:underline"
+                >
+                  <span>
+                    {item.employeeName} · {item.typeName}
+                  </span>
+                  <span
+                    className={item.daysLeft < 0 ? 'text-sm font-medium text-danger' : 'text-sm'}
+                  >
+                    {daysLabel(item.daysLeft)} ({item.expiresOn})
+                  </span>
+                </Link>
+              </li>
+            ))}
+          </ul>
+        )}
+      </Widget>
+
       <Widget title="할 일" id="todo-heading">
         <ul className="flex flex-col gap-1 text-sm">
           <li>임시 저장된 작업일지 {todos.draftLogCount}건</li>
           <li>3일 넘게 쌓인 메모 {todos.staleInboxCount}건</li>
+          <li>
+            {todos.unclosedMonth ? (
+              <Link
+                to={`/monthly-hours?month=${todos.unclosedMonth}`}
+                className="min-h-touch content-center text-primary underline"
+              >
+                {todos.unclosedMonth} 월 공수 확정 전
+              </Link>
+            ) : (
+              '확정하지 않은 지난달 월 공수 없음'
+            )}
+          </li>
         </ul>
       </Widget>
     </div>

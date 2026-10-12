@@ -3,6 +3,7 @@ import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { PinnedDocuments } from '../documents/PinnedDocuments';
+import { RequiredCredentialsPanel } from '../credentials/RequiredCredentialsPanel';
 import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
 import { ProjectForm } from '../projects/ProjectForm';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
@@ -13,6 +14,9 @@ import { useProject } from '../projects/useProjects';
 import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel';
 
 // 프로젝트 기본정보 화면. 투입·일지·집계 같은 탭은 이후 단계에서 붙는다
+// 보증 화면은 완료 이후 상태에서만 보인다 (종료는 조회만)
+const WARRANTY_PAGE_STATUSES: readonly string[] = ['COMPLETED', 'WARRANTY', 'CLOSED'];
+
 export const ProjectCardPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);
@@ -108,6 +112,22 @@ export const ProjectCardPage = () => {
       >
         프로젝트 요약
       </Link>
+      {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
+        <Link
+          className="min-h-touch content-center text-primary underline"
+          to={`/projects/${project.data.id}/repairs`}
+        >
+          보수 요청
+        </Link>
+      ) : null}
+      {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
+        <Link
+          className="min-h-touch content-center text-primary underline"
+          to={`/projects/${project.data.id}/warranty`}
+        >
+          보증
+        </Link>
+      ) : null}
       <Link
         className="min-h-touch content-center text-primary underline"
         to={`/search?project=${project.data.id}`}
@@ -116,6 +136,7 @@ export const ProjectCardPage = () => {
       </Link>
       <PinnedDocuments projectId={project.data.id} />
       <ProjectStatusPanel project={project.data} />
+      <RequiredCredentialsPanel projectId={project.data.id} />
       <ProjectAssignmentsPanel project={project.data} />
       <ProjectProgressPanel projectId={project.data.id} status={project.data.status} />
 
