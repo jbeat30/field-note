@@ -426,6 +426,11 @@ export const createProjectService = (
         actualStart: current.actualStart ? fromDate(current.actualStart) : null,
         lastEffectiveOn: last ? fromDate(last.effectiveOn) : null,
         today,
+        confirmSummary: input.confirmSummary === true,
+        draftLogCount:
+          input.toStatus === 'CLOSED'
+            ? await tx.workLog.count({ where: { projectId: id, status: 'DRAFT' } })
+            : 0,
       });
 
       if (!checked.ok) {

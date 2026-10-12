@@ -1569,6 +1569,10 @@ export const handlers = [
       actualStart: current.actualStart,
       lastEffectiveOn,
       today,
+      confirmSummary: body.data.confirmSummary === true,
+      draftLogCount: getWorkLogs(account).filter(
+        (log) => log.projectId === current.id && log.status === 'DRAFT',
+      ).length,
     });
 
     if (!checked.ok) {
