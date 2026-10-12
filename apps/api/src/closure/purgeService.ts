@@ -60,6 +60,12 @@ export const purgeCompany = (
     // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
     // 일지의 수정 이력 → 공수 항목 → 일지 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
     // 감사 기록 → 문서 버전 → 문서 순서 (버전이 파일·문서를, 문서가 프로젝트·계정을 참조하므로 파일·프로젝트보다 먼저)
+    // 변경 작업의 증빙 연결·상태 이력은 문서·변경 작업을 참조하므로 그보다 먼저 지움
+    deleted.change_work_documents = (await tx.changeWorkDocument.deleteMany({ where })).count;
+    deleted.change_work_status_changes = (
+      await tx.changeWorkStatusChange.deleteMany({ where })
+    ).count;
+    deleted.change_works = (await tx.changeWork.deleteMany({ where })).count;
     deleted.audit_logs = (await tx.auditLog.deleteMany({ where })).count;
     deleted.document_versions = (await tx.documentVersion.deleteMany({ where })).count;
     deleted.documents = (await tx.document.deleteMany({ where })).count;
@@ -75,9 +81,11 @@ export const purgeCompany = (
     deleted.project_assignments = (await tx.projectAssignment.deleteMany({ where })).count;
     deleted.project_period_changes = (await tx.projectPeriodChange.deleteMany({ where })).count;
     deleted.project_status_changes = (await tx.projectStatusChange.deleteMany({ where })).count;
+    deleted.project_progress_records = (await tx.projectProgressRecord.deleteMany({ where })).count;
     deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
     deleted.projects = (await tx.project.deleteMany({ where })).count;
     deleted.project_code_sequences = (await tx.projectCodeSequence.deleteMany({ where })).count;
+    deleted.employee_pay_rates = (await tx.employeePayRate.deleteMany({ where })).count;
     deleted.employees = (await tx.employee.deleteMany({ where })).count;
     deleted.partners = (await tx.partner.deleteMany({ where })).count;
     deleted.option_items = (await tx.optionItem.deleteMany({ where })).count;
@@ -87,6 +95,7 @@ export const purgeCompany = (
     deleted.password_resets = (await tx.passwordReset.deleteMany({ where })).count;
     deleted.social_accounts = (await tx.socialAccount.deleteMany({ where })).count;
     deleted.user_credentials = (await tx.userCredential.deleteMany({ where })).count;
+    deleted.alert_preferences = (await tx.alertPreference.deleteMany({ where })).count;
     deleted.company_settings = (await tx.companySettings.deleteMany({ where })).count;
 
     // 동의 이력 등이 계정 행을 참조하므로 계정은 지우지 않고 개인 식별 항목만 제거

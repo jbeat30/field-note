@@ -17,6 +17,10 @@ import {
   workLogRevisionsSchema,
   workLogSchema,
   workLogsResponseSchema,
+  laborCostSchema,
+  payRateSchema,
+  payRatesResponseSchema,
+  staffingCalendarSchema,
   workSummarySchema,
   employeeWorkHistorySchema,
   assignmentsResponseSchema,
@@ -1127,6 +1131,124 @@ describe('목업 서버 계약', () => {
     ).toBe(404);
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 120_000);
+
+  it('직원 단가: 더미 단가를 최근순으로 보여 주고 추가·검증하며 로그인 없이는 거부한다', async () => {
+    const worker = '0198d000-0000-7000-8000-000000000101';
+
+    expect(
+      (await client.GET('/api/v1/employees/{id}/pay-rates', { params: { path: { id: worker } } }))
+        .response.status,
+    ).toBe(401);
+
+    await login();
+
+    const employees = employeesResponseSchema.parse(
+      (await client.GET('/api/v1/employees')).data,
+    ).items;
+    const id = employees.find((item) => item.name === '정판금')!.id;
+    const rates = (query: typeof id) =>
+      client.GET('/api/v1/employees/{id}/pay-rates', { params: { path: { id: query } } });
+    const list = payRatesResponseSchema.parse((await rates(id)).data).items;
+
+    // 더미: 정판금은 2026-01-01 일급 23만원 → 2026-09-01 일급 25만원
+    expect(list.map((item) => [item.effectiveFrom, item.payType, item.amount])).toEqual([
+      ['2026-09-01', 'DAILY', 250_000],
+      ['2026-01-01', 'DAILY', 230_000],
+    ]);
+
+    const created = await client.POST('/api/v1/employees/{id}/pay-rates', {
+      params: { path: { id } },
+      body: { payType: 'MONTHLY', amount: 5_500_000, effectiveFrom: '2026-10-11' },
+    });
+
+    expect(created.response.status).toBe(201);
+    expect(payRateSchema.parse(created.data)).toMatchObject({
+      payType: 'MONTHLY',
+      amount: 5_500_000,
+    });
+    expect(payRatesResponseSchema.parse((await rates(id)).data).items[0]).toMatchObject({
+      effectiveFrom: '2026-10-11',
+      payType: 'MONTHLY',
+    });
+
+    const invalid = await client.POST('/api/v1/employees/{id}/pay-rates', {
+      params: { path: { id } },
+      body: { payType: 'DAILY', amount: 0, effectiveFrom: '2026-10-11' },
+    });
+
+    expect(invalid.response.status).toBe(400);
+    expect((await rates('0198d000-0000-7000-8000-00000000dead')).response.status).toBe(404);
+  });
+
+  it('프로젝트 인건비: 단가가 있는 공수만 금액에 넣고 없는 공수는 따로 센다', async () => {
+    await login();
+
+    const projects = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects')).data,
+    ).items;
+    const a = projects.find((item) => item.code === '2026-001')!;
+    const cost = laborCostSchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/labor-cost', {
+          params: { path: { id: a.id } },
+        })
+      ).data,
+    );
+
+    expect(cost.actual.totalAmount).toBeGreaterThan(0);
+    expect(cost.actual.totalMinutes).toBeGreaterThan(0);
+    expect(cost.actual.employees.reduce((sum, row) => sum + row.amount, 0)).toBe(
+      cost.actual.totalAmount,
+    );
+    // 더미 단가가 없는 직원의 공수는 따로 센다
+    expect(cost.actual.unpricedMinutes).toBeGreaterThan(0);
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/labor-cost', {
+          params: { path: { id: '0198d000-0000-7000-8000-00000000dead' } },
+        })
+      ).response.status,
+    ).toBe(404);
+  });
+
+  it('인력 배치 캘린더: 기간과 겹치는 투입만 나오고 로그인과 기간을 검사한다', async () => {
+    const query = { from: '2026-10-05', to: '2026-10-11' };
+
+    expect(
+      (await client.GET('/api/v1/staffing-calendar', { params: { query } })).response.status,
+    ).toBe(401);
+
+    await login();
+
+    const calendar = staffingCalendarSchema.parse(
+      (await client.GET('/api/v1/staffing-calendar', { params: { query } })).data,
+    );
+
+    expect(calendar.assignments.length).toBeGreaterThan(0);
+    expect(
+      calendar.assignments.every(
+        (item) => item.startDate <= query.to && item.endDate >= query.from,
+      ),
+    ).toBe(true);
+    expect(calendar.employees.length).toBeGreaterThan(0);
+
+    const empty = staffingCalendarSchema.parse(
+      (
+        await client.GET('/api/v1/staffing-calendar', {
+          params: { query: { from: '2030-01-01', to: '2030-01-07' } },
+        })
+      ).data,
+    );
+
+    expect(empty.assignments).toEqual([]);
+    expect(
+      (
+        await client.GET('/api/v1/staffing-calendar', {
+          params: { query: { from: '2026-10-05', to: '2026-12-31' } },
+        })
+      ).response.status,
+    ).toBe(400);
+  });
 
   it('공수 집계: 저장된 일지만 직원별·작업 구분별·주별로 합산하고 직원 이력은 프로젝트별로 나온다', async () => {
     expect(

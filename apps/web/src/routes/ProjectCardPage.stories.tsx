@@ -267,6 +267,27 @@ export const CompleteProject: Story = {
   },
 };
 
+// 완료 전에 확인할 것을 알려 주되 막지는 않는다 (§10.3)
+export const CompleteShowsNotices: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '완료 처리' }));
+
+    const form = within(await canvas.findByRole('form', { name: '완료 처리 확인' }));
+    const notices = within(await form.findByRole('list', { name: '확인할 것' }));
+
+    // 더미: 임시 저장 일지 1건, 진행률 40%, 협의 중 변경 작업 1건
+    await expect(notices.getByText(/임시 저장된 작업일지가 1건/)).toBeInTheDocument();
+    await expect(notices.getByText(/진행률이 40%입니다/)).toBeInTheDocument();
+    await expect(notices.getByText(/협의 중인 변경·추가 작업이 1건/)).toBeInTheDocument();
+
+    // 안내가 있어도 완료할 수 있다
+    await userEvent.click(form.getByRole('button', { name: '확인' }));
+    await expect(await canvas.findByText("'완료' 상태로 바꿨습니다")).toBeInTheDocument();
+  },
+};
+
 export const CancelMakesProjectReadOnly: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
@@ -697,5 +718,48 @@ export const WorkSummaryDateRangeAndMonthly: Story = {
 
     await userEvent.selectOptions(summary.getByLabelText('기간 묶음'), '월별');
     await expect(await summary.findByText('2026-09월')).toBeInTheDocument();
+  },
+};
+
+export const ProgressPanel: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 더미 진행률 기록 두 건(25%, 40%)이 최근순으로 보이고 현재 진행률은 40%
+    const panel = within(await canvas.findByRole('region', { name: '진행 현황' }));
+
+    await expect(await panel.findByText('진행률 이력')).toBeInTheDocument();
+    await expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('40%');
+
+    // 범위를 벗어난 값은 서버에 보내기 전에 막는다
+    await userEvent.type(panel.getByLabelText('진행률 (%)'), '120');
+    await userEvent.click(panel.getByRole('button', { name: '진행률 기록' }));
+    await expect(
+      await panel.findByText('0부터 100 사이의 정수를 입력해 주세요'),
+    ).toBeInTheDocument();
+
+    // 정상 값은 기록되어 현재 진행률과 이력이 바뀐다
+    await userEvent.clear(panel.getByLabelText('진행률 (%)'));
+    await userEvent.type(panel.getByLabelText('진행률 (%)'), '55');
+    await userEvent.type(panel.getByLabelText('메모 (선택)'), '도장 시작');
+    await userEvent.click(panel.getByRole('button', { name: '진행률 기록' }));
+    await waitFor(() =>
+      expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('55%'),
+    );
+    await expect(await panel.findByText(/도장 시작/)).toBeInTheDocument();
+  },
+};
+
+export const LaborCostPanel: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '인건비 (최소 추정)' }));
+
+    // 금액이 계산되고 포함하지 않는 항목을 알려 준다
+    await expect(await panel.findByText('지금까지 인건비')).toBeInTheDocument();
+    await expect(panel.getByText(/4대보험·수당·퇴직금·세금은 포함하지/)).toBeInTheDocument();
+    // 더미 단가가 없는 직원의 공수는 합계에서 빠지고 안내된다
+    await expect(await panel.findByText(/단가가 없어 합계에서 빠진 공수/)).toBeInTheDocument();
+    await expect(panel.getAllByText(/\d원$/).length).toBeGreaterThan(0);
   },
 };

@@ -1,6 +1,9 @@
 import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
+  DEMO_CHANGE_WORKS,
+  DEMO_PAY_RATES,
+  DEMO_PROGRESS,
   DEMO_EMPLOYEES,
   DEMO_INVITATION,
   DEMO_PARTNERS,
@@ -261,6 +264,38 @@ describe('seedDemoData', () => {
     expect((await history('2026-003')).every((item) => item.changedBy === hanbit.userId)).toBe(
       true,
     );
+  });
+
+  it('더미 변경·추가 작업을 이력과 함께 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.changeWork.count()).toBe(DEMO_CHANGE_WORKS.length);
+    expect(await db.owner.changeWorkStatusChange.count()).toBe(
+      DEMO_CHANGE_WORKS.reduce((sum, item) => sum + (item.history?.length ?? 0), 0),
+    );
+
+    const works = await db.owner.changeWork.findMany({ include: { project: true } });
+
+    expect(works.every((work) => work.project.companyId === work.companyId)).toBe(true);
+  });
+
+  it('더미 단가를 넣고 다시 실행해도 늘지 않으며 단가는 다른 회사 직원에게 붙지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.employeePayRate.count()).toBe(DEMO_PAY_RATES.length);
+
+    const rates = await db.owner.employeePayRate.findMany({ include: { employee: true } });
+
+    expect(rates.every((rate) => rate.employee.companyId === rate.companyId)).toBe(true);
+  });
+
+  it('더미 진행률 기록을 넣고 다시 실행해도 늘지 않는다', async () => {
+    await seedDemoData(db.owner);
+    await seedDemoData(db.owner);
+
+    expect(await db.owner.projectProgressRecord.count()).toBe(DEMO_PROGRESS.length);
   });
 
   it('더미 투입(취소한 투입 포함)과 예정 기간 변경 이력을 넣고 다시 실행해도 늘지 않으며 투입은 프로젝트 기간 안이다', async () => {
