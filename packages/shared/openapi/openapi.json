@@ -30923,6 +30923,164 @@
                                   "seq",
                                   "days"
                                 ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "WARRANTY_ENDING"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "endOn": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "daysLeft": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName",
+                                  "endOn",
+                                  "daysLeft"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "REPAIR_UNHANDLED"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "repairId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "seq": {
+                                    "type": "integer"
+                                  },
+                                  "days": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName",
+                                  "repairId",
+                                  "seq",
+                                  "days"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "CERTIFICATE_EXPIRING"
+                                    ]
+                                  },
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "expiresOn": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "daysLeft": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "projectId",
+                                  "projectName",
+                                  "title",
+                                  "expiresOn",
+                                  "daysLeft"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "CREDENTIAL_EXPIRING"
+                                    ]
+                                  },
+                                  "employeeId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "employeeName": {
+                                    "type": "string"
+                                  },
+                                  "typeName": {
+                                    "type": "string"
+                                  },
+                                  "expiresOn": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "daysLeft": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "employeeId",
+                                  "employeeName",
+                                  "typeName",
+                                  "expiresOn",
+                                  "daysLeft"
+                                ]
+                              },
+                              {
+                                "type": "object",
+                                "properties": {
+                                  "kind": {
+                                    "type": "string",
+                                    "enum": [
+                                      "MONTH_UNCLOSED"
+                                    ]
+                                  },
+                                  "month": {
+                                    "type": "string"
+                                  }
+                                },
+                                "required": [
+                                  "kind",
+                                  "month"
+                                ]
                               }
                             ]
                           }
@@ -31177,11 +31335,135 @@
                             },
                             "staleInboxCount": {
                               "type": "integer"
+                            },
+                            "unclosedMonth": {
+                              "type": [
+                                "string",
+                                "null"
+                              ]
                             }
                           },
                           "required": [
                             "draftLogCount",
-                            "staleInboxCount"
+                            "staleInboxCount",
+                            "unclosedMonth"
+                          ]
+                        },
+                        "warranty": {
+                          "type": "object",
+                          "properties": {
+                            "ending": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "code": {
+                                    "type": "string"
+                                  },
+                                  "name": {
+                                    "type": "string"
+                                  },
+                                  "endOn": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "daysLeft": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "projectId",
+                                  "code",
+                                  "name",
+                                  "endOn",
+                                  "daysLeft"
+                                ]
+                              }
+                            },
+                            "openRepairCount": {
+                              "type": "integer"
+                            }
+                          },
+                          "required": [
+                            "ending",
+                            "openRepairCount"
+                          ]
+                        },
+                        "expiring": {
+                          "type": "object",
+                          "properties": {
+                            "certificates": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "projectId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "projectName": {
+                                    "type": "string"
+                                  },
+                                  "title": {
+                                    "type": "string"
+                                  },
+                                  "expiresOn": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "daysLeft": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "projectId",
+                                  "projectName",
+                                  "title",
+                                  "expiresOn",
+                                  "daysLeft"
+                                ]
+                              }
+                            },
+                            "credentials": {
+                              "type": "array",
+                              "items": {
+                                "type": "object",
+                                "properties": {
+                                  "employeeId": {
+                                    "type": "string",
+                                    "format": "uuid"
+                                  },
+                                  "employeeName": {
+                                    "type": "string"
+                                  },
+                                  "typeName": {
+                                    "type": "string"
+                                  },
+                                  "expiresOn": {
+                                    "type": "string",
+                                    "format": "date"
+                                  },
+                                  "daysLeft": {
+                                    "type": "integer"
+                                  }
+                                },
+                                "required": [
+                                  "employeeId",
+                                  "employeeName",
+                                  "typeName",
+                                  "expiresOn",
+                                  "daysLeft"
+                                ]
+                              }
+                            }
+                          },
+                          "required": [
+                            "certificates",
+                            "credentials"
                           ]
                         }
                       },
@@ -31193,7 +31475,9 @@
                         "activeProjects",
                         "risks",
                         "week",
-                        "todos"
+                        "todos",
+                        "warranty",
+                        "expiring"
                       ]
                     },
                     "settings": {
@@ -31213,7 +31497,12 @@
                                   "BURN_AHEAD",
                                   "PROJECT_OVERDUE",
                                   "DOUBLE_ASSIGNED",
-                                  "CHANGE_STALE"
+                                  "CHANGE_STALE",
+                                  "WARRANTY_ENDING",
+                                  "REPAIR_UNHANDLED",
+                                  "CERTIFICATE_EXPIRING",
+                                  "CREDENTIAL_EXPIRING",
+                                  "MONTH_UNCLOSED"
                                 ]
                               },
                               "enabled": {
@@ -31342,7 +31631,12 @@
                               "BURN_AHEAD",
                               "PROJECT_OVERDUE",
                               "DOUBLE_ASSIGNED",
-                              "CHANGE_STALE"
+                              "CHANGE_STALE",
+                              "WARRANTY_ENDING",
+                              "REPAIR_UNHANDLED",
+                              "CERTIFICATE_EXPIRING",
+                              "CREDENTIAL_EXPIRING",
+                              "MONTH_UNCLOSED"
                             ]
                           },
                           "enabled": {
@@ -31462,7 +31756,12 @@
                             "BURN_AHEAD",
                             "PROJECT_OVERDUE",
                             "DOUBLE_ASSIGNED",
-                            "CHANGE_STALE"
+                            "CHANGE_STALE",
+                            "WARRANTY_ENDING",
+                            "REPAIR_UNHANDLED",
+                            "CERTIFICATE_EXPIRING",
+                            "CREDENTIAL_EXPIRING",
+                            "MONTH_UNCLOSED"
                           ]
                         },
                         "enabled": {
@@ -31506,7 +31805,12 @@
                               "BURN_AHEAD",
                               "PROJECT_OVERDUE",
                               "DOUBLE_ASSIGNED",
-                              "CHANGE_STALE"
+                              "CHANGE_STALE",
+                              "WARRANTY_ENDING",
+                              "REPAIR_UNHANDLED",
+                              "CERTIFICATE_EXPIRING",
+                              "CREDENTIAL_EXPIRING",
+                              "MONTH_UNCLOSED"
                             ]
                           },
                           "enabled": {

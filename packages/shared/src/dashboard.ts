@@ -13,11 +13,13 @@ import {
   projectWarningTypeSchema,
   type ProjectWarningType,
 } from './projectHealth';
+import { CREDENTIAL_EXPIRING_DAYS, credentialDaysLeft } from './credentials';
 import { projectStatusSchema, type ProjectStatus } from './projects';
+import { warrantyDaysLeft } from './warranty';
 import { periodStart } from './workSummary';
 
 // 홈 대시보드와 알림 (서비스 기획서 §15.2, §15.3). 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산한다
-// (초기: 화면 표시). 지금 만들 수 있는 위젯·알림만 담고 보증·직원 서류·월 공수 확정 항목은 해당 기능(4단계)에서 추가한다
+// (초기: 화면 표시). 4단계에서 보증 종료 임박·미처리 보수·보증서·직원 서류 만료·월 공수 미확정이 더해졌다
 const dateSchema = z.iso.date();
 
 export const ALERT_KINDS = [
@@ -28,6 +30,11 @@ export const ALERT_KINDS = [
   'PROJECT_OVERDUE',
   'DOUBLE_ASSIGNED',
   'CHANGE_STALE',
+  'WARRANTY_ENDING',
+  'REPAIR_UNHANDLED',
+  'CERTIFICATE_EXPIRING',
+  'CREDENTIAL_EXPIRING',
+  'MONTH_UNCLOSED',
 ] as const;
 
 export const alertKindSchema = z.enum(ALERT_KINDS);
@@ -42,12 +49,27 @@ export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   PROJECT_OVERDUE: '종료 예정일이 지났는데 끝나지 않았을 때',
   DOUBLE_ASSIGNED: '이번 주에 같은 날 두 프로젝트에 겹쳐 투입됐을 때',
   CHANGE_STALE: '협의 중인 변경·추가 작업이 7일 넘게 남았을 때',
+  WARRANTY_ENDING: '보증 종료가 60일 안으로 다가왔을 때',
+  REPAIR_UNHANDLED: '접수한 보수 요청이 3일 넘게 처리되지 않을 때',
+  CERTIFICATE_EXPIRING: '보증서 만료가 30일 안으로 다가왔을 때',
+  CREDENTIAL_EXPIRING: '직원 서류·자격 만료가 30일 안으로 다가왔을 때',
+  MONTH_UNCLOSED: '지난달에 저장한 일지가 있는데 월 공수를 확정하지 않았을 때',
 };
 
 // 메모함·협의 중 변경 작업을 오래 방치된 것으로 보는 기준 (§15.3)
 export const INBOX_STALE_DAYS = 3;
 
 export const CHANGE_STALE_DAYS = 7;
+
+// 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준 (§15.3). 직원 서류는 CREDENTIAL_EXPIRING_DAYS
+export const WARRANTY_ENDING_DAYS = 60;
+
+export const REPAIR_UNHANDLED_DAYS = 3;
+
+export const CERTIFICATE_EXPIRING_DAYS = 30;
+
+// 만료 임박 위젯에 보여 줄 최대 개수
+export const EXPIRING_LIMIT = 20;
 
 export const alertSettingsSchema = z.object({
   items: z.array(z.object({ kind: alertKindSchema, enabled: z.boolean() })),
@@ -108,6 +130,39 @@ export const dashboardAlertSchema = z.discriminatedUnion('kind', [
     seq: z.number().int(),
     days: z.number().int(),
   }),
+  z.object({
+    kind: z.literal('WARRANTY_ENDING'),
+    projectId: z.uuid(),
+    projectName: z.string(),
+    endOn: dateSchema,
+    // 종료 예정일까지 남은 일수 (지났으면 음수)
+    daysLeft: z.number().int(),
+  }),
+  z.object({
+    kind: z.literal('REPAIR_UNHANDLED'),
+    projectId: z.uuid(),
+    projectName: z.string(),
+    repairId: z.uuid(),
+    seq: z.number().int(),
+    days: z.number().int(),
+  }),
+  z.object({
+    kind: z.literal('CERTIFICATE_EXPIRING'),
+    projectId: z.uuid(),
+    projectName: z.string(),
+    title: z.string(),
+    expiresOn: dateSchema,
+    daysLeft: z.number().int(),
+  }),
+  z.object({
+    kind: z.literal('CREDENTIAL_EXPIRING'),
+    employeeId: z.uuid(),
+    employeeName: z.string(),
+    typeName: z.string(),
+    expiresOn: dateSchema,
+    daysLeft: z.number().int(),
+  }),
+  z.object({ kind: z.literal('MONTH_UNCLOSED'), month: z.string() }),
 ]);
 
 export type DashboardAlert = z.infer<typeof dashboardAlertSchema>;
@@ -162,6 +217,42 @@ export const dashboardSchema = z.object({
   todos: z.object({
     draftLogCount: z.number().int(),
     staleInboxCount: z.number().int(),
+    // 저장한 일지가 있는데 확정하지 않은 지난달 (없으면 null)
+    unclosedMonth: z.string().nullable(),
+  }),
+  // 보증 종료 임박: 보증 중 프로젝트 (종료 예정일이 가까운 순)와 처리하지 않은(접수·처리 중) 보수 요청 건수
+  warranty: z.object({
+    ending: z.array(
+      z.object({
+        projectId: z.uuid(),
+        code: z.string(),
+        name: z.string(),
+        endOn: dateSchema,
+        daysLeft: z.number().int(),
+      }),
+    ),
+    openRepairCount: z.number().int(),
+  }),
+  // 만료 임박: 보증서와 직원 서류 (이미 만료된 것 포함, 만료가 빠른 순)
+  expiring: z.object({
+    certificates: z.array(
+      z.object({
+        projectId: z.uuid(),
+        projectName: z.string(),
+        title: z.string(),
+        expiresOn: dateSchema,
+        daysLeft: z.number().int(),
+      }),
+    ),
+    credentials: z.array(
+      z.object({
+        employeeId: z.uuid(),
+        employeeName: z.string(),
+        typeName: z.string(),
+        expiresOn: dateSchema,
+        daysLeft: z.number().int(),
+      }),
+    ),
   }),
 });
 
@@ -213,8 +304,45 @@ export type DashboardInput = {
     seq: number;
     statusChangedOn: string;
   }[];
+  // 보증 중 프로젝트 (종료 예정일이 있는 것만)
+  warrantyProjects: readonly { id: string; code: string; name: string; endOn: string }[];
+  // 접수·처리 중인 보수 요청 (접수 상태만 방치 알림 대상)
+  openRepairs: readonly {
+    id: string;
+    projectId: string;
+    projectName: string;
+    seq: number;
+    receivedOn: string;
+    status: 'RECEIVED' | 'IN_PROGRESS';
+  }[];
+  // 지우지 않은 보증서와 재직 직원의 서류 중 만료일이 있는 것
+  certificates: readonly {
+    projectId: string;
+    projectName: string;
+    title: string;
+    expiresOn: string;
+  }[];
+  credentials: readonly {
+    employeeId: string;
+    employeeName: string;
+    typeName: string;
+    expiresOn: string;
+  }[];
+  // 저장한 일지가 있는데 확정하지 않은 지난달 (없으면 null)
+  unclosedMonth: string | null;
   // 켜 둔 알림 종류
   enabled: ReadonlySet<AlertKind>;
+};
+
+/**
+ * @description 오늘이 속한 달의 전달 (YYYY-MM)
+ * @param today 오늘(서울 기준)
+ * @returns 지난달
+ */
+export const previousMonth = (today: string) => {
+  const [year, month] = today.split('-').map(Number) as [number, number];
+
+  return month === 1 ? `${year - 1}-12` : `${year}-${String(month - 1).padStart(2, '0')}`;
 };
 
 const daysBetween = (from: string, to: string) =>
@@ -414,6 +542,89 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     }
   }
 
+  // 보증·보수·만료 임박 (지난 것은 음수 일수로 남겨 계속 알림)
+  const warrantyEnding = input.warrantyProjects
+    .map((project) => ({
+      projectId: project.id,
+      code: project.code,
+      name: project.name,
+      endOn: project.endOn,
+      daysLeft: warrantyDaysLeft(project.endOn, input.today),
+    }))
+    .filter((item) => item.daysLeft <= WARRANTY_ENDING_DAYS)
+    .sort((a, b) => a.daysLeft - b.daysLeft || a.code.localeCompare(b.code));
+  const unhandled = input.openRepairs
+    .filter((repair) => repair.status === 'RECEIVED')
+    .map((repair) => ({ ...repair, days: daysBetween(repair.receivedOn, input.today) }))
+    .filter((repair) => repair.days >= REPAIR_UNHANDLED_DAYS)
+    .sort((a, b) => b.days - a.days || a.seq - b.seq);
+  const expiringCertificates = input.certificates
+    .map((item) => ({ ...item, daysLeft: warrantyDaysLeft(item.expiresOn, input.today) }))
+    .filter((item) => item.daysLeft <= CERTIFICATE_EXPIRING_DAYS)
+    .sort((a, b) => a.daysLeft - b.daysLeft || a.title.localeCompare(b.title));
+  const expiringCredentials = input.credentials
+    .map((item) => ({
+      ...item,
+      daysLeft: credentialDaysLeft(item.expiresOn, input.today)!,
+    }))
+    .filter((item) => item.daysLeft <= CREDENTIAL_EXPIRING_DAYS)
+    .sort((a, b) => a.daysLeft - b.daysLeft || a.employeeName.localeCompare(b.employeeName));
+
+  if (on('WARRANTY_ENDING')) {
+    for (const item of warrantyEnding) {
+      alerts.push({
+        kind: 'WARRANTY_ENDING',
+        projectId: item.projectId,
+        projectName: item.name,
+        endOn: item.endOn,
+        daysLeft: item.daysLeft,
+      });
+    }
+  }
+
+  if (on('REPAIR_UNHANDLED')) {
+    for (const repair of unhandled) {
+      alerts.push({
+        kind: 'REPAIR_UNHANDLED',
+        projectId: repair.projectId,
+        projectName: repair.projectName,
+        repairId: repair.id,
+        seq: repair.seq,
+        days: repair.days,
+      });
+    }
+  }
+
+  if (on('CERTIFICATE_EXPIRING')) {
+    for (const item of expiringCertificates) {
+      alerts.push({
+        kind: 'CERTIFICATE_EXPIRING',
+        projectId: item.projectId,
+        projectName: item.projectName,
+        title: item.title,
+        expiresOn: item.expiresOn,
+        daysLeft: item.daysLeft,
+      });
+    }
+  }
+
+  if (on('CREDENTIAL_EXPIRING')) {
+    for (const item of expiringCredentials) {
+      alerts.push({
+        kind: 'CREDENTIAL_EXPIRING',
+        employeeId: item.employeeId,
+        employeeName: item.employeeName,
+        typeName: item.typeName,
+        expiresOn: item.expiresOn,
+        daysLeft: item.daysLeft,
+      });
+    }
+  }
+
+  if (on('MONTH_UNCLOSED') && input.unclosedMonth) {
+    alerts.push({ kind: 'MONTH_UNCLOSED', month: input.unclosedMonth });
+  }
+
   const week = weekRange(input.today);
 
   return {
@@ -444,7 +655,25 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
       freeCount: free.length,
       freeNames: free.slice(0, FREE_NAMES_LIMIT).map((employee) => employee.name),
     },
-    todos: { draftLogCount: input.draftLogCount, staleInboxCount: input.staleInbox.count },
+    todos: {
+      draftLogCount: input.draftLogCount,
+      staleInboxCount: input.staleInbox.count,
+      unclosedMonth: input.unclosedMonth,
+    },
+    warranty: {
+      ending: warrantyEnding.slice(0, EXPIRING_LIMIT),
+      openRepairCount: input.openRepairs.length,
+    },
+    expiring: {
+      certificates: expiringCertificates.slice(0, EXPIRING_LIMIT).map((item) => ({
+        projectId: item.projectId,
+        projectName: item.projectName,
+        title: item.title,
+        expiresOn: item.expiresOn,
+        daysLeft: item.daysLeft,
+      })),
+      credentials: expiringCredentials.slice(0, EXPIRING_LIMIT),
+    },
   };
 };
 
@@ -471,6 +700,24 @@ export const dashboardAlertMessage = (alert: DashboardAlert): string => {
       return `${alert.employeeName}: 이번 주 ${alert.dateCount}일이 두 프로젝트에 겹쳐 투입됐습니다 (${alert.firstDate}부터)`;
     case 'CHANGE_STALE':
       return `${alert.projectName}: 변경·추가 작업 #${alert.seq}이 ${alert.days}일째 협의 중입니다`;
+    case 'WARRANTY_ENDING':
+      return alert.daysLeft < 0
+        ? `${alert.projectName}: 보증 종료 예정일(${alert.endOn})이 ${-alert.daysLeft}일 지났습니다`
+        : alert.daysLeft === 0
+          ? `${alert.projectName}: 오늘 보증이 끝납니다`
+          : `${alert.projectName}: 보증 종료까지 ${alert.daysLeft}일 남았습니다 (${alert.endOn})`;
+    case 'REPAIR_UNHANDLED':
+      return `${alert.projectName}: 보수 요청 #${alert.seq}이 접수 후 ${alert.days}일째 처리되지 않았습니다`;
+    case 'CERTIFICATE_EXPIRING':
+      return alert.daysLeft < 0
+        ? `${alert.projectName}: 보증서 '${alert.title}'이 ${-alert.daysLeft}일 전에 만료됐습니다`
+        : `${alert.projectName}: 보증서 '${alert.title}' 만료가 ${alert.daysLeft}일 남았습니다 (${alert.expiresOn})`;
+    case 'CREDENTIAL_EXPIRING':
+      return alert.daysLeft < 0
+        ? `${alert.employeeName}: ${alert.typeName}이(가) ${-alert.daysLeft}일 전에 만료됐습니다`
+        : `${alert.employeeName}: ${alert.typeName} 만료가 ${alert.daysLeft}일 남았습니다 (${alert.expiresOn})`;
+    case 'MONTH_UNCLOSED':
+      return `${alert.month} 월 공수가 아직 확정되지 않았습니다`;
   }
 };
 
@@ -493,5 +740,14 @@ export const dashboardAlertPath = (alert: DashboardAlert): string => {
       return '/staffing';
     case 'CHANGE_STALE':
       return `/projects/${alert.projectId}/change-works`;
+    case 'WARRANTY_ENDING':
+    case 'CERTIFICATE_EXPIRING':
+      return `/projects/${alert.projectId}/warranty`;
+    case 'REPAIR_UNHANDLED':
+      return `/projects/${alert.projectId}/repairs`;
+    case 'CREDENTIAL_EXPIRING':
+      return `/employees/${alert.employeeId}`;
+    case 'MONTH_UNCLOSED':
+      return `/monthly-hours?month=${alert.month}`;
   }
 };

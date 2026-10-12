@@ -152,6 +152,45 @@ export const ensureMockDefaultWarranty = (account: MockAccount, project: Project
   ]);
 };
 
+/**
+ * @description 대시보드가 읽는 보증 정보: 보증 중 프로젝트의 종료 예정일과 지우지 않은 보증서 (완료·보증 중 프로젝트)
+ * @param account 현재 계정
+ * @returns 보증 종료 예정과 보증서 목록
+ */
+export const listMockWarrantyDashboard = (account: MockAccount) => {
+  const store = storeOf(account);
+  const projects = new Map(getProjects(account).map((project) => [project.id, project]));
+  const documents = new Map(listMockDocuments(account).map((document) => [document.id, document]));
+
+  return {
+    projects: [...store.records.entries()].flatMap(([projectId, record]) => {
+      const project = projects.get(projectId);
+
+      return project?.status === 'WARRANTY'
+        ? [{ id: project.id, code: project.code, name: project.name, endOn: record.endOn }]
+        : [];
+    }),
+    certificates: store.certificates.flatMap((item) => {
+      const project = projects.get(item.projectId);
+      const document = documents.get(item.documentId);
+
+      return !item.removedAt &&
+        project &&
+        (project.status === 'COMPLETED' || project.status === 'WARRANTY') &&
+        document
+        ? [
+            {
+              projectId: item.projectId,
+              projectName: project.name,
+              title: document.title,
+              expiresOn: item.expiresOn,
+            },
+          ]
+        : [];
+    }),
+  };
+};
+
 const toWarranty = (account: MockAccount, project: ProjectDetail): ProjectWarranty => {
   const store = storeOf(account);
   const record = store.records.get(project.id);
