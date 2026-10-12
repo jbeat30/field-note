@@ -26,6 +26,7 @@ import { createDashboardService } from '../dashboard/dashboardService';
 import { createCompletionService } from '../completion/completionService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createWarrantyService } from '../warranty/warrantyService';
+import { createRepairService } from '../repair/repairService';
 import { createLaborService } from '../labor/laborService';
 import { createProgressService } from '../progress/progressService';
 import { createReportService } from '../report/reportService';
@@ -84,6 +85,7 @@ const instance = () =>
     labor: createLaborService(db.app, () => NOW),
     changeWorks: createChangeWorkService(db.app, () => NOW),
     warranty: createWarrantyService(db.app, () => NOW),
+    repairs: createRepairService(db.app, () => NOW),
     completion: createCompletionService(db.app, createMemoryStorage().storage, () => NOW),
     workLogs: createWorkLogService(db.app, () => NOW),
     files: createFileService({
@@ -287,6 +289,24 @@ const buildCompany = async () => {
     })
   ).body.certificates[0].id as string;
 
+  // 보수 요청: 완료한 프로젝트를 보증 중으로 올린 뒤 한 건 접수하고 상태를 한 번 바꿔 둔다
+  await c.call('post', `/projects/${warrantyProjectId}/status`, {
+    toStatus: 'WARRANTY',
+    effectiveOn: '2026-09-21',
+    confirmSummary: true,
+  });
+
+  const repairId = await c.id(`/projects/${warrantyProjectId}/repair-requests`, {
+    receivedOn: '2026-10-01',
+    requester: '회사 A의 고객',
+    content: '회사 A의 보수 요청',
+  });
+
+  await c.call('post', `/repair-requests/${repairId}/status`, {
+    toStatus: 'IN_PROGRESS',
+    effectiveOn: '2026-10-02',
+  });
+
   const materialId = await c.id('/materials', { name: '회사 A의 자재', unit: '장' });
   const materialRecordId = await c.id(`/projects/${projectId}/material-records`, {
     materialId,
@@ -316,6 +336,7 @@ const buildCompany = async () => {
     warrantyProjectId,
     warrantyDocumentId,
     certificateId,
+    repairId,
   };
 };
 
@@ -421,6 +442,41 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'DELETE /projects/{id}/warranty/certificates/{certificateId}',
       'delete',
       `/projects/${a.warrantyProjectId}/warranty/certificates/${a.certificateId}`,
+    ],
+    [
+      'GET /projects/{id}/repair-requests',
+      'get',
+      `/projects/${a.warrantyProjectId}/repair-requests`,
+    ],
+    [
+      'POST /projects/{id}/repair-requests',
+      'post',
+      `/projects/${a.warrantyProjectId}/repair-requests`,
+      { requester: '침투', content: '침투' },
+    ],
+    [
+      'GET /projects/{id}/after-service-usage',
+      'get',
+      `/projects/${a.warrantyProjectId}/after-service-usage`,
+    ],
+    ['GET /repair-requests/{id}', 'get', `/repair-requests/${a.repairId}`],
+    ['PATCH /repair-requests/{id}', 'patch', `/repair-requests/${a.repairId}`, { content: '침투' }],
+    [
+      'POST /repair-requests/{id}/status',
+      'post',
+      `/repair-requests/${a.repairId}/status`,
+      { toStatus: 'DONE' },
+    ],
+    [
+      'POST /repair-requests/{id}/links',
+      'post',
+      `/repair-requests/${a.repairId}/links`,
+      { workLogId: a.worker },
+    ],
+    [
+      'DELETE /repair-requests/{id}/links/{linkId}',
+      'delete',
+      `/repair-requests/${a.repairId}/links/${a.worker}`,
     ],
     ['GET /projects/{id}/progress', 'get', `/projects/${a.projectId}/progress`],
     [
@@ -611,6 +667,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       warrantyProjectId: '{id}',
       warrantyDocumentId: '{id}',
       certificateId: '{certificateId}',
+      repairId: '{id}',
     };
     const tested = new Set([...COLLECTIONS, ...attacks(dummy).map(([name]) => name)]);
     const exempt = new Set(OWN_ACCOUNT_ONLY);
@@ -673,6 +730,16 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(warranty.body.certificates).toHaveLength(1);
     expect(warranty.body.certificates[0]).toMatchObject({ expiresOn: '2027-09-20' });
     expect(warranty.body.changes).toHaveLength(1);
+
+    // 보수 요청도 그대로: B의 침투(완료 처리·내용 수정)가 반영되지 않았다
+    const repair = await a.c.call('get', `/repair-requests/${a.repairId}`);
+
+    expect(repair.body).toMatchObject({
+      status: 'IN_PROGRESS',
+      content: '회사 A의 보수 요청',
+      seq: 1,
+    });
+    expect(repair.body.history).toHaveLength(1);
 
     // 단가도 그대로: B의 침투 단가(999,999원)가 들어가지 않았다
     const rates = await a.c.call('get', `/employees/${a.worker}/pay-rates`);

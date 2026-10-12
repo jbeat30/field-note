@@ -12,6 +12,7 @@ import {
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { loadRepairCounts } from '../repair/repairService';
 import type { ObjectStorage } from '../storage/objectStorage';
 
 export class CompletionError extends Error {
@@ -86,11 +87,12 @@ export const createCompletionService = (
     notices: (companyId, projectId, to) =>
       withCompany(app, companyId, async (tx) => {
         const project = await requireProject(tx, projectId);
-        const [draftLogCount, latest, materials, negotiatingCount] = await Promise.all([
+        const [draftLogCount, latest, materials, negotiatingCount, repairs] = await Promise.all([
           tx.workLog.count({ where: { projectId, status: 'DRAFT' } }),
           tx.projectProgressRecord.findFirst({ where: { projectId }, orderBy: LATEST_FIRST }),
           balanceOf(tx, projectId),
           tx.changeWork.count({ where: { projectId, status: 'NEGOTIATING' } }),
+          to === 'CLOSED' ? loadRepairCounts(tx, projectId) : { open: 0, hold: 0 },
         ]);
 
         return {
@@ -107,6 +109,8 @@ export const createCompletionService = (
               remaining: item.remaining,
             })),
             negotiatingCount,
+            openRepairCount: repairs.open,
+            holdRepairCount: repairs.hold,
             plannedEnd: fromDate(project.plannedEnd),
             today: todayInSeoul(now()),
           }),
