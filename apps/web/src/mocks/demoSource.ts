@@ -11,6 +11,7 @@ export {
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
   DEMO_PROJECTS,
+  DEMO_REPAIRS,
   DEMO_WARRANTIES,
   DEMO_WORK_LOGS,
 } from '@field-note/shared/demo';

@@ -10,6 +10,7 @@ import {
   DEMO_ACCOUNTS,
   DEMO_ASSIGNMENTS,
   DEMO_CHANGE_WORKS,
+  DEMO_REPAIRS,
   DEMO_WARRANTIES,
   DEMO_PAY_RATES,
   DEMO_PROGRESS,
@@ -413,6 +414,52 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
           changedBy: admin.userId,
         },
       });
+    }
+  }
+
+  // 보수 요청 (프로젝트 코드로 연결, 기록자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  for (const item of DEMO_REPAIRS) {
+    const project = await prisma.project.findFirstOrThrow({
+      where: { companyId: item.companyId, code: item.projectCode },
+    });
+    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+
+    if (
+      admin &&
+      !(await prisma.repairRequest.findUnique({
+        where: { companyId_id: { companyId: item.companyId, id: item.id } },
+      }))
+    ) {
+      await prisma.repairRequest.create({
+        data: {
+          id: item.id,
+          companyId: item.companyId,
+          projectId: project.id,
+          seq: item.seq,
+          receivedOn: requiredDate(item.receivedOn),
+          requester: item.requester,
+          content: item.content,
+          location: item.location ?? null,
+          status: item.status,
+          statusChangedOn: requiredDate(item.statusChangedOn),
+          resolvedOn: item.resolvedOn ? requiredDate(item.resolvedOn) : null,
+          createdBy: admin.userId,
+        },
+      });
+
+      for (const change of item.history ?? []) {
+        await prisma.repairRequestStatusChange.create({
+          data: {
+            companyId: item.companyId,
+            repairRequestId: item.id,
+            fromStatus: change.fromStatus,
+            toStatus: change.toStatus,
+            effectiveOn: requiredDate(change.effectiveOn),
+            note: change.note ?? null,
+            changedBy: admin.userId,
+          },
+        });
+      }
     }
   }
 

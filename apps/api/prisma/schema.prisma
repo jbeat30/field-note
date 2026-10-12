@@ -38,12 +38,12 @@ enum LegalDocumentType {
 }
 
 model Company {
-  id                      String                   @id @default(dbgenerated("uuidv7()")) @db.Uuid
+  id                      String                      @id @default(dbgenerated("uuidv7()")) @db.Uuid
   name                    String
-  status                  CompanyStatus            @default(ACTIVE)
+  status                  CompanyStatus               @default(ACTIVE)
   // 회사별 저장 용량 한도(바이트). 운영자가 서버 용량에 맞춰 조정 (서비스 기획서 §12.1)
-  storageQuotaBytes       BigInt                   @default(5368709120) @map("storage_quota_bytes")
-  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
+  storageQuotaBytes       BigInt                      @default(5368709120) @map("storage_quota_bytes")
+  createdAt               DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
   users                   User[]
   sessions                Session[]
   consents                Consent[]
@@ -70,6 +70,9 @@ model Company {
   projectWarranties       ProjectWarranty[]
   projectWarrantyChanges  ProjectWarrantyChange[]
   warrantyCertificates    WarrantyCertificate[]
+  repairRequests          RepairRequest[]
+  repairStatusChanges     RepairRequestStatusChange[]
+  repairLinks             RepairRequestLink[]
   alertPreferences        AlertPreference[]
   projectAssignments      ProjectAssignment[]
   projectPeriodChanges    ProjectPeriodChange[]
@@ -139,6 +142,7 @@ model Project {
   warranty             ProjectWarranty?
   warrantyChanges      ProjectWarrantyChange[]
   warrantyCertificates WarrantyCertificate[]
+  repairRequests       RepairRequest[]
   assignments          ProjectAssignment[]
   periodChanges        ProjectPeriodChange[]
   workLogs             WorkLog[]
@@ -285,25 +289,26 @@ enum WorkLogStatus {
 // 작업일지: 프로젝트 × 날짜마다 한 건. 공통 내용은 여기에, 직원별·작업 구분별 공수는 항목(work_log_entries)에 둠
 // version은 저장(수정)할 때마다 올라가는 낙관적 잠금 값
 model WorkLog {
-  companyId      String            @map("company_id") @db.Uuid
-  id             String            @default(dbgenerated("uuidv7()")) @db.Uuid
-  projectId      String            @map("project_id") @db.Uuid
-  workDate       DateTime          @map("work_date") @db.Date
-  status         WorkLogStatus     @default(DRAFT)
-  content        String            @default("")
+  companyId      String              @map("company_id") @db.Uuid
+  id             String              @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId      String              @map("project_id") @db.Uuid
+  workDate       DateTime            @map("work_date") @db.Date
+  status         WorkLogStatus       @default(DRAFT)
+  content        String              @default("")
   area           String?
   notes          String?
-  isChange       Boolean           @default(false) @map("is_change")
-  isAfterService Boolean           @default(false) @map("is_after_service")
-  version        Int               @default(1)
+  isChange       Boolean             @default(false) @map("is_change")
+  isAfterService Boolean             @default(false) @map("is_after_service")
+  version        Int                 @default(1)
   // 처음 저장(임시 저장 → 저장됨)한 시각. 지연 입력 표시의 기준
-  savedAt        DateTime?         @map("saved_at") @db.Timestamptz(3)
-  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime          @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company        Company           @relation(fields: [companyId], references: [id])
-  project        Project           @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  savedAt        DateTime?           @map("saved_at") @db.Timestamptz(3)
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company        Company             @relation(fields: [companyId], references: [id])
+  project        Project             @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
   entries        WorkLogEntry[]
   revisions      WorkLogRevision[]
+  repairLinks    RepairRequestLink[]
 
   @@id([companyId, id])
   @@unique([companyId, projectId, workDate])
@@ -396,20 +401,20 @@ model Session {
 
 // 회사 관리자 계정 (회사당 하나). 직원은 계정이 없음
 model User {
-  id                      String                   @default(dbgenerated("uuidv7()")) @db.Uuid
-  companyId               String                   @map("company_id") @db.Uuid
+  id                      String                      @default(dbgenerated("uuidv7()")) @db.Uuid
+  companyId               String                      @map("company_id") @db.Uuid
   // 인증 전에는 비어 있고 서비스 전체에서 유일
-  email                   String?                  @unique
-  emailVerifiedAt         DateTime?                @map("email_verified_at") @db.Timestamptz(3)
+  email                   String?                     @unique
+  emailVerifiedAt         DateTime?                   @map("email_verified_at") @db.Timestamptz(3)
   // 이름 또는 상호
-  displayName             String                   @map("display_name")
+  displayName             String                      @map("display_name")
   phone                   String?
   // 만 14세 이상 확인 시각
-  ageConfirmedAt          DateTime?                @map("age_confirmed_at") @db.Timestamptz(3)
-  status                  UserStatus               @default(INVITED)
-  createdAt               DateTime                 @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt               DateTime                 @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company                 Company                  @relation(fields: [companyId], references: [id])
+  ageConfirmedAt          DateTime?                   @map("age_confirmed_at") @db.Timestamptz(3)
+  status                  UserStatus                  @default(INVITED)
+  createdAt               DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt               DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company                 Company                     @relation(fields: [companyId], references: [id])
   credential              UserCredential?
   consents                Consent[]
   sessions                Session[]
@@ -417,24 +422,27 @@ model User {
   emailVerification       EmailVerification?
   passwordReset           PasswordReset?
   socialAccounts          SocialAccount[]
-  projectStatusChanges    ProjectStatusChange[]    @relation("ProjectStatusChangedBy")
-  projectProgressRecords  ProjectProgressRecord[]  @relation("ProjectProgressRecordedBy")
-  employeePayRates        EmployeePayRate[]        @relation("EmployeePayRateCreatedBy")
-  changeWorks             ChangeWork[]             @relation("ChangeWorkCreatedBy")
-  changeWorkStatusChanges ChangeWorkStatusChange[] @relation("ChangeWorkStatusChangedBy")
-  changeWorkDocuments     ChangeWorkDocument[]     @relation("ChangeWorkDocumentLinkedBy")
-  projectWarranties       ProjectWarranty[]        @relation("ProjectWarrantyUpdatedBy")
-  projectWarrantyChanges  ProjectWarrantyChange[]  @relation("ProjectWarrantyChangedBy")
-  warrantyCertificates    WarrantyCertificate[]    @relation("WarrantyCertificateCreatedBy")
-  projectPeriodChanges    ProjectPeriodChange[]    @relation("ProjectPeriodChangedBy")
-  workLogRevisions        WorkLogRevision[]        @relation("WorkLogRevisionChangedBy")
-  uploadedFiles           StoredFile[]             @relation("FileUploadedBy")
-  uploadedPhotos          Photo[]                  @relation("PhotoUploadedBy")
-  memos                   Memo[]                   @relation("MemoCreatedBy")
-  materialRecords         MaterialRecord[]         @relation("MaterialRecordCreatedBy")
-  documents               Document[]               @relation("DocumentCreatedBy")
-  documentVersions        DocumentVersion[]        @relation("DocumentVersionUploadedBy")
-  auditLogs               AuditLog[]               @relation("AuditLogActor")
+  projectStatusChanges    ProjectStatusChange[]       @relation("ProjectStatusChangedBy")
+  projectProgressRecords  ProjectProgressRecord[]     @relation("ProjectProgressRecordedBy")
+  employeePayRates        EmployeePayRate[]           @relation("EmployeePayRateCreatedBy")
+  changeWorks             ChangeWork[]                @relation("ChangeWorkCreatedBy")
+  changeWorkStatusChanges ChangeWorkStatusChange[]    @relation("ChangeWorkStatusChangedBy")
+  changeWorkDocuments     ChangeWorkDocument[]        @relation("ChangeWorkDocumentLinkedBy")
+  projectWarranties       ProjectWarranty[]           @relation("ProjectWarrantyUpdatedBy")
+  projectWarrantyChanges  ProjectWarrantyChange[]     @relation("ProjectWarrantyChangedBy")
+  warrantyCertificates    WarrantyCertificate[]       @relation("WarrantyCertificateCreatedBy")
+  repairRequests          RepairRequest[]             @relation("RepairRequestCreatedBy")
+  repairStatusChanges     RepairRequestStatusChange[] @relation("RepairStatusChangedBy")
+  repairLinks             RepairRequestLink[]         @relation("RepairLinkLinkedBy")
+  projectPeriodChanges    ProjectPeriodChange[]       @relation("ProjectPeriodChangedBy")
+  workLogRevisions        WorkLogRevision[]           @relation("WorkLogRevisionChangedBy")
+  uploadedFiles           StoredFile[]                @relation("FileUploadedBy")
+  uploadedPhotos          Photo[]                     @relation("PhotoUploadedBy")
+  memos                   Memo[]                      @relation("MemoCreatedBy")
+  materialRecords         MaterialRecord[]            @relation("MaterialRecordCreatedBy")
+  documents               Document[]                  @relation("DocumentCreatedBy")
+  documentVersions        DocumentVersion[]           @relation("DocumentVersionUploadedBy")
+  auditLogs               AuditLog[]                  @relation("AuditLogActor")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -933,30 +941,31 @@ model Material {
 // 프로젝트별 자재 기록. 잔량 = 반입 - 사용 - 반출 - 폐기. 지우면 deleted_at만 채우는 소프트 삭제
 // 작업일지는 프로젝트 × record_date로 연결 (일지가 아직 없어도 기록 가능)
 model MaterialRecord {
-  companyId      String             @map("company_id") @db.Uuid
-  id             String             @default(dbgenerated("uuidv7()")) @db.Uuid
-  projectId      String             @map("project_id") @db.Uuid
-  materialId     String             @map("material_id") @db.Uuid
-  recordDate     DateTime           @map("record_date") @db.Date
+  companyId      String              @map("company_id") @db.Uuid
+  id             String              @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId      String              @map("project_id") @db.Uuid
+  materialId     String              @map("material_id") @db.Uuid
+  recordDate     DateTime            @map("record_date") @db.Date
   kind           MaterialRecordKind
-  quantity       Decimal            @db.Decimal(12, 3)
-  categoryId     String?            @map("category_id") @db.Uuid
+  quantity       Decimal             @db.Decimal(12, 3)
+  categoryId     String?             @map("category_id") @db.Uuid
   area           String?
-  partnerId      String?            @map("partner_id") @db.Uuid
-  sourceText     String?            @map("source_text")
-  isChange       Boolean            @default(false) @map("is_change")
-  isAfterService Boolean            @default(false) @map("is_after_service")
+  partnerId      String?             @map("partner_id") @db.Uuid
+  sourceText     String?             @map("source_text")
+  isChange       Boolean             @default(false) @map("is_change")
+  isAfterService Boolean             @default(false) @map("is_after_service")
   memo           String?
-  createdBy      String             @map("created_by") @db.Uuid
-  createdAt      DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt      DateTime           @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt      DateTime?          @map("deleted_at") @db.Timestamptz(3)
-  company        Company            @relation(fields: [companyId], references: [id])
-  project        Project            @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
-  material       Material           @relation(fields: [companyId, materialId], references: [companyId, id], onDelete: Restrict)
-  category       OptionItem?        @relation("MaterialRecordCategory", fields: [companyId, categoryId], references: [companyId, id], onDelete: Restrict)
-  partner        Partner?           @relation("MaterialRecordPartner", fields: [companyId, partnerId], references: [companyId, id], onDelete: Restrict)
-  creator        User               @relation("MaterialRecordCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+  createdBy      String              @map("created_by") @db.Uuid
+  createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt      DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt      DateTime?           @map("deleted_at") @db.Timestamptz(3)
+  company        Company             @relation(fields: [companyId], references: [id])
+  project        Project             @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  material       Material            @relation(fields: [companyId, materialId], references: [companyId, id], onDelete: Restrict)
+  category       OptionItem?         @relation("MaterialRecordCategory", fields: [companyId, categoryId], references: [companyId, id], onDelete: Restrict)
+  partner        Partner?            @relation("MaterialRecordPartner", fields: [companyId, partnerId], references: [companyId, id], onDelete: Restrict)
+  creator        User                @relation("MaterialRecordCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+  repairLinks    RepairRequestLink[]
 
   @@id([companyId, id])
   @@index([companyId, projectId, recordDate(sort: Desc), id(sort: Desc)])
@@ -1207,6 +1216,92 @@ model WarrantyCertificate {
   @@index([companyId, projectId])
   @@index([companyId, expiresOn])
   @@map("warranty_certificates")
+}
+
+// 보수 요청 상태 (서비스 기획서 §10.6)
+enum RepairStatus {
+  RECEIVED
+  IN_PROGRESS
+  ON_HOLD
+  DONE
+
+  @@map("repair_status")
+}
+
+// 보수 요청: 보증 중에 고객이 요청한 하자 보수의 접수부터 처리까지. 번호(seq)는 프로젝트마다 1부터
+// 내용은 완료 전까지만 고칠 수 있고, 지우는 API는 없음. 사후 작업으로 쓴 일지·자재 기록은 RepairRequestLink로 연결
+model RepairRequest {
+  companyId       String                      @map("company_id") @db.Uuid
+  id              String                      @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId       String                      @map("project_id") @db.Uuid
+  seq             Int
+  receivedOn      DateTime                    @map("received_on") @db.Date
+  requester       String
+  content         String
+  // 하자 위치 (구역·층·호실 등)
+  location        String?
+  status          RepairStatus                @default(RECEIVED)
+  // 현재 상태가 된 날 (처음에는 접수일)
+  statusChangedOn DateTime                    @map("status_changed_on") @db.Date
+  // 완료된 날 (완료일 때만 값이 있음)
+  resolvedOn      DateTime?                   @map("resolved_on") @db.Date
+  createdBy       String                      @map("created_by") @db.Uuid
+  createdAt       DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt       DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company         Company                     @relation(fields: [companyId], references: [id])
+  project         Project                     @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  creator         User                        @relation("RepairRequestCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+  statusChanges   RepairRequestStatusChange[]
+  links           RepairRequestLink[]
+
+  @@id([companyId, id])
+  @@unique([companyId, projectId, seq])
+  @@index([companyId, projectId, status])
+  @@index([companyId, status])
+  @@map("repair_requests")
+}
+
+// 보수 요청 상태 변경 이력. 추가만 가능
+model RepairRequestStatusChange {
+  companyId       String        @map("company_id") @db.Uuid
+  id              String        @default(dbgenerated("uuidv7()")) @db.Uuid
+  repairRequestId String        @map("repair_request_id") @db.Uuid
+  fromStatus      RepairStatus  @map("from_status")
+  toStatus        RepairStatus  @map("to_status")
+  effectiveOn     DateTime      @map("effective_on") @db.Date
+  note            String?
+  changedBy       String        @map("changed_by") @db.Uuid
+  changedAt       DateTime      @default(now()) @map("changed_at") @db.Timestamptz(3)
+  company         Company       @relation(fields: [companyId], references: [id])
+  repairRequest   RepairRequest @relation(fields: [companyId, repairRequestId], references: [companyId, id], onDelete: Restrict)
+  user            User          @relation("RepairStatusChangedBy", fields: [companyId, changedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, repairRequestId, changedAt])
+  @@map("repair_request_status_changes")
+}
+
+// 보수 요청에 연결한 사후 작업: 작업일지 또는 자재 기록 중 하나. 해제해도 행은 남기고 해제 시각만 기록
+model RepairRequestLink {
+  companyId        String          @map("company_id") @db.Uuid
+  id               String          @default(dbgenerated("uuidv7()")) @db.Uuid
+  repairRequestId  String          @map("repair_request_id") @db.Uuid
+  workLogId        String?         @map("work_log_id") @db.Uuid
+  materialRecordId String?         @map("material_record_id") @db.Uuid
+  linkedBy         String          @map("linked_by") @db.Uuid
+  linkedAt         DateTime        @default(now()) @map("linked_at") @db.Timestamptz(3)
+  unlinkedAt       DateTime?       @map("unlinked_at") @db.Timestamptz(3)
+  company          Company         @relation(fields: [companyId], references: [id])
+  repairRequest    RepairRequest   @relation(fields: [companyId, repairRequestId], references: [companyId, id], onDelete: Restrict)
+  workLog          WorkLog?        @relation(fields: [companyId, workLogId], references: [companyId, id], onDelete: Restrict)
+  materialRecord   MaterialRecord? @relation(fields: [companyId, materialRecordId], references: [companyId, id], onDelete: Restrict)
+  user             User            @relation("RepairLinkLinkedBy", fields: [companyId, linkedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, repairRequestId])
+  @@index([companyId, workLogId])
+  @@index([companyId, materialRecordId])
+  @@map("repair_request_links")
 }
 
 // 알림 종류 (서비스 기획서 §15.3). 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산하며, 종류별로 켜고 끈다

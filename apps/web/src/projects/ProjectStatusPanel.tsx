@@ -114,6 +114,7 @@ const TransitionForm = ({
       draftLogCount: notices.data?.find((notice) => notice.type === 'DRAFT_LOGS')?.count ?? 0,
       warrantyMonths,
       warrantyEndOn,
+      openRepairCount: notices.data?.find((notice) => notice.type === 'OPEN_REPAIRS')?.count ?? 0,
     });
 
     if (!checked.ok) {

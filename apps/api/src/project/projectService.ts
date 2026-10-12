@@ -17,6 +17,7 @@ import {
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { loadRepairCounts } from '../repair/repairService';
 import { createDefaultWarranty, loadWarrantyForTransition } from '../warranty/warrantyService';
 
 type Clock = () => Date;
@@ -420,6 +421,8 @@ export const createProjectService = (
       const effectiveOn = input.effectiveOn ?? today;
       const reason = input.reason?.trim() || null;
       const warranty = await loadWarrantyForTransition(tx, id);
+      const repairs =
+        input.toStatus === 'CLOSED' ? await loadRepairCounts(tx, id) : { open: 0, hold: 0 };
       const checked = validateProjectTransition({
         from: current.status,
         to: input.toStatus,
@@ -435,6 +438,7 @@ export const createProjectService = (
             : 0,
         warrantyMonths: warranty.months,
         warrantyEndOn: warranty.endOn,
+        openRepairCount: repairs.open,
       });
 
       if (!checked.ok) {

@@ -25,6 +25,10 @@ export const queryKeys = {
   changeWork: (id: string) => ['change-works', 'detail', { id }] as const,
   changeUsage: (projectId: string) => ['change-works', 'usage', { projectId }] as const,
   warranty: (projectId: string) => ['warranty', 'detail', { projectId }] as const,
+  repairs: (projectId: string, status?: string) =>
+    ['repairs', 'list', { projectId, status }] as const,
+  repair: (id: string) => ['repairs', 'detail', { id }] as const,
+  afterServiceUsage: (projectId: string) => ['repairs', 'usage', { projectId }] as const,
   transitionNotices: (projectId: string, to: string) =>
     ['completion', 'notices', { projectId, to }] as const,
   projectSummary: (projectId: string) => ['completion', 'summary', { projectId }] as const,
