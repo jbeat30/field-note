@@ -18,6 +18,7 @@ import {
 import { delay, http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
+import { addMockAudit } from './auditHandlers';
 import type { MockAccount } from './data';
 import { DEMO_CREDENTIALS, DEMO_REQUIRED_CREDENTIALS } from './demoSource';
 import { getMockFile } from './photoHandlers';
@@ -424,6 +425,14 @@ export const createCredentialHandlers = ({ apiError, parseBody }: Helpers) => {
           { path: 'params.credentialId', message: '검사가 끝난 파일만 열 수 있습니다' },
         ]);
       }
+
+      addMockAudit(account, {
+        action: 'EMPLOYEE_DOCUMENT_VIEWED',
+        targetType: 'EMPLOYEE',
+        targetId: row.employeeId,
+        targetName: getEmployees(account).find((item) => item.id === row.employeeId)?.name ?? null,
+        summary: `${getOptions(account).find((item) => item.id === row.typeId)?.name ?? ''} · ${file.name}`,
+      });
 
       // 목업은 실제 파일이 없으므로 이름을 담은 안내 이미지를 돌려줌
       return HttpResponse.json({

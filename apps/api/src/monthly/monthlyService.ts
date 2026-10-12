@@ -273,6 +273,17 @@ export const createMonthlyService = (
             createdAt: at,
           },
         });
+        // 확정은 감사 기록으로도 남겨 기록 조회 화면에서 한꺼번에 본다 (대상은 회사)
+        await tx.auditLog.create({
+          data: {
+            companyId,
+            action: 'MONTH_CLOSED',
+            actorId: userId,
+            targetId: companyId,
+            detail: { month: input.month, draftLogCount: drafts.count },
+            createdAt: at,
+          },
+        });
 
         return load(tx, input.month);
       }),
@@ -306,6 +317,17 @@ export const createMonthlyService = (
             standardWorkMinutes: state.standardWorkMinutes,
             monthlyWorkDays: state.monthlyWorkDays,
             createdBy: userId,
+            createdAt: at,
+          },
+        });
+
+        await tx.auditLog.create({
+          data: {
+            companyId,
+            action: 'MONTH_REOPENED',
+            actorId: userId,
+            targetId: companyId,
+            detail: { month: input.month, reason: input.reason.trim() },
             createdAt: at,
           },
         });

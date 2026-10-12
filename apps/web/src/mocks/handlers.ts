@@ -149,6 +149,7 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
+import { createAuditHandlers } from './auditHandlers';
 import { createCredentialHandlers, mockCredentialWarnings } from './credentialHandlers';
 import { createMonthlyHandlers, mockMonthLockCheck } from './monthlyHandlers';
 import { countMockRepairs, createRepairHandlers } from './repairHandlers';
@@ -429,6 +430,7 @@ export const handlers = [
   ...createRepairHandlers({ apiError, parseBody }),
   ...createMonthlyHandlers({ apiError, parseBody }),
   ...createCredentialHandlers({ apiError, parseBody }),
+  ...createAuditHandlers({ apiError }),
   ...createCompletionHandlers({ apiError }),
   ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),

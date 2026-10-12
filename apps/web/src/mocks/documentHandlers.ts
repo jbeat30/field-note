@@ -20,6 +20,7 @@ import {
 import { delay, http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
+import { addMockAudit } from './auditHandlers';
 import type { MockAccount } from './data';
 import { addMockReadyFile, getMockFile } from './photoHandlers';
 import { getCurrentAccount, getProjects } from './state';
@@ -482,6 +483,13 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
 
       // 민감 자료는 기록을 먼저 남긴 뒤에만 주소를 줌
       if (document.isSensitive) {
+        addMockAudit(account, {
+          action: query.data.mode === 'download' ? 'DOCUMENT_DOWNLOADED' : 'DOCUMENT_VIEWED',
+          targetType: 'DOCUMENT',
+          targetId: document.id,
+          targetName: document.title,
+          summary: `${document.title} · v${version.versionNo}`,
+        });
         logs.push({
           id: crypto.randomUUID(),
           scope: scopeOf(account),

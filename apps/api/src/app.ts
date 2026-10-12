@@ -17,6 +17,8 @@ import { registerOptionRoutes } from './routes/options';
 import { registerDashboardRoutes } from './routes/dashboard';
 import { registerCompletionRoutes } from './routes/completion';
 import { registerChangeWorkRoutes } from './routes/changeWorks';
+import { registerAuditRoutes } from './routes/audit';
+import type { AuditService } from './audit/auditService';
 import { registerCredentialRoutes } from './routes/credentials';
 import { registerWarrantyRoutes } from './routes/warranty';
 import { registerRepairRoutes } from './routes/repairs';
@@ -100,6 +102,7 @@ export type AppOptions = {
   changeWorks?: ChangeWorkService;
   warranty?: WarrantyService;
   credentials?: CredentialService;
+  audit?: AuditService;
   repairs?: RepairService;
   monthly?: MonthlyService;
   completion?: CompletionService;
@@ -175,6 +178,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerChangeWorkRoutes(registry, options.changeWorks);
   registerWarrantyRoutes(registry, options.warranty);
   registerCredentialRoutes(registry, options.credentials);
+  registerAuditRoutes(registry, options.audit);
   registerRepairRoutes(registry, options.repairs);
   registerMonthlyRoutes(registry, options.monthly);
   registerCompletionRoutes(registry, options.completion);
