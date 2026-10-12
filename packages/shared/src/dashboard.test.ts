@@ -4,6 +4,7 @@ import {
   assembleDashboard,
   dashboardAlertMessage,
   dashboardAlertPath,
+  previousMonth,
   weekRange,
   type AlertKind,
   type DashboardInput,
@@ -43,6 +44,11 @@ const base = (patch: Partial<DashboardInput> = {}): DashboardInput => ({
   draftLogCount: 0,
   calendar: { from: '2026-10-05', to: '2026-10-11', employees: [], assignments: [] },
   negotiatingChanges: [],
+  warrantyProjects: [],
+  openRepairs: [],
+  certificates: [],
+  credentials: [],
+  unclosedMonth: null,
   enabled: new Set<AlertKind>(ALERT_KINDS),
   ...patch,
 });
@@ -200,7 +206,11 @@ describe('assembleDashboard: 메모함·변경 작업·할 일', () => {
       }),
     );
 
-    expect(dashboard.todos).toEqual({ draftLogCount: 2, staleInboxCount: 4 });
+    expect(dashboard.todos).toEqual({
+      draftLogCount: 2,
+      staleInboxCount: 4,
+      unclosedMonth: null,
+    });
     expect(dashboard.alerts).toEqual([
       { kind: 'INBOX_STALE', count: 4, oldestDays: 9 },
       expect.objectContaining({ kind: 'CHANGE_STALE', seq: 2, days: 7 }),
@@ -283,5 +293,136 @@ describe('alertSettingsUpdateSchema', () => {
       alertSettingsUpdateSchema.safeParse({ items: [{ kind: 'INBOX_STALE', enabled: false }] })
         .success,
     ).toBe(true);
+  });
+});
+
+describe('assembleDashboard: 4단계 알림', () => {
+  const alertsOf = (patch: Partial<DashboardInput>) => assembleDashboard(base(patch)).alerts;
+
+  it('보증 종료가 60일 안이면 알리고 가까운 순으로 보여 주며 지난 것도 계속 알린다', () => {
+    const dashboard = assembleDashboard(
+      base({
+        warrantyProjects: [
+          { id: P1, code: '2026-001', name: 'A', endOn: '2026-12-10' },
+          { id: P2, code: '2026-002', name: 'B', endOn: '2026-10-09' },
+          { id: P3, code: '2026-003', name: 'C', endOn: '2026-12-11' },
+          { id: C1, code: '2026-004', name: 'D', endOn: '2026-10-11' },
+        ],
+      }),
+    );
+
+    expect(dashboard.warranty.ending.map((item) => [item.name, item.daysLeft])).toEqual([
+      ['B', -2],
+      ['D', 0],
+      ['A', 60],
+    ]);
+    expect(dashboard.alerts.map((alert) => dashboardAlertMessage(alert))).toEqual([
+      'B: 보증 종료 예정일(2026-10-09)이 2일 지났습니다',
+      'D: 오늘 보증이 끝납니다',
+      'A: 보증 종료까지 60일 남았습니다 (2026-12-10)',
+    ]);
+  });
+
+  it('접수 상태로 3일 넘게 둔 보수 요청만 알리고 처리 중인 건은 건수에만 센다', () => {
+    const repair = (
+      id: string,
+      seq: number,
+      receivedOn: string,
+      status: 'RECEIVED' | 'IN_PROGRESS',
+    ) => ({
+      id,
+      projectId: P1,
+      projectName: 'A',
+      seq,
+      receivedOn,
+      status,
+    });
+    const dashboard = assembleDashboard(
+      base({
+        openRepairs: [
+          repair(E1, 1, '2026-10-08', 'RECEIVED'),
+          repair(E2, 2, '2026-10-09', 'RECEIVED'),
+          repair(E3, 3, '2026-09-01', 'IN_PROGRESS'),
+        ],
+      }),
+    );
+
+    expect(dashboard.alerts).toEqual([
+      { kind: 'REPAIR_UNHANDLED', projectId: P1, projectName: 'A', repairId: E1, seq: 1, days: 3 },
+    ]);
+    expect(dashboard.warranty.openRepairCount).toBe(3);
+  });
+
+  it('보증서는 30일, 직원 서류는 30일 안(지난 것 포함)에서 만료가 빠른 순으로 알린다', () => {
+    const dashboard = assembleDashboard(
+      base({
+        certificates: [
+          { projectId: P1, projectName: 'A', title: '보증증권', expiresOn: '2026-11-10' },
+          { projectId: P1, projectName: 'A', title: '하자보증', expiresOn: '2026-11-11' },
+        ],
+        credentials: [
+          { employeeId: E1, employeeName: '정판금', typeName: '건강검진', expiresOn: '2026-09-30' },
+          {
+            employeeId: E2,
+            employeeName: '한용접',
+            typeName: '용접 기능사',
+            expiresOn: '2026-11-10',
+          },
+          { employeeId: E3, employeeName: '오전기', typeName: '안전교육', expiresOn: '2026-11-11' },
+        ],
+      }),
+    );
+
+    expect(dashboard.expiring.certificates.map((item) => item.title)).toEqual(['보증증권']);
+    expect(
+      dashboard.expiring.credentials.map((item) => [item.employeeName, item.daysLeft]),
+    ).toEqual([
+      ['정판금', -11],
+      ['한용접', 30],
+    ]);
+    expect(dashboard.alerts.map((alert) => alert.kind)).toEqual([
+      'CERTIFICATE_EXPIRING',
+      'CREDENTIAL_EXPIRING',
+      'CREDENTIAL_EXPIRING',
+    ]);
+    expect(dashboardAlertMessage(dashboard.alerts[1]!)).toContain('11일 전에 만료됐습니다');
+  });
+
+  it('지난달 월 공수가 확정되지 않았으면 알림과 할 일에 보이고 알림을 끄면 알림만 빠진다', () => {
+    const on = assembleDashboard(base({ unclosedMonth: '2026-09' }));
+
+    expect(on.todos.unclosedMonth).toBe('2026-09');
+    expect(on.alerts).toEqual([{ kind: 'MONTH_UNCLOSED', month: '2026-09' }]);
+    expect(dashboardAlertPath(on.alerts[0]!)).toBe('/monthly-hours?month=2026-09');
+
+    const off = assembleDashboard(
+      base({
+        unclosedMonth: '2026-09',
+        enabled: new Set<AlertKind>(ALERT_KINDS.filter((kind) => kind !== 'MONTH_UNCLOSED')),
+      }),
+    );
+
+    expect(off.alerts).toEqual([]);
+    expect(off.todos.unclosedMonth).toBe('2026-09');
+  });
+
+  it('알림을 끄면 위젯 목록은 그대로이고 알림만 빠진다', () => {
+    const dashboard = assembleDashboard(
+      base({
+        warrantyProjects: [{ id: P1, code: '2026-001', name: 'A', endOn: '2026-10-20' }],
+        enabled: new Set<AlertKind>(),
+      }),
+    );
+
+    expect(dashboard.alerts).toEqual([]);
+    expect(dashboard.warranty.ending).toHaveLength(1);
+    expect(alertsOf({})).toEqual([]);
+  });
+});
+
+describe('previousMonth', () => {
+  it('지난달을 구하고 1월이면 전년 12월', () => {
+    expect(previousMonth('2026-10-11')).toBe('2026-09');
+    expect(previousMonth('2026-01-05')).toBe('2025-12');
   });
 });
