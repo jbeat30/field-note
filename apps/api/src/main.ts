@@ -38,6 +38,7 @@ import { createLogger } from './logger';
 import { chooseSocialProvider } from './social/provider';
 import { createPgBossQueue } from './queue/jobQueue';
 import { createPrismaSessionStore } from './session/sessionStore';
+import { createCredentialService } from './credential/credentialService';
 import { createS3Storage } from './storage/objectStorage';
 
 const main = async () => {
@@ -85,6 +86,7 @@ const main = async () => {
   const memos = createMemoService(appPrisma);
   const materials = createMaterialService(appPrisma);
   const documents = createDocumentService(appPrisma, storage);
+  const credentials = createCredentialService({ app: appPrisma, storage });
   const search = createSearchService(appPrisma);
   const reports = createReportService(appPrisma, storage);
   const completion = createCompletionService(appPrisma, storage);
@@ -158,6 +160,7 @@ const main = async () => {
     warranty,
     repairs,
     monthly,
+    credentials,
     completion,
     dashboard,
     files,
