@@ -26,6 +26,7 @@ import { createDashboardService } from '../dashboard/dashboardService';
 import { createCompletionService } from '../completion/completionService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createWarrantyService } from '../warranty/warrantyService';
+import { createAuditService } from '../audit/auditService';
 import { createCredentialService } from '../credential/credentialService';
 import { createRepairService } from '../repair/repairService';
 import { createMonthlyService } from '../monthly/monthlyService';
@@ -89,6 +90,7 @@ const instance = () =>
     warranty: createWarrantyService(db.app, () => NOW),
     repairs: createRepairService(db.app, () => NOW),
     monthly: createMonthlyService(db.app, () => NOW),
+    audit: createAuditService(db.app),
     credentials: createCredentialService({
       app: db.app,
       storage: createMemoryStorage().storage,
@@ -664,6 +666,7 @@ const COLLECTIONS = [
   'GET /employees',
   'POST /employees',
   'GET /materials',
+  'GET /audit-logs',
   'GET /monthly-hours',
   'POST /monthly-hours/close',
   'POST /monthly-hours/reopen',
