@@ -1,4 +1,6 @@
 import {
+  employeeFileParamsSchema,
+  employeeFileUploadRequestSchema,
   fileParamsSchema,
   fileUploadRequestSchema,
   fileUploadTicketSchema,
@@ -6,6 +8,7 @@ import {
   fileUrlResponseSchema,
   projectFileParamsSchema,
   storedFileSchema,
+  type EmployeeFileUploadRequest,
   type FileUploadRequest,
   type FileUrlQuery,
 } from '@field-note/shared';
@@ -67,6 +70,30 @@ export const registerFileRoutes = (registry: RouteRegistry, files?: FileService)
           auth!.userId,
           (params as { projectId: string }).projectId,
           body as FileUploadRequest,
+        );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/employees/{employeeId}/files',
+      summary: '직원 서류 파일 업로드 신청 (이미지·PDF, 열람은 직원 서류 API로만)',
+      auth: 'required',
+      request: { params: employeeFileParamsSchema, body: employeeFileUploadRequestSchema },
+      response: { status: 201, schema: fileUploadTicketSchema },
+      errors: ['NOT_FOUND', 'STORAGE_QUOTA_EXCEEDED'],
+    },
+    async ({ auth, params, body }) => {
+      try {
+        return await files!.requestEmployeeUpload(
+          auth!.companyId,
+          auth!.userId,
+          (params as { employeeId: string }).employeeId,
+          body as EmployeeFileUploadRequest,
         );
       } catch (error) {
         throw toAppError(error);

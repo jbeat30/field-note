@@ -3,6 +3,9 @@ import {
   INBOX_STALE_DAYS,
   alertSettingsUpdateSchema,
   assembleDashboard,
+  monthOf,
+  monthRange,
+  previousMonth,
   todayInSeoul,
   weekRange,
   type AlertKind,
@@ -14,8 +17,12 @@ import { delay, http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import { listMockChangeWorks } from './changeWorkHandlers';
+import { listMockCredentialExpiries } from './credentialHandlers';
 import type { MockAccount } from './data';
 import { listMockMemos } from './memoHandlers';
+import { getMockClosedMonths } from './monthlyHandlers';
+import { listMockOpenRepairs } from './repairHandlers';
+import { listMockWarrantyDashboard } from './warrantyHandlers';
 import {
   getAssignments,
   getCurrentAccount,
@@ -106,6 +113,14 @@ const buildDashboard = (account: MockAccount) => {
   const staleInbox = listMockMemos(account).filter(
     (memo) => memo.projectId === null && Date.parse(memo.createdAt) <= staleBefore,
   );
+  const warranty = listMockWarrantyDashboard(account);
+  // 지난달에 저장한 일지가 있는데 확정하지 않았으면 알림 (서버와 같은 규칙)
+  const prevMonth = previousMonth(today);
+  const prevRange = monthRange(prevMonth);
+  const hasPrevLogs = logs.some(
+    (log) =>
+      log.status === 'SAVED' && log.workDate >= prevRange.from && log.workDate <= prevRange.to,
+  );
   const oldest = staleInbox.map((memo) => memo.createdAt).sort()[0];
 
   return {
@@ -170,6 +185,14 @@ const buildDashboard = (account: MockAccount) => {
             statusChangedOn: work.statusChangedOn,
           })),
       ),
+      warrantyProjects: warranty.projects,
+      openRepairs: listMockOpenRepairs(account),
+      certificates: warranty.certificates,
+      credentials: listMockCredentialExpiries(account),
+      unclosedMonth:
+        hasPrevLogs && !getMockClosedMonths(account).includes(monthOf(prevRange.from))
+          ? prevMonth
+          : null,
       enabled: new Set<AlertKind>(
         settings.items.filter((item) => item.enabled).map((item) => item.kind),
       ),

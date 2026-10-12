@@ -149,6 +149,15 @@ import {
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
+import { createAuditHandlers } from './auditHandlers';
+import { createCredentialHandlers, mockCredentialWarnings } from './credentialHandlers';
+import { createMonthlyHandlers, mockMonthLockCheck } from './monthlyHandlers';
+import { countMockRepairs, createRepairHandlers } from './repairHandlers';
+import {
+  createWarrantyHandlers,
+  ensureMockDefaultWarranty,
+  getMockWarrantyForTransition,
+} from './warrantyHandlers';
 import { createCompletionHandlers } from './completionHandlers';
 import { createDashboardHandlers } from './dashboardHandlers';
 import { createDocumentHandlers } from './documentHandlers';
@@ -310,7 +319,7 @@ const sortedProgress = (records: ProgressRecord[]) =>
     (a, b) => b.recordedOn.localeCompare(a.recordedOn) || b.createdAt.localeCompare(a.createdAt),
   );
 
-// 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음)
+// 같은 날 다른 프로젝트에 겹쳐 배정되거나 필요 자격이 없는·휴직·퇴사 직원이면 경고 (막지는 않음)
 const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
   if (row.cancelledAt) return { ...row, warnings: [] as AssignmentWarning[] };
 
@@ -338,6 +347,14 @@ const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
       });
     }
   }
+
+  // 프로젝트 필요 자격이 없거나 만료된 직원 (서비스 기획서 §8.4)
+  warnings.push(
+    ...mockCredentialWarnings(account, row.projectId, row.employeeId, {
+      from: row.startDate,
+      to: row.endDate,
+    }),
+  );
 
   const status = getEmployees(account).find((item) => item.id === row.employeeId)?.status;
 
@@ -409,6 +426,11 @@ export const handlers = [
   ...createMaterialHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
   ...createChangeWorkHandlers({ apiError, parseBody }),
+  ...createWarrantyHandlers({ apiError, parseBody }),
+  ...createRepairHandlers({ apiError, parseBody }),
+  ...createMonthlyHandlers({ apiError, parseBody }),
+  ...createCredentialHandlers({ apiError, parseBody }),
+  ...createAuditHandlers({ apiError }),
   ...createCompletionHandlers({ apiError }),
   ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
@@ -1561,6 +1583,7 @@ export const handlers = [
       (latest, item) => (latest === null || item.effectiveOn > latest ? item.effectiveOn : latest),
       null,
     );
+    const warranty = getMockWarrantyForTransition(account, current.id);
     const checked = validateProjectTransition({
       from: current.status,
       to: body.data.toStatus,
@@ -1569,6 +1592,13 @@ export const handlers = [
       actualStart: current.actualStart,
       lastEffectiveOn,
       today,
+      confirmSummary: body.data.confirmSummary === true,
+      draftLogCount: getWorkLogs(account).filter(
+        (log) => log.projectId === current.id && log.status === 'DRAFT',
+      ).length,
+      warrantyMonths: warranty.months,
+      warrantyEndOn: warranty.endOn,
+      openRepairCount: countMockRepairs(account, current.id).open,
     });
 
     if (!checked.ok) {
@@ -1593,6 +1623,10 @@ export const handlers = [
       account,
       projects.map((item) => (item.id === current.id ? updated : item)),
     );
+
+    // 처음 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 만든다
+    if (body.data.toStatus === 'WARRANTY') ensureMockDefaultWarranty(account, updated);
+
     addProjectStatusChange(account, current.id, {
       id: crypto.randomUUID(),
       fromStatus: current.status,
@@ -2377,6 +2411,11 @@ export const handlers = [
     const dateCheck = checkWorkDate(workDate, project, todayInSeoul(new Date()));
 
     if (!dateCheck.ok) return invalid(dateCheck.path, dateCheck.message);
+
+    // 월 공수가 확정된 달의 일지는 재오픈 전까지 고칠 수 없다 (서버와 같은 규칙)
+    const lockCheck = mockMonthLockCheck(account, workDate);
+
+    if (!lockCheck.ok) return invalid(lockCheck.path, lockCheck.message);
 
     const saveCheck = validateWorkLogForSave(input);
 

@@ -22,6 +22,7 @@ import {
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { MonthlyError, assertMonthOpen } from '../monthly/monthlyService';
 
 type Clock = () => Date;
 
@@ -345,6 +346,13 @@ export const createWorkLogService = (
 
       if (!dateCheck.ok) {
         throw invalid(dateCheck.path, dateCheck.message);
+      }
+
+      // 월 공수가 확정된 달의 일지는 재오픈 전까지 고칠 수 없다 (§13.2)
+      try {
+        await assertMonthOpen(tx, companyId, workDate);
+      } catch (error) {
+        throw error instanceof MonthlyError ? invalid('workDate', error.detail.message) : error;
       }
 
       const saveCheck = validateWorkLogForSave(input);

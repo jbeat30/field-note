@@ -14,6 +14,9 @@ import { createAssignmentService } from './assignment/assignmentService';
 import { createDashboardService } from './dashboard/dashboardService';
 import { createCompletionService } from './completion/completionService';
 import { createChangeWorkService } from './changeWork/changeWorkService';
+import { createWarrantyService } from './warranty/warrantyService';
+import { createRepairService } from './repair/repairService';
+import { createMonthlyService } from './monthly/monthlyService';
 import { createLaborService } from './labor/laborService';
 import { createProgressService } from './progress/progressService';
 import { createWorkLogService } from './workLog/workLogService';
@@ -35,6 +38,8 @@ import { createLogger } from './logger';
 import { chooseSocialProvider } from './social/provider';
 import { createPgBossQueue } from './queue/jobQueue';
 import { createPrismaSessionStore } from './session/sessionStore';
+import { createAuditService } from './audit/auditService';
+import { createCredentialService } from './credential/credentialService';
 import { createS3Storage } from './storage/objectStorage';
 
 const main = async () => {
@@ -58,6 +63,9 @@ const main = async () => {
   const progress = createProgressService(appPrisma);
   const labor = createLaborService(appPrisma);
   const changeWorks = createChangeWorkService(appPrisma);
+  const warranty = createWarrantyService(appPrisma);
+  const repairs = createRepairService(appPrisma);
+  const monthly = createMonthlyService(appPrisma);
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
@@ -79,6 +87,8 @@ const main = async () => {
   const memos = createMemoService(appPrisma);
   const materials = createMaterialService(appPrisma);
   const documents = createDocumentService(appPrisma, storage);
+  const credentials = createCredentialService({ app: appPrisma, storage });
+  const audit = createAuditService(appPrisma);
   const search = createSearchService(appPrisma);
   const reports = createReportService(appPrisma, storage);
   const completion = createCompletionService(appPrisma, storage);
@@ -149,6 +159,11 @@ const main = async () => {
     progress,
     labor,
     changeWorks,
+    warranty,
+    repairs,
+    monthly,
+    credentials,
+    audit,
     completion,
     dashboard,
     files,

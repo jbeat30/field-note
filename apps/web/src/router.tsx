@@ -93,8 +93,20 @@ export const routes = [
             ...page(() => import('./routes/ProjectChangeWorksPage'), 'ProjectChangeWorksPage'),
           },
           {
+            path: '/projects/:id/repairs',
+            ...page(() => import('./routes/ProjectRepairsPage'), 'ProjectRepairsPage'),
+          },
+          {
+            path: '/projects/:id/warranty',
+            ...page(() => import('./routes/ProjectWarrantyPage'), 'ProjectWarrantyPage'),
+          },
+          {
             path: '/projects/:id/summary',
             ...page(() => import('./routes/ProjectSummaryPage'), 'ProjectSummaryPage'),
+          },
+          {
+            path: '/monthly-hours',
+            ...page(() => import('./routes/MonthlyHoursPage'), 'MonthlyHoursPage'),
           },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
@@ -130,6 +142,10 @@ export const routes = [
           {
             path: '/settings/alerts',
             ...page(() => import('./routes/AlertSettingsPage'), 'AlertSettingsPage'),
+          },
+          {
+            path: '/settings/records',
+            ...page(() => import('./routes/AuditLogsPage'), 'AuditLogsPage'),
           },
           {
             path: '/settings/lists',

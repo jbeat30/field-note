@@ -13,6 +13,7 @@ import { delay, http, HttpResponse } from 'msw';
 import { listMockChangeWorks } from './changeWorkHandlers';
 import type { MockAccount } from './data';
 import { listMockDocuments } from './documentHandlers';
+import { countMockRepairs } from './repairHandlers';
 import { listMockMaterialRecords } from './materialHandlers';
 import { listMockPhotos } from './photoHandlers';
 import {
@@ -106,6 +107,8 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
         negotiatingCount: listMockChangeWorks(account, project.id).filter(
           (work) => work.status === 'NEGOTIATING',
         ).length,
+        openRepairCount: countMockRepairs(account, project.id).open,
+        holdRepairCount: countMockRepairs(account, project.id).hold,
         plannedEnd: project.plannedEnd,
         today: todayInSeoul(new Date()),
       }),

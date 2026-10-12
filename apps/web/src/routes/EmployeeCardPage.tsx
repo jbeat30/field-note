@@ -14,6 +14,7 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
+import { EmployeeCredentialsPanel } from '../credentials/EmployeeCredentialsPanel';
 import { EmployeePayPanel } from '../labor/EmployeePayPanel';
 import { OptionSelect } from '../employees/OptionSelect';
 import { useEmployee, useUpdateEmployee } from '../employees/useEmployees';
@@ -166,6 +167,8 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
 
       <EmployeeWorkHistoryPanel employeeId={employee.id} />
 
+      <EmployeeCredentialsPanel employeeId={employee.id} />
+
       <EmployeePayPanel employeeId={employee.id} />
 
       {saved && <Alert variant="info">{saved}</Alert>}
@@ -310,7 +313,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
   );
 };
 
-// 직원 카드: 기본정보(생년월일·연락처 포함)와 재직 상태. 투입 이력과 서류는 이후 단계에서 추가
+// 직원 카드: 기본정보(생년월일·연락처 포함), 재직 상태, 투입 이력, 서류·자격
 export const EmployeeCardPage = () => {
   const { id = '' } = useParams();
   const employee = useEmployee(id);

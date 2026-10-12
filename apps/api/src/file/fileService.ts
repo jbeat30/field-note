@@ -3,9 +3,11 @@ import { createHash, randomUUID } from 'node:crypto';
 import {
   FILE_DOWNLOAD_URL_TTL_SECONDS,
   FILE_UPLOAD_URL_TTL_SECONDS,
+  employeeFileObjectKey,
   fileObjectKey,
   isAllowedFileType,
   isImageMime,
+  type EmployeeFileUploadRequest,
   type FileRejectReason,
   type FileUploadRequest,
   type FileUploadTicket,
@@ -39,6 +41,13 @@ export type FileService = {
     projectId: string,
     input: FileUploadRequest,
   ) => Promise<FileUploadTicket>;
+  // 직원 서류 업로드 신청: 직원 카드에 붙는 파일 (열람은 서류 API로만, 기록을 남김)
+  requestEmployeeUpload: (
+    companyId: string,
+    userId: string,
+    employeeId: string,
+    input: EmployeeFileUploadRequest,
+  ) => Promise<FileUploadTicket>;
   // 업로드 완료 알림: 저장소에 올라왔는지 확인하고 내용 검사·썸네일 작업을 시작 (여러 번 불러도 안전)
   complete: (companyId: string, fileId: string) => Promise<StoredFile>;
   get: (companyId: string, fileId: string) => Promise<StoredFile>;
@@ -53,6 +62,7 @@ type Row = Prisma.StoredFileGetPayload<object>;
 const toFile = (row: Row): StoredFile => ({
   id: row.id,
   projectId: row.projectId,
+  employeeId: row.employeeId,
   purpose: row.purpose,
   name: row.originalName,
   contentType: row.contentType,
@@ -109,71 +119,89 @@ export const createFileService = ({
     );
   };
 
-  return {
-    requestUpload: async (companyId, userId, projectId, input) => {
-      const at = now();
-      const row = await withCompany(app, companyId, async (tx) => {
-        const project = await tx.project.findFirst({ where: { id: projectId } });
+  // 프로젝트 또는 직원에 붙는 파일의 업로드 신청 (형식은 호출한 쪽이 검증, 용량은 회사 단위로 확인)
+  const request = async (
+    companyId: string,
+    userId: string,
+    owner: { projectId: string } | { employeeId: string },
+    input: { purpose: StoredFile['purpose']; name: string; contentType: string; size: number },
+  ): Promise<FileUploadTicket> => {
+    const at = now();
+    const row = await withCompany(app, companyId, async (tx) => {
+      const exists =
+        'projectId' in owner
+          ? await tx.project.findFirst({ where: { id: owner.projectId } })
+          : await tx.employee.findFirst({ where: { id: owner.employeeId } });
 
-        if (!project) {
-          throw new FileError('NOT_FOUND');
-        }
+      if (!exists) {
+        throw new FileError('NOT_FOUND');
+      }
 
-        // 같은 회사의 동시 신청이 한도를 함께 넘지 않도록 회사 단위로 순서를 맞춤
-        await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`files:${companyId}`}))`;
+      // 같은 회사의 동시 신청이 한도를 함께 넘지 않도록 회사 단위로 순서를 맞춤
+      await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`files:${companyId}`}))`;
 
-        const company = await tx.company.findUniqueOrThrow({ where: { id: companyId } });
-        // 사용 중: 검사 중·사용 가능 파일 + 아직 업로드 주소가 유효한 신청 (만료된 신청은 용량에서 제외)
-        const used = await tx.storedFile.aggregate({
-          _sum: { sizeBytes: true },
-          where: {
-            OR: [
-              { status: { in: ['PROCESSING', 'READY'] } },
-              {
-                status: 'PENDING',
-                createdAt: { gt: new Date(at.getTime() - FILE_UPLOAD_URL_TTL_SECONDS * 1000) },
-              },
-            ],
-          },
-        });
-
-        if ((used._sum.sizeBytes ?? 0n) + BigInt(input.size) > company.storageQuotaBytes) {
-          throw new FileError('QUOTA');
-        }
-
-        // 객체 키에 파일 ID가 들어가므로 ID를 먼저 정함 (회사·프로젝트·파일이 경로에 모두 들어감)
-        const id = randomUUID();
-
-        return tx.storedFile.create({
-          data: {
-            companyId,
-            id,
-            projectId,
-            purpose: input.purpose,
-            originalName: input.name,
-            contentType: input.contentType,
-            sizeBytes: BigInt(input.size),
-            objectKey: fileObjectKey(companyId, projectId, id, 'original'),
-            uploadedBy: userId,
-          },
-        });
-      });
-      const upload = await storage.presignUpload(row.objectKey, {
-        contentType: input.contentType,
-        size: input.size,
-        expiresInSeconds: FILE_UPLOAD_URL_TTL_SECONDS,
-      });
-
-      return {
-        file: toFile(row),
-        upload: {
-          url: upload.url,
-          method: 'PUT',
-          headers: upload.headers,
-          expiresAt: new Date(at.getTime() + FILE_UPLOAD_URL_TTL_SECONDS * 1000).toISOString(),
+      const company = await tx.company.findUniqueOrThrow({ where: { id: companyId } });
+      // 사용 중: 검사 중·사용 가능 파일 + 아직 업로드 주소가 유효한 신청 (만료된 신청은 용량에서 제외)
+      const used = await tx.storedFile.aggregate({
+        _sum: { sizeBytes: true },
+        where: {
+          OR: [
+            { status: { in: ['PROCESSING', 'READY'] } },
+            {
+              status: 'PENDING',
+              createdAt: { gt: new Date(at.getTime() - FILE_UPLOAD_URL_TTL_SECONDS * 1000) },
+            },
+          ],
         },
-      };
-    },
+      });
+
+      if ((used._sum.sizeBytes ?? 0n) + BigInt(input.size) > company.storageQuotaBytes) {
+        throw new FileError('QUOTA');
+      }
+
+      // 객체 키에 파일 ID가 들어가므로 ID를 먼저 정함 (회사·프로젝트(직원)·파일이 경로에 모두 들어감)
+      const id = randomUUID();
+
+      return tx.storedFile.create({
+        data: {
+          companyId,
+          id,
+          ...owner,
+          purpose: input.purpose,
+          originalName: input.name,
+          contentType: input.contentType,
+          sizeBytes: BigInt(input.size),
+          objectKey:
+            'projectId' in owner
+              ? fileObjectKey(companyId, owner.projectId, id, 'original')
+              : employeeFileObjectKey(companyId, owner.employeeId, id, 'original'),
+          uploadedBy: userId,
+        },
+      });
+    });
+    const upload = await storage.presignUpload(row.objectKey, {
+      contentType: input.contentType,
+      size: input.size,
+      expiresInSeconds: FILE_UPLOAD_URL_TTL_SECONDS,
+    });
+
+    return {
+      file: toFile(row),
+      upload: {
+        url: upload.url,
+        method: 'PUT',
+        headers: upload.headers,
+        expiresAt: new Date(at.getTime() + FILE_UPLOAD_URL_TTL_SECONDS * 1000).toISOString(),
+      },
+    };
+  };
+
+  return {
+    requestUpload: (companyId, userId, projectId, input) =>
+      request(companyId, userId, { projectId }, input),
+
+    requestEmployeeUpload: (companyId, userId, employeeId, input) =>
+      request(companyId, userId, { employeeId }, { ...input, purpose: 'EMPLOYEE_DOCUMENT' }),
 
     complete: async (companyId, fileId) => {
       let row = await getOrThrow(companyId, fileId);
@@ -211,7 +239,8 @@ export const createFileService = ({
       }
 
       // 작업자료 문서 파일은 문서 API로만 열람한다 (민감 자료 열람 기록을 거치지 않고 열 수 없게 함)
-      if (row.purpose === 'DOCUMENT') {
+      // 직원 서류 파일도 서류 API로만 연다 (열람 기록을 거침)
+      if (row.purpose === 'DOCUMENT' || row.purpose === 'EMPLOYEE_DOCUMENT') {
         throw new FileError('NOT_FOUND');
       }
 
@@ -269,7 +298,9 @@ export const createFileService = ({
           return reject(row, 'UNREADABLE_IMAGE');
         }
 
-        thumbnailKey = fileObjectKey(companyId, row.projectId, row.id, 'thumbnail');
+        thumbnailKey = row.projectId
+          ? fileObjectKey(companyId, row.projectId, row.id, 'thumbnail')
+          : employeeFileObjectKey(companyId, row.employeeId!, row.id, 'thumbnail');
         await storage.write(thumbnailKey, thumbnail, 'image/webp');
       }
 

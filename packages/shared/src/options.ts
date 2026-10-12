@@ -2,7 +2,13 @@ import { z } from 'zod';
 
 // 회사가 직접 관리하는 선택 목록 (서비스 기획서 §8.2 직원 구분, §8.3 직종, §9.2 작업 구분, §10.2 공종)
 // 입력하다가 막히지 않도록 처음에는 프리셋을 채워 주고, 이후 회사가 이름·순서·사용 여부를 바꾼다
-export const OPTION_KINDS = ['JOB_TYPE', 'WORK_CATEGORY', 'TRADE', 'WORKER_TYPE'] as const;
+export const OPTION_KINDS = [
+  'JOB_TYPE',
+  'WORK_CATEGORY',
+  'TRADE',
+  'WORKER_TYPE',
+  'CREDENTIAL_TYPE',
+] as const;
 
 export const optionKindSchema = z.enum(OPTION_KINDS);
 
@@ -13,6 +19,7 @@ export const OPTION_KIND_LABELS: Record<OptionKind, string> = {
   WORK_CATEGORY: '작업 구분',
   TRADE: '공종',
   WORKER_TYPE: '직원 구분',
+  CREDENTIAL_TYPE: '자격 종류',
 };
 
 // 항목 이름 최대 길이와 종류별 최대 개수 (DB도 같은 값으로 검사)
