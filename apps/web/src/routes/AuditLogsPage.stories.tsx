@@ -37,7 +37,7 @@ export const Default: Story = {
     await expect(rows[1]).toHaveTextContent('단가 조회');
     await expect(within(rows[1]!).getByRole('link', { name: '정판금' })).toHaveAttribute(
       'href',
-      /\/employees\//,
+      '/employees/0198d000-0000-7000-8000-000000000101',
     );
     await expect(canvas.getByText(/수정하거나 지울 수 없습니다/)).toBeInTheDocument();
   },
