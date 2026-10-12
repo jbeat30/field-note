@@ -29,6 +29,7 @@ export const queryKeys = {
     ['repairs', 'list', { projectId, status }] as const,
   repair: (id: string) => ['repairs', 'detail', { id }] as const,
   afterServiceUsage: (projectId: string) => ['repairs', 'usage', { projectId }] as const,
+  monthlyHours: (month: string) => ['monthly', 'hours', { month }] as const,
   transitionNotices: (projectId: string, to: string) =>
     ['completion', 'notices', { projectId, to }] as const,
   projectSummary: (projectId: string) => ['completion', 'summary', { projectId }] as const,

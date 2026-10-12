@@ -73,6 +73,8 @@ model Company {
   repairRequests          RepairRequest[]
   repairStatusChanges     RepairRequestStatusChange[]
   repairLinks             RepairRequestLink[]
+  monthlyCloses           MonthlyClose[]
+  monthlyCloseEvents      MonthlyCloseEvent[]
   alertPreferences        AlertPreference[]
   projectAssignments      ProjectAssignment[]
   projectPeriodChanges    ProjectPeriodChange[]
@@ -434,6 +436,8 @@ model User {
   repairRequests          RepairRequest[]             @relation("RepairRequestCreatedBy")
   repairStatusChanges     RepairRequestStatusChange[] @relation("RepairStatusChangedBy")
   repairLinks             RepairRequestLink[]         @relation("RepairLinkLinkedBy")
+  monthlyCloses           MonthlyClose[]              @relation("MonthlyCloseClosedBy")
+  monthlyCloseEvents      MonthlyCloseEvent[]         @relation("MonthlyCloseEventBy")
   projectPeriodChanges    ProjectPeriodChange[]       @relation("ProjectPeriodChangedBy")
   workLogRevisions        WorkLogRevision[]           @relation("WorkLogRevisionChangedBy")
   uploadedFiles           StoredFile[]                @relation("FileUploadedBy")
@@ -1302,6 +1306,54 @@ model RepairRequestLink {
   @@index([companyId, workLogId])
   @@index([companyId, materialRecordId])
   @@map("repair_request_links")
+}
+
+// 월 공수 확정 이력 종류
+enum MonthlyCloseKind {
+  CLOSED
+  REOPENED
+
+  @@map("monthly_close_kind")
+}
+
+// 월 공수 확정 상태 (회사·월마다 한 행, 한 번이라도 확정하면 생김). 확정된 달은 그달의 작업일지를 고칠 수 없고 재오픈(사유 기록)으로만 정정
+// 하루 기준시간·월 기준일수는 확정 시점의 값으로 고정 (월 공수표는 이 값으로 환산)
+model MonthlyClose {
+  companyId           String    @map("company_id") @db.Uuid
+  // 그달 1일
+  month               DateTime  @db.Date
+  isClosed            Boolean   @map("is_closed")
+  standardWorkMinutes Int       @map("standard_work_minutes")
+  monthlyWorkDays     Int       @map("monthly_work_days")
+  closedAt            DateTime? @map("closed_at") @db.Timestamptz(3)
+  closedBy            String?   @map("closed_by") @db.Uuid
+  updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company             Company   @relation(fields: [companyId], references: [id])
+  user                User?     @relation("MonthlyCloseClosedBy", fields: [companyId, closedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, month])
+  @@map("monthly_closes")
+}
+
+// 월 공수 확정·재오픈 이력. 추가만 가능
+model MonthlyCloseEvent {
+  companyId           String           @map("company_id") @db.Uuid
+  id                  String           @default(dbgenerated("uuidv7()")) @db.Uuid
+  month               DateTime         @db.Date
+  kind                MonthlyCloseKind
+  reason              String?
+  // 그때의 임시 저장 일지 건수 (확정할 때 확인한 건수)
+  draftLogCount       Int              @map("draft_log_count")
+  standardWorkMinutes Int              @map("standard_work_minutes")
+  monthlyWorkDays     Int              @map("monthly_work_days")
+  createdBy           String           @map("created_by") @db.Uuid
+  createdAt           DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
+  company             Company          @relation(fields: [companyId], references: [id])
+  user                User             @relation("MonthlyCloseEventBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, month, createdAt])
+  @@map("monthly_close_events")
 }
 
 // 알림 종류 (서비스 기획서 §15.3). 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산하며, 종류별로 켜고 끈다

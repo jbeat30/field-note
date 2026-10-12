@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
+import { resetMockRepairs } from '../mocks/repairHandlers';
 import { findAccount, getProjects, getWorkLogs, saveProjects, signIn } from '../mocks/state';
 
 import { ProjectRepairsPage } from './ProjectRepairsPage';
@@ -15,6 +16,8 @@ const routerFor = (name: string) => ({
 
 // 프로젝트를 보증 중으로 맞춘다 (보수 요청은 보증 중에만 접수)
 const warrantyOf = (name: string) => () => {
+  // 스토리를 다시 그릴 때마다 보수 요청이 처음 상태로 돌아가야 같은 순서로 확인할 수 있다
+  resetMockRepairs();
   signIn('hanbit');
 
   const account = findAccount('hanbit')!;
