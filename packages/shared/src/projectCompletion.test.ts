@@ -46,6 +46,20 @@ describe('evaluateTransitionNotices (§10.3)', () => {
     });
   });
 
+  it('종료 전환에서는 임시 저장 일지만 알리고 진행률·자재는 묻지 않는다', () => {
+    const close = {
+      ...base,
+      from: 'WARRANTY' as const,
+      to: 'CLOSED' as const,
+      progressPercent: 50,
+    };
+
+    expect(evaluateTransitionNotices(close)).toEqual([]);
+    expect(evaluateTransitionNotices({ ...close, draftLogCount: 1 })).toEqual([
+      { type: 'DRAFT_LOGS', count: 1 },
+    ]);
+  });
+
   it('진행률 기록이 없으면 기록을 요청한다', () => {
     const [check] = evaluateTransitionNotices({ ...base, progressPercent: null });
 
