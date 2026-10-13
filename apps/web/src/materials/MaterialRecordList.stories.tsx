@@ -53,7 +53,7 @@ export const EditQuantity: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getAllByRole('button', { name: '수량 수정' })[0]!);
+    await userEvent.click(canvas.getAllByRole('button', { name: '기록 수정' })[0]!);
     await userEvent.clear(canvas.getByLabelText('수정할 수량'));
     await userEvent.type(canvas.getByLabelText('수정할 수량'), '8');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
@@ -66,7 +66,7 @@ export const InvalidEditDisablesSave: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getAllByRole('button', { name: '수량 수정' })[0]!);
+    await userEvent.click(canvas.getAllByRole('button', { name: '기록 수정' })[0]!);
     await userEvent.clear(canvas.getByLabelText('수정할 수량'));
     await userEvent.type(canvas.getByLabelText('수정할 수량'), '0');
 

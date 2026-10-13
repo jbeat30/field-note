@@ -64,8 +64,8 @@ const RecordItem = ({
             <Button
               type="button"
               variant="ghost"
-              aria-label="수량 수정"
-              title="수량 수정"
+              aria-label="기록 수정"
+              title="기록 수정"
               onClick={() => setIsEditing(true)}
             >
               <Pencil aria-hidden className="size-5" />
