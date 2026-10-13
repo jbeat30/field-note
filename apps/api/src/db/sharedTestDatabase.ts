@@ -54,6 +54,7 @@ export const startSharedPostgres = async (): Promise<{
       cwd: API_ROOT,
       env: { ...process.env, DATABASE_MIGRATE_URL: withDatabase(adminUrl, TEMPLATE_DB) },
       stdio: 'pipe',
+      shell: process.platform === 'win32',
     });
 
     for (const [role, password] of Object.entries(ROLE_PASSWORDS)) {
