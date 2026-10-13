@@ -220,12 +220,23 @@ P4-1 ~ P4-7 완료, P4-8(TOTP)은 상용 배포 단계로 이월. 개발 순서�
 | U-15 | 전체 점검(모바일·다크·접근성)                                                            | 완료 |
 | PW   | 프로젝트 작업 공간 개편 (작업 달력·하루 작업·인원·자재·진행 단계·보증, `06-field-ux.md`) | 완료 |
 | R-0  | 리뉴얼 2차 기획(`08-renewal-plan.md`), 결정 007(지출·수입 기록, 투입 계획), Windows 호환 | 완료 |
-| R-1  | 컴포넌트 크기 체계·디자인 기준, 사용처 교체                                              | 다음 |
-| R-2  | 프로젝트 작업 공간 메뉴 5개·머리·개요                                                    | 남음 |
+| R-1  | 컴포넌트 크기 체계·디자인 기준, 사용처 교체                                              | 완료 |
+| R-2  | 프로젝트 작업 공간 메뉴 5개·머리·개요                                                    | 다음 |
 | R-3  | 투입 계획·작업 기록·하루 기록 재배치·인원 표                                             | 남음 |
 | R-4  | 지출·수입 기록, 자료 메뉴 통합                                                           | 남음 |
 | R-5  | 직원 목록·단가표·직원 카드                                                               | 남음 |
 | R-6  | 나머지 화면 정리, e2e·문서 마무리 → 푸시·PR                                              | 남음 |
+
+R-1 메모
+
+- 토큰: 모서리 입력·버튼 8px·패널 12px(`--radius-xl` 0.75rem), 글자 단계 2xl 22·xl 19·lg 17, 굵기 bold 650·semibold 590. 회색 글자는 대비 4.5:1을 넘도록 65% 이상
+- 크기 단계 `controlSize`(sm 36/32·md 44/40·lg 52/48, 모바일/넓은 화면): `Input`·`Select`·`Combobox`·`DateInput`·`Button`이 같은 `size`를 받음. `Input`에 앞뒤 붙임(`startAdornment`·`endAdornment`)
+- `Select`: 기기 기본 선택 칸 → Radix Select. `options`·`value`·`onValueChange`·`emptyLabel`(빈 값 항목)·묶음(`group`)·보조 설명. 값 타입을 제네릭으로 받아 캐스팅 없음. 기존 38곳 모두 교체(항목이 많은 고객·담당자·자재는 `Combobox`)
+- `Combobox`: 크기·묶음·"새로 추가"(`onCreate`), 여러 개 고르기 `MultiCombobox`. 목록 모양은 `listbox.ts`로 Select·Combobox·DropdownMenu가 같이 씀
+- 새 컴포넌트: `MoneyInput`(천 단위 쉼표, 원 단위 정수), `Section`(카드 없는 구역), `StatGroup`(수치 한 상자), `StatusDot`(점 + 글자 상태). `Modal` 기본이 `auto`(좁은 화면 시트·넓은 화면 가운데 창)
+- 표 머리는 회색 알약 대신 아래 선, 빈 화면은 점선 상자 없이, 칩 선택은 진한 무채색, 탭 선택은 글자색 + 밑줄
+- 시험: 스토리 선택 동작은 `lib/storyActions.ts`의 `chooseOption`(칸이 다시 그려져도 다시 찾아 엶), e2e는 `selectByText`가 열어서 고름. 목업 응답 지연은 `mocks/latency.ts`의 `mockDelay`로 모으고 Jest에서는 기다리지 않음 (요청이 많은 해지 시험이 5초를 넘던 문제)
+- e2e(`coreFlow`·`dailyLogTiming`)는 아직 옛 화면 구조(배정 인원 메뉴·투입 등록 폼)를 가정. R-2·R-3에서 화면 구조를 바꾼 뒤 R-6에서 함께 맞춘다
 
 R-0 메모
 
