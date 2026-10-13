@@ -214,7 +214,7 @@ export const MaterialEntryForm = ({
 
       {isCreating && (
         <div
-          className="flex flex-col gap-2 rounded-md border border-border p-3"
+          className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
           role="group"
           aria-label="새 자재 만들기"
         >
@@ -279,7 +279,10 @@ export const MaterialEntryForm = ({
             const material = materials.find((item) => item.id === row.materialId);
 
             return (
-              <li key={row.key} className="flex flex-col gap-2 rounded-md border border-border p-3">
+              <li
+                key={row.key}
+                className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
+              >
                 <div className="flex items-center gap-2">
                   <Select
                     className="min-w-0 flex-1"
@@ -349,7 +352,7 @@ export const MaterialEntryForm = ({
             작업 구분·구역·변경 작업 표시 (선택)
           </button>
           {isCommonOpen && (
-            <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+            <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4">
               <FormField label="작업 구분">
                 <Select
                   value={common.categoryId}

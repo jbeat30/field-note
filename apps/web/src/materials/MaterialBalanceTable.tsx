@@ -13,10 +13,7 @@ export const MaterialBalanceTable = ({ items }: MaterialBalanceTableProps) => {
   return (
     <ul className="flex flex-col gap-2">
       {items.map((item) => (
-        <li
-          key={item.materialId}
-          className="flex flex-col gap-2 rounded-md border border-border p-3"
-        >
+        <li key={item.materialId} className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-medium">
               {item.name}

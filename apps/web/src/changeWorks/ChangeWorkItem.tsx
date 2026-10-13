@@ -100,7 +100,7 @@ const StatusForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label={`${TRANSITION_LABELS[to]} 확인`}
@@ -192,7 +192,7 @@ const EditForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label="변경·추가 작업 수정"
@@ -439,10 +439,10 @@ export const ChangeWorkItem = ({
   const stale = work.status === 'NEGOTIATING' && waited >= STALE_DAYS;
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-bold">#{work.seq}</span>
-        <span className="rounded bg-muted px-2 py-0.5 text-sm">
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-semibold">
           {CHANGE_WORK_STATUS_LABELS[work.status]}
         </span>
         {stale && <span className="text-sm font-medium text-danger">{waited}일째 협의 중</span>}

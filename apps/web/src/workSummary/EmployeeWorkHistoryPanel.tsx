@@ -28,7 +28,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
       <h2 id="history-heading" className="text-lg font-bold">
         투입 이력
       </h2>
-      <dl className="grid grid-cols-2 gap-2 rounded-md border border-border p-3 text-sm">
+      <dl className="grid grid-cols-2 gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
         <div>
           <dt className="text-foreground/70">이번 달 공수</dt>
           <dd className="font-bold">{formatWork(data.thisMonthMinutes, config)}</dd>
@@ -42,7 +42,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
         <p className="text-sm">아직 투입된 프로젝트가 없습니다</p>
       ) : (
         <ul
-          className="divide-y divide-border rounded-md border border-border"
+          className="divide-y divide-border rounded-xl border border-border"
           aria-label="프로젝트별 투입 이력"
         >
           {data.projects.map((row) => (

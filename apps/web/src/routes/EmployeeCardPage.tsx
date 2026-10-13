@@ -159,7 +159,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
         </Link>
         <h1 className="flex items-center gap-2 text-2xl font-bold">
           {employee.name}
-          <span className="rounded bg-muted px-2 py-0.5 text-sm font-normal">
+          <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
             {EMPLOYEE_STATUS_LABELS[employee.status]}
           </span>
         </h1>

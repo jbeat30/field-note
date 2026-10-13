@@ -79,7 +79,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
         />
       </div>
 
-      <dl className="grid grid-cols-2 gap-2 rounded-md border border-border p-3 text-sm">
+      <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-surface-subtle p-4 text-sm">
         <div>
           <dt className="text-foreground/70">총 공수</dt>
           <dd className="font-bold">{formatWork(data.totalMinutes, config)}</dd>
@@ -114,7 +114,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
           <div className="flex flex-col gap-1">
             <h3 className="text-base font-bold">직원별</h3>
             <ul
-              className="divide-y divide-border rounded-md border border-border"
+              className="divide-y divide-border rounded-xl border border-border"
               aria-label="직원별 공수"
             >
               {data.byEmployee.map((row) => (
@@ -137,7 +137,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
           <div className="flex flex-col gap-1">
             <h3 className="text-base font-bold">작업 구분별</h3>
             <ul
-              className="flex flex-col gap-2 rounded-md border border-border p-3"
+              className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
               aria-label="작업 구분별 공수"
             >
               {data.byCategory.map((row) => (
@@ -169,7 +169,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
               </Select>
             </div>
             <ul
-              className="flex flex-col gap-2 rounded-md border border-border p-3"
+              className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
               aria-label="기간별 공수"
             >
               {data.byPeriod.map((row) => (

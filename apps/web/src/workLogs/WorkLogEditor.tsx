@@ -414,12 +414,12 @@ export const WorkLogEditor = ({
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="text-lg font-bold">{formatDay(date)} 일지</h2>
         {log && (
-          <span className="rounded bg-muted px-2 py-0.5 text-xs">
+          <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
             {WORK_LOG_STATUS_LABELS[log.status]} · 버전 {version}
           </span>
         )}
         {log?.isLate && (
-          <span className="rounded border border-border px-2 py-0.5 text-xs">지연 입력</span>
+          <span className="rounded-full border border-border px-2.5 py-0.5 text-xs">지연 입력</span>
         )}
       </div>
       {log?.status === 'DRAFT' && (
@@ -459,7 +459,7 @@ export const WorkLogEditor = ({
       {conflict && (
         <div
           role="alert"
-          className="flex flex-col gap-2 rounded-md border border-danger p-3 text-sm text-danger"
+          className="flex flex-col gap-2 rounded-xl border border-danger p-4 text-sm text-danger"
         >
           <p>{ERROR_MESSAGES.CONFLICT}</p>
           <Button type="button" variant="secondary" className="self-start" onClick={onReload}>
@@ -470,7 +470,7 @@ export const WorkLogEditor = ({
       {pendingAssignment && (
         <div
           role="alert"
-          className="flex flex-col gap-2 rounded-md border border-border p-3 text-sm"
+          className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4 text-sm"
         >
           <p>{pendingAssignment.message}</p>
           <div className="flex gap-2">
@@ -529,7 +529,7 @@ export const WorkLogEditor = ({
           직원별 작업 구분·공수 ({unit})
         </h3>
 
-        <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4">
           <p className="text-sm font-medium">일괄 지정</p>
           <div className="flex gap-2">
             <Select
@@ -592,7 +592,7 @@ export const WorkLogEditor = ({
             return (
               <li
                 key={employeeId}
-                className="flex flex-col gap-2 rounded-md border border-border p-3"
+                className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
               >
                 <label className="flex min-h-touch items-center gap-2 font-medium">
                   <input
@@ -749,7 +749,7 @@ export const WorkLogEditor = ({
       </section>
 
       <section
-        className="flex flex-col gap-2 rounded-md border border-border p-3"
+        className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
         aria-labelledby="extra-heading"
       >
         <h3 id="extra-heading" className="text-sm font-bold">

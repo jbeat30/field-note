@@ -123,7 +123,7 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
           {document.versions.map((version, index) => (
             <li
               key={version.versionNo}
-              className="flex flex-col gap-2 rounded-md border border-border p-3"
+              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
             >
               <p className="text-sm">
                 <span className="font-bold">v{version.versionNo}</span>
@@ -213,7 +213,7 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
             <p className="text-sm text-foreground/70">아직 열람 기록이 없습니다</p>
           )}
           {logs.isSuccess && logs.data.length > 0 && (
-            <ul className="divide-y divide-border rounded-md border border-border text-sm">
+            <ul className="divide-y divide-border rounded-xl border border-border text-sm">
               {logs.data.map((log) => (
                 <li key={log.id} className="flex flex-wrap justify-between gap-2 px-3 py-2">
                   <span>
