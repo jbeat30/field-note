@@ -4,9 +4,11 @@ import {
   type OptionItem,
   type OptionKind,
 } from '@field-note/shared';
-import { useState, type FormEvent } from 'react';
+import { ChevronDown, ChevronUp, Eye, EyeOff, Pencil } from 'lucide-react';
+import { useState, type FormEvent, type ReactNode } from 'react';
 
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { SortableItem, SortableList } from '../components/ui/sortable-list';
@@ -21,6 +23,23 @@ const KIND_HINTS: Record<OptionKind, string> = {
   WORKER_TYPE: '목록과 필터에 쓰는 표시입니다 (공수 계산에는 쓰지 않습니다)',
   CREDENTIAL_TYPE: '직원 서류의 종류입니다 (자격증, 안전교육 이수증, 건강검진 등)',
 };
+
+// 행 안의 아이콘 동작 버튼 (이름은 aria-label, 눈에 보이는 이름은 title)
+const IconButton = ({
+  label,
+  disabled,
+  onClick,
+  children,
+}: {
+  label: string;
+  disabled?: boolean;
+  onClick: () => void;
+  children: ReactNode;
+}) => (
+  <Button variant="ghost" aria-label={label} title={label} disabled={disabled} onClick={onClick}>
+    {children}
+  </Button>
+);
 
 // 항목 한 줄: 이름, 순서 이동, 이름 변경, 숨기기. 삭제는 없다 (이미 기록에 쓰인 이름이 사라지지 않게 숨기기만 한다)
 const OptionRow = ({
@@ -107,44 +126,37 @@ const OptionRow = ({
       id={item.id}
       label={item.name}
       disabled={isBusy}
-      className="flex flex-wrap items-center justify-between gap-2 py-2"
+      className="flex items-center justify-between gap-2 py-1"
     >
       {(handle) => (
         <>
           <span className="flex items-center gap-1">
             {handle}
-            <span className={item.isActive ? 'font-medium' : 'text-foreground/70 line-through'}>
+            <span className={item.isActive ? 'font-medium' : 'text-foreground/70'}>
               {item.name}
-              {!item.isActive && <span className="ml-2 text-sm no-underline">(숨김)</span>}
             </span>
+            {!item.isActive && <Badge className="ml-1">숨김</Badge>}
           </span>
-          <div className="flex flex-wrap gap-1">
-            <Button
-              variant="secondary"
-              aria-label={`${item.name} 위로`}
+          <div className="flex items-center gap-0.5">
+            <IconButton
+              label={`${item.name} 위로`}
               disabled={isBusy || index === 0}
               onClick={() => onMove(index, index - 1)}
             >
-              ↑
-            </Button>
-            <Button
-              variant="secondary"
-              aria-label={`${item.name} 아래로`}
+              <ChevronUp aria-hidden className="size-5" />
+            </IconButton>
+            <IconButton
+              label={`${item.name} 아래로`}
               disabled={isBusy || index === count - 1}
               onClick={() => onMove(index, index + 1)}
             >
-              ↓
-            </Button>
-            <Button
-              variant="secondary"
-              aria-label={`${item.name} 이름 변경`}
-              onClick={() => setEditing(true)}
-            >
-              이름 변경
-            </Button>
-            <Button
-              variant="secondary"
-              aria-label={`${item.name} ${item.isActive ? '숨기기' : '다시 사용'}`}
+              <ChevronDown aria-hidden className="size-5" />
+            </IconButton>
+            <IconButton label={`${item.name} 이름 변경`} onClick={() => setEditing(true)}>
+              <Pencil aria-hidden className="size-5" />
+            </IconButton>
+            <IconButton
+              label={`${item.name} ${item.isActive ? '숨기기' : '다시 사용'}`}
               disabled={update.isPending}
               onClick={() =>
                 update.mutate(
@@ -153,8 +165,12 @@ const OptionRow = ({
                 )
               }
             >
-              {item.isActive ? '숨기기' : '다시 사용'}
-            </Button>
+              {item.isActive ? (
+                <EyeOff aria-hidden className="size-5" />
+              ) : (
+                <Eye aria-hidden className="size-5" />
+              )}
+            </IconButton>
           </div>
         </>
       )}
@@ -200,13 +216,28 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
   };
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby={`options-${kind}`}>
+    <section
+      className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-5"
+      aria-labelledby={`options-${kind}`}
+    >
       <div>
-        <h2 id={`options-${kind}`} className="text-lg font-bold">
+        <h2 id={`options-${kind}`} className="flex items-center gap-2 text-lg font-bold">
           {label}
+          <Badge>{items.length}개</Badge>
         </h2>
         <p className="text-sm text-foreground/70">{KIND_HINTS[kind]}</p>
       </div>
+      <form className="flex gap-2" onSubmit={add} noValidate>
+        <Input
+          aria-label={`${label} 추가`}
+          placeholder={`새 ${label}`}
+          value={newName}
+          onChange={(event) => setNewName(event.target.value)}
+        />
+        <Button type="submit" className="shrink-0 whitespace-nowrap" disabled={create.isPending}>
+          추가
+        </Button>
+      </form>
       {message && <Alert>{message}</Alert>}
       <SortableList
         ids={items.map((item) => item.id)}
@@ -219,7 +250,7 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
             { onError: (error) => setMessage(getErrorDetailMessage(error)) },
           );
         }}
-        className="divide-y divide-border"
+        className="divide-y divide-line"
       >
         {items.map((item, index) => (
           <OptionRow
@@ -233,17 +264,6 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
           />
         ))}
       </SortableList>
-      <form className="flex gap-2" onSubmit={add} noValidate>
-        <Input
-          aria-label={`${label} 추가`}
-          placeholder={`새 ${label}`}
-          value={newName}
-          onChange={(event) => setNewName(event.target.value)}
-        />
-        <Button type="submit" className="shrink-0 whitespace-nowrap" disabled={create.isPending}>
-          추가
-        </Button>
-      </form>
     </section>
   );
 };
