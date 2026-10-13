@@ -59,6 +59,8 @@ export const AppLayout = () => {
   const [isMoreOpen, setMoreOpen] = useState(false);
   // 더보기 안의 화면을 보고 있으면 더보기 탭을 강조
   const isInMore = MORE_ITEMS.some((item) => pathname.startsWith(item.to));
+  // 빠른 추가(+)는 모바일의 프로젝트 밖 화면에서만. 프로젝트 안에서는 머리의 주 버튼이 같은 일을 하고, 넓은 화면은 왼쪽 메뉴·머리 버튼으로 충분
+  const showQuickAdd = !/^\/projects\/(?!new$)[^/]+/.test(pathname);
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
@@ -112,16 +114,18 @@ export const AppLayout = () => {
           <Outlet />
         </main>
       </div>
-      <div className="pointer-events-none fixed inset-x-0 bottom-16 flex justify-end p-4 md:bottom-0 print:hidden">
-        <Button
-          className="pointer-events-auto size-14 rounded-full px-0 shadow-card"
-          aria-label="빠른 추가"
-          title="빠른 추가: 메모·사진·오늘 작업 내역"
-          onClick={() => setQuickAddOpen(true)}
-        >
-          <Plus aria-hidden className="size-6" />
-        </Button>
-      </div>
+      {showQuickAdd && (
+        <div className="pointer-events-none fixed inset-x-0 bottom-16 flex justify-end p-4 md:hidden print:hidden">
+          <Button
+            className="pointer-events-auto size-14 rounded-full px-0 shadow-card"
+            aria-label="빠른 추가"
+            title="빠른 추가: 메모·사진·오늘 작업 내역"
+            onClick={() => setQuickAddOpen(true)}
+          >
+            <Plus aria-hidden className="size-6" />
+          </Button>
+        </div>
+      )}
       <nav
         aria-label="하단 메뉴"
         className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden"

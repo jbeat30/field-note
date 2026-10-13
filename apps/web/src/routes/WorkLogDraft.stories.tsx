@@ -7,6 +7,7 @@ import { findAccount, getWorkLogs, signIn } from '../mocks/state';
 import { useDraftStore } from '../stores/draftStore';
 
 import { ProjectWorkDayPage } from './ProjectWorkDayPage';
+import { chooseOption } from '../lib/storyActions';
 
 const projectId = DEMO_PROJECTS.find((project) => project.name === 'A동 외장 판금 공사')!.id;
 
@@ -41,10 +42,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 하루 작업은 빈 채로 시작하므로, 프로젝트 팀을 한 번에 넣고 시작하는 시험 도우미
+// 하루 작업은 빈 채로 시작하므로, 이 현장 투입 인원을 회사 직원 표에서 고르는 시험 도우미
 const fillTeam = async (canvas: ReturnType<typeof within>) => {
-  await userEvent.click(await canvas.findByRole('button', { name: /프로젝트 팀 \d+명 모두 넣기/ }));
-  await canvas.findByRole('checkbox', { name: '정판금 출근' });
+  for (const name of ['정판금', '최설치', '한용접', '김일용']) {
+    await userEvent.click(await canvas.findByRole('checkbox', { name: `${name} 일함` }));
+  }
+  await canvas.findByLabelText('정판금 일한 시간(시간)');
 };
 
 // 작업 내역을 쓰다가 닫은 뒤 다시 열면 입력이 그대로 복구되고 안내가 나온다
@@ -98,7 +101,7 @@ export const AutoSavesWhileTypingAndClearsOnSave: Story = {
       ).toBe('쓰는 중인 내용'),
     );
 
-    await userEvent.selectOptions(canvas.getByLabelText('작업 구분 일괄 지정'), '설치');
+    await chooseOption(canvas.getByLabelText('작업 구분 일괄 지정'), '설치');
     await userEvent.click(canvas.getByRole('button', { name: '모두 적용' }));
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
@@ -187,7 +190,7 @@ export const BrokenDraftIsIgnored: Story = {
     const canvas = within(canvasElement);
 
     await fillTeam(canvas);
-    await expect(canvas.getByRole('checkbox', { name: '정판금 출근' })).toBeChecked();
+    await expect(canvas.getByRole('checkbox', { name: '정판금 일함' })).toBeChecked();
     await expect(canvas.queryByText(/복구했습니다/)).not.toBeInTheDocument();
   },
 };

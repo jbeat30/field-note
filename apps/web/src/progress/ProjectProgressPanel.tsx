@@ -1,17 +1,24 @@
 import {
-  PROGRESS_NOTE_MAX_LENGTH,
   PROJECT_WARNING_LABELS,
   canRecordProgress,
+  minutesToManDays,
+  roundTo,
   todayInSeoul,
   type ProjectStatus,
 } from '@field-note/shared';
+import { ChevronRight } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
-import { DateInput } from '../components/ui/date-input';
+import { Modal } from '../components/ui/modal';
+import { ProgressBar } from '../components/ui/progress-bar';
+import { Section } from '../components/ui/section';
+import { StatGroup } from '../components/ui/stat-group';
+import { StatusDot } from '../components/ui/status-dot';
+import { cn } from '../lib/cn';
 import { formatDay } from '../lib/dates';
 import { splitServerErrors } from '../lib/serverErrors';
 import { useCompanySettings } from '../settings/useCompanySettings';
@@ -19,79 +26,94 @@ import { formatWork } from '../workSummary/formatWork';
 
 import { useProgressRecords, useProjectHealth, useRecordProgress } from './useProgress';
 
-const ProgressForm = ({ projectId }: { projectId: string }) => {
+// 자주 쓰는 진행률 (한 번 눌러 고름)
+const QUICK_PERCENTS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
+
+// 진행률 바꾸기 창: 누르기만 하면 되도록 10% 단위 단추 + 직접 입력. 기준일은 오늘
+const ProgressDialog = ({
+  projectId,
+  current,
+  onClose,
+}: {
+  projectId: string;
+  current: number | null;
+  onClose: () => void;
+}) => {
   const record = useRecordProgress(projectId);
-  const today = todayInSeoul(new Date());
-  const [percent, setPercent] = useState('');
-  const [recordedOn, setRecordedOn] = useState(today);
-  const [note, setNote] = useState('');
-  const [errors, setErrors] = useState<Record<string, string>>({});
-  const [rootError, setRootError] = useState('');
+  const [percent, setPercent] = useState(current === null ? '' : String(current));
+  const [error, setError] = useState('');
 
   const submit = (event: FormEvent) => {
     event.preventDefault();
-    setErrors({});
-    setRootError('');
+    setError('');
 
     const value = Number(percent);
 
     if (percent.trim() === '' || !Number.isInteger(value) || value < 0 || value > 100) {
-      setErrors({ percent: '0부터 100 사이의 정수를 입력해 주세요' });
+      setError('0부터 100 사이의 정수를 입력해 주세요');
       return;
     }
 
     void record
-      .mutateAsync({ percent: value, recordedOn, ...(note.trim() ? { note: note.trim() } : {}) })
-      .then(() => {
-        setPercent('');
-        setNote('');
-        setRecordedOn(today);
-      })
-      .catch((error: unknown) => {
-        const { byField, root } = splitServerErrors(error, ['percent', 'recordedOn', 'note']);
+      .mutateAsync({ percent: value, recordedOn: todayInSeoul(new Date()) })
+      .then(onClose)
+      .catch((failure: unknown) => {
+        const { byField, root } = splitServerErrors(failure, ['percent', 'recordedOn', 'note']);
 
-        setErrors(byField);
-        setRootError(root);
+        setError(byField.percent ?? byField.recordedOn ?? root);
       });
   };
 
   return (
-    <form className="flex flex-col gap-3" onSubmit={submit} noValidate aria-label="진행률 입력">
-      {rootError && <Alert>{rootError}</Alert>}
-      <div className="grid grid-cols-2 gap-2">
-        <FormField label="진행률 (%)" error={errors.percent}>
+    <Modal
+      open
+      onOpenChange={(open) => !open && onClose()}
+      title="진행률 바꾸기"
+      description="오늘 기준으로 기록됩니다"
+    >
+      <form className="flex flex-col gap-4" onSubmit={submit} noValidate aria-label="진행률 입력">
+        <div className="grid grid-cols-5 gap-1.5" role="group" aria-label="진행률 빠른 선택">
+          {QUICK_PERCENTS.map((value) => (
+            <Button
+              key={value}
+              type="button"
+              size="sm"
+              variant={String(value) === percent ? 'primary' : 'secondary'}
+              aria-pressed={String(value) === percent}
+              onClick={() => setPercent(String(value))}
+            >
+              {value}%
+            </Button>
+          ))}
+        </div>
+        <FormField label="진행률 (%)" error={error}>
           <Input
             type="number"
             inputMode="numeric"
             min={0}
             max={100}
+            endAdornment="%"
             value={percent}
             onChange={(event) => setPercent(event.target.value)}
           />
         </FormField>
-        <FormField label="기준일" error={errors.recordedOn}>
-          <DateInput
-            max={today}
-            value={recordedOn}
-            onChange={(event) => setRecordedOn(event.target.value)}
-          />
-        </FormField>
-      </div>
-      <FormField label="메모 (선택)" error={errors.note}>
-        <Input
-          maxLength={PROGRESS_NOTE_MAX_LENGTH}
-          value={note}
-          onChange={(event) => setNote(event.target.value)}
-        />
-      </FormField>
-      <Button type="submit" disabled={record.isPending}>
-        {record.isPending ? '기록 중' : '진행률 기록'}
-      </Button>
-    </form>
+        <div className="flex justify-end gap-2">
+          <Button type="button" variant="secondary" onClick={onClose}>
+            닫기
+          </Button>
+          <Button type="submit" disabled={record.isPending}>
+            {record.isPending ? '기록 중' : '진행률 기록'}
+          </Button>
+        </div>
+      </form>
+    </Modal>
   );
 };
 
-// 진행 점검 (서비스 기획서 §10.4): 진행률 입력·이력, 공수 소진율, 현재 속도로 끝낼 때 필요한 공수, 경고
+/**
+ * @description 프로젝트 진행 현황 (서비스 기획서 §10.4): 진행률·공수 소진율·투입 공수를 한 줄로 보고, 진행률은 한 번에 바꾼다
+ * 경고(일정보다 뒤처짐 등)는 점 + 글자로, 진행률 이력은 접어 둔다
+ */
 export const ProjectProgressPanel = ({
   projectId,
   status,
@@ -102,6 +124,7 @@ export const ProjectProgressPanel = ({
   const health = useProjectHealth(projectId);
   const records = useProgressRecords(projectId);
   const settings = useCompanySettings();
+  const [editing, setEditing] = useState(false);
 
   if (health.isError || records.isError || settings.isError) {
     return <Alert>진행 현황을 불러오지 못했습니다</Alert>;
@@ -113,75 +136,109 @@ export const ProjectProgressPanel = ({
 
   const data = health.data;
   const config = settings.data;
+  const burnTone =
+    data.burnPercent === null
+      ? 'default'
+      : data.burnPercent >= 100
+        ? 'danger'
+        : data.burnPercent >= 80
+          ? 'warning'
+          : 'default';
 
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="progress-heading">
-      <h2 id="progress-heading" className="text-lg font-bold">
-        진행 현황
-      </h2>
-
+    <Section
+      title="진행 현황"
+      actions={
+        canRecordProgress(status) && (
+          <Button variant="secondary" size="sm" onClick={() => setEditing(true)}>
+            진행률 바꾸기
+          </Button>
+        )
+      }
+    >
       {data.warnings.length > 0 && (
-        <ul className="flex flex-col gap-1" aria-label="진행 경고">
+        <ul className="flex flex-wrap gap-x-5 gap-y-1" aria-label="진행 경고">
           {data.warnings.map((warning) => (
-            <li key={warning} className="rounded-md bg-danger-subtle px-3 py-2 text-danger">
-              {PROJECT_WARNING_LABELS[warning]}
+            <li key={warning}>
+              <StatusDot tone="danger">{PROJECT_WARNING_LABELS[warning]}</StatusDot>
             </li>
           ))}
         </ul>
       )}
-
-      <dl className="grid grid-cols-2 gap-2 text-sm">
-        <div>
-          <dt className="text-foreground/70">진행률</dt>
-          <dd className="font-bold">
-            {data.progressPercent === null ? '기록 없음' : `${data.progressPercent}%`}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-foreground/70">공수 소진율</dt>
-          <dd className="font-bold">
-            {data.burnPercent === null ? '계획 없음' : `${Math.round(data.burnPercent)}%`}
-          </dd>
-        </div>
-        <div>
-          <dt className="text-foreground/70">투입 공수</dt>
-          <dd className="font-bold">{formatWork(data.usedMinutes, config)}</dd>
-        </div>
-        <div>
-          <dt className="text-foreground/70">계획 공수</dt>
-          <dd className="font-bold">
-            {data.plannedMinutes === null ? '계획 없음' : formatWork(data.plannedMinutes, config)}
-          </dd>
-        </div>
-        {data.forecastMinutes !== null && (
-          <div className="col-span-2">
-            <dt className="text-foreground/70">현재 속도로 끝내려면 필요한 공수</dt>
-            <dd className="font-bold">{formatWork(data.forecastMinutes, config)}</dd>
-          </div>
-        )}
-      </dl>
-
-      {canRecordProgress(status) ? (
-        <ProgressForm projectId={projectId} />
-      ) : (
+      <StatGroup
+        items={[
+          {
+            label: '진행률',
+            value: data.progressPercent === null ? '-' : data.progressPercent,
+            unit: data.progressPercent === null ? undefined : '%',
+            hint: data.progressPercent === null ? '기록 없음' : undefined,
+          },
+          {
+            label: '공수 소진율',
+            value: data.burnPercent === null ? '-' : Math.round(data.burnPercent),
+            unit: data.burnPercent === null ? undefined : '%',
+            hint: data.burnPercent === null ? '계획 공수 없음' : undefined,
+            tone: burnTone,
+          },
+          {
+            label: '투입 공수',
+            value: roundTo(minutesToManDays(data.usedMinutes, config.standardWorkMinutes), 1),
+            unit: 'MD',
+            hint:
+              data.plannedMinutes === null
+                ? `${roundTo(data.usedMinutes / 60, 1)}시간`
+                : `계획 ${formatWork(data.plannedMinutes, config)}`,
+          },
+          {
+            label: '끝내려면 필요한 공수',
+            value:
+              data.forecastMinutes === null
+                ? '-'
+                : roundTo(minutesToManDays(data.forecastMinutes, config.standardWorkMinutes), 1),
+            unit: data.forecastMinutes === null ? undefined : 'MD',
+            hint: '지금 속도 기준',
+          },
+        ]}
+      />
+      {data.progressPercent !== null && (
+        <ProgressBar aria-label="진행률 막대" value={data.progressPercent} />
+      )}
+      {!canRecordProgress(status) && (
         <p className="text-sm text-foreground/70">이 상태에서는 진행률을 입력할 수 없습니다</p>
       )}
 
-      <div className="flex flex-col gap-1">
-        <h3 className="font-medium">진행률 이력</h3>
+      <details className="group text-sm">
+        <summary className="flex min-h-10 cursor-pointer list-none items-center gap-1 font-medium text-foreground/80 [&::-webkit-details-marker]:hidden">
+          <ChevronRight
+            aria-hidden
+            className="size-4 transition-transform duration-(--duration-fast) group-open:rotate-90"
+          />
+          진행률 이력 ({records.data.length})
+        </summary>
         {records.data.length === 0 ? (
-          <p className="text-sm text-foreground/70">기록이 없습니다</p>
+          <p className="text-foreground/65">기록이 없습니다</p>
         ) : (
-          <ul className="flex flex-col gap-1 text-sm">
+          <ul className="flex flex-col divide-y divide-line">
             {records.data.map((item) => (
-              <li key={item.id}>
-                {formatDay(item.recordedOn)} · <span className="font-bold">{item.percent}%</span>
-                {item.note ? ` · ${item.note}` : ''}
+              <li key={item.id} className="flex items-center gap-3 py-2">
+                <span className="w-28 shrink-0 text-foreground/70">
+                  {formatDay(item.recordedOn)}
+                </span>
+                <span className={cn('font-semibold tabular-nums')}>{item.percent}%</span>
+                {item.note && <span className="text-foreground/65">{item.note}</span>}
               </li>
             ))}
           </ul>
         )}
-      </div>
-    </section>
+      </details>
+
+      {editing && (
+        <ProgressDialog
+          projectId={projectId}
+          current={data.progressPercent}
+          onClose={() => setEditing(false)}
+        />
+      )}
+    </Section>
   );
 };

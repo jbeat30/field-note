@@ -1,15 +1,11 @@
-import { todayInSeoul, type ProjectDetail } from '@field-note/shared';
-import { Camera, ClipboardPen, NotebookPen, Package } from 'lucide-react';
+import type { ProjectDetail } from '@field-note/shared';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
-import { projectWorkPath } from '../lib/projectPaths';
 import { useEmployees } from '../employees/useEmployees';
 import { RequiredCredentialsPanel } from '../credentials/RequiredCredentialsPanel';
-import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
 import { ProjectForm } from '../projects/ProjectForm';
-import { ProjectKpis } from '../projects/ProjectKpis';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
 import { ProjectLaborCostPanel } from '../labor/ProjectLaborCostPanel';
 import { usePartners } from '../partners/usePartners';
@@ -17,7 +13,7 @@ import { ProjectProgressPanel } from '../progress/ProjectProgressPanel';
 import { useOptions } from '../settings/useOptions';
 import { ProjectStatusPanel } from '../projects/ProjectStatusPanel';
 import { useProject } from '../projects/useProjects';
-import { ProjectWorkerTable } from '../workSummary/ProjectWorkerTable';
+import { ProjectPeopleStats } from '../workSummary/ProjectPeopleStats';
 import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel';
 
 // 프로젝트 작업 공간의 메뉴별 화면: 개요 · 투입 · 공수·비용 · 정보 (머리·메뉴는 ProjectLayout이 맡는다)
@@ -71,18 +67,6 @@ const Panel = ({ children, className }: { children: ReactNode; className?: strin
   <div className={`rounded-xl bg-surface-subtle p-5 ${className ?? ''}`}>{children}</div>
 );
 
-// 현장에서 바로 남기는 네 가지
-const LEAVE_NOW = [
-  {
-    label: '오늘 작업',
-    icon: ClipboardPen,
-    to: (id: string) => projectWorkPath(id, todayInSeoul(new Date())),
-  },
-  { label: '사진', icon: Camera, to: (id: string) => `/projects/${id}/photos` },
-  { label: '자재', icon: Package, to: (id: string) => `/projects/${id}/materials` },
-  { label: '메모', icon: NotebookPen, to: (id: string) => `/projects/${id}/memos` },
-];
-
 type Section = 'overview' | 'assignments' | 'labor' | 'info' | 'all';
 
 const show = (section: Section, ...targets: Exclude<Section, 'all'>[]) =>
@@ -116,35 +100,13 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
   return (
     <div className="flex flex-col gap-5">
       {show(section, 'overview') && (
-        <section aria-labelledby="leave-now-heading" className="flex flex-col gap-3">
-          <h2 id="leave-now-heading" className="text-lg font-bold">
-            지금 남기기
-          </h2>
-          <ul className="grid grid-cols-2 gap-3 md:grid-cols-4">
-            {LEAVE_NOW.map((item) => (
-              <li key={item.label}>
-                <Link
-                  to={item.to(data.id)}
-                  className="flex min-h-20 flex-col items-center justify-center gap-1.5 rounded-xl bg-surface-subtle text-base font-semibold hover:bg-muted"
-                >
-                  <item.icon aria-hidden className="size-6 text-primary" />
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
-        </section>
-      )}
-      {show(section, 'overview') && <ProjectKpis projectId={data.id} />}
-
-      {show(section, 'overview') && (
         <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
           <div className="flex min-w-0 flex-col gap-5">
             <Panel>
-              <ProjectStatusPanel project={data} />
+              <ProjectProgressPanel projectId={data.id} status={data.status} />
             </Panel>
             <Panel>
-              <ProjectProgressPanel projectId={data.id} status={data.status} />
+              <ProjectStatusPanel project={data} />
             </Panel>
           </div>
           <aside className="flex min-w-0 flex-col gap-5 xl:sticky xl:top-6">
@@ -156,19 +118,9 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
       )}
 
       {show(section, 'assignments') && (
-        <div className="grid items-start gap-5 xl:grid-cols-2">
-          <div className="flex min-w-0 flex-col gap-5">
-            <Panel>
-              <ProjectAssignmentsPanel project={data} />
-            </Panel>
-            <Panel>
-              <RequiredCredentialsPanel projectId={data.id} />
-            </Panel>
-          </div>
-          <Panel>
-            <ProjectWorkerTable projectId={data.id} />
-          </Panel>
-        </div>
+        <Panel>
+          <ProjectPeopleStats projectId={data.id} />
+        </Panel>
       )}
 
       {show(section, 'labor') && (
@@ -194,6 +146,9 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
           </Panel>
           <Panel>
             <ProjectPeriodHistory projectId={data.id} />
+          </Panel>
+          <Panel>
+            <RequiredCredentialsPanel projectId={data.id} />
           </Panel>
         </>
       )}

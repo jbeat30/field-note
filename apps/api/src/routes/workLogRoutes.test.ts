@@ -982,8 +982,18 @@ describe('공수 집계', () => {
       plannedMinutes: null,
     });
     expect(summary.byEmployee).toEqual([
-      { employeeId: s.worker, workedDays: 2, totalMinutes: 960, plannedMinutes: null },
-      { employeeId: s.worker2, workedDays: 1, totalMinutes: 720, plannedMinutes: null },
+      expect.objectContaining({
+        employeeId: s.worker,
+        workedDays: 2,
+        totalMinutes: 960,
+        plannedMinutes: null,
+      }),
+      expect.objectContaining({
+        employeeId: s.worker2,
+        workedDays: 1,
+        totalMinutes: 720,
+        plannedMinutes: null,
+      }),
     ]);
     expect(summary.byCategory).toEqual([
       { categoryId: cat2, totalMinutes: 960 },

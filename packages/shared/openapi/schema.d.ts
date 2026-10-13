@@ -4834,6 +4834,15 @@ export interface paths {
                                 workedDays: number;
                                 totalMinutes: number;
                                 plannedMinutes: number | null;
+                                /** Format: date */
+                                firstWorkDate: string | null;
+                                /** Format: date */
+                                lastWorkDate: string | null;
+                                categories: {
+                                    /** Format: uuid */
+                                    categoryId: string;
+                                    totalMinutes: number;
+                                }[];
                             }[];
                             byCategory: {
                                 /** Format: uuid */

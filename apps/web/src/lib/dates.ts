@@ -21,3 +21,9 @@ export const formatDay = (date: string) => {
 
   return `${parsed.getUTCMonth() + 1}월 ${parsed.getUTCDate()}일 (${WEEKDAYS[parsed.getUTCDay()]})`;
 };
+
+/**
+ * @description 서울 기준 오늘 날짜 (기기 시간대와 상관없이 현장 날짜로 판단)
+ * @returns YYYY-MM-DD
+ */
+export const seoulToday = () => new Date().toLocaleDateString('en-CA', { timeZone: 'Asia/Seoul' });

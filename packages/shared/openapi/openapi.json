@@ -13511,13 +13511,49 @@
                               "integer",
                               "null"
                             ]
+                          },
+                          "firstWorkDate": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date"
+                          },
+                          "lastWorkDate": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "date"
+                          },
+                          "categories": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "categoryId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "totalMinutes": {
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "categoryId",
+                                "totalMinutes"
+                              ]
+                            }
                           }
                         },
                         "required": [
                           "employeeId",
                           "workedDays",
                           "totalMinutes",
-                          "plannedMinutes"
+                          "plannedMinutes",
+                          "firstWorkDate",
+                          "lastWorkDate",
+                          "categories"
                         ]
                       }
                     },
