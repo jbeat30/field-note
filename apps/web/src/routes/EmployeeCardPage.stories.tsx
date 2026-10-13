@@ -41,7 +41,7 @@ export const Default: Story = {
     await expect(canvas.getByLabelText('직종')).toHaveDisplayValue('판금공');
     await expect(canvas.getByLabelText('직원 구분')).toHaveDisplayValue('정직원');
     await expect(
-      canvas.getByText(/주민등록번호·계좌번호는 저장하지 않습니다. 급여는 아래 단가만 기록합니다/),
+      canvas.getByText(/주민등록번호·계좌번호는 저장하지 않습니다. 급여는 단가만 기록합니다/),
     ).toBeInTheDocument();
     // 바꾸기 전에는 저장할 수 없음
     await expect(canvas.getByRole('button', { name: '저장' })).toBeDisabled();

@@ -10,7 +10,9 @@ import { Link, useParams } from 'react-router';
 
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
@@ -105,66 +107,78 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <BackLink to="/partners">명부</BackLink>
-        <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
-          {partner.name}
-          <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
-            {PARTNER_KIND_LABELS[partner.kind]}
-          </span>
-          {!partner.isActive && (
-            <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">숨김</span>
-          )}
-        </h1>
+        <PageHeader
+          title={partner.name}
+          eyebrow={
+            <>
+              <Badge tone="primary">{PARTNER_KIND_LABELS[partner.kind]}</Badge>
+              {!partner.isActive && <Badge>숨김</Badge>}
+            </>
+          }
+          actions={
+            partner.phone ? (
+              <Button asChild variant="secondary">
+                <a href={`tel:${partner.phone}`}>전화 걸기 ({partner.phone})</a>
+              </Button>
+            ) : undefined
+          }
+        />
       </div>
 
-      {saved && <Alert variant="info">{saved}</Alert>}
-      {errors.root && <Alert>{errors.root.message}</Alert>}
+      <div className="grid items-start gap-5 xl:grid-cols-[3fr_2fr]">
+        <div className="rounded-xl bg-surface-subtle p-5">
+          {saved && <Alert variant="info">{saved}</Alert>}
+          {errors.root && <Alert>{errors.root.message}</Alert>}
 
-      <form className="flex flex-col gap-4" onSubmit={save} noValidate>
-        <FormField
-          label="상호"
-          hint="구분은 등록한 뒤 바꿀 수 없습니다"
-          error={errors.name?.message}
-        >
-          <Input {...register('name')} />
-        </FormField>
-        <FormField label="담당자" error={errors.contactName?.message}>
-          <Input {...register('contactName')} />
-        </FormField>
-        <FormField label="연락처" error={errors.phone?.message}>
-          <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
-        </FormField>
-        {partner.phone && (
-          <a
-            className="min-h-touch content-center text-sm text-primary underline"
-            href={`tel:${partner.phone}`}
-          >
-            전화 걸기 ({partner.phone})
-          </a>
-        )}
-        <FormField
-          label="메모"
-          hint={`관리자만 보는 메모입니다 (${PARTNER_MEMO_MAX_LENGTH}자까지)`}
-          error={errors.memo?.message}
-        >
-          <Textarea {...register('memo')} />
-        </FormField>
-        <Button type="submit" disabled={!isDirty || update.isPending}>
-          {update.isPending ? '저장 중' : '저장'}
-        </Button>
-      </form>
+          <form className="grid gap-4 md:grid-cols-2" onSubmit={save} noValidate>
+            <FormField
+              className="md:col-span-2"
+              label="상호"
+              hint="구분은 등록한 뒤 바꿀 수 없습니다"
+              error={errors.name?.message}
+            >
+              <Input {...register('name')} />
+            </FormField>
+            <FormField label="담당자" error={errors.contactName?.message}>
+              <Input {...register('contactName')} />
+            </FormField>
+            <FormField label="연락처" error={errors.phone?.message}>
+              <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
+            </FormField>
+            <FormField
+              className="md:col-span-2"
+              label="메모"
+              hint={`관리자만 보는 메모입니다 (${PARTNER_MEMO_MAX_LENGTH}자까지)`}
+              error={errors.memo?.message}
+            >
+              <Textarea {...register('memo')} />
+            </FormField>
+            <Button
+              type="submit"
+              className="md:col-span-2 md:justify-self-start md:px-10"
+              disabled={!isDirty || update.isPending}
+            >
+              {update.isPending ? '저장 중' : '저장'}
+            </Button>
+          </form>
+        </div>
 
-      <section className="flex flex-col gap-3" aria-labelledby="active-heading">
-        <h2 id="active-heading" className="text-lg font-bold">
-          사용 여부
-        </h2>
-        <p className="text-sm text-foreground/70">
-          삭제하지 않고 숨깁니다. 숨겨도 이 업체가 쓰인 프로젝트·자재 기록의 상호는 그대로 남고,
-          새로 고를 때만 보이지 않습니다
-        </p>
-        <Button variant="secondary" disabled={update.isPending} onClick={toggleActive}>
-          {partner.isActive ? '숨기기' : '다시 사용'}
-        </Button>
-      </section>
+        <section
+          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+          aria-labelledby="active-heading"
+        >
+          <h2 id="active-heading" className="text-lg font-bold">
+            사용 여부
+          </h2>
+          <p className="text-sm text-foreground/70">
+            삭제하지 않고 숨깁니다. 숨겨도 이 업체가 쓰인 프로젝트·자재 기록의 상호는 그대로 남고,
+            새로 고를 때만 보이지 않습니다
+          </p>
+          <Button variant="secondary" disabled={update.isPending} onClick={toggleActive}>
+            {partner.isActive ? '숨기기' : '다시 사용'}
+          </Button>
+        </section>
+      </div>
     </div>
   );
 };

@@ -112,7 +112,8 @@ export const HideAndRestore: Story = {
 
     await expect(await canvas.findByText(/숨겼습니다/)).toBeInTheDocument();
     // 카드는 그대로 열리고 숨김 표시만 붙음
-    await expect(canvas.getByRole('heading', { name: /가나다건설/ })).toHaveTextContent('숨김');
+    await expect(canvas.getByRole('heading', { name: /가나다건설/ })).toBeInTheDocument();
+    await expect(canvas.getByText('숨김')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '다시 사용' }));
 
@@ -125,9 +126,8 @@ export const HiddenPartnerCard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByRole('heading', { name: /옛날상가/ })).toHaveTextContent(
-      '숨김',
-    );
+    await expect(await canvas.findByRole('heading', { name: /옛날상가/ })).toBeInTheDocument();
+    await expect(canvas.getByText('숨김')).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '다시 사용' })).toBeInTheDocument();
   },
 };
