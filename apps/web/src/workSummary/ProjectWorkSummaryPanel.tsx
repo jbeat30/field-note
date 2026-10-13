@@ -6,7 +6,7 @@ import {
 import { useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { useEmployees } from '../employees/useEmployees';
 import { formatDay } from '../lib/dates';
@@ -65,14 +65,12 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
       </h2>
 
       <div className="grid grid-cols-2 gap-2">
-        <Input
-          type="date"
+        <DateInput
           aria-label="집계 시작일"
           value={from}
           onChange={(event) => setFrom(event.target.value)}
         />
-        <Input
-          type="date"
+        <DateInput
           aria-label="집계 종료일"
           value={to}
           onChange={(event) => setTo(event.target.value)}

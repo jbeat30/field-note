@@ -18,6 +18,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useDocuments } from '../documents/useDocuments';
@@ -111,8 +112,7 @@ const StatusForm = ({
       </p>
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label="바뀐 날" error={errors.effectiveOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={effectiveOn}
           onChange={(event) => setEffectiveOn(event.target.value)}
@@ -199,8 +199,7 @@ const EditForm = ({
     >
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label="요청일" error={errors.requestedOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={requestedOn}
           onChange={(event) => setRequestedOn(event.target.value)}

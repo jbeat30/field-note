@@ -1,6 +1,6 @@
 import { ALERT_KIND_LABELS } from '@field-note/shared';
-import { Link } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Checkbox } from '../components/ui/checkbox';
 import { useAlertSettings, useSaveAlertSettings } from '../dashboard/useDashboard';
@@ -13,9 +13,7 @@ export const AlertSettingsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Link className="min-h-touch content-center text-sm text-primary underline" to="/settings">
-          ← 설정으로
-        </Link>
+        <BackLink to="/settings">설정으로</BackLink>
         <h1 className="text-2xl font-bold">알림 설정</h1>
         <p className="text-sm text-foreground/70">
           홈 화면에 보여 줄 알림을 고릅니다. 꺼도 대시보드의 현황은 그대로 보입니다

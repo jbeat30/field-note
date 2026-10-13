@@ -11,6 +11,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { formatDay } from '../lib/dates';
 import { splitServerErrors } from '../lib/serverErrors';
 import { useCompanySettings } from '../settings/useCompanySettings';
@@ -69,8 +70,7 @@ const ProgressForm = ({ projectId }: { projectId: string }) => {
           />
         </FormField>
         <FormField label="기준일" error={errors.recordedOn}>
-          <Input
-            type="date"
+          <DateInput
             max={today}
             value={recordedOn}
             onChange={(event) => setRecordedOn(event.target.value)}

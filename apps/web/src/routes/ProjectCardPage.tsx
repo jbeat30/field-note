@@ -2,6 +2,7 @@ import { PROJECT_STATUS_LABELS } from '@field-note/shared';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
@@ -68,9 +69,7 @@ export const ProjectCardPage = () => {
 
   return (
     <div className="flex flex-col gap-5">
-      <Link className="flex min-h-touch items-center text-sm text-primary underline" to="/projects">
-        ← 프로젝트 목록
-      </Link>
+      <BackLink to="/projects">프로젝트 목록</BackLink>
       <PageHeader
         eyebrow={
           <>

@@ -1,12 +1,13 @@
 import { todayInSeoul } from '@field-note/shared';
 import { Dialog } from 'radix-ui';
 import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { addDays, formatDay } from '../lib/dates';
 import { useProject } from '../projects/useProjects';
 import { downloadReportXlsx, printWhenReady } from '../reports/exportReport';
@@ -62,12 +63,7 @@ export const DailyReportPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 print:hidden">
-        <Link
-          className="min-h-touch content-center text-sm text-primary underline"
-          to={`/projects/${id}`}
-        >
-          ← {project.data.name}
-        </Link>
+        <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -77,8 +73,7 @@ export const DailyReportPage = () => {
           >
             ◀
           </Button>
-          <Input
-            type="date"
+          <DateInput
             aria-label="일보 날짜"
             value={date}
             onChange={(event) => event.target.value && setDate(event.target.value)}
@@ -106,20 +101,14 @@ export const DailyReportPage = () => {
           <div className="mt-2 flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
               <FormField label="시작일">
-                <Input
-                  type="date"
+                <DateInput
                   value={from}
                   max={to}
                   onChange={(event) => setFrom(event.target.value)}
                 />
               </FormField>
               <FormField label="끝일">
-                <Input
-                  type="date"
-                  value={to}
-                  min={from}
-                  onChange={(event) => setTo(event.target.value)}
-                />
+                <DateInput value={to} min={from} onChange={(event) => setTo(event.target.value)} />
               </FormField>
             </div>
             {exportError && <Alert>{exportError}</Alert>}

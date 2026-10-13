@@ -12,6 +12,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { formatDay } from '../lib/dates';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -91,8 +92,7 @@ const PayRateForm = ({ employeeId }: { employeeId: string }) => {
         />
       </FormField>
       <FormField label="적용 시작일" error={errors.effectiveFrom}>
-        <Input
-          type="date"
+        <DateInput
           value={effectiveFrom}
           onChange={(event) => setEffectiveFrom(event.target.value)}
         />

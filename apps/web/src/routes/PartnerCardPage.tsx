@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
@@ -103,9 +104,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Link className="min-h-touch content-center text-sm text-primary underline" to="/partners">
-          ← 명부
-        </Link>
+        <BackLink to="/partners">명부</BackLink>
         <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
           {partner.name}
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
