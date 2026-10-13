@@ -205,7 +205,7 @@ export const materialRecordUpdateSchema = z
 export type MaterialRecordUpdate = z.infer<typeof materialRecordUpdateSchema>;
 
 export const materialRecordListQuerySchema = z.object({
-  // 그날 작업일지 화면에서 쓰는 날짜 필터
+  // 그날 작업 내역 화면에서 쓰는 날짜 필터
   date: dateSchema.optional(),
   materialId: z.uuid().optional(),
   kind: materialRecordKindSchema.optional(),

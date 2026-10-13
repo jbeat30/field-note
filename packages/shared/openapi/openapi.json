@@ -13071,7 +13071,7 @@
     },
     "/api/v1/projects/{id}/work-logs": {
       "get": {
-        "summary": "프로젝트 작업일지 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시)",
+        "summary": "프로젝트 작업 내역 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시)",
         "security": [
           {
             "sessionCookie": []
@@ -13163,6 +13163,25 @@
                           },
                           "hasContent": {
                             "type": "boolean"
+                          },
+                          "workers": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "employeeId": {
+                                  "type": "string",
+                                  "format": "uuid"
+                                },
+                                "minutes": {
+                                  "type": "integer"
+                                }
+                              },
+                              "required": [
+                                "employeeId",
+                                "minutes"
+                              ]
+                            }
                           }
                         },
                         "required": [
@@ -13174,7 +13193,8 @@
                           "isLate",
                           "entryCount",
                           "totalMinutes",
-                          "hasContent"
+                          "hasContent",
+                          "workers"
                         ]
                       }
                     }
@@ -13398,7 +13418,7 @@
     },
     "/api/v1/projects/{id}/work-summary": {
       "get": {
-        "summary": "프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 일지만 반영)",
+        "summary": "프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 작업 내역만 반영)",
         "security": [
           {
             "sessionCookie": []
@@ -13766,7 +13786,7 @@
     },
     "/api/v1/employees/{id}/work-history": {
       "get": {
-        "summary": "직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 일지만 반영)",
+        "summary": "직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 작업 내역만 반영)",
         "security": [
           {
             "sessionCookie": []
@@ -14078,7 +14098,7 @@
     },
     "/api/v1/projects/{id}/work-logs/{workDate}": {
       "get": {
-        "summary": "그날의 작업일지 (공수 항목과 경고 포함)",
+        "summary": "그날의 작업 내역 (공수 항목과 경고 포함)",
         "security": [
           {
             "sessionCookie": []
@@ -14536,7 +14556,7 @@
         }
       },
       "put": {
-        "summary": "그날의 작업일지 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금)",
+        "summary": "그날의 작업 내역 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금)",
         "security": [
           {
             "sessionCookie": []
@@ -15155,7 +15175,7 @@
     },
     "/api/v1/projects/{id}/work-logs/{workDate}/revisions": {
       "get": {
-        "summary": "작업일지 수정 이력 (고치기 전 값, 최근이 맨 앞)",
+        "summary": "작업 내역 수정 이력 (고치기 전 값, 최근이 맨 앞)",
         "security": [
           {
             "sessionCookie": []
@@ -18053,7 +18073,7 @@
     },
     "/api/v1/projects/{id}/change-usage": {
       "get": {
-        "summary": "변경·추가 작업으로 쓴 공수·자재 (일지·자재 기록의 변경 작업 표시 합계)",
+        "summary": "변경·추가 작업으로 쓴 공수·자재 (작업 내역·자재 기록의 변경 작업 표시 합계)",
         "security": [
           {
             "sessionCookie": []
@@ -25963,7 +25983,7 @@
     },
     "/api/v1/projects/{id}/after-service-usage": {
       "get": {
-        "summary": "사후 작업으로 쓴 공수·자재 (사후 작업 표시가 된 일지·자재 기록 합계)",
+        "summary": "사후 작업으로 쓴 공수·자재 (사후 작업 표시가 된 작업 내역·자재 기록 합계)",
         "security": [
           {
             "sessionCookie": []
@@ -26250,7 +26270,7 @@
     },
     "/api/v1/repair-requests/{id}": {
       "get": {
-        "summary": "보수 요청 상세 (상태 이력, 연결한 일지·자재 기록, 쓴 공수·자재 포함)",
+        "summary": "보수 요청 상세 (상태 이력, 연결한 작업 내역·자재 기록, 쓴 공수·자재 포함)",
         "security": [
           {
             "sessionCookie": []
@@ -27912,7 +27932,7 @@
     },
     "/api/v1/repair-requests/{id}/links": {
       "post": {
-        "summary": "사후 작업 연결 (사후 작업으로 표시한 같은 프로젝트의 저장된 일지 또는 자재 기록)",
+        "summary": "사후 작업 연결 (사후 작업으로 표시한 같은 프로젝트의 저장된 작업 내역 또는 자재 기록)",
         "security": [
           {
             "sessionCookie": []
@@ -29005,7 +29025,7 @@
     },
     "/api/v1/monthly-hours": {
       "get": {
-        "summary": "월 공수표 (프로젝트 × 직원별 저장된 일지 공수, 확정 상태·확정 당시 기준값·임시 저장 일지·이력)",
+        "summary": "월 공수표 (프로젝트 × 직원별 저장된 작업 내역 공수, 확정 상태·확정 당시 기준값·임시 저장 작업 내역·이력)",
         "security": [
           {
             "sessionCookie": []
@@ -29327,7 +29347,7 @@
     },
     "/api/v1/monthly-hours/close": {
       "post": {
-        "summary": "월 공수 확정 (이번 달까지, 임시 저장 일지가 남아 있으면 확인 필요, 확정 당시 기준값 고정, 이력에 남음)",
+        "summary": "월 공수 확정 (이번 달까지, 임시 저장 작업 내역이 남아 있으면 확인 필요, 확정 당시 기준값 고정, 이력에 남음)",
         "security": [
           {
             "sessionCookie": []
@@ -29660,7 +29680,7 @@
     },
     "/api/v1/monthly-hours/reopen": {
       "post": {
-        "summary": "월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업일지를 다시 고칠 수 있다",
+        "summary": "월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역를 다시 고칠 수 있다",
         "security": [
           {
             "sessionCookie": []
@@ -30168,7 +30188,7 @@
     },
     "/api/v1/projects/{id}/transition-notices": {
       "get": {
-        "summary": "상태 전환 전 확인할 것 (완료: 임시 저장 일지·진행률·남은 자재·협의 중 변경 작업, 재개: 종료 예정일 경과). 막지 않고 알림",
+        "summary": "상태 전환 전 확인할 것 (완료: 임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업, 재개: 종료 예정일 경과). 막지 않고 알림",
         "security": [
           {
             "sessionCookie": []
@@ -44185,7 +44205,7 @@
     },
     "/api/v1/search": {
       "get": {
-        "summary": "통합 검색 (프로젝트·직원·메모·자료·일지, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색)",
+        "summary": "통합 검색 (프로젝트·직원·메모·자료·작업 내역, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색)",
         "security": [
           {
             "sessionCookie": []
@@ -44879,7 +44899,7 @@
     },
     "/api/v1/projects/{projectId}/daily-reports/{date}": {
       "get": {
-        "summary": "작업일보 한 장 (그날의 일지·인원·공수·자재·사진, 인쇄·PDF용)",
+        "summary": "작업일보 한 장 (그날의 작업 내역·인원·공수·자재·사진, 인쇄·PDF용)",
         "security": [
           {
             "sessionCookie": []
@@ -45429,7 +45449,7 @@
     },
     "/api/v1/projects/{projectId}/daily-reports.xlsx": {
       "get": {
-        "summary": "작업일보 엑셀 내보내기 (기간 안의 일지·공수·자재 시트, 내보낸 기록이 남음)",
+        "summary": "작업일보 엑셀 내보내기 (기간 안의 작업 내역·공수·자재 시트, 내보낸 기록이 남음)",
         "security": [
           {
             "sessionCookie": []

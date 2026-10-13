@@ -22,7 +22,7 @@ export class CompletionError extends Error {
 }
 
 export type CompletionService = {
-  // 이 전환에서 확인할 것 (임시 저장 일지·진행률·남은 자재·협의 중 변경 작업·종료 예정일 경과). 막지 않고 알려 줌
+  // 이 전환에서 확인할 것 (임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업·종료 예정일 경과). 막지 않고 알려 줌
   notices: (companyId: string, projectId: string, to: ProjectStatus) => Promise<TransitionNotices>;
   // 프로젝트 요약(완료 리포트): 그때그때 최신 기록으로 만든다. 금액과 민감 문서는 싣지 않음
   summary: (companyId: string, projectId: string) => Promise<ProjectCompletionSummary>;

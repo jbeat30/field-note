@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 공수 집계 (서비스 기획서 §9.6). 집계에는 저장된 일지만 반영하고 임시 저장은 건수만 따로 알린다 (§9.4)
+// 공수 집계 (서비스 기획서 §9.6). 집계에는 저장된 작업 내역만 반영하고 임시 저장은 건수만 따로 알린다 (§9.4)
 // 값은 모두 분 단위이며 MD·MM·소진율은 보여 줄 때 회사 설정으로 환산한다
 
 const dateSchema = z.iso.date();
@@ -33,7 +33,7 @@ export const workSummarySchema = z.object({
   // 공수가 있는 날 수 (프로젝트 기준)
   workedDays: z.number().int(),
   savedLogCount: z.number().int(),
-  // 집계에서 빠진 임시 저장 일지 수
+  // 집계에서 빠진 임시 저장 작업 내역 수
   draftLogCount: z.number().int(),
   byEmployee: z.array(
     z.object({
@@ -117,8 +117,8 @@ const groupBy = <T>(items: readonly T[], keyOf: (item: T) => string) => {
 };
 
 /**
- * @description 프로젝트의 공수 집계 (직원별·작업 구분별·기간별). 저장된 일지의 항목만 넘겨야 한다
- * @param input 저장된 일지 항목, 임시 저장 건수, 투입 계획
+ * @description 프로젝트의 공수 집계 (직원별·작업 구분별·기간별). 저장된 작업 내역의 항목만 넘겨야 한다
+ * @param input 저장된 작업 내역 항목, 임시 저장 건수, 투입 계획
  * @returns 분 단위 집계 (직원은 공수가 큰 순, 기간은 오래된 순)
  */
 export const summarizeProjectWork = (input: {
@@ -178,7 +178,7 @@ export const summarizeProjectWork = (input: {
 };
 
 /**
- * @description 직원의 프로젝트별 투입 이력과 이번 달·올해 공수. 저장된 일지의 항목만 넘겨야 한다
+ * @description 직원의 프로젝트별 투입 이력과 이번 달·올해 공수. 저장된 작업 내역의 항목만 넘겨야 한다
  * @param input 직원의 저장된 항목(프로젝트별), 취소하지 않은 투입, 프로젝트 이름, 오늘(서울)
  * @returns 프로젝트별 이력 (최근 작업한 순, 작업 기록이 없는 투입은 뒤)
  */

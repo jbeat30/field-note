@@ -37,14 +37,14 @@ export class WorkLogError extends Error {
 }
 
 export type WorkLogService = {
-  // 프로젝트의 일지 목록 (요약, 최근 날짜가 맨 앞)
+  // 프로젝트의 작업 내역 목록 (요약, 최근 날짜가 맨 앞)
   list: (
     companyId: string,
     projectId: string,
     query: WorkLogListQuery,
   ) => Promise<WorkLogSummary[]>;
   get: (companyId: string, projectId: string, workDate: string) => Promise<WorkLog>;
-  // 그날 일지를 만들거나 고침. 이미 있으면 expectedVersion이 현재 버전과 같아야 하고, 저장된 일지를 고치면 고치기 전 값이 수정 이력에 남음
+  // 그날 작업 내역을 만들거나 고침. 이미 있으면 expectedVersion이 현재 버전과 같아야 하고, 저장된 작업 내역을 고치면 고치기 전 값이 수정 이력에 남음
   save: (
     companyId: string,
     userId: string,
@@ -54,7 +54,7 @@ export type WorkLogService = {
   ) => Promise<WorkLog>;
   // 수정 이력 (최근이 맨 앞)
   revisions: (companyId: string, projectId: string, workDate: string) => Promise<WorkLogRevision[]>;
-  // 프로젝트 공수 집계 (직원별·작업 구분별·기간별). 저장된 일지만 반영
+  // 프로젝트 공수 집계 (직원별·작업 구분별·기간별). 저장된 작업 내역만 반영
   summary: (companyId: string, projectId: string, query: WorkSummaryQuery) => Promise<WorkSummary>;
   // 직원 카드의 프로젝트별 투입 이력과 이번 달·올해 공수
   employeeHistory: (companyId: string, employeeId: string) => Promise<EmployeeWorkHistory>;
@@ -89,9 +89,18 @@ const toSummary = (row: LogRow): WorkLogSummary => ({
   entryCount: row.entries.length,
   totalMinutes: row.entries.reduce((sum, entry) => sum + entry.minutes, 0),
   hasContent: row.content.trim().length > 0,
+  workers: [
+    ...row.entries
+      .reduce((map, entry) => {
+        map.set(entry.employeeId, (map.get(entry.employeeId) ?? 0) + entry.minutes);
+
+        return map;
+      }, new Map<string, number>())
+      .entries(),
+  ].map(([employeeId, minutes]) => ({ employeeId, minutes })),
 });
 
-// 경고: 하루 합계 공수 초과(저장된 다른 프로젝트 일지 포함), 휴직·퇴사 직원 (막지는 않음, 서비스 기획서 §9.4)
+// 경고: 하루 합계 공수 초과(저장된 다른 프로젝트 작업 내역 포함), 휴직·퇴사 직원 (막지는 않음, 서비스 기획서 §9.4)
 const warningsFor = async (
   tx: Prisma.TransactionClient,
   row: LogRow,
@@ -185,7 +194,7 @@ const toWorkLog = async (
   autoAssignedEmployeeIds,
 });
 
-// 프로젝트 행을 잠가 같은 프로젝트의 일지·투입·기간 변경이 동시에 들어와도 검사가 어긋나지 않게 함
+// 프로젝트 행을 잠가 같은 프로젝트의 작업 내역·투입·기간 변경이 동시에 들어와도 검사가 어긋나지 않게 함
 const lockProject = async (tx: Prisma.TransactionClient, projectId: string) => {
   await tx.$queryRaw`SELECT id FROM projects WHERE id = ${projectId}::uuid FOR UPDATE`;
 
@@ -205,10 +214,10 @@ const findLog = (tx: Prisma.TransactionClient, projectId: string, workDate: stri
   });
 
 /**
- * @description 작업일지 서비스 (앱 계정으로 자기 회사 범위에서만 조회·수정, 일지는 지우지 않음)
+ * @description 작업 내역 서비스 (앱 계정으로 자기 회사 범위에서만 조회·수정, 작업 내역은 지우지 않음)
  * @param app 앱 계정(DATABASE_URL, RLS 적용) Prisma 클라이언트
  * @param now 시계 (오늘 날짜·저장 시각 판정용)
- * @returns 작업일지 서비스
+ * @returns 작업 내역 서비스
  */
 export const createWorkLogService = (
   app: PrismaClient,
@@ -348,7 +357,7 @@ export const createWorkLogService = (
         throw invalid(dateCheck.path, dateCheck.message);
       }
 
-      // 월 공수가 확정된 달의 일지는 재오픈 전까지 고칠 수 없다 (§13.2)
+      // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없다 (§13.2)
       try {
         await assertMonthOpen(tx, companyId, workDate);
       } catch (error) {
@@ -373,10 +382,10 @@ export const createWorkLogService = (
       }
 
       if (existing?.status === 'SAVED' && input.status === 'DRAFT') {
-        throw invalid('status', '저장된 일지는 임시 저장으로 되돌릴 수 없습니다');
+        throw invalid('status', '저장된 작업 내역은 임시 저장으로 되돌릴 수 없습니다');
       }
 
-      // 직원·작업 구분: 같은 회사의 직원, 작업 구분 목록의 항목만. 숨긴 작업 구분은 이 일지가 이미 쓰고 있을 때만 유지
+      // 직원·작업 구분: 같은 회사의 직원, 작업 구분 목록의 항목만. 숨긴 작업 구분은 이 작업 내역이 이미 쓰고 있을 때만 유지
       const employeeIds = [...new Set(input.entries.map((entry) => entry.employeeId))];
       const categoryIds = [...new Set(input.entries.map((entry) => entry.categoryId))];
       const employees = await tx.employee.findMany({ where: { id: { in: employeeIds } } });
@@ -398,7 +407,7 @@ export const createWorkLogService = (
         throw invalid('entries', '숨긴 작업 구분은 새로 고를 수 없습니다');
       }
 
-      // 투입 등록이 안 된 직원을 일지에 넣으면 투입을 자동으로 추가할지 확인 (서비스 기획서 §9.3). 저장할 때만 확인하고 퇴사한 직원은 경고만
+      // 투입 등록이 안 된 직원을 작업 내역에 넣으면 투입을 자동으로 추가할지 확인 (서비스 기획서 §9.3). 저장할 때만 확인하고 퇴사한 직원은 경고만
       const autoAssigned: string[] = [];
 
       if (input.status === 'SAVED') {
@@ -469,7 +478,7 @@ export const createWorkLogService = (
       } else {
         logId = existing.id;
 
-        // 저장된 일지를 고치면 고치기 전 값을 남김 (임시 저장 중의 수정은 기록하지 않음)
+        // 저장된 작업 내역을 고치면 고치기 전 값을 남김 (임시 저장 중의 수정은 기록하지 않음)
         if (existing.status === 'SAVED') {
           await tx.workLogRevision.create({
             data: {

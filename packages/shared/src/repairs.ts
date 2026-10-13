@@ -6,7 +6,7 @@ import { materialRecordKindSchema } from './materials';
 import type { ProjectStatus } from './projects';
 
 // 보수 요청 (서비스 기획서 §10.6): 보증 중에 고객이 요청한 하자 보수를 접수부터 처리까지 기록한다.
-// 보수 작업은 작업일지·자재 기록에 "사후 작업"으로 입력하고 이 요청에 연결해 쓴 공수·자재를 건별로 본다
+// 보수 작업은 작업 내역·자재 기록에 "사후 작업"으로 입력하고 이 요청에 연결해 쓴 공수·자재를 건별로 본다
 export const REPAIR_STATUSES = ['RECEIVED', 'IN_PROGRESS', 'ON_HOLD', 'DONE'] as const;
 
 export const repairStatusSchema = z.enum(REPAIR_STATUSES);
@@ -87,11 +87,11 @@ export const repairTransitionSchema = z.object({
 
 export type RepairTransition = z.infer<typeof repairTransitionSchema>;
 
-// 사후 작업으로 표시한 일지 또는 자재 기록 중 하나를 이 요청에 연결한다
+// 사후 작업으로 표시한 작업 내역 또는 자재 기록 중 하나를 이 요청에 연결한다
 export const repairLinkSchema = z
   .object({ workLogId: z.uuid().optional(), materialRecordId: z.uuid().optional() })
   .refine((value) => (value.workLogId === undefined) !== (value.materialRecordId === undefined), {
-    message: '일지 또는 자재 기록 중 하나를 선택해 주세요',
+    message: '작업 내역 또는 자재 기록 중 하나를 선택해 주세요',
   });
 
 export type RepairLink = z.infer<typeof repairLinkSchema>;
@@ -117,7 +117,7 @@ export const repairRequestSchema = z.object({
   statusChangedOn: dateSchema,
   // 완료된 날 (완료가 아니면 null)
   resolvedOn: dateSchema.nullable(),
-  // 연결한 일지·자재 기록 수
+  // 연결한 작업 내역·자재 기록 수
   linkCount: z.number().int(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -147,7 +147,7 @@ export const repairLinkItemSchema = z.discriminatedUnion('kind', [
     workLogId: z.uuid(),
     workDate: dateSchema,
     content: z.string(),
-    // 그날 일지에 적힌 공수 합(분)
+    // 그날 작업 내역에 적힌 공수 합(분)
     minutes: z.number().int(),
     linkedAt: z.iso.datetime(),
   }),
@@ -167,7 +167,7 @@ export const repairLinkItemSchema = z.discriminatedUnion('kind', [
 
 export type RepairLinkItem = z.infer<typeof repairLinkItemSchema>;
 
-// 보수 요청에 연결한 일지의 공수와 사용(USED) 자재 합계 — 프로젝트 사후 작업 합계와 같은 모양
+// 보수 요청에 연결한 작업 내역의 공수와 사용(USED) 자재 합계 — 프로젝트 사후 작업 합계와 같은 모양
 export const repairUsageSchema = changeUsageSchema;
 
 export type RepairUsage = z.infer<typeof repairUsageSchema>;

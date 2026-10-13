@@ -56,7 +56,7 @@ export type ChangeWorkService = {
     documentId: string,
     confirmCompleted: boolean,
   ) => Promise<ChangeWorkDetail>;
-  // 변경·추가 작업으로 쓴 공수·자재 (일지·자재 기록의 "변경 작업" 표시를 합산)
+  // 변경·추가 작업으로 쓴 공수·자재 (작업 내역·자재 기록의 "변경 작업" 표시를 합산)
   usage: (companyId: string, projectId: string) => Promise<ChangeUsage>;
 };
 

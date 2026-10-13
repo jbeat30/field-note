@@ -140,7 +140,7 @@ const setup = async () => {
     effectiveOn: '2026-09-01',
   });
 
-  // 일지는 투입된 직원만 넣을 수 있다 (김작업은 계획 공수 10일)
+  // 작업 내역은 투입된 직원만 넣을 수 있다 (김작업은 계획 공수 10일)
   await client.id(`/projects/${project}/assignments`, {
     employeeId: worker,
     startDate: '2026-09-01',
@@ -309,7 +309,7 @@ describe('직원 단가표', () => {
 });
 
 describe('프로젝트 인건비 (최소 추정)', () => {
-  it('일지도 단가도 없으면 모두 0이다', async () => {
+  it('작업 내역도 단가도 없으면 모두 0이다', async () => {
     const { client, project } = await setup();
     const cost = laborCostSchema.parse((await client.cost(project)).body);
 
@@ -444,7 +444,7 @@ describe('프로젝트 인건비 (최소 추정)', () => {
     });
   });
 
-  it('임시 저장 일지는 인건비에 넣지 않는다', async () => {
+  it('임시 저장 작업 내역은 인건비에 넣지 않는다', async () => {
     const { client, project, worker, category } = await setup();
 
     await client.addRate(worker, {

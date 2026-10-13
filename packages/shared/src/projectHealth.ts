@@ -72,7 +72,7 @@ export const PROJECT_WARNING_LABELS: Record<ProjectWarningType, string> = {
 export const projectHealthSchema = z.object({
   // 계획 공수(분): 취소하지 않은 투입의 계획 공수 합. 계획이 하나도 없으면 null
   plannedMinutes: z.number().int().nullable(),
-  // 투입 공수(분): 저장된 일지의 공수 합
+  // 투입 공수(분): 저장된 작업 내역의 공수 합
   usedMinutes: z.number().int(),
   // 공수 소진율(%): 계획이 없으면 null
   burnPercent: z.number().nullable(),

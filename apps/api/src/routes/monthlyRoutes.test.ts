@@ -171,7 +171,7 @@ const setup = async () => {
   const log = (project: string, date: string, entries: [string, number][], status = 'SAVED') =>
     client.saveLog(project, date, {
       status,
-      content: `${date} 일지`,
+      content: `${date} 작업 내역`,
       entries: entries.map(([employeeId, minutes]) => ({
         employeeId,
         categoryId: category,
@@ -201,7 +201,7 @@ describe('월 공수표', () => {
     ).toBe(401);
   });
 
-  it('프로젝트 × 직원별로 저장된 일지 공수만 합산하고 다른 달·임시 저장은 뺀다', async () => {
+  it('프로젝트 × 직원별로 저장된 작업 내역 공수만 합산하고 다른 달·임시 저장은 뺀다', async () => {
     const { client, a, b, kim, lee, log } = await setup();
 
     await log(a, '2026-09-10', [
@@ -245,7 +245,7 @@ describe('월 공수표', () => {
 });
 
 describe('월 공수 확정·재오픈', () => {
-  it('임시 저장 일지가 있으면 확인해야 확정하고 확정하면 이력과 확정 당시 기준값이 남는다', async () => {
+  it('임시 저장 작업 내역이 있으면 확인해야 확정하고 확정하면 이력과 확정 당시 기준값이 남는다', async () => {
     const { client, a, kim, log } = await setup();
 
     await log(a, '2026-09-10', [[kim, 480]]);
@@ -279,7 +279,7 @@ describe('월 공수 확정·재오픈', () => {
     expect((await client.close({ month: '2026-10' })).status).toBe(200);
   });
 
-  it('확정된 달의 일지는 저장할 수 없고 다른 달은 저장할 수 있다', async () => {
+  it('확정된 달의 작업 내역은 저장할 수 없고 다른 달은 저장할 수 있다', async () => {
     const { client, a, kim, log } = await setup();
 
     await log(a, '2026-09-10', [[kim, 480]]);
@@ -343,7 +343,7 @@ describe('월 공수 확정·재오픈', () => {
       'REOPENED:공수 정정',
       'CLOSED:null',
     ]);
-    // 이미 저장된 일지는 버전을 알려 주어야 고칠 수 있다 (낙관적 잠금)
+    // 이미 저장된 작업 내역은 버전을 알려 주어야 고칠 수 있다 (낙관적 잠금)
     expect(
       (
         await client.saveLog(a, '2026-09-10', {
