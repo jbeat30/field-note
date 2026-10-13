@@ -218,10 +218,13 @@ export const SettingsPage = () => {
   };
 
   return (
-    <div className="flex flex-col gap-8">
+    <div className="flex flex-col gap-4">
       <h1 className="text-2xl font-bold">설정</h1>
 
-      <section className="flex flex-col gap-2" aria-labelledby="account-heading">
+      <section
+        className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="account-heading"
+      >
         <h2 id="account-heading" className="text-lg font-bold">
           계정
         </h2>
@@ -235,35 +238,50 @@ export const SettingsPage = () => {
         </dl>
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="password-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="password-heading"
+      >
         <h2 id="password-heading" className="text-lg font-bold">
           비밀번호 변경
         </h2>
         <PasswordChangeForm />
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="email-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="email-heading"
+      >
         <h2 id="email-heading" className="text-lg font-bold">
           이메일 변경
         </h2>
         <EmailChangeForm />
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="social-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="social-heading"
+      >
         <h2 id="social-heading" className="text-lg font-bold">
           소셜 로그인
         </h2>
         <SocialLoginSection />
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="company-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="company-heading"
+      >
         <h2 id="company-heading" className="text-lg font-bold">
           회사 설정
         </h2>
         <CompanySettingsSection />
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="lists-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="lists-heading"
+      >
         <h2 id="lists-heading" className="text-lg font-bold">
           목록 관리
         </h2>
@@ -275,7 +293,10 @@ export const SettingsPage = () => {
         </Button>
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="alerts-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="alerts-heading"
+      >
         <h2 id="alerts-heading" className="text-lg font-bold">
           알림
         </h2>
@@ -287,7 +308,10 @@ export const SettingsPage = () => {
         </Button>
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="records-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="records-heading"
+      >
         <h2 id="records-heading" className="text-lg font-bold">
           기록 조회
         </h2>
@@ -300,21 +324,27 @@ export const SettingsPage = () => {
         </Button>
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="devices-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="devices-heading"
+      >
         <h2 id="devices-heading" className="text-lg font-bold">
           로그인한 기기
         </h2>
         <DevicesSection />
       </section>
 
-      <section className="flex flex-col gap-3" aria-labelledby="closure-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-labelledby="closure-heading"
+      >
         <h2 id="closure-heading" className="text-lg font-bold">
           계정 해지
         </h2>
         <ClosureSection />
       </section>
 
-      <section className="flex flex-col gap-3">
+      <section className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4">
         <Button variant="secondary" onClick={onLogout}>
           로그아웃
         </Button>
