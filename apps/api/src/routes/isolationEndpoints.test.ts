@@ -375,6 +375,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /employees/{id}/work-history', 'get', `/employees/${a.worker}/work-history`],
     ['GET /partners/{id}', 'get', `/partners/${a.clientId}`],
     ['PATCH /partners/{id}', 'patch', `/partners/${a.clientId}`, { name: '침투' }],
+    ['DELETE /partners/{id}', 'delete', `/partners/${a.clientId}`],
     ['PATCH /company/options/{id}', 'patch', `/company/options/${a.category}`, { name: '침투' }],
     ['GET /projects/{id}', 'get', `/projects/${a.projectId}`],
     ['PATCH /projects/{id}', 'patch', `/projects/${a.projectId}`, { name: '침투' }],
