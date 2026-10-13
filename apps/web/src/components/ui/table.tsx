@@ -12,7 +12,7 @@ export const Table = ({ className, ...props }: ComponentProps<'table'>) => (
 export const TableHead = (props: ComponentProps<'thead'>) => <thead {...props} />;
 
 export const TableBody = ({ className, ...props }: ComponentProps<'tbody'>) => (
-  <tbody className={cn('divide-y divide-border', className)} {...props} />
+  <tbody className={cn('divide-y divide-line', className)} {...props} />
 );
 
 export const TableRow = (props: ComponentProps<'tr'>) => <tr {...props} />;
@@ -21,7 +21,7 @@ export const TableHeaderCell = ({ className, ...props }: ComponentProps<'th'>) =
   <th
     scope="col"
     className={cn(
-      'border-b border-border px-3 py-2 text-left font-semibold whitespace-nowrap text-foreground/70',
+      'bg-surface-nested px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-foreground/70 first:rounded-l-lg last:rounded-r-lg',
       className,
     )}
     {...props}

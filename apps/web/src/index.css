@@ -33,6 +33,8 @@
   --color-warning: var(--warning);
   --color-warning-subtle: var(--warning-subtle);
   --color-overlay: var(--overlay);
+  --color-control-border: var(--control-border);
+  --color-control-border-hover: var(--control-border-hover);
 
   /* 모서리: 토스처럼 둥글게 (카드 24px, 입력·버튼 12px) */
   --radius-sm: 0.5rem;
@@ -40,7 +42,13 @@
   --radius-lg: 1rem;
   --radius-xl: 1.5rem;
 
+  /* 입력·버튼 모서리 (카드 16~24px보다 한 단계 작게) */
+  --radius-control: 0.625rem;
+
+  --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);
   --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
+  /* 펼침 목록·팝오버·메뉴 */
+  --shadow-pop: 0 4px 6px -2px rgb(16 24 40 / 0.05), 0 12px 24px -4px rgb(16 24 40 / 0.12);
   --shadow-sheet: 0 -4px 24px rgb(0 0 0 / 0.12);
 
   /* 모션: 짧고 가볍게 */
@@ -64,6 +72,8 @@
   --surface-subtle: #ffffff;
   --surface-nested: #f7f8fa;
   --line: #e5e8eb;
+  --control-border: #cdd3d9;
+  --control-border-hover: #a9b2bc;
   --muted: #f2f4f6;
   --foreground: #191f28;
   --border: #d1d6db;
@@ -96,6 +106,8 @@
     --surface-subtle: #1a1a1a;
     --surface-nested: #232323;
     --line: #2b2f36;
+    --control-border: #444b57;
+    --control-border-hover: #5c6575;
     --muted: #222222;
     --foreground: #f2f4f6;
     --border: #3d434e;
@@ -188,6 +200,12 @@ body {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* 기본 체크박스·라디오도 앱 색을 따름 */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--primary);
 }
 
 /* 눌러서 동작하는 요소는 마우스 포인터를 손가락 모양으로 (꺼진 요소는 금지 모양) */

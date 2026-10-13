@@ -1,6 +1,9 @@
+import { CircleAlert } from 'lucide-react';
 import { useId, type ReactElement, cloneElement } from 'react';
 
 import { cn } from '../../lib/cn';
+
+import { Label } from './label';
 
 type FormFieldProps = {
   label: string;
@@ -19,9 +22,7 @@ export const FormField = ({ label, className, error, hint, children }: FormField
 
   return (
     <div className={cn('flex flex-col gap-1.5', className)}>
-      <label htmlFor={id} className="text-sm font-medium">
-        {label}
-      </label>
+      <Label htmlFor={id}>{label}</Label>
       {cloneElement(children, {
         id,
         'aria-invalid': error ? true : undefined,
@@ -30,8 +31,12 @@ export const FormField = ({ label, className, error, hint, children }: FormField
       {message && (
         <p
           id={descriptionId}
-          className={error ? 'text-sm text-danger' : 'text-sm text-foreground/70'}
+          className={cn(
+            'flex items-start gap-1 text-sm',
+            error ? 'font-medium text-danger' : 'text-foreground/70',
+          )}
         >
+          {error && <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />}
           {message}
         </p>
       )}

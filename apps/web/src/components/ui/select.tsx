@@ -2,13 +2,16 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '../../lib/cn';
 
-// 모바일에서 기기 기본 선택 화면을 쓰도록 네이티브 select 사용 (터치 영역 44px 이상)
+import { controlClass } from './input';
+
+// 오른쪽 화살표 (회색이라 밝은·어두운 화면 모두에서 보임)
+const CHEVRON =
+  "bg-[url(\"data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='20' height='20' viewBox='0 0 24 24' fill='none' stroke='%238b95a1' stroke-width='2.2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E\")] bg-[length:1.25rem] bg-[right_0.75rem_center] bg-no-repeat";
+
+// 기기 기본 선택 화면(모바일에서 가장 쓰기 쉬움)을 쓰되 모양만 통일한 선택 칸. 항목이 많아 검색이 필요하면 Combobox
 export const Select = ({ className, ...props }: ComponentProps<'select'>) => (
   <select
-    className={cn(
-      'min-h-touch w-full rounded-md border border-border bg-surface placeholder:text-foreground/70 hover:border-border-strong transition-colors duration-(--duration-fast) px-3 text-base focus-visible:border-primary focus-visible:outline-2 focus-visible:outline-offset-0 focus-visible:outline-primary/40 disabled:opacity-50 aria-[invalid=true]:border-danger',
-      className,
-    )}
+    className={cn(controlClass, 'min-h-11 appearance-none pr-10 md:min-h-10', CHEVRON, className)}
     {...props}
   />
 );

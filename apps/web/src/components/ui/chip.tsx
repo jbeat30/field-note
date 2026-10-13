@@ -12,10 +12,10 @@ export const Chip = ({
     type="button"
     aria-pressed={selected}
     className={cn(
-      'inline-flex min-h-touch items-center rounded-full border px-4 text-sm font-medium transition-colors duration-(--duration-fast) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary',
+      'inline-flex min-h-11 items-center rounded-full border px-4 text-sm font-semibold transition-colors duration-(--duration-fast) focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary md:min-h-9',
       selected
-        ? 'border-primary bg-primary-subtle text-primary'
-        : 'border-border bg-surface text-foreground hover:bg-muted',
+        ? 'border-primary bg-primary text-primary-foreground shadow-xs'
+        : 'border-control-border bg-surface text-foreground/80 hover:border-control-border-hover hover:bg-muted',
       className,
     )}
     {...props}
