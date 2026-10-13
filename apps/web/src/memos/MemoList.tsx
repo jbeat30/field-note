@@ -1,6 +1,7 @@
 import { MEMO_TAGS, MEMO_TAG_LABELS, type Memo, type MemoTag } from '@field-note/shared';
 import { useState } from 'react';
 
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
 import { formatDay } from '../lib/dates';
@@ -55,9 +56,9 @@ const MemoItem = ({
           />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="w-fit rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
+          <Badge className="w-fit" tone={memo.tag === 'TODO' ? 'primary' : 'neutral'}>
             {MEMO_TAG_LABELS[memo.tag]}
-          </span>
+          </Badge>
           {isEditing ? (
             <div className="flex flex-col gap-2">
               <textarea
