@@ -75,6 +75,13 @@
   --warning: #9a5b00;
   --warning-subtle: #fff4e0;
   --overlay: rgb(25 31 40 / 0.5);
+  /* 프로젝트 구분 색 (인력 배치 표·범례) */
+  --proj-0: #2563eb;
+  --proj-1: #0d9488;
+  --proj-2: #d97706;
+  --proj-3: #9333ea;
+  --proj-4: #db2777;
+  --proj-5: #65a30d;
 }
 
 /* 인쇄는 항상 밝은 색 */
@@ -100,6 +107,12 @@
     --warning: #fbbf4a;
     --warning-subtle: #33270d;
     --overlay: rgb(0 0 0 / 0.65);
+    --proj-0: #60a5fa;
+    --proj-1: #2dd4bf;
+    --proj-2: #fbbf24;
+    --proj-3: #c084fc;
+    --proj-4: #f472b6;
+    --proj-5: #a3e635;
   }
 }
 
