@@ -51,7 +51,7 @@ export const StaffingGrid = ({ rows, dates }: { rows: StaffingRow[]; dates: stri
             >
               <Link
                 to={`/employees/${row.employee.id}`}
-                className="underline-offset-2 hover:underline"
+                className="inline-flex min-h-touch items-center underline-offset-2 hover:underline"
               >
                 {row.employee.name}
               </Link>
