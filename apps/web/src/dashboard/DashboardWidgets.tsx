@@ -289,7 +289,7 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
             {todos.unclosedMonth ? (
               <Link
                 to={`/monthly-hours?month=${todos.unclosedMonth}`}
-                className="min-h-touch content-center text-primary underline"
+                className="flex min-h-touch items-center text-primary underline"
               >
                 {todos.unclosedMonth} 월 공수 확정 전
               </Link>
