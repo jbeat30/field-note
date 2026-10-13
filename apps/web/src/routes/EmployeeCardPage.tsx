@@ -6,11 +6,14 @@ import {
 } from '@field-note/shared';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
+import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
@@ -157,161 +160,191 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <BackLink to="/employees">직원 목록</BackLink>
-        <h1 className="flex items-center gap-2 text-2xl font-bold">
-          {employee.name}
-          <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
-            {EMPLOYEE_STATUS_LABELS[employee.status]}
-          </span>
-        </h1>
+        <PageHeader
+          title={employee.name}
+          eyebrow={
+            <Badge tone={employee.status === 'ACTIVE' ? 'success' : 'neutral'}>
+              {EMPLOYEE_STATUS_LABELS[employee.status]}
+            </Badge>
+          }
+        />
       </div>
 
-      <EmployeeWorkHistoryPanel employeeId={employee.id} />
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <div className="flex flex-col gap-5">
+          <Panel>
+            <EmployeeWorkHistoryPanel employeeId={employee.id} />
+          </Panel>
+          <Panel>
+            <EmployeeCredentialsPanel employeeId={employee.id} />
+          </Panel>
+          <Panel>
+            <EmployeePayPanel employeeId={employee.id} />
+          </Panel>
+        </div>
 
-      <EmployeeCredentialsPanel employeeId={employee.id} />
+        <div className="flex flex-col gap-5">
+          <Panel>
+            {saved && <Alert variant="info">{saved}</Alert>}
+            {errors.root && <Alert>{errors.root.message}</Alert>}
 
-      <EmployeePayPanel employeeId={employee.id} />
-
-      {saved && <Alert variant="info">{saved}</Alert>}
-      {errors.root && <Alert>{errors.root.message}</Alert>}
-
-      <form className="flex flex-col gap-4" onSubmit={save} noValidate>
-        <FormField label="이름" error={errors.name?.message}>
-          <Input {...register('name')} />
-        </FormField>
-        <FormField
-          label="직책"
-          hint="표시용입니다 (예: 반장, 기공, 조공)"
-          error={errors.title?.message}
-        >
-          <Input {...register('title')} />
-        </FormField>
-        <FormField label="직종" error={errors.jobTypeId?.message}>
-          <OptionSelect
-            kind="JOB_TYPE"
-            options={options.data ?? []}
-            keepId={employee.jobTypeId}
-            {...register('jobTypeId')}
-          />
-        </FormField>
-        <FormField
-          label="직원 구분"
-          hint="목록과 필터에 쓰는 표시입니다 (공수 계산에는 쓰지 않습니다)"
-          error={errors.workerTypeId?.message}
-        >
-          <OptionSelect
-            kind="WORKER_TYPE"
-            options={options.data ?? []}
-            keepId={employee.workerTypeId}
-            {...register('workerTypeId')}
-          />
-        </FormField>
-        <FormField label="입사일" error={errors.hiredOn?.message}>
-          <DateInput {...register('hiredOn')} />
-        </FormField>
-        {employee.status === 'LEFT' && (
-          <FormField label="퇴사일" error={errors.leftOn?.message}>
-            <DateInput {...register('leftOn')} />
-          </FormField>
-        )}
-        <FormField label="생년월일" error={errors.birthDate?.message}>
-          <DateInput {...register('birthDate')} />
-        </FormField>
-        <FormField label="연락처" error={errors.phone?.message}>
-          <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
-        </FormField>
-        <FormField
-          label="메모"
-          hint={`관리자만 보는 메모입니다 (${EMPLOYEE_MEMO_MAX_LENGTH}자까지)`}
-          error={errors.memo?.message}
-        >
-          <Textarea {...register('memo')} />
-        </FormField>
-        <p className="text-sm text-foreground/70">
-          주민등록번호·계좌번호는 저장하지 않습니다. 급여는 아래 단가만 기록합니다
-        </p>
-        <Button type="submit" disabled={!isDirty || update.isPending}>
-          {update.isPending ? '저장 중' : '저장'}
-        </Button>
-      </form>
-
-      <section className="flex flex-col gap-3" aria-labelledby="status-heading">
-        <h2 id="status-heading" className="text-lg font-bold">
-          재직 상태
-        </h2>
-        {employee.status === 'LEFT' ? (
-          <>
-            <p className="text-sm text-foreground/70">
-              퇴사한 직원은 새 투입·일지 입력에서 빠지고, 과거 기록은 그대로 남습니다. 재입사하면
-              같은 카드를 다시 재직으로 바꿉니다
-            </p>
-            <Button
-              variant="secondary"
-              disabled={update.isPending}
-              onClick={() => changeStatus('ACTIVE')}
-            >
-              재입사 (재직으로 변경)
-            </Button>
-          </>
-        ) : (
-          <>
-            {employee.status === 'ON_LEAVE' && (
-              <Button
-                variant="secondary"
-                disabled={update.isPending}
-                onClick={() => changeStatus('ACTIVE')}
+            <h2 className="mb-4 text-lg font-bold">기본정보</h2>
+            <form className="grid gap-4 md:grid-cols-2" onSubmit={save} noValidate>
+              <FormField label="이름" error={errors.name?.message}>
+                <Input {...register('name')} />
+              </FormField>
+              <FormField
+                label="직책"
+                hint="표시용입니다 (예: 반장, 기공, 조공)"
+                error={errors.title?.message}
               >
-                복직 (재직으로 변경)
+                <Input {...register('title')} />
+              </FormField>
+              <FormField label="직종" error={errors.jobTypeId?.message}>
+                <OptionSelect
+                  kind="JOB_TYPE"
+                  options={options.data ?? []}
+                  keepId={employee.jobTypeId}
+                  {...register('jobTypeId')}
+                />
+              </FormField>
+              <FormField
+                label="직원 구분"
+                hint="목록과 필터에 쓰는 표시입니다 (공수 계산에는 쓰지 않습니다)"
+                error={errors.workerTypeId?.message}
+              >
+                <OptionSelect
+                  kind="WORKER_TYPE"
+                  options={options.data ?? []}
+                  keepId={employee.workerTypeId}
+                  {...register('workerTypeId')}
+                />
+              </FormField>
+              <FormField label="입사일" error={errors.hiredOn?.message}>
+                <DateInput {...register('hiredOn')} />
+              </FormField>
+              {employee.status === 'LEFT' && (
+                <FormField label="퇴사일" error={errors.leftOn?.message}>
+                  <DateInput {...register('leftOn')} />
+                </FormField>
+              )}
+              <FormField label="생년월일" error={errors.birthDate?.message}>
+                <DateInput {...register('birthDate')} />
+              </FormField>
+              <FormField label="연락처" error={errors.phone?.message}>
+                <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
+              </FormField>
+              <FormField
+                className="md:col-span-2"
+                label="메모"
+                hint={`관리자만 보는 메모입니다 (${EMPLOYEE_MEMO_MAX_LENGTH}자까지)`}
+                error={errors.memo?.message}
+              >
+                <Textarea {...register('memo')} />
+              </FormField>
+              <p className="text-sm text-foreground/70 md:col-span-2">
+                주민등록번호·계좌번호는 저장하지 않습니다. 급여는 단가만 기록합니다
+              </p>
+              <Button
+                type="submit"
+                className="md:col-span-2 md:justify-self-start md:px-10"
+                disabled={!isDirty || update.isPending}
+              >
+                {update.isPending ? '저장 중' : '저장'}
               </Button>
-            )}
-            {employee.status === 'ACTIVE' && pending !== 'ON_LEAVE' && (
-              <Button variant="secondary" onClick={() => setPending('ON_LEAVE')}>
-                휴직 처리
-              </Button>
-            )}
-            {pending === 'ON_LEAVE' && (
-              <div className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
-                <p className="text-sm">{employee.name}님을 휴직으로 바꿀까요?</p>
-                <div className="flex gap-2">
-                  <Button disabled={update.isPending} onClick={() => changeStatus('ON_LEAVE')}>
-                    휴직 확인
-                  </Button>
-                  <Button variant="secondary" onClick={() => setPending(null)}>
-                    취소
-                  </Button>
-                </div>
-              </div>
-            )}
-            {pending !== 'LEFT' && (
-              <Button variant="secondary" onClick={() => setPending('LEFT')}>
-                퇴사 처리
-              </Button>
-            )}
-            {pending === 'LEFT' && (
-              <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
-                <p className="text-sm">
-                  {employee.name}님을 퇴사 처리할까요? 퇴사일은 오늘로 기록되고 새 투입에서
-                  빠집니다. 과거 기록은 그대로 남습니다
-                </p>
-                <div className="flex gap-2">
+            </form>
+          </Panel>
+
+          <Panel>
+            <section className="flex flex-col gap-3" aria-labelledby="status-heading">
+              <h2 id="status-heading" className="text-lg font-bold">
+                재직 상태
+              </h2>
+              {employee.status === 'LEFT' ? (
+                <>
+                  <p className="text-sm text-foreground/70">
+                    퇴사한 직원은 새 투입·일지 입력에서 빠지고, 과거 기록은 그대로 남습니다.
+                    재입사하면 같은 카드를 다시 재직으로 바꿉니다
+                  </p>
                   <Button
-                    variant="danger"
+                    variant="secondary"
                     disabled={update.isPending}
-                    onClick={() => changeStatus('LEFT')}
+                    onClick={() => changeStatus('ACTIVE')}
                   >
-                    퇴사 확인
+                    재입사 (재직으로 변경)
                   </Button>
-                  <Button variant="secondary" onClick={() => setPending(null)}>
-                    취소
-                  </Button>
-                </div>
-              </div>
-            )}
-          </>
-        )}
-      </section>
+                </>
+              ) : (
+                <>
+                  {employee.status === 'ON_LEAVE' && (
+                    <Button
+                      variant="secondary"
+                      disabled={update.isPending}
+                      onClick={() => changeStatus('ACTIVE')}
+                    >
+                      복직 (재직으로 변경)
+                    </Button>
+                  )}
+                  {employee.status === 'ACTIVE' && pending !== 'ON_LEAVE' && (
+                    <Button variant="secondary" onClick={() => setPending('ON_LEAVE')}>
+                      휴직 처리
+                    </Button>
+                  )}
+                  {pending === 'ON_LEAVE' && (
+                    <div className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
+                      <p className="text-sm">{employee.name}님을 휴직으로 바꿀까요?</p>
+                      <div className="flex gap-2">
+                        <Button
+                          disabled={update.isPending}
+                          onClick={() => changeStatus('ON_LEAVE')}
+                        >
+                          휴직 확인
+                        </Button>
+                        <Button variant="secondary" onClick={() => setPending(null)}>
+                          취소
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {pending !== 'LEFT' && (
+                    <Button variant="secondary" onClick={() => setPending('LEFT')}>
+                      퇴사 처리
+                    </Button>
+                  )}
+                  {pending === 'LEFT' && (
+                    <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
+                      <p className="text-sm">
+                        {employee.name}님을 퇴사 처리할까요? 퇴사일은 오늘로 기록되고 새 투입에서
+                        빠집니다. 과거 기록은 그대로 남습니다
+                      </p>
+                      <div className="flex gap-2">
+                        <Button
+                          variant="danger"
+                          disabled={update.isPending}
+                          onClick={() => changeStatus('LEFT')}
+                        >
+                          퇴사 확인
+                        </Button>
+                        <Button variant="secondary" onClick={() => setPending(null)}>
+                          취소
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                </>
+              )}
+            </section>
+          </Panel>
+        </div>
+      </div>
     </div>
   );
 };
+
+// 패널 하나를 카드로 감쌈
+const Panel = ({ children }: { children: ReactNode }) => (
+  <div className="rounded-xl bg-surface-subtle p-5">{children}</div>
+);
 
 // 직원 카드: 기본정보(생년월일·연락처 포함), 재직 상태, 투입 이력, 서류·자격
 export const EmployeeCardPage = () => {
