@@ -7,11 +7,12 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { useAuditLogs, type AuditFilter } from '../audit/useAuditLogs';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 
 // 기록 시각을 서울 기준으로 보여 줌
@@ -80,9 +81,7 @@ export const AuditLogsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Link className="min-h-touch content-center text-sm text-primary underline" to="/settings">
-          ← 설정으로
-        </Link>
+        <BackLink to="/settings">설정으로</BackLink>
         <h1 className="text-2xl font-bold">기록 조회</h1>
         <p className="text-sm text-foreground/70">
           누가 언제 무엇을 열람·내보내기·확정했는지 남은 기록입니다. 수정하거나 지울 수 없습니다
@@ -105,10 +104,10 @@ export const AuditLogsPage = () => {
           </Select>
         </FormField>
         <FormField label="시작 날짜">
-          <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+          <DateInput value={from} onChange={(event) => setFrom(event.target.value)} />
         </FormField>
         <FormField label="끝 날짜" error={dateError}>
-          <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+          <DateInput value={to} onChange={(event) => setTo(event.target.value)} />
         </FormField>
       </form>
 

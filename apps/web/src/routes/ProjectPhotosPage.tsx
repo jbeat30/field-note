@@ -5,8 +5,9 @@ import {
   type PhotoCategory,
 } from '@field-note/shared';
 import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
@@ -59,12 +60,7 @@ export const ProjectPhotosPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link
-        className="min-h-touch content-center text-sm text-primary underline"
-        to={`/projects/${id}`}
-      >
-        ← {project.data.name}
-      </Link>
+      <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
       <h1 className="text-2xl font-bold">사진첩</h1>
       <PhotoUploader onSelect={(files, settings) => enqueueFiles(queue, id, files, settings)} />
       <UploadQueuePanel

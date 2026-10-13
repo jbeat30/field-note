@@ -18,6 +18,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { draftKey } from '../drafts/formDraft';
@@ -756,8 +757,7 @@ export const WorkLogEditor = ({
           같은 내용을 다른 날짜에도 저장
         </h3>
         <div className="flex gap-2">
-          <Input
-            type="date"
+          <DateInput
             aria-label="추가 날짜"
             max={today}
             value={extraInput}

@@ -2,6 +2,7 @@
 @import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
 @import '@fontsource-variable/space-grotesk';
 @import 'tailwindcss';
+@import 'react-day-picker/style.css';
 
 /* 다크 모드: html에 dark 클래스가 있을 때 (테마 설정 또는 기기 설정) */
 @custom-variant dark (&:where(.dark, .dark *));
@@ -113,6 +114,42 @@ body {
   transition:
     background-color var(--duration-base) var(--ease-smooth),
     color var(--duration-base) var(--ease-smooth);
+}
+
+/* 달력(react-day-picker)을 앱 색·글꼴에 맞춤 */
+.rdp-root {
+  --rdp-accent-color: var(--primary);
+  --rdp-accent-background-color: var(--primary-subtle);
+  --rdp-day-height: 40px;
+  --rdp-day-width: 40px;
+  --rdp-day_button-height: 38px;
+  --rdp-day_button-width: 38px;
+  --rdp-nav_button-height: 2.75rem;
+  --rdp-nav_button-width: 2.75rem;
+  font-size: 0.9375rem;
+}
+
+.rdp-selected .rdp-day_button {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: var(--primary-foreground);
+  font-weight: 700;
+}
+
+.rdp-today:not(.rdp-selected) {
+  color: var(--primary);
+  font-weight: 700;
+}
+
+.rdp-weekday {
+  color: color-mix(in srgb, var(--foreground) 70%, transparent);
+  font-weight: 600;
+}
+
+.rdp-button_previous:hover,
+.rdp-button_next:hover,
+.rdp-day_button:hover {
+  background: var(--muted);
 }
 
 /* 카드(bg-surface-subtle): 얇은 윤곽선을 두고, 카드 안의 카드는 한 단계 어두운 면, 그 안은 다시 카드색으로 */

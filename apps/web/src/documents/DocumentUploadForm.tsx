@@ -12,6 +12,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { getErrorDetailMessage } from '../lib/apiError';
 
@@ -155,8 +156,7 @@ export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) 
       )}
       <div className="grid grid-cols-2 gap-3">
         <FormField label="개정일">
-          <Input
-            type="date"
+          <DateInput
             max={today}
             value={revisionDate}
             disabled={isBusy}

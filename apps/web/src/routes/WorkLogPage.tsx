@@ -10,7 +10,7 @@ import { Link, useSearchParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { useEmployees } from '../employees/useEmployees';
 import { addDays, formatDay } from '../lib/dates';
@@ -117,8 +117,7 @@ export const WorkLogPage = () => {
           >
             ◀
           </Button>
-          <Input
-            type="date"
+          <DateInput
             aria-label="작업일"
             max={today}
             value={date}

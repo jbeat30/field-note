@@ -14,6 +14,7 @@ import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { PageHeader } from '../components/ui/page-header';
 import { Select } from '../components/ui/select';
 import { useEmployees } from '../employees/useEmployees';
@@ -128,16 +129,14 @@ export const ProjectListPage = () => {
         <div className="grid grid-cols-2 gap-2 lg:max-w-xl">
           <label className="flex flex-col gap-1 text-sm">
             기간 시작
-            <Input
-              type="date"
+            <DateInput
               value={filter.from ?? ''}
               onChange={(event) => update({ from: event.target.value || undefined })}
             />
           </label>
           <label className="flex flex-col gap-1 text-sm">
             기간 끝
-            <Input
-              type="date"
+            <DateInput
               value={filter.to ?? ''}
               onChange={(event) => update({ to: event.target.value || undefined })}
             />

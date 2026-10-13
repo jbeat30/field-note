@@ -8,10 +8,12 @@ import { useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { Link, useParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 import { EmployeeCredentialsPanel } from '../credentials/EmployeeCredentialsPanel';
@@ -154,9 +156,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Link className="min-h-touch content-center text-sm text-primary underline" to="/employees">
-          ← 직원 목록
-        </Link>
+        <BackLink to="/employees">직원 목록</BackLink>
         <h1 className="flex items-center gap-2 text-2xl font-bold">
           {employee.name}
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
@@ -206,15 +206,15 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
           />
         </FormField>
         <FormField label="입사일" error={errors.hiredOn?.message}>
-          <Input type="date" {...register('hiredOn')} />
+          <DateInput {...register('hiredOn')} />
         </FormField>
         {employee.status === 'LEFT' && (
           <FormField label="퇴사일" error={errors.leftOn?.message}>
-            <Input type="date" {...register('leftOn')} />
+            <DateInput {...register('leftOn')} />
           </FormField>
         )}
         <FormField label="생년월일" error={errors.birthDate?.message}>
-          <Input type="date" {...register('birthDate')} />
+          <DateInput {...register('birthDate')} />
         </FormField>
         <FormField label="연락처" error={errors.phone?.message}>
           <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />

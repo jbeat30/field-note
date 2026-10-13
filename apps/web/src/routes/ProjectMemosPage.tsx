@@ -1,7 +1,8 @@
 import { MEMO_TAGS, MEMO_TAG_LABELS, type MemoTag } from '@field-note/shared';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
@@ -37,12 +38,7 @@ export const ProjectMemosPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link
-        className="min-h-touch content-center text-sm text-primary underline"
-        to={`/projects/${id}`}
-      >
-        ← {project.data.name}
-      </Link>
+      <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
       <h1 className="text-2xl font-bold">메모 노트</h1>
       <MemoForm
         draftKey={memoDraftKey(id)}

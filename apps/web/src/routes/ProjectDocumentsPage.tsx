@@ -1,7 +1,8 @@
 import { DOCUMENT_CATEGORIES, DOCUMENT_CATEGORY_LABELS } from '@field-note/shared';
 import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
@@ -50,12 +51,7 @@ export const ProjectDocumentsPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link
-        className="min-h-touch content-center text-sm text-primary underline"
-        to={`/projects/${id}`}
-      >
-        ← {project.data.name}
-      </Link>
+      <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
       <h1 className="text-2xl font-bold">문서함</h1>
       <section
         className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"

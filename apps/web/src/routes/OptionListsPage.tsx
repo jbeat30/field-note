@@ -1,6 +1,6 @@
 import { OPTION_KINDS } from '@field-note/shared';
-import { Link } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { OptionListSection } from '../settings/OptionListSection';
 import { useOptions } from '../settings/useOptions';
@@ -12,9 +12,7 @@ export const OptionListsPage = () => {
   return (
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
-        <Link className="min-h-touch content-center text-sm text-primary underline" to="/settings">
-          ← 설정으로
-        </Link>
+        <BackLink to="/settings">설정으로</BackLink>
         <h1 className="text-2xl font-bold">목록 관리</h1>
         <p className="text-sm text-foreground/70">
           입력할 때 고르는 목록을 회사에 맞게 바꿉니다. 쓰지 않는 항목은 삭제하지 않고 숨기며,
