@@ -2,6 +2,7 @@ import { APP_NAME } from '@field-note/shared';
 import { BookUser, ClipboardList, FolderKanban, House, Plus, Settings, Users } from 'lucide-react';
 import { NavLink, Outlet } from 'react-router';
 
+import { useMe } from '../auth/useMe';
 import { Button } from '../components/ui/button';
 import { Toaster } from '../components/ui/toaster';
 import { cn } from '../lib/cn';
@@ -22,6 +23,7 @@ const NAV_ITEMS = [
 // 모든 화면 공통 틀: 넓은 화면은 왼쪽 고정 메뉴(관리 화면 방식), 좁은 화면은 상단 헤더 + 하단 탭 메뉴. 빠른 추가 버튼(터치 영역 44px 이상)
 export const AppLayout = () => {
   const setQuickAddOpen = useUiStore((state) => state.setQuickAddOpen);
+  const me = useMe();
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
@@ -45,7 +47,19 @@ export const AppLayout = () => {
             </NavLink>
           ))}
         </nav>
-        <ThemeToggle />
+        <div className="flex items-center gap-3 border-t border-line pt-4">
+          <span
+            aria-hidden
+            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-subtle font-bold text-primary"
+          >
+            {me.data?.displayName.slice(0, 1)}
+          </span>
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{me.data?.displayName}</p>
+            <p className="truncate text-xs text-foreground/70">{me.data?.companyName}</p>
+          </div>
+          <ThemeToggle />
+        </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-surface/90 px-4 backdrop-blur md:hidden print:hidden">
