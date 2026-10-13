@@ -1,7 +1,10 @@
 import { useId, type ReactElement, cloneElement } from 'react';
 
+import { cn } from '../../lib/cn';
+
 type FormFieldProps = {
   label: string;
+  className?: string;
   error?: string;
   hint?: string;
   // id·aria 속성을 주입받는 입력 요소 한 개
@@ -9,13 +12,13 @@ type FormFieldProps = {
 };
 
 // 라벨·도움말·오류 문구를 입력과 연결 (접근성)
-export const FormField = ({ label, error, hint, children }: FormFieldProps) => {
+export const FormField = ({ label, className, error, hint, children }: FormFieldProps) => {
   const id = useId();
   const descriptionId = `${id}-description`;
   const message = error ?? hint;
 
   return (
-    <div className="flex flex-col gap-1.5">
+    <div className={cn('flex flex-col gap-1.5', className)}>
       <label htmlFor={id} className="text-sm font-medium">
         {label}
       </label>

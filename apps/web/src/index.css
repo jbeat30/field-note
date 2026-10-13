@@ -18,6 +18,9 @@
   --color-primary-subtle: var(--primary-subtle);
   --color-surface: var(--surface);
   --color-surface-subtle: var(--surface-subtle);
+  --color-canvas: var(--canvas);
+  --color-surface-nested: var(--surface-nested);
+  --color-line: var(--line);
   --color-muted: var(--muted);
   --color-foreground: var(--foreground);
   --color-border: var(--border);
@@ -54,8 +57,12 @@
   --primary: #005ce6;
   --primary-foreground: #ffffff;
   --primary-subtle: #e8f0ff;
+  /* 화면 바탕(canvas) 위에 카드(surface-subtle)를 올리는 구조. 입력 칸은 surface */
+  --canvas: #f2f4f6;
   --surface: #ffffff;
-  --surface-subtle: #f7f8fa;
+  --surface-subtle: #ffffff;
+  --surface-nested: #f7f8fa;
+  --line: #e5e8eb;
   --muted: #f2f4f6;
   --foreground: #191f28;
   --border: #d1d6db;
@@ -76,8 +83,11 @@
     --primary: #5c95ff;
     --primary-foreground: #0a1224;
     --primary-subtle: #0d1f40;
+    --canvas: #0c0c0d;
     --surface: #111111;
     --surface-subtle: #1a1a1a;
+    --surface-nested: #232323;
+    --line: #2b2f36;
     --muted: #222222;
     --foreground: #f2f4f6;
     --border: #3d434e;
@@ -94,7 +104,7 @@
 
 body {
   margin: 0;
-  background: var(--color-surface);
+  background: var(--canvas);
   color: var(--color-foreground);
   font-family: var(--font-sans);
   letter-spacing: -0.01em;
@@ -103,6 +113,21 @@ body {
   transition:
     background-color var(--duration-base) var(--ease-smooth),
     color var(--duration-base) var(--ease-smooth);
+}
+
+/* 카드(bg-surface-subtle): 얇은 윤곽선을 두고, 카드 안의 카드는 한 단계 어두운 면, 그 안은 다시 카드색으로 */
+.bg-surface-subtle {
+  box-shadow: 0 0 0 1px var(--line);
+}
+
+.bg-surface-subtle .bg-surface-subtle {
+  background-color: var(--surface-nested);
+  box-shadow: none;
+}
+
+.bg-surface-subtle .bg-surface-subtle .bg-surface-subtle {
+  background-color: var(--surface-subtle);
+  box-shadow: 0 0 0 1px var(--line);
 }
 
 /* 모션을 줄이도록 설정한 기기에서는 전환을 없앰 */
