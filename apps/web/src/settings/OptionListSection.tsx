@@ -9,6 +9,7 @@ import { useState, type FormEvent } from 'react';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { SortableItem, SortableList } from '../components/ui/sortable-list';
 import { getErrorDetailMessage } from '../lib/apiError';
 
 import { useCreateOption, useReorderOptions, useUpdateOption } from './useOptions';
@@ -66,84 +67,98 @@ const OptionRow = ({
 
   if (isEditing) {
     return (
-      <li className="py-2">
-        <form className="flex flex-col gap-2" onSubmit={save} noValidate>
-          <label className="text-sm font-medium" htmlFor={`rename-${item.id}`}>
-            {item.name} 이름 변경
-          </label>
-          <Input
-            id={`rename-${item.id}`}
-            value={name}
-            onChange={(event) => setName(event.target.value)}
-            aria-invalid={nameError ? true : undefined}
-          />
-          {nameError && <p className="text-sm text-danger">{nameError}</p>}
-          <div className="flex gap-2">
-            <Button type="submit" disabled={update.isPending}>
-              저장
-            </Button>
-            <Button
-              type="button"
-              variant="secondary"
-              onClick={() => {
-                setEditing(false);
-                setName(item.name);
-                setNameError('');
-              }}
-            >
-              취소
-            </Button>
-          </div>
-        </form>
-      </li>
+      <SortableItem id={item.id} label={item.name} className="py-2" disabled>
+        {() => (
+          <form className="flex flex-col gap-2" onSubmit={save} noValidate>
+            <label className="text-sm font-medium" htmlFor={`rename-${item.id}`}>
+              {item.name} 이름 변경
+            </label>
+            <Input
+              id={`rename-${item.id}`}
+              value={name}
+              onChange={(event) => setName(event.target.value)}
+              aria-invalid={nameError ? true : undefined}
+            />
+            {nameError && <p className="text-sm text-danger">{nameError}</p>}
+            <div className="flex gap-2">
+              <Button type="submit" disabled={update.isPending}>
+                저장
+              </Button>
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => {
+                  setEditing(false);
+                  setName(item.name);
+                  setNameError('');
+                }}
+              >
+                취소
+              </Button>
+            </div>
+          </form>
+        )}
+      </SortableItem>
     );
   }
 
   return (
-    <li className="flex flex-wrap items-center justify-between gap-2 py-2">
-      <span className={item.isActive ? 'font-medium' : 'text-foreground/70 line-through'}>
-        {item.name}
-        {!item.isActive && <span className="ml-2 text-sm no-underline">(숨김)</span>}
-      </span>
-      <div className="flex flex-wrap gap-1">
-        <Button
-          variant="secondary"
-          aria-label={`${item.name} 위로`}
-          disabled={isBusy || index === 0}
-          onClick={() => onMove(index, index - 1)}
-        >
-          ↑
-        </Button>
-        <Button
-          variant="secondary"
-          aria-label={`${item.name} 아래로`}
-          disabled={isBusy || index === count - 1}
-          onClick={() => onMove(index, index + 1)}
-        >
-          ↓
-        </Button>
-        <Button
-          variant="secondary"
-          aria-label={`${item.name} 이름 변경`}
-          onClick={() => setEditing(true)}
-        >
-          이름 변경
-        </Button>
-        <Button
-          variant="secondary"
-          aria-label={`${item.name} ${item.isActive ? '숨기기' : '다시 사용'}`}
-          disabled={update.isPending}
-          onClick={() =>
-            update.mutate(
-              { id: item.id, isActive: !item.isActive },
-              { onError: (error) => onError(getErrorDetailMessage(error)) },
-            )
-          }
-        >
-          {item.isActive ? '숨기기' : '다시 사용'}
-        </Button>
-      </div>
-    </li>
+    <SortableItem
+      id={item.id}
+      label={item.name}
+      disabled={isBusy}
+      className="flex flex-wrap items-center justify-between gap-2 py-2"
+    >
+      {(handle) => (
+        <>
+          <span className="flex items-center gap-1">
+            {handle}
+            <span className={item.isActive ? 'font-medium' : 'text-foreground/70 line-through'}>
+              {item.name}
+              {!item.isActive && <span className="ml-2 text-sm no-underline">(숨김)</span>}
+            </span>
+          </span>
+          <div className="flex flex-wrap gap-1">
+            <Button
+              variant="secondary"
+              aria-label={`${item.name} 위로`}
+              disabled={isBusy || index === 0}
+              onClick={() => onMove(index, index - 1)}
+            >
+              ↑
+            </Button>
+            <Button
+              variant="secondary"
+              aria-label={`${item.name} 아래로`}
+              disabled={isBusy || index === count - 1}
+              onClick={() => onMove(index, index + 1)}
+            >
+              ↓
+            </Button>
+            <Button
+              variant="secondary"
+              aria-label={`${item.name} 이름 변경`}
+              onClick={() => setEditing(true)}
+            >
+              이름 변경
+            </Button>
+            <Button
+              variant="secondary"
+              aria-label={`${item.name} ${item.isActive ? '숨기기' : '다시 사용'}`}
+              disabled={update.isPending}
+              onClick={() =>
+                update.mutate(
+                  { id: item.id, isActive: !item.isActive },
+                  { onError: (error) => onError(getErrorDetailMessage(error)) },
+                )
+              }
+            >
+              {item.isActive ? '숨기기' : '다시 사용'}
+            </Button>
+          </div>
+        </>
+      )}
+    </SortableItem>
   );
 };
 
@@ -193,7 +208,19 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
         <p className="text-sm text-foreground/70">{KIND_HINTS[kind]}</p>
       </div>
       {message && <Alert>{message}</Alert>}
-      <ul className="divide-y divide-border">
+      <SortableList
+        ids={items.map((item) => item.id)}
+        getLabel={(id) => items.find((item) => item.id === id)?.name ?? ''}
+        disabled={reorder.isPending}
+        onReorder={(ids) => {
+          setMessage('');
+          reorder.mutate(
+            { kind, ids },
+            { onError: (error) => setMessage(getErrorDetailMessage(error)) },
+          );
+        }}
+        className="divide-y divide-border"
+      >
         {items.map((item, index) => (
           <OptionRow
             key={item.id}
@@ -205,7 +232,7 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
             onError={setMessage}
           />
         ))}
-      </ul>
+      </SortableList>
       <form className="flex gap-2" onSubmit={add} noValidate>
         <Input
           aria-label={`${label} 추가`}
