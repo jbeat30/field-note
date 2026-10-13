@@ -6,6 +6,7 @@ import {
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -44,7 +45,7 @@ export const ProjectMaterialsPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
-      <h1 className="text-2xl font-bold">자재 현황</h1>
+      <PageHeader title="자재 현황" description="자재 반입·사용 잔량과 기록입니다" />
       <Link
         className="min-h-touch content-center text-primary underline"
         to={`/work-logs?project=${id}`}

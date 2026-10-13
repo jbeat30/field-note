@@ -12,7 +12,7 @@ import { Input } from './input';
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
 // 'YYYY-MM-DD' → 로컬 날짜 (시간대 때문에 하루 어긋나지 않게 직접 쪼갬)
-const parseDay = (value: string): Date | undefined => {
+export const parseDay = (value: string): Date | undefined => {
   if (!ISO_DAY.test(value)) return undefined;
 
   const [year, month, day] = value.split('-').map(Number) as [number, number, number];
@@ -21,7 +21,7 @@ const parseDay = (value: string): Date | undefined => {
   return date.getMonth() === month - 1 ? date : undefined;
 };
 
-const formatDay = (date: Date) =>
+export const formatDay = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
 // 날짜 입력: 직접 쓰거나(YYYY-MM-DD) 달력에서 고른다. 값 형식과 onChange는 기존 날짜 입력과 같아

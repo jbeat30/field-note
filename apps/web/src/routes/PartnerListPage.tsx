@@ -7,6 +7,7 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
@@ -24,7 +25,7 @@ export const PartnerListPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">명부</h1>
+      <PageHeader title="명부" description="고객·협력업체 연락처를 관리합니다" />
       <p className="-mt-4 text-sm text-foreground/70">
         고객, 협력업체, 자재 공급처를 관리합니다. 금액과 거래 내역은 다루지 않습니다
       </p>

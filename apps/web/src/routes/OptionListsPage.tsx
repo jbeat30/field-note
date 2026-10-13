@@ -1,5 +1,6 @@
 import { OPTION_KINDS } from '@field-note/shared';
 
+import { PageHeader } from '../components/ui/page-header';
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { OptionListSection } from '../settings/OptionListSection';
@@ -13,7 +14,7 @@ export const OptionListsPage = () => {
     <div className="flex flex-col gap-8">
       <div className="flex flex-col gap-2">
         <BackLink to="/settings">설정으로</BackLink>
-        <h1 className="text-2xl font-bold">목록 관리</h1>
+        <PageHeader title="목록 관리" description="입력할 때 고르는 목록을 회사에 맞게 바꿉니다" />
         <p className="text-sm text-foreground/70">
           입력할 때 고르는 목록을 회사에 맞게 바꿉니다. 쓰지 않는 항목은 삭제하지 않고 숨기며,
           숨겨도 이미 기록된 이름은 그대로 남습니다

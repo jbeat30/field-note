@@ -7,6 +7,7 @@ import {
 import { useMemo, useState } from 'react';
 import { useParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -61,7 +62,7 @@ export const ProjectPhotosPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
-      <h1 className="text-2xl font-bold">사진첩</h1>
+      <PageHeader title="사진첩" description="현장 사진을 구분·구역별로 올리고 비교합니다" />
       <PhotoUploader onSelect={(files, settings) => enqueueFiles(queue, id, files, settings)} />
       <UploadQueuePanel
         items={queueItems}

@@ -3,6 +3,7 @@ import { Dialog } from 'radix-ui';
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -71,7 +72,7 @@ export const DailyReportPage = () => {
             aria-label="전날"
             onClick={() => setDate(addDays(date, -1))}
           >
-            ◀
+            <ChevronLeft aria-hidden className="size-5" />
           </Button>
           <DateInput
             aria-label="일보 날짜"
@@ -84,7 +85,7 @@ export const DailyReportPage = () => {
             aria-label="다음 날"
             onClick={() => setDate(addDays(date, 1))}
           >
-            ▶
+            <ChevronRight aria-hidden className="size-5" />
           </Button>
         </div>
         <Button type="button" disabled={!report.data} onClick={() => void printWhenReady()}>
