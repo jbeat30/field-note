@@ -2,8 +2,8 @@ import { expect, test } from '@playwright/test';
 
 import { login, photoFile, seoulDate, selectByText, uniqueName } from './helpers';
 
-// 핵심 흐름(기술 기획서 §13): 로그인 → 프로젝트 → 투입 → 일지 일괄 입력(공수·자재) → 사진 업로드 → 저장 → 작업일보
-test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어진다', async ({ page }) => {
+// 핵심 흐름(기술 기획서 §13): 로그인 → 프로젝트 → 투입 → 작업 내역 일괄 입력(공수·자재) → 사진 업로드 → 저장 → 작업일보
+test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 이어진다', async ({ page }) => {
   const projectName = uniqueName('E2E 판금 공사');
   // 자재 이름은 회사 안에서 겹칠 수 없으므로 시험마다 다르게 (같은 DB로 다시 돌려도 되게)
   const materialName = uniqueName('E2E 강판');
@@ -26,7 +26,9 @@ test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어�
 
   const projectId = page.url().split('/projects/')[1]!;
 
-  await test.step('작업 시작으로 바꾸면 일지를 쓸 수 있게 된다', async () => {
+  await test.step('작업 시작으로 바꾸면 작업 내역을 쓸 수 있게 된다', async () => {
+    // 프로젝트 상태는 "현황" 메뉴에서 바꾼다
+    await page.getByRole('link', { name: '현황', exact: true }).click();
     await page.getByRole('button', { name: '작업 시작' }).click();
     await page.getByLabel('실제 시작일').fill(seoulDate(-7));
     await page.getByRole('button', { name: '확인', exact: true }).click();
@@ -36,6 +38,8 @@ test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어�
   });
 
   await test.step('직원 두 명을 투입', async () => {
+    // 프로젝트 작업 공간의 "배정 인원" 메뉴
+    await page.getByRole('link', { name: '배정 인원' }).click();
     for (const name of ['정판금', '최설치']) {
       const form = page.getByRole('form', { name: '투입 등록' });
 
@@ -47,8 +51,8 @@ test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어�
     }
   });
 
-  await test.step('일지 일괄 입력: 투입 직원이 채워지고 작업 구분·공수·내용을 한 번에 정해 저장', async () => {
-    await page.goto(`/work-logs?project=${projectId}&date=${today}`);
+  await test.step('작업 내역 일괄 입력: 투입 직원이 채워지고 작업 구분·공수·내용을 한 번에 정해 저장', async () => {
+    await page.goto(`/projects/${projectId}/work/${today}`);
     await expect(page.getByRole('checkbox', { name: '정판금 출근' })).toBeChecked();
     await expect(page.getByRole('checkbox', { name: '최설치 출근' })).toBeChecked();
 
@@ -89,7 +93,7 @@ test('로그인부터 일지 저장·작업일보까지 핵심 흐름이 이어�
     });
   });
 
-  await test.step('작업일보에 일지·공수·자재·사진이 모인다', async () => {
+  await test.step('작업일보에 작업 내역·공수·자재·사진이 모인다', async () => {
     await page.goto(`/projects/${projectId}/daily-report?date=${today}`);
 
     const report = page.getByRole('article', { name: '작업일보' });

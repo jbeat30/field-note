@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { login, photoFile, seoulDate, uniqueName } from './helpers';
 
-// 하루 일지 입력 3분 목표(서비스 기획서 §14, P2-9): 직원 공수 → 작업 내용 → 자재 → 사진을 모바일 크기에서 끝내는 데 걸리는 시간을 잰다.
+// 하루 작업 내역 입력 3분 목표(서비스 기획서 §14, P2-9): 직원 공수 → 작업 내용 → 자재 → 사진을 모바일 크기에서 끝내는 데 걸리는 시간을 잰다.
 // 사람이 아니라 스크립트가 하므로 사람의 속도를 흉내 낸다: 화면을 누르거나 고르기 전 0.8초 생각하고, 글자는 한 자에 0.2초(분당 300자)로 치고,
 // 휴대폰의 사진 고르기 창에 걸리는 시간을 5초로 본다. 실제 사람의 시간은 실사용 시험에서 다시 잰다.
 const GOAL_SECONDS = 180;
@@ -84,28 +84,35 @@ const prepare = async (page: Page) => {
   return { projectId: project.id as string, materialName: material.name as string };
 };
 
-test('하루 일지(공수·내용·자재·사진)를 모바일 화면에서 3분 안에 입력한다', async ({ page }) => {
+test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면에서 3분 안에 입력한다', async ({
+  page,
+}) => {
   await login(page);
 
   const { projectId, materialName } = await prepare(page);
   const watch: Stopwatch = { taps: 0, typedChars: 0 };
   const user = createUser(page, watch);
 
-  // 프로젝트 화면에서 시작 (현장에서 일지를 쓰러 프로젝트를 연 상태)
+  // 프로젝트 화면에서 시작 (현장에서 작업 내역을 쓰러 프로젝트를 연 상태)
   await page.goto(`/projects/${projectId}`);
   await expect(page.getByRole('heading', { name: /E2E 측정 현장/ })).toBeVisible();
 
   const started = Date.now();
 
-  // 1) 빠른 추가 → 오늘 일지
+  // 1) 빠른 추가 → 오늘 작업
   await user.tap(() => page.getByRole('button', { name: '빠른 추가' }).click());
-  await user.tap(() => page.getByRole('link', { name: '오늘 일지' }).click());
+  await user.tap(() => page.getByRole('link', { name: '오늘 작업' }).click());
   await expect(page.getByRole('checkbox', { name: /출근/ }).first()).toBeChecked();
 
-  // 2) 직원 공수: 투입 직원이 채워져 있으니 작업 구분만 일괄 지정하고 한 명은 반일
+  // 2) 직원 일한 시간: 배정된 직원이 채워져 있으니 작업 구분만 일괄 지정하고 한 명은 반일
   await user.tap(() => page.getByLabel('작업 구분 일괄 지정').selectOption({ label: '설치' }));
   await user.tap(() => page.getByRole('button', { name: '모두 적용' }).click());
-  await user.tap(() => page.getByRole('button', { name: '반일' }).first().click());
+  await user.tap(() =>
+    page
+      .getByRole('button', { name: /^.*반일$/ })
+      .first()
+      .click(),
+  );
 
   // 3) 작업 내용
   await user.type(page.getByLabel('작업 내용'), WORK_NOTE);
@@ -136,7 +143,7 @@ test('하루 일지(공수·내용·자재·사진)를 모바일 화면에서 3�
   const photoStepMs = Date.now() - photoStarted;
 
   const seconds = (Date.now() - started) / 1000;
-  const summary = `하루 일지 입력 ${seconds.toFixed(1)}초 (목표 ${GOAL_SECONDS}초), 누르기·고르기 ${watch.taps}번, 글자 ${watch.typedChars}자, 사진 두 장 올리기 ${(photoStepMs / 1000).toFixed(1)}초(고르기 창 ${PHOTO_PICKER_MS / 1000}초 포함)`;
+  const summary = `하루 작업 내역 입력 ${seconds.toFixed(1)}초 (목표 ${GOAL_SECONDS}초), 누르기·고르기 ${watch.taps}번, 글자 ${watch.typedChars}자, 사진 두 장 올리기 ${(photoStepMs / 1000).toFixed(1)}초(고르기 창 ${PHOTO_PICKER_MS / 1000}초 포함)`;
 
   console.log(`[실측] ${summary}`);
   await test.info().attach('timing', { body: summary });
