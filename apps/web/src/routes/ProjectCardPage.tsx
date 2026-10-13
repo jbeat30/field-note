@@ -1,7 +1,11 @@
 import { PROJECT_STATUS_LABELS } from '@field-note/shared';
+import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import { PinnedDocuments } from '../documents/PinnedDocuments';
 import { RequiredCredentialsPanel } from '../credentials/RequiredCredentialsPanel';
 import { ProjectAssignmentsPanel } from '../projects/ProjectAssignmentsPanel';
@@ -40,118 +44,114 @@ export const ProjectCardPage = () => {
     );
   }
 
+  const { data } = project;
+  const links: { to: string; label: string; show?: boolean }[] = [
+    { to: `/projects/${data.id}/photos`, label: '사진첩' },
+    { to: `/projects/${data.id}/memos`, label: '메모 노트' },
+    { to: `/projects/${data.id}/materials`, label: '자재 현황' },
+    { to: `/projects/${data.id}/documents`, label: '문서함' },
+    { to: `/projects/${data.id}/daily-report`, label: '작업일보 출력' },
+    { to: `/projects/${data.id}/change-works`, label: '변경·추가 작업' },
+    { to: `/projects/${data.id}/summary`, label: '프로젝트 요약' },
+    {
+      to: `/projects/${data.id}/repairs`,
+      label: '보수 요청',
+      show: WARRANTY_PAGE_STATUSES.includes(data.status),
+    },
+    {
+      to: `/projects/${data.id}/warranty`,
+      label: '보증',
+      show: WARRANTY_PAGE_STATUSES.includes(data.status),
+    },
+    { to: `/search?project=${data.id}`, label: '프로젝트 안에서 찾기' },
+  ];
+
   return (
-    <div className="flex flex-col gap-4">
-      <Link className="min-h-touch content-center text-sm text-primary underline" to="/projects">
+    <div className="flex flex-col gap-5">
+      <Link className="flex min-h-touch items-center text-sm text-primary underline" to="/projects">
         ← 프로젝트 목록
       </Link>
-      <div className="flex flex-col gap-1">
-        <p className="flex items-center gap-2 text-sm text-foreground/70">
-          {project.data.code}
-          <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-foreground">
-            {PROJECT_STATUS_LABELS[project.data.status]}
-          </span>
-        </p>
-        <h1 className="text-2xl font-bold">{project.data.name}</h1>
-        {project.data.siteMapUrl && (
-          <a
-            className="min-h-touch content-center text-sm text-primary underline"
-            href={project.data.siteMapUrl}
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            지도 열기
-          </a>
-        )}
-      </div>
-      <nav aria-label="프로젝트 바로가기" className="flex flex-wrap gap-2">
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/work-logs?project=${project.data.id}`}
-        >
-          일지 입력
-        </Link>
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/projects/${project.data.id}/photos`}
-        >
-          사진첩
-        </Link>
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/projects/${project.data.id}/memos`}
-        >
-          메모 노트
-        </Link>
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/projects/${project.data.id}/materials`}
-        >
-          자재 현황
-        </Link>
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/projects/${project.data.id}/documents`}
-        >
-          문서함
-        </Link>
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/projects/${project.data.id}/daily-report`}
-        >
-          작업일보 출력
-        </Link>
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/projects/${project.data.id}/change-works`}
-        >
-          변경·추가 작업
-        </Link>
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/projects/${project.data.id}/summary`}
-        >
-          프로젝트 요약
-        </Link>
-        {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
-          <Link
-            className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-            to={`/projects/${project.data.id}/repairs`}
-          >
-            보수 요청
-          </Link>
-        ) : null}
-        {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
-          <Link
-            className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-            to={`/projects/${project.data.id}/warranty`}
-          >
-            보증
-          </Link>
-        ) : null}
-        <Link
-          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
-          to={`/search?project=${project.data.id}`}
-        >
-          프로젝트 안에서 찾기
-        </Link>
+      <PageHeader
+        eyebrow={
+          <>
+            {data.code}
+            <Badge tone="primary">{PROJECT_STATUS_LABELS[data.status]}</Badge>
+            {data.siteMapUrl && (
+              <a
+                className="text-primary underline"
+                href={data.siteMapUrl}
+                target="_blank"
+                rel="noopener noreferrer"
+              >
+                지도 열기
+              </a>
+            )}
+          </>
+        }
+        title={data.name}
+        actions={
+          <Button asChild>
+            <Link to={`/work-logs?project=${data.id}`}>일지 입력</Link>
+          </Button>
+        }
+      />
+      <nav
+        aria-label="프로젝트 바로가기"
+        className="flex flex-wrap gap-2 rounded-xl bg-surface-subtle p-3"
+      >
+        {links
+          .filter((link) => link.show !== false)
+          .map((link) => (
+            <Link
+              key={link.to}
+              className="inline-flex min-h-touch items-center rounded-full bg-surface-nested px-4 text-sm font-medium text-foreground hover:bg-primary-subtle hover:text-primary"
+              to={link.to}
+            >
+              {link.label}
+            </Link>
+          ))}
       </nav>
-      <PinnedDocuments projectId={project.data.id} />
-      <ProjectStatusPanel project={project.data} />
-      <RequiredCredentialsPanel projectId={project.data.id} />
-      <ProjectAssignmentsPanel project={project.data} />
-      <ProjectProgressPanel projectId={project.data.id} status={project.data.status} />
-
-      <ProjectWorkSummaryPanel projectId={project.data.id} />
-
-      <ProjectLaborCostPanel projectId={project.data.id} />
-      <section className="flex flex-col gap-3" aria-labelledby="info-heading">
-        <h2 id="info-heading" className="text-lg font-bold">
-          기본정보
-        </h2>
-        <ProjectForm project={project.data} />
-      </section>
-      <ProjectPeriodHistory projectId={project.data.id} />
+      <PinnedDocuments projectId={data.id} />
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <div className="flex flex-col gap-5">
+          <Panel>
+            <ProjectStatusPanel project={data} />
+          </Panel>
+          <Panel>
+            <ProjectAssignmentsPanel project={data} />
+          </Panel>
+          <Panel>
+            <RequiredCredentialsPanel projectId={data.id} />
+          </Panel>
+        </div>
+        <div className="flex flex-col gap-5">
+          <Panel>
+            <ProjectProgressPanel projectId={data.id} status={data.status} />
+          </Panel>
+          <Panel>
+            <ProjectWorkSummaryPanel projectId={data.id} />
+          </Panel>
+          <Panel>
+            <ProjectLaborCostPanel projectId={data.id} />
+          </Panel>
+        </div>
+      </div>
+      <Panel>
+        <section className="flex flex-col gap-4" aria-labelledby="info-heading">
+          <h2 id="info-heading" className="text-lg font-bold">
+            기본정보
+          </h2>
+          <ProjectForm project={data} />
+        </section>
+      </Panel>
+      <Panel>
+        <ProjectPeriodHistory projectId={data.id} />
+      </Panel>
     </div>
   );
 };
+
+// 패널 하나를 카드로 감쌈 (패널 안의 상자는 자동으로 한 단계 어두운 면이 됨)
+const Panel = ({ children }: { children: ReactNode }) => (
+  <div className="rounded-xl bg-surface-subtle p-5">{children}</div>
+);

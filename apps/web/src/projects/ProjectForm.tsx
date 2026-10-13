@@ -323,25 +323,29 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   }
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={submit} noValidate>
-      {saved && <Alert variant="info">{saved}</Alert>}
-      {errors.root && <Alert>{errors.root.message}</Alert>}
+    <form className="grid gap-4 md:grid-cols-2" onSubmit={submit} noValidate>
+      {saved && (
+        <Alert variant="info" className="md:col-span-2">
+          {saved}
+        </Alert>
+      )}
+      {errors.root && <Alert className="md:col-span-2">{errors.root.message}</Alert>}
 
       {isReadOnly && (
-        <Alert>
+        <Alert className="md:col-span-2">
           &apos;{PROJECT_STATUS_LABELS[project!.status]}&apos; 상태의 프로젝트는 수정할 수 없습니다.
           기록은 그대로 조회할 수 있습니다
         </Alert>
       )}
 
       <Lockable locked={isLocked('name')}>
-        <FormField label="프로젝트명" error={errors.name?.message}>
+        <FormField label="프로젝트명" className="md:col-span-2" error={errors.name?.message}>
           <Input {...register('name')} />
         </FormField>
       </Lockable>
 
       <Lockable locked={isLocked('siteName')}>
-        <fieldset className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-4">
+        <fieldset className="grid gap-4 rounded-xl bg-surface-subtle p-4 md:col-span-2 md:grid-cols-2">
           <legend className="px-1 text-sm font-bold">현장</legend>
           <FormField label="현장 이름" hint="건물명이나 현장 이름" error={errors.siteName?.message}>
             <Input {...register('siteName')} />
@@ -372,6 +376,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
             />
           </FormField>
           <FormField
+            className="md:col-span-2"
             label="출입·주의 메모"
             hint="출입 방법, 주차, 작업 시간 제한"
             error={errors.accessMemo?.message}
@@ -382,33 +387,35 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       </Lockable>
 
       <Lockable locked={isLocked('clientId')}>
-        <FormField label="고객" hint="명부의 고객(발주처·원청)" error={errors.clientId?.message}>
-          {/* 제어 컴포넌트: 즉석으로 추가한 고객은 목록이 다시 그려진 뒤에야 옵션이 생기므로, 값을 먼저 넣어도 사라지지 않게 함 */}
-          <Select
-            value={clientId}
-            onChange={(event) => setValue('clientId', event.target.value, { shouldDirty: true })}
-          >
-            <option value="">고객 선택</option>
-            {clients.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-                {item.isActive ? '' : ' (숨김)'}
-              </option>
-            ))}
-          </Select>
-        </FormField>
-        <InlineAdd
-          label="목록에 없는 고객 추가"
-          placeholder="새 고객 상호"
-          isPending={createPartner.isPending}
-          error={clientError}
-          onAdd={addClient}
-        />
-        {clientId === '' && clients.length === 0 && (
-          <p className="text-sm text-foreground/70">
-            등록된 고객이 없습니다. 위에서 바로 추가할 수 있습니다
-          </p>
-        )}
+        <div className="flex flex-col gap-2">
+          <FormField label="고객" hint="명부의 고객(발주처·원청)" error={errors.clientId?.message}>
+            {/* 제어 컴포넌트: 즉석으로 추가한 고객은 목록이 다시 그려진 뒤에야 옵션이 생기므로, 값을 먼저 넣어도 사라지지 않게 함 */}
+            <Select
+              value={clientId}
+              onChange={(event) => setValue('clientId', event.target.value, { shouldDirty: true })}
+            >
+              <option value="">고객 선택</option>
+              {clients.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                  {item.isActive ? '' : ' (숨김)'}
+                </option>
+              ))}
+            </Select>
+          </FormField>
+          <InlineAdd
+            label="목록에 없는 고객 추가"
+            placeholder="새 고객 상호"
+            isPending={createPartner.isPending}
+            error={clientError}
+            onAdd={addClient}
+          />
+          {clientId === '' && clients.length === 0 && (
+            <p className="text-sm text-foreground/70">
+              등록된 고객이 없습니다. 위에서 바로 추가할 수 있습니다
+            </p>
+          )}
+        </div>
       </Lockable>
 
       <Lockable locked={isLocked('managerId')}>
@@ -430,7 +437,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       </Lockable>
 
       <Lockable locked={isLocked('tradeIds')}>
-        <fieldset className="flex flex-col gap-2">
+        <fieldset className="flex flex-col gap-2 md:col-span-2">
           <legend className="text-sm font-medium">공종 (여러 개 선택 가능)</legend>
           <div className="flex flex-wrap gap-2">
             {trades.map((trade) => (
@@ -463,7 +470,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       </Lockable>
 
       <Lockable locked={isLocked('contractDate')}>
-        <fieldset className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-4">
+        <fieldset className="grid gap-4 rounded-xl bg-surface-subtle p-4 md:col-span-2 md:grid-cols-3">
           <legend className="px-1 text-sm font-bold">일정</legend>
           <FormField label="계약일" error={errors.contractDate?.message}>
             <Input type="date" {...register('contractDate')} />
@@ -484,6 +491,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       {periodChanged && (
         <Lockable locked={isLocked('plannedStart')}>
           <FormField
+            className="md:col-span-2"
             label={reasonRequired ? '기간 변경 사유 (필수)' : '기간 변경 사유 (선택)'}
             hint="연장·단축한 이유를 남기면 기간 변경 이력에 기록됩니다"
             error={errors.periodChangeReason?.message}
@@ -495,6 +503,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
 
       <Lockable locked={isLocked('memo')}>
         <FormField
+          className="md:col-span-2"
           label="메모"
           hint={`관리자만 보는 메모입니다 (${PROJECT_MEMO_MAX_LENGTH}자까지)`}
           error={errors.memo?.message}
@@ -504,7 +513,11 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       </Lockable>
 
       {!isReadOnly && (
-        <Button type="submit" disabled={isBusy || (isEdit && !isDirty)}>
+        <Button
+          type="submit"
+          className="md:col-span-2 md:justify-self-start md:px-10"
+          disabled={isBusy || (isEdit && !isDirty)}
+        >
           {isBusy ? '저장 중' : isEdit ? '저장' : '프로젝트 등록'}
         </Button>
       )}

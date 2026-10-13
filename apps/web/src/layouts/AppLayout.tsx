@@ -25,7 +25,7 @@ export const AppLayout = () => {
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-4 border-r border-border bg-surface-subtle p-4 md:flex print:hidden">
+      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-4 border-r border-line bg-surface p-4 md:flex print:hidden">
         <p className="font-emphasis px-3 py-2 text-xl font-bold text-primary">{APP_NAME}</p>
         <nav aria-label="주 메뉴" className="flex flex-1 flex-col gap-1">
           {NAV_ITEMS.map((item) => (
@@ -52,7 +52,7 @@ export const AppLayout = () => {
           <p className="font-emphasis shrink-0 text-lg font-bold text-primary">{APP_NAME}</p>
           <ThemeToggle />
         </header>
-        <main className="mx-auto w-full max-w-5xl flex-1 px-4 pt-4 pb-40 md:px-8 md:pt-8 md:pb-24 print:p-0">
+        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-4 pb-40 md:px-8 md:pt-8 md:pb-24 print:p-0">
           <Outlet />
         </main>
       </div>

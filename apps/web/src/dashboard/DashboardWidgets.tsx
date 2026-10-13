@@ -9,6 +9,7 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { cn } from '../lib/cn';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ProgressBar } from '../components/ui/progress-bar';
@@ -16,18 +17,20 @@ import { ProgressBar } from '../components/ui/progress-bar';
 // 알림이 많을 때 처음에 보여 줄 개수 (나머지는 펼쳐서 본다)
 const ALERTS_COLLAPSED = 5;
 
-const card = 'flex flex-col gap-2 rounded-xl bg-surface-subtle p-4';
+const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
 
 const Widget = ({
   title,
   id,
+  className,
   children,
 }: {
   title: string;
   id: string;
+  className?: string;
   children: React.ReactNode;
 }) => (
-  <section className={card} aria-labelledby={id}>
+  <section className={cn(card, className)} aria-labelledby={id}>
     <h2 id={id} className="text-lg font-bold">
       {title}
     </h2>
@@ -98,8 +101,8 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
   const shownAlerts = showAllAlerts ? alerts : alerts.slice(0, ALERTS_COLLAPSED);
 
   return (
-    <div className="flex flex-col gap-4">
-      <Widget title="알림" id="alerts-heading">
+    <div className="grid items-start gap-4 lg:grid-cols-2">
+      <Widget title="알림" id="alerts-heading" className="lg:col-span-2">
         {alerts.length === 0 ? (
           <Empty>지금 확인할 알림이 없습니다</Empty>
         ) : (

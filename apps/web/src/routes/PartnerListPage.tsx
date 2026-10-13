@@ -87,11 +87,11 @@ export const PartnerListPage = () => {
                     <h3 className="text-sm font-bold text-foreground/70">
                       {PARTNER_KIND_LABELS[kind]}
                     </h3>
-                    <ul className="flex flex-col gap-2">
+                    <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                       {items.map((partner) => (
                         <li key={partner.id}>
                           <Link
-                            className="flex min-h-touch flex-col justify-center gap-0.5 rounded-xl bg-surface-subtle px-4 py-3"
+                            className="flex min-h-touch flex-col justify-center gap-0.5 rounded-xl bg-surface-subtle px-5 py-4 transition-shadow hover:shadow-card"
                             to={`/partners/${partner.id}`}
                           >
                             <span
