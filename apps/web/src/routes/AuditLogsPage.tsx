@@ -40,7 +40,7 @@ const Row = ({ item }: { item: AuditLog }) => {
   const path = targetPath(item);
 
   return (
-    <li className="flex flex-col gap-0.5 rounded-xl bg-surface-subtle p-4 text-sm">
+    <li className="grid gap-1 rounded-xl bg-surface-subtle px-5 py-4 text-sm md:grid-cols-[14rem_1fr_16rem] md:items-center md:gap-4">
       <span className="font-medium">{AUDIT_ACTION_TITLES[item.action]}</span>
       <span>
         {item.targetName ? (
@@ -82,18 +82,15 @@ export const AuditLogsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <BackLink to="/settings">설정으로</BackLink>
+        <BackLink to="/settings?tab=company">설정으로</BackLink>
         <PageHeader
           title="기록 조회"
-          description="민감 정보 열람·내보내기·확정 기록을 확인합니다 (조회만 가능)"
+          description="누가 언제 무엇을 열람·내보내기·확정했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
         />
-        <p className="text-sm text-foreground/70">
-          누가 언제 무엇을 열람·내보내기·확정했는지 남은 기록입니다. 수정하거나 지울 수 없습니다
-        </p>
       </div>
 
       <form
-        className="flex flex-col gap-3"
+        className="grid gap-3 rounded-xl bg-surface-subtle p-5 md:grid-cols-3"
         aria-label="기록 거르기"
         onSubmit={(e) => e.preventDefault()}
       >

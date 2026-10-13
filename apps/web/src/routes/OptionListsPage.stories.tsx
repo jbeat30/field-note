@@ -17,9 +17,14 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 종류별 영역 (같은 이름이 여러 종류에 있을 수 있어 영역 안에서만 찾는다)
-const section = async (canvasElement: HTMLElement, name: string) =>
-  within(await within(canvasElement).findByRole('region', { name }));
+// 종류별 영역 (종류 탭을 눌러 열고, 영역 안에서만 찾는다)
+const section = async (canvasElement: HTMLElement, name: string) => {
+  const tab = await within(canvasElement).findByRole('tab', { name });
+
+  await userEvent.click(tab);
+
+  return within(await within(canvasElement).findByRole('region', { name: new RegExp(`^${name}`) }));
+};
 
 const namesIn = (list: ReturnType<typeof within>) =>
   list.getAllByRole('listitem').map((item: HTMLElement) => item.textContent ?? '');
@@ -114,11 +119,11 @@ export const HideAndRestore: Story = {
     await userEvent.click(await jobs.findByRole('button', { name: '사무 숨기기' }));
 
     // 삭제되지 않고 숨김 표시와 함께 남음
-    await expect(await jobs.findByText('(숨김)')).toBeInTheDocument();
+    await expect(await jobs.findByText('숨김')).toBeInTheDocument();
 
     await userEvent.click(jobs.getByRole('button', { name: '사무 다시 사용' }));
 
-    await waitFor(() => expect(jobs.queryByText('(숨김)')).not.toBeInTheDocument());
+    await waitFor(() => expect(jobs.queryByText('숨김')).not.toBeInTheDocument());
   },
 };
 
@@ -140,8 +145,11 @@ export const DragReorder: Story = {
     const handle = await jobs.findByRole('button', { name: '판금공 순서 끌어서 바꾸기' });
 
     handle.focus();
+    // 집은 뒤 항목 위치가 측정되도록 잠깐씩 기다림
     await userEvent.keyboard(' ');
+    await new Promise((resolve) => setTimeout(resolve, 200));
     await userEvent.keyboard('{ArrowDown}');
+    await new Promise((resolve) => setTimeout(resolve, 200));
     await userEvent.keyboard(' ');
 
     await waitFor(() => expect(namesIn(jobs)[1]).toContain('판금공'));
