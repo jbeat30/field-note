@@ -236,7 +236,7 @@ const AssignmentRow = ({
       </div>
       <Warnings warnings={assignment.warnings} />
       {mode === 'cancel' ? (
-        <div className="flex flex-col gap-2 rounded-md border border-danger p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
           <p className="text-sm">
             {employeeName}님의 투입을 취소할까요? 기록은 남고 목록에서 빠집니다
           </p>
@@ -430,7 +430,7 @@ export const ProjectAssignmentsPanel = ({ project }: { project: ProjectDetail })
         </p>
       ) : (
         <form
-          className="flex flex-col gap-3 rounded-md border border-border p-3"
+          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
           onSubmit={submit}
           noValidate
           aria-label="투입 등록"

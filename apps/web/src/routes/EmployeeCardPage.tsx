@@ -269,7 +269,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
               </Button>
             )}
             {pending === 'ON_LEAVE' && (
-              <div className="flex flex-col gap-2 rounded-md border border-border p-3">
+              <div className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
                 <p className="text-sm">{employee.name}님을 휴직으로 바꿀까요?</p>
                 <div className="flex gap-2">
                   <Button disabled={update.isPending} onClick={() => changeStatus('ON_LEAVE')}>
@@ -287,7 +287,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
               </Button>
             )}
             {pending === 'LEFT' && (
-              <div className="flex flex-col gap-2 rounded-md border border-danger p-3">
+              <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
                 <p className="text-sm">
                   {employee.name}님을 퇴사 처리할까요? 퇴사일은 오늘로 기록되고 새 투입에서
                   빠집니다. 과거 기록은 그대로 남습니다

@@ -152,7 +152,7 @@ const TransitionForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label={`${actionLabel(project.status, to)} 확인`}

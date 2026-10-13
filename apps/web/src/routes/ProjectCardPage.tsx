@@ -64,76 +64,78 @@ export const ProjectCardPage = () => {
           </a>
         )}
       </div>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/work-logs?project=${project.data.id}`}
-      >
-        일지 입력
-      </Link>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/projects/${project.data.id}/photos`}
-      >
-        사진첩
-      </Link>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/projects/${project.data.id}/memos`}
-      >
-        메모 노트
-      </Link>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/projects/${project.data.id}/materials`}
-      >
-        자재 현황
-      </Link>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/projects/${project.data.id}/documents`}
-      >
-        문서함
-      </Link>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/projects/${project.data.id}/daily-report`}
-      >
-        작업일보 출력
-      </Link>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/projects/${project.data.id}/change-works`}
-      >
-        변경·추가 작업
-      </Link>
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/projects/${project.data.id}/summary`}
-      >
-        프로젝트 요약
-      </Link>
-      {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
+      <nav aria-label="프로젝트 바로가기" className="flex flex-wrap gap-2">
         <Link
-          className="min-h-touch content-center text-primary underline"
-          to={`/projects/${project.data.id}/repairs`}
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/work-logs?project=${project.data.id}`}
         >
-          보수 요청
+          일지 입력
         </Link>
-      ) : null}
-      {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
         <Link
-          className="min-h-touch content-center text-primary underline"
-          to={`/projects/${project.data.id}/warranty`}
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/projects/${project.data.id}/photos`}
         >
-          보증
+          사진첩
         </Link>
-      ) : null}
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/search?project=${project.data.id}`}
-      >
-        프로젝트 안에서 찾기
-      </Link>
+        <Link
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/projects/${project.data.id}/memos`}
+        >
+          메모 노트
+        </Link>
+        <Link
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/projects/${project.data.id}/materials`}
+        >
+          자재 현황
+        </Link>
+        <Link
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/projects/${project.data.id}/documents`}
+        >
+          문서함
+        </Link>
+        <Link
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/projects/${project.data.id}/daily-report`}
+        >
+          작업일보 출력
+        </Link>
+        <Link
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/projects/${project.data.id}/change-works`}
+        >
+          변경·추가 작업
+        </Link>
+        <Link
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/projects/${project.data.id}/summary`}
+        >
+          프로젝트 요약
+        </Link>
+        {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
+          <Link
+            className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+            to={`/projects/${project.data.id}/repairs`}
+          >
+            보수 요청
+          </Link>
+        ) : null}
+        {WARRANTY_PAGE_STATUSES.includes(project.data.status) ? (
+          <Link
+            className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+            to={`/projects/${project.data.id}/warranty`}
+          >
+            보증
+          </Link>
+        ) : null}
+        <Link
+          className="inline-flex min-h-touch items-center rounded-full bg-primary-subtle px-4 text-sm font-medium text-primary"
+          to={`/search?project=${project.data.id}`}
+        >
+          프로젝트 안에서 찾기
+        </Link>
+      </nav>
       <PinnedDocuments projectId={project.data.id} />
       <ProjectStatusPanel project={project.data} />
       <RequiredCredentialsPanel projectId={project.data.id} />

@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { PartnerQuickAdd } from '../partners/PartnerQuickAdd';
@@ -82,15 +83,15 @@ export const PartnerListPage = () => {
                 const items = visible.filter((item) => item.kind === kind);
 
                 return items.length === 0 ? null : (
-                  <div key={kind} className="flex flex-col">
+                  <div key={kind} className="flex flex-col gap-2">
                     <h3 className="text-sm font-bold text-foreground/70">
                       {PARTNER_KIND_LABELS[kind]}
                     </h3>
-                    <ul className="divide-y divide-border">
+                    <ul className="flex flex-col gap-2">
                       {items.map((partner) => (
                         <li key={partner.id}>
                           <Link
-                            className="flex min-h-touch flex-col justify-center gap-0.5 py-2"
+                            className="flex min-h-touch flex-col justify-center gap-0.5 rounded-xl bg-surface-subtle px-4 py-3"
                             to={`/partners/${partner.id}`}
                           >
                             <span
@@ -101,11 +102,7 @@ export const PartnerListPage = () => {
                               }
                             >
                               {partner.name}
-                              {!partner.isActive && (
-                                <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-normal">
-                                  숨김
-                                </span>
-                              )}
+                              {!partner.isActive && <Badge>숨김</Badge>}
                             </span>
                             {partner.contactName && (
                               <span className="text-sm text-foreground/70">

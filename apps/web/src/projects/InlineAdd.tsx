@@ -46,7 +46,7 @@ export const InlineAdd = ({
 
   // 바깥 폼 안에 들어가는 입력이라 별도 폼을 중첩하지 않고 Enter·버튼으로 직접 처리
   return (
-    <div className="flex flex-col gap-2 rounded-md border border-border p-2">
+    <div className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-3">
       <div className="flex gap-2">
         <Input
           aria-label={placeholder}
