@@ -253,7 +253,7 @@ export const DocumentDetailDialog = ({ documentId, onClose }: DocumentDetailDial
   return (
     <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-foreground/50" />
+        <Dialog.Overlay className="fixed inset-0 bg-overlay" />
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed inset-x-0 bottom-0 top-0 mx-auto flex max-w-xl flex-col gap-3 overflow-y-auto bg-surface p-4 sm:inset-y-6 sm:rounded-md"

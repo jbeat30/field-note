@@ -95,7 +95,7 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
               <li key={`${alert.kind}-${index}`}>
                 <Link
                   to={dashboardAlertPath(alert)}
-                  className="flex min-h-touch items-center rounded-md bg-danger/10 px-3 py-2 text-danger"
+                  className="flex min-h-touch items-center rounded-md bg-danger-subtle px-3 py-2 text-danger"
                 >
                   {dashboardAlertMessage(alert)}
                 </Link>

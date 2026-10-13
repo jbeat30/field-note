@@ -97,7 +97,7 @@ export const PartnerListPage = () => {
                               className={
                                 partner.isActive
                                   ? 'flex items-center gap-2 font-medium'
-                                  : 'flex items-center gap-2 font-medium text-foreground/60'
+                                  : 'flex items-center gap-2 font-medium text-foreground/70'
                               }
                             >
                               {partner.name}

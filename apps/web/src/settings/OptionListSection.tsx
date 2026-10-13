@@ -101,7 +101,7 @@ const OptionRow = ({
 
   return (
     <li className="flex flex-wrap items-center justify-between gap-2 py-2">
-      <span className={item.isActive ? 'font-medium' : 'text-foreground/60 line-through'}>
+      <span className={item.isActive ? 'font-medium' : 'text-foreground/70 line-through'}>
         {item.name}
         {!item.isActive && <span className="ml-2 text-sm no-underline">(숨김)</span>}
       </span>
