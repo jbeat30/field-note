@@ -38,17 +38,17 @@ export const Mobile: Story = {
   },
 };
 
-// 테마 버튼이 기기 설정 → 밝게 → 어둡게 순서로 바뀜
+// 테마 버튼이 밝게 ↔ 어둡게로 바뀜
 export const ThemeSwitch: Story = {
   play: async ({ canvasElement }) => {
-    const toggle = () => within(canvasElement).getByRole('button', { name: /^화면 테마/ });
-
     useThemeStore.getState().setMode('light');
-    await userEvent.click(toggle());
+    await userEvent.click(
+      await within(canvasElement).findByRole('button', { name: '어두운 화면으로 전환' }),
+    );
     await expect(useThemeStore.getState().mode).toBe('dark');
-    await expect(toggle()).toHaveAccessibleName(/어둡게/);
-    await userEvent.click(toggle());
-    await expect(useThemeStore.getState().mode).toBe('system');
-    useThemeStore.getState().setMode('light');
+    await userEvent.click(
+      await within(canvasElement).findByRole('button', { name: '밝은 화면으로 전환' }),
+    );
+    await expect(useThemeStore.getState().mode).toBe('light');
   },
 };
