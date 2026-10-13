@@ -8,6 +8,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { EmployeeQuickAdd } from '../employees/EmployeeQuickAdd';
@@ -89,7 +90,7 @@ export const EmployeeListPage = () => {
             {employees.data.length === 0 ? (
               <p className="text-sm">조건에 맞는 직원이 없습니다</p>
             ) : (
-              <ul className="divide-y divide-border">
+              <ul className="flex flex-col gap-2">
                 {employees.data.map((employee) => {
                   const details = [
                     employee.title,
@@ -100,15 +101,13 @@ export const EmployeeListPage = () => {
                   return (
                     <li key={employee.id}>
                       <Link
-                        className="flex min-h-touch flex-col justify-center gap-0.5 py-2"
+                        className="flex min-h-touch flex-col justify-center gap-0.5 rounded-xl bg-surface-subtle px-4 py-3"
                         to={`/employees/${employee.id}`}
                       >
                         <span className="flex items-center gap-2 font-medium">
                           {employee.name}
                           {employee.status !== 'ACTIVE' && (
-                            <span className="rounded bg-muted px-1.5 py-0.5 text-xs font-normal">
-                              {EMPLOYEE_STATUS_LABELS[employee.status]}
-                            </span>
+                            <Badge>{EMPLOYEE_STATUS_LABELS[employee.status]}</Badge>
                           )}
                         </span>
                         {details.length > 0 && (

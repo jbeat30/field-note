@@ -11,6 +11,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
@@ -159,15 +160,16 @@ export const ProjectListPage = () => {
           {projects.data.length === 0 ? (
             <p className="text-sm">조건에 맞는 프로젝트가 없습니다</p>
           ) : (
-            <ul className="divide-y divide-border">
+            <ul className="flex flex-col gap-2">
               {projects.data.map((project) => (
                 <li key={project.id}>
-                  <Link className="flex flex-col gap-1 py-3" to={`/projects/${project.id}`}>
+                  <Link
+                    className="flex flex-col gap-1 rounded-xl bg-surface-subtle px-4 py-3"
+                    to={`/projects/${project.id}`}
+                  >
                     <span className="flex flex-wrap items-center gap-2">
                       <span className="text-sm text-foreground/70">{project.code}</span>
-                      <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
-                        {PROJECT_STATUS_LABELS[project.status]}
-                      </span>
+                      <Badge tone="primary">{PROJECT_STATUS_LABELS[project.status]}</Badge>
                     </span>
                     <span className="font-medium">{project.name}</span>
                     <span className="text-sm text-foreground/70">
