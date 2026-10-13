@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useParams } from 'react-router';
 
 import { PageHeader } from '../components/ui/page-header';
-import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
@@ -39,8 +38,11 @@ export const ProjectMemosPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
-      <PageHeader title="메모 노트" description="이 프로젝트의 메모를 날짜순으로 봅니다" />
+      <PageHeader
+        level={2}
+        title="메모 노트"
+        description="이 프로젝트의 메모를 날짜순으로 봅니다"
+      />
       <MemoForm
         draftKey={memoDraftKey(id)}
         onSubmit={async (value) => void (await create.mutateAsync({ ...value, projectId: id }))}

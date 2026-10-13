@@ -4,7 +4,6 @@ import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
@@ -64,7 +63,6 @@ export const DailyReportPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 print:hidden">
-        <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
         <div className="flex items-center gap-2">
           <Button
             type="button"

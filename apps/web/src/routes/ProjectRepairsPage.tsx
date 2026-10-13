@@ -5,7 +5,7 @@ import {
   type RepairStatus,
 } from '@field-note/shared';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
@@ -37,10 +37,11 @@ export const ProjectRepairsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <PageHeader title="보수 요청" description="보증 기간 중 접수한 보수 요청을 처리합니다" />
-        <Link className="text-primary underline" to={`/projects/${id}`}>
-          {project.data.name}
-        </Link>
+        <PageHeader
+          level={2}
+          title="보수 요청"
+          description="보증 기간 중 접수한 보수 요청을 처리합니다"
+        />
       </div>
 
       {!gate.ok && <Alert>{gate.message}. 조회만 할 수 있습니다</Alert>}

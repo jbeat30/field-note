@@ -17,7 +17,7 @@ import { Select } from '../components/ui/select';
 import { useEmployees } from '../employees/useEmployees';
 import { addDays, formatDay } from '../lib/dates';
 import { useAssignments } from '../projects/useAssignments';
-import { useProject, useProjects } from '../projects/useProjects';
+import { useProject, useProjectChoices } from '../projects/useProjects';
 import { useCompanySettings } from '../settings/useCompanySettings';
 import { useOptions } from '../settings/useOptions';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
@@ -32,7 +32,7 @@ export const WorkLogPage = () => {
   const [params, setParams] = useSearchParams();
   const today = todayInSeoul(new Date());
   const date = params.get('date') || today;
-  const projects = useProjects({});
+  const projects = useProjectChoices();
   const projectId =
     params.get('project') || projects.data?.find((item) => item.status === 'IN_PROGRESS')?.id || '';
   const project = useProject(projectId);

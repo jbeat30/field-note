@@ -43,8 +43,8 @@ export const Default: Story = {
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent);
 
-    // 고정한 문서 → 분류별 (도면은 고정되어 위로 올라감)
-    await expect(headings).toEqual(['문서 올리기', '고정한 문서', '시방·사양', '계약·행정']);
+    // 분류별로 묶임
+    await expect(headings).toEqual(['문서함', '문서 올리기', '도면', '시방·사양', '계약·행정']);
     await expect(canvas.getByText('민감')).toBeInTheDocument();
   },
 };
@@ -158,19 +158,6 @@ export const UnsupportedFileIsRejected: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
 
     await expect(await canvas.findByRole('alert')).toHaveTextContent('올릴 수 없는 파일 형식');
-  },
-};
-
-export const PinFromList: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(
-      await canvas.findByRole('button', { name: '외장 판금 시방서 첫 화면에 고정' }),
-    );
-    await expect(
-      await canvas.findByRole('button', { name: '외장 판금 시방서 고정 해제' }),
-    ).toBeInTheDocument();
   },
 };
 

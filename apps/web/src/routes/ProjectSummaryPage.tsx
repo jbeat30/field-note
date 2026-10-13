@@ -1,6 +1,5 @@
 import { useParams } from 'react-router';
 
-import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { ProjectSummarySheet } from '../completion/ProjectSummarySheet';
@@ -25,7 +24,6 @@ export const ProjectSummaryPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 print:hidden">
-        <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
         <Button type="button" onClick={() => void printWhenReady()}>
           인쇄·PDF로 저장
         </Button>

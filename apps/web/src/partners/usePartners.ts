@@ -90,3 +90,25 @@ export const useUpdatePartner = (id: string) => {
     },
   });
 };
+
+// 삭제: 프로젝트·자재 기록에서 쓰고 있으면 서버가 거부한다 (그때는 숨기기)
+export const useDeletePartner = (id: string) => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async () => {
+      const { data, error } = await apiClient.DELETE('/api/v1/partners/{id}', {
+        params: { path: { id } },
+      });
+
+      if (!data) {
+        throw error ?? new Error('[web.useDeletePartner] 삭제 실패');
+      }
+    },
+    onSuccess: () => {
+      queryClient.removeQueries({ queryKey: queryKeys.partner(id) });
+
+      return queryClient.invalidateQueries({ queryKey: ['partners', 'list'] });
+    },
+  });
+};

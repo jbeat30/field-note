@@ -190,6 +190,36 @@ body {
   }
 }
 
+/* 눌러서 동작하는 요소는 마우스 포인터를 손가락 모양으로 (꺼진 요소는 금지 모양) */
+a[href],
+button,
+summary,
+select,
+label[for],
+[role='button'],
+[role='tab'],
+[role='switch'],
+[role='checkbox'],
+[role='radio'],
+[role='option'],
+input[type='checkbox'],
+input[type='radio'],
+input[type='file'],
+input[type='range'],
+label:has(input:not(:disabled)),
+label:has([role='checkbox']),
+label:has([role='switch']) {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+[aria-disabled='true'],
+[data-disabled],
+input:disabled {
+  cursor: not-allowed;
+}
+
 /* 인쇄(작업일보 출력): A4 세로, 화면 메뉴는 숨기고 색은 그대로 인쇄 */
 @page {
   size: A4;

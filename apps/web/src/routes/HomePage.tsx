@@ -12,7 +12,7 @@ import { Alert } from '../components/ui/alert';
 import { DashboardWidgets } from '../dashboard/DashboardWidgets';
 import { useDashboard } from '../dashboard/useDashboard';
 import { useMemoSummary } from '../memos/useMemos';
-import { useProjects } from '../projects/useProjects';
+import { useProjectChoices } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
 
 // 로그인 후 첫 화면 (서비스 기획서 §15.2): 검색, 알림·오늘 투입·위험 프로젝트·진행 프로젝트·이번 주 인력·할 일 위젯,
@@ -23,7 +23,7 @@ export const HomePage = () => {
   const dashboard = useDashboard();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
-  const projects = useProjects({});
+  const projects = useProjectChoices();
   const drafts = useDraftStore((state) => state.drafts);
   const isDraftReady = useDraftHydrated();
 

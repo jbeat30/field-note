@@ -8,12 +8,12 @@ import { MemoForm } from '../memos/MemoForm';
 import { memoDraftKey } from '../memos/memoDraft';
 import { MemoList } from '../memos/MemoList';
 import { useCreateMemo, useDeleteMemo, useMemoList, useUpdateMemo } from '../memos/useMemos';
-import { useProjects } from '../projects/useProjects';
+import { useProjectChoices } from '../projects/useProjects';
 
 // 메모함: 프로젝트를 정하지 않고 먼저 적어 둔 메모가 모이는 곳. 나중에 프로젝트에 연결하거나 삭제한다 (서비스 기획서 §14)
 export const InboxPage = () => {
   const memos = useMemoList({ scope: 'INBOX' });
-  const projects = useProjects({});
+  const projects = useProjectChoices();
   const create = useCreateMemo();
   const update = useUpdateMemo();
   const remove = useDeleteMemo();

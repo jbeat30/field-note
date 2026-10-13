@@ -185,6 +185,13 @@ const liveRecords = (account: MockAccount, projectId?: string) => {
   );
 };
 
+// 업체를 공급처로 쓴 자재 기록이 있는지 (명부 삭제 검사용)
+export const hasMockMaterialRecordForPartner = (account: MockAccount, partnerId: string) =>
+  [...records.values()].some(
+    (record) =>
+      record.scope === scopeOf(account) && !record.deletedAt && record.partnerId === partnerId,
+  );
+
 // 작업일보 목업이 쓰는 자재 기록 조회 (자재 이름·규격·단위를 붙여 돌려줌, 지운 기록 제외)
 export const listMockMaterialRecords = (account: MockAccount, projectId: string) =>
   liveRecords(account, projectId)

@@ -13,7 +13,6 @@ type DocumentListProps = {
   documents: readonly Document[];
   onOpen: (document: Document, mode: 'view' | 'download') => void;
   onDetail: (document: Document) => void;
-  onTogglePin: (document: Document) => void;
 };
 
 const formatSize = (bytes: number) =>
@@ -25,7 +24,6 @@ const DocumentItem = ({
   document,
   onOpen,
   onDetail,
-  onTogglePin,
 }: { document: Document } & Omit<DocumentListProps, 'documents'>) => {
   const { latest } = document;
   const isReady = latest.fileStatus === 'READY';
@@ -77,30 +75,19 @@ const DocumentItem = ({
         >
           버전·기록
         </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          aria-pressed={document.isPinned}
-          aria-label={`${document.title} ${document.isPinned ? '고정 해제' : '첫 화면에 고정'}`}
-          onClick={() => onTogglePin(document)}
-        >
-          {document.isPinned ? '★ 고정됨' : '☆ 고정'}
-        </Button>
       </div>
     </li>
   );
 };
 
-// 문서 목록: 고정한 문서를 맨 위에 모으고 나머지는 분류별로 (분류 안에서는 받은 순서 = 최근 수정순)
+// 문서 목록: 분류별로 묶어서 보여 준다 (분류 안에서는 받은 순서 = 최근 수정순)
 export const DocumentList = ({ documents, ...handlers }: DocumentListProps) => {
-  const pinned = documents.filter((document) => document.isPinned);
-  const groups: [string, readonly Document[]][] = [
-    ...(pinned.length > 0 ? ([['고정한 문서', pinned]] as [string, readonly Document[]][]) : []),
-    ...DOCUMENT_CATEGORIES.map((category: DocumentCategory): [string, readonly Document[]] => [
+  const groups: [string, readonly Document[]][] = DOCUMENT_CATEGORIES.map(
+    (category: DocumentCategory): [string, readonly Document[]] => [
       DOCUMENT_CATEGORY_LABELS[category],
-      documents.filter((document) => !document.isPinned && document.category === category),
-    ]).filter(([, items]) => items.length > 0),
-  ];
+      documents.filter((document) => document.category === category),
+    ],
+  ).filter(([, items]) => items.length > 0);
 
   return (
     <div className="flex flex-col gap-4">

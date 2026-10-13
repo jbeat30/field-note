@@ -5,7 +5,7 @@ import {
   type ChangeWorkStatus,
 } from '@field-note/shared';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { PageHeader } from '../components/ui/page-header';
 import { ChangeWorkForm } from '../changeWorks/ChangeWorkForm';
@@ -43,12 +43,10 @@ export const ProjectChangeWorksPage = () => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
         <PageHeader
+          level={2}
           title="변경·추가 작업"
           description="계약 밖에서 생긴 작업의 협의와 승인을 기록합니다"
         />
-        <Link className="text-primary underline" to={`/projects/${id}`}>
-          {project.data.name}
-        </Link>
       </div>
 
       {!gate.ok && <Alert>{gate.message}. 조회만 할 수 있습니다</Alert>}

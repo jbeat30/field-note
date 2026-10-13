@@ -3,7 +3,7 @@ import {
   WARRANTY_START_BASIS_LABELS,
   warrantyProjectCheck,
 } from '@field-note/shared';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
@@ -44,10 +44,7 @@ export const ProjectWarrantyPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <PageHeader title="보증" description="보증 기간과 보증서를 관리합니다" />
-        <Link className="text-primary underline" to={`/projects/${id}`}>
-          {project.data.name}
-        </Link>
+        <PageHeader level={2} title="보증" description="보증 기간과 보증서를 관리합니다" />
       </div>
 
       {!gate.ok && <Alert>{gate.message}. 조회만 할 수 있습니다</Alert>}

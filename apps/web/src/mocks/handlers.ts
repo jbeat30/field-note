@@ -1,4 +1,7 @@
 import {
+  PROJECT_PAGE_SIZE_DEFAULT,
+  PROJECT_STATUSES,
+  type ProjectStatus,
   closureCancelSchema,
   closureRequestSchema,
   closureTokenParamsSchema,
@@ -161,7 +164,7 @@ import {
 import { createCompletionHandlers } from './completionHandlers';
 import { createDashboardHandlers } from './dashboardHandlers';
 import { createDocumentHandlers } from './documentHandlers';
-import { createMaterialHandlers } from './materialHandlers';
+import { createMaterialHandlers, hasMockMaterialRecordForPartner } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
 import { createSearchHandlers } from './searchHandlers';
 import { createMemoHandlers } from './memoHandlers';
@@ -1263,6 +1266,47 @@ export const handlers = [
     return HttpResponse.json(updated);
   }),
 
+  http.delete('/api/v1/partners/:id', async ({ request, params }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const parsed = partnerParamsSchema.safeParse(params);
+
+    if (!parsed.success) {
+      return apiError('VALIDATION_ERROR', [{ path: 'params.id', message: 'Invalid UUID' }]);
+    }
+
+    const partners = getPartners(account);
+
+    if (!partners.some((item) => item.id === parsed.data.id)) return apiError('NOT_FOUND');
+
+    // 서버와 같은 규칙: 프로젝트(고객)나 자재 기록(공급처)이 쓰고 있으면 삭제하지 않음
+    const inUse =
+      getProjects(account).some((item) => item.clientId === parsed.data.id) ||
+      hasMockMaterialRecordForPartner(account, parsed.data.id);
+
+    if (inUse) {
+      return apiError('VALIDATION_ERROR', [
+        {
+          path: 'params.id',
+          message: '프로젝트나 자재 기록에서 쓰고 있어 삭제할 수 없습니다. 숨기기를 이용해 주세요',
+        },
+      ]);
+    }
+
+    savePartners(
+      account,
+      partners.filter((item) => item.id !== parsed.data.id),
+    );
+
+    return HttpResponse.json({ success: true });
+  }),
+
   http.get('/api/v1/projects', async ({ request }) => {
     await simulateLatency();
 
@@ -1284,15 +1328,54 @@ export const handlers = [
       );
     }
 
-    const { status, clientId, managerId, tradeId, from, to, q, sort = 'recent' } = query.data;
+    const {
+      status,
+      clientId,
+      managerId,
+      tradeId,
+      from,
+      to,
+      q,
+      sortBy = 'recent',
+      sortDir,
+      page = 1,
+      pageSize = PROJECT_PAGE_SIZE_DEFAULT,
+    } = query.data;
     const needle = q?.toLowerCase();
     const codeKey = (code: string) => {
       const [year, sequence] = code.split('-').map(Number) as [number, number];
 
       return year * 1_000_000 + sequence;
     };
+    const direction = (sortDir ?? (sortBy === 'recent' ? 'desc' : 'asc')) === 'asc' ? 1 : -1;
+    const partnerName = (id: string) =>
+      getPartners(account).find((item) => item.id === id)?.name ?? '';
+    const employeeName = (id: string) =>
+      getEmployees(account).find((item) => item.id === id)?.name ?? '';
+    const statusOrder = (value: string) => PROJECT_STATUSES.indexOf(value as ProjectStatus);
+    // 서버와 같은 규칙: 정렬 기준 → 같으면 최근 등록순
+    const compare = (a: ProjectDetail, b: ProjectDetail) => {
+      const recent = codeKey(b.code) - codeKey(a.code);
+
+      if (sortBy === 'recent') return -direction * recent;
+
+      const primary =
+        sortBy === 'name'
+          ? a.name.localeCompare(b.name, 'ko')
+          : sortBy === 'status'
+            ? statusOrder(a.status) - statusOrder(b.status)
+            : sortBy === 'client'
+              ? partnerName(a.clientId).localeCompare(partnerName(b.clientId), 'ko')
+              : sortBy === 'manager'
+                ? employeeName(a.managerId).localeCompare(employeeName(b.managerId), 'ko')
+                : sortBy === 'plannedStart'
+                  ? a.plannedStart.localeCompare(b.plannedStart)
+                  : a.plannedEnd.localeCompare(b.plannedEnd);
+
+      return direction * primary || recent;
+    };
     // 서버와 같은 규칙: 목록에는 현장 연락처·출입 메모·계약일·메모를 싣지 않음
-    const items = getProjects(account)
+    const matched = getProjects(account)
       .filter(
         (item) =>
           (!status || item.status === status) &&
@@ -1306,28 +1389,21 @@ export const handlers = [
             item.code.toLowerCase().includes(needle) ||
             item.siteName.toLowerCase().includes(needle)),
       )
-      .sort((a, b) => {
-        const recent = codeKey(b.code) - codeKey(a.code);
+      .sort(compare);
+    const items = matched.slice((page - 1) * pageSize, page * pageSize).map((item) => ({
+      id: item.id,
+      code: item.code,
+      name: item.name,
+      status: item.status,
+      siteName: item.siteName,
+      clientId: item.clientId,
+      managerId: item.managerId,
+      tradeIds: item.tradeIds,
+      plannedStart: item.plannedStart,
+      plannedEnd: item.plannedEnd,
+    }));
 
-        if (sort === 'endDate') return a.plannedEnd.localeCompare(b.plannedEnd) || recent;
-        if (sort === 'name') return a.name.localeCompare(b.name, 'ko') || recent;
-
-        return recent;
-      })
-      .map((item) => ({
-        id: item.id,
-        code: item.code,
-        name: item.name,
-        status: item.status,
-        siteName: item.siteName,
-        clientId: item.clientId,
-        managerId: item.managerId,
-        tradeIds: item.tradeIds,
-        plannedStart: item.plannedStart,
-        plannedEnd: item.plannedEnd,
-      }));
-
-    return HttpResponse.json({ items });
+    return HttpResponse.json({ items, total: matched.length, page, pageSize });
   }),
 
   http.post('/api/v1/projects', async ({ request }) => {

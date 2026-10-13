@@ -1,7 +1,10 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { signIn } from '../mocks/state';
+import { http } from 'msw';
+
+import { handlers } from '../mocks/handlers';
+import { findAccount, getProjects, saveProjects, signIn } from '../mocks/state';
 
 import { ProjectListPage } from './ProjectListPage';
 
@@ -17,9 +20,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// 표의 데이터 줄 (머리 줄 제외)
 const rows = (canvas: ReturnType<typeof within>) =>
   within(canvas.getByRole('region', { name: '프로젝트 목록' }))
-    .getAllByRole('listitem')
+    .getAllByRole('row')
+    .slice(1)
     .map((item: HTMLElement) => item.textContent ?? '');
 
 export const Default: Story = {
@@ -32,10 +37,21 @@ export const Default: Story = {
     await waitFor(() => expect(rows(canvas)[0]).toContain('2026-004'));
     await expect(rows(canvas).at(-1)).toContain('2025-012');
     // 상태·현장·고객·담당자·기간·공종이 보이고, 현장 연락처·출입 메모는 목록에 없음
-    await expect(
-      await canvas.findByText('A동 신축 현장 · 가나다건설 · 송소장'),
-    ).toBeInTheDocument();
-    await expect(await canvas.findByText(/2026-07-15 ~ 2026-11-30 · 판금/)).toBeInTheDocument();
+    // 고객·담당자 이름은 명부·직원 목록을 불러온 뒤에 채워진다
+    await waitFor(() =>
+      expect(rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))).toContain(
+        '가나다건설',
+      ),
+    );
+
+    const row = rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))!;
+
+    await expect(row).toContain('A동 신축 현장');
+    await expect(row).toContain('진행');
+    await expect(row).toContain('가나다건설');
+    await expect(row).toContain('송소장');
+    await expect(row).toContain('2026-07-15 ~ 2026-11-30');
+    await expect(row).toContain('판금');
     await expect(canvas.queryByText(/02-0000-0101/)).not.toBeInTheDocument();
     await expect(canvas.queryByText(/정문 출입증/)).not.toBeInTheDocument();
     await expect(canvas.getByRole('link', { name: '프로젝트 등록' })).toHaveAttribute(
@@ -115,15 +131,23 @@ export const FilterByPeriod: Story = {
   },
 };
 
-export const SortByEndDate: Story = {
+export const SortByPeriodColumn: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.selectOptions(canvas.getByLabelText('정렬'), '종료 예정일 빠른 순');
+    // 열 머리를 누르면 그 열 기준 오름차순, 한 번 더 누르면 내림차순
+    await userEvent.click(canvas.getByRole('button', { name: '기간' }));
 
     await waitFor(() => expect(rows(canvas)[0]).toContain('C동 환기 설비'));
     await expect(rows(canvas).at(-1)).toContain('미래오피스 천장 마감');
+
+    await userEvent.click(canvas.getByRole('button', { name: '기간' }));
+    await waitFor(() => expect(rows(canvas)[0]).toContain('미래오피스 천장 마감'));
+    await expect(canvas.getByRole('columnheader', { name: /기간/ })).toHaveAttribute(
+      'aria-sort',
+      'descending',
+    );
   },
 };
 
@@ -150,5 +174,101 @@ export const NoResult: Story = {
     await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '없는프로젝트');
 
     await expect(await canvas.findByText('조건에 맞는 프로젝트가 없습니다')).toBeInTheDocument();
+  },
+};
+
+// 프로젝트가 많으면 쪽으로 나뉘고, 필터를 바꾸면 첫 쪽으로 돌아온다
+export const Pagination: Story = {
+  loaders: [
+    () => {
+      signIn('hanbit');
+
+      const account = findAccount('hanbit')!;
+      const base = getProjects(account)[0]!;
+
+      saveProjects(account, [
+        ...getProjects(account),
+        ...Array.from({ length: 20 }, (_, index) => ({
+          ...base,
+          id: `00000000-0000-4000-8000-0000000000${String(index).padStart(2, '0')}`,
+          code: `2026-1${String(index).padStart(2, '0')}`,
+          name: `추가 프로젝트 ${index + 1}`,
+        })),
+      ]);
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText('25건')).toBeInTheDocument();
+    // 고객·담당자 이름까지 불러온 뒤에 쪽을 넘긴다 (불러오면 표가 첫 쪽으로 돌아감)
+    await waitFor(() =>
+      expect(rows(canvas).some((text) => text.includes('가나다건설'))).toBe(true),
+    );
+    await waitFor(() => expect(rows(canvas).some((text) => text.includes('송소장'))).toBe(true));
+    await waitFor(() => expect(rows(canvas)).toHaveLength(10));
+    await expect(canvas.getByRole('button', { name: '1쪽' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+
+    await userEvent.click(canvas.getByRole('button', { name: '3쪽' }));
+    await waitFor(() => expect(rows(canvas)).toHaveLength(5));
+
+    // 쪽당 개수를 늘리면 첫 쪽부터 다시
+    await userEvent.selectOptions(canvas.getByLabelText('쪽당 개수'), '20개');
+    await waitFor(() => expect(rows(canvas)).toHaveLength(20));
+    await expect(canvas.getByRole('button', { name: '1쪽' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+  },
+};
+
+// 고객·담당자 열도 머리를 눌러 가나다순으로 정렬
+export const SortByClientColumn: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('A동 외장 판금 공사');
+    // 고객 이름까지 불러온 뒤에 정렬한다
+    await waitFor(() =>
+      expect(rows(canvas).some((text) => text.includes('가나다건설'))).toBe(true),
+    );
+    await userEvent.click(canvas.getByRole('button', { name: '고객' }));
+
+    await waitFor(() => expect(rows(canvas)[0]).toContain('가나다건설'));
+    await expect(rows(canvas).at(-1)).toContain('옛날상가');
+  },
+};
+
+// 타이핑 중에는 조회하지 않고, 멈춘 뒤 검색어 전체로 한 번만 조회한다
+const searchedTerms: string[] = [];
+
+export const SearchIsDebounced: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        // 검색어가 실린 조회만 기록하고 진짜 응답은 다음 핸들러에 맡김
+        http.get('/api/v1/projects', ({ request }) => {
+          const q = new URL(request.url).searchParams.get('q');
+
+          if (q) searchedTerms.push(q);
+        }),
+        ...handlers,
+      ],
+    },
+  },
+  beforeEach: () => {
+    searchedTerms.length = 0;
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('A동 외장 판금 공사');
+    await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '기계실', { delay: 30 });
+
+    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(searchedTerms).toEqual(['기계실']);
   },
 };

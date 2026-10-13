@@ -1,5 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Route, Routes } from 'react-router';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+
+import { ProjectLayout } from '../layouts/ProjectLayout';
 
 import { resetMockCredentials } from '../mocks/credentialHandlers';
 import { DEMO_PROJECTS } from '../mocks/demoSource';
@@ -16,6 +19,16 @@ const meta = {
   title: 'Pages/프로젝트 카드',
   component: ProjectCardPage,
   parameters: { router: routerFor('A동 외장 판금 공사') },
+  // 머리(이름·상태·메뉴)는 프로젝트 작업 공간 틀이 그리므로 틀 안에서 시험한다. 모든 구역을 한 화면에 그려 확인
+  decorators: [
+    (Story) => (
+      <Routes>
+        <Route element={<ProjectLayout />}>
+          <Route index element={<Story />} />
+        </Route>
+      </Routes>
+    ),
+  ],
   loaders: [
     () => {
       // 스토리가 다시 그려져도 필요 자격 상태가 이어지지 않게 처음으로 되돌림

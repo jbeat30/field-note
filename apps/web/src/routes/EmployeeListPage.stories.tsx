@@ -17,11 +17,12 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
+// 표의 데이터 줄 (머리 줄 제외)
 const rowNames = (canvas: ReturnType<typeof within>) =>
   canvas
-    .getAllByRole('listitem')
-    .map((item: HTMLElement) => item.textContent ?? '')
-    .filter(Boolean);
+    .getAllByRole('row')
+    .slice(1)
+    .map((item: HTMLElement) => item.textContent ?? '');
 
 export const Default: Story = {
   play: async ({ canvasElement }) => {
@@ -29,11 +30,15 @@ export const Default: Story = {
 
     await expect(await canvas.findByText('정판금')).toBeInTheDocument();
     await expect(canvas.getByText('8명')).toBeInTheDocument();
-    // 직책·직종·구분이 한 줄로 보이고, 생년월일·연락처는 목록에 없음
-    await expect(canvas.getByText('반장 · 판금공 · 정직원')).toBeInTheDocument();
+    // 직책·직종·구분이 열로 보이고, 생년월일·연락처는 목록에 없음
+    const row = rowNames(canvas).find((text: string) => text.includes('정판금'))!;
+
+    await expect(row).toContain('반장');
+    await expect(row).toContain('판금공');
+    await expect(row).toContain('정직원');
     await expect(canvas.queryByText(/010-0000/)).not.toBeInTheDocument();
     // 휴직·퇴사 표시, 퇴사자는 목록 맨 뒤
-    await expect(within(canvas.getByRole('list')).getByText('휴직')).toBeInTheDocument();
+    await expect(within(canvas.getByRole('table')).getByText('휴직')).toBeInTheDocument();
     await waitFor(() => expect(rowNames(canvas).at(-1)).toContain('박퇴사'));
   },
 };
@@ -63,7 +68,7 @@ export const QuickAddWithJobType: Story = {
 
     await expect(await canvas.findByText('새용접 등록했습니다')).toBeInTheDocument();
 
-    const row = (await canvas.findByText('새용접', { selector: 'span' })).closest('li')!;
+    const row = (await canvas.findByRole('link', { name: '새용접' })).closest('tr')!;
 
     await expect(row).toHaveTextContent('용접공');
   },
@@ -126,5 +131,23 @@ export const NoResult: Story = {
     await userEvent.type(canvas.getByLabelText('이름 검색'), '없는이름');
 
     await expect(await canvas.findByText('조건에 맞는 직원이 없습니다')).toBeInTheDocument();
+  },
+};
+
+// 열 머리를 누르면 그 열 기준 오름차순, 한 번 더 누르면 내림차순
+export const SortByNameColumn: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('정판금');
+    await userEvent.click(canvas.getByRole('button', { name: '이름' }));
+    await waitFor(() => expect(rowNames(canvas)[0]).toContain('김일용'));
+    await expect(canvas.getByRole('columnheader', { name: /이름/ })).toHaveAttribute(
+      'aria-sort',
+      'ascending',
+    );
+
+    await userEvent.click(canvas.getByRole('button', { name: '이름' }));
+    await waitFor(() => expect(rowNames(canvas)[0]).toContain('한용접'));
   },
 };
