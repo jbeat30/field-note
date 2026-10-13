@@ -12,6 +12,7 @@ import { Link, useSearchParams } from 'react-router';
 import { BackLink } from '../components/ui/back-link';
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { PeriodNav } from '../components/ui/period-nav';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -164,30 +165,48 @@ export const MonthlyHoursPage = () => {
 
       {data && summary && (
         <>
-          <section className="flex flex-col gap-2" aria-labelledby="monthly-state-heading">
+          <section
+            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
+            aria-labelledby="monthly-state-heading"
+          >
             <h2 id="monthly-state-heading" className="text-lg font-bold">
               확정 상태
             </h2>
-            <dl className="grid grid-cols-[8rem_1fr] gap-y-1 text-sm">
-              <dt className="text-foreground/70">상태</dt>
-              <dd className="font-medium">{data.isClosed ? '확정됨' : '미확정'}</dd>
-              {data.closedAt && (
-                <>
-                  <dt className="text-foreground/70">확정 일시</dt>
-                  <dd>{formatDateTime(data.closedAt)}</dd>
-                </>
-              )}
-              <dt className="text-foreground/70">하루 기준시간</dt>
-              <dd>
-                {data.standardWorkMinutes / 60}시간
-                {data.isClosed ? ' (확정 당시 값)' : ''}
-              </dd>
-              <dt className="text-foreground/70">월 기준일수</dt>
-              <dd>{data.monthlyWorkDays}일</dd>
-              <dt className="text-foreground/70">합계</dt>
-              <dd className="font-bold">
-                {value(summary.total).manDays} MD · {value(summary.total).manMonths} MM
-              </dd>
+            <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
+              <div className="rounded-xl bg-surface-nested p-4">
+                <dt className="text-sm text-foreground/70">상태</dt>
+                <dd className="mt-1">
+                  <Badge tone={data.isClosed ? 'success' : 'warning'}>
+                    {data.isClosed ? '확정됨' : '미확정'}
+                  </Badge>
+                  {data.closedAt && (
+                    <span className="mt-1 block text-xs text-foreground/70">
+                      확정 일시 {formatDateTime(data.closedAt)}
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-surface-nested p-4">
+                <dt className="text-sm text-foreground/70">하루 기준시간</dt>
+                <dd className="mt-1 text-xl font-bold">
+                  {data.standardWorkMinutes / 60}시간
+                  {data.isClosed && (
+                    <span className="block text-xs font-normal text-foreground/70">
+                      (확정 당시 값)
+                    </span>
+                  )}
+                </dd>
+              </div>
+              <div className="rounded-xl bg-surface-nested p-4">
+                <dt className="text-sm text-foreground/70">월 기준일수</dt>
+                <dd className="mt-1 text-xl font-bold">{data.monthlyWorkDays}일</dd>
+              </div>
+              <div className="rounded-xl bg-surface-nested p-4">
+                <dt className="text-sm text-foreground/70">합계</dt>
+                <dd className="mt-1 text-xl font-bold">
+                  {value(summary.total).manDays} MD · {value(summary.total).manMonths} MM
+                </dd>
+              </div>
             </dl>
             {!data.isClosed && (
               <p className="text-sm text-foreground/70">
@@ -198,7 +217,10 @@ export const MonthlyHoursPage = () => {
           </section>
 
           {data.draftLogCount > 0 && (
-            <section className="flex flex-col gap-2" aria-labelledby="monthly-drafts-heading">
+            <section
+              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
+              aria-labelledby="monthly-drafts-heading"
+            >
               <h2 id="monthly-drafts-heading" className="text-lg font-bold">
                 임시 저장된 일지 {data.draftLogCount}건
               </h2>
@@ -225,7 +247,10 @@ export const MonthlyHoursPage = () => {
             </section>
           )}
 
-          <section className="flex flex-col gap-2" aria-labelledby="monthly-table-heading">
+          <section
+            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
+            aria-labelledby="monthly-table-heading"
+          >
             <h2 id="monthly-table-heading" className="text-lg font-bold">
               프로젝트·직원별 공수
             </h2>
@@ -263,7 +288,10 @@ export const MonthlyHoursPage = () => {
           </section>
 
           {summary.byEmployee.length > 0 && (
-            <section className="flex flex-col gap-2" aria-labelledby="monthly-employee-heading">
+            <section
+              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
+              aria-labelledby="monthly-employee-heading"
+            >
               <h2 id="monthly-employee-heading" className="text-lg font-bold">
                 직원별 합계
               </h2>
@@ -280,7 +308,10 @@ export const MonthlyHoursPage = () => {
             </section>
           )}
 
-          <section className="flex flex-col gap-3" aria-labelledby="monthly-action-heading">
+          <section
+            className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+            aria-labelledby="monthly-action-heading"
+          >
             <h2 id="monthly-action-heading" className="text-lg font-bold">
               {data.isClosed ? '재오픈' : '확정'}
             </h2>
@@ -331,7 +362,10 @@ export const MonthlyHoursPage = () => {
             )}
           </section>
 
-          <section className="flex flex-col gap-2" aria-labelledby="monthly-export-heading">
+          <section
+            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
+            aria-labelledby="monthly-export-heading"
+          >
             <h2 id="monthly-export-heading" className="text-lg font-bold">
               엑셀로 내보내기
             </h2>
@@ -371,7 +405,10 @@ export const MonthlyHoursPage = () => {
             )}
           </section>
 
-          <section className="flex flex-col gap-2" aria-labelledby="monthly-history-heading">
+          <section
+            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
+            aria-labelledby="monthly-history-heading"
+          >
             <h2 id="monthly-history-heading" className="text-lg font-bold">
               확정·재오픈 이력
             </h2>
