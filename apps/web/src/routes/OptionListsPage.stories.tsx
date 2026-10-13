@@ -132,3 +132,18 @@ export const Reorder: Story = {
     await expect(namesIn(jobs)[1]).toContain('판금공');
   },
 };
+
+// 손잡이로 순서를 바꾸면 서버에 저장됨 (키보드: Space → 방향키 → Space)
+export const DragReorder: Story = {
+  play: async ({ canvasElement }) => {
+    const jobs = await section(canvasElement, '직종');
+    const handle = await jobs.findByRole('button', { name: '판금공 순서 끌어서 바꾸기' });
+
+    handle.focus();
+    await userEvent.keyboard(' ');
+    await userEvent.keyboard('{ArrowDown}');
+    await userEvent.keyboard(' ');
+
+    await waitFor(() => expect(namesIn(jobs)[1]).toContain('판금공'));
+  },
+};
