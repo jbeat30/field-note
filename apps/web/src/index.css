@@ -1,17 +1,95 @@
+/* 글꼴: 서체 파일을 앱에 포함해 오프라인(PWA)에서도 같은 모양으로 보임 */
+@import 'pretendard/dist/web/variable/pretendardvariable-dynamic-subset.css';
+@import '@fontsource-variable/space-grotesk';
 @import 'tailwindcss';
 
-/* 디자인 토큰: 앱과 Storybook이 같은 파일을 불러와 모양이 같게 보임 */
-@theme {
-  --font-sans: 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Noto Sans KR', sans-serif;
-  --color-primary: #1d4ed8;
-  --color-primary-foreground: #ffffff;
-  --color-surface: #ffffff;
-  --color-muted: #f1f5f9;
-  --color-foreground: #0f172a;
-  --color-border: #cbd5e1;
-  --color-danger: #b91c1c;
+/* 다크 모드: html에 dark 클래스가 있을 때 (테마 설정 또는 기기 설정) */
+@custom-variant dark (&:where(.dark, .dark *));
+
+/* 디자인 토큰: 앱과 Storybook이 같은 파일을 불러와 모양이 같게 보임. 색은 아래 :root / .dark 의 변수를 따름 */
+@theme inline {
+  --font-sans:
+    'Pretendard Variable', 'Pretendard', system-ui, -apple-system, 'Segoe UI', 'Noto Sans KR',
+    sans-serif;
+  --font-emphasis: 'Space Grotesk Variable', 'Pretendard Variable', 'Pretendard', sans-serif;
+
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-primary-subtle: var(--primary-subtle);
+  --color-surface: var(--surface);
+  --color-surface-subtle: var(--surface-subtle);
+  --color-muted: var(--muted);
+  --color-foreground: var(--foreground);
+  --color-border: var(--border);
+  --color-border-strong: var(--border-strong);
+  --color-danger: var(--danger);
+  --color-danger-subtle: var(--danger-subtle);
+  --color-success: var(--success);
+  --color-success-subtle: var(--success-subtle);
+  --color-warning: var(--warning);
+  --color-warning-subtle: var(--warning-subtle);
+  --color-overlay: var(--overlay);
+
+  /* 모서리: 토스처럼 둥글게 (카드 24px, 입력·버튼 12px) */
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1rem;
+  --radius-xl: 1.5rem;
+
+  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
+  --shadow-sheet: 0 -4px 24px rgb(0 0 0 / 0.12);
+
+  /* 모션: 짧고 가볍게 */
+  --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --duration-fast: 150ms;
+  --duration-base: 250ms;
+
   /* 현장 사용 기준 터치 영역 최소 크기 */
   --spacing-touch: 2.75rem;
+}
+
+:root {
+  color-scheme: light;
+  --primary: #005ce6;
+  --primary-foreground: #ffffff;
+  --primary-subtle: #e8f0ff;
+  --surface: #ffffff;
+  --surface-subtle: #f7f8fa;
+  --muted: #f2f4f6;
+  --foreground: #191f28;
+  --border: #d1d6db;
+  --border-strong: #8b95a1;
+  --danger: #c4231a;
+  --danger-subtle: #fef0ee;
+  --success: #0b7a53;
+  --success-subtle: #e6f6ef;
+  --warning: #9a5b00;
+  --warning-subtle: #fff4e0;
+  --overlay: rgb(25 31 40 / 0.5);
+}
+
+/* 인쇄는 항상 밝은 색 */
+@media screen {
+  :root.dark {
+    color-scheme: dark;
+    --primary: #5c95ff;
+    --primary-foreground: #0a1224;
+    --primary-subtle: #0d1f40;
+    --surface: #111111;
+    --surface-subtle: #1a1a1a;
+    --muted: #222222;
+    --foreground: #f2f4f6;
+    --border: #3d434e;
+    --border-strong: #8b95a1;
+    --danger: #ff7a70;
+    --danger-subtle: #3a1512;
+    --success: #34d399;
+    --success-subtle: #0e2a20;
+    --warning: #fbbf4a;
+    --warning-subtle: #33270d;
+    --overlay: rgb(0 0 0 / 0.65);
+  }
 }
 
 body {
@@ -19,6 +97,22 @@ body {
   background: var(--color-surface);
   color: var(--color-foreground);
   font-family: var(--font-sans);
+  letter-spacing: -0.01em;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  transition:
+    background-color var(--duration-base) var(--ease-smooth),
+    color var(--duration-base) var(--ease-smooth);
+}
+
+/* 모션을 줄이도록 설정한 기기에서는 전환을 없앰 */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+  }
 }
 
 /* 인쇄(작업일보 출력): A4 세로, 화면 메뉴는 숨기고 색은 그대로 인쇄 */

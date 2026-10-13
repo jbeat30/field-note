@@ -123,7 +123,7 @@ export const ProjectProgressPanel = ({
       {data.warnings.length > 0 && (
         <ul className="flex flex-col gap-1" aria-label="진행 경고">
           {data.warnings.map((warning) => (
-            <li key={warning} className="rounded-md bg-danger/10 px-3 py-2 text-danger">
+            <li key={warning} className="rounded-md bg-danger-subtle px-3 py-2 text-danger">
               {PROJECT_WARNING_LABELS[warning]}
             </li>
           ))}

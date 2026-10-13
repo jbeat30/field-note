@@ -64,7 +64,7 @@ export const useOpenDocument = (): OpenDocument => {
     dialog: pending && (
       <Dialog.Root open onOpenChange={(open) => !open && setPending(null)}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-foreground/50" />
+          <Dialog.Overlay className="fixed inset-0 bg-overlay" />
           <Dialog.Content
             className="fixed inset-x-0 bottom-0 mx-auto flex max-w-xl flex-col gap-3 rounded-t-lg bg-surface p-4"
             aria-describedby="sensitive-description"

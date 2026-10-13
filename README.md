@@ -4,13 +4,13 @@
 
 ## 구성
 
-| 경로              | 내용                             |
-| ----------------- | -------------------------------- |
-| `apps/web`        | React 19 + Vite 8 (SPA)          |
-| `apps/api`        | Express 5 API 서버               |
-| `packages/shared` | Zod 스키마, 공통 타입, 공수 계산 |
-| `packages/config` | tsconfig·ESLint·Jest 공통 설정   |
-| `docs`            | 기획서, 분석, 개발 순서 설계     |
+| 경로              | 내용                                                     |
+| ----------------- | -------------------------------------------------------- |
+| `apps/web`        | React 19 + Vite 8 (SPA, 토스 블루 디자인 토큰·다크 모드) |
+| `apps/api`        | Express 5 API 서버                                       |
+| `packages/shared` | Zod 스키마, 공통 타입, 공수 계산                         |
+| `packages/config` | tsconfig·ESLint·Jest 공통 설정                           |
+| `docs`            | 기획서, 분석, 개발 순서 설계                             |
 
 ## AI와 함께 개발하기 (바이브 코딩)
 
