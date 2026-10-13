@@ -37,7 +37,7 @@ const CertificateRow = ({
   const [expiresOn, setExpiresOn] = useState(certificate.expiresOn);
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3 text-sm">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
       <div className="flex flex-col gap-0.5">
         <span className="font-medium">
           {certificate.title}

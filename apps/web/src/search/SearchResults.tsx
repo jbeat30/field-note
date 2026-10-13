@@ -29,7 +29,7 @@ const Hit = ({ hit }: { hit: SearchHit }) => (
   <li>
     <Link
       to={searchHitLink(hit)}
-      className="flex min-h-touch flex-col gap-0.5 rounded-md border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="flex min-h-touch flex-col gap-0.5 rounded-xl bg-surface-subtle px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       <span className="flex flex-wrap items-center gap-2 font-medium">
         {hit.title}

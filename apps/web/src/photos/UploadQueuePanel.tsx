@@ -46,7 +46,7 @@ export const UploadQueuePanel = ({
 
   return (
     <section
-      className="flex flex-col gap-2 rounded-md border border-border p-3"
+      className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
       aria-label="사진 올리기 현황"
     >
       <div className="flex items-center justify-between gap-2">

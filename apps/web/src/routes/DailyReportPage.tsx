@@ -99,7 +99,7 @@ export const DailyReportPage = () => {
           인쇄 창에서 “PDF로 저장”을 고르면 {formatDay(date)} 작업일보를 파일로 보관·제출할 수
           있습니다
         </p>
-        <details className="rounded-md border border-border p-3">
+        <details className="rounded-xl bg-surface-subtle p-4">
           <summary className="min-h-touch cursor-pointer content-center text-base font-medium">
             엑셀로 내보내기
           </summary>

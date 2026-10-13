@@ -43,7 +43,7 @@ const MemoItem = ({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
       <div className="flex items-start gap-2">
         {memo.tag === 'TODO' && (
           <input
@@ -55,7 +55,7 @@ const MemoItem = ({
           />
         )}
         <div className="flex min-w-0 flex-1 flex-col gap-1">
-          <span className="w-fit rounded bg-muted px-1.5 py-0.5 text-xs">
+          <span className="w-fit rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
             {MEMO_TAG_LABELS[memo.tag]}
           </span>
           {isEditing ? (
