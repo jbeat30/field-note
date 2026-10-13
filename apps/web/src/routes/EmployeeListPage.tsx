@@ -9,6 +9,8 @@ import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
+import { Button } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { EmployeeQuickAdd } from '../employees/EmployeeQuickAdd';
@@ -27,24 +29,26 @@ export const EmployeeListPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-2">
-        <h1 className="text-2xl font-bold">직원</h1>
-        <div className="flex flex-col items-end">
-          <Link to="/staffing" className="flex min-h-touch items-center text-primary underline">
-            인력 배치 보기
-          </Link>
-          <Link
-            to="/monthly-hours"
-            className="flex min-h-touch items-center text-primary underline"
-          >
-            월 공수표
-          </Link>
-        </div>
-      </div>
+      <PageHeader
+        title="직원"
+        actions={
+          <>
+            <Button asChild variant="secondary">
+              <Link to="/staffing">인력 배치 보기</Link>
+            </Button>
+            <Button asChild variant="secondary">
+              <Link to="/monthly-hours">월 공수표</Link>
+            </Button>
+          </>
+        }
+      />
 
       <EmployeeQuickAdd />
 
-      <section className="flex flex-col gap-3" aria-labelledby="employee-list-heading">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+        aria-labelledby="employee-list-heading"
+      >
         <h2 id="employee-list-heading" className="text-lg font-bold">
           직원 목록
         </h2>
@@ -90,7 +94,7 @@ export const EmployeeListPage = () => {
             {employees.data.length === 0 ? (
               <p className="text-sm">조건에 맞는 직원이 없습니다</p>
             ) : (
-              <ul className="flex flex-col gap-2">
+              <ul className="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
                 {employees.data.map((employee) => {
                   const details = [
                     employee.title,
@@ -101,7 +105,7 @@ export const EmployeeListPage = () => {
                   return (
                     <li key={employee.id}>
                       <Link
-                        className="flex min-h-touch flex-col justify-center gap-0.5 rounded-xl bg-surface-subtle px-4 py-3"
+                        className="flex min-h-touch flex-col justify-center gap-0.5 rounded-xl bg-surface-subtle px-5 py-4 transition-shadow hover:shadow-card"
                         to={`/employees/${employee.id}`}
                       >
                         <span className="flex items-center gap-2 font-medium">

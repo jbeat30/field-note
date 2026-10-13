@@ -582,7 +582,7 @@ export const WorkLogEditor = ({
         {lines.length === 0 && (
           <p className="text-sm">이 날 투입된 직원이 없습니다. 아래에서 직원을 추가해 주세요</p>
         )}
-        <ul className="flex flex-col gap-3" aria-label="직원별 공수">
+        <ul className="grid gap-3 xl:grid-cols-2" aria-label="직원별 공수">
           {employeeIds.map((employeeId) => {
             const employee = employeeById.get(employeeId);
             const employeeLines = lines.filter((line) => line.employeeId === employeeId);

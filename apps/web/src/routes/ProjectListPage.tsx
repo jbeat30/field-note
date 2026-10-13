@@ -14,6 +14,7 @@ import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { PageHeader } from '../components/ui/page-header';
 import { Select } from '../components/ui/select';
 import { useEmployees } from '../employees/useEmployees';
 import { usePartners } from '../partners/usePartners';
@@ -39,14 +40,19 @@ export const ProjectListPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex items-center justify-between gap-3">
-        <h1 className="text-2xl font-bold">프로젝트</h1>
-        <Button asChild>
-          <Link to="/projects/new">프로젝트 등록</Link>
-        </Button>
-      </div>
+      <PageHeader
+        title="프로젝트"
+        actions={
+          <Button asChild>
+            <Link to="/projects/new">프로젝트 등록</Link>
+          </Button>
+        }
+      />
 
-      <section className="flex flex-col gap-3" aria-label="검색과 필터">
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+        aria-label="검색과 필터"
+      >
         <Input
           type="search"
           aria-label="프로젝트 검색"
@@ -54,7 +60,7 @@ export const ProjectListPage = () => {
           value={filter.q ?? ''}
           onChange={(event) => update({ q: event.target.value })}
         />
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:grid-cols-5">
           <Select
             aria-label="상태 필터"
             value={filter.status ?? ''}
@@ -108,7 +114,6 @@ export const ProjectListPage = () => {
           </Select>
           <Select
             aria-label="공종 필터"
-            className="col-span-2"
             value={filter.tradeId ?? ''}
             onChange={(event) => update({ tradeId: event.target.value || undefined })}
           >
@@ -120,7 +125,7 @@ export const ProjectListPage = () => {
             ))}
           </Select>
         </div>
-        <div className="grid grid-cols-2 gap-2">
+        <div className="grid grid-cols-2 gap-2 lg:max-w-xl">
           <label className="flex flex-col gap-1 text-sm">
             기간 시작
             <Input
@@ -160,11 +165,11 @@ export const ProjectListPage = () => {
           {projects.data.length === 0 ? (
             <p className="text-sm">조건에 맞는 프로젝트가 없습니다</p>
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="grid gap-3 lg:grid-cols-2">
               {projects.data.map((project) => (
                 <li key={project.id}>
                   <Link
-                    className="flex flex-col gap-1 rounded-xl bg-surface-subtle px-4 py-3"
+                    className="flex h-full flex-col gap-1 rounded-xl bg-surface-subtle px-5 py-4 transition-shadow hover:shadow-card"
                     to={`/projects/${project.id}`}
                   >
                     <span className="flex flex-wrap items-center gap-2">
