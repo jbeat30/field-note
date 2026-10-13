@@ -98,7 +98,7 @@ const MemoItem = ({
             <p
               className={
                 memo.isDone
-                  ? 'whitespace-pre-wrap text-foreground/60 line-through'
+                  ? 'whitespace-pre-wrap text-foreground/70 line-through'
                   : 'whitespace-pre-wrap'
               }
             >

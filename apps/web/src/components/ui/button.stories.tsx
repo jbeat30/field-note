@@ -50,3 +50,5 @@ export const LongText: Story = {
     ),
   ],
 };
+
+export const Ghost: Story = { args: { variant: 'ghost', children: '취소' } };

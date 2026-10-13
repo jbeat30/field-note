@@ -142,7 +142,7 @@ export const DailyReportPage = () => {
 
       <Dialog.Root open={isConfirming} onOpenChange={setIsConfirming}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-foreground/50 print:hidden" />
+          <Dialog.Overlay className="fixed inset-0 bg-overlay print:hidden" />
           <Dialog.Content
             aria-describedby="export-description"
             className="fixed inset-x-0 bottom-0 mx-auto flex max-w-xl flex-col gap-3 rounded-t-lg bg-surface p-4 print:hidden"

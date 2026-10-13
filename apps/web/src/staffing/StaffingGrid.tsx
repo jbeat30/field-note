@@ -86,9 +86,9 @@ export const StaffingGrid = ({ rows, dates }: { rows: StaffingRow[]; dates: stri
                   data-state={cell.state}
                   className={cn(
                     'h-11 border-b border-border px-1 text-center text-xs',
-                    cell.state === 'ASSIGNED' && 'bg-primary/15 font-medium text-primary',
-                    cell.state === 'CONFLICT' && 'bg-danger/15 font-bold text-danger',
-                    cell.state === 'UNAVAILABLE' && 'bg-muted text-foreground/60',
+                    cell.state === 'ASSIGNED' && 'bg-primary-subtle font-medium text-primary',
+                    cell.state === 'CONFLICT' && 'bg-danger-subtle font-bold text-danger',
+                    cell.state === 'UNAVAILABLE' && 'bg-muted text-foreground/70',
                   )}
                 >
                   {text}
