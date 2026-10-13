@@ -58,7 +58,7 @@ export const ProjectDocumentsPage = () => {
       </Link>
       <h1 className="text-2xl font-bold">문서함</h1>
       <section
-        className="flex flex-col gap-3 rounded-md border border-border p-3"
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
         aria-labelledby="upload-heading"
       >
         <h2 id="upload-heading" className="text-lg font-bold">

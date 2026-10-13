@@ -341,7 +341,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       </Lockable>
 
       <Lockable locked={isLocked('siteName')}>
-        <fieldset className="flex flex-col gap-4 rounded-md border border-border p-3">
+        <fieldset className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-4">
           <legend className="px-1 text-sm font-bold">현장</legend>
           <FormField label="현장 이름" hint="건물명이나 현장 이름" error={errors.siteName?.message}>
             <Input {...register('siteName')} />
@@ -463,7 +463,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       </Lockable>
 
       <Lockable locked={isLocked('contractDate')}>
-        <fieldset className="flex flex-col gap-4 rounded-md border border-border p-3">
+        <fieldset className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-4">
           <legend className="px-1 text-sm font-bold">일정</legend>
           <FormField label="계약일" error={errors.contractDate?.message}>
             <Input type="date" {...register('contractDate')} />

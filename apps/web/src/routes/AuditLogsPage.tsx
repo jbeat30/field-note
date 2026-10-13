@@ -38,7 +38,7 @@ const Row = ({ item }: { item: AuditLog }) => {
   const path = targetPath(item);
 
   return (
-    <li className="flex flex-col gap-0.5 rounded-md border border-border p-3 text-sm">
+    <li className="flex flex-col gap-0.5 rounded-xl bg-surface-subtle p-4 text-sm">
       <span className="font-medium">{AUDIT_ACTION_TITLES[item.action]}</span>
       <span>
         {item.targetName ? (

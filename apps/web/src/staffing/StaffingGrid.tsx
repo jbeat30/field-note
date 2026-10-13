@@ -13,7 +13,7 @@ const dayLabel = (date: string) => ({
 
 // 직원 × 날짜 표: 가로로 밀어 볼 수 있고 직원 이름 열은 고정. 칸에는 프로젝트 번호 끝 3자리만 보여 좁은 화면에서도 읽힌다
 export const StaffingGrid = ({ rows, dates }: { rows: StaffingRow[]; dates: string[] }) => (
-  <div className="overflow-x-auto rounded-md border border-border">
+  <div className="overflow-x-auto rounded-xl border border-border">
     <table className="w-full border-collapse text-sm">
       <thead>
         <tr>
