@@ -3,6 +3,7 @@ import { BookUser, ClipboardList, FolderKanban, House, Plus, Settings, Users } f
 import { NavLink, Outlet } from 'react-router';
 
 import { Button } from '../components/ui/button';
+import { Toaster } from '../components/ui/toaster';
 import { cn } from '../lib/cn';
 import { useUiStore } from '../stores/uiStore';
 
@@ -80,6 +81,7 @@ export const AppLayout = () => {
         ))}
       </nav>
       <QuickAddSheet />
+      <Toaster />
     </div>
   );
 };
