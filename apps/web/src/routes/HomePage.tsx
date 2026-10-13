@@ -7,6 +7,7 @@ import { ResumeDrafts } from '../drafts/ResumeDrafts';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
+import { Skeleton } from '../components/ui/skeleton';
 import { Alert } from '../components/ui/alert';
 import { DashboardWidgets } from '../dashboard/DashboardWidgets';
 import { useDashboard } from '../dashboard/useDashboard';
@@ -30,7 +31,7 @@ export const HomePage = () => {
     <section className="flex flex-col gap-4">
       <div>
         <h1 className="text-2xl font-bold">{me.data?.companyName ?? '홈'}</h1>
-        <p className="mt-2 text-sm">{me.data?.displayName}님, 안녕하세요</p>
+        <p className="mt-1 text-sm text-foreground/70">{me.data?.displayName}님, 안녕하세요</p>
       </div>
       <form
         role="search"
@@ -54,11 +55,17 @@ export const HomePage = () => {
         <Button type="submit">찾기</Button>
       </form>
       {dashboard.isError && <Alert>대시보드를 불러오지 못했습니다</Alert>}
-      {dashboard.isPending && <p className="text-sm text-foreground/70">대시보드를 불러오는 중</p>}
+      {dashboard.isPending && (
+        <div className="flex flex-col gap-3">
+          <p className="text-sm text-foreground/70">대시보드를 불러오는 중</p>
+          <Skeleton className="h-32 w-full rounded-xl" />
+          <Skeleton className="h-24 w-full rounded-xl" />
+        </div>
+      )}
       {dashboard.data && <DashboardWidgets dashboard={dashboard.data.dashboard} />}
       <Link
         to="/inbox"
-        className="flex min-h-touch flex-col gap-1 rounded-md border border-border p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+        className="flex min-h-touch flex-col gap-1 rounded-xl bg-surface-subtle p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
       >
         <span className="text-lg font-bold">메모함</span>
         {summary.data ? (

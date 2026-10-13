@@ -9,12 +9,14 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ProgressBar } from '../components/ui/progress-bar';
 
 // 알림이 많을 때 처음에 보여 줄 개수 (나머지는 펼쳐서 본다)
 const ALERTS_COLLAPSED = 5;
 
-const card = 'flex flex-col gap-2 rounded-md border border-border p-4';
+const card = 'flex flex-col gap-2 rounded-xl bg-surface-subtle p-4';
 
 const Widget = ({
   title,
@@ -58,9 +60,20 @@ const ProjectRow = ({ project }: { project: DashboardProject }) => (
         공수 소진율{' '}
         {project.burnPercent === null ? '계획 없음' : `${Math.round(project.burnPercent)}%`}
       </span>
+      {project.progressPercent !== null && (
+        <ProgressBar
+          aria-label={`${project.name} 진행률`}
+          value={project.progressPercent}
+          className="mt-1"
+        />
+      )}
       {project.warnings.length > 0 && (
-        <span className="text-sm font-medium text-danger">
-          {project.warnings.map((warning) => PROJECT_WARNING_LABELS[warning]).join(' · ')}
+        <span className="flex flex-wrap gap-1">
+          {project.warnings.map((warning) => (
+            <Badge key={warning} tone="danger">
+              {PROJECT_WARNING_LABELS[warning]}
+            </Badge>
+          ))}
         </span>
       )}
     </Link>
