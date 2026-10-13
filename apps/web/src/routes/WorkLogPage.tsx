@@ -8,6 +8,8 @@ import {
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { DateInput } from '../components/ui/date-input';
@@ -92,7 +94,7 @@ export const WorkLogPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">작업일지</h1>
+      <PageHeader title="작업일지" description="프로젝트와 날짜를 고르고 하루 일지를 입력합니다" />
       {failed && <Alert>화면에 필요한 정보를 불러오지 못했습니다</Alert>}
 
       <div className="flex flex-col gap-2">
@@ -115,7 +117,7 @@ export const WorkLogPage = () => {
             aria-label="전날"
             onClick={() => update({ date: addDays(date, -1) })}
           >
-            ◀
+            <ChevronLeft aria-hidden className="size-5" />
           </Button>
           <DateInput
             aria-label="작업일"
@@ -130,7 +132,7 @@ export const WorkLogPage = () => {
             disabled={date >= today}
             onClick={() => update({ date: addDays(date, 1) })}
           >
-            ▶
+            <ChevronRight aria-hidden className="size-5" />
           </Button>
         </div>
       </div>

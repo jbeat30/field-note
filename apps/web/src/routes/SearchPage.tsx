@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Input } from '../components/ui/input';
 import { useProject } from '../projects/useProjects';
@@ -30,7 +31,7 @@ export const SearchPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">찾기</h1>
+      <PageHeader title="찾기" description="프로젝트·직원·메모·자료·일지를 한 번에 찾습니다" />
       {projectId && (
         <p className="text-sm text-foreground/70">
           {project.data ? (

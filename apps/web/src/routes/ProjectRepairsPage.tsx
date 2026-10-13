@@ -7,6 +7,7 @@ import {
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Select } from '../components/ui/select';
 import { useProject } from '../projects/useProjects';
@@ -36,7 +37,7 @@ export const ProjectRepairsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">보수 요청</h1>
+        <PageHeader title="보수 요청" description="보증 기간 중 접수한 보수 요청을 처리합니다" />
         <Link className="text-primary underline" to={`/projects/${id}`}>
           {project.data.name}
         </Link>

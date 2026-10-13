@@ -7,6 +7,7 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { BackLink } from '../components/ui/back-link';
 import { useAuditLogs, type AuditFilter } from '../audit/useAuditLogs';
 import { Alert } from '../components/ui/alert';
@@ -82,7 +83,10 @@ export const AuditLogsPage = () => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <BackLink to="/settings">설정으로</BackLink>
-        <h1 className="text-2xl font-bold">기록 조회</h1>
+        <PageHeader
+          title="기록 조회"
+          description="민감 정보 열람·내보내기·확정 기록을 확인합니다 (조회만 가능)"
+        />
         <p className="text-sm text-foreground/70">
           누가 언제 무엇을 열람·내보내기·확정했는지 남은 기록입니다. 수정하거나 지울 수 없습니다
         </p>

@@ -7,6 +7,7 @@ import {
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { ChangeWorkForm } from '../changeWorks/ChangeWorkForm';
 import { ChangeWorkItem } from '../changeWorks/ChangeWorkItem';
 import { ChangeWorkUsagePanel } from '../changeWorks/ChangeWorkUsagePanel';
@@ -41,7 +42,10 @@ export const ProjectChangeWorksPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">변경·추가 작업</h1>
+        <PageHeader
+          title="변경·추가 작업"
+          description="계약 밖에서 생긴 작업의 협의와 승인을 기록합니다"
+        />
         <Link className="text-primary underline" to={`/projects/${id}`}>
           {project.data.name}
         </Link>

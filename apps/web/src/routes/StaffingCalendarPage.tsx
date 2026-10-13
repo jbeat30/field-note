@@ -10,8 +10,10 @@ import {
 } from '@field-note/shared';
 import { useSearchParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
-import { Button } from '../components/ui/button';
+import { PeriodNav } from '../components/ui/period-nav';
 import { StaffingGrid } from '../staffing/StaffingGrid';
 import { useStaffingCalendar } from '../staffing/useStaffingCalendar';
 
@@ -38,28 +40,20 @@ export const StaffingCalendarPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">인력 배치</h1>
+      <BackLink to="/employees">직원</BackLink>
+      <PageHeader title="인력 배치" description="직원별 투입 현황과 겹침을 한 주 단위로 봅니다" />
 
-      <div className="flex items-center justify-between gap-2">
-        <Button variant="secondary" aria-label="이전 주" onClick={() => move(-WEEK_DAYS)}>
-          ‹
-        </Button>
-        <div className="flex flex-col items-center">
-          <p className="font-bold">
-            {from} ~ {to}
-          </p>
-          <button
-            type="button"
-            className="min-h-touch text-sm text-primary underline"
-            onClick={() => setParams({})}
-          >
-            이번 주
-          </button>
-        </div>
-        <Button variant="secondary" aria-label="다음 주" onClick={() => move(WEEK_DAYS)}>
-          ›
-        </Button>
-      </div>
+      <PeriodNav
+        label={`${from} ~ ${to}`}
+        prevLabel="이전 주"
+        nextLabel="다음 주"
+        onPrev={() => move(-WEEK_DAYS)}
+        onNext={() => move(WEEK_DAYS)}
+        todayLabel="이번 주"
+        onToday={() => setParams({})}
+        pickValue={from}
+        onPick={(date) => setParams({ from: periodStart(date, 'week') })}
+      />
 
       {calendar.isError && <Alert role="alert">배치 현황을 불러오지 못했습니다</Alert>}
       {calendar.isPending && <p>불러오는 중</p>}
