@@ -6,6 +6,7 @@ import {
 import { useState } from 'react';
 import { Link, useParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
@@ -42,12 +43,7 @@ export const ProjectMaterialsPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link
-        className="min-h-touch content-center text-sm text-primary underline"
-        to={`/projects/${id}`}
-      >
-        ← {project.data.name}
-      </Link>
+      <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
       <h1 className="text-2xl font-bold">자재 현황</h1>
       <Link
         className="min-h-touch content-center text-primary underline"

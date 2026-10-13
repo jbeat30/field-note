@@ -9,6 +9,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { useDocuments } from '../documents/useDocuments';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -73,11 +74,7 @@ const CertificateRow = ({
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <FormField label="만료일">
-              <Input
-                type="date"
-                value={expiresOn}
-                onChange={(event) => setExpiresOn(event.target.value)}
-              />
+              <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
             </FormField>
           </div>
           <Button
@@ -203,11 +200,7 @@ export const WarrantyCertificates = ({
             </Select>
           </FormField>
           <FormField label="만료일" error={errors.expiresOn}>
-            <Input
-              type="date"
-              value={expiresOn}
-              onChange={(event) => setExpiresOn(event.target.value)}
-            />
+            <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
           </FormField>
           <FormField label="발급처 (선택)" error={errors.issuer}>
             <Input

@@ -20,6 +20,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { useEmployees } from '../employees/useEmployees';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -182,18 +183,10 @@ const AssignmentRow = ({
           <p className="font-medium">{employeeName} 투입 수정</p>
           {rootError && <Alert>{rootError}</Alert>}
           <FormField label="투입 시작일" error={errors.startDate}>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-            />
+            <DateInput value={startDate} onChange={(event) => setStartDate(event.target.value)} />
           </FormField>
           <FormField label="투입 종료일" error={errors.endDate}>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-            />
+            <DateInput value={endDate} onChange={(event) => setEndDate(event.target.value)} />
           </FormField>
           <FormField
             label={plannedLabel(settings)}
@@ -450,18 +443,10 @@ export const ProjectAssignmentsPanel = ({ project }: { project: ProjectDetail })
             </Select>
           </FormField>
           <FormField label="투입 시작일" error={errors.startDate}>
-            <Input
-              type="date"
-              value={startDate}
-              onChange={(event) => setStartDate(event.target.value)}
-            />
+            <DateInput value={startDate} onChange={(event) => setStartDate(event.target.value)} />
           </FormField>
           <FormField label="투입 종료일" error={errors.endDate}>
-            <Input
-              type="date"
-              value={endDate}
-              onChange={(event) => setEndDate(event.target.value)}
-            />
+            <DateInput value={endDate} onChange={(event) => setEndDate(event.target.value)} />
           </FormField>
           <FormField
             label={plannedLabel(settings.data)}

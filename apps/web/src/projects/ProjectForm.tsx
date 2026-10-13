@@ -18,6 +18,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useEmployees } from '../employees/useEmployees';
@@ -473,17 +474,17 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
         <fieldset className="grid gap-4 rounded-xl bg-surface-subtle p-4 md:col-span-2 md:grid-cols-3">
           <legend className="px-1 text-sm font-bold">일정</legend>
           <FormField label="계약일" error={errors.contractDate?.message}>
-            <Input type="date" {...register('contractDate')} />
+            <DateInput {...register('contractDate')} />
           </FormField>
           <FormField
             label="시작 예정일"
             hint="작업일지를 입력할 수 있는 기간이 됩니다"
             error={errors.plannedStart?.message}
           >
-            <Input type="date" {...register('plannedStart')} />
+            <DateInput {...register('plannedStart')} />
           </FormField>
           <FormField label="종료 예정일" error={errors.plannedEnd?.message}>
-            <Input type="date" {...register('plannedEnd')} />
+            <DateInput {...register('plannedEnd')} />
           </FormField>
         </fieldset>
       </Lockable>

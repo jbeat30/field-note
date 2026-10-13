@@ -17,7 +17,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 
@@ -173,8 +173,7 @@ const TransitionForm = ({
       )}
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label={dateLabel} error={errors.effectiveOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={effectiveOn}
           onChange={(event) => setEffectiveOn(event.target.value)}
