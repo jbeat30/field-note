@@ -108,11 +108,11 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
         </Link>
         <h1 className="flex flex-wrap items-center gap-2 text-2xl font-bold">
           {partner.name}
-          <span className="rounded bg-muted px-2 py-0.5 text-sm font-normal">
+          <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">
             {PARTNER_KIND_LABELS[partner.kind]}
           </span>
           {!partner.isActive && (
-            <span className="rounded bg-muted px-2 py-0.5 text-sm font-normal">숨김</span>
+            <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm">숨김</span>
           )}
         </h1>
       </div>

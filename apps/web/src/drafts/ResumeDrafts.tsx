@@ -29,7 +29,7 @@ export const ResumeDrafts = ({ drafts, projectNames }: ResumeDraftsProps) => {
           <li key={`${draft.projectId}:${draft.date}`}>
             <Link
               to={`/work-logs?project=${draft.projectId}&date=${draft.date}`}
-              className="flex min-h-touch flex-col justify-center rounded-md border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="flex min-h-touch flex-col justify-center rounded-xl bg-surface-subtle px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span className="font-medium">
                 {projectNames.get(draft.projectId) ?? '프로젝트'} · {formatDay(draft.date)}{' '}

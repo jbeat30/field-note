@@ -43,7 +43,7 @@ export const WorkLogRevisionsPanel = ({
 
   return (
     <details
-      className="rounded-md border border-border p-3"
+      className="rounded-xl bg-surface-subtle p-4"
       onToggle={(event) => setOpen((event.currentTarget as HTMLDetailsElement).open)}
     >
       <summary className="min-h-touch cursor-pointer content-center text-sm font-bold">

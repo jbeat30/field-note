@@ -188,7 +188,7 @@ export const WorkLogPage = () => {
           <h2 id="recent-heading" className="text-base font-bold">
             최근 일지
           </h2>
-          <ul className="divide-y divide-border rounded-md border border-border">
+          <ul className="divide-y divide-border rounded-xl border border-border">
             {[...list.data]
               .sort((a, b) => b.workDate.localeCompare(a.workDate))
               .slice(0, 14)

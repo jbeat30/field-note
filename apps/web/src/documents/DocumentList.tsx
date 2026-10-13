@@ -30,7 +30,7 @@ const DocumentItem = ({
   const isReady = latest.fileStatus === 'READY';
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-base font-bold">{document.title}</span>
         {document.isSensitive && (
@@ -38,7 +38,7 @@ const DocumentItem = ({
             민감
           </span>
         )}
-        <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
           최신 v{latest.versionNo}
           {document.versionCount > 1 ? ` (전체 ${document.versionCount}개)` : ''}
         </span>

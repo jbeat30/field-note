@@ -96,7 +96,7 @@ const StatusForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label={`${TRANSITION_LABELS[to]} 확인`}
@@ -187,7 +187,7 @@ const EditForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label="보수 요청 수정"
@@ -482,10 +482,10 @@ export const RepairItem = ({
   const detail = useRepairDetail(repair.id, open);
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-bold">#{repair.seq}</span>
-        <span className="rounded bg-muted px-2 py-0.5 text-sm">
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-semibold">
           {REPAIR_STATUS_LABELS[repair.status]}
         </span>
         {repair.location && <span className="text-sm text-foreground/70">{repair.location}</span>}

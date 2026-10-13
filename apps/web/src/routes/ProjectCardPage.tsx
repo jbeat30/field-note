@@ -48,7 +48,7 @@ export const ProjectCardPage = () => {
       <div className="flex flex-col gap-1">
         <p className="flex items-center gap-2 text-sm text-foreground/70">
           {project.data.code}
-          <span className="rounded bg-muted px-1.5 py-0.5 text-xs text-foreground">
+          <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold text-foreground">
             {PROJECT_STATUS_LABELS[project.data.status]}
           </span>
         </p>

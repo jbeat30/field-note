@@ -126,7 +126,7 @@ const CredentialRow = ({
   };
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3 text-sm">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
       <div className="flex flex-col gap-1">
         <span className="flex flex-wrap items-center gap-2 font-medium">
           {credential.typeName}
@@ -177,7 +177,7 @@ const CredentialRow = ({
         </div>
       )}
       {confirmDelete && (
-        <div className="flex flex-col gap-2 rounded-md border border-danger p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
           <p>{credential.typeName} 서류를 삭제할까요? 목록에서 사라집니다</p>
           <div className="flex gap-2">
             <Button

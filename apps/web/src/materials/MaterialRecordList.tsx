@@ -35,7 +35,7 @@ const RecordItem = ({
   const parsed = parseQuantity(text);
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
         <span className="font-medium">
           {material
