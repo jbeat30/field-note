@@ -5,6 +5,7 @@ import {
   type DocumentCategory,
 } from '@field-note/shared';
 
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { formatDay } from '../lib/dates';
 
@@ -33,15 +34,11 @@ const DocumentItem = ({
     <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="text-base font-bold">{document.title}</span>
-        {document.isSensitive && (
-          <span className="rounded bg-danger px-1.5 py-0.5 text-xs text-primary-foreground">
-            민감
-          </span>
-        )}
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
+        {document.isSensitive && <Badge tone="danger">민감</Badge>}
+        <Badge>
           최신 v{latest.versionNo}
           {document.versionCount > 1 ? ` (전체 ${document.versionCount}개)` : ''}
-        </span>
+        </Badge>
       </div>
       <p className="text-sm text-foreground/70">
         {latest.fileName} · {formatSize(latest.size)} · {formatDay(latest.revisionDate)} 개정

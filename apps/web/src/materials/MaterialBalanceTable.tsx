@@ -11,9 +11,9 @@ export const MaterialBalanceTable = ({ items }: MaterialBalanceTableProps) => {
   }
 
   return (
-    <ul className="flex flex-col gap-2">
+    <ul className="grid gap-3 lg:grid-cols-2">
       {items.map((item) => (
-        <li key={item.materialId} className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
+        <li key={item.materialId} className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5">
           <div className="flex items-baseline justify-between gap-2">
             <span className="font-medium">
               {item.name}
@@ -36,9 +36,9 @@ export const MaterialBalanceTable = ({ items }: MaterialBalanceTableProps) => {
                 ['폐기', item.discarded],
               ] as const
             ).map(([label, value]) => (
-              <div key={label} className="rounded bg-muted px-1 py-1.5">
+              <div key={label} className="rounded-lg bg-surface-nested px-1 py-2">
                 <dt className="text-xs text-foreground/70">{label}</dt>
-                <dd className="font-medium">{value}</dd>
+                <dd className="text-base font-bold">{value}</dd>
               </div>
             ))}
           </dl>

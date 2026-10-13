@@ -3,6 +3,7 @@ import {
   type Material,
   type MaterialRecord,
 } from '@field-note/shared';
+import { Pencil, Trash2 } from 'lucide-react';
 import { useState } from 'react';
 
 import { Button } from '../components/ui/button';
@@ -34,37 +35,65 @@ const RecordItem = ({
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
   const parsed = parseQuantity(text);
 
+  const subInfo = [
+    record.area,
+    record.isChange && '변경·추가 작업',
+    record.isAfterService && '사후 작업',
+    record.memo,
+  ]
+    .filter(Boolean)
+    .join(' · ');
+
   return (
-    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
-      <div className="flex flex-wrap items-baseline justify-between gap-2">
-        <span className="font-medium">
-          {material
-            ? `${material.name}${material.spec ? ` ${material.spec}` : ''}`
-            : '(삭제된 자재)'}
-        </span>
-        <span className="text-lg font-bold">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle px-5 py-3">
+      <div className="flex items-center gap-3">
+        <div className="min-w-0 flex-1">
+          <p className="font-medium">
+            {material
+              ? `${material.name}${material.spec ? ` ${material.spec}` : ''}`
+              : '(삭제된 자재)'}
+          </p>
+          {subInfo && <p className="text-sm text-foreground/70">{subInfo}</p>}
+        </div>
+        <span className="shrink-0 text-lg font-bold">
           {MATERIAL_RECORD_KIND_LABELS[record.kind]} {record.quantity}
           {material?.unit}
         </span>
+        {!isEditing && (
+          <div className="flex shrink-0 gap-1">
+            <Button
+              type="button"
+              variant="ghost"
+              aria-label="기록 수정"
+              title="기록 수정"
+              onClick={() => setIsEditing(true)}
+            >
+              <Pencil aria-hidden className="size-5" />
+            </Button>
+            {isConfirmingDelete ? (
+              <Button type="button" variant="danger" onClick={() => onDelete(record)}>
+                정말 삭제
+              </Button>
+            ) : (
+              <Button
+                type="button"
+                variant="ghost"
+                aria-label="삭제"
+                title="삭제"
+                onClick={() => setIsConfirmingDelete(true)}
+              >
+                <Trash2 aria-hidden className="size-5" />
+              </Button>
+            )}
+          </div>
+        )}
       </div>
-      {(record.area || record.isChange || record.isAfterService || record.memo) && (
-        <p className="text-sm text-foreground/70">
-          {[
-            record.area,
-            record.isChange && '변경·추가 작업',
-            record.isAfterService && '사후 작업',
-            record.memo,
-          ]
-            .filter(Boolean)
-            .join(' · ')}
-        </p>
-      )}
-      {isEditing ? (
+      {isEditing && (
         <div className="flex items-center gap-2">
           <Input
             className="min-w-0 flex-1 text-right text-xl font-bold"
             inputMode="decimal"
-            aria-label="수량 수정"
+            aria-label="수정할 수량"
             value={text}
             aria-invalid={parsed === null ? true : undefined}
             onChange={(event) => setText(event.target.value)}
@@ -82,21 +111,6 @@ const RecordItem = ({
           <Button type="button" variant="secondary" onClick={() => setIsEditing(false)}>
             취소
           </Button>
-        </div>
-      ) : (
-        <div className="flex gap-2">
-          <Button type="button" variant="secondary" onClick={() => setIsEditing(true)}>
-            수량 수정
-          </Button>
-          {isConfirmingDelete ? (
-            <Button type="button" variant="danger" onClick={() => onDelete(record)}>
-              정말 삭제
-            </Button>
-          ) : (
-            <Button type="button" variant="secondary" onClick={() => setIsConfirmingDelete(true)}>
-              삭제
-            </Button>
-          )}
         </div>
       )}
     </li>

@@ -41,12 +41,12 @@ export const FilterRecordsByKind: Story = {
 
     await canvas.findByLabelText('아연도강판 잔량');
     await waitFor(() =>
-      expect(canvas.getAllByRole('button', { name: '수량 수정' }).length).toBe(7),
+      expect(canvas.getAllByRole('button', { name: '기록 수정' }).length).toBe(7),
     );
     await userEvent.selectOptions(canvas.getByLabelText('구분으로 거르기'), '폐기');
 
     await waitFor(() =>
-      expect(canvas.getAllByRole('button', { name: '수량 수정' })).toHaveLength(1),
+      expect(canvas.getAllByRole('button', { name: '기록 수정' })).toHaveLength(1),
     );
   },
 };
