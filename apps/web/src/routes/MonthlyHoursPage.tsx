@@ -9,7 +9,10 @@ import {
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
+import { BackLink } from '../components/ui/back-link';
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
+import { PeriodNav } from '../components/ui/period-nav';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
@@ -133,29 +136,27 @@ export const MonthlyHoursPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <h1 className="text-2xl font-bold">월 공수표</h1>
+      <BackLink to="/employees">직원</BackLink>
+      <PageHeader title="월 공수표" description="한 달 공수를 확인하고 확정합니다" />
 
-      <div className="flex items-center justify-between gap-2">
-        <Button variant="secondary" aria-label="이전 달" onClick={() => move(-1)}>
-          ‹
-        </Button>
-        <div className="flex flex-col items-center">
-          <p className="font-bold">{month}</p>
-          <button
-            type="button"
-            className="min-h-touch text-sm text-primary underline"
-            onClick={() => {
-              setParams({});
-              setMessage('');
-            }}
-          >
-            이번 달
-          </button>
-        </div>
-        <Button variant="secondary" aria-label="다음 달" onClick={() => move(1)}>
-          ›
-        </Button>
-      </div>
+      <PeriodNav
+        label={month}
+        prevLabel="이전 달"
+        nextLabel="다음 달"
+        onPrev={() => move(-1)}
+        onNext={() => move(1)}
+        todayLabel="이번 달"
+        onToday={() => {
+          setParams({});
+          setMessage('');
+        }}
+        pickValue={`${month}-01`}
+        pickMax={today}
+        onPick={(date) => {
+          setParams({ month: monthOf(date) });
+          setMessage('');
+        }}
+      />
 
       {rootError && <Alert>{rootError}</Alert>}
       {message && <p role="status">{message}</p>}

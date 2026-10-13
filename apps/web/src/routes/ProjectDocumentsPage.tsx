@@ -2,6 +2,7 @@ import { DOCUMENT_CATEGORIES, DOCUMENT_CATEGORY_LABELS } from '@field-note/share
 import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Input } from '../components/ui/input';
@@ -52,7 +53,7 @@ export const ProjectDocumentsPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
-      <h1 className="text-2xl font-bold">문서함</h1>
+      <PageHeader title="문서함" description="프로젝트 문서를 올리고 찾아봅니다" />
       <section
         className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
         aria-labelledby="upload-heading"

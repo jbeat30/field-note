@@ -1,5 +1,6 @@
 import { ALERT_KIND_LABELS } from '@field-note/shared';
 
+import { PageHeader } from '../components/ui/page-header';
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Checkbox } from '../components/ui/checkbox';
@@ -14,7 +15,7 @@ export const AlertSettingsPage = () => {
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
         <BackLink to="/settings">설정으로</BackLink>
-        <h1 className="text-2xl font-bold">알림 설정</h1>
+        <PageHeader title="알림 설정" description="홈 화면에 보여 줄 알림을 종류별로 켜고 끕니다" />
         <p className="text-sm text-foreground/70">
           홈 화면에 보여 줄 알림을 고릅니다. 꺼도 대시보드의 현황은 그대로 보입니다
         </p>

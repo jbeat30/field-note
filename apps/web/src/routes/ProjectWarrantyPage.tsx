@@ -5,6 +5,7 @@ import {
 } from '@field-note/shared';
 import { Link, useParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { useProject } from '../projects/useProjects';
 import { WarrantyCertificates } from '../warranty/WarrantyCertificates';
@@ -43,7 +44,7 @@ export const ProjectWarrantyPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">보증</h1>
+        <PageHeader title="보증" description="보증 기간과 보증서를 관리합니다" />
         <Link className="text-primary underline" to={`/projects/${id}`}>
           {project.data.name}
         </Link>
