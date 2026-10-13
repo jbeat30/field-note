@@ -11,7 +11,7 @@ import { MaterialDayPanel } from './MaterialDayPanel';
 const projectId = DEMO_PROJECTS.find((project) => project.name === 'A동 외장 판금 공사')!.id;
 
 const meta = {
-  title: 'Materials/일지 안 자재',
+  title: 'Materials/작업 내역 안 자재',
   component: MaterialDayPanel,
   args: { projectId, date: '2026-10-07', categories: [] },
   loaders: [() => signIn('hanbit')],

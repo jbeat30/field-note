@@ -52,11 +52,11 @@ export const ManyAlertsCollapsed: Story = {
     const canvas = within(canvasElement);
     const alerts = within(canvas.getByRole('region', { name: '알림' }));
 
-    await expect(alerts.getAllByText(/일지가 아직 없습니다/)).toHaveLength(5);
+    await expect(alerts.getAllByText(/작업 내역이 아직 없습니다/)).toHaveLength(5);
     await userEvent.click(alerts.getByRole('button', { name: '알림 7건 더 보기' }));
-    await expect(alerts.getAllByText(/일지가 아직 없습니다/)).toHaveLength(12);
+    await expect(alerts.getAllByText(/작업 내역이 아직 없습니다/)).toHaveLength(12);
     await userEvent.click(alerts.getByRole('button', { name: '알림 접기' }));
-    await expect(alerts.getAllByText(/일지가 아직 없습니다/)).toHaveLength(5);
+    await expect(alerts.getAllByText(/작업 내역이 아직 없습니다/)).toHaveLength(5);
   },
 };
 
@@ -65,7 +65,7 @@ export const FewAlertsNoToggle: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getAllByText(/일지가 아직 없습니다/)).toHaveLength(3);
+    await expect(canvas.getAllByText(/작업 내역이 아직 없습니다/)).toHaveLength(3);
     await expect(canvas.queryByRole('button', { name: /더 보기/ })).not.toBeInTheDocument();
   },
 };

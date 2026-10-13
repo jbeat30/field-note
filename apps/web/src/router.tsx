@@ -75,6 +75,14 @@ export const routes = [
             children: [
               {
                 index: true,
+                ...page(() => import('./routes/ProjectWorkPage'), 'ProjectWorkPage'),
+              },
+              {
+                path: 'work/:date',
+                ...page(() => import('./routes/ProjectWorkDayPage'), 'ProjectWorkDayPage'),
+              },
+              {
+                path: 'overview',
                 ...page(() => import('./routes/ProjectCardPage'), 'ProjectOverviewPage'),
               },
               {
@@ -133,9 +141,10 @@ export const routes = [
           },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
           { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
+          // 예전 작업 내역 주소: 프로젝트의 작업 내역으로 보냄
           {
             path: '/work-logs',
-            ...page(() => import('./routes/WorkLogPage'), 'WorkLogPage'),
+            ...page(() => import('./routes/WorkLogRedirect'), 'WorkLogRedirect'),
           },
           {
             path: '/employees',

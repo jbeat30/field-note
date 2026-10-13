@@ -19,7 +19,7 @@ type MaterialDayPanelProps = {
   categories: readonly { id: string; name: string }[];
 };
 
-// 작업일지 화면 안의 자재 입력 (별도 메뉴로 가지 않음): 그날 기록을 보고, 목록으로 여러 자재를 한꺼번에 추가한다
+// 작업 내역 화면 안의 자재 입력 (별도 메뉴로 가지 않음): 그날 기록을 보고, 목록으로 여러 자재를 한꺼번에 추가한다
 export const MaterialDayPanel = ({ projectId, date, categories }: MaterialDayPanelProps) => {
   const materials = useMaterials();
   const records = useMaterialRecordsOnDate(projectId, date);
@@ -42,9 +42,9 @@ export const MaterialDayPanel = ({ projectId, date, categories }: MaterialDayPan
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="materials-heading">
-      <h2 id="materials-heading" className="text-lg font-bold">
-        자재
-      </h2>
+      <h3 id="materials-heading" className="text-base font-bold">
+        이 날 기록한 자재
+      </h3>
       {materials.isError && <Alert>자재 목록을 불러오지 못했습니다</Alert>}
       {records.isSuccess && records.data.length > 0 && (
         <MaterialRecordList

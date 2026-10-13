@@ -1,6 +1,6 @@
-import { PROJECT_STATUS_LABELS, type ProjectStatus } from '@field-note/shared';
+import { PROJECT_STATUS_LABELS, todayInSeoul, type ProjectStatus } from '@field-note/shared';
 import { CalendarRange, MapPin, UserRound, Building2 } from 'lucide-react';
-import { Link, NavLink, Outlet, useParams } from 'react-router';
+import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { BackLink } from '../components/ui/back-link';
@@ -9,6 +9,7 @@ import { Button } from '../components/ui/button';
 import { Skeleton } from '../components/ui/skeleton';
 import { useEmployees } from '../employees/useEmployees';
 import { cn } from '../lib/cn';
+import { projectWorkPath } from '../lib/projectPaths';
 import { usePartners } from '../partners/usePartners';
 import { useProject } from '../projects/useProjects';
 
@@ -43,6 +44,7 @@ const dueText = (end: string, status: ProjectStatus) => {
 // /projects/:id 아래 모든 화면이 이 틀 안에서 열려, 메뉴로 오가며 한 프로젝트를 관리한다
 export const ProjectLayout = () => {
   const { id = '' } = useParams();
+  const { pathname } = useLocation();
   const project = useProject(id);
   const partners = usePartners({});
   const employees = useEmployees({});
@@ -74,20 +76,31 @@ export const ProjectLayout = () => {
   const manager = employees.data?.find((item) => item.id === data.managerId)?.name;
   const due = dueText(data.plannedEnd, data.status);
   const base = `/projects/${data.id}`;
-  const tabs: { to: string; label: string; end?: boolean; show?: boolean }[] = [
-    { to: base, label: '개요', end: true },
-    { to: `${base}/assignments`, label: '투입' },
-    { to: `${base}/labor`, label: '공수·비용' },
-    { to: `${base}/info`, label: '정보' },
+  const closeout = [`${base}/summary`, `${base}/repairs`, `${base}/warranty`];
+  const inCloseout = closeout.some((path) => pathname.startsWith(path));
+  const showWarranty = WARRANTY_STATUSES.includes(data.status);
+  const tabs: { to: string; label: string; end?: boolean; active?: boolean }[] = [
+    { to: base, label: '작업 달력', end: true },
+    { to: `${base}/overview`, label: '현황' },
+    { to: `${base}/assignments`, label: '인원' },
+    { to: `${base}/materials`, label: '자재' },
     { to: `${base}/photos`, label: '사진' },
     { to: `${base}/memos`, label: '메모' },
-    { to: `${base}/materials`, label: '자재' },
     { to: `${base}/documents`, label: '문서' },
-    { to: `${base}/change-works`, label: '변경·추가' },
-    { to: `${base}/daily-report`, label: '작업일보' },
-    { to: `${base}/summary`, label: '요약' },
-    { to: `${base}/repairs`, label: '보수', show: WARRANTY_STATUSES.includes(data.status) },
-    { to: `${base}/warranty`, label: '보증', show: WARRANTY_STATUSES.includes(data.status) },
+    { to: `${base}/labor`, label: '공수·인건비' },
+    { to: `${base}/change-works`, label: '추가 공사' },
+    { to: `${base}/summary`, label: '마감·보증', active: inCloseout },
+    { to: `${base}/info`, label: '정보 수정' },
+  ];
+  const closeoutTabs = [
+    { to: `${base}/summary`, label: '마감 요약' },
+    ...(showWarranty
+      ? [
+          { to: `${base}/repairs`, label: '보수' },
+          { to: `${base}/warranty`, label: '보증' },
+        ]
+      : []),
+    { to: `${base}/daily-report`, label: '일보 출력' },
   ];
 
   return (
@@ -108,14 +121,14 @@ export const ProjectLayout = () => {
           </div>
           <div className="flex shrink-0 flex-wrap gap-2">
             <Button asChild>
-              <Link to={`/work-logs?project=${data.id}`}>일지 입력</Link>
+              <Link to={projectWorkPath(data.id, todayInSeoul(new Date()))}>오늘 작업 입력</Link>
             </Button>
             <Button asChild variant="secondary">
               <Link to={`/search?project=${data.id}`}>프로젝트 안에서 찾기</Link>
             </Button>
           </div>
         </div>
-        <ul className="grid gap-x-8 gap-y-3 text-sm sm:grid-cols-2 xl:grid-cols-4">
+        <ul className="hidden gap-x-8 gap-y-3 text-sm sm:grid sm:grid-cols-2 xl:grid-cols-4">
           <Fact icon={MapPin} label="현장">
             {data.siteName || '-'}
             {data.siteMapUrl && (
@@ -145,26 +158,50 @@ export const ProjectLayout = () => {
         aria-label="프로젝트 메뉴"
         className="-mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 print:hidden"
       >
-        {tabs
-          .filter((tab) => tab.show !== false)
-          .map((tab) => (
+        {tabs.map((tab) => (
+          <NavLink
+            key={tab.to}
+            to={tab.to}
+            end={tab.end}
+            className={({ isActive }) =>
+              cn(
+                '-mb-px flex min-h-touch items-center border-b-2 px-4 text-sm font-medium whitespace-nowrap transition-colors',
+                // 하루 작업 화면(/work/날짜)에서도 "작업" 메뉴를 강조
+                isActive ||
+                  tab.active ||
+                  (tab.end && pathname.startsWith(`${tab.to}/work/`)) ||
+                  (tab.label === '마감·보증' && pathname.startsWith(`${base}/daily-report`))
+                  ? 'border-primary text-primary'
+                  : 'border-transparent text-foreground/70 hover:text-foreground',
+              )
+            }
+          >
+            {tab.label}
+          </NavLink>
+        ))}
+      </nav>
+
+      {(inCloseout || pathname.startsWith(`${base}/daily-report`)) && (
+        <nav
+          aria-label="마감·보증 메뉴"
+          className="flex gap-1 self-start rounded-xl bg-muted p-1 print:hidden"
+        >
+          {closeoutTabs.map((tab) => (
             <NavLink
               key={tab.to}
               to={tab.to}
-              end={tab.end}
               className={({ isActive }) =>
                 cn(
-                  '-mb-px flex min-h-touch items-center border-b-2 px-4 text-sm font-medium whitespace-nowrap transition-colors',
-                  isActive
-                    ? 'border-primary text-primary'
-                    : 'border-transparent text-foreground/70 hover:text-foreground',
+                  'flex min-h-touch items-center rounded-lg px-4 text-sm font-medium whitespace-nowrap',
+                  isActive ? 'bg-surface text-foreground shadow-xs' : 'text-foreground/70',
                 )
               }
             >
               {tab.label}
             </NavLink>
           ))}
-      </nav>
+        </nav>
+      )}
 
       <Outlet />
     </div>

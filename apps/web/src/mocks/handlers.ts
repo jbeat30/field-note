@@ -367,7 +367,7 @@ const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
   return { ...row, warnings };
 };
 
-// 일지 응답: 경고(하루 합계 초과·휴직·퇴사)는 응답할 때 계산 (서버와 같은 규칙, 저장된 다른 프로젝트 일지만 합계에 포함)
+// 작업 내역 응답: 경고(하루 합계 초과·휴직·퇴사)는 응답할 때 계산 (서버와 같은 규칙, 저장된 다른 프로젝트 작업 내역만 합계에 포함)
 const toMockWorkLog = (
   account: MockAccount,
   log: MockWorkLog,
@@ -2424,6 +2424,15 @@ export const handlers = [
         entryCount: item.entries.length,
         totalMinutes: item.entries.reduce((sum, entry) => sum + entry.minutes, 0),
         hasContent: item.content.trim().length > 0,
+        workers: [
+          ...item.entries
+            .reduce((map, entry) => {
+              map.set(entry.employeeId, (map.get(entry.employeeId) ?? 0) + entry.minutes);
+
+              return map;
+            }, new Map<string, number>())
+            .entries(),
+        ].map(([employeeId, minutes]) => ({ employeeId, minutes })),
       }));
 
     return HttpResponse.json({ items });
@@ -2488,7 +2497,7 @@ export const handlers = [
 
     if (!dateCheck.ok) return invalid(dateCheck.path, dateCheck.message);
 
-    // 월 공수가 확정된 달의 일지는 재오픈 전까지 고칠 수 없다 (서버와 같은 규칙)
+    // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없다 (서버와 같은 규칙)
     const lockCheck = mockMonthLockCheck(account, workDate);
 
     if (!lockCheck.ok) return invalid(lockCheck.path, lockCheck.message);
@@ -2507,7 +2516,7 @@ export const handlers = [
     if (existing && input.expectedVersion !== existing.version) return apiError('CONFLICT');
 
     if (existing?.status === 'SAVED' && input.status === 'DRAFT') {
-      return invalid('status', '저장된 일지는 임시 저장으로 되돌릴 수 없습니다');
+      return invalid('status', '저장된 작업 내역은 임시 저장으로 되돌릴 수 없습니다');
     }
 
     const employees = getEmployees(account);
@@ -2614,7 +2623,7 @@ export const handlers = [
       entries,
     };
 
-    // 저장된 일지를 고치면 고치기 전 값을 이력에 남김
+    // 저장된 작업 내역을 고치면 고치기 전 값을 이력에 남김
     if (existing?.status === 'SAVED') {
       addWorkLogRevision(account, existing.id, {
         id: crypto.randomUUID(),

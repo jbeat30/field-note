@@ -196,7 +196,7 @@ export const NotFound: Story = {
   },
 };
 
-// 최설치: A동(2026-09-01, 09-02)과 B동 덕트 설치(09-02)에 저장된 일지가 있음
+// 최설치: A동(2026-09-01, 09-02)과 B동 덕트 설치(09-02)에 저장된 작업 내역이 있음
 export const WorkHistory: Story = {
   parameters: { router: routerFor('최설치') },
   play: async ({ canvasElement }) => {

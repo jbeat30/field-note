@@ -25,7 +25,7 @@ const Bar = ({ value, max }: { value: number; max: number }) => (
   </div>
 );
 
-// 프로젝트 공수 집계: 직원별·작업 구분별·기간별 (서비스 기획서 §9.6). 저장된 일지만 반영한다
+// 프로젝트 공수 집계: 직원별·작업 구분별·기간별 (서비스 기획서 §9.6). 저장된 작업 내역만 반영한다
 export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) => {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -101,12 +101,12 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
       </dl>
       {data.draftLogCount > 0 && (
         <p className="text-sm text-foreground/70">
-          임시 저장 일지 {data.draftLogCount}건은 집계에 포함되지 않았습니다
+          임시 저장 작업 내역 {data.draftLogCount}건은 집계에 포함되지 않았습니다
         </p>
       )}
 
       {data.savedLogCount === 0 ? (
-        <p className="text-sm">저장된 일지가 없어 집계할 공수가 없습니다</p>
+        <p className="text-sm">저장된 작업 내역이 없어 집계할 공수가 없습니다</p>
       ) : (
         <>
           <div className="flex flex-col gap-1">

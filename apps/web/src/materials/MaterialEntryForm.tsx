@@ -51,7 +51,7 @@ type MaterialEntryFormProps = {
 const materialLabel = (material: Material) =>
   `${material.name}${material.spec ? ` ${material.spec}` : ''} (${material.unit})`;
 
-// 일지 안 자재 입력: 최근 쓴 자재를 한 번 눌러 추가하고 큰 숫자로 수량만 적는다. 여러 자재를 목록으로 한꺼번에 저장 (서비스 기획서 §11.6)
+// 작업 내역 안 자재 입력: 최근 쓴 자재를 한 번 눌러 추가하고 큰 숫자로 수량만 적는다. 여러 자재를 목록으로 한꺼번에 저장 (서비스 기획서 §11.6)
 type EntrySnapshot = { rows: MaterialRow[]; common: MaterialCommon };
 
 // 비교용 글자: 행의 임시 키는 빼고 내용만 비교

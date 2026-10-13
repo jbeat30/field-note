@@ -137,8 +137,8 @@ export const DailyReportPage = () => {
           >
             <Dialog.Title className="text-lg font-bold">엑셀로 내보낼까요?</Dialog.Title>
             <p id="export-description" className="text-base">
-              {from} ~ {to}의 일지·공수·자재를 엑셀로 내려받습니다. 내보낸 사람과 기간은 기록으로
-              남습니다.
+              {from} ~ {to}의 작업 내역·공수·자재를 엑셀로 내려받습니다. 내보낸 사람과 기간은
+              기록으로 남습니다.
             </p>
             <div className="flex gap-2">
               <Button

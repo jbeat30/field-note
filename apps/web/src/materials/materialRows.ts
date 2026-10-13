@@ -6,7 +6,7 @@ import {
   type MaterialRecordKind,
 } from '@field-note/shared';
 
-// 일지 안 자재 입력: 여러 자재를 목록형으로 입력하는 행 (저장 전 화면 상태)
+// 작업 내역 안 자재 입력: 여러 자재를 목록형으로 입력하는 행 (저장 전 화면 상태)
 export type MaterialRow = {
   // 화면에서 행을 구분하는 값 (서버로 보내지 않음)
   key: string;

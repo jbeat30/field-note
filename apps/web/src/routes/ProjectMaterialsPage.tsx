@@ -1,11 +1,15 @@
 import {
   MATERIAL_RECORD_KINDS,
   MATERIAL_RECORD_KIND_LABELS,
+  todayInSeoul,
   type MaterialRecordKind,
 } from '@field-note/shared';
 import { useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
+import { DateInput } from '../components/ui/date-input';
+import { MaterialDayPanel } from '../materials/MaterialDayPanel';
+import { useOptions } from '../settings/useOptions';
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -25,6 +29,12 @@ import { useProject } from '../projects/useProjects';
 export const ProjectMaterialsPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);
+  const options = useOptions();
+  const [params, setParams] = useSearchParams();
+  const today = todayInSeoul(new Date());
+  const requested = params.get('date');
+  const date = requested && /^\d{4}-\d{2}-\d{2}$/.test(requested) ? requested : today;
+  const categories = (options.data ?? []).filter((item) => item.kind === 'WORK_CATEGORY');
   const balance = useMaterialBalance(id);
   const materials = useMaterials();
   const [kind, setKind] = useState<MaterialRecordKind | ''>('');
@@ -43,13 +53,11 @@ export const ProjectMaterialsPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader level={2} title="자재 현황" description="자재 반입·사용 잔량과 기록입니다" />
-      <Link
-        className="min-h-touch content-center text-primary underline"
-        to={`/work-logs?project=${id}`}
-      >
-        일지에서 자재 입력하기
-      </Link>
+      <PageHeader
+        level={2}
+        title="자재"
+        description="자재 반입·사용·반출·폐기를 여기서 기록하고, 잔량과 지난 기록을 관리합니다"
+      />
       <section className="flex flex-col gap-2" aria-labelledby="balance-heading">
         <h2 id="balance-heading" className="text-lg font-bold">
           잔량
@@ -58,9 +66,39 @@ export const ProjectMaterialsPage = () => {
         {balance.isError && <Alert>자재 현황을 불러오지 못했습니다</Alert>}
         {balance.isSuccess && <MaterialBalanceTable items={balance.data} />}
       </section>
+      <section
+        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+        aria-labelledby="entry-heading"
+      >
+        <div className="flex flex-wrap items-end justify-between gap-3">
+          <h2 id="entry-heading" className="text-lg font-bold">
+            자재 기록하기
+          </h2>
+          <label className="flex items-center gap-2 text-sm font-medium">
+            날짜
+            <DateInput
+              className="w-44"
+              aria-label="자재 기록 날짜"
+              max={today}
+              value={date}
+              onChange={(event) =>
+                event.target.value && setParams({ date: event.target.value }, { replace: true })
+              }
+            />
+          </label>
+        </div>
+        {options.isSuccess && (
+          <MaterialDayPanel
+            key={`${id}:${date}`}
+            projectId={id}
+            date={date}
+            categories={categories}
+          />
+        )}
+      </section>
       <section className="flex flex-col gap-2" aria-labelledby="records-heading">
         <h2 id="records-heading" className="text-lg font-bold">
-          기록
+          전체 기록
         </h2>
         <Select
           className="w-auto"

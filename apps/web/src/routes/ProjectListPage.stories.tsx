@@ -66,7 +66,7 @@ export const FilterByStatus: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.selectOptions(canvas.getByLabelText('상태 필터'), '중단');
+    await userEvent.click(canvas.getByRole('button', { name: '중단' }));
 
     await expect(await canvas.findByText('1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
@@ -79,6 +79,7 @@ export const FilterByClient: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
+    await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     await within(canvas.getByLabelText('고객 필터')).findByRole('option', { name: '미래오피스' });
     await userEvent.selectOptions(canvas.getByLabelText('고객 필터'), '미래오피스');
 
@@ -92,6 +93,7 @@ export const FilterByTradeAndManager: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
+    await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     await within(canvas.getByLabelText('공종 필터')).findByRole('option', { name: '설비' });
     await userEvent.selectOptions(canvas.getByLabelText('공종 필터'), '설비');
 
@@ -122,6 +124,7 @@ export const FilterByPeriod: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
+    await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     // 2027년 1월과 겹치는 프로젝트는 미래오피스 천장 마감뿐
     await userEvent.type(canvas.getByLabelText('기간 시작'), '2027-01-10');
     await userEvent.type(canvas.getByLabelText('기간 끝'), '2027-01-20');
@@ -156,7 +159,7 @@ export const ClearFilters: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.selectOptions(canvas.getByLabelText('상태 필터'), '완료');
+    await userEvent.click(canvas.getByRole('button', { name: '완료' }));
     await expect(await canvas.findByText('1건')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '필터 지우기' }));
@@ -270,5 +273,29 @@ export const SearchIsDebounced: Story = {
 
     await expect(await canvas.findByText('1건')).toBeInTheDocument();
     await expect(searchedTerms).toEqual(['기계실']);
+  },
+};
+
+// 상태는 위의 버튼 한 번으로 거르고, 고객·담당자·공종·기간은 "자세히 찾기"를 펼쳐서 고른다
+export const StatusButtonsAndAdvancedToggle: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('A동 외장 판금 공사');
+    await expect(canvas.queryByLabelText('고객 필터')).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '전체' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await userEvent.click(canvas.getByRole('button', { name: '진행 중' }));
+    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '진행 중' })).toHaveAttribute(
+      'aria-pressed',
+      'true',
+    );
+
+    await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
+    await expect(canvas.getByLabelText('고객 필터')).toBeInTheDocument();
   },
 };

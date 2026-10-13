@@ -45,7 +45,7 @@ export const UnconfiguredDefaults: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('12개월 (기본값, 아직 저장 전)')).toBeInTheDocument();
+    await expect(await canvas.findByText('12개월 (기본값)')).toBeInTheDocument();
     await expect(canvas.getAllByText(/2027-03-12/).length).toBeGreaterThan(0);
     await expect(canvas.getByText('아직 저장한 보증 설정이 없습니다')).toBeInTheDocument();
   },

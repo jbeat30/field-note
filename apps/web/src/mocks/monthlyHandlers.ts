@@ -58,7 +58,7 @@ const storeOf = (account: MockAccount): Store => {
 };
 
 /**
- * @description 확정된 달 목록 (작업일지 저장 목업이 확정된 달을 막는 데 씀)
+ * @description 확정된 달 목록 (작업 내역 저장 목업이 확정된 달을 막는 데 씀)
  * @param account 현재 계정
  * @returns YYYY-MM 목록
  */
@@ -68,7 +68,7 @@ export const getMockClosedMonths = (account: MockAccount) =>
     .map(([month]) => month);
 
 /**
- * @description 이 날짜의 작업일지를 고칠 수 있는지 (확정된 달은 재오픈해야 함)
+ * @description 이 날짜의 작업 내역를 고칠 수 있는지 (확정된 달은 재오픈해야 함)
  * @param account 현재 계정
  * @param workDate 작업 일자
  * @returns 통과 여부와 거부 사유
@@ -248,7 +248,7 @@ export const createMonthlyHandlers = ({ apiError, parseBody }: Helpers) => {
         targetName: null,
         summary:
           drafts.count > 0
-            ? `${body.data.month} · 임시 저장 일지 ${drafts.count}건 확인`
+            ? `${body.data.month} · 임시 저장 작업 내역 ${drafts.count}건 확인`
             : body.data.month,
       });
 

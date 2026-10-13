@@ -233,7 +233,7 @@ const EditForm = ({
   );
 };
 
-// 사후 작업: 보증 중에 "사후 작업"으로 표시한 일지·자재 기록을 이 요청에 연결해 건별로 쓴 공수·자재를 본다
+// 사후 작업: 보증 중에 "사후 작업"으로 표시한 작업 내역·자재 기록을 이 요청에 연결해 건별로 쓴 공수·자재를 본다
 const AfterServiceLinks = ({
   detail,
   projectId,
@@ -278,7 +278,7 @@ const AfterServiceLinks = ({
           {detail.links.map((item) => {
             const label =
               item.kind === 'WORK_LOG'
-                ? `${formatDay(item.workDate)} 일지 · ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
+                ? `${formatDay(item.workDate)} 작업 내역 · ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
                 : `${formatDay(item.recordDate)} ${item.name}${item.spec ? ` (${item.spec})` : ''} ${MATERIAL_RECORD_KIND_LABELS[item.recordKind]} ${item.quantity} ${item.unit}`;
 
             return (
@@ -305,7 +305,7 @@ const AfterServiceLinks = ({
       )}
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-foreground/70">연결한 일지의 공수</dt>
+          <dt className="text-foreground/70">연결한 작업 내역의 공수</dt>
           <dd className="font-bold">
             {settings.data ? formatWork(detail.usage.minutes, settings.data) : '-'} (
             {detail.usage.workLogCount}건)
@@ -327,10 +327,10 @@ const AfterServiceLinks = ({
           <div className="flex-1">
             <FormField label="사후 작업 연결">
               <Select value={target} onChange={(event) => setTarget(event.target.value)}>
-                <option value="">일지·자재 기록 선택</option>
+                <option value="">작업 내역·자재 기록 선택</option>
                 {logChoices.map((item) => (
                   <option key={item.id} value={`log:${item.id}`}>
-                    {formatDay(item.workDate)} 일지
+                    {formatDay(item.workDate)} 작업 내역
                   </option>
                 ))}
                 {recordChoices.map((item) => (
@@ -361,7 +361,7 @@ const AfterServiceLinks = ({
         </div>
       )}
       <p className="text-sm text-foreground/70">
-        보수 작업은 작업일지·자재 기록에서 &quot;사후 작업&quot;으로 표시한 뒤 여기서 연결합니다
+        보수 작업은 작업 내역·자재 기록에서 &quot;사후 작업&quot;으로 표시한 뒤 여기서 연결합니다
       </p>
     </div>
   );

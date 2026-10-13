@@ -21,7 +21,7 @@ import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
-import { Select } from '../components/ui/select';
+import { Combobox } from '../components/ui/combobox';
 import { useEmployees } from '../employees/useEmployees';
 import { splitServerErrors } from '../lib/serverErrors';
 import { useCompanySettings } from '../settings/useCompanySettings';
@@ -231,7 +231,7 @@ const AssignmentRow = ({
       {mode === 'cancel' ? (
         <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
           <p className="text-sm">
-            {employeeName}님의 투입을 취소할까요? 기록은 남고 목록에서 빠집니다
+            {employeeName}님을 팀에서 뺄까요? 이미 기록한 작업은 그대로 남습니다
           </p>
           {rootError && <Alert>{rootError}</Alert>}
           <div className="flex gap-2">
@@ -249,7 +249,7 @@ const AssignmentRow = ({
                   );
               }}
             >
-              취소 확인
+              빼기 확인
             </Button>
             <Button variant="secondary" onClick={() => setMode('view')}>
               닫기
@@ -268,10 +268,10 @@ const AssignmentRow = ({
             </Button>
             <Button
               variant="secondary"
-              aria-label={`${employeeName} 투입 취소`}
+              aria-label={`${employeeName} 팀에서 빼기`}
               onClick={() => setMode('cancel')}
             >
-              투입 취소
+              팀에서 빼기
             </Button>
           </div>
         )
@@ -303,6 +303,9 @@ export const ProjectAssignmentsPanel = ({ project }: { project: ProjectDetail })
   const locked = !statusCheck.ok && statusCheck.path === 'projectId';
   const names = new Map((employees.data ?? []).map((item) => [item.id, item.name]));
   const assignable = (employees.data ?? []).filter((item) => item.status !== 'LEFT');
+  const teamIds = new Set(
+    (assignments.data ?? []).filter((item) => !item.cancelledAt).map((item) => item.employeeId),
+  );
 
   if (assignments.isPending || employees.isPending || settings.isPending) {
     return <p className="text-sm">투입을 불러오는 중</p>;
@@ -366,10 +369,11 @@ export const ProjectAssignmentsPanel = ({ project }: { project: ProjectDetail })
   return (
     <section className="flex flex-col gap-3" aria-labelledby="assign-heading">
       <h2 id="assign-heading" className="text-lg font-bold">
-        투입
+        프로젝트 팀
       </h2>
       <p className="text-sm text-foreground/70">
-        프로젝트 기간({project.plannedStart} ~ {project.plannedEnd}) 안에서 직원을 배정합니다
+        이 프로젝트에 투입할 회사 직원을 골라 둡니다. 날마다 실제로 나온 사람과 시간은 작업 달력에서
+        그날 기록하며, 팀이 아닌 직원도 그날 추가할 수 있습니다
       </p>
 
       {project.status === 'SUSPENDED' && (
@@ -387,7 +391,7 @@ export const ProjectAssignmentsPanel = ({ project }: { project: ProjectDetail })
       {result && (
         <Alert variant="info">
           <p>
-            {names.get(result.employeeId) ?? '직원'}님을 투입했습니다 ({result.startDate} ~{' '}
+            {names.get(result.employeeId) ?? '직원'}님을 팀에 넣었습니다 ({result.startDate} ~{' '}
             {result.endDate})
           </p>
           {result.warnings.length > 0 && (
@@ -400,7 +404,7 @@ export const ProjectAssignmentsPanel = ({ project }: { project: ProjectDetail })
       )}
 
       {assignments.data.length === 0 ? (
-        <p className="text-sm">아직 투입한 직원이 없습니다</p>
+        <p className="text-sm">아직 팀에 넣은 직원이 없습니다</p>
       ) : (
         <ul className="divide-y divide-border" aria-label="투입 목록">
           {assignments.data.map((assignment) => (
@@ -426,47 +430,63 @@ export const ProjectAssignmentsPanel = ({ project }: { project: ProjectDetail })
           className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
           onSubmit={submit}
           noValidate
-          aria-label="투입 등록"
+          aria-label="팀에 직원 추가"
         >
-          <h3 className="text-sm font-bold">투입 등록</h3>
+          <h3 className="text-sm font-bold">팀에 직원 추가</h3>
           {rootError && <Alert>{rootError}</Alert>}
-          <FormField label="직원" error={errors.employeeId}>
-            <Select value={employeeId} onChange={(event) => setEmployeeId(event.target.value)}>
-              <option value="">직원 선택</option>
-              {assignable.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                  {item.title ? ` (${item.title})` : ''}
-                  {item.status === 'ON_LEAVE' ? ' (휴직)' : ''}
-                </option>
-              ))}
-            </Select>
-          </FormField>
-          <FormField label="투입 시작일" error={errors.startDate}>
-            <DateInput value={startDate} onChange={(event) => setStartDate(event.target.value)} />
-          </FormField>
-          <FormField label="투입 종료일" error={errors.endDate}>
-            <DateInput value={endDate} onChange={(event) => setEndDate(event.target.value)} />
-          </FormField>
-          <FormField
-            label={plannedLabel(settings.data)}
-            hint="선택 (비우면 계획 공수 없음)"
-            error={errors.plannedMinutes}
-          >
-            <Input
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              min="0"
-              value={planned}
-              onChange={(event) => setPlanned(event.target.value)}
+          <FormField label="회사 직원" error={errors.employeeId}>
+            <Combobox
+              value={employeeId}
+              onValueChange={setEmployeeId}
+              options={assignable
+                .filter((item) => !teamIds.has(item.id))
+                .map((item) => ({
+                  value: item.id,
+                  label: item.name,
+                  description: [item.title ?? '', item.status === 'ON_LEAVE' ? '휴직' : '']
+                    .filter(Boolean)
+                    .join(' · '),
+                }))}
+              placeholder="직원 선택"
+              searchPlaceholder="이름·직책으로 찾기"
+              emptyText="추가할 직원이 없습니다"
             />
           </FormField>
+          <details className="rounded-lg bg-surface-nested px-3 py-2 text-sm">
+            <summary className="min-h-touch cursor-pointer content-center font-medium">
+              투입 기간·계획 공수 정하기 (선택, 기본은 프로젝트 전체 기간)
+            </summary>
+            <div className="mt-2 flex flex-col gap-3 pb-2">
+              <FormField label="투입 시작일" error={errors.startDate}>
+                <DateInput
+                  value={startDate}
+                  onChange={(event) => setStartDate(event.target.value)}
+                />
+              </FormField>
+              <FormField label="투입 종료일" error={errors.endDate}>
+                <DateInput value={endDate} onChange={(event) => setEndDate(event.target.value)} />
+              </FormField>
+              <FormField
+                label={plannedLabel(settings.data)}
+                hint="선택 (비우면 계획 공수 없음)"
+                error={errors.plannedMinutes}
+              >
+                <Input
+                  type="number"
+                  inputMode="decimal"
+                  step="0.5"
+                  min="0"
+                  value={planned}
+                  onChange={(event) => setPlanned(event.target.value)}
+                />
+              </FormField>
+            </div>
+          </details>
           {errors.confirmSuspended && (
             <p className="text-sm text-danger">{errors.confirmSuspended}</p>
           )}
           <Button type="submit" disabled={create.isPending}>
-            {create.isPending ? '등록 중' : '투입 등록'}
+            {create.isPending ? '추가 중' : '팀에 추가'}
           </Button>
         </form>
       )}

@@ -296,8 +296,8 @@ export const CompleteShowsNotices: Story = {
     const form = within(await canvas.findByRole('form', { name: '완료 처리 확인' }));
     const notices = within(await form.findByRole('list', { name: '확인할 것' }));
 
-    // 더미: 임시 저장 일지 1건, 진행률 40%, 협의 중 변경 작업 1건
-    await expect(notices.getByText(/임시 저장된 작업일지가 1건/)).toBeInTheDocument();
+    // 더미: 임시 저장 작업 내역 1건, 진행률 40%, 협의 중 변경 작업 1건
+    await expect(notices.getByText(/임시 저장된 작업 내역가 1건/)).toBeInTheDocument();
     await expect(notices.getByText(/진행률이 40%입니다/)).toBeInTheDocument();
     await expect(notices.getByText(/협의 중인 변경·추가 작업이 1건/)).toBeInTheDocument();
 
@@ -470,7 +470,20 @@ export const WarrantyEditsOnlyManagerAndMemo: Story = {
 
 // 투입 패널은 목록이 도착한 뒤에 그려지므로 기다렸다가 찾는다
 const assignForm = async (canvas: ReturnType<typeof within>) =>
-  within(await canvas.findByRole('form', { name: '투입 등록' }));
+  within(await canvas.findByRole('form', { name: '팀에 직원 추가' }));
+
+// 검색해서 고르는 직원 칸에서 직원을 고른다 (목록은 화면 밖 겹침층에 그려진다)
+// 직원 선택 목록(겹침층)
+const listbox = () => within(document.body).findByRole('listbox');
+
+const pickEmployee = async (form: ReturnType<typeof within>, name: RegExp) => {
+  await userEvent.click(await form.findByRole('combobox'));
+  await userEvent.click(await within(await listbox()).findByRole('option', { name }));
+};
+
+// 접혀 있는 투입 기간·계획 공수 칸을 연다
+const openPeriod = (form: ReturnType<typeof within>) =>
+  userEvent.click(form.getByText(/투입 기간·계획 공수 정하기/));
 
 export const AssignmentsListed: Story = {
   play: async ({ canvasElement }) => {
@@ -511,12 +524,12 @@ export const AddAssignment: Story = {
     const canvas = panel(canvasElement);
     const form = await assignForm(canvas);
 
-    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
+    await pickEmployee(form, /오전기/);
+    await openPeriod(form);
     await userEvent.type(form.getByLabelText('계획 공수 (MD)'), '10');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+    await userEvent.click(form.getByRole('button', { name: '팀에 추가' }));
 
-    await expect(await canvas.findByText(/오전기님을 투입했습니다/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/오전기님을 팀에 넣었습니다/)).toBeInTheDocument();
     await expect(
       await canvas.findByText(/2026-07-15 ~ 2026-11-30 · 계획 10MD \(80시간\)/),
     ).toBeInTheDocument();
@@ -526,14 +539,15 @@ export const AddAssignment: Story = {
 export const LeftEmployeeNotSelectable: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
-    const select = await (await assignForm(canvas)).findByLabelText('직원');
+    const form = await assignForm(canvas);
 
-    await within(select).findByRole('option', { name: '오전기' });
-    await expect(within(select).queryByRole('option', { name: '박퇴사' })).not.toBeInTheDocument();
+    await userEvent.click(await form.findByRole('combobox'));
+    const body = within(await listbox());
+
+    await body.findByRole('option', { name: /오전기/ });
+    await expect(body.queryByRole('option', { name: /박퇴사/ })).not.toBeInTheDocument();
     // 휴직 직원은 고를 수 있고 표시가 붙음
-    await expect(
-      within(select).getByRole('option', { name: '이조공 (조공) (휴직)' }),
-    ).toBeInTheDocument();
+    await expect(body.getByRole('option', { name: /이조공.*휴직/ })).toBeInTheDocument();
   },
 };
 
@@ -542,10 +556,10 @@ export const AssignmentOutsideProjectPeriod: Story = {
     const canvas = panel(canvasElement);
     const form = await assignForm(canvas);
 
-    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
+    await pickEmployee(form, /오전기/);
+    await openPeriod(form);
     fireEvent.change(form.getByLabelText('투입 시작일'), { target: { value: '2026-07-01' } });
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+    await userEvent.click(form.getByRole('button', { name: '팀에 추가' }));
 
     await expect(
       await form.findByText(/프로젝트 시작 예정일\(2026-07-15\) 이후여야 합니다/),
@@ -557,24 +571,23 @@ export const AssignmentNeedsEmployee: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click((await assignForm(canvas)).getByRole('button', { name: '투입 등록' }));
+    await userEvent.click((await assignForm(canvas)).getByRole('button', { name: '팀에 추가' }));
 
     await expect(await canvas.findByText('직원을 선택해 주세요')).toBeInTheDocument();
   },
 };
 
-export const SameProjectOverlapRejected: Story = {
+// 이미 팀에 있는 직원은 고르는 목록에 나오지 않는다
+export const TeamMemberNotOfferedAgain: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
     const form = await assignForm(canvas);
 
-    await within(await form.findByLabelText('직원')).findByRole('option', {
-      name: '정판금 (반장)',
-    });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '정판금 (반장)');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+    await userEvent.click(await form.findByRole('combobox'));
+    const options = within(await listbox());
 
-    await expect(await form.findByText(/이미 투입되어 있습니다/)).toBeInTheDocument();
+    await options.findByRole('option', { name: /오전기/ });
+    await expect(options.queryByRole('option', { name: /정판금/ })).not.toBeInTheDocument();
   },
 };
 
@@ -585,13 +598,10 @@ export const OverlapWarningAfterAdd: Story = {
     const canvas = panel(canvasElement);
     const form = await assignForm(canvas);
 
-    await within(await form.findByLabelText('직원')).findByRole('option', {
-      name: '최설치 (기공)',
-    });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '최설치 (기공)');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+    await pickEmployee(form, /최설치/);
+    await userEvent.click(form.getByRole('button', { name: '팀에 추가' }));
 
-    await expect(await canvas.findByText(/최설치님을 투입했습니다/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/최설치님을 팀에 넣었습니다/)).toBeInTheDocument();
     await expect(await canvas.findByText('확인이 필요합니다')).toBeInTheDocument();
     await expect(
       canvas.getAllByText(
@@ -642,8 +652,8 @@ export const CancelAssignment: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '김일용 투입 취소' }));
-    await userEvent.click(await canvas.findByRole('button', { name: '취소 확인' }));
+    await userEvent.click(await canvas.findByRole('button', { name: '김일용 팀에서 빼기' }));
+    await userEvent.click(await canvas.findByRole('button', { name: '빼기 확인' }));
 
     const list = within(canvas.getByRole('list', { name: '투입 목록' }));
 
@@ -660,7 +670,7 @@ export const CompletedProjectLocksAssignments: Story = {
     await expect(
       await canvas.findByText(/상태의 프로젝트에는 투입을 바꿀 수 없습니다/),
     ).toBeInTheDocument();
-    await expect(canvas.queryByRole('form', { name: '투입 등록' })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('form', { name: '팀에 직원 추가' })).not.toBeInTheDocument();
   },
 };
 
@@ -670,18 +680,17 @@ export const SuspendedProjectNeedsConfirmation: Story = {
     const canvas = panel(canvasElement);
     const form = await assignForm(canvas);
 
-    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+    await pickEmployee(form, /오전기/);
+    await userEvent.click(form.getByRole('button', { name: '팀에 추가' }));
 
     await expect(
       await canvas.findByText(/중단 중인 프로젝트입니다. 투입하려면 확인이 필요합니다/),
     ).toBeInTheDocument();
 
     await userEvent.click(canvas.getByLabelText(/투입을 바꾸는 것을 확인합니다/));
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
+    await userEvent.click(form.getByRole('button', { name: '팀에 추가' }));
 
-    await expect(await canvas.findByText(/오전기님을 투입했습니다/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/오전기님을 팀에 넣었습니다/)).toBeInTheDocument();
   },
 };
 
@@ -759,7 +768,7 @@ export const ShrinkBlockedByAssignments: Story = {
   },
 };
 
-// 더미 일지: 저장 3건(공수 합 7.0 MD) + 임시 저장 1건은 집계 제외
+// 더미 작업 내역: 저장 3건(공수 합 7.0 MD) + 임시 저장 1건은 집계 제외
 export const WorkSummary: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -770,7 +779,7 @@ export const WorkSummary: Story = {
     ).toBeInTheDocument();
     await expect(summary.getByText('0.32 MM')).toBeInTheDocument();
     await expect(
-      summary.getByText(/임시 저장 일지 1건은 집계에 포함되지 않았습니다/),
+      summary.getByText(/임시 저장 작업 내역 1건은 집계에 포함되지 않았습니다/),
     ).toBeInTheDocument();
     await expect(summary.getByText('6%')).toBeInTheDocument();
 

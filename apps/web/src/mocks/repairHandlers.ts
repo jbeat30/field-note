@@ -148,7 +148,7 @@ export const listMockOpenRepairs = (account: MockAccount) => {
   });
 };
 
-// 삭제된 자재 기록·임시 저장 일지에 걸린 연결은 세지 않는다
+// 삭제된 자재 기록·임시 저장 작업 내역에 걸린 연결은 세지 않는다
 const liveLinks = (account: MockAccount, repair: MockRepair): RepairLinkItem[] => {
   const logs = new Map(getWorkLogs(account).map((log) => [log.id, log]));
   const records = new Map(
@@ -551,11 +551,14 @@ export const createRepairHandlers = ({ apiError, parseBody }: Helpers) => {
         );
 
         if (!log) {
-          return invalid('body.workLogId', '사후 작업으로 표시한 저장된 일지만 연결할 수 있습니다');
+          return invalid(
+            'body.workLogId',
+            '사후 작업으로 표시한 저장된 작업 내역만 연결할 수 있습니다',
+          );
         }
 
         if (active.some((link) => link.workLogId === log.id)) {
-          return invalid('body.workLogId', '이미 연결된 일지입니다');
+          return invalid('body.workLogId', '이미 연결된 작업 내역입니다');
         }
       } else {
         const record = listMockMaterialRecords(account, repair.projectId).find(

@@ -15,7 +15,7 @@ import { parseQuantity } from './materialRows';
 type MaterialRecordListProps = {
   records: readonly MaterialRecord[];
   materials: readonly Pick<Material, 'id' | 'name' | 'spec' | 'unit'>[];
-  // 날짜별 제목을 붙일지 (하루치만 보여 줄 때는 끔)
+  // 날짜별 제목을 붙작업 내역 (하루치만 보여 줄 때는 끔)
   showDates?: boolean;
   onChangeQuantity: (record: MaterialRecord, quantity: number) => void;
   onDelete: (record: MaterialRecord) => void;

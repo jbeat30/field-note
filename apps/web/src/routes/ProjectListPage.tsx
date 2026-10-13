@@ -6,18 +6,21 @@ import {
   type ProjectStatus,
 } from '@field-note/shared';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
+import { ChevronDown } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { Chip } from '../components/ui/chip';
 import { columnHelper, DataTable } from '../components/ui/data-table';
 import { EmptyState } from '../components/ui/empty-state';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
 import { PageHeader } from '../components/ui/page-header';
 import { Select } from '../components/ui/select';
+import { cn } from '../lib/cn';
 import { useDebouncedValue } from '../lib/useDebouncedValue';
 import { useEmployees } from '../employees/useEmployees';
 import { usePartners } from '../partners/usePartners';
@@ -39,6 +42,15 @@ type ProjectItem = NonNullable<ReturnType<typeof useProjects>['data']>['items'][
 
 // 표에 넣을 줄: 고객·담당자·공종 이름을 미리 풀어 둔다 (이름 조회가 끝나면 새 줄 객체가 되어 표가 다시 계산함)
 type Row = ProjectItem & { clientName?: string; managerName?: string; tradeNames: string };
+
+// 상태로 한 번에 찾는 버튼 (나머지 상태는 자세히 찾기의 상태 선택)
+const STATUS_CHIPS: { label: string; status: ProjectStatus | '' }[] = [
+  { label: '전체', status: '' },
+  { label: '진행 중', status: 'IN_PROGRESS' },
+  { label: '예정', status: 'PLANNED' },
+  { label: '중단', status: 'SUSPENDED' },
+  { label: '완료', status: 'COMPLETED' },
+];
 
 // 열 → 서버 정렬 기준
 const SORT_KEY: Record<string, ProjectSortKey> = {
@@ -115,6 +127,7 @@ export const ProjectListPage = () => {
   // 검색·필터는 서버 조회 조건, 정렬·쪽도 서버에 넘긴다 (한 쪽만 받음)
   const [filter, setFilter] = useState<ProjectListQuery>({});
   const [searchText, setSearchText] = useState('');
+  const [showAdvanced, setShowAdvanced] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   // 타이핑이 멈춘 뒤에만 검색어를 조회에 반영 (글자마다 요청이 나가지 않게)
@@ -181,83 +194,113 @@ export const ProjectListPage = () => {
         <Input
           type="search"
           aria-label="프로젝트 검색"
-          placeholder="프로젝트명·코드·현장 검색"
+          placeholder="프로젝트 이름·현장 이름·번호로 찾기"
           value={searchText}
           onChange={(event) => {
             setSearchText(event.target.value);
             goFirstPage();
           }}
         />
-        <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-          <Select
-            aria-label="상태 필터"
-            value={filter.status ?? ''}
-            onChange={(event) =>
-              update({ status: (event.target.value || undefined) as ProjectStatus | undefined })
-            }
-          >
-            <option value="">전체 상태</option>
-            {PROJECT_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {PROJECT_STATUS_LABELS[status]}
-              </option>
-            ))}
-          </Select>
-          <Select
-            aria-label="고객 필터"
-            value={filter.clientId ?? ''}
-            onChange={(event) => update({ clientId: event.target.value || undefined })}
-          >
-            <option value="">전체 고객</option>
-            {(partners.data ?? [])
-              .filter((item) => item.kind === 'CLIENT')
-              .map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                </option>
-              ))}
-          </Select>
-          <Select
-            aria-label="담당자 필터"
-            value={filter.managerId ?? ''}
-            onChange={(event) => update({ managerId: event.target.value || undefined })}
-          >
-            <option value="">전체 담당자</option>
-            {(employees.data ?? []).map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-          <Select
-            aria-label="공종 필터"
-            value={filter.tradeId ?? ''}
-            onChange={(event) => update({ tradeId: event.target.value || undefined })}
-          >
-            <option value="">전체 공종</option>
-            {trades.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-              </option>
-            ))}
-          </Select>
-        </div>
-        <div className="grid grid-cols-2 gap-2 lg:max-w-xl">
-          <label className="flex flex-col gap-1 text-sm">
-            기간 시작
-            <DateInput
-              value={filter.from ?? ''}
-              onChange={(event) => update({ from: event.target.value || undefined })}
-            />
-          </label>
-          <label className="flex flex-col gap-1 text-sm">
-            기간 끝
-            <DateInput
-              value={filter.to ?? ''}
-              onChange={(event) => update({ to: event.target.value || undefined })}
-            />
-          </label>
-        </div>
+        <ul className="flex flex-wrap gap-2" aria-label="상태로 찾기">
+          {STATUS_CHIPS.map((chip) => (
+            <li key={chip.label}>
+              <Chip
+                selected={(filter.status ?? '') === chip.status}
+                onClick={() =>
+                  update({ status: (chip.status || undefined) as ProjectStatus | undefined })
+                }
+              >
+                {chip.label}
+              </Chip>
+            </li>
+          ))}
+        </ul>
+        <button
+          type="button"
+          aria-expanded={showAdvanced}
+          className="flex min-h-touch items-center gap-1 self-start text-sm font-medium text-primary"
+          onClick={() => setShowAdvanced((value) => !value)}
+        >
+          자세히 찾기 (고객·담당자·공종·기간)
+          <ChevronDown
+            aria-hidden
+            className={cn('size-4 transition-transform', showAdvanced && 'rotate-180')}
+          />
+        </button>
+        {showAdvanced && (
+          <>
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+              <Select
+                aria-label="상태 필터"
+                value={filter.status ?? ''}
+                onChange={(event) =>
+                  update({ status: (event.target.value || undefined) as ProjectStatus | undefined })
+                }
+              >
+                <option value="">전체 상태</option>
+                {PROJECT_STATUSES.map((status) => (
+                  <option key={status} value={status}>
+                    {PROJECT_STATUS_LABELS[status]}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                aria-label="고객 필터"
+                value={filter.clientId ?? ''}
+                onChange={(event) => update({ clientId: event.target.value || undefined })}
+              >
+                <option value="">전체 고객</option>
+                {(partners.data ?? [])
+                  .filter((item) => item.kind === 'CLIENT')
+                  .map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {item.name}
+                    </option>
+                  ))}
+              </Select>
+              <Select
+                aria-label="담당자 필터"
+                value={filter.managerId ?? ''}
+                onChange={(event) => update({ managerId: event.target.value || undefined })}
+              >
+                <option value="">전체 담당자</option>
+                {(employees.data ?? []).map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Select>
+              <Select
+                aria-label="공종 필터"
+                value={filter.tradeId ?? ''}
+                onChange={(event) => update({ tradeId: event.target.value || undefined })}
+              >
+                <option value="">전체 공종</option>
+                {trades.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.name}
+                  </option>
+                ))}
+              </Select>
+            </div>
+            <div className="grid grid-cols-2 gap-2 lg:max-w-xl">
+              <label className="flex flex-col gap-1 text-sm">
+                기간 시작
+                <DateInput
+                  value={filter.from ?? ''}
+                  onChange={(event) => update({ from: event.target.value || undefined })}
+                />
+              </label>
+              <label className="flex flex-col gap-1 text-sm">
+                기간 끝
+                <DateInput
+                  value={filter.to ?? ''}
+                  onChange={(event) => update({ to: event.target.value || undefined })}
+                />
+              </label>
+            </div>
+          </>
+        )}
         {isFiltered && (
           <Button
             type="button"

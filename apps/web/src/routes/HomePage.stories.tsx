@@ -28,7 +28,7 @@ export const Default: Story = {
   },
 };
 
-// 저장하지 않고 닫았던 일지가 기기에 남아 있으면 홈에서 바로 이어서 쓰도록 안내
+// 저장하지 않고 닫았던 작업 내역이 기기에 남아 있으면 홈에서 바로 이어서 쓰도록 안내
 export const ResumesUnsavedWorkLog: Story = {
   beforeEach: () => {
     const project = DEMO_PROJECTS.find((item) => item.name === 'A동 외장 판금 공사')!;
@@ -38,7 +38,7 @@ export const ResumesUnsavedWorkLog: Story = {
       serializeDraft({
         value: {
           lines: [],
-          content: '쓰던 일지',
+          content: '쓰던 작업 내역',
           area: '',
           notes: '',
           isChange: false,
@@ -54,9 +54,9 @@ export const ResumesUnsavedWorkLog: Story = {
 
     await expect(
       await canvas.findByRole('link', {
-        name: /A동 외장 판금 공사 · 10월 8일 \(목\) 일지 작성 중/,
+        name: /A동 외장 판금 공사 · 10월 8일 \(목\) 작업 내역 작성 중/,
       }),
-    ).toHaveAttribute('href', expect.stringContaining('/work-logs?project='));
+    ).toHaveAttribute('href', expect.stringMatching(/\/projects\/.+\/work\/\d{4}-\d{2}-\d{2}$/));
   },
 };
 

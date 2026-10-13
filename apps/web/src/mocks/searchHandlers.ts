@@ -31,7 +31,7 @@ const toGroup = (items: SearchHit[], limit: number): SearchGroup => ({
 });
 
 /**
- * @description 통합 검색 API 목업 핸들러 (서버와 같은 규칙: 대소문자 무시 부분 일치, 직원은 이름·직책만, 지운 메모·문서 제외, 프로젝트 안 검색은 메모·자료·일지만)
+ * @description 통합 검색 API 목업 핸들러 (서버와 같은 규칙: 대소문자 무시 부분 일치, 직원은 이름·직책만, 지운 메모·문서 제외, 프로젝트 안 검색은 메모·자료·작업 내역만)
  * @param helpers 공통 오류 응답
  * @returns msw 핸들러 목록
  */

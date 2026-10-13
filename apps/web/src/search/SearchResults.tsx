@@ -49,7 +49,7 @@ const Hit = ({ hit }: { hit: SearchHit }) => (
   </li>
 );
 
-// 통합 검색 결과: 프로젝트·직원·메모·자료·일지로 나눠 보여 주고, 종류마다 개수를 제한한 만큼 더 있으면 검색어를 좁히도록 안내
+// 통합 검색 결과: 프로젝트·직원·메모·자료·작업 내역으로 나눠 보여 주고, 종류마다 개수를 제한한 만큼 더 있으면 검색어를 좁히도록 안내
 export const SearchResults = ({ results }: SearchResultsProps) => {
   const visible = GROUPS.filter(({ key }) => results[key].items.length > 0);
 

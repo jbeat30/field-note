@@ -478,7 +478,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
           </FormField>
           <FormField
             label="시작 예정일"
-            hint="작업일지를 입력할 수 있는 기간이 됩니다"
+            hint="작업 내역를 입력할 수 있는 기간이 됩니다"
             error={errors.plannedStart?.message}
           >
             <DateInput {...register('plannedStart')} />

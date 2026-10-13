@@ -47,7 +47,7 @@ export const HomePage = () => {
           type="search"
           className="min-w-0 flex-1"
           aria-label="찾기"
-          placeholder="프로젝트·직원·메모·자료·일지 찾기"
+          placeholder="프로젝트·직원·메모·자료·작업 내역 찾기"
           maxLength={50}
           value={searchText}
           onChange={(event) => setSearchText(event.target.value)}

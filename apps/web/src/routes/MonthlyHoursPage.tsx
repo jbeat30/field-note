@@ -19,6 +19,7 @@ import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { Textarea } from '../components/ui/textarea';
 import { formatDay } from '../lib/dates';
+import { projectWorkPath } from '../lib/projectPaths';
 import { splitServerErrors } from '../lib/serverErrors';
 import { useCloseMonth, useMonthlyHours, useReopenMonth } from '../monthly/useMonthlyHours';
 import { ReportExportError, downloadMonthlyXlsx } from '../reports/exportReport';
@@ -41,8 +42,8 @@ const formatDateTime = (iso: string) =>
     minute: '2-digit',
   }).format(new Date(iso));
 
-// 월 공수 확정과 월 공수표 (서비스 기획서 §13.2, §15.4): 한 달의 프로젝트·직원별 공수를 확인하고 임시 저장 일지를 정리한 뒤 확정(잠금)한다.
-// 확정은 선택 기능이며 확정한 달의 일지는 재오픈(사유 기록)해야 고칠 수 있다. 확정한 표는 엑셀로 내보내 급여·정산 담당에게 전달한다
+// 월 공수 확정과 월 공수표 (서비스 기획서 §13.2, §15.4): 한 달의 프로젝트·직원별 공수를 확인하고 임시 저장 작업 내역을 정리한 뒤 확정(잠금)한다.
+// 확정은 선택 기능이며 확정한 달의 작업 내역은 재오픈(사유 기록)해야 고칠 수 있다. 확정한 표는 엑셀로 내보내 급여·정산 담당에게 전달한다
 export const MonthlyHoursPage = () => {
   const [params, setParams] = useSearchParams();
   const today = todayInSeoul(new Date());
@@ -210,7 +211,7 @@ export const MonthlyHoursPage = () => {
             </dl>
             {!data.isClosed && (
               <p className="text-sm text-foreground/70">
-                확정하면 이 달의 작업일지는 재오픈하기 전까지 수정할 수 없고, 지금의 기준시간·월
+                확정하면 이 달의 작업 내역는 재오픈하기 전까지 수정할 수 없고, 지금의 기준시간·월
                 기준일수가 고정됩니다. 확정은 선택 기능입니다
               </p>
             )}
@@ -222,17 +223,17 @@ export const MonthlyHoursPage = () => {
               aria-labelledby="monthly-drafts-heading"
             >
               <h2 id="monthly-drafts-heading" className="text-lg font-bold">
-                임시 저장된 일지 {data.draftLogCount}건
+                임시 저장된 작업 내역 {data.draftLogCount}건
               </h2>
               <p className="text-sm text-foreground/70">
-                집계에는 저장된 일지만 반영됩니다. 확정 전에 저장하거나 정리해 주세요
+                집계에는 저장된 작업 내역만 반영됩니다. 확정 전에 저장하거나 정리해 주세요
               </p>
               <ul className="flex flex-col gap-1 text-sm">
                 {data.drafts.map((draft) => (
                   <li key={`${draft.projectId}-${draft.workDate}`}>
                     <Link
                       className="text-primary underline"
-                      to={`/work-logs?project=${draft.projectId}&date=${draft.workDate}`}
+                      to={projectWorkPath(draft.projectId, draft.workDate)}
                     >
                       {formatDay(draft.workDate)} · {draft.projectName}
                     </Link>
@@ -255,7 +256,7 @@ export const MonthlyHoursPage = () => {
               프로젝트·직원별 공수
             </h2>
             {data.rows.length === 0 ? (
-              <p className="text-foreground/70">이 달에 저장된 일지가 없습니다</p>
+              <p className="text-foreground/70">이 달에 저장된 작업 내역이 없습니다</p>
             ) : (
               <div className="overflow-x-auto">
                 <table className="w-full min-w-[22rem] text-left text-sm">
@@ -322,9 +323,11 @@ export const MonthlyHoursPage = () => {
                     <Checkbox
                       checked={confirmDrafts}
                       onCheckedChange={(checked) => setConfirmDrafts(checked === true)}
-                      aria-label="임시 저장된 일지가 남아 있어도 확정합니다"
+                      aria-label="임시 저장된 작업 내역이 남아 있어도 확정합니다"
                     />
-                    <span>임시 저장된 일지 {data.draftLogCount}건이 남아 있어도 확정합니다</span>
+                    <span>
+                      임시 저장된 작업 내역 {data.draftLogCount}건이 남아 있어도 확정합니다
+                    </span>
                   </label>
                 )}
                 <Button type="button" disabled={close.isPending || isFuture} onClick={doClose}>
@@ -347,7 +350,7 @@ export const MonthlyHoursPage = () => {
                 <FormField
                   label="재오픈 사유 (필수)"
                   error={reasonError}
-                  hint="정정이 필요한 이유를 남겨 주세요. 재오픈하면 이 달의 일지를 다시 고칠 수 있습니다"
+                  hint="정정이 필요한 이유를 남겨 주세요. 재오픈하면 이 달의 작업 내역을 다시 고칠 수 있습니다"
                 >
                   <Textarea
                     maxLength={MONTH_REASON_MAX_LENGTH}

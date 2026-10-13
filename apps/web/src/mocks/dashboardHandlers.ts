@@ -114,7 +114,7 @@ const buildDashboard = (account: MockAccount) => {
     (memo) => memo.projectId === null && Date.parse(memo.createdAt) <= staleBefore,
   );
   const warranty = listMockWarrantyDashboard(account);
-  // 지난달에 저장한 일지가 있는데 확정하지 않았으면 알림 (서버와 같은 규칙)
+  // 지난달에 저장한 작업 내역이 있는데 확정하지 않았으면 알림 (서버와 같은 규칙)
   const prevMonth = previousMonth(today);
   const prevRange = monthRange(prevMonth);
   const hasPrevLogs = logs.some(

@@ -14,7 +14,7 @@ const routerFor = (month: string) => ({
 const meta = {
   title: 'Pages/월 공수표',
   component: MonthlyHoursPage,
-  // 더미 일지는 2026-09에 있다: 저장된 일지 4건(A동 3·B동 1)과 임시 저장 1건(A동 9월 4일)
+  // 더미 작업 내역은 2026-09에 있다: 저장된 작업 내역 4건(A동 3·B동 1)과 임시 저장 1건(A동 9월 4일)
   parameters: { router: routerFor('2026-09') },
   // 스토리를 다시 그릴 때마다 확정 상태가 처음으로 돌아가야 같은 순서로 확인할 수 있다
   loaders: [
@@ -37,8 +37,10 @@ export const Default: Story = {
     // 프로젝트·직원별 표와 직원별 합계
     await expect(await canvas.findByRole('table')).toBeInTheDocument();
     await expect(canvas.getByRole('heading', { name: '직원별 합계' })).toBeInTheDocument();
-    // 임시 저장 일지는 목록으로 알린다 (집계에는 포함되지 않음)
-    await expect(canvas.getByRole('heading', { name: '임시 저장된 일지 1건' })).toBeInTheDocument();
+    // 임시 저장 작업 내역은 목록으로 알린다 (집계에는 포함되지 않음)
+    await expect(
+      canvas.getByRole('heading', { name: '임시 저장된 작업 내역 1건' }),
+    ).toBeInTheDocument();
     await expect(canvas.getByText('확정한 기록이 없습니다')).toBeInTheDocument();
   },
 };
@@ -48,23 +50,25 @@ export const EmptyMonth: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('이 달에 저장된 일지가 없습니다')).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('이 달에 저장된 작업 내역이 없습니다'),
+    ).toBeInTheDocument();
     await expect(canvas.queryByRole('table')).not.toBeInTheDocument();
   },
 };
 
-// 임시 저장 일지가 남아 있으면 확인해야 확정할 수 있다
+// 임시 저장 작업 내역이 남아 있으면 확인해야 확정할 수 있다
 export const CloseNeedsDraftConfirm: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await userEvent.click(await canvas.findByRole('button', { name: '2026-09 공수 확정' }));
     await expect(
-      await canvas.findByText(/임시 저장된 작업일지가 1건 있습니다/, {}, { timeout: 4000 }),
+      await canvas.findByText(/임시 저장된 작업 내역가 1건 있습니다/, {}, { timeout: 4000 }),
     ).toBeInTheDocument();
 
     await userEvent.click(
-      canvas.getByRole('checkbox', { name: '임시 저장된 일지가 남아 있어도 확정합니다' }),
+      canvas.getByRole('checkbox', { name: '임시 저장된 작업 내역이 남아 있어도 확정합니다' }),
     );
     await userEvent.click(canvas.getByRole('button', { name: '2026-09 공수 확정' }));
 
@@ -84,7 +88,9 @@ export const ReopenNeedsReason: Story = {
     const canvas = within(canvasElement);
 
     await userEvent.click(
-      await canvas.findByRole('checkbox', { name: '임시 저장된 일지가 남아 있어도 확정합니다' }),
+      await canvas.findByRole('checkbox', {
+        name: '임시 저장된 작업 내역이 남아 있어도 확정합니다',
+      }),
     );
     await userEvent.click(await canvas.findByRole('button', { name: '2026-09 공수 확정' }));
 

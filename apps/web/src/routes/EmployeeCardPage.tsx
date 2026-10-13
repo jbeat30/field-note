@@ -263,7 +263,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
               {employee.status === 'LEFT' ? (
                 <>
                   <p className="text-sm text-foreground/70">
-                    퇴사한 직원은 새 투입·일지 입력에서 빠지고, 과거 기록은 그대로 남습니다.
+                    퇴사한 직원은 새 투입·작업 내역 입력에서 빠지고, 과거 기록은 그대로 남습니다.
                     재입사하면 같은 카드를 다시 재직으로 바꿉니다
                   </p>
                   <Button

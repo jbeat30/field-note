@@ -1,6 +1,7 @@
 import {
   ERROR_MESSAGES,
   WORK_LOG_STATUS_LABELS,
+  roundTo,
   checkWorkDate,
   workLogStatusCheck,
   type CompanySettings,
@@ -12,6 +13,7 @@ import {
   type WorkLogWarning,
 } from '@field-note/shared';
 import { useQueryClient } from '@tanstack/react-query';
+import { Minus, Plus } from 'lucide-react';
 import { useEffect, useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
@@ -19,7 +21,9 @@ import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
+import { Combobox } from '../components/ui/combobox';
 import { Select } from '../components/ui/select';
+import { cn } from '../lib/cn';
 import { Textarea } from '../components/ui/textarea';
 import { draftKey } from '../drafts/formDraft';
 import { useLocalDraft } from '../drafts/useLocalDraft';
@@ -33,7 +37,8 @@ import {
   linesToEntries,
   newLineKey,
   quickValue,
-  unitLabel,
+  minutesToValue,
+  valueToMinutes,
   type EntryLine,
 } from './workLogForm';
 import { WorkLogRevisionsPanel } from './WorkLogRevisionsPanel';
@@ -59,7 +64,7 @@ type Props = {
   categories: readonly OptionItem[];
   // 그날 투입이 등록된 직원
   assignedEmployeeIds: readonly string[];
-  // 이 날짜보다 앞선 가장 최근 일지의 날짜 ("어제와 동일" 복사용)
+  // 이 날짜보다 앞선 가장 최근 작업 내역의 날짜 ("어제와 동일" 복사용)
   previousDate: string | null;
   today: string;
   // 서버의 최신 내용으로 화면을 다시 불러옴 (충돌했을 때)
@@ -98,14 +103,14 @@ type SaveResult = {
 };
 
 /**
- * @description 작업일지 일괄 입력 폼: 투입 직원 목록에서 작업 구분·공수를 한 번에 정하고 공통 내용을 한 번 입력한다 (서비스 기획서 §9.3)
- * @param props 프로젝트·날짜·기존 일지와 선택 목록
+ * @description 작업 내역 일괄 입력 폼: 투입 직원 목록에서 작업 구분·공수를 한 번에 정하고 공통 내용을 한 번 입력한다 (서비스 기획서 §9.3)
+ * @param props 프로젝트·날짜·기존 작업 내역과 선택 목록
  */
 export const WorkLogEditor = ({
   project,
   date,
   log,
-  settings,
+  settings: companySettings,
   employees,
   categories,
   assignedEmployeeIds,
@@ -115,21 +120,14 @@ export const WorkLogEditor = ({
 }: Props) => {
   const queryClient = useQueryClient();
   const save = useSaveWorkLog(project.id);
+  // 작업 입력은 항상 "시간"으로 받는다 (공수 환산은 집계 화면에서만). 회사의 공수 입력 방식 설정과 무관하게 입력은 시간
+  const settings = { ...companySettings, workUnitMode: 'HOURS' as const };
   const employeeById = new Map(employees.map((employee) => [employee.id, employee]));
   const names = new Map(employees.map((employee) => [employee.id, employee.name]));
-  const unit = unitLabel(settings);
 
   // 서버 내용(또는 투입 직원)만으로 만든 처음 값
   const [initial] = useState<EditorSnapshot>(() => ({
-    lines: log
-      ? entriesToLines(log.entries, settings)
-      : assignedEmployeeIds.map((employeeId) => ({
-          key: newLineKey(),
-          employeeId,
-          categoryId: '',
-          value: quickValue(1, settings),
-          included: true,
-        })),
+    lines: log ? entriesToLines(log.entries, settings) : [],
     content: log?.content ?? '',
     area: log?.area ?? '',
     notes: log?.notes ?? '',
@@ -157,7 +155,6 @@ export const WorkLogEditor = ({
   const [confirmStatus, setConfirmStatus] = useState(false);
   const [version, setVersion] = useState<number | null>(log?.version ?? null);
   const [bulkCategory, setBulkCategory] = useState('');
-  const [addEmployee, setAddEmployee] = useState('');
   const [extraDates, setExtraDates] = useState<string[]>([]);
   const [extraInput, setExtraInput] = useState('');
   const [errors, setErrors] = useState<Record<string, string>>({});
@@ -253,23 +250,33 @@ export const WorkLogEditor = ({
       ];
     });
 
-  const addExtraEmployee = () => {
-    if (!addEmployee) return;
+  const includedLines = lines.filter((line) => line.included);
+  const totalMinutes = includedLines.reduce(
+    (sum, line) => sum + (valueToMinutes(line.value, settings) ?? 0),
+    0,
+  );
+  const summaryText = `${new Set(includedLines.map((line) => line.employeeId)).size}명 · ${roundTo(totalMinutes / 60, 1)}시간`;
+  const addEmployees = (ids: readonly string[]) => {
+    const fresh = ids.filter((employeeId) => !employeeIds.includes(employeeId));
+
+    if (fresh.length === 0) return;
 
     setLines((current) => [
       ...current,
-      {
+      ...fresh.map((employeeId) => ({
         key: newLineKey(),
-        employeeId: addEmployee,
+        employeeId,
         categoryId: bulkCategory,
         value: quickValue(1, settings),
         included: true,
-      },
+      })),
     ]);
-    setAddEmployee('');
   };
+  const teamMissing = assignedEmployeeIds.filter((employeeId) =>
+    addable.some((e) => e.id === employeeId),
+  );
 
-  // "어제와 동일": 가장 최근 일지의 공수 항목과 공통 내용을 복사 (퇴사한 직원은 뺌). 저장하기 전에 확인하도록 안내만 한다
+  // "어제와 동일": 가장 최근 작업 내역의 공수 항목과 공통 내용을 복사 (퇴사한 직원은 뺌). 저장하기 전에 확인하도록 안내만 한다
   const copyPrevious = async () => {
     if (!previousDate) return;
 
@@ -278,7 +285,7 @@ export const WorkLogEditor = ({
     const previous = await readWorkLog(queryClient, project.id, previousDate);
 
     if (!previous) {
-      setNotice('복사할 일지를 찾지 못했습니다');
+      setNotice('복사할 작업 내역을 찾지 못했습니다');
       return;
     }
 
@@ -292,7 +299,9 @@ export const WorkLogEditor = ({
     setArea(previous.area ?? '');
     setNotes(previous.notes ?? '');
     setChange(previous.isChange);
-    setNotice(`${formatDay(previousDate)} 일지를 복사했습니다. 내용을 확인한 뒤 저장해 주세요`);
+    setNotice(
+      `${formatDay(previousDate)} 작업 내역을 복사했습니다. 내용을 확인한 뒤 저장해 주세요`,
+    );
   };
 
   const addExtraDate = () => {
@@ -347,7 +356,7 @@ export const WorkLogEditor = ({
       });
       const extras: SaveResult['extras'] = [];
 
-      // 여러 날짜: 날짜마다 따로 저장하고 결과를 날짜별로 보여 줌 (이미 일지가 있는 날은 건너뜀)
+      // 여러 날짜: 날짜마다 따로 저장하고 결과를 날짜별로 보여 줌 (이미 작업 내역이 있는 날은 건너뜀)
       for (const extra of extraDates) {
         try {
           await save.mutateAsync({ workDate: extra, body });
@@ -358,7 +367,7 @@ export const WorkLogEditor = ({
             ok: false,
             message:
               getErrorCode(error) === 'CONFLICT'
-                ? '이미 일지가 있어 건너뛰었습니다'
+                ? '이미 작업 내역이 있어 건너뛰었습니다'
                 : splitServerErrors(error, FIELDS).root || '저장하지 못했습니다',
           });
         }
@@ -413,7 +422,7 @@ export const WorkLogEditor = ({
   return (
     <div className="flex flex-col gap-5">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="text-lg font-bold">{formatDay(date)} 일지</h2>
+        <h2 className="text-xl font-bold">{formatDay(date)} 작업</h2>
         {log && (
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
             {WORK_LOG_STATUS_LABELS[log.status]} · 버전 {version}
@@ -441,8 +450,8 @@ export const WorkLogEditor = ({
             onChange={(event) => setConfirmStatus(event.target.checked)}
           />
           {project.status === 'SUSPENDED'
-            ? '중단 중인 프로젝트에 일지를 쓰는 것을 확인합니다'
-            : '완료된 프로젝트에 소급해서 일지를 쓰는 것을 확인합니다'}
+            ? '중단 중인 프로젝트에 작업 내역을 쓰는 것을 확인합니다'
+            : '완료된 프로젝트에 소급해서 작업 내역을 쓰는 것을 확인합니다'}
         </label>
       )}
       {project.status === 'WARRANTY' && (
@@ -501,8 +510,8 @@ export const WorkLogEditor = ({
       {draft.status === 'stale' && draft.value && (
         <Alert variant="info" className="flex flex-col gap-2">
           <span>
-            이 기기에 저장해 둔 작성 내용이 있지만, 그 뒤에 서버의 일지가 바뀌어 자동으로 불러오지
-            않았습니다
+            이 기기에 저장해 둔 작성 내용이 있지만, 그 뒤에 서버의 작업 내역이 바뀌어 자동으로
+            불러오지 않았습니다
           </span>
           <div className="flex gap-2">
             <Button
@@ -525,20 +534,42 @@ export const WorkLogEditor = ({
       )}
       {notice && <Alert variant="info">{notice}</Alert>}
 
-      <section className="flex flex-col gap-3" aria-labelledby="entries-heading">
-        <h3 id="entries-heading" className="text-base font-bold">
-          직원별 작업 구분·공수 ({unit})
-        </h3>
+      <section
+        className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-5"
+        aria-labelledby="entries-heading"
+      >
+        <div>
+          <h3 id="entries-heading" className="text-lg font-bold">
+            일한 사람과 시간
+          </h3>
+          <p className="text-sm text-foreground/70">
+            사람마다 일한 시간과 한 일의 종류를 따로 정합니다. 안 나온 사람은 체크를 풀어 주세요
+          </p>
+        </div>
 
-        <div className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4">
-          <p className="text-sm font-medium">일괄 지정</p>
+        <div className="flex flex-col gap-3 rounded-xl bg-surface-nested p-4">
+          <p className="text-sm font-semibold">모두에게 한 번에 적용</p>
+          <div className="flex flex-wrap gap-2">
+            {QUICK_MULTIPLIERS.map((quick) => (
+              <Button
+                key={quick.label}
+                type="button"
+                variant="secondary"
+                onClick={() => applyBulkValue(quick.multiplier)}
+              >
+                전원 {quick.label} (
+                {roundTo((settings.standardWorkMinutes * quick.multiplier) / 60, 1)}
+                시간)
+              </Button>
+            ))}
+          </div>
           <div className="flex gap-2">
             <Select
               aria-label="작업 구분 일괄 지정"
               value={bulkCategory}
               onChange={(event) => setBulkCategory(event.target.value)}
             >
-              <option value="">작업 구분 선택</option>
+              <option value="">무슨 일을 했는지 고르기</option>
               {activeCategories.map((category) => (
                 <option key={category.id} value={category.id}>
                   {category.name}
@@ -554,18 +585,6 @@ export const WorkLogEditor = ({
               모두 적용
             </Button>
           </div>
-          <div className="flex flex-wrap gap-2">
-            {QUICK_MULTIPLIERS.map((quick) => (
-              <Button
-                key={quick.label}
-                type="button"
-                variant="secondary"
-                onClick={() => applyBulkValue(quick.multiplier)}
-              >
-                전원 {quick.label}
-              </Button>
-            ))}
-          </div>
           {previousDate && (
             <Button
               type="button"
@@ -574,83 +593,124 @@ export const WorkLogEditor = ({
               onClick={() => void copyPrevious()}
             >
               {previousDate === addDays(date, -1)
-                ? '어제와 동일'
-                : `${formatDay(previousDate)} 일지와 동일`}
+                ? '어제와 똑같이 채우기'
+                : `${formatDay(previousDate)} 작업과 똑같이 채우기`}
             </Button>
           )}
         </div>
 
         {lines.length === 0 && (
-          <p className="text-sm">이 날 투입된 직원이 없습니다. 아래에서 직원을 추가해 주세요</p>
+          <p className="text-sm">
+            이 날 일한 직원을 아직 고르지 않았습니다. 아래에서 직원을 골라 추가해 주세요
+          </p>
         )}
-        <ul className="grid gap-3 xl:grid-cols-2" aria-label="직원별 공수">
+        <ul className="grid gap-3 xl:grid-cols-2" aria-label="직원별 일한 시간">
           {employeeIds.map((employeeId) => {
             const employee = employeeById.get(employeeId);
             const employeeLines = lines.filter((line) => line.employeeId === employeeId);
             const name = employee?.name ?? '(알 수 없는 직원)';
             const included = employeeLines.every((line) => line.included);
+            const personMinutes = employeeLines
+              .filter((line) => line.included)
+              .reduce((sum, line) => sum + (valueToMinutes(line.value, settings) ?? 0), 0);
 
             return (
               <li
                 key={employeeId}
-                className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
+                className={cn(
+                  'flex flex-col gap-3 rounded-xl p-4 ring-1 ring-line',
+                  included ? 'bg-surface' : 'bg-surface-nested',
+                )}
               >
-                <label className="flex min-h-touch items-center gap-2 font-medium">
-                  <input
-                    type="checkbox"
-                    className="size-5"
-                    aria-label={`${name} 출근`}
-                    checked={included}
-                    onChange={(event) => setEmployeeIncluded(employeeId, event.target.checked)}
-                  />
-                  {name}
-                  {employee?.title ? (
-                    <span className="text-sm font-normal text-foreground/70">
-                      ({employee.title})
-                    </span>
-                  ) : null}
-                  {employee?.status === 'ON_LEAVE' && (
-                    <span className="text-xs text-danger">휴직</span>
-                  )}
-                  {employee?.status === 'LEFT' && <span className="text-xs text-danger">퇴사</span>}
-                  {!included && (
-                    <span className="text-xs font-normal text-foreground/70">결근·미작업</span>
-                  )}
-                </label>
+                <div className="flex items-center justify-between gap-2">
+                  <label className="flex min-h-touch items-center gap-3 font-semibold">
+                    <input
+                      type="checkbox"
+                      className="size-6"
+                      aria-label={`${name} 출근`}
+                      checked={included}
+                      onChange={(event) => setEmployeeIncluded(employeeId, event.target.checked)}
+                    />
+                    {name}
+                    {employee?.title ? (
+                      <span className="text-sm font-normal text-foreground/70">
+                        ({employee.title})
+                      </span>
+                    ) : null}
+                    {employee?.status === 'ON_LEAVE' && (
+                      <span className="text-xs text-danger">휴직</span>
+                    )}
+                    {employee?.status === 'LEFT' && (
+                      <span className="text-xs text-danger">퇴사</span>
+                    )}
+                  </label>
+                  <p className="text-lg font-bold">
+                    {included ? `${roundTo(personMinutes / 60, 1)}시간` : '결근·미작업'}
+                  </p>
+                </div>
                 {employeeLines.map((line, index) => {
                   const suffix = index === 0 ? '' : ` ${index + 1}`;
+                  const minutes = valueToMinutes(line.value, settings) ?? 0;
+                  const step = (deltaMinutes: number) =>
+                    updateLine(line.key, {
+                      value: minutesToValue(Math.max(30, minutes + deltaMinutes), settings),
+                    });
 
                   return (
-                    <div key={line.key} className="flex flex-col gap-2" data-testid="entry-line">
-                      <div className="grid grid-cols-[1fr_6rem] gap-2">
-                        <Select
-                          aria-label={`${name} 작업 구분${suffix}`}
-                          value={line.categoryId}
+                    <div
+                      key={line.key}
+                      className="flex flex-col gap-2 rounded-lg bg-surface-nested p-3"
+                      data-testid="entry-line"
+                    >
+                      <Select
+                        aria-label={`${name} 작업 구분${suffix}`}
+                        value={line.categoryId}
+                        disabled={!line.included}
+                        onChange={(event) =>
+                          updateLine(line.key, { categoryId: event.target.value })
+                        }
+                      >
+                        <option value="">무슨 일을 했나요</option>
+                        {activeCategories.map((category) => (
+                          <option key={category.id} value={category.id}>
+                            {category.name}
+                            {category.isActive ? '' : ' (숨김)'}
+                          </option>
+                        ))}
+                      </Select>
+                      <div className="flex items-center gap-2">
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          aria-label={`${name} 30분 줄이기${suffix}`}
                           disabled={!line.included}
-                          onChange={(event) =>
-                            updateLine(line.key, { categoryId: event.target.value })
-                          }
+                          onClick={() => step(-30)}
                         >
-                          <option value="">작업 구분</option>
-                          {activeCategories.map((category) => (
-                            <option key={category.id} value={category.id}>
-                              {category.name}
-                              {category.isActive ? '' : ' (숨김)'}
-                            </option>
-                          ))}
-                        </Select>
+                          <Minus aria-hidden className="size-5" />
+                        </Button>
                         <Input
                           type="number"
                           inputMode="decimal"
                           step="0.5"
                           min="0"
-                          aria-label={`${name} 공수 (${unit})${suffix}`}
+                          className="text-center text-lg font-bold"
+                          aria-label={`${name} 일한 시간(시간)${suffix}`}
                           value={line.value}
                           disabled={!line.included}
                           onChange={(event) => updateLine(line.key, { value: event.target.value })}
                         />
+                        <Button
+                          type="button"
+                          variant="secondary"
+                          aria-label={`${name} 30분 늘리기${suffix}`}
+                          disabled={!line.included}
+                          onClick={() => step(30)}
+                        >
+                          <Plus aria-hidden className="size-5" />
+                        </Button>
+                        <span className="shrink-0 text-sm text-foreground/70">시간</span>
                       </div>
-                      <div className="flex flex-wrap gap-1">
+                      <div className="flex flex-wrap gap-1.5">
                         {QUICK_MULTIPLIERS.map((quick) => (
                           <Button
                             key={quick.label}
@@ -675,7 +735,7 @@ export const WorkLogEditor = ({
                             disabled={!included}
                             onClick={() => splitLine(employeeId)}
                           >
-                            나누기
+                            다른 일도 했어요
                           </Button>
                         )}
                         {employeeLines.length > 1 && (
@@ -687,7 +747,7 @@ export const WorkLogEditor = ({
                               setLines((current) => current.filter((item) => item.key !== line.key))
                             }
                           >
-                            줄 삭제
+                            이 줄 빼기
                           </Button>
                         )}
                       </div>
@@ -700,34 +760,51 @@ export const WorkLogEditor = ({
         </ul>
         {errors.entries && <p className="text-sm text-danger">{errors.entries}</p>}
 
-        <div className="flex gap-2">
-          <Select
+        <div className="flex flex-col gap-2 sm:flex-row">
+          <Combobox
             aria-label="직원 추가"
-            value={addEmployee}
-            onChange={(event) => setAddEmployee(event.target.value)}
-          >
-            <option value="">투입되지 않은 직원 추가</option>
-            {addable.map((employee) => (
-              <option key={employee.id} value={employee.id}>
-                {employee.name}
-                {assignedEmployeeIds.includes(employee.id) ? '' : ' (투입 없음)'}
-              </option>
-            ))}
-          </Select>
-          <Button
-            type="button"
-            variant="secondary"
-            className="shrink-0 whitespace-nowrap"
-            onClick={addExtraEmployee}
-          >
-            직원 추가
-          </Button>
+            value=""
+            onValueChange={(employeeId) => addEmployees([employeeId])}
+            options={[...addable]
+              .sort(
+                (a, b) =>
+                  Number(assignedEmployeeIds.includes(b.id)) -
+                  Number(assignedEmployeeIds.includes(a.id)),
+              )
+              .map((employee) => ({
+                value: employee.id,
+                label: employee.name,
+                description: [
+                  assignedEmployeeIds.includes(employee.id) ? '프로젝트 팀' : '',
+                  employee.title ?? '',
+                  employee.status === 'ON_LEAVE' ? '휴직' : '',
+                ]
+                  .filter(Boolean)
+                  .join(' · '),
+              }))}
+            placeholder="회사 직원 중에서 추가"
+            searchPlaceholder="이름·직책으로 찾기"
+            emptyText="추가할 직원이 없습니다"
+          />
+          {teamMissing.length > 0 && (
+            <Button
+              type="button"
+              variant="secondary"
+              className="shrink-0 whitespace-nowrap"
+              onClick={() => addEmployees(teamMissing)}
+            >
+              프로젝트 팀 {teamMissing.length}명 모두 넣기
+            </Button>
+          )}
         </div>
       </section>
 
-      <section className="flex flex-col gap-4" aria-labelledby="common-heading">
-        <h3 id="common-heading" className="text-base font-bold">
-          공통 내용
+      <section
+        className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-5"
+        aria-labelledby="common-heading"
+      >
+        <h3 id="common-heading" className="text-lg font-bold">
+          한 일
         </h3>
         <FormField label="작업 내용" error={errors.content}>
           <Textarea value={content} onChange={(event) => setContent(event.target.value)} />
@@ -816,7 +893,7 @@ export const WorkLogEditor = ({
             </p>
           )}
           {result.warnings.length > 0 && (
-            <ul className="mt-1 list-disc pl-5" aria-label="일지 경고">
+            <ul className="mt-1 list-disc pl-5" aria-label="작업 내역 경고">
               {result.warnings.map((warning, index) => (
                 <li key={`${warning.type}-${index}`}>{warningText(warning)}</li>
               ))}
@@ -834,7 +911,10 @@ export const WorkLogEditor = ({
         </Alert>
       )}
 
-      <div className="flex gap-2">
+      <div className="sticky bottom-20 z-10 flex items-center gap-2 rounded-xl bg-surface p-3 shadow-sheet ring-1 ring-line md:bottom-4">
+        <p className="min-w-0 flex-1 text-sm font-semibold" aria-live="polite">
+          {summaryText}
+        </p>
         <Button
           type="button"
           variant="secondary"

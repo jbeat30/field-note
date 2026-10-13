@@ -142,7 +142,7 @@ export const HoldNeedsReasonThenDone: Story = {
   },
 };
 
-// 사후 작업으로 표시한 일지를 보수 요청에 연결하면 건별 공수가 보인다
+// 사후 작업으로 표시한 작업 내역을 보수 요청에 연결하면 건별 공수가 보인다
 export const LinkAfterServiceLog: Story = {
   parameters: { router: routerFor('A동 외장 판금 공사') },
   loaders: [
@@ -182,7 +182,7 @@ export const LinkAfterServiceLog: Story = {
     await userEvent.click(within(itemOf(canvas, 1)).getByRole('button', { name: '연결' }));
 
     await expect(
-      await canvas.findByText(/일지 · /, { exact: false }, { timeout: 4000 }),
+      await canvas.findByText(/작업 내역 · /, { exact: false }, { timeout: 4000 }),
     ).toBeInTheDocument();
     await expect(canvas.getAllByText('사후 작업 1건').length).toBeGreaterThan(0);
   },
