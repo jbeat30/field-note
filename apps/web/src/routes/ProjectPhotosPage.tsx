@@ -93,18 +93,16 @@ export const ProjectPhotosPage = () => {
         </div>
         {view === 'ALL' && (
           <Select
-            className="w-auto"
+            className="w-40"
             aria-label="구분으로 거르기"
             value={category}
-            onChange={(event) => setCategory(event.target.value as PhotoCategory | '')}
-          >
-            <option value="">모든 구분</option>
-            {PHOTO_CATEGORIES.map((value) => (
-              <option key={value} value={value}>
-                {PHOTO_CATEGORY_LABELS[value]}
-              </option>
-            ))}
-          </Select>
+            emptyLabel="모든 구분"
+            onValueChange={setCategory}
+            options={PHOTO_CATEGORIES.map((value) => ({
+              value: value,
+              label: PHOTO_CATEGORY_LABELS[value],
+            }))}
+          />
         )}
       </div>
       {photos.isPending && <p className="text-sm">사진을 불러오는 중</p>}

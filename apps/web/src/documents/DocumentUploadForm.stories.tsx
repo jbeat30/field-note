@@ -3,6 +3,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { DocumentUploadForm } from './DocumentUploadForm';
 import { DocumentUploadError } from './uploadDocument';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Documents/문서 올리기',
@@ -25,7 +26,7 @@ export const CreateWithSuggestedTitle: Story = {
     // 이름 칸이 비어 있으면 파일 이름으로 채워짐
     await expect(canvas.getByLabelText('문서 이름')).toHaveValue('1층 시공도');
 
-    await userEvent.selectOptions(canvas.getByLabelText('분류'), '도면');
+    await chooseOption(canvas.getByLabelText('분류'), '도면');
     await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
 
     await waitFor(() =>
@@ -49,7 +50,7 @@ export const ContractIsSensitiveByDefault: Story = {
     const checkbox = canvas.getByLabelText(/민감 자료/);
 
     await expect(checkbox).not.toBeChecked();
-    await userEvent.selectOptions(canvas.getByLabelText('분류'), '계약·행정');
+    await chooseOption(canvas.getByLabelText('분류'), '계약·행정');
     await expect(checkbox).toBeChecked();
 
     await userEvent.click(checkbox);

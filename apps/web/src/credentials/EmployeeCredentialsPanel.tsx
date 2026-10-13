@@ -352,7 +352,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
             options={options.data ?? []}
             emptyLabel="종류 선택"
             value={typeId}
-            onChange={(event) => setTypeId(event.target.value)}
+            onValueChange={setTypeId}
           />
         </FormField>
         <FormField label="취득일 (선택)" error={errors.issuedOn}>

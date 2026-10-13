@@ -13,7 +13,7 @@ import {
   type ErrorCode,
   type StaffingCalendar,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import { listMockChangeWorks } from './changeWorkHandlers';
@@ -32,6 +32,7 @@ import {
   getWorkLogs,
   saveAlertSettings,
 } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -207,7 +208,7 @@ const buildDashboard = (account: MockAccount) => {
  */
 export const createDashboardHandlers = ({ apiError, parseBody }: Helpers) => [
   http.get('/api/v1/dashboard', async () => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 
@@ -217,7 +218,7 @@ export const createDashboardHandlers = ({ apiError, parseBody }: Helpers) => [
   }),
 
   http.get('/api/v1/company/alert-settings', async () => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 
@@ -227,7 +228,7 @@ export const createDashboardHandlers = ({ apiError, parseBody }: Helpers) => [
   }),
 
   http.put('/api/v1/company/alert-settings', async ({ request }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

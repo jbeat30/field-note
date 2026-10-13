@@ -19,6 +19,7 @@ import { EmptyState } from '../components/ui/empty-state';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
 import { PageHeader } from '../components/ui/page-header';
+import { Combobox } from '../components/ui/combobox';
 import { Select } from '../components/ui/select';
 import { cn } from '../lib/cn';
 import { useDebouncedValue } from '../lib/useDebouncedValue';
@@ -233,55 +234,42 @@ export const ProjectListPage = () => {
               <Select
                 aria-label="상태 필터"
                 value={filter.status ?? ''}
-                onChange={(event) =>
-                  update({ status: (event.target.value || undefined) as ProjectStatus | undefined })
-                }
-              >
-                <option value="">전체 상태</option>
-                {PROJECT_STATUSES.map((status) => (
-                  <option key={status} value={status}>
-                    {PROJECT_STATUS_LABELS[status]}
-                  </option>
-                ))}
-              </Select>
-              <Select
+                emptyLabel="전체 상태"
+                onValueChange={(status) => update({ status: status || undefined })}
+                options={PROJECT_STATUSES.map((status) => ({
+                  value: status,
+                  label: PROJECT_STATUS_LABELS[status],
+                }))}
+              />
+              <Combobox
                 aria-label="고객 필터"
                 value={filter.clientId ?? ''}
-                onChange={(event) => update({ clientId: event.target.value || undefined })}
-              >
-                <option value="">전체 고객</option>
-                {(partners.data ?? [])
+                placeholder="전체 고객"
+                searchPlaceholder="고객 이름으로 찾기"
+                clearable
+                onValueChange={(clientId) => update({ clientId: clientId || undefined })}
+                options={(partners.data ?? [])
                   .filter((item) => item.kind === 'CLIENT')
-                  .map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {item.name}
-                    </option>
-                  ))}
-              </Select>
-              <Select
+                  .map((item) => ({ value: item.id, label: item.name }))}
+              />
+              <Combobox
                 aria-label="담당자 필터"
                 value={filter.managerId ?? ''}
-                onChange={(event) => update({ managerId: event.target.value || undefined })}
-              >
-                <option value="">전체 담당자</option>
-                {(employees.data ?? []).map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </Select>
+                placeholder="전체 담당자"
+                clearable
+                onValueChange={(managerId) => update({ managerId: managerId || undefined })}
+                options={(employees.data ?? []).map((item) => ({
+                  value: item.id,
+                  label: item.name,
+                }))}
+              />
               <Select
                 aria-label="공종 필터"
                 value={filter.tradeId ?? ''}
-                onChange={(event) => update({ tradeId: event.target.value || undefined })}
-              >
-                <option value="">전체 공종</option>
-                {trades.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {item.name}
-                  </option>
-                ))}
-              </Select>
+                emptyLabel="전체 공종"
+                onValueChange={(tradeId) => update({ tradeId: tradeId || undefined })}
+                options={trades.map((item) => ({ value: item.id, label: item.name }))}
+              />
             </div>
             <div className="grid grid-cols-2 gap-2 lg:max-w-xl">
               <label className="flex flex-col gap-1 text-sm">

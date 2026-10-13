@@ -5,6 +5,7 @@ import { signIn } from '../mocks/state';
 import { resetDraftStore } from '../stores/draftStore';
 
 import { InboxPage } from './InboxPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/메모함',
@@ -47,12 +48,9 @@ export const LinkRemovesFromInbox: Story = {
 
     await canvas.findByText('자재 반입 시간 협의');
     await waitFor(() =>
-      expect(
-        within(canvas.getByLabelText('자재 반입 시간 협의 프로젝트에 연결')).getAllByRole('option')
-          .length,
-      ).toBeGreaterThan(1),
+      expect(canvas.getByLabelText('자재 반입 시간 협의 프로젝트에 연결')).toBeEnabled(),
     );
-    await userEvent.selectOptions(
+    await chooseOption(
       canvas.getByLabelText('자재 반입 시간 협의 프로젝트에 연결'),
       'A동 외장 판금 공사',
     );

@@ -77,17 +77,16 @@ export const ProjectChangeWorksPage = () => {
           기록 목록
         </h2>
         <Select
+          className="w-40"
           aria-label="상태 필터"
           value={status}
-          onChange={(event) => setStatus(event.target.value as ChangeWorkStatus | '')}
-        >
-          <option value="">전체 상태</option>
-          {CHANGE_WORK_STATUSES.map((value) => (
-            <option key={value} value={value}>
-              {CHANGE_WORK_STATUS_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          emptyLabel="전체 상태"
+          onValueChange={setStatus}
+          options={CHANGE_WORK_STATUSES.map((value) => ({
+            value: value,
+            label: CHANGE_WORK_STATUS_LABELS[value],
+          }))}
+        />
         {works.isError && <Alert>변경·추가 작업을 불러오지 못했습니다</Alert>}
         {works.isPending && <p className="text-sm">불러오는 중</p>}
         {works.data && works.data.length === 0 && (

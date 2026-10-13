@@ -5,6 +5,7 @@ import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
 
 import { ProjectPhotosPage } from './ProjectPhotosPage';
+import { chooseOption } from '../lib/storyActions';
 
 const projectId = DEMO_PROJECTS.find((project) => project.name === 'A동 외장 판금 공사')!.id;
 
@@ -41,7 +42,7 @@ export const FilterByCategory: Story = {
     await waitFor(() =>
       expect(canvas.getAllByRole('button', { name: /사진 열기/ })).toHaveLength(5),
     );
-    await userEvent.selectOptions(canvas.getByLabelText('구분으로 거르기'), '작업 전');
+    await chooseOption(canvas.getByLabelText('구분으로 거르기'), '작업 전');
 
     await waitFor(() =>
       expect(canvas.getAllByRole('button', { name: /사진 열기/ })).toHaveLength(2),

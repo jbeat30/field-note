@@ -2,7 +2,6 @@ import {
   EMPLOYEE_STATUSES,
   EMPLOYEE_STATUS_LABELS,
   type EmployeeListQuery,
-  type EmployeeStatus,
 } from '@field-note/shared';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
@@ -150,24 +149,20 @@ export const EmployeeListPage = () => {
           <Select
             aria-label="상태 필터"
             value={filter.status ?? ''}
-            onChange={(event) =>
-              update({ status: (event.target.value || undefined) as EmployeeStatus | undefined })
-            }
-          >
-            <option value="">전체 상태</option>
-            {EMPLOYEE_STATUSES.map((status) => (
-              <option key={status} value={status}>
-                {EMPLOYEE_STATUS_LABELS[status]}
-              </option>
-            ))}
-          </Select>
+            emptyLabel="전체 상태"
+            onValueChange={(status) => update({ status: status || undefined })}
+            options={EMPLOYEE_STATUSES.map((status) => ({
+              value: status,
+              label: EMPLOYEE_STATUS_LABELS[status],
+            }))}
+          />
           <OptionSelect
             aria-label="직종 필터"
             kind="JOB_TYPE"
             options={options.data ?? []}
             value={filter.jobTypeId ?? ''}
             emptyLabel="전체 직종"
-            onChange={(event) => update({ jobTypeId: event.target.value || undefined })}
+            onValueChange={(jobTypeId) => update({ jobTypeId: jobTypeId || undefined })}
           />
         </div>
 

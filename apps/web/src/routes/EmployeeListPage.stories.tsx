@@ -4,6 +4,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { signIn } from '../mocks/state';
 
 import { EmployeeListPage } from './EmployeeListPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/직원 목록',
@@ -62,8 +63,7 @@ export const QuickAddWithJobType: Story = {
     const jobType = await canvas.findByLabelText('직종');
 
     await userEvent.type(await canvas.findByLabelText('이름'), '새용접');
-    await within(jobType).findByRole('option', { name: '용접공' });
-    await userEvent.selectOptions(jobType, '용접공');
+    await chooseOption(jobType, '용접공');
     await userEvent.click(canvas.getByRole('button', { name: '등록' }));
 
     await expect(await canvas.findByText('새용접 등록했습니다')).toBeInTheDocument();
@@ -89,7 +89,7 @@ export const FilterByStatus: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('정판금');
-    await userEvent.selectOptions(canvas.getByLabelText('상태 필터'), '퇴사');
+    await chooseOption(canvas.getByLabelText('상태 필터'), '퇴사');
 
     await expect(await canvas.findByText('1명')).toBeInTheDocument();
     await waitFor(() => expect(canvas.queryByText('정판금')).not.toBeInTheDocument());
@@ -102,7 +102,7 @@ export const FilterByJobType: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('정판금');
-    await userEvent.selectOptions(canvas.getByLabelText('직종 필터'), '보통인부');
+    await chooseOption(canvas.getByLabelText('직종 필터'), '보통인부');
 
     await expect(await canvas.findByText('2명')).toBeInTheDocument();
     await expect(canvas.getByText('김일용')).toBeInTheDocument();

@@ -6,6 +6,7 @@ import { resetMockRepairs } from '../mocks/repairHandlers';
 import { findAccount, getProjects, getWorkLogs, saveProjects, signIn } from '../mocks/state';
 
 import { ProjectRepairsPage } from './ProjectRepairsPage';
+import { chooseOption } from '../lib/storyActions';
 
 const routerFor = (name: string) => ({
   initialEntries: [
@@ -177,8 +178,7 @@ export const LinkAfterServiceLog: Story = {
 
     const select = within(itemOf(canvas, 1)).getByLabelText('사후 작업 연결');
 
-    await waitFor(() => expect(within(select).getAllByRole('option').length).toBeGreaterThan(1));
-    await userEvent.selectOptions(select, within(select).getAllByRole('option')[1]!);
+    await chooseOption(select, 0);
     await userEvent.click(within(itemOf(canvas, 1)).getByRole('button', { name: '연결' }));
 
     await expect(

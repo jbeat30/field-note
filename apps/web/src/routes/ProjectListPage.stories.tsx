@@ -7,6 +7,7 @@ import { handlers } from '../mocks/handlers';
 import { findAccount, getProjects, saveProjects, signIn } from '../mocks/state';
 
 import { ProjectListPage } from './ProjectListPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/프로젝트 목록',
@@ -80,8 +81,7 @@ export const FilterByClient: Story = {
 
     await canvas.findByText('A동 외장 판금 공사');
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
-    await within(canvas.getByLabelText('고객 필터')).findByRole('option', { name: '미래오피스' });
-    await userEvent.selectOptions(canvas.getByLabelText('고객 필터'), '미래오피스');
+    await chooseOption(canvas.getByLabelText('고객 필터'), '미래오피스');
 
     await expect(await canvas.findByText('1건')).toBeInTheDocument();
     await expect(canvas.getByText('미래오피스 천장 마감')).toBeInTheDocument();
@@ -94,13 +94,11 @@ export const FilterByTradeAndManager: Story = {
 
     await canvas.findByText('A동 외장 판금 공사');
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
-    await within(canvas.getByLabelText('공종 필터')).findByRole('option', { name: '설비' });
-    await userEvent.selectOptions(canvas.getByLabelText('공종 필터'), '설비');
+    await chooseOption(canvas.getByLabelText('공종 필터'), '설비');
 
     await expect(await canvas.findByText('2건')).toBeInTheDocument();
 
-    await within(canvas.getByLabelText('담당자 필터')).findByRole('option', { name: '최설치' });
-    await userEvent.selectOptions(canvas.getByLabelText('담당자 필터'), '최설치');
+    await chooseOption(canvas.getByLabelText('담당자 필터'), '최설치');
 
     await expect(await canvas.findByText('1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
@@ -219,7 +217,7 @@ export const Pagination: Story = {
     await waitFor(() => expect(rows(canvas)).toHaveLength(5));
 
     // 쪽당 개수를 늘리면 첫 쪽부터 다시
-    await userEvent.selectOptions(canvas.getByLabelText('쪽당 개수'), '20개');
+    await chooseOption(canvas.getByLabelText('쪽당 개수'), '20개');
     await waitFor(() => expect(rows(canvas)).toHaveLength(20));
     await expect(canvas.getByRole('button', { name: '1쪽' })).toHaveAttribute(
       'aria-current',

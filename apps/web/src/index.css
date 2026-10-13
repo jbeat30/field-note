@@ -36,17 +36,28 @@
   --color-control-border: var(--control-border);
   --color-control-border-hover: var(--control-border-hover);
 
-  /* 모서리: 토스처럼 둥글게 (카드 24px, 입력·버튼 12px) */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  /* 모서리: 입력·버튼 8px, 패널 12px. 알약 모양(rounded-full)은 배지·칩에만 */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
+  --radius-control: 0.5rem;
 
-  /* 입력·버튼 모서리 (카드 16~24px보다 한 단계 작게) */
-  --radius-control: 0.625rem;
+  /* 글자 단계: 화면 제목(2xl) 22 · 구역 제목(lg) 17 · 본문(base) 15~16 · 보조(sm) 14 · 작은 글자(xs) 12 */
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.35;
+  --text-xl: 1.1875rem;
+  --text-xl--line-height: 1.4;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.45;
+
+  /* 굵기: 가변 글꼴이라 한 단계 가볍게 (700은 큰 글자에서 무거워 보임) */
+  --font-weight-bold: 650;
+  --font-weight-semibold: 590;
 
   --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
+  /* 놓여 있는 패널은 그림자 없이 테두리만. 떠 있는 것(팝오버·메뉴·모달)에만 그림자 */
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.06), 0 8px 24px -6px rgb(16 24 40 / 0.14);
   /* 펼침 목록·팝오버·메뉴 */
   --shadow-pop: 0 4px 6px -2px rgb(16 24 40 / 0.05), 0 12px 24px -4px rgb(16 24 40 / 0.12);
   --shadow-sheet: 0 -4px 24px rgb(0 0 0 / 0.12);

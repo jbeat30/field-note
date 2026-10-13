@@ -62,17 +62,16 @@ export const ProjectRepairsPage = () => {
           접수 목록
         </h2>
         <Select
+          className="w-40"
           aria-label="상태 필터"
           value={status}
-          onChange={(event) => setStatus(event.target.value as RepairStatus | '')}
-        >
-          <option value="">전체 상태</option>
-          {REPAIR_STATUSES.map((value) => (
-            <option key={value} value={value}>
-              {REPAIR_STATUS_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          emptyLabel="전체 상태"
+          onValueChange={setStatus}
+          options={REPAIR_STATUSES.map((value) => ({
+            value: value,
+            label: REPAIR_STATUS_LABELS[value],
+          }))}
+        />
         {repairs.isError && <Alert>보수 요청을 불러오지 못했습니다</Alert>}
         {repairs.isPending && <p className="text-sm">불러오는 중</p>}
         {repairs.data && repairs.data.length === 0 && (

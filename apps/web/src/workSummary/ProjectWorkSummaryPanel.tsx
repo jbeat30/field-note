@@ -157,14 +157,12 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
                 aria-label="기간 묶음"
                 className="w-28"
                 value={unit}
-                onChange={(event) => setUnit(event.target.value as WorkSummaryUnit)}
-              >
-                {WORK_SUMMARY_UNITS.map((item) => (
-                  <option key={item} value={item}>
-                    {WORK_SUMMARY_UNIT_LABELS[item]}
-                  </option>
-                ))}
-              </Select>
+                onValueChange={setUnit}
+                options={WORK_SUMMARY_UNITS.map((item) => ({
+                  value: item,
+                  label: WORK_SUMMARY_UNIT_LABELS[item],
+                }))}
+              />
             </div>
             <ul
               className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"

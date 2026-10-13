@@ -49,19 +49,14 @@ export const ProjectMemosPage = () => {
       />
       <div className="flex flex-wrap items-center gap-3">
         <Select
-          className="w-auto"
+          className="w-40"
           aria-label="태그로 거르기"
           value={onlyOpen ? 'TODO' : tag}
           disabled={onlyOpen}
-          onChange={(event) => setTag(event.target.value as MemoTag | '')}
-        >
-          <option value="">모든 태그</option>
-          {MEMO_TAGS.map((value) => (
-            <option key={value} value={value}>
-              {MEMO_TAG_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          emptyLabel="모든 태그"
+          onValueChange={setTag}
+          options={MEMO_TAGS.map((value) => ({ value: value, label: MEMO_TAG_LABELS[value] }))}
+        />
         <label className="flex min-h-touch items-center gap-2 text-sm">
           <input
             type="checkbox"

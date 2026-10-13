@@ -11,28 +11,27 @@ export const OptionSelect = ({
   keepId,
   emptyLabel = '선택 안 함',
   ...props
-}: ComponentProps<typeof Select> & {
+}: Omit<ComponentProps<typeof Select<string>>, 'options' | 'emptyLabel'> & {
   kind: OptionKind;
   options: OptionItem[];
   // 숨긴 항목이어도 목록에 남겨 둘 항목 (현재 저장된 값)
   keepId?: string | null;
   emptyLabel?: string;
 }) => {
-  const current = keepId ?? (typeof props.value === 'string' ? props.value : '');
+  const current = keepId ?? props.value;
   const items = options.filter(
     (item) => item.kind === kind && (item.isActive || item.id === current),
   );
 
   return (
-    <Select {...props}>
-      <option value="">{emptyLabel}</option>
-      {items.map((item) => (
-        <option key={item.id} value={item.id}>
-          {item.name}
-          {item.isActive ? '' : ' (숨김)'}
-        </option>
-      ))}
-    </Select>
+    <Select
+      {...props}
+      emptyLabel={emptyLabel}
+      options={items.map((item) => ({
+        value: item.id,
+        label: item.isActive ? item.name : `${item.name} (숨김)`,
+      }))}
+    />
   );
 };
 

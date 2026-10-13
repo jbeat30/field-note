@@ -7,7 +7,7 @@ import { ko } from 'react-day-picker/locale';
 import { cn } from '../../lib/cn';
 
 import { Button } from './button';
-import { Input } from './input';
+import { Input, type ControlSize } from './input';
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -32,8 +32,9 @@ export const DateInput = ({
   min,
   max,
   disabled,
+  size = 'md',
   ...props
-}: Omit<ComponentProps<'input'>, 'type'>) => {
+}: Omit<ComponentProps<'input'>, 'type' | 'size'> & { size?: ControlSize }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date | undefined>();
@@ -84,7 +85,8 @@ export const DateInput = ({
             placeholder="YYYY-MM-DD"
             maxLength={10}
             disabled={disabled}
-            className={cn('pr-12', className)}
+            size={size}
+            className={cn(size === 'sm' ? 'pr-9' : 'pr-11', className)}
             {...props}
             // 입력 칸을 눌러도 달력이 열린다 (직접 입력도 계속 가능)
             onClick={(event) => {
@@ -97,9 +99,12 @@ export const DateInput = ({
               type="button"
               aria-label="달력 열기"
               disabled={disabled}
-              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-foreground/70 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
+              className={cn(
+                'absolute inset-y-0 right-0 flex items-center justify-center rounded-r-control text-foreground/65 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50',
+                size === 'sm' ? 'w-9' : 'w-11',
+              )}
             >
-              <CalendarDays aria-hidden className="size-5" />
+              <CalendarDays aria-hidden className={size === 'sm' ? 'size-4' : 'size-4.5'} />
             </button>
           </Popover.Trigger>
         </div>
@@ -116,7 +121,7 @@ export const DateInput = ({
           onInteractOutside={(event) => {
             if (inputRef.current?.contains(event.target as Node)) event.preventDefault();
           }}
-          className="z-30 rounded-xl border border-line bg-surface p-3 shadow-card"
+          className="z-30 rounded-lg border border-line bg-surface p-3 shadow-pop"
         >
           <DayPicker
             mode="single"

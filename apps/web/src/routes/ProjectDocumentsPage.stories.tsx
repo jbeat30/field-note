@@ -6,6 +6,7 @@ import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
 
 import { ProjectDocumentsPage } from './ProjectDocumentsPage';
+import { chooseOption } from '../lib/storyActions';
 
 const projectId = DEMO_PROJECTS.find((project) => project.name === 'A동 외장 판금 공사')!.id;
 
@@ -54,11 +55,11 @@ export const FilterAndSearch: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('1층 시공도');
-    await userEvent.selectOptions(canvas.getByLabelText('분류로 거르기'), '계약·행정');
+    await chooseOption(canvas.getByLabelText('분류로 거르기'), '계약·행정');
     await waitFor(() => expect(canvas.queryByText('외장 판금 시방서')).not.toBeInTheDocument());
     await expect(await canvas.findByText('도급 계약서')).toBeInTheDocument();
 
-    await userEvent.selectOptions(canvas.getByLabelText('분류로 거르기'), '모든 분류');
+    await chooseOption(canvas.getByLabelText('분류로 거르기'), '모든 분류');
     await userEvent.type(canvas.getByLabelText('문서 이름 검색'), '시방');
     await waitFor(() => expect(canvas.queryByText('도급 계약서')).not.toBeInTheDocument());
     await expect(await canvas.findByText('외장 판금 시방서')).toBeInTheDocument();
@@ -134,7 +135,7 @@ export const UploadNewDocument: Story = {
       canvas.getByLabelText('문서 파일'),
       new File(['%PDF-1.7'], '안전점검표.pdf', { type: 'application/pdf' }),
     );
-    await userEvent.selectOptions(canvas.getByLabelText('분류'), '안전·검사');
+    await chooseOption(canvas.getByLabelText('분류'), '안전·검사');
     await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
 
     await expect(

@@ -70,13 +70,11 @@ export const MemoForm = ({
         />
       </FormField>
       <FormField label="태그">
-        <Select value={tag} onChange={(event) => setTag(event.target.value as MemoTag)}>
-          {MEMO_TAGS.map((value) => (
-            <option key={value} value={value}>
-              {MEMO_TAG_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+        <Select
+          value={tag}
+          onValueChange={setTag}
+          options={MEMO_TAGS.map((value) => ({ value, label: MEMO_TAG_LABELS[value] }))}
+        />
       </FormField>
       {error && <Alert>{error}</Alert>}
       <Button type="submit" disabled={isSaving}>

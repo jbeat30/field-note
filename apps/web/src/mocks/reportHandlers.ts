@@ -7,7 +7,7 @@ import {
   type DailyReport,
   type ErrorCode,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 import { listMockMaterialRecords } from './materialHandlers';
 import { listMockPhotos } from './photoHandlers';
@@ -19,6 +19,7 @@ import {
   getProjects,
   getWorkLogs,
 } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -31,7 +32,7 @@ type Helpers = {
  */
 export const createReportHandlers = ({ apiError }: Helpers) => [
   http.get('/api/v1/projects/:projectId/daily-reports/:date', async ({ params }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 
@@ -141,7 +142,7 @@ export const createReportHandlers = ({ apiError }: Helpers) => [
   }),
 
   http.get('/api/v1/projects/:projectId/daily-reports.xlsx', async ({ request, params }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

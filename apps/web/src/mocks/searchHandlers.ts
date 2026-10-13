@@ -6,11 +6,12 @@ import {
   type SearchHit,
   type SearchResponse,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 import { listMockDocuments } from './documentHandlers';
 import { listMockMemos } from './memoHandlers';
 import { getCurrentAccount, getEmployees, getProjects, getWorkLogs } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -37,7 +38,7 @@ const toGroup = (items: SearchHit[], limit: number): SearchGroup => ({
  */
 export const createSearchHandlers = ({ apiError }: Helpers) => [
   http.get('/api/v1/search', async ({ request }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

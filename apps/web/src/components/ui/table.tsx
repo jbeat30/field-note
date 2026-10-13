@@ -21,7 +21,7 @@ export const TableHeaderCell = ({ className, ...props }: ComponentProps<'th'>) =
   <th
     scope="col"
     className={cn(
-      'bg-surface-nested px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-foreground/70 first:rounded-l-lg last:rounded-r-lg',
+      'border-b border-line px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-foreground/65',
       className,
     )}
     {...props}
@@ -29,5 +29,5 @@ export const TableHeaderCell = ({ className, ...props }: ComponentProps<'th'>) =
 );
 
 export const TableCell = ({ className, ...props }: ComponentProps<'td'>) => (
-  <td className={cn('min-h-touch px-3 py-3', className)} {...props} />
+  <td className={cn('px-3 py-3 align-middle', className)} {...props} />
 );

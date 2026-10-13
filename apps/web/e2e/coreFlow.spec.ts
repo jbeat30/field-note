@@ -16,7 +16,7 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
     await page.getByLabel('프로젝트명').fill(projectName);
     await page.getByLabel('현장 이름').fill('E2E 현장');
     await selectByText(page, '고객', '가나다건설');
-    await page.getByLabel('담당자', { exact: true }).selectOption({ index: 1 });
+    await selectByText(page, '담당자', 0);
     await page.getByLabel('계약일').fill(seoulDate(-30));
     await page.getByLabel('시작 예정일').fill(seoulDate(-7));
     await page.getByLabel('종료 예정일').fill(seoulDate(60));
@@ -56,7 +56,7 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
     await expect(page.getByRole('checkbox', { name: '정판금 출근' })).toBeChecked();
     await expect(page.getByRole('checkbox', { name: '최설치 출근' })).toBeChecked();
 
-    await page.getByLabel('작업 구분 일괄 지정').selectOption({ label: '설치' });
+    await selectByText(page, '작업 구분 일괄 지정', '설치');
     await page.getByRole('button', { name: '모두 적용' }).click();
     await page.getByLabel('작업 내용').fill('3층 외장 패널 설치');
     await page.getByLabel('작업 구역').fill('3층 301호');
@@ -68,7 +68,7 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
     await page.getByRole('button', { name: '새 자재' }).click();
     await page.getByLabel('자재명').fill(materialName);
     await page.getByRole('button', { name: '자재 추가하고 입력 행에 넣기' }).click();
-    await page.getByLabel('구분', { exact: true }).selectOption({ label: '반입' });
+    await selectByText(page, '구분', '반입');
     await page.getByLabel('수량').fill('100');
     await page.getByRole('button', { name: '자재 1건 저장' }).click();
     await expect(page.getByText('반입 100장')).toBeVisible();
@@ -81,7 +81,7 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
 
   await test.step('사진을 올리면 사진첩에 나타난다', async () => {
     await page.goto(`/projects/${projectId}/photos`);
-    await page.getByLabel('구분', { exact: true }).selectOption({ label: '작업 후' });
+    await selectByText(page, '구분', '작업 후');
     await page.getByLabel('구역 (선택)').fill('3층 301호');
     await page
       .getByLabel('사진 파일 선택')

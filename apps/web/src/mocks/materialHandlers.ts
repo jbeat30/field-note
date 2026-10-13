@@ -18,11 +18,12 @@ import {
   type MaterialRecord,
   type MaterialRecordCreate,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import type { MockAccount } from './data';
 import { getCurrentAccount, getOptions, getPartners, getProjects } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -265,7 +266,7 @@ const newestFirst = (a: MockRecord, b: MockRecord) =>
  * @returns msw 핸들러 목록
  */
 export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
 
   const hasProject = (account: MockAccount, projectId: string) =>
     getProjects(account).some((project) => project.id === projectId);

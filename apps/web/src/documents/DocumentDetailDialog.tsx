@@ -88,14 +88,12 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
       <FormField label="분류">
         <Select
           value={category}
-          onChange={(event) => setCategory(event.target.value as DocumentCategory)}
-        >
-          {DOCUMENT_CATEGORIES.map((value) => (
-            <option key={value} value={value}>
-              {DOCUMENT_CATEGORY_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          onValueChange={setCategory}
+          options={DOCUMENT_CATEGORIES.map((value) => ({
+            value,
+            label: DOCUMENT_CATEGORY_LABELS[value],
+          }))}
+        />
       </FormField>
       <label className="flex min-h-touch items-center gap-3 text-base">
         <input

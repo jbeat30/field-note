@@ -71,14 +71,9 @@ const MemoItem = ({
               <Select
                 aria-label="태그"
                 value={tag}
-                onChange={(event) => setTag(event.target.value as MemoTag)}
-              >
-                {MEMO_TAGS.map((value) => (
-                  <option key={value} value={value}>
-                    {MEMO_TAG_LABELS[value]}
-                  </option>
-                ))}
-              </Select>
+                onValueChange={setTag}
+                options={MEMO_TAGS.map((value) => ({ value, label: MEMO_TAG_LABELS[value] }))}
+              />
               <div className="flex gap-2">
                 <Button
                   type="button"
@@ -112,18 +107,13 @@ const MemoItem = ({
         <div className="flex flex-wrap items-center gap-2">
           {projects && onLink && (
             <Select
-              className="w-auto flex-1"
+              className="min-w-0 flex-1"
               aria-label={`${memo.content} 프로젝트에 연결`}
               value=""
-              onChange={(event) => event.target.value && onLink(memo, event.target.value)}
-            >
-              <option value="">프로젝트에 연결…</option>
-              {projects.map((project) => (
-                <option key={project.id} value={project.id}>
-                  {project.name}
-                </option>
-              ))}
-            </Select>
+              placeholder="프로젝트에 연결…"
+              onValueChange={(projectId) => onLink(memo, projectId)}
+              options={projects.map((project) => ({ value: project.id, label: project.name }))}
+            />
           )}
           {onEdit && (
             <Button type="button" variant="secondary" onClick={() => setIsEditing(true)}>

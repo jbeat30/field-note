@@ -47,14 +47,12 @@ export const PhotoUploader = ({ onSelect }: PhotoUploaderProps) => {
         <FormField label="구분">
           <Select
             value={category}
-            onChange={(event) => setCategory(event.target.value as PhotoCategory)}
-          >
-            {PHOTO_CATEGORIES.map((value) => (
-              <option key={value} value={value}>
-                {PHOTO_CATEGORY_LABELS[value]}
-              </option>
-            ))}
-          </Select>
+            onValueChange={setCategory}
+            options={PHOTO_CATEGORIES.map((value) => ({
+              value,
+              label: PHOTO_CATEGORY_LABELS[value],
+            }))}
+          />
         </FormField>
         <FormField label="구역 (선택)">
           <Input

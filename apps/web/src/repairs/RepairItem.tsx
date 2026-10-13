@@ -326,20 +326,23 @@ const AfterServiceLinks = ({
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <FormField label="사후 작업 연결">
-              <Select value={target} onChange={(event) => setTarget(event.target.value)}>
-                <option value="">작업 내역·자재 기록 선택</option>
-                {logChoices.map((item) => (
-                  <option key={item.id} value={`log:${item.id}`}>
-                    {formatDay(item.workDate)} 작업 내역
-                  </option>
-                ))}
-                {recordChoices.map((item) => (
-                  <option key={item.id} value={`record:${item.id}`}>
-                    {formatDay(item.recordDate)} {materialName(item.materialId)}{' '}
-                    {MATERIAL_RECORD_KIND_LABELS[item.kind]} {item.quantity}
-                  </option>
-                ))}
-              </Select>
+              <Select
+                value={target}
+                placeholder="작업 내역·자재 기록 선택"
+                onValueChange={setTarget}
+                options={[
+                  ...logChoices.map((item) => ({
+                    value: `log:${item.id}`,
+                    label: `${formatDay(item.workDate)} 작업 내역`,
+                    group: '작업 내역',
+                  })),
+                  ...recordChoices.map((item) => ({
+                    value: `record:${item.id}`,
+                    label: `${formatDay(item.recordDate)} ${materialName(item.materialId)} ${MATERIAL_RECORD_KIND_LABELS[item.kind]} ${item.quantity}`,
+                    group: '자재 기록',
+                  })),
+                ]}
+              />
             </FormField>
           </div>
           <Button

@@ -19,7 +19,7 @@ import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
-import { Select } from '../components/ui/select';
+import { Combobox } from '../components/ui/combobox';
 import { Textarea } from '../components/ui/textarea';
 import { useEmployees } from '../employees/useEmployees';
 import { getErrorDetailMessage } from '../lib/apiError';
@@ -391,18 +391,16 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
         <div className="flex flex-col gap-2">
           <FormField label="고객" hint="명부의 고객(발주처·원청)" error={errors.clientId?.message}>
             {/* 제어 컴포넌트: 즉석으로 추가한 고객은 목록이 다시 그려진 뒤에야 옵션이 생기므로, 값을 먼저 넣어도 사라지지 않게 함 */}
-            <Select
+            <Combobox
               value={clientId}
-              onChange={(event) => setValue('clientId', event.target.value, { shouldDirty: true })}
-            >
-              <option value="">고객 선택</option>
-              {clients.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.name}
-                  {item.isActive ? '' : ' (숨김)'}
-                </option>
-              ))}
-            </Select>
+              placeholder="고객 선택"
+              searchPlaceholder="고객 이름으로 찾기"
+              onValueChange={(value) => setValue('clientId', value, { shouldDirty: true })}
+              options={clients.map((item) => ({
+                value: item.id,
+                label: item.isActive ? item.name : `${item.name} (숨김)`,
+              }))}
+            />
           </FormField>
           <InlineAdd
             label="목록에 없는 고객 추가"
@@ -421,19 +419,16 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
 
       <Lockable locked={isLocked('managerId')}>
         <FormField label="담당자" hint="프로젝트 책임자(PM·소장)" error={errors.managerId?.message}>
-          <Select
+          <Combobox
             value={managerId}
-            onChange={(event) => setValue('managerId', event.target.value, { shouldDirty: true })}
-          >
-            <option value="">담당자 선택</option>
-            {managers.map((item) => (
-              <option key={item.id} value={item.id}>
-                {item.name}
-                {item.title ? ` (${item.title})` : ''}
-                {item.status === 'LEFT' ? ' (퇴사)' : ''}
-              </option>
-            ))}
-          </Select>
+            placeholder="담당자 선택"
+            onValueChange={(value) => setValue('managerId', value, { shouldDirty: true })}
+            options={managers.map((item) => ({
+              value: item.id,
+              label: item.status === 'LEFT' ? `${item.name} (퇴사)` : item.name,
+              description: item.title ?? undefined,
+            }))}
+          />
         </FormField>
       </Lockable>
 

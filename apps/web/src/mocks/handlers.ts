@@ -85,7 +85,7 @@ import {
   type ErrorCode,
   type MeResponse,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import {
@@ -169,6 +169,7 @@ import { createReportHandlers } from './reportHandlers';
 import { createSearchHandlers } from './searchHandlers';
 import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
+import { mockDelay } from './latency';
 
 // 실제 API와 같은 상태 코드·오류 형식을 쓴다 (공유 패키지의 같은 표 사용)
 const STATUS = ERROR_STATUS;
@@ -180,7 +181,7 @@ const apiError = (code: ErrorCode, details?: { path: string; message: string }[]
   );
 
 // 실제 서버 응답 시간에 가까운 지연 (로딩 상태 확인용)
-const simulateLatency = () => delay(400);
+const simulateLatency = () => mockDelay(400);
 
 const CSRF_HEADER = 'X-Field-Note-Client';
 

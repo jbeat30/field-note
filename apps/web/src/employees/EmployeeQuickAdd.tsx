@@ -70,7 +70,7 @@ export const EmployeeQuickAdd = () => {
           options={options.data ?? []}
           value={jobTypeId}
           emptyLabel="직종 선택 안 함"
-          onChange={(event) => setJobTypeId(event.target.value)}
+          onValueChange={setJobTypeId}
         />
         <Button type="submit" className="shrink-0 whitespace-nowrap" disabled={create.isPending}>
           등록

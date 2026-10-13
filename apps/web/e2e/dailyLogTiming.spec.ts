@@ -1,6 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
 
-import { login, photoFile, seoulDate, uniqueName } from './helpers';
+import { login, photoFile, seoulDate, selectByText, uniqueName } from './helpers';
 
 // 하루 작업 내역 입력 3분 목표(서비스 기획서 §14, P2-9): 직원 공수 → 작업 내용 → 자재 → 사진을 모바일 크기에서 끝내는 데 걸리는 시간을 잰다.
 // 사람이 아니라 스크립트가 하므로 사람의 속도를 흉내 낸다: 화면을 누르거나 고르기 전 0.8초 생각하고, 글자는 한 자에 0.2초(분당 300자)로 치고,
@@ -105,7 +105,7 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
   await expect(page.getByRole('checkbox', { name: /출근/ }).first()).toBeChecked();
 
   // 2) 직원 일한 시간: 배정된 직원이 채워져 있으니 작업 구분만 일괄 지정하고 한 명은 반일
-  await user.tap(() => page.getByLabel('작업 구분 일괄 지정').selectOption({ label: '설치' }));
+  await user.tap(() => selectByText(page, '작업 구분 일괄 지정', '설치'));
   await user.tap(() => page.getByRole('button', { name: '모두 적용' }).click());
   await user.tap(() =>
     page
@@ -130,7 +130,7 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
   // 6) 사진: 빠른 추가의 "사진"으로 사진첩에 가서 구분을 고르고 두 장을 올림
   await user.tap(() => page.getByRole('button', { name: '빠른 추가' }).click());
   await user.tap(() => page.getByRole('link', { name: '사진', exact: true }).click());
-  await user.tap(() => page.getByLabel('구분', { exact: true }).selectOption({ label: '작업 후' }));
+  await user.tap(() => selectByText(page, '구분', '작업 후'));
 
   const photoStarted = Date.now();
 

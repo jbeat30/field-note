@@ -13,12 +13,13 @@ import {
   type MonthlyHours,
   type MonthlyHoursRow,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import { addMockAudit } from './auditHandlers';
 import type { MockAccount } from './data';
 import { getCurrentAccount, getEmployees, getProjects, getWorkLogs } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -161,7 +162,7 @@ const toHours = (account: MockAccount, month: string): MonthlyHours => {
  * @param helpers 목업 공통 응답·본문 검사
  */
 export const createMonthlyHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
   const invalid = (path: string, message: string) =>
     apiError('VALIDATION_ERROR', [{ path, message }]);
   const queryOf = (request: Request) => {

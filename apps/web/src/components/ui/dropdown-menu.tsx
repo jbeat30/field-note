@@ -3,6 +3,8 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '../../lib/cn';
 
+import { listboxContentClass, listboxItemClass, radixItemDisabledClass } from './listbox';
+
 export const DropdownMenu = MenuPrimitive.Root;
 export const DropdownMenuTrigger = MenuPrimitive.Trigger;
 
@@ -13,12 +15,9 @@ export const DropdownMenuContent = ({
   <MenuPrimitive.Portal>
     <MenuPrimitive.Content
       align="end"
-      sideOffset={6}
+      sideOffset={4}
       collisionPadding={12}
-      className={cn(
-        'z-40 min-w-44 rounded-xl border border-line bg-surface p-1 shadow-pop',
-        className,
-      )}
+      className={cn(listboxContentClass, 'min-w-44 p-1', className)}
       {...props}
     />
   </MenuPrimitive.Portal>
@@ -32,8 +31,10 @@ export const DropdownMenuItem = ({
 }: ComponentProps<typeof MenuPrimitive.Item> & { danger?: boolean }) => (
   <MenuPrimitive.Item
     className={cn(
-      'flex min-h-10 cursor-pointer items-center gap-2 rounded-lg px-3 text-[15px] outline-none data-[disabled]:pointer-events-none data-[disabled]:opacity-50 data-[highlighted]:bg-muted [&_svg]:size-4 [&_svg]:shrink-0',
-      danger && 'text-danger',
+      listboxItemClass,
+      radixItemDisabledClass,
+      '[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-foreground/65',
+      danger && 'text-danger [&_svg]:text-danger',
       className,
     )}
     {...props}
@@ -45,7 +46,7 @@ export const DropdownMenuLabel = ({
   ...props
 }: ComponentProps<typeof MenuPrimitive.Label>) => (
   <MenuPrimitive.Label
-    className={cn('px-3 py-1.5 text-xs font-semibold text-foreground/70', className)}
+    className={cn('px-2.5 pt-2 pb-1 text-xs font-semibold text-foreground/65', className)}
     {...props}
   />
 );

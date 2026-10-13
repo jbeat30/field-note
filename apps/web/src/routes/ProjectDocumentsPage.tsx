@@ -69,18 +69,16 @@ export const ProjectDocumentsPage = () => {
           onChange={(event) => setQ(event.target.value)}
         />
         <Select
-          className="w-auto"
+          className="w-40"
           aria-label="분류로 거르기"
           value={category}
-          onChange={(event) => setCategory(event.target.value)}
-        >
-          <option value="">모든 분류</option>
-          {DOCUMENT_CATEGORIES.map((value) => (
-            <option key={value} value={value}>
-              {DOCUMENT_CATEGORY_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          emptyLabel="모든 분류"
+          onValueChange={setCategory}
+          options={DOCUMENT_CATEGORIES.map((value) => ({
+            value: value,
+            label: DOCUMENT_CATEGORY_LABELS[value],
+          }))}
+        />
       </div>
       {opener.error && (
         <Alert>{opener.error ?? '처리하지 못했습니다. 잠시 후 다시 시도해 주세요'}</Alert>

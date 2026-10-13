@@ -5,7 +5,7 @@ import {
   type EmployeeDetail,
 } from '@field-note/shared';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
@@ -76,10 +76,14 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     setError,
     reset,
     formState: { errors, isDirty },
   } = useForm<CardForm>({ values: toForm(employee) });
+  const jobTypeId = useWatch({ control, name: 'jobTypeId' });
+  const workerTypeId = useWatch({ control, name: 'workerTypeId' });
 
   const applyErrors = (error: unknown) => {
     const { byField, root } = splitServerErrors(error, FIELDS);
@@ -205,7 +209,8 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
                   kind="JOB_TYPE"
                   options={options.data ?? []}
                   keepId={employee.jobTypeId}
-                  {...register('jobTypeId')}
+                  value={jobTypeId}
+                  onValueChange={(value) => setValue('jobTypeId', value, { shouldDirty: true })}
                 />
               </FormField>
               <FormField
@@ -217,7 +222,8 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
                   kind="WORKER_TYPE"
                   options={options.data ?? []}
                   keepId={employee.workerTypeId}
-                  {...register('workerTypeId')}
+                  value={workerTypeId}
+                  onValueChange={(value) => setValue('workerTypeId', value, { shouldDirty: true })}
                 />
               </FormField>
               <FormField label="입사일" error={errors.hiredOn?.message}>

@@ -123,19 +123,15 @@ export const DataTable = <TData extends object>({
           쪽당
           <Select
             aria-label="쪽당 개수"
-            className="min-h-10 w-24 py-0"
-            value={pageSize}
-            onChange={(event) =>
+            size="sm"
+            className="w-24"
+            value={String(pageSize)}
+            onValueChange={(value) =>
               // 개수를 바꾸면 첫 쪽부터 다시 본다
-              changePagination({ pageIndex: 0, pageSize: Number(event.target.value) })
+              changePagination({ pageIndex: 0, pageSize: Number(value) })
             }
-          >
-            {pageSizes.map((size) => (
-              <option key={size} value={size}>
-                {size}개
-              </option>
-            ))}
-          </Select>
+            options={pageSizes.map((size) => ({ value: String(size), label: `${size}개` }))}
+          />
         </label>
       </div>
 

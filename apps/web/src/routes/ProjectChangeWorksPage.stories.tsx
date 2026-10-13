@@ -5,6 +5,7 @@ import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
 
 import { ProjectChangeWorksPage } from './ProjectChangeWorksPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/변경·추가 작업',
@@ -123,10 +124,7 @@ export const LinkEvidence: Story = {
     const item = within(itemOf(canvas, 2));
 
     await expect(await item.findByText('연결한 증빙이 없습니다')).toBeInTheDocument();
-    await waitFor(() =>
-      expect(item.getByRole('option', { name: '1층 시공도' })).toBeInTheDocument(),
-    );
-    await userEvent.selectOptions(item.getByLabelText('문서함에서 연결'), '1층 시공도');
+    await chooseOption(item.getByLabelText('문서함에서 연결'), '1층 시공도');
     await userEvent.click(item.getByRole('button', { name: '연결' }));
 
     await expect(

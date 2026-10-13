@@ -1,9 +1,4 @@
-import {
-  PARTNER_KINDS,
-  PARTNER_KIND_LABELS,
-  type PartnerKind,
-  type PartnerListQuery,
-} from '@field-note/shared';
+import { PARTNER_KINDS, PARTNER_KIND_LABELS, type PartnerListQuery } from '@field-note/shared';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -46,20 +41,12 @@ export const PartnerListPage = () => {
         <Select
           aria-label="구분 필터"
           value={filter.kind ?? ''}
-          onChange={(event) =>
-            setFilter((current) => ({
-              ...current,
-              kind: (event.target.value || undefined) as PartnerKind | undefined,
-            }))
+          emptyLabel="전체 구분"
+          onValueChange={(kind) =>
+            setFilter((current) => ({ ...current, kind: kind || undefined }))
           }
-        >
-          <option value="">전체 구분</option>
-          {PARTNER_KINDS.map((kind) => (
-            <option key={kind} value={kind}>
-              {PARTNER_KIND_LABELS[kind]}
-            </option>
-          ))}
-        </Select>
+          options={PARTNER_KINDS.map((kind) => ({ value: kind, label: PARTNER_KIND_LABELS[kind] }))}
+        />
         <label className="flex min-h-touch items-center gap-2 text-sm">
           <input
             type="checkbox"
