@@ -55,11 +55,12 @@ export const ProjectDocumentsPage = () => {
         className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
         aria-labelledby="upload-heading"
       >
-        <h2 id="upload-heading" className="text-lg font-bold">
+        <h2 id="upload-heading" className="text-base font-semibold">
           문서 올리기
         </h2>
         <DocumentUploadForm mode="create" onSubmit={upload} />
       </section>
+      <hr className="border-line" />
       <div className="flex flex-wrap gap-2">
         <Input
           className="min-w-0 flex-1"

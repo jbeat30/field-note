@@ -380,8 +380,8 @@ export const MaterialUsageForm = ({
         >
           <Plus aria-hidden />줄 추가
         </Button>
-        <Button type="submit" disabled={busy}>
-          {busy ? '저장하는 중' : '자재 기록'}
+        <Button type="submit" size="sm" disabled={busy}>
+          {busy ? '저장 중' : '저장'}
         </Button>
       </div>
       <FormNotice message={notice} />

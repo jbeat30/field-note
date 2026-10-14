@@ -43,7 +43,7 @@ export const PhotoUploader = ({ onSelect }: PhotoUploaderProps) => {
       <h2 id="upload-heading" className="text-lg font-bold">
         사진 올리기
       </h2>
-      <div className="grid grid-cols-2 gap-3">
+      <div className="grid items-end gap-3 md:grid-cols-[1fr_1fr_auto]">
         <FormField label="구분">
           <Select
             value={category}
@@ -62,19 +62,26 @@ export const PhotoUploader = ({ onSelect }: PhotoUploaderProps) => {
             onChange={(event) => setArea(event.target.value)}
           />
         </FormField>
+        <div>
+          <input
+            ref={inputRef}
+            type="file"
+            accept="image/*"
+            multiple
+            className="sr-only"
+            aria-label="사진 파일 선택"
+            onChange={handleChange}
+          />
+          <Button
+            type="button"
+            size="sm"
+            disabled={isPreparing}
+            onClick={() => inputRef.current?.click()}
+          >
+            {isPreparing ? '준비 중' : '사진 고르기·찍기'}
+          </Button>
+        </div>
       </div>
-      <input
-        ref={inputRef}
-        type="file"
-        accept="image/*"
-        multiple
-        className="sr-only"
-        aria-label="사진 파일 선택"
-        onChange={handleChange}
-      />
-      <Button type="button" disabled={isPreparing} onClick={() => inputRef.current?.click()}>
-        {isPreparing ? '사진을 준비하는 중' : '사진 고르기·찍기'}
-      </Button>
       {failures.length > 0 && (
         <Alert>
           <ul>

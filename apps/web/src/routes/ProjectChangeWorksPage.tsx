@@ -55,6 +55,8 @@ export const ProjectChangeWorksPage = () => {
 
       <ChangeWorkUsagePanel projectId={id} />
 
+      <hr className="border-line" />
+
       {/* xl+: 왼쪽 새로 기록 / 오른쪽 목록 */}
       <div className="grid items-start gap-5 xl:grid-cols-[380px_1fr]">
         {/* 왼쪽: 새로 기록 폼 */}
