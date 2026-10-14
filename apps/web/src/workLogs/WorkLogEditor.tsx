@@ -268,7 +268,9 @@ export const WorkLogEditor = ({
   const [bulkCategory, setBulkCategory] = useState('');
   const [search, setSearch] = useState('');
   const [loadOpen, setLoadOpen] = useState(false);
-  const [loadDate, setLoadDate] = useState(previousDate ?? '');
+  // 직접 고르기 전에는 늦게 도착하는 최근 날짜를 따라감
+  const [pickedLoadDate, setLoadDate] = useState<string | null>(null);
+  const loadDate = pickedLoadDate ?? previousDate ?? '';
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rootError, setRootError] = useState('');
   const [conflict, setConflict] = useState(false);

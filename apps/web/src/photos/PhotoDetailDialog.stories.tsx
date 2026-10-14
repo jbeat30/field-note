@@ -61,7 +61,7 @@ export const DeleteNeedsConfirm: Story = {
     await userEvent.click(dialog.getByRole('button', { name: '삭제' }));
     await expect(args.onDelete).not.toHaveBeenCalled();
 
-    await userEvent.click(dialog.getByRole('button', { name: '정말 삭제' }));
+    await userEvent.click(within(document.body).getByRole('button', { name: '지우기' }));
     await waitFor(() => expect(args.onDelete).toHaveBeenCalledWith(args.photo.id));
   },
 };

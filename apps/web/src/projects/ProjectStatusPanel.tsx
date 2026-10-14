@@ -259,7 +259,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
       {project.status === 'CANCELLED' ? (
         <Alert>취소된 프로젝트입니다. 기록은 그대로 조회할 수 있고 더 수정할 수 없습니다</Alert>
       ) : (
-        <div className="relative flex justify-between" aria-label="진행 단계">
+        <div className="relative flex justify-between" role="list" aria-label="진행 단계">
           {/* 전체 트랙 */}
           <div className="absolute top-[17px] right-4 left-4 h-0.5 bg-muted" />
           {/* 완료 트랙 */}
@@ -284,7 +284,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
                   index < stepIndex && 'bg-primary text-primary-foreground',
                   index === stepIndex &&
                     'bg-primary text-primary-foreground ring-4 ring-primary/20',
-                  index > stepIndex && 'bg-muted text-foreground/40',
+                  index > stepIndex && 'bg-muted text-foreground/70',
                 )}
               >
                 {index < stepIndex ? <Check aria-hidden className="size-4" /> : index + 1}
@@ -292,7 +292,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
               <span
                 className={cn(
                   'text-center text-xs font-medium leading-tight',
-                  index <= stepIndex ? 'text-foreground' : 'text-foreground/40',
+                  index <= stepIndex ? 'text-foreground' : 'text-foreground/70',
                 )}
               >
                 {PROJECT_STATUS_LABELS[step]}

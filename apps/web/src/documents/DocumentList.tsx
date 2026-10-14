@@ -32,7 +32,9 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
         <TableHeaderCell>분류</TableHeaderCell>
         <TableHeaderCell className="text-right">판·크기</TableHeaderCell>
         <TableHeaderCell>개정일</TableHeaderCell>
-        <TableHeaderCell />
+        <TableHeaderCell>
+          <span className="sr-only">문서 작업</span>
+        </TableHeaderCell>
       </TableRow>
     </TableHead>
     <TableBody>

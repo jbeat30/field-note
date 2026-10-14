@@ -50,7 +50,9 @@ export const Default: Story = {
     await expect(row).toContain('A동 신축 현장');
     await expect(row).toContain('진행');
     await expect(row).toContain('가나다건설');
-    await expect(row).toContain('송소장');
+    await waitFor(() =>
+      expect(rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))).toContain('송소장'),
+    );
     await expect(row).toContain('2026-07-15 ~ 2026-11-30');
     await expect(row).toContain('판금');
     await expect(canvas.queryByText(/02-0000-0101/)).not.toBeInTheDocument();

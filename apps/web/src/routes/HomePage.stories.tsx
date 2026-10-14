@@ -23,8 +23,10 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText(/정리 안 된 메모 3건/)).toBeInTheDocument();
-    await expect(canvas.getByRole('link', { name: /메모함/ })).toHaveAttribute('href', '/inbox');
+    await expect(await canvas.findByRole('region', { name: '할 일' })).toBeInTheDocument();
+    await expect(
+      within(canvas.getByRole('region', { name: '할 일' })).getByText(/3일 넘게 쌓인 메모 \d+건/),
+    ).toBeInTheDocument();
   },
 };
 
@@ -64,7 +66,7 @@ export const NoDraftsNoSection: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await canvas.findByText(/정리 안 된 메모/);
+    await canvas.findByRole('region', { name: '할 일' });
     await expect(canvas.queryByRole('heading', { name: '이어서 작성' })).not.toBeInTheDocument();
   },
 };

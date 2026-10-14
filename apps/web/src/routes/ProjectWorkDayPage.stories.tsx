@@ -114,7 +114,7 @@ export const SplitCategoryAndQuickValue: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '한용접 작업 구분 나누기' }));
 
     await expect(canvas.getByLabelText('한용접 일한 시간(시간) 2')).toHaveValue(4);
-    await expect(canvas.getByText(/한 일을 나눠 적었습니다 · 합계 12시간/)).toBeInTheDocument();
+    await expect(canvas.getByText(/나눠 적음 · 합계 12시간/)).toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: '한용접 줄 삭제 2' }));
     await expect(canvas.queryByLabelText('한용접 일한 시간(시간) 2')).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: '한용접 연장' }));
@@ -134,7 +134,7 @@ export const LoadFromOtherDate: Story = {
       await within(document.body).findByRole('dialog', { name: '다른 날짜에서 불러오기' }),
     );
 
-    await expect(dialog.getByLabelText('불러올 날짜')).toHaveValue('2026-09-04');
+    await waitFor(() => expect(dialog.getByLabelText('불러올 날짜')).toHaveValue('2026-09-04'));
     await userEvent.click(dialog.getByRole('button', { name: '불러오기' }));
 
     await expect(await canvas.findByText(/작업 내역을 불러왔습니다/)).toBeInTheDocument();
@@ -177,7 +177,7 @@ export const DraftLogShowsNotice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText(/집계에 반영되지 않습니다/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/임시 저장 · 버전/)).toBeInTheDocument();
   },
 };
 
@@ -219,10 +219,10 @@ export const AddEmployeeWithoutAssignmentAsksConfirm: Story = {
     await fireEvent.change(canvas.getByLabelText('작업 내용'), { target: { value: '지원 작업' } });
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await userEvent.click(await canvas.findByRole('button', { name: '투입 추가하고 저장' }));
-    await expect(
-      await canvas.findByText(/투입을 자동으로 추가했습니다: 오전기/),
-    ).toBeInTheDocument();
+    await userEvent.click(
+      await within(document.body).findByRole('button', { name: '투입 추가하고 저장' }),
+    );
+    await expect(await canvas.findByText(/투입 자동 추가: 오전기/)).toBeInTheDocument();
   },
 };
 

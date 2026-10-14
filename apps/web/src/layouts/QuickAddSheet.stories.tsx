@@ -39,10 +39,12 @@ export const OutsideProject: Story = {
     );
 
     await userEvent.click(dialog.getByRole('button', { name: '메모' }));
-    await expect(dialog.getByText(/메모함에 저장합니다/)).toBeInTheDocument();
+    await expect(
+      dialog.getByText(/프로젝트를 고르면 해당 메모 노트에 저장됩니다/),
+    ).toBeInTheDocument();
 
     await userEvent.type(dialog.getByLabelText('메모'), '현장에서 적은 한 줄');
-    await userEvent.click(dialog.getByRole('button', { name: '메모함에 저장' }));
+    await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
     // 저장하면 닫힘
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());

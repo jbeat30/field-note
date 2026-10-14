@@ -435,7 +435,7 @@ export const MonthlyHoursPage = () => {
                           {event.standardWorkMinutes / 60}시간 · {event.monthlyWorkDays}일
                           {event.draftLogCount > 0 ? ` · 임시 ${event.draftLogCount}건` : ''}
                         </span>
-                        <span className="text-xs text-foreground/55">
+                        <span className="text-xs text-foreground/70">
                           {formatDateTime(event.createdAt)}
                         </span>
                       </li>

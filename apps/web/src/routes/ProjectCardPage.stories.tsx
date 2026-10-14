@@ -171,6 +171,13 @@ export const NotFound: Story = {
 
 const panel = (canvasElement: HTMLElement) => within(canvasElement);
 
+const statusAction = async (canvas: ReturnType<typeof within>, name: string) => {
+  const button = canvas.queryByRole('button', { name });
+  if (button) return button;
+  await userEvent.click(await canvas.findByRole('button', { name: '그 밖의 처리' }));
+  return within(document.body).findByRole('menuitem', { name });
+};
+
 export const StatusPanelInProgress: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
@@ -178,9 +185,9 @@ export const StatusPanelInProgress: Story = {
     await expect(await canvas.findByText('실제 시작일')).toBeInTheDocument();
     await expect(canvas.getByText('2026-07-15', { selector: 'dd' })).toBeInTheDocument();
     // 진행 중에는 중단·완료·취소로 바꿀 수 있고 재개는 없음
-    await expect(canvas.getByRole('button', { name: '작업 중단' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '완료 처리' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '프로젝트 취소' })).toBeInTheDocument();
+    await expect(await statusAction(canvas, '프로젝트 취소')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
     await expect(canvas.queryByRole('button', { name: '작업 재개' })).not.toBeInTheDocument();
     // 변경 이력
     await expect(await canvas.findByText(/2026-07-15 예정 → 진행/)).toBeInTheDocument();
@@ -192,7 +199,9 @@ export const StartPlannedProject: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await expect(await canvas.findByText('아직 시작 전')).toBeInTheDocument();
+    await expect((await canvas.findByText('실제 시작일')).nextElementSibling).toHaveTextContent(
+      '-',
+    );
     await userEvent.click(await canvas.findByRole('button', { name: '작업 시작' }));
     await userEvent.click(
       within(await canvas.findByRole('form', { name: '작업 시작 확인' })).getByRole('button', {
@@ -203,9 +212,10 @@ export const StartPlannedProject: Story = {
     await expect(await canvas.findByText("'진행' 상태로 바꿨습니다")).toBeInTheDocument();
     await expect(canvas.getByText('현재 상태').nextElementSibling).toHaveTextContent('진행');
     // 실제 시작일이 오늘로 기록되고 이력이 한 건 생김
-    await expect(canvas.queryByText('아직 시작 전')).not.toBeInTheDocument();
+    await expect(canvas.getByText('실제 시작일').nextElementSibling).not.toHaveTextContent(/^-$/);
     await expect(await canvas.findByText(/예정 → 진행/)).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '작업 중단' })).toBeInTheDocument();
+    await expect(await statusAction(canvas, '작업 중단')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
   },
 };
 
@@ -213,7 +223,7 @@ export const SuspendNeedsReason: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '작업 중단' }));
+    await userEvent.click(await statusAction(canvas, '작업 중단'));
 
     const form = within(await canvas.findByRole('form', { name: '작업 중단 확인' }));
 
@@ -228,7 +238,7 @@ export const SuspendWithReasonAndResume: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '작업 중단' }));
+    await userEvent.click(await statusAction(canvas, '작업 중단'));
 
     const form = within(await canvas.findByRole('form', { name: '작업 중단 확인' }));
 
@@ -312,7 +322,7 @@ export const CancelMakesProjectReadOnly: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '프로젝트 취소' }));
+    await userEvent.click(await statusAction(canvas, '프로젝트 취소'));
 
     const form = within(await canvas.findByRole('form', { name: '프로젝트 취소 확인' }));
 
@@ -340,7 +350,8 @@ export const SuspendedProjectHistory: Story = {
     await expect(await canvas.findByText('사유: 철골 자재 납품 지연으로 중단')).toBeInTheDocument();
     // 중단 중에는 재개와 취소만 가능
     await expect(canvas.getByRole('button', { name: '작업 재개' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '프로젝트 취소' })).toBeInTheDocument();
+    await expect(await statusAction(canvas, '프로젝트 취소')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
     await expect(canvas.queryByRole('button', { name: '완료 처리' })).not.toBeInTheDocument();
     // 최근 변경(중단)이 이력 맨 앞
     const items = canvas

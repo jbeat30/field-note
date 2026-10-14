@@ -62,7 +62,7 @@ export const CloseNeedsDraftConfirm: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '2026-09 공수 확정' }));
+    await userEvent.click(await canvas.findByRole('button', { name: '공수 확정' }));
     await expect(
       await canvas.findByText(/임시 저장된 작업 내역가 1건 있습니다/, {}, { timeout: 4000 }),
     ).toBeInTheDocument();
@@ -70,16 +70,16 @@ export const CloseNeedsDraftConfirm: Story = {
     await userEvent.click(
       canvas.getByRole('checkbox', { name: '임시 저장된 작업 내역이 남아 있어도 확정합니다' }),
     );
-    await userEvent.click(canvas.getByRole('button', { name: '2026-09 공수 확정' }));
+    await userEvent.click(canvas.getByRole('button', { name: '공수 확정' }));
 
     await expect(
       await canvas.findByText('2026-09 공수를 확정했습니다', {}, { timeout: 4000 }),
     ).toBeInTheDocument();
     await expect(canvas.getByText('확정됨')).toBeInTheDocument();
-    await expect(canvas.getByText('(확정 당시 값)', { exact: false })).toBeInTheDocument();
+    await expect(canvas.getByText('하루 기준시간')).toBeInTheDocument();
     // 확정 이력이 남고 재오픈 폼이 열린다
     await expect(canvas.getByRole('form', { name: '재오픈' })).toBeInTheDocument();
-    await expect(await canvas.findByText(/임시 저장 1건/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/임시 1건/)).toBeInTheDocument();
   },
 };
 
@@ -92,7 +92,7 @@ export const ReopenNeedsReason: Story = {
         name: '임시 저장된 작업 내역이 남아 있어도 확정합니다',
       }),
     );
-    await userEvent.click(await canvas.findByRole('button', { name: '2026-09 공수 확정' }));
+    await userEvent.click(await canvas.findByRole('button', { name: '공수 확정' }));
 
     const form = within(await canvas.findByRole('form', { name: '재오픈' }, { timeout: 4000 }));
 
@@ -116,7 +116,7 @@ export const FutureMonthCannotClose: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByRole('button', { name: '2999-01 공수 확정' })).toBeDisabled();
+    await expect(await canvas.findByRole('button', { name: '공수 확정' })).toBeDisabled();
     await expect(canvas.getByText('아직 오지 않은 달은 확정할 수 없습니다')).toBeInTheDocument();
   },
 };
@@ -128,10 +128,10 @@ export const ExportAsksConfirmation: Story = {
 
     await userEvent.click(await canvas.findByRole('button', { name: '엑셀로 내보내기' }));
 
-    const group = within(canvas.getByRole('group', { name: '내보내기 확인' }));
+    const group = within(await within(document.body).findByRole('alertdialog'));
 
     await expect(group.getByText(/내보낸 기록이 남습니다/)).toBeInTheDocument();
     await userEvent.click(group.getByRole('button', { name: '취소' }));
-    await expect(canvas.queryByRole('group', { name: '내보내기 확인' })).not.toBeInTheDocument();
+    await expect(within(document.body).queryByRole('alertdialog')).not.toBeInTheDocument();
   },
 };

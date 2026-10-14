@@ -71,12 +71,14 @@ const MemoItem = ({
           {isEditing ? (
             <div className="flex flex-col gap-2">
               <textarea
+                aria-label="메모 내용"
                 className="min-h-16 w-full rounded-md border border-control-border bg-surface p-2 text-sm outline-none focus:border-primary"
                 value={content}
                 onChange={(event) => setContent(event.target.value)}
               />
               <div className="flex gap-2">
                 <Select
+                  aria-label="태그"
                   size="sm"
                   value={tag}
                   onValueChange={(value) => setTag(value as MemoTag)}
@@ -107,7 +109,7 @@ const MemoItem = ({
               </div>
             </div>
           ) : (
-            <p className={memo.isDone ? 'text-sm text-foreground/50 line-through' : 'text-sm'}>
+            <p className={memo.isDone ? 'text-sm text-foreground/70 line-through' : 'text-sm'}>
               {memo.content}
             </p>
           )}

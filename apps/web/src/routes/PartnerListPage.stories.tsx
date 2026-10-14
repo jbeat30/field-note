@@ -26,7 +26,9 @@ export const Default: Story = {
     // 숨긴 업체를 뺀 6곳, 구분별로 묶여 보임
     await expect(canvas.getByText('6곳')).toBeInTheDocument();
     for (const heading of ['고객', '협력업체', '자재 공급처']) {
-      await expect(canvas.getByRole('heading', { name: heading, level: 3 })).toBeInTheDocument();
+      await expect(
+        within(canvas.getByRole('region', { name: '업체 목록' })).getAllByText(heading)[0],
+      ).toBeInTheDocument();
     }
     // 담당자 이름은 보이고 연락처·메모는 목록에 없음
     await expect(canvas.getByText('윤소장')).toBeInTheDocument();

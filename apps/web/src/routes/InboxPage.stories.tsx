@@ -78,7 +78,7 @@ export const DeleteMemo: Story = {
     const item = (await canvas.findByText('자재 반입 시간 협의')).closest('li')!;
 
     await userEvent.click(within(item).getByRole('button', { name: '삭제' }));
-    await userEvent.click(within(item).getByRole('button', { name: '정말 삭제' }));
+    await userEvent.click(await within(document.body).findByRole('button', { name: '지우기' }));
 
     await waitFor(() => expect(canvas.queryByText('자재 반입 시간 협의')).not.toBeInTheDocument());
   },

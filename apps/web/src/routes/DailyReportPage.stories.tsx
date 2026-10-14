@@ -3,6 +3,8 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
+import { ProjectLayout } from '../layouts/ProjectLayout';
+import { Route, Routes } from 'react-router';
 
 import { DailyReportPage } from './DailyReportPage';
 
@@ -18,6 +20,15 @@ const meta = {
   component: DailyReportPage,
   parameters: { router: routerFor('2026-09-02') },
   loaders: [() => signIn('hanbit')],
+  decorators: [
+    (Story) => (
+      <Routes>
+        <Route element={<ProjectLayout />}>
+          <Route index element={<Story />} />
+        </Route>
+      </Routes>
+    ),
+  ],
 } satisfies Meta<typeof DailyReportPage>;
 
 export default meta;
@@ -72,7 +83,7 @@ export const PrintButton: Story = {
 
     window.print = print;
 
-    const button = await canvas.findByRole('button', { name: '인쇄·PDF로 저장' });
+    const button = await canvas.findByRole('button', { name: '인쇄·PDF' });
 
     await waitFor(() => expect(button).toBeEnabled());
     await userEvent.click(button);

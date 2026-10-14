@@ -126,7 +126,9 @@ export const ProjectMaterialsPage = () => {
                     <TableHeaderCell>규격</TableHeaderCell>
                     <TableHeaderCell>구분</TableHeaderCell>
                     <TableHeaderCell className="text-right">수량</TableHeaderCell>
-                    <TableHeaderCell />
+                    <TableHeaderCell>
+                      <span className="sr-only">기록 작업</span>
+                    </TableHeaderCell>
                   </TableRow>
                 </TableHead>
                 <TableBody>

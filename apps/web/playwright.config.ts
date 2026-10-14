@@ -3,8 +3,8 @@ import { defineConfig } from '@playwright/test';
 // 화면 전체 흐름 시험 (기술 기획서 §13): 실제 서버·DB·저장소와 Chromium(모바일 크기)으로 핵심 흐름을 확인한다
 // 시험 전에 인프라와 DB가 준비되어 있어야 한다: pnpm infra:up && pnpm db:setup && pnpm db:seed (루트 README 참고)
 // 사용자의 다른 앱이 3000번 포트를 쓰는 일이 잦아 시험용 API는 3001번에 띄운다
-const API_PORT = 3001;
-const WEB_PORT = 5173;
+const API_PORT = Number(process.env.E2E_API_PORT ?? 3001);
+const WEB_PORT = Number(process.env.E2E_WEB_PORT ?? 5173);
 const isCi = Boolean(process.env.CI);
 
 export default defineConfig({
@@ -29,7 +29,7 @@ export default defineConfig({
     {
       command: 'npx tsx --env-file-if-exists=../../.env src/main.ts',
       cwd: '../api',
-      env: { PORT: String(API_PORT) },
+      env: { PORT: String(API_PORT), APP_ORIGIN: `http://localhost:${WEB_PORT}` },
       url: `http://localhost:${API_PORT}/api/v1/health`,
       reuseExistingServer: !isCi,
       timeout: 120_000,

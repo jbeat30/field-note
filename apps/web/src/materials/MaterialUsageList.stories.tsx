@@ -39,6 +39,8 @@ export const Default: Story = {
     await expect(canvas.getByText('반입')).toBeInTheDocument();
 
     await userEvent.click(day.getByRole('button', { name: '철문 기록 지우기' }));
+    await expect(args.onDelete).not.toHaveBeenCalled();
+    await userEvent.click(await within(document.body).findByRole('button', { name: '지우기' }));
     await expect(args.onDelete).toHaveBeenCalledWith(args.records[0]);
   },
 };

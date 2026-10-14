@@ -33,7 +33,7 @@ const createUser = (page: Page, watch: Stopwatch) => ({
 
 // 시험 준비는 서버에 직접 만들어 둔다(측정 대상이 아님): 진행 중 프로젝트, 투입 직원 3명, 오늘 반입한 자재
 const prepare = async (page: Page) => {
-  const headers = { 'X-Field-Note-Client': 'web', Origin: 'http://localhost:5173' };
+  const headers = { 'X-Field-Note-Client': 'web', Origin: new URL(page.url()).origin };
   const post = async (path: string, data: object) => {
     const response = await page.request.post(`/api/v1${path}`, { data, headers });
 
@@ -41,7 +41,11 @@ const prepare = async (page: Page) => {
 
     return response.json();
   };
-  const get = async (path: string) => (await page.request.get(`/api/v1${path}`)).json();
+  const get = async (path: string) => {
+    const response = await page.request.get(`/api/v1${path}`);
+    expect(response.ok(), `${path} → ${response.status()}`).toBe(true);
+    return response.json();
+  };
   const clientId = (await get('/partners?kind=CLIENT')).items[0].id as string;
   const employees = (await get('/employees')).items as { id: string; name: string }[];
   const project = await post('/projects', {
@@ -81,7 +85,11 @@ const prepare = async (page: Page) => {
     quantity: 100,
   });
 
-  return { projectId: project.id as string, materialName: material.name as string };
+  return {
+    projectId: project.id as string,
+    materialName: material.name as string,
+    employeeNames: employees.slice(0, 3).map((employee) => employee.name),
+  };
 };
 
 test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면에서 3분 안에 입력한다', async ({
@@ -89,7 +97,7 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
 }) => {
   await login(page);
 
-  const { projectId, materialName } = await prepare(page);
+  const { projectId, materialName, employeeNames } = await prepare(page);
   const watch: Stopwatch = { taps: 0, typedChars: 0 };
   const user = createUser(page, watch);
 
@@ -99,10 +107,11 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
 
   const started = Date.now();
 
-  // 1) 빠른 추가 → 오늘 작업
-  await user.tap(() => page.getByRole('button', { name: '빠른 추가' }).click());
-  await user.tap(() => page.getByRole('link', { name: '오늘 작업' }).click());
-  await expect(page.getByRole('checkbox', { name: /출근/ }).first()).toBeChecked();
+  // 1) 프로젝트 머리의 오늘 기록
+  await user.tap(() => page.getByRole('link', { name: '오늘 기록' }).click());
+  for (const employee of employeeNames) {
+    await user.tap(() => page.getByRole('checkbox', { name: `${employee} 일함` }).check());
+  }
 
   // 2) 직원 일한 시간: 배정된 직원이 채워져 있으니 작업 구분만 일괄 지정하고 한 명은 반일
   await user.tap(() => selectByText(page, '작업 구분 일괄 지정', '설치'));
@@ -115,20 +124,25 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
   );
 
   // 3) 작업 내용
-  await user.type(page.getByLabel('작업 내용'), WORK_NOTE);
+  await user.type(page.getByRole('textbox', { name: '작업 내용', exact: true }), WORK_NOTE);
 
   // 4) 저장
   await user.tap(() => page.getByRole('button', { name: '저장', exact: true }).click());
-  await expect(page.getByText(/저장했습니다 \(버전 1\)/)).toBeVisible();
+  await expect(page.getByText(/저장됐습니다 · 버전 1/)).toBeVisible();
 
   // 5) 자재: 최근 쓴 자재를 한 번 눌러 수량만 적고 저장
-  await user.tap(() => page.getByRole('button', { name: new RegExp(materialName) }).click());
-  await user.type(page.getByLabel('수량'), '12');
-  await user.tap(() => page.getByRole('button', { name: '자재 1건 저장' }).click());
-  await expect(page.getByText('사용 12장')).toBeVisible();
+  await user.tap(() => page.getByRole('link', { name: '자재 메뉴' }).click());
+  await user.tap(() =>
+    page
+      .getByRole('form', { name: '사용한 자재 기록' })
+      .getByRole('button', { name: `${materialName} 1.0T`, exact: true })
+      .click(),
+  );
+  await user.type(page.getByLabel('1번 줄 수량'), '12');
+  await user.tap(() => page.getByRole('button', { name: '저장', exact: true }).click());
+  await expect(page.getByText('자재 1건을 기록했습니다')).toBeVisible();
 
-  // 6) 사진: 빠른 추가의 "사진"으로 사진첩에 가서 구분을 고르고 두 장을 올림
-  await user.tap(() => page.getByRole('button', { name: '빠른 추가' }).click());
+  // 6) 프로젝트 메뉴의 사진첩에서 구분을 고르고 두 장 올리기
   await user.tap(() => page.getByRole('link', { name: '사진', exact: true }).click());
   await user.tap(() => selectByText(page, '구분', '작업 후'));
 

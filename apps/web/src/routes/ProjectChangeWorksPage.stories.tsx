@@ -54,13 +54,13 @@ export const CreateWithValidation: Story = {
     const form = within(await canvas.findByRole('form', { name: '변경·추가 작업 기록' }));
 
     // 요청자·내용이 비어 있으면 서버에 보내기 전에 막는다
-    await userEvent.click(form.getByRole('button', { name: '기록하기' }));
+    await userEvent.click(form.getByRole('button', { name: '저장' }));
     await expect(await form.findByText('요청자를 입력해 주세요')).toBeInTheDocument();
     await expect(form.getByText('내용을 입력해 주세요')).toBeInTheDocument();
 
     await userEvent.type(form.getByLabelText('요청자'), '고객사 박과장');
     await userEvent.type(form.getByLabelText('요청 내용'), '2층 복도 천장 점검구 추가');
-    await userEvent.click(form.getByRole('button', { name: '기록하기' }));
+    await userEvent.click(form.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('#3 기록했습니다 (협의 중)')).toBeInTheDocument();
     await waitFor(() => expect(canvas.getByText('#3')).toBeInTheDocument());

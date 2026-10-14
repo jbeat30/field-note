@@ -51,7 +51,7 @@ export const RecordCustomMaterials: Story = {
     await userEvent.clear(canvas.getByLabelText('2번 줄 규격'));
     await userEvent.type(canvas.getByLabelText('2번 줄 규격'), '800×2100 1.6T 백색');
     await userEvent.type(canvas.getByLabelText('2번 줄 수량'), '1');
-    await userEvent.click(canvas.getByRole('button', { name: '자재 기록' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('자재 2건을 기록했습니다')).toBeInTheDocument();
 
@@ -68,7 +68,7 @@ export const NeedsQuantityAndUnit: Story = {
     const canvas = within(canvasElement);
 
     await userEvent.type(await canvas.findByLabelText('1번 줄 품명'), '후레싱');
-    await userEvent.click(canvas.getByRole('button', { name: '자재 기록' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText(/0보다 큰 수량 · 단위/)).toBeInTheDocument();
   },
@@ -98,6 +98,8 @@ export const DeleteRecord: Story = {
     const before = (await canvas.findAllByRole('button', { name: /기록 지우기$/ })).length;
 
     await userEvent.click(canvas.getAllByRole('button', { name: /기록 지우기$/ })[0]!);
+
+    await userEvent.click(await within(document.body).findByRole('button', { name: '지우기' }));
 
     await waitFor(() =>
       expect(canvas.getAllByRole('button', { name: /기록 지우기$/ })).toHaveLength(before - 1),

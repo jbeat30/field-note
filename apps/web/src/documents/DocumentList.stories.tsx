@@ -30,15 +30,14 @@ export const Default: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    // 분류별로 묶임
-    const headings = canvas
-      .getAllByRole('heading', { level: 2 })
-      .map((heading) => heading.textContent);
+    const table = within(canvas.getByRole('table', { name: '문서 목록' }));
 
-    await expect(headings).toEqual(['도면', '시방·사양', '계약·행정']);
-    // 최신본 번호·전체 버전 수·개정일·사유, 민감 표시
-    await expect(canvas.getByText('최신 v2 (전체 2개)')).toBeInTheDocument();
-    await expect(canvas.getByText(/10월 6일 \(화\) 개정 · 배관 위치 변경/)).toBeInTheDocument();
+    await expect(table.getAllByRole('row')).toHaveLength(4);
+    for (const category of ['도면', '시방·사양', '계약·행정']) {
+      await expect(table.getByText(category)).toBeInTheDocument();
+    }
+    await expect(table.getByText('10월 6일 (화)')).toBeInTheDocument();
+    await expect(table.getByText(/v2/)).toHaveTextContent('v2 /2');
     await expect(canvas.getByText('민감')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '1층 시공도 열기' }));
@@ -52,7 +51,7 @@ export const OpenDetail: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getByRole('button', { name: '외장 시방서 상세' }));
+    await userEvent.click(canvas.getByRole('button', { name: '외장 시방서 버전·기록' }));
     await expect(args.onDetail).toHaveBeenCalledWith(args.documents[2]);
   },
 };

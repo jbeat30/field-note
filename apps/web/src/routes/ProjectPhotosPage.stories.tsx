@@ -71,7 +71,7 @@ export const OpenDetailAndDelete: Story = {
     const dialog = within(await within(document.body).findByRole('dialog'));
 
     await userEvent.click(dialog.getByRole('button', { name: '삭제' }));
-    await userEvent.click(dialog.getByRole('button', { name: '정말 삭제' }));
+    await userEvent.click(within(document.body).getByRole('button', { name: '지우기' }));
 
     await waitFor(() =>
       expect(canvas.getAllByRole('button', { name: /사진 열기/ })).toHaveLength(4),

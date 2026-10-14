@@ -27,7 +27,7 @@ export const CreateWithSuggestedTitle: Story = {
     await expect(canvas.getByLabelText('문서 이름')).toHaveValue('1층 시공도');
 
     await chooseOption(canvas.getByLabelText('분류'), '도면');
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await waitFor(() =>
       expect(args.onSubmit).toHaveBeenCalledWith(
@@ -57,7 +57,7 @@ export const ContractIsSensitiveByDefault: Story = {
     await expect(checkbox).not.toBeChecked();
 
     await userEvent.upload(canvas.getByLabelText('문서 파일'), pdf('계약서.pdf'));
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await waitFor(() =>
       expect(args.onSubmit).toHaveBeenCalledWith(
@@ -89,12 +89,12 @@ export const NoFileOrTitleIsRejected: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
     await expect(await canvas.findByRole('alert')).toHaveTextContent('올릴 파일을 골라 주세요');
 
     await userEvent.upload(canvas.getByLabelText('문서 파일'), pdf());
     await userEvent.clear(canvas.getByLabelText('문서 이름'));
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
     await expect(await canvas.findByRole('alert')).toHaveTextContent('문서 이름을 입력해 주세요');
     await expect(args.onSubmit).not.toHaveBeenCalled();
   },
@@ -112,7 +112,7 @@ export const ShowsProgress: Story = {
     const canvas = within(canvasElement);
 
     await userEvent.upload(canvas.getByLabelText('문서 파일'), pdf());
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('올리는 중 40%')).toBeInTheDocument();
     await expect(canvas.getByLabelText('문서 이름')).toBeDisabled();
@@ -130,7 +130,7 @@ export const UploadFailsKeepsInput: Story = {
     const canvas = within(canvasElement);
 
     await userEvent.upload(canvas.getByLabelText('문서 파일'), pdf());
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByRole('alert')).toHaveTextContent('연결이 끊겼습니다');
     // 다시 시도할 수 있게 이름은 그대로
@@ -147,7 +147,7 @@ export const VersionMode: Story = {
     await expect(canvas.queryByLabelText('문서 이름')).not.toBeInTheDocument();
     await userEvent.upload(canvas.getByLabelText('새 버전 파일'), pdf('시공도_rev3.pdf'));
     await userEvent.type(canvas.getByLabelText('개정 사유'), '창호 위치 변경');
-    await userEvent.click(canvas.getByRole('button', { name: '새 버전 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await waitFor(() =>
       expect(args.onSubmit).toHaveBeenCalledWith(

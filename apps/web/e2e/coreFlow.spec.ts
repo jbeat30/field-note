@@ -37,46 +37,27 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
     );
   });
 
-  await test.step('직원 두 명을 투입', async () => {
-    // 프로젝트 작업 공간의 "배정 인원" 메뉴
-    await page.getByRole('link', { name: '배정 인원' }).click();
-    for (const name of ['정판금', '최설치']) {
-      const form = page.getByRole('form', { name: '투입 등록' });
-
-      await selectByText(page, '직원', name);
-      await form.getByLabel('투입 시작일').fill(seoulDate(-7));
-      await form.getByLabel('투입 종료일').fill(seoulDate(60));
-      await form.getByRole('button', { name: '투입 등록' }).click();
-      await expect(page.getByRole('list', { name: '투입 목록' }).getByText(name)).toBeVisible();
-    }
-  });
-
   await test.step('작업 내역 일괄 입력: 투입 직원이 채워지고 작업 구분·공수·내용을 한 번에 정해 저장', async () => {
     await page.goto(`/projects/${projectId}/work/${today}`);
-    await expect(page.getByRole('checkbox', { name: '정판금 출근' })).toBeChecked();
-    await expect(page.getByRole('checkbox', { name: '최설치 출근' })).toBeChecked();
+    await page.getByRole('checkbox', { name: '정판금 일함' }).check();
+    await page.getByRole('checkbox', { name: '최설치 일함' }).check();
 
     await selectByText(page, '작업 구분 일괄 지정', '설치');
     await page.getByRole('button', { name: '모두 적용' }).click();
-    await page.getByLabel('작업 내용').fill('3층 외장 패널 설치');
+    await page.getByRole('textbox', { name: '작업 내용', exact: true }).fill('3층 외장 패널 설치');
     await page.getByLabel('작업 구역').fill('3층 301호');
     await page.getByRole('button', { name: '저장', exact: true }).click();
-    await expect(page.getByText(/저장했습니다 \(버전 1\)/)).toBeVisible();
+    await page.getByRole('button', { name: '투입 추가하고 저장' }).click();
+    await expect(page.getByText(/저장됐습니다 · 버전 1/)).toBeVisible();
   });
 
-  await test.step('같은 화면에서 자재를 새로 만들어 반입·사용을 입력', async () => {
-    await page.getByRole('button', { name: '새 자재' }).click();
-    await page.getByLabel('자재명').fill(materialName);
-    await page.getByRole('button', { name: '자재 추가하고 입력 행에 넣기' }).click();
-    await selectByText(page, '구분', '반입');
-    await page.getByLabel('수량').fill('100');
-    await page.getByRole('button', { name: '자재 1건 저장' }).click();
-    await expect(page.getByText('반입 100장')).toBeVisible();
-
-    await page.getByRole('button', { name: materialName }).click();
-    await page.getByLabel('수량').fill('12.5');
-    await page.getByRole('button', { name: '자재 1건 저장' }).click();
-    await expect(page.getByText('사용 12.5장')).toBeVisible();
+  await test.step('자재 메뉴에서 맞춤 자재 사용 기록', async () => {
+    await page.getByRole('link', { name: '자재 메뉴' }).click();
+    await page.getByLabel('1번 줄 품명').fill(materialName);
+    await page.getByLabel('1번 줄 수량').fill('12.5');
+    await page.getByLabel('1번 줄 단위').fill('장');
+    await page.getByRole('button', { name: '저장', exact: true }).click();
+    await expect(page.getByText('자재 1건을 기록했습니다')).toBeVisible();
   });
 
   await test.step('사진을 올리면 사진첩에 나타난다', async () => {
