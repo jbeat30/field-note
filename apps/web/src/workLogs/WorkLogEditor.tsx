@@ -19,6 +19,7 @@ import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
+import { ConfirmDialog } from '../components/ui/confirm-dialog';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
@@ -568,22 +569,17 @@ export const WorkLogEditor = ({
           </Button>
         </div>
       )}
-      {pendingAssignment && (
-        <div
-          role="alert"
-          className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4 text-sm"
-        >
-          <p>{pendingAssignment.message}</p>
-          <div className="flex gap-2">
-            <Button type="button" onClick={() => void doSave(pendingAssignment.status, true)}>
-              투입 추가하고 저장
-            </Button>
-            <Button type="button" variant="secondary" onClick={() => setPendingAssignment(null)}>
-              취소
-            </Button>
-          </div>
-        </div>
-      )}
+      <ConfirmDialog
+        open={pendingAssignment !== null}
+        title="투입에 등록되지 않은 직원이 있습니다"
+        description={pendingAssignment?.message ?? ''}
+        confirmLabel="투입 추가하고 저장"
+        onConfirm={() => {
+          if (pendingAssignment) void doSave(pendingAssignment.status, true);
+          setPendingAssignment(null);
+        }}
+        onCancel={() => setPendingAssignment(null)}
+      />
       {rootError && <Alert>{rootError}</Alert>}
       {isRestoredNoticeOpen && draft.status === 'restored' && (
         <Alert variant="info" className="flex flex-col gap-2">
@@ -735,7 +731,7 @@ export const WorkLogEditor = ({
             {employeeIds.length === 0 ? (
               <p className="text-sm text-foreground/65">먼저 일한 사람을 고르세요</p>
             ) : (
-              <ul className="flex flex-col" aria-label="직원별 일한 시간">
+              <ul className="grid gap-2 sm:grid-cols-2" aria-label="직원별 일한 시간">
                 {employeeIds.map((employeeId) => {
                   const name = names.get(employeeId) ?? '(알 수 없는 직원)';
                   const employeeLines = lines.filter((line) => line.employeeId === employeeId);
@@ -747,9 +743,9 @@ export const WorkLogEditor = ({
                   return (
                     <li
                       key={employeeId}
-                      className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0 md:flex-row md:items-center md:gap-4"
+                      className="flex flex-col gap-2 rounded-lg bg-surface-nested p-3"
                     >
-                      <p className="font-semibold md:w-32 md:shrink-0">{name}</p>
+                      <p className="text-sm font-semibold">{name}</p>
                       {employeeLines.length === 1 ? (
                         <HoursInput
                           name={name}
@@ -759,8 +755,7 @@ export const WorkLogEditor = ({
                         />
                       ) : (
                         <p className="text-sm text-foreground/65">
-                          한 일을 나눠 적었습니다 · 합계 {roundTo(personMinutes / 60, 1)}시간 (아래
-                          3에서 일마다 시간 입력)
+                          나눠 적음 · 합계 {roundTo(personMinutes / 60, 1)}시간 (3에서 입력)
                         </p>
                       )}
                     </li>
@@ -799,7 +794,7 @@ export const WorkLogEditor = ({
             {employeeIds.length === 0 ? (
               <p className="text-sm text-foreground/65">먼저 일한 사람을 고르세요</p>
             ) : (
-              <ul className="flex flex-col" aria-label="직원별 한 일">
+              <ul className="grid gap-2 sm:grid-cols-2" aria-label="직원별 한 일">
                 {employeeIds.map((employeeId) => {
                   const name = names.get(employeeId) ?? '(알 수 없는 직원)';
                   const employeeLines = lines.filter((line) => line.employeeId === employeeId);
@@ -808,9 +803,9 @@ export const WorkLogEditor = ({
                   return (
                     <li
                       key={employeeId}
-                      className="flex flex-col gap-2 border-b border-line py-3 last:border-b-0 md:flex-row md:items-start md:gap-4"
+                      className="flex flex-col gap-2 rounded-lg bg-surface-nested p-3"
                     >
-                      <p className="font-semibold md:w-32 md:shrink-0 md:pt-2">{name}</p>
+                      <p className="text-sm font-semibold">{name}</p>
                       <div className="flex min-w-0 flex-1 flex-col gap-2">
                         {employeeLines.map((line, index) => {
                           const suffix = index === 0 ? '' : ` ${index + 1}`;
@@ -925,42 +920,49 @@ export const WorkLogEditor = ({
               </ul>
             </Alert>
           )}
-        </div>
-      </div>
 
-      <div
-        className={cn(
-          'sticky bottom-20 z-10 flex items-center gap-2 rounded-xl p-3 shadow-sheet ring-1 md:bottom-4',
-          result?.status === 'SAVED' ? 'bg-success-subtle ring-success/25' : 'bg-surface ring-line',
-        )}
-      >
-        {result?.status === 'SAVED' ? (
-          <Check aria-hidden className="size-4 shrink-0 text-success" />
-        ) : null}
-        <p
-          className={cn(
-            'min-w-0 flex-1 text-sm font-semibold',
-            result?.status === 'SAVED' && 'text-success',
-          )}
-          aria-live="polite"
-        >
-          {result
-            ? result.status === 'SAVED'
-              ? `저장됐습니다 · 버전 ${result.version}${result.isLate ? ' · 지연 입력' : ''}${result.autoAssigned.length > 0 ? ` · 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
-              : `임시 저장됐습니다 · 버전 ${result.version}`
-            : summaryText}
-        </p>
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={save.isPending}
-          onClick={() => void doSave('DRAFT', false)}
-        >
-          임시 저장
-        </Button>
-        <Button type="button" disabled={save.isPending} onClick={() => void doSave('SAVED', false)}>
-          저장
-        </Button>
+          {/* 저장 버튼: Step 4 아래 배치 */}
+          <div
+            className={cn(
+              'flex items-center gap-2 rounded-xl p-3 ring-1',
+              result?.status === 'SAVED'
+                ? 'bg-success-subtle ring-success/25'
+                : 'bg-surface-subtle ring-line',
+            )}
+          >
+            {result?.status === 'SAVED' ? (
+              <Check aria-hidden className="size-4 shrink-0 text-success" />
+            ) : null}
+            <p
+              className={cn(
+                'min-w-0 flex-1 text-sm font-semibold',
+                result?.status === 'SAVED' && 'text-success',
+              )}
+              aria-live="polite"
+            >
+              {result
+                ? result.status === 'SAVED'
+                  ? `저장됐습니다 · 버전 ${result.version}${result.isLate ? ' · 지연 입력' : ''}${result.autoAssigned.length > 0 ? ` · 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
+                  : `임시 저장됐습니다 · 버전 ${result.version}`
+                : summaryText}
+            </p>
+            <Button
+              type="button"
+              variant="secondary"
+              disabled={save.isPending}
+              onClick={() => void doSave('DRAFT', false)}
+            >
+              임시 저장
+            </Button>
+            <Button
+              type="button"
+              disabled={save.isPending}
+              onClick={() => void doSave('SAVED', false)}
+            >
+              저장
+            </Button>
+          </div>
+        </div>
       </div>
 
       {log && log.version > 1 && (

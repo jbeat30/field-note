@@ -58,7 +58,7 @@ export const ProjectMaterialsPage = () => {
       {confirmDialog}
 
       {/* xl+ 화면: 왼쪽 등록폼 / 오른쪽 자재별 합계 */}
-      <div className="grid items-start gap-5 xl:grid-cols-[420px_1fr]">
+      <div className="grid items-start gap-5 xl:grid-cols-[560px_1fr]">
         <div className="rounded-xl bg-surface-subtle p-4 md:p-5">
           <Section
             title="자재 등록"
