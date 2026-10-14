@@ -22,7 +22,7 @@ describe('검색 결과 이동 주소', () => {
       '/projects/p1/documents?doc=d1',
     );
     expect(searchHitLink(hit({ type: 'WORK_LOG', projectId: 'p1', date: '2026-10-06' }))).toBe(
-      '/work-logs?project=p1&date=2026-10-06',
+      '/projects/p1/work/2026-10-06',
     );
   });
 

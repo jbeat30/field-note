@@ -1,4 +1,5 @@
 import {
+  PROJECT_PAGE_SIZE_MAX,
   formatProjectCode,
   PROJECT_CODE_PATTERN,
   projectCreateSchema,
@@ -126,12 +127,30 @@ describe('프로젝트 수정 검증', () => {
 });
 
 describe('목록 조회 조건', () => {
-  it('상태·정렬 값을 검사한다', () => {
+  it('상태·정렬·쪽 값을 검사한다', () => {
     expect(
-      projectListQuerySchema.safeParse({ status: 'IN_PROGRESS', sort: 'endDate' }).success,
+      projectListQuerySchema.safeParse({
+        status: 'IN_PROGRESS',
+        sortBy: 'plannedEnd',
+        sortDir: 'desc',
+        page: '2',
+        pageSize: '50',
+      }).success,
     ).toBe(true);
     expect(projectListQuerySchema.safeParse({ status: 'NOPE' }).success).toBe(false);
-    expect(projectListQuerySchema.safeParse({ sort: 'random' }).success).toBe(false);
+    expect(projectListQuerySchema.safeParse({ sortBy: 'random' }).success).toBe(false);
+    expect(projectListQuerySchema.safeParse({ sortDir: 'up' }).success).toBe(false);
+    expect(projectListQuerySchema.safeParse({ page: 0 }).success).toBe(false);
+    expect(projectListQuerySchema.safeParse({ pageSize: PROJECT_PAGE_SIZE_MAX + 1 }).success).toBe(
+      false,
+    );
     expect(projectListQuerySchema.safeParse({ from: '2026-99-99' }).success).toBe(false);
+  });
+
+  it('주소에서 온 문자열 쪽 번호는 숫자로 바꿔 읽는다', () => {
+    expect(projectListQuerySchema.parse({ page: '3', pageSize: '10' })).toEqual({
+      page: 3,
+      pageSize: 10,
+    });
   });
 });

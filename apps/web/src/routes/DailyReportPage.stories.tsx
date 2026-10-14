@@ -3,6 +3,8 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
+import { ProjectLayout } from '../layouts/ProjectLayout';
+import { Route, Routes } from 'react-router';
 
 import { DailyReportPage } from './DailyReportPage';
 
@@ -18,6 +20,15 @@ const meta = {
   component: DailyReportPage,
   parameters: { router: routerFor('2026-09-02') },
   loaders: [() => signIn('hanbit')],
+  decorators: [
+    (Story) => (
+      <Routes>
+        <Route element={<ProjectLayout />}>
+          <Route index element={<Story />} />
+        </Route>
+      </Routes>
+    ),
+  ],
 } satisfies Meta<typeof DailyReportPage>;
 
 export default meta;
@@ -36,13 +47,13 @@ export const WithWorkLog: Story = {
   },
 };
 
-// 일지는 없고 자재·사진만 있는 날
+// 작업 내역은 없고 자재·사진만 있는 날
 export const MaterialsAndPhotosDay: Story = {
   parameters: { router: routerFor('2026-10-07') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('이 날 작성한 일지가 없습니다')).toBeInTheDocument();
+    await expect(await canvas.findByText('이 날 작성한 작업 내역이 없습니다')).toBeInTheDocument();
     // 그날 사용 기록 두 건과 반입·반출 등이 표에 나옴
     await expect(
       canvas.getAllByText('아연도강판 1.0T', { selector: 'td' }).length,
@@ -72,7 +83,7 @@ export const PrintButton: Story = {
 
     window.print = print;
 
-    const button = await canvas.findByRole('button', { name: '인쇄·PDF로 저장' });
+    const button = await canvas.findByRole('button', { name: '인쇄·PDF' });
 
     await waitFor(() => expect(button).toBeEnabled());
     await userEvent.click(button);

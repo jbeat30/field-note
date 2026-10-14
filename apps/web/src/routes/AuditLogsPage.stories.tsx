@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fireEvent, waitFor, within } from 'storybook/test';
 
 import { resetMockAudit } from '../mocks/auditHandlers';
 import { signIn } from '../mocks/state';
 
 import { AuditLogsPage } from './AuditLogsPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/기록 조회',
@@ -48,13 +49,13 @@ export const FilterByAction: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByRole('list', { name: '기록 목록' });
-    await userEvent.selectOptions(canvas.getByLabelText('종류'), '단가 조회');
+    await chooseOption(canvas.getByLabelText('종류'), '단가 조회');
 
     await waitFor(() => expect(canvas.getAllByRole('listitem')).toHaveLength(1));
     await expect(canvas.getByRole('listitem')).toHaveTextContent('단가 조회');
 
     // 해당하는 기록이 없으면 안내
-    await userEvent.selectOptions(canvas.getByLabelText('종류'), '월 공수 확정');
+    await chooseOption(canvas.getByLabelText('종류'), '월 공수 확정');
     await expect(await canvas.findByText('조건에 맞는 기록이 없습니다')).toBeInTheDocument();
   },
 };

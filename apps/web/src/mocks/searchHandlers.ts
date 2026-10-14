@@ -6,11 +6,12 @@ import {
   type SearchHit,
   type SearchResponse,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 import { listMockDocuments } from './documentHandlers';
 import { listMockMemos } from './memoHandlers';
 import { getCurrentAccount, getEmployees, getProjects, getWorkLogs } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -31,13 +32,13 @@ const toGroup = (items: SearchHit[], limit: number): SearchGroup => ({
 });
 
 /**
- * @description 통합 검색 API 목업 핸들러 (서버와 같은 규칙: 대소문자 무시 부분 일치, 직원은 이름·직책만, 지운 메모·문서 제외, 프로젝트 안 검색은 메모·자료·일지만)
+ * @description 통합 검색 API 목업 핸들러 (서버와 같은 규칙: 대소문자 무시 부분 일치, 직원은 이름·직책만, 지운 메모·문서 제외, 프로젝트 안 검색은 메모·자료·작업 내역만)
  * @param helpers 공통 오류 응답
  * @returns msw 핸들러 목록
  */
 export const createSearchHandlers = ({ apiError }: Helpers) => [
   http.get('/api/v1/search', async ({ request }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

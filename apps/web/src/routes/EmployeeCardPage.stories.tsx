@@ -6,6 +6,7 @@ import { DEMO_EMPLOYEES } from '../mocks/demoSource';
 import { findAccount, getEmployees, getOptions, saveOptions, signIn } from '../mocks/state';
 
 import { EmployeeCardPage } from './EmployeeCardPage';
+import { chooseOption } from '../lib/storyActions';
 
 const idOf = (name: string) => DEMO_EMPLOYEES.find((employee) => employee.name === name)!.id;
 const routerFor = (name: string) => ({
@@ -38,8 +39,8 @@ export const Default: Story = {
     // 카드에서는 생년월일·연락처·메모가 보임
     await expect(canvas.getByLabelText('연락처')).toHaveValue('010-0000-0001');
     await expect(canvas.getByLabelText('생년월일')).toHaveValue('1978-04-12');
-    await expect(canvas.getByLabelText('직종')).toHaveDisplayValue('판금공');
-    await expect(canvas.getByLabelText('직원 구분')).toHaveDisplayValue('정직원');
+    await expect(canvas.getByLabelText('직종')).toHaveTextContent('판금공');
+    await expect(canvas.getByLabelText('직원 구분')).toHaveTextContent('정직원');
     await expect(
       canvas.getByText(/주민등록번호·계좌번호는 저장하지 않습니다. 급여는 단가만 기록합니다/),
     ).toBeInTheDocument();
@@ -178,7 +179,7 @@ export const HiddenJobTypeStillShown: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByLabelText('직종')).toHaveDisplayValue('판금공 (숨김)');
+    await expect(await canvas.findByLabelText('직종')).toHaveTextContent('판금공 (숨김)');
   },
 };
 
@@ -196,7 +197,7 @@ export const NotFound: Story = {
   },
 };
 
-// 최설치: A동(2026-09-01, 09-02)과 B동 덕트 설치(09-02)에 저장된 일지가 있음
+// 최설치: A동(2026-09-01, 09-02)과 B동 덕트 설치(09-02)에 저장된 작업 내역이 있음
 export const WorkHistory: Story = {
   parameters: { router: routerFor('최설치') },
   play: async ({ canvasElement }) => {
@@ -243,7 +244,7 @@ export const PayRates: Story = {
     await expect(await panel.findByText('금액을 입력해 주세요')).toBeInTheDocument();
 
     // 월급제로 바꿔 저장하면 새 이력이 맨 앞에 쌓이고 기존 이력은 그대로
-    await userEvent.selectOptions(panel.getByLabelText('단가 종류'), 'MONTHLY');
+    await chooseOption(panel.getByLabelText('단가 종류'), '월급제');
     await userEvent.type(panel.getByLabelText('월급 (원)'), '5500000');
     await userEvent.click(panel.getByRole('button', { name: '단가 저장' }));
     await waitFor(() => expect(history()).toHaveLength(3));
@@ -284,7 +285,7 @@ export const AddCredential: Story = {
     await expect(await form.findByText('서류 종류를 선택해 주세요')).toBeInTheDocument();
 
     // 만료일이 취득일보다 빠르면 막는다
-    await userEvent.selectOptions(form.getByLabelText('서류 종류'), '전기기능사');
+    await chooseOption(form.getByLabelText('서류 종류'), '전기기능사');
     fireEvent.change(form.getByLabelText('취득일 (선택)'), { target: { value: '2026-05-01' } });
     fireEvent.change(form.getByLabelText('만료일 (선택)'), { target: { value: '2026-04-30' } });
     await userEvent.click(form.getByRole('button', { name: '서류 등록' }));
@@ -296,7 +297,7 @@ export const AddCredential: Story = {
     await waitFor(() => expect(panel.getAllByRole('listitem')).toHaveLength(3));
     await expect(panel.getByText(/전기기능사/, { selector: 'li span' })).toBeInTheDocument();
     // 등록하면 입력칸이 비워진다
-    await expect(form.getByLabelText('서류 종류')).toHaveValue('');
+    await expect(form.getByLabelText('서류 종류')).toHaveTextContent('종류 선택');
   },
 };
 

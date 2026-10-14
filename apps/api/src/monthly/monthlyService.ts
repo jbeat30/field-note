@@ -31,9 +31,9 @@ export class MonthlyError extends Error {
 export type MonthlyFile = { filename: string; body: Buffer };
 
 export type MonthlyService = {
-  // 월 공수표: 프로젝트 × 직원별 저장된 일지 공수, 확정 상태·확정 당시 기준값·임시 저장 일지·이력
+  // 월 공수표: 프로젝트 × 직원별 저장된 작업 내역 공수, 확정 상태·확정 당시 기준값·임시 저장 작업 내역·이력
   get: (companyId: string, month: string) => Promise<MonthlyHours>;
-  // 월 공수 확정 (이번 달까지, 임시 저장 일지가 남아 있으면 확인 필요). 그달의 작업일지는 재오픈 전까지 고칠 수 없다
+  // 월 공수 확정 (이번 달까지, 임시 저장 작업 내역이 남아 있으면 확인 필요). 그달의 작업 내역는 재오픈 전까지 고칠 수 없다
   close: (companyId: string, userId: string, input: MonthlyClose) => Promise<MonthlyHours>;
   // 재오픈 (사유 필수, 이력에 남음)
   reopen: (companyId: string, userId: string, input: MonthlyReopen) => Promise<MonthlyHours>;
@@ -45,13 +45,13 @@ const toDate = (value: string) => new Date(`${value}T00:00:00.000Z`);
 
 const invalid = (path: string, message: string) => new MonthlyError('INVALID', { path, message });
 
-// 같은 회사·월에 대한 확정과 일지 저장을 한 줄로 세워 확정 직전에 끼어드는 저장이 없게 함
+// 같은 회사·월에 대한 확정과 작업 내역 저장을 한 줄로 세워 확정 직전에 끼어드는 저장이 없게 함
 const lockMonth = async (tx: Prisma.TransactionClient, companyId: string, month: string) => {
   await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`monthly:${companyId}:${month}`}))`;
 };
 
 /**
- * @description 이 날짜의 작업일지를 고칠 수 있는지 확인한다 (확정된 달은 재오픈해야 함). 확정 처리와 같은 잠금을 쓴다
+ * @description 이 날짜의 작업 내역를 고칠 수 있는지 확인한다 (확정된 달은 재오픈해야 함). 확정 처리와 같은 잠금을 쓴다
  * @param tx 회사 범위 트랜잭션
  * @param companyId 회사
  * @param workDate 작업 일자
@@ -125,7 +125,7 @@ export const createMonthlyService = (
     month: string,
   ): Promise<MonthlyHoursRow[]> => {
     const { from, to } = monthRange(month);
-    // 집계에는 저장된 일지만 쓴다 (임시 저장은 제외, §9.4)
+    // 집계에는 저장된 작업 내역만 쓴다 (임시 저장은 제외, §9.4)
     const entries = await tx.workLogEntry.findMany({
       where: { workLog: { status: 'SAVED', workDate: { gte: toDate(from), lte: toDate(to) } } },
       select: { employeeId: true, minutes: true, workLog: { select: { projectId: true } } },
@@ -394,7 +394,7 @@ export const createMonthlyService = (
         ['확정 일시', data.closedAt ?? '-'],
         ['하루 기준시간(분)', data.standardWorkMinutes],
         ['월 기준일수', data.monthlyWorkDays],
-        ['임시 저장 일지(건)', data.draftLogCount],
+        ['임시 저장 작업 내역(건)', data.draftLogCount],
         ['총 공수(MD)', total.manDays],
         ['총 공수(MM)', total.manMonths],
       ]);

@@ -69,19 +69,20 @@ export const MemoForm = ({
           onChange={(event) => setDraft(draftKey, event.target.value)}
         />
       </FormField>
-      <FormField label="태그">
-        <Select value={tag} onChange={(event) => setTag(event.target.value as MemoTag)}>
-          {MEMO_TAGS.map((value) => (
-            <option key={value} value={value}>
-              {MEMO_TAG_LABELS[value]}
-            </option>
-          ))}
-        </Select>
-      </FormField>
       {error && <Alert>{error}</Alert>}
-      <Button type="submit" disabled={isSaving}>
-        {isSaving ? '저장하는 중' : submitLabel}
-      </Button>
+      <div className="flex items-end justify-between gap-2">
+        <FormField label="태그" className="w-40">
+          <Select
+            size="sm"
+            value={tag}
+            onValueChange={setTag}
+            options={MEMO_TAGS.map((value) => ({ value, label: MEMO_TAG_LABELS[value] }))}
+          />
+        </FormField>
+        <Button type="submit" size="sm" disabled={isSaving}>
+          {isSaving ? '저장 중' : submitLabel}
+        </Button>
+      </div>
     </form>
   );
 };

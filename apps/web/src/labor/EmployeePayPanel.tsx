@@ -73,13 +73,11 @@ const PayRateForm = ({ employeeId }: { employeeId: string }) => {
     <form className="flex flex-col gap-3" onSubmit={submit} noValidate aria-label="단가 변경">
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label="단가 종류" error={errors.payType}>
-        <Select value={payType} onChange={(event) => setPayType(event.target.value as PayType)}>
-          {PAY_TYPES.map((type) => (
-            <option key={type} value={type}>
-              {PAY_TYPE_LABELS[type]}
-            </option>
-          ))}
-        </Select>
+        <Select
+          value={payType}
+          onValueChange={setPayType}
+          options={PAY_TYPES.map((type) => ({ value: type, label: PAY_TYPE_LABELS[type] }))}
+        />
       </FormField>
       <FormField label={PAY_AMOUNT_LABELS[payType]} error={errors.amount}>
         <Input

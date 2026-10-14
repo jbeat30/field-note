@@ -109,7 +109,7 @@ export const auditSummary = (action: AuditAction, detail: unknown): string | nul
       parts.push(
         field(detail, 'month'),
         Number(field(detail, 'draftLogCount') ?? 0) > 0
-          ? `임시 저장 일지 ${field(detail, 'draftLogCount')}건 확인`
+          ? `임시 저장 작업 내역 ${field(detail, 'draftLogCount')}건 확인`
           : undefined,
       );
       break;

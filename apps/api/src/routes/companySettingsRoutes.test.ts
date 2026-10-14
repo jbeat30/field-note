@@ -83,7 +83,7 @@ describe('GET·PUT /api/v1/company/settings', () => {
 
     expect(companySettingsSchema.parse(initial.body)).toEqual({
       standardWorkMinutes: 480,
-      monthlyWorkDays: 22,
+      monthlyWorkDays: 26,
       workUnitMode: 'RATIO',
     });
 
@@ -111,7 +111,7 @@ describe('GET·PUT /api/v1/company/settings', () => {
     expect((await request(instance).get('/api/v1/company/settings').set('Cookie', b)).body).toEqual(
       {
         standardWorkMinutes: 480,
-        monthlyWorkDays: 22,
+        monthlyWorkDays: 26,
         workUnitMode: 'RATIO',
       },
     );

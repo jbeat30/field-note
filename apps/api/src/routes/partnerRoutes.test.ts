@@ -87,6 +87,11 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     get: (id: string) => request(instance).get(`/api/v1/partners/${id}`).set('Cookie', cookie),
     create: (body: object) => write('post', '/partners', body),
     update: (id: string, body: object) => write('patch', `/partners/${id}`, body),
+    remove: (id: string) =>
+      request(instance)
+        .delete(`/api/v1/partners/${id}`)
+        .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+        .set('Cookie', cookie),
   };
 };
 
@@ -350,7 +355,60 @@ describe('회사 격리', () => {
     expect(namesOf(await b.list())).toEqual(['B침투']);
   });
 
-  it('앱 계정은 명부를 삭제할 수 없다', async () => {
-    await expect(db.app.$executeRawUnsafe('DELETE FROM partners')).rejects.toThrow();
+  it('앱 계정의 삭제는 회사 경계를 넘지 못한다 (회사를 지정하지 않으면 아무 행도 지워지지 않음)', async () => {
+    const instance = app();
+    const a = api(instance, await signedUp(instance));
+
+    await a.create({ kind: 'CLIENT', name: '지워지면안됨' });
+
+    const count = async () =>
+      Number(
+        (await db.ownerPool.query<{ n: string }>('SELECT count(*) AS n FROM partners')).rows[0]!.n,
+      );
+    const before = await count();
+
+    await db.app.$executeRawUnsafe('DELETE FROM partners');
+
+    expect(await count()).toBe(before);
+  });
+});
+
+describe('삭제', () => {
+  it('쓰이지 않은 업체는 삭제할 수 있고 목록과 카드에서 사라진다', async () => {
+    const instance = app();
+    const client = api(instance, await signedUp(instance));
+    const keep = (await client.create({ kind: 'CLIENT', name: '남길곳' })).body.id;
+    const drop = (await client.create({ kind: 'SUPPLIER', name: '지울곳' })).body.id;
+
+    const res = await client.remove(drop);
+
+    expect(res.status).toBe(200);
+    expect(res.body).toEqual({ success: true });
+    expect((await client.get(drop)).status).toBe(404);
+    expect(namesOf(await client.list())).toEqual(['남길곳']);
+    expect((await client.get(keep)).status).toBe(200);
+    // 삭제한 상호는 다시 등록할 수 있다
+    expect((await client.create({ kind: 'SUPPLIER', name: '지울곳' })).status).toBe(201);
+  });
+
+  it('없는 업체·잘못된 주소는 오류이고, 다른 회사의 업체는 지울 수 없다', async () => {
+    const instance = app();
+    const a = api(instance, await signedUp(instance));
+    const b = api(instance, await signedUp(instance));
+    const id = (await a.create({ kind: 'CLIENT', name: 'A사고객' })).body.id;
+
+    expect((await a.remove('0198d000-0000-7000-8000-000000000999')).status).toBe(404);
+    expect((await a.remove('not-a-uuid')).status).toBe(400);
+    expect((await b.remove(id)).status).toBe(404);
+    expect((await a.get(id)).status).toBe(200);
+  });
+
+  it('로그인하지 않으면 삭제할 수 없다', async () => {
+    const instance = app();
+    const res = await request(instance)
+      .delete('/api/v1/partners/0198d000-0000-7000-8000-000000000999')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE);
+
+    expect(res.status).toBe(401);
   });
 });

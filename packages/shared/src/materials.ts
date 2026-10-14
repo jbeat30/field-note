@@ -154,6 +154,29 @@ export const compareMaterials = (a: Material, b: Material) => {
   );
 };
 
+/**
+ * @description 현장에서 바로 쓴 품명·규격이 회사 자재 중 어느 것과 같은지 찾음 (공백·대소문자·전각 차이는 무시)
+ * 같은 것이 없으면 새 자재로 만들면 된다. 판금 인테리어처럼 현장마다 규격이 다른 맞춤 자재를 그때그때 적기 위한 규칙
+ * @param materials 회사 자재 목록
+ * @param name 품명
+ * @param spec 규격 (없으면 빈 글자)
+ * @returns 같은 자재 또는 undefined
+ */
+export const findMaterialMatch = <T extends Pick<Material, 'name' | 'spec'>>(
+  materials: readonly T[],
+  name: string,
+  spec: string,
+) => {
+  const nameKey = normalizeMaterialText(name);
+  const specKey = normalizeMaterialText(spec);
+
+  return materials.find(
+    (material) =>
+      normalizeMaterialText(material.name) === nameKey &&
+      normalizeMaterialText(material.spec) === specKey,
+  );
+};
+
 export const materialsResponseSchema = z.object({ items: z.array(materialSchema) });
 
 export type MaterialsResponse = z.infer<typeof materialsResponseSchema>;
@@ -205,7 +228,7 @@ export const materialRecordUpdateSchema = z
 export type MaterialRecordUpdate = z.infer<typeof materialRecordUpdateSchema>;
 
 export const materialRecordListQuerySchema = z.object({
-  // 그날 작업일지 화면에서 쓰는 날짜 필터
+  // 그날 작업 내역 화면에서 쓰는 날짜 필터
   date: dateSchema.optional(),
   materialId: z.uuid().optional(),
   kind: materialRecordKindSchema.optional(),

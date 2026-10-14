@@ -46,14 +46,12 @@ export const registerProjectRoutes = (registry: RouteRegistry, projects?: Projec
     {
       method: 'get',
       path: '/projects',
-      summary: '프로젝트 목록 (상태·고객·담당자·공종·기간·검색 필터와 정렬)',
+      summary: '프로젝트 목록 (상태·고객·담당자·공종·기간·검색 필터, 정렬, 쪽 나누기)',
       auth: 'required',
       request: { query: projectListQuerySchema },
       response: { status: 200, schema: projectsResponseSchema },
     },
-    async ({ auth, query }) => ({
-      items: await projects!.list(auth!.companyId, query as ProjectListQuery),
-    }),
+    async ({ auth, query }) => projects!.list(auth!.companyId, query as ProjectListQuery),
   );
 
   add(

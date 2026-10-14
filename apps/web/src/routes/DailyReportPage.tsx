@@ -4,14 +4,13 @@ import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 
 import { ChevronLeft, ChevronRight } from 'lucide-react';
-import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { DateInput } from '../components/ui/date-input';
 import { addDays, formatDay } from '../lib/dates';
 import { useProject } from '../projects/useProjects';
-import { downloadReportXlsx, printWhenReady } from '../reports/exportReport';
+import { downloadReportXlsx } from '../reports/exportReport';
 import { ReportSheet } from '../reports/ReportSheet';
 import { useDailyReport } from '../reports/useDailyReport';
 
@@ -64,7 +63,6 @@ export const DailyReportPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 print:hidden">
-        <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -88,9 +86,6 @@ export const DailyReportPage = () => {
             <ChevronRight aria-hidden className="size-5" />
           </Button>
         </div>
-        <Button type="button" disabled={!report.data} onClick={() => void printWhenReady()}>
-          인쇄·PDF로 저장
-        </Button>
         <p className="text-sm text-foreground/70">
           인쇄 창에서 “PDF로 저장”을 고르면 {formatDay(date)} 작업일보를 파일로 보관·제출할 수
           있습니다
@@ -139,8 +134,8 @@ export const DailyReportPage = () => {
           >
             <Dialog.Title className="text-lg font-bold">엑셀로 내보낼까요?</Dialog.Title>
             <p id="export-description" className="text-base">
-              {from} ~ {to}의 일지·공수·자재를 엑셀로 내려받습니다. 내보낸 사람과 기간은 기록으로
-              남습니다.
+              {from} ~ {to}의 작업 내역·공수·자재를 엑셀로 내려받습니다. 내보낸 사람과 기간은
+              기록으로 남습니다.
             </p>
             <div className="flex gap-2">
               <Button

@@ -13,12 +13,15 @@ import { BackLink } from '../components/ui/back-link';
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
-import { PeriodNav } from '../components/ui/period-nav';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
+import { PeriodNav } from '../components/ui/period-nav';
+import { StatGroup } from '../components/ui/stat-group';
 import { Textarea } from '../components/ui/textarea';
+import { useConfirm } from '../components/ui/confirm-dialog';
 import { formatDay } from '../lib/dates';
+import { projectWorkPath } from '../lib/projectPaths';
 import { splitServerErrors } from '../lib/serverErrors';
 import { useCloseMonth, useMonthlyHours, useReopenMonth } from '../monthly/useMonthlyHours';
 import { ReportExportError, downloadMonthlyXlsx } from '../reports/exportReport';
@@ -41,8 +44,6 @@ const formatDateTime = (iso: string) =>
     minute: '2-digit',
   }).format(new Date(iso));
 
-// 월 공수 확정과 월 공수표 (서비스 기획서 §13.2, §15.4): 한 달의 프로젝트·직원별 공수를 확인하고 임시 저장 일지를 정리한 뒤 확정(잠금)한다.
-// 확정은 선택 기능이며 확정한 달의 일지는 재오픈(사유 기록)해야 고칠 수 있다. 확정한 표는 엑셀로 내보내 급여·정산 담당에게 전달한다
 export const MonthlyHoursPage = () => {
   const [params, setParams] = useSearchParams();
   const today = todayInSeoul(new Date());
@@ -57,7 +58,8 @@ export const MonthlyHoursPage = () => {
   const [rootError, setRootError] = useState('');
   const [message, setMessage] = useState('');
   const [isExporting, setIsExporting] = useState(false);
-  const [isConfirmingExport, setIsConfirmingExport] = useState(false);
+  const { confirm, dialog: confirmDialog } = useConfirm();
+
   const move = (delta: number) => {
     setParams({ month: shiftMonth(month, delta) });
     setConfirmDrafts(false);
@@ -90,7 +92,6 @@ export const MonthlyHoursPage = () => {
     setReasonError('');
     setMessage('');
 
-    // 서버와 같은 공유 스키마로 먼저 검사해 입력칸 옆에 바로 보여 줌
     const parsed = monthlyReopenSchema.safeParse({ month, reason });
 
     if (!parsed.success) {
@@ -108,6 +109,13 @@ export const MonthlyHoursPage = () => {
   };
 
   const exportXlsx = async () => {
+    const ok = await confirm({
+      title: `${month} 공수표를 내보낼까요?`,
+      description: '내보낸 기록이 남습니다',
+      confirmLabel: '내보내기',
+    });
+    if (!ok) return;
+
     setIsExporting(true);
     setRootError('');
     setMessage('');
@@ -118,7 +126,6 @@ export const MonthlyHoursPage = () => {
       setRootError(caught instanceof ReportExportError ? caught.message : '내보내지 못했습니다');
     } finally {
       setIsExporting(false);
-      setIsConfirmingExport(false);
     }
   };
 
@@ -136,302 +143,308 @@ export const MonthlyHoursPage = () => {
   const isFuture = month > monthOf(today);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
+      {confirmDialog}
       <BackLink to="/employees">직원</BackLink>
       <PageHeader title="월 공수표" description="한 달 공수를 확인하고 확정합니다" />
 
-      <PeriodNav
-        label={month}
-        prevLabel="이전 달"
-        nextLabel="다음 달"
-        onPrev={() => move(-1)}
-        onNext={() => move(1)}
-        todayLabel="이번 달"
-        onToday={() => {
-          setParams({});
-          setMessage('');
-        }}
-        pickValue={`${month}-01`}
-        pickMax={today}
-        onPick={(date) => {
-          setParams({ month: monthOf(date) });
-          setMessage('');
-        }}
-      />
+      {/* 달 이동 + 액션 버튼 한 줄 */}
+      <div className="flex flex-wrap items-center gap-3">
+        <div className="flex-1">
+          <PeriodNav
+            label={month}
+            prevLabel="이전 달"
+            nextLabel="다음 달"
+            onPrev={() => move(-1)}
+            onNext={() => move(1)}
+            todayLabel="이번 달"
+            onToday={() => {
+              setParams({});
+              setMessage('');
+            }}
+            pickValue={`${month}-01`}
+            pickMax={today}
+            onPick={(date) => {
+              setParams({ month: monthOf(date) });
+              setMessage('');
+            }}
+          />
+        </div>
+        {data && (
+          <div className="flex shrink-0 items-center gap-2">
+            <Badge tone={data.isClosed ? 'success' : 'warning'}>
+              {data.isClosed ? '확정됨' : '미확정'}
+            </Badge>
+            <Button
+              type="button"
+              variant="secondary"
+              size="sm"
+              disabled={isExporting}
+              onClick={() => void exportXlsx()}
+            >
+              {isExporting ? '내보내는 중' : '엑셀로 내보내기'}
+            </Button>
+            {!data.isClosed && (
+              <Button
+                type="button"
+                size="sm"
+                disabled={close.isPending || isFuture}
+                onClick={doClose}
+              >
+                {close.isPending ? '확정 중' : '공수 확정'}
+              </Button>
+            )}
+          </div>
+        )}
+      </div>
 
       {rootError && <Alert>{rootError}</Alert>}
-      {message && <p role="status">{message}</p>}
+      {message && (
+        <p role="status" className="text-sm font-medium text-success">
+          {message}
+        </p>
+      )}
       {!data && <p className="text-sm">불러오는 중</p>}
 
       {data && summary && (
         <>
-          <section
-            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-            aria-labelledby="monthly-state-heading"
-          >
-            <h2 id="monthly-state-heading" className="text-lg font-bold">
-              확정 상태
-            </h2>
-            <dl className="grid grid-cols-2 gap-3 md:grid-cols-4">
-              <div className="rounded-xl bg-surface-nested p-4">
-                <dt className="text-sm text-foreground/70">상태</dt>
-                <dd className="mt-1">
-                  <Badge tone={data.isClosed ? 'success' : 'warning'}>
-                    {data.isClosed ? '확정됨' : '미확정'}
-                  </Badge>
-                  {data.closedAt && (
-                    <span className="mt-1 block text-xs text-foreground/70">
-                      확정 일시 {formatDateTime(data.closedAt)}
-                    </span>
-                  )}
-                </dd>
-              </div>
-              <div className="rounded-xl bg-surface-nested p-4">
-                <dt className="text-sm text-foreground/70">하루 기준시간</dt>
-                <dd className="mt-1 text-xl font-bold">
-                  {data.standardWorkMinutes / 60}시간
-                  {data.isClosed && (
-                    <span className="block text-xs font-normal text-foreground/70">
-                      (확정 당시 값)
-                    </span>
-                  )}
-                </dd>
-              </div>
-              <div className="rounded-xl bg-surface-nested p-4">
-                <dt className="text-sm text-foreground/70">월 기준일수</dt>
-                <dd className="mt-1 text-xl font-bold">{data.monthlyWorkDays}일</dd>
-              </div>
-              <div className="rounded-xl bg-surface-nested p-4">
-                <dt className="text-sm text-foreground/70">합계</dt>
-                <dd className="mt-1 text-xl font-bold">
-                  {value(summary.total).manDays} MD · {value(summary.total).manMonths} MM
-                </dd>
-              </div>
-            </dl>
-            {!data.isClosed && (
-              <p className="text-sm text-foreground/70">
-                확정하면 이 달의 작업일지는 재오픈하기 전까지 수정할 수 없고, 지금의 기준시간·월
-                기준일수가 고정됩니다. 확정은 선택 기능입니다
+          {/* 수치 요약 */}
+          <div className="rounded-xl bg-surface-subtle p-4">
+            <StatGroup
+              items={[
+                {
+                  label: '합계',
+                  value: `${value(summary.total).manDays} MD`,
+                  unit: `· ${value(summary.total).manMonths} MM`,
+                },
+                { label: '일한 사람', value: summary.byEmployee.length, unit: '명' },
+                { label: '하루 기준시간', value: `${data.standardWorkMinutes / 60}`, unit: '시간' },
+                { label: 'MM 환산 기준', value: data.monthlyWorkDays, unit: '일' },
+              ]}
+            />
+            {data.isClosed && data.closedAt && (
+              <p className="mt-2 text-xs text-foreground/65">
+                확정 {formatDateTime(data.closedAt)}
               </p>
             )}
-          </section>
+          </div>
 
-          {data.draftLogCount > 0 && (
-            <section
-              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="monthly-drafts-heading"
-            >
-              <h2 id="monthly-drafts-heading" className="text-lg font-bold">
-                임시 저장된 일지 {data.draftLogCount}건
-              </h2>
-              <p className="text-sm text-foreground/70">
-                집계에는 저장된 일지만 반영됩니다. 확정 전에 저장하거나 정리해 주세요
-              </p>
-              <ul className="flex flex-col gap-1 text-sm">
-                {data.drafts.map((draft) => (
-                  <li key={`${draft.projectId}-${draft.workDate}`}>
-                    <Link
-                      className="text-primary underline"
-                      to={`/work-logs?project=${draft.projectId}&date=${draft.workDate}`}
-                    >
-                      {formatDay(draft.workDate)} · {draft.projectName}
-                    </Link>
-                  </li>
-                ))}
-              </ul>
-              {data.draftLogCount > data.drafts.length && (
-                <p className="text-sm text-foreground/70">
-                  앞의 {data.drafts.length}건만 보여 줍니다
-                </p>
-              )}
-            </section>
-          )}
-
-          <section
-            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-            aria-labelledby="monthly-table-heading"
-          >
-            <h2 id="monthly-table-heading" className="text-lg font-bold">
-              프로젝트·직원별 공수
-            </h2>
-            {data.rows.length === 0 ? (
-              <p className="text-foreground/70">이 달에 저장된 일지가 없습니다</p>
-            ) : (
-              <div className="overflow-x-auto">
-                <table className="w-full min-w-[22rem] text-left text-sm">
-                  <thead>
-                    <tr className="border-b border-border">
-                      <th className="py-2 pr-2">프로젝트</th>
-                      <th className="py-2 pr-2">직원</th>
-                      <th className="py-2 pr-2 text-right">MD</th>
-                      <th className="py-2 text-right">MM</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    {data.rows.map((row) => (
-                      <tr
-                        key={`${row.projectId}-${row.employeeId}`}
-                        className="border-b border-border"
-                      >
-                        <td className="py-2 pr-2">
-                          {row.projectCode} {row.projectName}
-                        </td>
-                        <td className="py-2 pr-2">{row.employeeName}</td>
-                        <td className="py-2 pr-2 text-right">{value(row.minutes).manDays}</td>
-                        <td className="py-2 text-right">{value(row.minutes).manMonths}</td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            )}
-          </section>
-
-          {summary.byEmployee.length > 0 && (
-            <section
-              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="monthly-employee-heading"
-            >
-              <h2 id="monthly-employee-heading" className="text-lg font-bold">
-                직원별 합계
-              </h2>
-              <ul className="flex flex-col gap-1 text-sm">
-                {summary.byEmployee.map((item) => (
-                  <li key={item.id} className="flex justify-between gap-2">
-                    <span>{item.name}</span>
-                    <span className="font-medium">
-                      {value(item.minutes).manDays} MD · {value(item.minutes).manMonths} MM
-                    </span>
-                  </li>
-                ))}
-              </ul>
-            </section>
-          )}
-
-          <section
-            className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-            aria-labelledby="monthly-action-heading"
-          >
-            <h2 id="monthly-action-heading" className="text-lg font-bold">
-              {data.isClosed ? '재오픈' : '확정'}
-            </h2>
-            {!data.isClosed && (
-              <>
-                {data.draftLogCount > 0 && (
-                  <label className="flex min-h-touch items-center gap-3">
-                    <Checkbox
-                      checked={confirmDrafts}
-                      onCheckedChange={(checked) => setConfirmDrafts(checked === true)}
-                      aria-label="임시 저장된 일지가 남아 있어도 확정합니다"
-                    />
-                    <span>임시 저장된 일지 {data.draftLogCount}건이 남아 있어도 확정합니다</span>
-                  </label>
-                )}
-                <Button type="button" disabled={close.isPending || isFuture} onClick={doClose}>
-                  {close.isPending ? '확정 중' : `${month} 공수 확정`}
-                </Button>
-                {isFuture && (
-                  <p className="text-sm text-foreground/70">
-                    아직 오지 않은 달은 확정할 수 없습니다
-                  </p>
-                )}
-              </>
-            )}
-            {data.isClosed && (
-              <form
-                className="flex flex-col gap-3"
-                onSubmit={doReopen}
-                noValidate
-                aria-label="재오픈"
-              >
-                <FormField
-                  label="재오픈 사유 (필수)"
-                  error={reasonError}
-                  hint="정정이 필요한 이유를 남겨 주세요. 재오픈하면 이 달의 일지를 다시 고칠 수 있습니다"
+          {/* xl+ 2열: 왼쪽 표 / 오른쪽 확정+이력 */}
+          <div className="grid items-start gap-5 xl:grid-cols-[1fr_300px]">
+            {/* 왼쪽: 임시저장 경고 + 표 + 직원별 합계 */}
+            <div className="flex flex-col gap-4">
+              {data.draftLogCount > 0 && (
+                <section
+                  className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
+                  aria-labelledby="monthly-drafts-heading"
                 >
-                  <Textarea
-                    maxLength={MONTH_REASON_MAX_LENGTH}
-                    value={reason}
-                    onChange={(event) => setReason(event.target.value)}
-                  />
-                </FormField>
-                <Button type="submit" variant="secondary" disabled={reopen.isPending}>
-                  {reopen.isPending ? '처리 중' : `${month} 공수 재오픈`}
-                </Button>
-              </form>
-            )}
-          </section>
+                  <h2 id="monthly-drafts-heading" className="text-base font-semibold">
+                    임시 저장된 작업 내역 {data.draftLogCount}건
+                  </h2>
+                  <p className="text-sm text-foreground/70">확정 전에 저장하거나 정리해 주세요</p>
+                  <ul className="flex flex-col gap-1 text-sm">
+                    {data.drafts.map((draft) => (
+                      <li key={`${draft.projectId}-${draft.workDate}`}>
+                        <Link
+                          className="text-primary underline"
+                          to={projectWorkPath(draft.projectId, draft.workDate)}
+                        >
+                          {formatDay(draft.workDate)} · {draft.projectName}
+                        </Link>
+                      </li>
+                    ))}
+                  </ul>
+                  {data.draftLogCount > data.drafts.length && (
+                    <p className="text-sm text-foreground/70">
+                      앞의 {data.drafts.length}건만 보여 줍니다
+                    </p>
+                  )}
+                  {data.draftLogCount > 0 && !data.isClosed && (
+                    <label className="flex min-h-touch items-center gap-3 text-sm">
+                      <Checkbox
+                        checked={confirmDrafts}
+                        onCheckedChange={(checked) => setConfirmDrafts(checked === true)}
+                        aria-label="임시 저장된 작업 내역이 남아 있어도 확정합니다"
+                      />
+                      <span>임시 저장 {data.draftLogCount}건이 남아 있어도 확정합니다</span>
+                    </label>
+                  )}
+                </section>
+              )}
 
-          <section
-            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-            aria-labelledby="monthly-export-heading"
-          >
-            <h2 id="monthly-export-heading" className="text-lg font-bold">
-              엑셀로 내보내기
-            </h2>
-            <p className="text-sm text-foreground/70">
-              급여·정산 담당에게 전달하는 용도입니다.{' '}
-              {data.isClosed
-                ? '확정된 값으로 내보냅니다'
-                : '아직 확정하지 않아 현재 저장된 기록 기준으로 내보냅니다'}
-              . 내보낸 기록은 남습니다
-            </p>
-            {!isConfirmingExport ? (
-              <Button type="button" variant="secondary" onClick={() => setIsConfirmingExport(true)}>
-                엑셀로 내보내기
-              </Button>
-            ) : (
-              <div
-                className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
-                role="group"
-                aria-label="내보내기 확인"
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+                aria-labelledby="monthly-table-heading"
               >
-                <p className="text-sm font-medium">
-                  {month} 월 공수표를 내려받습니다. 내보낸 기록이 남습니다
-                </p>
-                <div className="flex gap-2">
-                  <Button type="button" disabled={isExporting} onClick={() => void exportXlsx()}>
-                    {isExporting ? '내보내는 중' : '내보내기'}
-                  </Button>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    onClick={() => setIsConfirmingExport(false)}
-                  >
-                    취소
-                  </Button>
-                </div>
-              </div>
-            )}
-          </section>
+                <h2 id="monthly-table-heading" className="text-base font-semibold">
+                  프로젝트·직원별 공수
+                </h2>
+                {data.rows.length === 0 ? (
+                  <p className="text-foreground/70 text-sm">이 달에 저장된 작업 내역이 없습니다</p>
+                ) : (
+                  <div className="overflow-x-auto">
+                    <table className="w-full min-w-[24rem] text-left text-sm">
+                      <thead>
+                        <tr className="border-b border-line">
+                          <th className="py-2 pr-3 text-xs font-semibold text-foreground/65">
+                            프로젝트
+                          </th>
+                          <th className="py-2 pr-3 text-xs font-semibold text-foreground/65">
+                            직원
+                          </th>
+                          <th className="py-2 pr-3 text-right text-xs font-semibold text-foreground/65">
+                            MD
+                          </th>
+                          <th className="py-2 text-right text-xs font-semibold text-foreground/65">
+                            MM
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {data.rows.map((row) => (
+                          <tr
+                            key={`${row.projectId}-${row.employeeId}`}
+                            className="border-b border-line"
+                          >
+                            <td className="py-2 pr-3 text-sm">
+                              <span className="text-foreground/65">{row.projectCode}</span>{' '}
+                              {row.projectName}
+                            </td>
+                            <td className="py-2 pr-3">{row.employeeName}</td>
+                            <td className="py-2 pr-3 text-right tabular-nums font-semibold">
+                              {value(row.minutes).manDays}
+                            </td>
+                            <td className="py-2 text-right tabular-nums text-foreground/70">
+                              {value(row.minutes).manMonths}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </section>
 
-          <section
-            className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-            aria-labelledby="monthly-history-heading"
-          >
-            <h2 id="monthly-history-heading" className="text-lg font-bold">
-              확정·재오픈 이력
-            </h2>
-            {data.events.length === 0 ? (
-              <p className="text-sm text-foreground/70">확정한 기록이 없습니다</p>
-            ) : (
-              <ol className="divide-y divide-border">
-                {data.events.map((event) => (
-                  <li key={event.id} className="flex flex-col gap-0.5 py-2 text-sm">
-                    <span className="font-medium">
-                      {event.kind === 'CLOSED' ? '확정' : '재오픈'}
-                    </span>
-                    {event.reason && <span>사유: {event.reason}</span>}
-                    <span>
-                      기준 {event.standardWorkMinutes / 60}시간 · 월 {event.monthlyWorkDays}일
-                      {event.draftLogCount > 0 ? ` · 임시 저장 ${event.draftLogCount}건` : ''}
-                    </span>
-                    <span className="text-foreground/70">{formatDateTime(event.createdAt)}</span>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </section>
+              {summary.byEmployee.length > 0 && (
+                <section
+                  className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
+                  aria-labelledby="monthly-employee-heading"
+                >
+                  <h2 id="monthly-employee-heading" className="text-base font-semibold">
+                    직원별 합계
+                  </h2>
+                  <ul className="flex flex-col divide-y divide-line text-sm">
+                    {summary.byEmployee.map((item) => (
+                      <li key={item.id} className="flex justify-between gap-2 py-2">
+                        <span>{item.name}</span>
+                        <span className="tabular-nums font-semibold">
+                          {value(item.minutes).manDays} MD
+                          <span className="ml-1 font-normal text-foreground/65">
+                            · {value(item.minutes).manMonths} MM
+                          </span>
+                        </span>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
+
+            {/* 오른쪽: 확정/재오픈 + 이력 */}
+            <div className="flex flex-col gap-4">
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+                aria-labelledby="monthly-action-heading"
+              >
+                <h2 id="monthly-action-heading" className="text-base font-semibold">
+                  {data.isClosed ? '재오픈' : '확정'}
+                </h2>
+                {!data.isClosed && (
+                  <div className="flex flex-col gap-3">
+                    <p className="text-sm text-foreground/70">
+                      확정하면 이 달의 작업 내역을 재오픈 전까지 수정할 수 없고 기준시간·일수가
+                      고정됩니다. 확정은 선택 기능입니다
+                    </p>
+                    <Button
+                      type="button"
+                      size="sm"
+                      className="self-start"
+                      disabled={close.isPending || isFuture}
+                      onClick={doClose}
+                    >
+                      {close.isPending ? '확정 중' : `${month} 공수 확정`}
+                    </Button>
+                    {isFuture && (
+                      <p className="text-sm text-foreground/70">
+                        아직 오지 않은 달은 확정할 수 없습니다
+                      </p>
+                    )}
+                  </div>
+                )}
+                {data.isClosed && (
+                  <form
+                    className="flex flex-col gap-3"
+                    onSubmit={doReopen}
+                    noValidate
+                    aria-label="재오픈"
+                  >
+                    <FormField
+                      label="재오픈 사유 (필수)"
+                      error={reasonError}
+                      hint="재오픈하면 이 달의 작업 내역을 다시 고칠 수 있습니다"
+                    >
+                      <Textarea
+                        maxLength={MONTH_REASON_MAX_LENGTH}
+                        value={reason}
+                        onChange={(event) => setReason(event.target.value)}
+                      />
+                    </FormField>
+                    <Button
+                      type="submit"
+                      size="sm"
+                      variant="secondary"
+                      className="self-start"
+                      disabled={reopen.isPending}
+                    >
+                      {reopen.isPending ? '처리 중' : `${month} 공수 재오픈`}
+                    </Button>
+                  </form>
+                )}
+              </section>
+
+              <section
+                className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
+                aria-labelledby="monthly-history-heading"
+              >
+                <h2 id="monthly-history-heading" className="text-base font-semibold">
+                  확정·재오픈 이력
+                </h2>
+                {data.events.length === 0 ? (
+                  <p className="text-sm text-foreground/70">확정한 기록이 없습니다</p>
+                ) : (
+                  <ol className="divide-y divide-line text-sm">
+                    {data.events.map((event) => (
+                      <li key={event.id} className="flex flex-col gap-0.5 py-2">
+                        <span className="font-semibold">
+                          {event.kind === 'CLOSED' ? '확정' : '재오픈'}
+                        </span>
+                        {event.reason && (
+                          <span className="text-foreground/70">사유: {event.reason}</span>
+                        )}
+                        <span className="text-foreground/65">
+                          {event.standardWorkMinutes / 60}시간 · {event.monthlyWorkDays}일
+                          {event.draftLogCount > 0 ? ` · 임시 ${event.draftLogCount}건` : ''}
+                        </span>
+                        <span className="text-xs text-foreground/70">
+                          {formatDateTime(event.createdAt)}
+                        </span>
+                      </li>
+                    ))}
+                  </ol>
+                )}
+              </section>
+            </div>
+          </div>
         </>
       )}
     </div>

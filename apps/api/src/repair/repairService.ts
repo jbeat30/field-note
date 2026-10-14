@@ -46,7 +46,7 @@ export type RepairService = {
     id: string,
     input: RepairTransition,
   ) => Promise<RepairRequestDetail>;
-  // 사후 작업으로 표시한 같은 프로젝트의 일지·자재 기록을 연결·해제 (해제해도 연결 기록은 남음)
+  // 사후 작업으로 표시한 같은 프로젝트의 작업 내역·자재 기록을 연결·해제 (해제해도 연결 기록은 남음)
   link: (
     companyId: string,
     userId: string,
@@ -54,7 +54,7 @@ export type RepairService = {
     input: RepairLink,
   ) => Promise<RepairRequestDetail>;
   unlink: (companyId: string, id: string, linkId: string) => Promise<RepairRequestDetail>;
-  // 프로젝트에서 사후 작업으로 표시한 일지의 공수·자재 사용량 합계 (연결 여부와 무관)
+  // 프로젝트에서 사후 작업으로 표시한 작업 내역의 공수·자재 사용량 합계 (연결 여부와 무관)
   afterServiceUsage: (companyId: string, projectId: string) => Promise<RepairUsage>;
 };
 
@@ -100,7 +100,7 @@ const toSummary = (
   updatedAt: row.updatedAt.toISOString(),
 });
 
-// 삭제되지 않은 자재 기록·저장된 일지에 걸린 연결만 센다
+// 삭제되지 않은 자재 기록·저장된 작업 내역에 걸린 연결만 센다
 const LIVE_TARGET = {
   unlinkedAt: null,
   OR: [{ workLog: { status: 'SAVED' as const } }, { materialRecord: { deletedAt: null } }],
@@ -160,7 +160,7 @@ const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<Repai
 
     return [];
   });
-  // 연결한 일지의 공수 합과 사용(USED) 자재 합
+  // 연결한 작업 내역의 공수 합과 사용(USED) 자재 합
   const materials = new Map<string, RepairUsage['materials'][number]>();
 
   for (const link of row.links) {
@@ -390,7 +390,7 @@ export const createRepairService = (
         assertProjectAllows(current.project.status);
 
         if (input.workLogId) {
-          // 같은 프로젝트에서 사후 작업으로 표시한 저장된 일지만 연결할 수 있다 (다른 회사·프로젝트 일지는 없는 것으로 취급)
+          // 같은 프로젝트에서 사후 작업으로 표시한 저장된 작업 내역만 연결할 수 있다 (다른 회사·프로젝트 작업 내역은 없는 것으로 취급)
           const log = await tx.workLog.findFirst({
             where: {
               id: input.workLogId,
@@ -404,7 +404,7 @@ export const createRepairService = (
           if (!log) {
             throw invalid(
               'body.workLogId',
-              '사후 작업으로 표시한 저장된 일지만 연결할 수 있습니다',
+              '사후 작업으로 표시한 저장된 작업 내역만 연결할 수 있습니다',
             );
           }
 
@@ -414,7 +414,7 @@ export const createRepairService = (
               select: { id: true },
             })
           ) {
-            throw invalid('body.workLogId', '이미 연결된 일지입니다');
+            throw invalid('body.workLogId', '이미 연결된 작업 내역입니다');
           }
         } else {
           const record = await tx.materialRecord.findFirst({

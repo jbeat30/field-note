@@ -29,7 +29,7 @@ describe('보수 요청 스키마', () => {
     expect(repairUpdateSchema.safeParse({ content: '수정' }).success).toBe(true);
   });
 
-  it('연결은 일지 또는 자재 기록 중 정확히 하나여야 한다', () => {
+  it('연결은 작업 내역 또는 자재 기록 중 정확히 하나여야 한다', () => {
     expect(repairLinkSchema.safeParse({ workLogId: UUID }).success).toBe(true);
     expect(repairLinkSchema.safeParse({ materialRecordId: UUID }).success).toBe(true);
     expect(repairLinkSchema.safeParse({}).success).toBe(false);

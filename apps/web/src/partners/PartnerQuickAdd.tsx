@@ -64,15 +64,15 @@ export const PartnerQuickAdd = () => {
       <div className="flex flex-col gap-2 sm:flex-row">
         <Select
           aria-label="구분"
+          className="sm:w-56"
           value={kind}
-          onChange={(event) => setKind(event.target.value as PartnerKind)}
-        >
-          {PARTNER_KINDS.map((item) => (
-            <option key={item} value={item}>
-              {PARTNER_KIND_LABELS[item]} ({PARTNER_KIND_HINTS[item]})
-            </option>
-          ))}
-        </Select>
+          onValueChange={setKind}
+          options={PARTNER_KINDS.map((item) => ({
+            value: item,
+            label: PARTNER_KIND_LABELS[item],
+            description: PARTNER_KIND_HINTS[item],
+          }))}
+        />
         <Input
           aria-label="상호"
           placeholder="상호"

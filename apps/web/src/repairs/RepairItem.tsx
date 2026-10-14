@@ -233,7 +233,7 @@ const EditForm = ({
   );
 };
 
-// 사후 작업: 보증 중에 "사후 작업"으로 표시한 일지·자재 기록을 이 요청에 연결해 건별로 쓴 공수·자재를 본다
+// 사후 작업: 보증 중에 "사후 작업"으로 표시한 작업 내역·자재 기록을 이 요청에 연결해 건별로 쓴 공수·자재를 본다
 const AfterServiceLinks = ({
   detail,
   projectId,
@@ -278,7 +278,7 @@ const AfterServiceLinks = ({
           {detail.links.map((item) => {
             const label =
               item.kind === 'WORK_LOG'
-                ? `${formatDay(item.workDate)} 일지 · ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
+                ? `${formatDay(item.workDate)} 작업 내역 · ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
                 : `${formatDay(item.recordDate)} ${item.name}${item.spec ? ` (${item.spec})` : ''} ${MATERIAL_RECORD_KIND_LABELS[item.recordKind]} ${item.quantity} ${item.unit}`;
 
             return (
@@ -305,7 +305,7 @@ const AfterServiceLinks = ({
       )}
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-foreground/70">연결한 일지의 공수</dt>
+          <dt className="text-foreground/70">연결한 작업 내역의 공수</dt>
           <dd className="font-bold">
             {settings.data ? formatWork(detail.usage.minutes, settings.data) : '-'} (
             {detail.usage.workLogCount}건)
@@ -326,20 +326,23 @@ const AfterServiceLinks = ({
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <FormField label="사후 작업 연결">
-              <Select value={target} onChange={(event) => setTarget(event.target.value)}>
-                <option value="">일지·자재 기록 선택</option>
-                {logChoices.map((item) => (
-                  <option key={item.id} value={`log:${item.id}`}>
-                    {formatDay(item.workDate)} 일지
-                  </option>
-                ))}
-                {recordChoices.map((item) => (
-                  <option key={item.id} value={`record:${item.id}`}>
-                    {formatDay(item.recordDate)} {materialName(item.materialId)}{' '}
-                    {MATERIAL_RECORD_KIND_LABELS[item.kind]} {item.quantity}
-                  </option>
-                ))}
-              </Select>
+              <Select
+                value={target}
+                placeholder="작업 내역·자재 기록 선택"
+                onValueChange={setTarget}
+                options={[
+                  ...logChoices.map((item) => ({
+                    value: `log:${item.id}`,
+                    label: `${formatDay(item.workDate)} 작업 내역`,
+                    group: '작업 내역',
+                  })),
+                  ...recordChoices.map((item) => ({
+                    value: `record:${item.id}`,
+                    label: `${formatDay(item.recordDate)} ${materialName(item.materialId)} ${MATERIAL_RECORD_KIND_LABELS[item.kind]} ${item.quantity}`,
+                    group: '자재 기록',
+                  })),
+                ]}
+              />
             </FormField>
           </div>
           <Button
@@ -361,7 +364,7 @@ const AfterServiceLinks = ({
         </div>
       )}
       <p className="text-sm text-foreground/70">
-        보수 작업은 작업일지·자재 기록에서 &quot;사후 작업&quot;으로 표시한 뒤 여기서 연결합니다
+        보수 작업은 작업 내역·자재 기록에서 &quot;사후 작업&quot;으로 표시한 뒤 여기서 연결합니다
       </p>
     </div>
   );

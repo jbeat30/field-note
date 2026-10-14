@@ -33,14 +33,33 @@
   --color-warning: var(--warning);
   --color-warning-subtle: var(--warning-subtle);
   --color-overlay: var(--overlay);
+  --color-control-border: var(--control-border);
+  --color-control-border-hover: var(--control-border-hover);
 
-  /* 모서리: 토스처럼 둥글게 (카드 24px, 입력·버튼 12px) */
-  --radius-sm: 0.5rem;
-  --radius-md: 0.75rem;
-  --radius-lg: 1rem;
-  --radius-xl: 1.5rem;
+  /* 모서리: 입력·버튼 8px, 패널 12px. 알약 모양(rounded-full)은 배지·칩에만 */
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.625rem;
+  --radius-xl: 0.75rem;
+  --radius-control: 0.5rem;
 
-  --shadow-card: 0 1px 2px rgb(0 0 0 / 0.04), 0 4px 16px rgb(0 0 0 / 0.06);
+  /* 글자 단계: 화면 제목(2xl) 22 · 구역 제목(lg) 17 · 본문(base) 15~16 · 보조(sm) 14 · 작은 글자(xs) 12 */
+  --text-2xl: 1.375rem;
+  --text-2xl--line-height: 1.35;
+  --text-xl: 1.1875rem;
+  --text-xl--line-height: 1.4;
+  --text-lg: 1.0625rem;
+  --text-lg--line-height: 1.45;
+
+  /* 굵기: 가변 글꼴이라 한 단계 가볍게 (700은 큰 글자에서 무거워 보임) */
+  --font-weight-bold: 650;
+  --font-weight-semibold: 590;
+
+  --shadow-xs: 0 1px 2px rgb(16 24 40 / 0.05);
+  /* 놓여 있는 패널은 그림자 없이 테두리만. 떠 있는 것(팝오버·메뉴·모달)에만 그림자 */
+  --shadow-card: 0 1px 2px rgb(16 24 40 / 0.06), 0 8px 24px -6px rgb(16 24 40 / 0.14);
+  /* 펼침 목록·팝오버·메뉴 */
+  --shadow-pop: 0 4px 6px -2px rgb(16 24 40 / 0.05), 0 12px 24px -4px rgb(16 24 40 / 0.12);
   --shadow-sheet: 0 -4px 24px rgb(0 0 0 / 0.12);
 
   /* 모션: 짧고 가볍게 */
@@ -64,6 +83,8 @@
   --surface-subtle: #ffffff;
   --surface-nested: #f7f8fa;
   --line: #e5e8eb;
+  --control-border: #cdd3d9;
+  --control-border-hover: #a9b2bc;
   --muted: #f2f4f6;
   --foreground: #191f28;
   --border: #d1d6db;
@@ -96,6 +117,8 @@
     --surface-subtle: #1a1a1a;
     --surface-nested: #232323;
     --line: #2b2f36;
+    --control-border: #444b57;
+    --control-border-hover: #5c6575;
     --muted: #222222;
     --foreground: #f2f4f6;
     --border: #3d434e;
@@ -188,6 +211,42 @@ body {
     transition-duration: 0.01ms !important;
     animation-duration: 0.01ms !important;
   }
+}
+
+/* 기본 체크박스·라디오도 앱 색을 따름 */
+input[type='checkbox'],
+input[type='radio'] {
+  accent-color: var(--primary);
+}
+
+/* 눌러서 동작하는 요소는 마우스 포인터를 손가락 모양으로 (꺼진 요소는 금지 모양) */
+a[href],
+button,
+summary,
+select,
+label[for],
+[role='button'],
+[role='tab'],
+[role='switch'],
+[role='checkbox'],
+[role='radio'],
+[role='option'],
+input[type='checkbox'],
+input[type='radio'],
+input[type='file'],
+input[type='range'],
+label:has(input:not(:disabled)),
+label:has([role='checkbox']),
+label:has([role='switch']) {
+  cursor: pointer;
+}
+
+button:disabled,
+select:disabled,
+[aria-disabled='true'],
+[data-disabled],
+input:disabled {
+  cursor: not-allowed;
 }
 
 /* 인쇄(작업일보 출력): A4 세로, 화면 메뉴는 숨기고 색은 그대로 인쇄 */

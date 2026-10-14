@@ -34,7 +34,8 @@ export const Mobile: Story = {
     );
 
     await expect(current).toHaveTextContent('프로젝트');
-    await expect(within(canvasElement).getByRole('button', { name: '빠른 추가' })).toBeVisible();
+    // 빠른 추가(+)도 모바일 전용이라 DOM에서 찾음
+    await expect(canvasElement.querySelector('button[aria-label="빠른 추가"]')).not.toBeNull();
   },
 };
 

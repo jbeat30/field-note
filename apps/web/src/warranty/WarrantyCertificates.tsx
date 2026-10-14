@@ -190,14 +190,12 @@ export const WarrantyCertificates = ({
             error={errors.documentId}
             hint="보증서 파일은 문서함에 올린 뒤 여기서 고릅니다"
           >
-            <Select value={documentId} onChange={(event) => setDocumentId(event.target.value)}>
-              <option value="">문서 선택</option>
-              {choices.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={documentId}
+              onValueChange={setDocumentId}
+              placeholder="문서 선택"
+              options={choices.map((item) => ({ value: item.id, label: item.title }))}
+            />
           </FormField>
           <FormField label="만료일" error={errors.expiresOn}>
             <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />

@@ -6,7 +6,7 @@ import {
 } from '@field-note/shared';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
-import { Link, useParams } from 'react-router';
+import { Link, useNavigate, useParams } from 'react-router';
 
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
@@ -17,7 +17,8 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
-import { usePartner, useUpdatePartner } from '../partners/usePartners';
+import { getErrorDetailMessage } from '../lib/apiError';
+import { useDeletePartner, usePartner, useUpdatePartner } from '../partners/usePartners';
 
 type CardForm = { name: string; contactName: string; phone: string; memo: string };
 
@@ -34,6 +35,10 @@ const orNull = (value: string) => value.trim() || null;
 
 const CardBody = ({ partner }: { partner: PartnerDetail }) => {
   const update = useUpdatePartner(partner.id);
+  const remove = useDeletePartner(partner.id);
+  const navigate = useNavigate();
+  const [isConfirmingDelete, setConfirmingDelete] = useState(false);
+  const [deleteError, setDeleteError] = useState('');
   const [saved, setSaved] = useState('');
   const {
     register,
@@ -115,13 +120,6 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
               {!partner.isActive && <Badge>숨김</Badge>}
             </>
           }
-          actions={
-            partner.phone ? (
-              <Button asChild variant="secondary">
-                <a href={`tel:${partner.phone}`}>전화 걸기 ({partner.phone})</a>
-              </Button>
-            ) : undefined
-          }
         />
       </div>
 
@@ -171,12 +169,56 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
             사용 여부
           </h2>
           <p className="text-sm text-foreground/70">
-            삭제하지 않고 숨깁니다. 숨겨도 이 업체가 쓰인 프로젝트·자재 기록의 상호는 그대로 남고,
-            새로 고를 때만 보이지 않습니다
+            숨겨도 이 업체가 쓰인 프로젝트·자재 기록의 상호는 그대로 남고, 새로 고를 때만 보이지
+            않습니다
           </p>
           <Button variant="secondary" disabled={update.isPending} onClick={toggleActive}>
             {partner.isActive ? '숨기기' : '다시 사용'}
           </Button>
+        </section>
+
+        <section
+          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+          aria-labelledby="delete-heading"
+        >
+          <h2 id="delete-heading" className="text-lg font-bold">
+            명부에서 삭제
+          </h2>
+          <p className="text-sm text-foreground/70">
+            잘못 등록했거나 쓰지 않는 업체를 지웁니다. 지운 업체는 되돌릴 수 없고, 프로젝트나 자재
+            기록에서 쓰고 있는 업체는 지울 수 없습니다 (그때는 숨기기를 이용해 주세요)
+          </p>
+          {deleteError && <Alert>{deleteError}</Alert>}
+          {isConfirmingDelete ? (
+            <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
+              <p className="text-sm">{partner.name}을(를) 명부에서 삭제할까요?</p>
+              <div className="flex gap-2">
+                <Button
+                  variant="danger"
+                  disabled={remove.isPending}
+                  onClick={() => {
+                    setDeleteError('');
+                    remove.mutate(undefined, {
+                      onSuccess: () => void navigate('/partners', { replace: true }),
+                      onError: (error) => {
+                        setConfirmingDelete(false);
+                        setDeleteError(getErrorDetailMessage(error));
+                      },
+                    });
+                  }}
+                >
+                  삭제 확인
+                </Button>
+                <Button variant="secondary" onClick={() => setConfirmingDelete(false)}>
+                  취소
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <Button variant="danger" onClick={() => setConfirmingDelete(true)}>
+              삭제
+            </Button>
+          )}
         </section>
       </div>
     </div>

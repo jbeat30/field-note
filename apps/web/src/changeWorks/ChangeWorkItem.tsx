@@ -283,14 +283,12 @@ const Evidence = ({
       <div className="flex items-end gap-2">
         <div className="flex-1">
           <FormField label="문서함에서 연결">
-            <Select value={documentId} onChange={(event) => setDocumentId(event.target.value)}>
-              <option value="">문서 선택</option>
-              {choices.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={documentId}
+              onValueChange={setDocumentId}
+              placeholder="문서 선택"
+              options={choices.map((item) => ({ value: item.id, label: item.title }))}
+            />
           </FormField>
         </div>
         <Button

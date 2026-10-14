@@ -13,7 +13,7 @@ import {
   type ErrorCode,
   type StaffingCalendar,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import { listMockChangeWorks } from './changeWorkHandlers';
@@ -32,6 +32,7 @@ import {
   getWorkLogs,
   saveAlertSettings,
 } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -114,7 +115,7 @@ const buildDashboard = (account: MockAccount) => {
     (memo) => memo.projectId === null && Date.parse(memo.createdAt) <= staleBefore,
   );
   const warranty = listMockWarrantyDashboard(account);
-  // 지난달에 저장한 일지가 있는데 확정하지 않았으면 알림 (서버와 같은 규칙)
+  // 지난달에 저장한 작업 내역이 있는데 확정하지 않았으면 알림 (서버와 같은 규칙)
   const prevMonth = previousMonth(today);
   const prevRange = monthRange(prevMonth);
   const hasPrevLogs = logs.some(
@@ -207,7 +208,7 @@ const buildDashboard = (account: MockAccount) => {
  */
 export const createDashboardHandlers = ({ apiError, parseBody }: Helpers) => [
   http.get('/api/v1/dashboard', async () => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 
@@ -217,7 +218,7 @@ export const createDashboardHandlers = ({ apiError, parseBody }: Helpers) => [
   }),
 
   http.get('/api/v1/company/alert-settings', async () => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 
@@ -227,7 +228,7 @@ export const createDashboardHandlers = ({ apiError, parseBody }: Helpers) => [
   }),
 
   http.put('/api/v1/company/alert-settings', async ({ request }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

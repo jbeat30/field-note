@@ -4,7 +4,7 @@ import { formatWork } from '../workSummary/formatWork';
 
 import { useChangeUsage } from './useChangeWorks';
 
-// 변경·추가 작업으로 쓴 공수·자재 (§10.5): 일지와 자재 기록에 "변경·추가 작업" 표시를 한 것의 합계 (정산·협의 근거)
+// 변경·추가 작업으로 쓴 공수·자재 (§10.5): 작업 내역과 자재 기록에 "변경·추가 작업" 표시를 한 것의 합계 (정산·협의 근거)
 export const ChangeWorkUsagePanel = ({ projectId }: { projectId: string }) => {
   const usage = useChangeUsage(projectId);
   const settings = useCompanySettings();
@@ -25,15 +25,15 @@ export const ChangeWorkUsagePanel = ({ projectId }: { projectId: string }) => {
         변경·추가 작업으로 쓴 공수·자재
       </h2>
       <p className="text-sm text-foreground/70">
-        일지와 자재 기록에서 &quot;변경·추가 작업&quot;으로 표시한 것의 합계입니다
+        작업 내역과 자재 기록에서 &quot;변경·추가 작업&quot;으로 표시한 것의 합계입니다
       </p>
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-foreground/70">공수 (저장된 일지)</dt>
+          <dt className="text-foreground/70">공수 (저장된 작업 내역)</dt>
           <dd className="font-bold">{formatWork(minutes, settings.data)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/70">일지 수</dt>
+          <dt className="text-foreground/70">작업 내역 수</dt>
           <dd className="font-bold">{workLogCount}건</dd>
         </div>
       </dl>

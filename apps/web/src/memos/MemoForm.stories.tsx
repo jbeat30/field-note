@@ -4,6 +4,7 @@ import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 import { resetDraftStore } from '../stores/draftStore';
 
 import { MemoForm } from './MemoForm';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Memos/메모 입력',
@@ -36,7 +37,7 @@ export const WithTag: Story = {
     const canvas = within(canvasElement);
 
     await userEvent.type(canvas.getByLabelText('메모'), '샘플 승인');
-    await userEvent.selectOptions(canvas.getByLabelText('태그'), '할 일');
+    await chooseOption(canvas.getByLabelText('태그'), '할 일');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await waitFor(() =>

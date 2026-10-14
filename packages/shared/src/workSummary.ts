@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 공수 집계 (서비스 기획서 §9.6). 집계에는 저장된 일지만 반영하고 임시 저장은 건수만 따로 알린다 (§9.4)
+// 공수 집계 (서비스 기획서 §9.6). 집계에는 저장된 작업 내역만 반영하고 임시 저장은 건수만 따로 알린다 (§9.4)
 // 값은 모두 분 단위이며 MD·MM·소진율은 보여 줄 때 회사 설정으로 환산한다
 
 const dateSchema = z.iso.date();
@@ -33,7 +33,7 @@ export const workSummarySchema = z.object({
   // 공수가 있는 날 수 (프로젝트 기준)
   workedDays: z.number().int(),
   savedLogCount: z.number().int(),
-  // 집계에서 빠진 임시 저장 일지 수
+  // 집계에서 빠진 임시 저장 작업 내역 수
   draftLogCount: z.number().int(),
   byEmployee: z.array(
     z.object({
@@ -41,6 +41,11 @@ export const workSummarySchema = z.object({
       workedDays: z.number().int(),
       totalMinutes: z.number().int(),
       plannedMinutes: z.number().int().nullable(),
+      // 처음·마지막으로 일한 날 (기록이 없으면 null)
+      firstWorkDate: dateSchema.nullable(),
+      lastWorkDate: dateSchema.nullable(),
+      // 이 사람이 한 일(작업 구분)별 시간, 많은 순
+      categories: z.array(z.object({ categoryId: z.uuid(), totalMinutes: z.number().int() })),
     }),
   ),
   byCategory: z.array(z.object({ categoryId: z.uuid(), totalMinutes: z.number().int() })),
@@ -117,10 +122,16 @@ const groupBy = <T>(items: readonly T[], keyOf: (item: T) => string) => {
 };
 
 /**
- * @description 프로젝트의 공수 집계 (직원별·작업 구분별·기간별). 저장된 일지의 항목만 넘겨야 한다
- * @param input 저장된 일지 항목, 임시 저장 건수, 투입 계획
+ * @description 프로젝트의 공수 집계 (직원별·작업 구분별·기간별). 저장된 작업 내역의 항목만 넘겨야 한다
+ * @param input 저장된 작업 내역 항목, 임시 저장 건수, 투입 계획
  * @returns 분 단위 집계 (직원은 공수가 큰 순, 기간은 오래된 순)
  */
+// 작업 구분별 합계 (시간이 많은 순, 같으면 id 순)
+const byCategoryOf = (entries: readonly SummaryEntry[]) =>
+  [...groupBy(entries, (entry) => entry.categoryId)]
+    .map(([categoryId, own]) => ({ categoryId, totalMinutes: sum(own) }))
+    .sort((a, b) => b.totalMinutes - a.totalMinutes || a.categoryId.localeCompare(b.categoryId));
+
 export const summarizeProjectWork = (input: {
   entries: readonly SummaryEntry[];
   savedLogCount: number;
@@ -148,18 +159,20 @@ export const summarizeProjectWork = (input: {
   const byEmployee = [...employeeIds]
     .map((employeeId) => {
       const own = byEmployeeGroups.get(employeeId) ?? [];
+      const dates = own.map((entry) => entry.workDate).sort();
 
       return {
         employeeId,
-        workedDays: new Set(own.map((entry) => entry.workDate)).size,
+        workedDays: new Set(dates).size,
         totalMinutes: sum(own),
         plannedMinutes: planned.get(employeeId) ?? null,
+        firstWorkDate: dates[0] ?? null,
+        lastWorkDate: dates.at(-1) ?? null,
+        categories: byCategoryOf(own),
       };
     })
     .sort((a, b) => b.totalMinutes - a.totalMinutes || a.employeeId.localeCompare(b.employeeId));
-  const byCategory = [...groupBy(entries, (entry) => entry.categoryId)]
-    .map(([categoryId, own]) => ({ categoryId, totalMinutes: sum(own) }))
-    .sort((a, b) => b.totalMinutes - a.totalMinutes || a.categoryId.localeCompare(b.categoryId));
+  const byCategory = byCategoryOf(entries);
   const byPeriod = [...groupBy(entries, (entry) => periodStart(entry.workDate, unit))]
     .map(([start, own]) => ({ periodStart: start, totalMinutes: sum(own) }))
     .sort((a, b) => a.periodStart.localeCompare(b.periodStart));
@@ -178,7 +191,7 @@ export const summarizeProjectWork = (input: {
 };
 
 /**
- * @description 직원의 프로젝트별 투입 이력과 이번 달·올해 공수. 저장된 일지의 항목만 넘겨야 한다
+ * @description 직원의 프로젝트별 투입 이력과 이번 달·올해 공수. 저장된 작업 내역의 항목만 넘겨야 한다
  * @param input 직원의 저장된 항목(프로젝트별), 취소하지 않은 투입, 프로젝트 이름, 오늘(서울)
  * @returns 프로젝트별 이력 (최근 작업한 순, 작업 기록이 없는 투입은 뒤)
  */

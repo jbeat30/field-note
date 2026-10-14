@@ -170,9 +170,9 @@ export const changeWorkDetailSchema = changeWorkSchema.extend({
 
 export type ChangeWorkDetail = z.infer<typeof changeWorkDetailSchema>;
 
-// 변경·추가 작업으로 쓴 공수·자재 (§10.5): 일지·자재 기록의 "변경 작업" 표시를 프로젝트 단위로 합산한 값
+// 변경·추가 작업으로 쓴 공수·자재 (§10.5): 작업 내역·자재 기록의 "변경 작업" 표시를 프로젝트 단위로 합산한 값
 export const changeUsageSchema = z.object({
-  // 변경·추가 작업 표시가 된 저장 일지의 수와 공수 합(분)
+  // 변경·추가 작업 표시가 된 저장 작업 내역의 수와 공수 합(분)
   workLogCount: z.number().int(),
   minutes: z.number().int(),
   // 변경·추가 작업 표시가 된 자재의 사용량 (자재마다 합)

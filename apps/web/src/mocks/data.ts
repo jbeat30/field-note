@@ -29,7 +29,7 @@ export type AssignmentRow = {
   cancelledAt: string | null;
 };
 
-// 목업이 저장하는 작업일지 (경고는 응답할 때 계산)
+// 목업이 저장하는 작업 내역 (경고는 응답할 때 계산)
 export type MockWorkLog = {
   id: string;
   projectId: string;
@@ -85,7 +85,7 @@ export type MockAccount = {
   payRates?: Record<string, PayRate[]>;
   // 투입 (취소한 것 포함)
   assignments?: AssignmentRow[];
-  // 작업일지와 일지별 수정 이력 (일지 id → 오래된 것부터)
+  // 작업 내역와 작업 내역별 수정 이력 (작업 내역 id → 오래된 것부터)
   workLogs?: MockWorkLog[];
   workLogRevisions?: Record<string, WorkLogRevision[]>;
 };
