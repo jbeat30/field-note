@@ -3,6 +3,8 @@ import { expect, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
+import { ProjectLayout } from '../layouts/ProjectLayout';
+import { Route, Routes } from 'react-router';
 
 import { ProjectSummaryPage } from './ProjectSummaryPage';
 
@@ -18,6 +20,15 @@ const meta = {
     },
   },
   loaders: [() => signIn('hanbit')],
+  decorators: [
+    (Story) => (
+      <Routes>
+        <Route element={<ProjectLayout />}>
+          <Route index element={<Story />} />
+        </Route>
+      </Routes>
+    ),
+  ],
 } satisfies Meta<typeof ProjectSummaryPage>;
 
 export default meta;
@@ -50,6 +61,6 @@ export const Default: Story = {
     await expect(sheet.getByText(/민감 자료 1건은 요약에 싣지 않았습니다/)).toBeInTheDocument();
     await expect(sheet.queryByText('도급 계약서')).not.toBeInTheDocument();
     await expect(sheet.queryByText(/\d원/)).not.toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '인쇄·PDF로 저장' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '인쇄·PDF' })).toBeInTheDocument();
   },
 };

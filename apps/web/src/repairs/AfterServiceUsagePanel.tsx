@@ -4,7 +4,7 @@ import { formatWork } from '../workSummary/formatWork';
 
 import { useAfterServiceUsage } from './useRepairs';
 
-// 사후 작업으로 쓴 공수·자재 (§10.6): 일지와 자재 기록에 "사후 작업" 표시를 한 것의 합계 (보증 비용 파악용)
+// 사후 작업으로 쓴 공수·자재 (§10.6): 작업 내역과 자재 기록에 "사후 작업" 표시를 한 것의 합계 (보증 비용 파악용)
 export const AfterServiceUsagePanel = ({ projectId }: { projectId: string }) => {
   const usage = useAfterServiceUsage(projectId);
   const settings = useCompanySettings();
@@ -25,15 +25,15 @@ export const AfterServiceUsagePanel = ({ projectId }: { projectId: string }) => 
         사후 작업으로 쓴 공수·자재
       </h2>
       <p className="text-sm text-foreground/70">
-        일지와 자재 기록에서 &quot;사후 작업&quot;으로 표시한 것의 합계입니다
+        작업 내역과 자재 기록에서 &quot;사후 작업&quot;으로 표시한 것의 합계입니다
       </p>
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-foreground/70">공수 (저장된 일지)</dt>
+          <dt className="text-foreground/70">공수 (저장된 작업 내역)</dt>
           <dd className="font-bold">{formatWork(minutes, settings.data)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/70">일지 수</dt>
+          <dt className="text-foreground/70">작업 내역 수</dt>
           <dd className="font-bold">{workLogCount}건</dd>
         </div>
       </dl>

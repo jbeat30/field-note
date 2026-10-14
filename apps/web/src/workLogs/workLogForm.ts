@@ -8,7 +8,7 @@ import {
   type WorkLogEntry,
 } from '@field-note/shared';
 
-// 일지 입력 폼의 한 줄: 직원 × 작업 구분 × 공수. 입력 칸은 회사의 공수 입력 방식(비율 MD·시간)으로 다루고, 저장은 분으로 한다
+// 작업 내역 입력 폼의 한 줄: 직원 × 작업 구분 × 공수. 입력 칸은 회사의 공수 입력 방식(비율 MD·시간)으로 다루고, 저장은 분으로 한다
 export type EntryLine = {
   // 화면에서 줄을 구분하는 값 (서버 값이 아님)
   key: string;

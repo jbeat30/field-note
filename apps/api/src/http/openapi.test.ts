@@ -56,6 +56,7 @@ describe('OpenAPI 계약', () => {
       execFileSync('pnpm', ['exec', 'tsx', 'scripts/generate-openapi.ts', '--check'], {
         cwd: apiRoot,
         stdio: 'pipe',
+        shell: process.platform === 'win32',
       }),
     ).not.toThrow();
   });

@@ -8,7 +8,7 @@ import {
   type ErrorCode,
   type ProjectCompletionSummary,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 import { listMockChangeWorks } from './changeWorkHandlers';
 import type { MockAccount } from './data';
@@ -26,6 +26,7 @@ import {
   getProjects,
   getWorkLogs,
 } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -59,7 +60,7 @@ const balanceOf = (account: MockAccount, projectId: string) => {
  */
 export const createCompletionHandlers = ({ apiError }: Helpers) => [
   http.get('/api/v1/projects/:id/transition-notices', async ({ request, params }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 
@@ -116,7 +117,7 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
   }),
 
   http.get('/api/v1/projects/:id/summary', async ({ params }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

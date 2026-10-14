@@ -1,11 +1,15 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { Route, Routes } from 'react-router';
 import { expect, fireEvent, userEvent, waitFor, within } from 'storybook/test';
+
+import { ProjectLayout } from '../layouts/ProjectLayout';
 
 import { resetMockCredentials } from '../mocks/credentialHandlers';
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { findAccount, getProjects, saveProjects, signIn } from '../mocks/state';
 
 import { ProjectCardPage } from './ProjectCardPage';
+import { chooseOption } from '../lib/storyActions';
 
 const routerFor = (name: string) => ({
   initialEntries: [`/projects/${DEMO_PROJECTS.find((project) => project.name === name)!.id}`],
@@ -16,6 +20,16 @@ const meta = {
   title: 'Pages/프로젝트 카드',
   component: ProjectCardPage,
   parameters: { router: routerFor('A동 외장 판금 공사') },
+  // 머리(이름·상태·메뉴)는 프로젝트 작업 공간 틀이 그리므로 틀 안에서 시험한다. 모든 구역을 한 화면에 그려 확인
+  decorators: [
+    (Story) => (
+      <Routes>
+        <Route element={<ProjectLayout />}>
+          <Route index element={<Story />} />
+        </Route>
+      </Routes>
+    ),
+  ],
   loaders: [
     () => {
       // 스토리가 다시 그려져도 필요 자격 상태가 이어지지 않게 처음으로 되돌림
@@ -46,8 +60,8 @@ export const Default: Story = {
     await expect(canvas.getByLabelText('출입·주의 메모')).toHaveValue(
       '정문 출입증 필요, 작업 시간 08~18시, 주차는 지하 2층',
     );
-    await expect(canvas.getByLabelText('고객')).toHaveDisplayValue('가나다건설');
-    await expect(canvas.getByLabelText('담당자')).toHaveDisplayValue('송소장 (소장)');
+    await expect(canvas.getByLabelText('고객')).toHaveTextContent('가나다건설');
+    await expect(canvas.getByLabelText('담당자')).toHaveTextContent('송소장');
     await expect(canvas.getByLabelText('판금')).toBeChecked();
     await expect(canvas.getByLabelText('설비')).not.toBeChecked();
     await expect(canvas.getByLabelText('계약일')).toHaveValue('2026-06-20');
@@ -125,7 +139,7 @@ export const HiddenClientStillShown: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByLabelText('고객')).toHaveDisplayValue('옛날상가 (숨김)');
+    await expect(await canvas.findByLabelText('고객')).toHaveTextContent('옛날상가 (숨김)');
     await expect(canvas.getByText('현재 상태').nextElementSibling).toHaveTextContent('완료');
   },
 };
@@ -157,6 +171,13 @@ export const NotFound: Story = {
 
 const panel = (canvasElement: HTMLElement) => within(canvasElement);
 
+const statusAction = async (canvas: ReturnType<typeof within>, name: string) => {
+  const button = canvas.queryByRole('button', { name });
+  if (button) return button;
+  await userEvent.click(await canvas.findByRole('button', { name: '그 밖의 처리' }));
+  return within(document.body).findByRole('menuitem', { name });
+};
+
 export const StatusPanelInProgress: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
@@ -164,9 +185,9 @@ export const StatusPanelInProgress: Story = {
     await expect(await canvas.findByText('실제 시작일')).toBeInTheDocument();
     await expect(canvas.getByText('2026-07-15', { selector: 'dd' })).toBeInTheDocument();
     // 진행 중에는 중단·완료·취소로 바꿀 수 있고 재개는 없음
-    await expect(canvas.getByRole('button', { name: '작업 중단' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '완료 처리' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '프로젝트 취소' })).toBeInTheDocument();
+    await expect(await statusAction(canvas, '프로젝트 취소')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
     await expect(canvas.queryByRole('button', { name: '작업 재개' })).not.toBeInTheDocument();
     // 변경 이력
     await expect(await canvas.findByText(/2026-07-15 예정 → 진행/)).toBeInTheDocument();
@@ -178,7 +199,9 @@ export const StartPlannedProject: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await expect(await canvas.findByText('아직 시작 전')).toBeInTheDocument();
+    await expect((await canvas.findByText('실제 시작일')).nextElementSibling).toHaveTextContent(
+      '-',
+    );
     await userEvent.click(await canvas.findByRole('button', { name: '작업 시작' }));
     await userEvent.click(
       within(await canvas.findByRole('form', { name: '작업 시작 확인' })).getByRole('button', {
@@ -189,9 +212,10 @@ export const StartPlannedProject: Story = {
     await expect(await canvas.findByText("'진행' 상태로 바꿨습니다")).toBeInTheDocument();
     await expect(canvas.getByText('현재 상태').nextElementSibling).toHaveTextContent('진행');
     // 실제 시작일이 오늘로 기록되고 이력이 한 건 생김
-    await expect(canvas.queryByText('아직 시작 전')).not.toBeInTheDocument();
+    await expect(canvas.getByText('실제 시작일').nextElementSibling).not.toHaveTextContent(/^-$/);
     await expect(await canvas.findByText(/예정 → 진행/)).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '작업 중단' })).toBeInTheDocument();
+    await expect(await statusAction(canvas, '작업 중단')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
   },
 };
 
@@ -199,7 +223,7 @@ export const SuspendNeedsReason: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '작업 중단' }));
+    await userEvent.click(await statusAction(canvas, '작업 중단'));
 
     const form = within(await canvas.findByRole('form', { name: '작업 중단 확인' }));
 
@@ -214,7 +238,7 @@ export const SuspendWithReasonAndResume: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '작업 중단' }));
+    await userEvent.click(await statusAction(canvas, '작업 중단'));
 
     const form = within(await canvas.findByRole('form', { name: '작업 중단 확인' }));
 
@@ -283,8 +307,8 @@ export const CompleteShowsNotices: Story = {
     const form = within(await canvas.findByRole('form', { name: '완료 처리 확인' }));
     const notices = within(await form.findByRole('list', { name: '확인할 것' }));
 
-    // 더미: 임시 저장 일지 1건, 진행률 40%, 협의 중 변경 작업 1건
-    await expect(notices.getByText(/임시 저장된 작업일지가 1건/)).toBeInTheDocument();
+    // 더미: 임시 저장 작업 내역 1건, 진행률 40%, 협의 중 변경 작업 1건
+    await expect(notices.getByText(/임시 저장된 작업 내역가 1건/)).toBeInTheDocument();
     await expect(notices.getByText(/진행률이 40%입니다/)).toBeInTheDocument();
     await expect(notices.getByText(/협의 중인 변경·추가 작업이 1건/)).toBeInTheDocument();
 
@@ -298,7 +322,7 @@ export const CancelMakesProjectReadOnly: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '프로젝트 취소' }));
+    await userEvent.click(await statusAction(canvas, '프로젝트 취소'));
 
     const form = within(await canvas.findByRole('form', { name: '프로젝트 취소 확인' }));
 
@@ -326,7 +350,8 @@ export const SuspendedProjectHistory: Story = {
     await expect(await canvas.findByText('사유: 철골 자재 납품 지연으로 중단')).toBeInTheDocument();
     // 중단 중에는 재개와 취소만 가능
     await expect(canvas.getByRole('button', { name: '작업 재개' })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '프로젝트 취소' })).toBeInTheDocument();
+    await expect(await statusAction(canvas, '프로젝트 취소')).toBeInTheDocument();
+    await userEvent.keyboard('{Escape}');
     await expect(canvas.queryByRole('button', { name: '완료 처리' })).not.toBeInTheDocument();
     // 최근 변경(중단)이 이력 맨 앞
     const items = canvas
@@ -445,7 +470,7 @@ export const WarrantyEditsOnlyManagerAndMemo: Story = {
     await expect(await canvas.findByLabelText('프로젝트명')).toBeDisabled();
     await expect(canvas.getByLabelText('현장 이름')).toBeDisabled();
     await expect(canvas.getByLabelText('고객')).toBeDisabled();
-    await expect(canvas.getByLabelText('담당자', { selector: 'select' })).toBeEnabled();
+    await expect(canvas.getByLabelText('담당자', { selector: 'button' })).toBeEnabled();
     await expect(canvas.getByLabelText('메모')).toBeEnabled();
 
     await userEvent.type(canvas.getByLabelText('메모'), ' 보증 메모');
@@ -455,220 +480,27 @@ export const WarrantyEditsOnlyManagerAndMemo: Story = {
   },
 };
 
-// 투입 패널은 목록이 도착한 뒤에 그려지므로 기다렸다가 찾는다
-const assignForm = async (canvas: ReturnType<typeof within>) =>
-  within(await canvas.findByRole('form', { name: '투입 등록' }));
-
-export const AssignmentsListed: Story = {
+// 투입 인원: 작업 달력 기록을 사람별로 모은 통계
+export const PeopleStats: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
-    const list = within(await canvas.findByRole('list', { name: '투입 목록' }));
+    const table = within(await canvas.findByRole('table', { name: '사람별 통계' }));
 
-    await expect(await list.findByText('정판금')).toBeInTheDocument();
-    // 취소한 투입(오전기)은 기본 목록에 없음
-    await expect(list.queryByText('오전기')).not.toBeInTheDocument();
-    // 계획 공수(분 → MD·시간)와 기간
-    await expect(
-      await canvas.findByText(/2026-08-01 ~ 2026-11-30 · 계획 40MD \(320시간\)/),
-    ).toBeInTheDocument();
-    await expect(canvas.getByText(/2026-09-01 ~ 2026-10-15 · 계획 공수 없음/)).toBeInTheDocument();
+    // 시드: A동 외장 판금 공사 9월 1~4일 기록
+    await expect(await table.findByText('정판금')).toBeInTheDocument();
+    await expect(table.getByText(/합계 \d+명/)).toBeInTheDocument();
+    await expect(canvas.getByText('총 일한 시간')).toBeInTheDocument();
   },
 };
 
-export const OverlapWarningShown: Story = {
+export const PeopleStatsThisMonthEmpty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
 
-    await canvas.findByRole('list', { name: '투입 목록' });
+    await canvas.findByRole('table', { name: '사람별 통계' });
+    await userEvent.click(canvas.getByRole('radio', { name: '이번 달' }));
 
-    // 최설치·한용접은 중단된 B동 덕트 설치와, 정판금은 예정인 미래오피스 천장 마감과 기간이 겹침
-    await expect(
-      (await canvas.findAllByText(/'B동 덕트 설치'\(2026-003\)에도 투입되어 있습니다/)).length,
-    ).toBeGreaterThanOrEqual(2);
-    await expect(
-      canvas.getByText(
-        /2026-11-02 ~ 2026-11-30에 '미래오피스 천장 마감'\(2026-002\)에도 투입되어 있습니다/,
-      ),
-    ).toBeInTheDocument();
-  },
-};
-
-export const AddAssignment: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-    const form = await assignForm(canvas);
-
-    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
-    await userEvent.type(form.getByLabelText('계획 공수 (MD)'), '10');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
-
-    await expect(await canvas.findByText(/오전기님을 투입했습니다/)).toBeInTheDocument();
-    await expect(
-      await canvas.findByText(/2026-07-15 ~ 2026-11-30 · 계획 10MD \(80시간\)/),
-    ).toBeInTheDocument();
-  },
-};
-
-export const LeftEmployeeNotSelectable: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-    const select = await (await assignForm(canvas)).findByLabelText('직원');
-
-    await within(select).findByRole('option', { name: '오전기' });
-    await expect(within(select).queryByRole('option', { name: '박퇴사' })).not.toBeInTheDocument();
-    // 휴직 직원은 고를 수 있고 표시가 붙음
-    await expect(
-      within(select).getByRole('option', { name: '이조공 (조공) (휴직)' }),
-    ).toBeInTheDocument();
-  },
-};
-
-export const AssignmentOutsideProjectPeriod: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-    const form = await assignForm(canvas);
-
-    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
-    fireEvent.change(form.getByLabelText('투입 시작일'), { target: { value: '2026-07-01' } });
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
-
-    await expect(
-      await form.findByText(/프로젝트 시작 예정일\(2026-07-15\) 이후여야 합니다/),
-    ).toBeInTheDocument();
-  },
-};
-
-export const AssignmentNeedsEmployee: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-
-    await userEvent.click((await assignForm(canvas)).getByRole('button', { name: '투입 등록' }));
-
-    await expect(await canvas.findByText('직원을 선택해 주세요')).toBeInTheDocument();
-  },
-};
-
-export const SameProjectOverlapRejected: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-    const form = await assignForm(canvas);
-
-    await within(await form.findByLabelText('직원')).findByRole('option', {
-      name: '정판금 (반장)',
-    });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '정판금 (반장)');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
-
-    await expect(await form.findByText(/이미 투입되어 있습니다/)).toBeInTheDocument();
-  },
-};
-
-// 다른 프로젝트와 겹치면 막지 않고 저장한 뒤 겹치는 구간을 알려 줌
-export const OverlapWarningAfterAdd: Story = {
-  parameters: { router: routerFor('미래오피스 천장 마감') },
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-    const form = await assignForm(canvas);
-
-    await within(await form.findByLabelText('직원')).findByRole('option', {
-      name: '최설치 (기공)',
-    });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '최설치 (기공)');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
-
-    await expect(await canvas.findByText(/최설치님을 투입했습니다/)).toBeInTheDocument();
-    await expect(await canvas.findByText('확인이 필요합니다')).toBeInTheDocument();
-    await expect(
-      canvas.getAllByText(
-        /2026-11-02 ~ 2026-11-30에 'A동 외장 판금 공사'\(2026-001\)에도 투입되어 있습니다/,
-      ).length,
-    ).toBeGreaterThan(0);
-  },
-};
-
-export const EditAssignment: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-
-    await userEvent.click(await canvas.findByRole('button', { name: '김일용 투입 수정' }));
-
-    const form = within(await canvas.findByRole('form', { name: '김일용 투입 수정' }));
-    const end = form.getByLabelText('투입 종료일');
-
-    fireEvent.change(end, { target: { value: '2026-10-31' } });
-    await userEvent.type(form.getByLabelText('계획 공수 (MD)'), '5');
-    await userEvent.click(form.getByRole('button', { name: '저장' }));
-
-    await expect(
-      await canvas.findByText(/2026-09-01 ~ 2026-10-31 · 계획 5MD \(40시간\)/),
-    ).toBeInTheDocument();
-  },
-};
-
-export const EditAssignmentOutsidePeriod: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-
-    await userEvent.click(await canvas.findByRole('button', { name: '김일용 투입 수정' }));
-
-    const form = within(await canvas.findByRole('form', { name: '김일용 투입 수정' }));
-    const end = form.getByLabelText('투입 종료일');
-
-    fireEvent.change(end, { target: { value: '2027-03-01' } });
-    await userEvent.click(form.getByRole('button', { name: '저장' }));
-
-    await expect(
-      await form.findByText(/프로젝트 종료 예정일\(2026-11-30\) 이전이어야 합니다/),
-    ).toBeInTheDocument();
-  },
-};
-
-export const CancelAssignment: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-
-    await userEvent.click(await canvas.findByRole('button', { name: '김일용 투입 취소' }));
-    await userEvent.click(await canvas.findByRole('button', { name: '취소 확인' }));
-
-    const list = within(canvas.getByRole('list', { name: '투입 목록' }));
-
-    await waitFor(() => expect(list.queryByText('김일용')).not.toBeInTheDocument());
-    await expect(list.getByText('정판금')).toBeInTheDocument();
-  },
-};
-
-export const CompletedProjectLocksAssignments: Story = {
-  parameters: { router: routerFor('옛날상가 간판 교체') },
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-
-    await expect(
-      await canvas.findByText(/상태의 프로젝트에는 투입을 바꿀 수 없습니다/),
-    ).toBeInTheDocument();
-    await expect(canvas.queryByRole('form', { name: '투입 등록' })).not.toBeInTheDocument();
-  },
-};
-
-export const SuspendedProjectNeedsConfirmation: Story = {
-  parameters: { router: routerFor('B동 덕트 설치') },
-  play: async ({ canvasElement }) => {
-    const canvas = panel(canvasElement);
-    const form = await assignForm(canvas);
-
-    await within(await form.findByLabelText('직원')).findByRole('option', { name: '오전기' });
-    await userEvent.selectOptions(form.getByLabelText('직원'), '오전기');
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
-
-    await expect(
-      await canvas.findByText(/중단 중인 프로젝트입니다. 투입하려면 확인이 필요합니다/),
-    ).toBeInTheDocument();
-
-    await userEvent.click(canvas.getByLabelText(/투입을 바꾸는 것을 확인합니다/));
-    await userEvent.click(form.getByRole('button', { name: '투입 등록' }));
-
-    await expect(await canvas.findByText(/오전기님을 투입했습니다/)).toBeInTheDocument();
+    await expect(await canvas.findByText('이 기간에 기록한 사람이 없습니다')).toBeInTheDocument();
   },
 };
 
@@ -746,7 +578,7 @@ export const ShrinkBlockedByAssignments: Story = {
   },
 };
 
-// 더미 일지: 저장 3건(공수 합 7.0 MD) + 임시 저장 1건은 집계 제외
+// 더미 작업 내역: 저장 3건(공수 합 7.0 MD) + 임시 저장 1건은 집계 제외
 export const WorkSummary: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -757,7 +589,7 @@ export const WorkSummary: Story = {
     ).toBeInTheDocument();
     await expect(summary.getByText('0.32 MM')).toBeInTheDocument();
     await expect(
-      summary.getByText(/임시 저장 일지 1건은 집계에 포함되지 않았습니다/),
+      summary.getByText(/임시 저장 작업 내역 1건은 집계에 포함되지 않았습니다/),
     ).toBeInTheDocument();
     await expect(summary.getByText('6%')).toBeInTheDocument();
 
@@ -790,7 +622,7 @@ export const WorkSummaryDateRangeAndMonthly: Story = {
     );
     await expect(summary.getByText('기간 선택 중에는 표시하지 않음')).toBeInTheDocument();
 
-    await userEvent.selectOptions(summary.getByLabelText('기간 묶음'), '월별');
+    await chooseOption(summary.getByLabelText('기간 묶음'), '월별');
     await expect(await summary.findByText('2026-09월')).toBeInTheDocument();
   },
 };
@@ -799,28 +631,33 @@ export const ProgressPanel: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // 더미 진행률 기록 두 건(25%, 40%)이 최근순으로 보이고 현재 진행률은 40%
+    // 더미 진행률 기록 두 건(25%, 40%), 현재 진행률은 40%
     const panel = within(await canvas.findByRole('region', { name: '진행 현황' }));
 
-    await expect(await panel.findByText('진행률 이력')).toBeInTheDocument();
+    await expect(await panel.findByText('진행률 이력 (2)')).toBeInTheDocument();
     await expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('40%');
 
-    // 범위를 벗어난 값은 서버에 보내기 전에 막는다
-    await userEvent.type(panel.getByLabelText('진행률 (%)'), '120');
-    await userEvent.click(panel.getByRole('button', { name: '진행률 기록' }));
+    // 진행률 바꾸기: 범위를 벗어난 값은 서버에 보내기 전에 막는다
+    await userEvent.click(panel.getByRole('button', { name: '진행률 바꾸기' }));
+
+    const dialog = within(
+      await within(document.body).findByRole('dialog', { name: '진행률 바꾸기' }),
+    );
+
+    await userEvent.clear(dialog.getByLabelText('진행률 (%)'));
+    await userEvent.type(dialog.getByLabelText('진행률 (%)'), '120');
+    await userEvent.click(dialog.getByRole('button', { name: '진행률 기록' }));
     await expect(
-      await panel.findByText('0부터 100 사이의 정수를 입력해 주세요'),
+      await dialog.findByText('0부터 100 사이의 정수를 입력해 주세요'),
     ).toBeInTheDocument();
 
-    // 정상 값은 기록되어 현재 진행률과 이력이 바뀐다
-    await userEvent.clear(panel.getByLabelText('진행률 (%)'));
-    await userEvent.type(panel.getByLabelText('진행률 (%)'), '55');
-    await userEvent.type(panel.getByLabelText('메모 (선택)'), '도장 시작');
-    await userEvent.click(panel.getByRole('button', { name: '진행률 기록' }));
+    // 빠른 선택 단추로 고르면 기록되어 현재 진행률과 이력이 바뀐다
+    await userEvent.click(dialog.getByRole('button', { name: '60%' }));
+    await userEvent.click(dialog.getByRole('button', { name: '진행률 기록' }));
     await waitFor(() =>
-      expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('55%'),
+      expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('60%'),
     );
-    await expect(await panel.findByText(/도장 시작/)).toBeInTheDocument();
+    await expect(await panel.findByText('진행률 이력 (3)')).toBeInTheDocument();
   },
 };
 
@@ -855,16 +692,5 @@ export const RequiredCredentials: Story = {
 
     await expect(await panel.findByText('필요 자격을 저장했습니다')).toBeInTheDocument();
     await expect(panel.getByRole('checkbox', { name: '용접 기능사' })).toBeChecked();
-  },
-};
-
-export const CredentialWarnings: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    // 필요 자격(안전교육 이수증)이 없는 투입 직원에게 경고가 붙는다
-    await expect(
-      (await canvas.findAllByText(/필요 자격 '안전교육 이수증': 자격 없음/)).length,
-    ).toBeGreaterThan(0);
   },
 };

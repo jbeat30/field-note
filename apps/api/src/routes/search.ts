@@ -19,7 +19,7 @@ export const registerSearchRoutes = (registry: RouteRegistry, search?: SearchSer
       method: 'get',
       path: '/search',
       summary:
-        '통합 검색 (프로젝트·직원·메모·자료·일지, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색)',
+        '통합 검색 (프로젝트·직원·메모·자료·작업 내역, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색)',
       auth: 'required',
       request: { query: searchQuerySchema },
       response: { status: 200, schema: searchResponseSchema },

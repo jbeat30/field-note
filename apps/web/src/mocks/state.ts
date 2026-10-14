@@ -512,7 +512,7 @@ export const getAssignments = (account: MockAccount): AssignmentRow[] => {
   return account.assignments;
 };
 
-// 작업일지: 처음 조회할 때 더미 일지(DB 시드와 같은 원본)로 채움 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결)
+// 작업 내역: 처음 조회할 때 더미 작업 내역(DB 시드와 같은 원본)로 채움 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결)
 export const getWorkLogs = (account: MockAccount): MockWorkLog[] => {
   if (!account.workLogs) {
     const projects = getProjects(account);

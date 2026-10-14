@@ -186,7 +186,7 @@ describe('변경·추가 작업 목업', () => {
     expect((await unlink()).response.status).toBe(404);
   });
 
-  it('변경 표시한 일지 공수를 합산하고 없는 프로젝트는 404다', async () => {
+  it('변경 표시한 작업 내역 공수를 합산하고 없는 프로젝트는 404다', async () => {
     const { a } = await setup();
     const usage = changeUsageSchema.parse(
       (await client.GET('/api/v1/projects/{id}/change-usage', { params: { path: { id: a } } }))

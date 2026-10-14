@@ -110,9 +110,11 @@ export const ChangeWorkForm = ({
           onChange={(event) => setContent(event.target.value)}
         />
       </FormField>
-      <Button type="submit" disabled={create.isPending}>
-        {create.isPending ? '기록 중' : '기록하기'}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" size="sm" disabled={create.isPending}>
+          {create.isPending ? '저장 중' : '저장'}
+        </Button>
+      </div>
     </form>
   );
 };

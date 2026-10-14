@@ -132,14 +132,12 @@ export const WarrantyForm = ({
         <Select
           value={startBasis}
           disabled={!editable}
-          onChange={(event) => setStartBasis(event.target.value as WarrantyStartBasis)}
-        >
-          {WARRANTY_START_BASES.map((value) => (
-            <option key={value} value={value}>
-              {WARRANTY_START_BASIS_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          onValueChange={setStartBasis}
+          options={WARRANTY_START_BASES.map((value) => ({
+            value: value,
+            label: WARRANTY_START_BASIS_LABELS[value],
+          }))}
+        />
       </FormField>
       {startBasis === 'ACTUAL_END' ? (
         <p className="text-sm text-foreground/70">

@@ -6,13 +6,14 @@ import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { findAccount, getWorkLogs, signIn } from '../mocks/state';
 import { useDraftStore } from '../stores/draftStore';
 
-import { WorkLogPage } from './WorkLogPage';
+import { ProjectWorkDayPage } from './ProjectWorkDayPage';
+import { chooseOption } from '../lib/storyActions';
 
 const projectId = DEMO_PROJECTS.find((project) => project.name === 'A동 외장 판금 공사')!.id;
 
 const routerFor = (date: string) => ({
-  initialEntries: [`/work-logs?project=${projectId}&date=${date}`],
-  path: '/work-logs',
+  initialEntries: [`/projects/${projectId}/work/${date}`],
+  path: '/projects/:id/work/:date',
 });
 
 const NEW_DAY = '2026-09-08';
@@ -31,17 +32,25 @@ const seedWorkLogDraft = (date: string, baseVersion: number | null, content: str
 };
 
 const meta = {
-  title: 'Pages/작업일지 임시 저장',
-  component: WorkLogPage,
+  title: 'Pages/작업 내역 임시 저장',
+  component: ProjectWorkDayPage,
   parameters: { router: routerFor(NEW_DAY) },
   loaders: [() => signIn('hanbit')],
-} satisfies Meta<typeof WorkLogPage>;
+} satisfies Meta<typeof ProjectWorkDayPage>;
 
 export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 일지를 쓰다가 닫은 뒤 다시 열면 입력이 그대로 복구되고 안내가 나온다
+// 하루 작업은 빈 채로 시작하므로, 이 현장 투입 인원을 회사 직원 표에서 고르는 시험 도우미
+const fillTeam = async (canvas: ReturnType<typeof within>) => {
+  for (const name of ['정판금', '최설치', '한용접', '김일용']) {
+    await userEvent.click(await canvas.findByRole('checkbox', { name: `${name} 일함` }));
+  }
+  await canvas.findByLabelText('정판금 일한 시간(시간)');
+};
+
+// 작업 내역을 쓰다가 닫은 뒤 다시 열면 입력이 그대로 복구되고 안내가 나온다
 export const RestoresUnsavedInput: Story = {
   beforeEach: () => seedWorkLogDraft(NEW_DAY, null, '복구될 작업 내용'),
   play: async ({ canvasElement }) => {
@@ -79,7 +88,7 @@ export const AutoSavesWhileTypingAndClearsOnSave: Story = {
     const canvas = within(canvasElement);
     const key = draftKey('workLog', projectId, NEW_DAY);
 
-    await canvas.findByRole('checkbox', { name: '정판금 출근' });
+    await fillTeam(canvas);
     // 아직 아무것도 고치지 않았으면 초안이 없음
     await expect(useDraftStore.getState().drafts[key]).toBeUndefined();
 
@@ -92,11 +101,11 @@ export const AutoSavesWhileTypingAndClearsOnSave: Story = {
       ).toBe('쓰는 중인 내용'),
     );
 
-    await userEvent.selectOptions(canvas.getByLabelText('작업 구분 일괄 지정'), '설치');
+    await chooseOption(canvas.getByLabelText('작업 구분 일괄 지정'), '설치');
     await userEvent.click(canvas.getByRole('button', { name: '모두 적용' }));
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByText(/저장했습니다 \(버전 1\)/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/저장됐습니다 · 버전 1/)).toBeInTheDocument();
     await waitFor(() => expect(useDraftStore.getState().drafts[key]).toBeUndefined());
   },
 };
@@ -107,7 +116,7 @@ export const NoDraftWhenBackToOriginal: Story = {
     const canvas = within(canvasElement);
     const key = draftKey('workLog', projectId, NEW_DAY);
 
-    await canvas.findByRole('checkbox', { name: '정판금 출근' });
+    await canvas.findByLabelText('작업 내용');
     await fireEvent.change(canvas.getByLabelText('작업 내용'), { target: { value: '임시' } });
     await waitFor(() => expect(useDraftStore.getState().drafts[key]).toBeDefined());
     await fireEvent.change(canvas.getByLabelText('작업 내용'), { target: { value: '' } });
@@ -115,7 +124,7 @@ export const NoDraftWhenBackToOriginal: Story = {
   },
 };
 
-// 그사이 서버의 일지가 바뀌었으면(다른 기기) 자동으로 덮지 않고 불러올지 묻는다
+// 그사이 서버의 작업 내역이 바뀌었으면(다른 기기) 자동으로 덮지 않고 불러올지 묻는다
 export const StaleDraftAsksBeforeLoading: Story = {
   parameters: { router: routerFor(SAVED_DAY) },
   beforeEach: () => seedWorkLogDraft(SAVED_DAY, 99, '예전 기기에서 쓰던 내용'),
@@ -156,10 +165,10 @@ export const StaleDraftCanBeDiscarded: Story = {
   },
 };
 
-// 서버 버전이 같은 초안은 그대로 복구 (이미 저장된 일지를 고치다 닫은 경우)
+// 서버 버전이 같은 초안은 그대로 복구 (이미 저장된 작업 내역을 고치다 닫은 경우)
 export const RestoresEditOfSavedLog: Story = {
   parameters: { router: routerFor(SAVED_DAY) },
-  // 서버에 있는 일지의 현재 버전과 같은 버전에서 쓰기 시작한 초안
+  // 서버에 있는 작업 내역의 현재 버전과 같은 버전에서 쓰기 시작한 초안
   beforeEach: () => {
     const saved = getWorkLogs(findAccount('hanbit')!).find((log) => log.workDate === SAVED_DAY)!;
 
@@ -180,7 +189,8 @@ export const BrokenDraftIsIgnored: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByRole('checkbox', { name: '정판금 출근' })).toBeChecked();
+    await fillTeam(canvas);
+    await expect(canvas.getByRole('checkbox', { name: '정판금 일함' })).toBeChecked();
     await expect(canvas.queryByText(/복구했습니다/)).not.toBeInTheDocument();
   },
 };

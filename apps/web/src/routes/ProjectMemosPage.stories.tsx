@@ -6,6 +6,7 @@ import { signIn } from '../mocks/state';
 import { resetDraftStore } from '../stores/draftStore';
 
 import { ProjectMemosPage } from './ProjectMemosPage';
+import { chooseOption } from '../lib/storyActions';
 
 const projectId = DEMO_PROJECTS.find((project) => project.name === 'A동 외장 판금 공사')!.id;
 
@@ -38,7 +39,7 @@ export const FilterByTag: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('철거 후 바닥 상태 불량, 보수 필요');
-    await userEvent.selectOptions(canvas.getByLabelText('태그로 거르기'), '이슈');
+    await chooseOption(canvas.getByLabelText('태그로 거르기'), '이슈');
 
     await waitFor(() => expect(canvas.getAllByRole('button', { name: '삭제' })).toHaveLength(1));
   },
@@ -63,7 +64,7 @@ export const SaveMemo: Story = {
 
     await canvas.findByText('철거 후 바닥 상태 불량, 보수 필요');
     await userEvent.type(canvas.getByLabelText('메모'), '업체 방문 일정 잡기');
-    await userEvent.selectOptions(canvas.getByLabelText('태그'), '할 일');
+    await chooseOption(canvas.getByLabelText('태그'), '할 일');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     // 입력 칸에도 같은 글이 있으므로 목록의 메모(문단)로 찾음

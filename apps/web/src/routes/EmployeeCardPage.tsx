@@ -5,7 +5,7 @@ import {
   type EmployeeDetail,
 } from '@field-note/shared';
 import { useState } from 'react';
-import { useForm } from 'react-hook-form';
+import { useForm, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
 import { Link, useParams } from 'react-router';
 
@@ -76,10 +76,14 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
   const {
     register,
     handleSubmit,
+    control,
+    setValue,
     setError,
     reset,
     formState: { errors, isDirty },
   } = useForm<CardForm>({ values: toForm(employee) });
+  const jobTypeId = useWatch({ control, name: 'jobTypeId' });
+  const workerTypeId = useWatch({ control, name: 'workerTypeId' });
 
   const applyErrors = (error: unknown) => {
     const { byField, root } = splitServerErrors(error, FIELDS);
@@ -205,7 +209,8 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
                   kind="JOB_TYPE"
                   options={options.data ?? []}
                   keepId={employee.jobTypeId}
-                  {...register('jobTypeId')}
+                  value={jobTypeId}
+                  onValueChange={(value) => setValue('jobTypeId', value, { shouldDirty: true })}
                 />
               </FormField>
               <FormField
@@ -217,7 +222,8 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
                   kind="WORKER_TYPE"
                   options={options.data ?? []}
                   keepId={employee.workerTypeId}
-                  {...register('workerTypeId')}
+                  value={workerTypeId}
+                  onValueChange={(value) => setValue('workerTypeId', value, { shouldDirty: true })}
                 />
               </FormField>
               <FormField label="입사일" error={errors.hiredOn?.message}>
@@ -263,7 +269,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
               {employee.status === 'LEFT' ? (
                 <>
                   <p className="text-sm text-foreground/70">
-                    퇴사한 직원은 새 투입·일지 입력에서 빠지고, 과거 기록은 그대로 남습니다.
+                    퇴사한 직원은 새 투입·작업 내역 입력에서 빠지고, 과거 기록은 그대로 남습니다.
                     재입사하면 같은 카드를 다시 재직으로 바꿉니다
                   </p>
                   <Button

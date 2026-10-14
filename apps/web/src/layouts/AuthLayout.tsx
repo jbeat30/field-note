@@ -4,7 +4,7 @@ import { Link, Outlet } from 'react-router';
 
 const FEATURES = [
   { icon: HardHat, text: '직원 투입과 인력 배치를 한눈에' },
-  { icon: ClipboardList, text: '하루 일지를 3분 안에 입력' },
+  { icon: ClipboardList, text: '하루 작업 내역을 3분 안에 입력' },
   { icon: Images, text: '사진·자재·문서를 프로젝트별로 정리' },
 ];
 

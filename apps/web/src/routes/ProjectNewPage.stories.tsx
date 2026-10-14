@@ -4,6 +4,7 @@ import { expect, userEvent, waitFor, within } from 'storybook/test';
 import { findAccount, getPartners, getProjects, signIn } from '../mocks/state';
 
 import { ProjectNewPage } from './ProjectNewPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/프로젝트 등록',
@@ -19,8 +20,8 @@ type Story = StoryObj<typeof meta>;
 const fillRequired = async (canvas: ReturnType<typeof within>) => {
   await userEvent.type(await canvas.findByLabelText('프로젝트명'), '신규 판금 공사');
   await userEvent.type(canvas.getByLabelText('현장 이름'), '신규 현장');
-  await userEvent.selectOptions(canvas.getByLabelText('고객'), '가나다건설');
-  await userEvent.selectOptions(canvas.getByLabelText('담당자'), '송소장 (소장)');
+  await chooseOption(canvas.getByLabelText('고객'), '가나다건설');
+  await chooseOption(canvas.getByLabelText('담당자'), '송소장');
   await userEvent.type(canvas.getByLabelText('계약일'), '2026-11-01');
   await userEvent.type(canvas.getByLabelText('시작 예정일'), '2026-11-10');
   await userEvent.type(canvas.getByLabelText('종료 예정일'), '2027-02-28');
@@ -33,15 +34,13 @@ export const Default: Story = {
     await expect(await canvas.findByRole('heading', { name: '프로젝트 등록' })).toBeInTheDocument();
     await expect(canvas.getByText(/코드는 저장할 때 자동으로 붙고/)).toBeInTheDocument();
     // 고객은 명부의 고객만, 숨긴 고객(옛날상가)과 다른 구분(공급처)은 목록에 없음
-    const client = await canvas.findByLabelText('고객');
+    await userEvent.click(await canvas.findByLabelText('고객'));
 
-    await expect(within(client).getByRole('option', { name: '가나다건설' })).toBeInTheDocument();
-    await expect(
-      within(client).queryByRole('option', { name: '옛날상가' }),
-    ).not.toBeInTheDocument();
-    await expect(
-      within(client).queryByRole('option', { name: '대한철강' }),
-    ).not.toBeInTheDocument();
+    const list = within(await within(document.body).findByRole('listbox'));
+
+    await expect(await list.findByRole('option', { name: '가나다건설' })).toBeInTheDocument();
+    await expect(list.queryByRole('option', { name: '옛날상가' })).not.toBeInTheDocument();
+    await expect(list.queryByRole('option', { name: '대한철강' })).not.toBeInTheDocument();
   },
 };
 
@@ -120,7 +119,7 @@ export const AddClientInline: Story = {
     await userEvent.type(canvas.getByLabelText('새 고객 상호'), '새고객건설');
     await userEvent.click(canvas.getByRole('button', { name: '추가' }));
 
-    await waitFor(() => expect(canvas.getByLabelText('고객')).toHaveDisplayValue('새고객건설'));
+    await waitFor(() => expect(canvas.getByLabelText('고객')).toHaveTextContent('새고객건설'));
     await expect(
       getPartners(findAccount('hanbit')!).some(
         (partner) => partner.name === '새고객건설' && partner.kind === 'CLIENT',

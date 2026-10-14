@@ -1,4 +1,5 @@
 import {
+  PROJECT_PAGE_SIZE_DEFAULT,
   PROJECT_STATUS_LABELS,
   allowedProjectFields,
   formatProjectCode,
@@ -9,10 +10,12 @@ import {
   type ProjectDetail,
   type ProjectListQuery,
   type ProjectPeriodChange,
+  type ProjectSortKey,
   type ProjectStatusChange,
   type ProjectSummary,
   type ProjectTransition,
   type ProjectUpdate,
+  type SortDirection,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -34,7 +37,10 @@ export class ProjectError extends Error {
 
 export type ProjectService = {
   // 목록 (현장 연락처·출입 메모·계약일·메모 제외)
-  list: (companyId: string, query: ProjectListQuery) => Promise<ProjectSummary[]>;
+  list: (
+    companyId: string,
+    query: ProjectListQuery,
+  ) => Promise<{ items: ProjectSummary[]; total: number; page: number; pageSize: number }>;
   get: (companyId: string, id: string) => Promise<ProjectDetail>;
   // 등록: 코드를 자동으로 붙이고 상태는 '예정'
   create: (companyId: string, input: ProjectCreate) => Promise<ProjectDetail>;
@@ -97,11 +103,17 @@ const invalid = (path: string, message: string) => new ProjectError('INVALID', {
 
 const INCLUDE_TRADES = { trades: { select: { tradeId: true } } } as const;
 
-// 코드의 (연도, 순번)을 숫자로 읽어 정렬 (문자열 비교는 2026-999 뒤에 2026-1000이 와서 틀림)
-const codeOrder = (code: string): [number, number] => {
-  const [year, sequence] = code.split('-');
-
-  return [Number(year), Number(sequence)];
+// 정렬 기준별 DB 정렬 식
+const SORT_ORDER: Record<
+  Exclude<ProjectSortKey, 'recent'>,
+  (direction: SortDirection) => Prisma.ProjectOrderByWithRelationInput
+> = {
+  name: (direction) => ({ name: direction }),
+  status: (direction) => ({ status: direction }),
+  client: (direction) => ({ client: { name: direction } }),
+  manager: (direction) => ({ manager: { name: direction } }),
+  plannedStart: (direction) => ({ plannedStart: direction }),
+  plannedEnd: (direction) => ({ plannedEnd: direction }),
 };
 
 // 고객은 명부의 '고객' 구분만 고를 수 있다. 숨긴 업체는 새로 고를 수 없지만 이미 쓰고 있다면 유지할 수 있다
@@ -165,50 +177,59 @@ export const createProjectService = (
   app: PrismaClient,
   now: Clock = () => new Date(),
 ): ProjectService => ({
-  list: (companyId, { status, clientId, managerId, tradeId, from, to, q, sort = 'recent' }) =>
+  list: (
+    companyId,
+    {
+      status,
+      clientId,
+      managerId,
+      tradeId,
+      from,
+      to,
+      q,
+      sortBy = 'recent',
+      sortDir,
+      page = 1,
+      pageSize = PROJECT_PAGE_SIZE_DEFAULT,
+    },
+  ) =>
     withCompany(app, companyId, async (tx) => {
+      const where: Prisma.ProjectWhereInput = {
+        status,
+        clientId,
+        managerId,
+        trades: tradeId ? { some: { tradeId } } : undefined,
+        // 조회 기간과 겹치는 프로젝트 (시작 ≤ 조회 끝, 종료 ≥ 조회 시작)
+        plannedEnd: from ? { gte: toDate(from) } : undefined,
+        plannedStart: to ? { lte: toDate(to) } : undefined,
+        ...(q
+          ? {
+              OR: [
+                { name: { contains: q, mode: 'insensitive' } },
+                { code: { contains: q, mode: 'insensitive' } },
+                { siteName: { contains: q, mode: 'insensitive' } },
+              ],
+            }
+          : {}),
+      };
+      const direction = sortDir ?? (sortBy === 'recent' ? 'desc' : 'asc');
+      // 같은 값끼리는 최근 등록순(등록 순서 = 코드 번호 순서, id는 시간순 uuid)으로 이어 붙여 쪽을 넘겨도 순서가 흔들리지 않게 함
+      const orderBy: Prisma.ProjectOrderByWithRelationInput[] = [
+        ...(sortBy === 'recent' ? [] : [SORT_ORDER[sortBy](direction)]),
+        { createdAt: sortBy === 'recent' ? direction : 'desc' },
+        { id: sortBy === 'recent' ? direction : 'desc' },
+      ];
+
+      const total = await tx.project.count({ where });
       const rows = await tx.project.findMany({
-        where: {
-          status,
-          clientId,
-          managerId,
-          trades: tradeId ? { some: { tradeId } } : undefined,
-          // 조회 기간과 겹치는 프로젝트 (시작 ≤ 조회 끝, 종료 ≥ 조회 시작)
-          plannedEnd: from ? { gte: toDate(from) } : undefined,
-          plannedStart: to ? { lte: toDate(to) } : undefined,
-          ...(q
-            ? {
-                OR: [
-                  { name: { contains: q, mode: 'insensitive' } },
-                  { code: { contains: q, mode: 'insensitive' } },
-                  { siteName: { contains: q, mode: 'insensitive' } },
-                ],
-              }
-            : {}),
-        },
+        where,
+        orderBy,
+        skip: (page - 1) * pageSize,
+        take: pageSize,
         include: INCLUDE_TRADES,
       });
 
-      const byRecent = (a: Row, b: Row) => {
-        const [yearA, seqA] = codeOrder(a.code);
-        const [yearB, seqB] = codeOrder(b.code);
-
-        return yearB - yearA || seqB - seqA;
-      };
-
-      return rows
-        .sort((a, b) => {
-          if (sort === 'endDate') {
-            return a.plannedEnd.getTime() - b.plannedEnd.getTime() || byRecent(a, b);
-          }
-
-          if (sort === 'name') {
-            return a.name.localeCompare(b.name, 'ko') || byRecent(a, b);
-          }
-
-          return byRecent(a, b);
-        })
-        .map(toSummary);
+      return { items: rows.map(toSummary), total, page, pageSize };
     }),
 
   get: (companyId, id) =>

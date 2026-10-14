@@ -4,7 +4,7 @@ import { workUnitModeSchema } from './account';
 import { minutesToManDays, roundTo, toManMonths } from './workUnits';
 
 // 월 공수 확정과 월 공수표 (서비스 기획서 §13.2, §15.4): 공수 기록이 급여·정산의 근거로 쓰이므로 월 단위로 확정(잠금)한다.
-// 확정은 선택 기능이며, 확정하면 그달의 작업일지를 고칠 수 없고 재오픈(사유 기록)으로만 정정한다.
+// 확정은 선택 기능이며, 확정하면 그달의 작업 내역를 고칠 수 없고 재오픈(사유 기록)으로만 정정한다.
 // 확정 시점의 하루 기준시간과 월 기준일수를 그 시점 값으로 고정한다
 export const MONTH_REASON_MAX_LENGTH = 500;
 
@@ -18,7 +18,7 @@ export type MonthlyHoursQuery = z.infer<typeof monthlyHoursQuerySchema>;
 
 export const monthlyCloseSchema = z.object({
   month: monthSchema,
-  // 임시 저장된 일지가 남아 있어도 확정하겠다는 확인 (남아 있으면 필수)
+  // 임시 저장된 작업 내역이 남아 있어도 확정하겠다는 확인 (남아 있으면 필수)
   confirmDrafts: z.boolean().optional(),
 });
 
@@ -41,7 +41,7 @@ export const monthlyHoursRowSchema = z.object({
   projectName: z.string(),
   employeeId: z.uuid(),
   employeeName: z.string(),
-  // 그달 저장된 일지의 공수 합(분)
+  // 그달 저장된 작업 내역의 공수 합(분)
   minutes: z.number().int(),
 });
 
@@ -59,7 +59,7 @@ export const monthlyCloseEventSchema = z.object({
   id: z.uuid(),
   kind: z.enum(['CLOSED', 'REOPENED']),
   reason: z.string().nullable(),
-  // 그때의 임시 저장 일지 건수 (확정 시 확인한 건수)
+  // 그때의 임시 저장 작업 내역 건수 (확정 시 확인한 건수)
   draftLogCount: z.number().int(),
   standardWorkMinutes: z.number().int(),
   monthlyWorkDays: z.number().int(),
@@ -76,7 +76,7 @@ export const monthlyHoursSchema = z.object({
   standardWorkMinutes: z.number().int(),
   monthlyWorkDays: z.number().int(),
   workUnitMode: workUnitModeSchema,
-  // 그달의 임시 저장 일지 (집계에는 저장된 일지만 반영되므로 확정 전에 정리). 최대 50건까지 보여 주고 전체 건수를 따로 준다
+  // 그달의 임시 저장 작업 내역 (집계에는 저장된 작업 내역만 반영되므로 확정 전에 정리). 최대 50건까지 보여 주고 전체 건수를 따로 준다
   draftLogCount: z.number().int(),
   drafts: z.array(monthlyDraftSchema),
   // 프로젝트 코드·직원 이름순
@@ -109,8 +109,8 @@ export const monthRange = (month: string) => {
 export const monthOf = (date: string) => date.slice(0, 7);
 
 /**
- * @description 월 공수 확정 검사: 이번 달까지만, 이미 확정한 달은 다시 확정할 수 없고, 임시 저장 일지가 남아 있으면 확인이 필요하다
- * @param input 월, 오늘(서울 기준), 확정 여부, 임시 저장 일지 건수, 확인 여부
+ * @description 월 공수 확정 검사: 이번 달까지만, 이미 확정한 달은 다시 확정할 수 없고, 임시 저장 작업 내역이 남아 있으면 확인이 필요하다
+ * @param input 월, 오늘(서울 기준), 확정 여부, 임시 저장 작업 내역 건수, 확인 여부
  * @returns 통과 여부와 어느 입력이 왜 안 되는지
  */
 export const validateMonthClose = (input: {
@@ -132,7 +132,7 @@ export const validateMonthClose = (input: {
     return {
       ok: false,
       path: 'confirmDrafts',
-      message: `임시 저장된 작업일지가 ${input.draftLogCount}건 있습니다. 저장하거나 정리한 뒤 확정하거나, 확인 후 확정해 주세요`,
+      message: `임시 저장된 작업 내역가 ${input.draftLogCount}건 있습니다. 저장하거나 정리한 뒤 확정하거나, 확인 후 확정해 주세요`,
     };
   }
 
@@ -140,7 +140,7 @@ export const validateMonthClose = (input: {
 };
 
 /**
- * @description 이 날짜의 작업일지를 고칠 수 있는지: 확정된 달은 재오픈해야 한다 (§9.4, §13.2)
+ * @description 이 날짜의 작업 내역를 고칠 수 있는지: 확정된 달은 재오픈해야 한다 (§9.4, §13.2)
  * @param workDate 작업 일자
  * @param closedMonths 확정된 달 목록
  * @returns 통과 여부와 거부 사유

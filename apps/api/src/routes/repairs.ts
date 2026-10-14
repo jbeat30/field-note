@@ -98,7 +98,7 @@ export const registerRepairRoutes = (registry: RouteRegistry, repairs?: RepairSe
     {
       method: 'get',
       path: '/projects/{id}/after-service-usage',
-      summary: '사후 작업으로 쓴 공수·자재 (사후 작업 표시가 된 일지·자재 기록 합계)',
+      summary: '사후 작업으로 쓴 공수·자재 (사후 작업 표시가 된 작업 내역·자재 기록 합계)',
       auth: 'required',
       request: { params: projectParamsSchema },
       response: { status: 200, schema: repairUsageSchema },
@@ -117,7 +117,7 @@ export const registerRepairRoutes = (registry: RouteRegistry, repairs?: RepairSe
     {
       method: 'get',
       path: '/repair-requests/{id}',
-      summary: '보수 요청 상세 (상태 이력, 연결한 일지·자재 기록, 쓴 공수·자재 포함)',
+      summary: '보수 요청 상세 (상태 이력, 연결한 작업 내역·자재 기록, 쓴 공수·자재 포함)',
       auth: 'required',
       request: { params: repairParamsSchema },
       response: { status: 200, schema: repairRequestDetailSchema },
@@ -183,7 +183,8 @@ export const registerRepairRoutes = (registry: RouteRegistry, repairs?: RepairSe
     {
       method: 'post',
       path: '/repair-requests/{id}/links',
-      summary: '사후 작업 연결 (사후 작업으로 표시한 같은 프로젝트의 저장된 일지 또는 자재 기록)',
+      summary:
+        '사후 작업 연결 (사후 작업으로 표시한 같은 프로젝트의 저장된 작업 내역 또는 자재 기록)',
       auth: 'required',
       request: { params: repairParamsSchema, body: repairLinkSchema },
       response: { status: 200, schema: repairRequestDetailSchema },

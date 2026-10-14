@@ -4,7 +4,7 @@ import { useInfiniteQuery, useMutation, useQueryClient } from '@tanstack/react-q
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-export type PhotoFilter = { category?: PhotoCategory; area?: string };
+export type PhotoFilter = { category?: PhotoCategory; area?: string; workDate?: string };
 
 const PAGE_SIZE = 30;
 

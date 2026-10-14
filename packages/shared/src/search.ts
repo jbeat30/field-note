@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 통합 검색 (서비스 기획서 §14 "찾기"): 프로젝트·직원·메모·자료(문서)·일지를 한 검색창에서 찾는다.
+// 통합 검색 (서비스 기획서 §14 "찾기"): 프로젝트·직원·메모·자료(문서)·작업 내역을 한 검색창에서 찾는다.
 // 검색 범위는 로그인한 회사 하나뿐이며, 직원의 연락처·생년월일·메모처럼 목록에서 가리는 개인정보는 검색 대상이 아니다 (§7.3)
 export const SEARCH_HIT_TYPES = ['PROJECT', 'EMPLOYEE', 'MEMO', 'DOCUMENT', 'WORK_LOG'] as const;
 
@@ -13,7 +13,7 @@ export const SEARCH_HIT_TYPE_LABELS: Record<SearchHitType, string> = {
   EMPLOYEE: '직원',
   MEMO: '메모',
   DOCUMENT: '자료',
-  WORK_LOG: '일지',
+  WORK_LOG: '작업 내역',
 };
 
 export const SEARCH_QUERY_MAX_LENGTH = 50;
@@ -27,7 +27,7 @@ export const searchQuerySchema = z.object({
     .trim()
     .min(1, '검색어를 입력해 주세요')
     .max(SEARCH_QUERY_MAX_LENGTH, `검색어는 ${SEARCH_QUERY_MAX_LENGTH}자까지 입력할 수 있습니다`),
-  // 프로젝트 안에서만 찾을 때 (메모·자료·일지만 검색)
+  // 프로젝트 안에서만 찾을 때 (메모·자료·작업 내역만 검색)
   projectId: z.uuid().optional(),
   // 종류마다 보여 줄 최대 개수
   limit: z.coerce
@@ -46,11 +46,11 @@ export const searchHitSchema = z.object({
   type: searchHitTypeSchema,
   id: z.uuid(),
   title: z.string(),
-  // 검색어 주변 글 (일지·메모처럼 본문에서 찾았을 때)
+  // 검색어 주변 글 (작업 내역·메모처럼 본문에서 찾았을 때)
   snippet: z.string().nullable(),
   projectId: z.uuid().nullable(),
   projectName: z.string().nullable(),
-  // 메모 날짜·일지 작업일·문서 개정일 등 (YYYY-MM-DD)
+  // 메모 날짜·작업 내역 작업일·문서 개정일 등 (YYYY-MM-DD)
   date: z.iso.date().nullable(),
   // 민감 자료, 퇴사한 직원처럼 눈에 띄게 알릴 표시
   badge: z.enum(SEARCH_BADGES).nullable(),

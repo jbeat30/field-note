@@ -4,6 +4,7 @@ import { expect, userEvent, within } from 'storybook/test';
 import { signIn } from '../mocks/state';
 
 import { PartnerListPage } from './PartnerListPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/명부 목록',
@@ -25,7 +26,9 @@ export const Default: Story = {
     // 숨긴 업체를 뺀 6곳, 구분별로 묶여 보임
     await expect(canvas.getByText('6곳')).toBeInTheDocument();
     for (const heading of ['고객', '협력업체', '자재 공급처']) {
-      await expect(canvas.getByRole('heading', { name: heading, level: 3 })).toBeInTheDocument();
+      await expect(
+        within(canvas.getByRole('region', { name: '업체 목록' })).getAllByText(heading)[0],
+      ).toBeInTheDocument();
     }
     // 담당자 이름은 보이고 연락처·메모는 목록에 없음
     await expect(canvas.getByText('윤소장')).toBeInTheDocument();
@@ -64,10 +67,7 @@ export const QuickAddSupplier: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(
-      await canvas.findByLabelText('구분'),
-      '자재 공급처 (자재를 사 오는 곳)',
-    );
+    await chooseOption(await canvas.findByLabelText('구분'), '자재 공급처');
     await userEvent.type(canvas.getByLabelText('상호'), '새공급처');
     await userEvent.click(canvas.getByRole('button', { name: '등록' }));
 
@@ -102,7 +102,7 @@ export const FilterByKind: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('가나다건설');
-    await userEvent.selectOptions(canvas.getByLabelText('구분 필터'), '자재 공급처');
+    await chooseOption(canvas.getByLabelText('구분 필터'), '자재 공급처');
 
     await expect(await canvas.findByText('2곳')).toBeInTheDocument();
     await expect(canvas.getByText('대한철강')).toBeInTheDocument();

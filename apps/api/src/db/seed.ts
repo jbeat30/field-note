@@ -569,7 +569,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
-  // 작업일지 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
+  // 작업 내역 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
   for (const log of DEMO_WORK_LOGS) {
     if (
       await prisma.workLog.findUnique({

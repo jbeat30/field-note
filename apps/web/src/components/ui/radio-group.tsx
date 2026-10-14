@@ -17,11 +17,11 @@ export const RadioGroupItem = ({
 }: ComponentProps<typeof RadioGroupPrimitive.Item>) => (
   <RadioGroupPrimitive.Item
     className={cn(
-      'flex size-6 shrink-0 items-center justify-center rounded-full border border-border bg-surface focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary data-[state=checked]:border-primary',
+      'flex size-5 shrink-0 items-center justify-center rounded-full border border-control-border bg-surface shadow-xs transition-colors hover:border-control-border-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary',
       className,
     )}
     {...props}
   >
-    <RadioGroupPrimitive.Indicator className="size-3 rounded-full bg-primary" />
+    <RadioGroupPrimitive.Indicator className="size-2 rounded-full bg-primary-foreground" />
   </RadioGroupPrimitive.Item>
 );

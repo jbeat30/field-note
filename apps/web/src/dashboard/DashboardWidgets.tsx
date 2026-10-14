@@ -10,6 +10,7 @@ import { useState } from 'react';
 import { Link } from 'react-router';
 
 import { cn } from '../lib/cn';
+import { projectWorkPath } from '../lib/projectPaths';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { ProgressBar } from '../components/ui/progress-bar';
@@ -84,7 +85,7 @@ const ProjectRow = ({ project }: { project: DashboardProject }) => (
 );
 
 // 홈 대시보드 (서비스 기획서 §15.2): 알림, 오늘 투입, 위험 프로젝트, 진행 프로젝트, 이번 주 인력,
-// 보증 종료 임박, 만료 임박(보증서·직원 서류), 할 일(임시 저장 일지·방치 메모·월 공수 미확정)
+// 보증 종료 임박, 만료 임박(보증서·직원 서류), 할 일(임시 저장 작업 내역·방치 메모·월 공수 미확정)
 export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
   const {
     alerts,
@@ -150,14 +151,14 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
               {todayAssignments.projects.map((item) => (
                 <li key={item.projectId}>
                   <Link
-                    to={`/work-logs?project=${item.projectId}`}
+                    to={projectWorkPath(item.projectId, dashboard.today)}
                     className="flex min-h-touch items-center justify-between gap-2 underline-offset-2 hover:underline"
                   >
                     <span>
                       {item.code} {item.name} · {item.headcount}명
                     </span>
                     <span className={item.hasLog ? 'text-sm' : 'text-sm font-medium text-danger'}>
-                      {item.hasLog ? '일지 입력함' : '일지 없음'}
+                      {item.hasLog ? '작업 내역 입력함' : '작업 내역 없음'}
                     </span>
                   </Link>
                 </li>
@@ -286,7 +287,7 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
 
       <Widget title="할 일" id="todo-heading">
         <ul className="flex flex-col gap-1 text-sm">
-          <li>임시 저장된 작업일지 {todos.draftLogCount}건</li>
+          <li>임시 저장된 작업 내역 {todos.draftLogCount}건</li>
           <li>3일 넘게 쌓인 메모 {todos.staleInboxCount}건</li>
           <li>
             {todos.unclosedMonth ? (

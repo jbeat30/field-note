@@ -9,7 +9,7 @@ export const badgeVariants = cva(
   {
     variants: {
       tone: {
-        neutral: 'bg-muted text-foreground',
+        neutral: 'bg-muted text-foreground/80',
         primary: 'bg-primary-subtle text-primary',
         success: 'bg-success-subtle text-success',
         warning: 'bg-warning-subtle text-warning',

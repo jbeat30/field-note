@@ -18,7 +18,7 @@ import { useCreateOption, useReorderOptions, useUpdateOption } from './useOption
 
 const KIND_HINTS: Record<OptionKind, string> = {
   JOB_TYPE: '직원의 기술 분류입니다',
-  WORK_CATEGORY: '작업일지에 쓰는 작업의 종류입니다',
+  WORK_CATEGORY: '작업 내역에 쓰는 작업의 종류입니다',
   TRADE: '프로젝트의 공사·작업 분류입니다',
   WORKER_TYPE: '목록과 필터에 쓰는 표시입니다 (공수 계산에는 쓰지 않습니다)',
   CREDENTIAL_TYPE: '직원 서류의 종류입니다 (자격증, 안전교육 이수증, 건강검진 등)',

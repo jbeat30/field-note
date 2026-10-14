@@ -3,7 +3,6 @@ import { useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
 
 import { PageHeader } from '../components/ui/page-header';
-import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
@@ -11,7 +10,7 @@ import { DocumentDetailDialog } from '../documents/DocumentDetailDialog';
 import { DocumentList } from '../documents/DocumentList';
 import { DocumentUploadForm, type DocumentFormValues } from '../documents/DocumentUploadForm';
 import { uploadDocumentFile } from '../documents/uploadDocument';
-import { useCreateDocument, useDocuments, useUpdateDocument } from '../documents/useDocuments';
+import { useCreateDocument, useDocuments } from '../documents/useDocuments';
 import { useOpenDocument } from '../documents/useOpenDocument';
 import { useProject } from '../projects/useProjects';
 
@@ -26,7 +25,6 @@ export const ProjectDocumentsPage = () => {
   const [detailId, setDetailId] = useState<string | null>(params.get('doc'));
   const documents = useDocuments(id, { category, q });
   const create = useCreateDocument(id);
-  const update = useUpdateDocument();
   const opener = useOpenDocument();
 
   if (project.isPending) {
@@ -52,17 +50,17 @@ export const ProjectDocumentsPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to={`/projects/${id}`}>{project.data.name}</BackLink>
-      <PageHeader title="문서함" description="프로젝트 문서를 올리고 찾아봅니다" />
+      <PageHeader level={2} title="문서함" description="프로젝트 문서를 올리고 찾아봅니다" />
       <section
         className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
         aria-labelledby="upload-heading"
       >
-        <h2 id="upload-heading" className="text-lg font-bold">
+        <h2 id="upload-heading" className="text-base font-semibold">
           문서 올리기
         </h2>
         <DocumentUploadForm mode="create" onSubmit={upload} />
       </section>
+      <hr className="border-line" />
       <div className="flex flex-wrap gap-2">
         <Input
           className="min-w-0 flex-1"
@@ -72,20 +70,18 @@ export const ProjectDocumentsPage = () => {
           onChange={(event) => setQ(event.target.value)}
         />
         <Select
-          className="w-auto"
+          className="w-40"
           aria-label="분류로 거르기"
           value={category}
-          onChange={(event) => setCategory(event.target.value)}
-        >
-          <option value="">모든 분류</option>
-          {DOCUMENT_CATEGORIES.map((value) => (
-            <option key={value} value={value}>
-              {DOCUMENT_CATEGORY_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          emptyLabel="모든 분류"
+          onValueChange={setCategory}
+          options={DOCUMENT_CATEGORIES.map((value) => ({
+            value: value,
+            label: DOCUMENT_CATEGORY_LABELS[value],
+          }))}
+        />
       </div>
-      {(opener.error || update.isError) && (
+      {opener.error && (
         <Alert>{opener.error ?? '처리하지 못했습니다. 잠시 후 다시 시도해 주세요'}</Alert>
       )}
       {documents.isPending && <p className="text-sm">문서를 불러오는 중</p>}
@@ -102,9 +98,6 @@ export const ProjectDocumentsPage = () => {
           documents={documents.data}
           onOpen={(document, mode) => opener.open(document, document.latest.versionNo, mode)}
           onDetail={(document) => setDetailId(document.id)}
-          onTogglePin={(document) =>
-            update.mutate({ id: document.id, body: { isPinned: !document.isPinned } })
-          }
         />
       )}
       {detailId && (

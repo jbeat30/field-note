@@ -95,14 +95,15 @@ export const AuditLogsPage = () => {
         onSubmit={(e) => e.preventDefault()}
       >
         <FormField label="종류">
-          <Select value={action} onChange={(event) => setAction(event.target.value)}>
-            <option value="">전체</option>
-            {AUDIT_ACTIONS.map((kind) => (
-              <option key={kind} value={kind}>
-                {AUDIT_ACTION_TITLES[kind]}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={action}
+            emptyLabel="전체"
+            onValueChange={setAction}
+            options={AUDIT_ACTIONS.map((kind) => ({
+              value: kind,
+              label: AUDIT_ACTION_TITLES[kind],
+            }))}
+          />
         </FormField>
         <FormField label="시작 날짜">
           <DateInput value={from} onChange={(event) => setFrom(event.target.value)} />

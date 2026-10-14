@@ -5,6 +5,7 @@ import {
   partnerParamsSchema,
   partnerUpdateSchema,
   partnersResponseSchema,
+  successResponseSchema,
   type PartnerCreate,
   type PartnerListQuery,
   type PartnerUpdate,
@@ -31,6 +32,13 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('VALIDATION_ERROR', [
         { path: 'body.name', message: '같은 구분에 이미 같은 상호가 있습니다' },
       ]);
+    case 'IN_USE':
+      return new AppError('VALIDATION_ERROR', [
+        {
+          path: 'params.id',
+          message: '프로젝트나 자재 기록에서 쓰고 있어 삭제할 수 없습니다. 숨기기를 이용해 주세요',
+        },
+      ]);
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
         { path: 'body', message: '명부는 회사마다 1000곳까지 등록할 수 있습니다' },
@@ -39,7 +47,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 고객·협력업체·자재 공급처 명부 라우트. 회사 ID는 세션에서만 얻는다 (삭제 API 없음, 숨김 처리)
+ * @description 고객·협력업체·자재 공급처 명부 라우트. 회사 ID는 세션에서만 얻는다 (쓰이지 않은 업체만 삭제, 쓰고 있으면 숨김)
  * @param registry 라우트 등록소
  * @param partners 명부 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */
@@ -115,6 +123,27 @@ export const registerPartnerRoutes = (registry: RouteRegistry, partners?: Partne
           (params as { id: string }).id,
           body as PartnerUpdate,
         );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'delete',
+      path: '/partners/{id}',
+      summary: '명부 삭제 (프로젝트·자재 기록에서 쓰고 있으면 거부, 그때는 숨기기)',
+      auth: 'required',
+      request: { params: partnerParamsSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: ['NOT_FOUND', 'VALIDATION_ERROR'],
+    },
+    async ({ auth, params }) => {
+      try {
+        await partners!.remove(auth!.companyId, (params as { id: string }).id);
+
+        return { success: true };
       } catch (error) {
         throw toAppError(error);
       }

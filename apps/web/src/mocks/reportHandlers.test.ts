@@ -60,7 +60,7 @@ describe('작업일보 목업 서버 계약', () => {
     expect(response.status).toBe(401);
   });
 
-  it('일지가 있는 날은 작업 내용·인원·공수 합계를 담는다', async () => {
+  it('작업 내역이 있는 날은 작업 내용·인원·공수 합계를 담는다', async () => {
     const projectId = await setup();
     const data = await report(projectId, '2026-09-02');
 
@@ -71,7 +71,7 @@ describe('작업일보 목업 서버 계약', () => {
     expect(data.totals.minutes).toBe(data.entries.reduce((sum, entry) => sum + entry.minutes, 0));
   });
 
-  it('일지가 없어도 그날의 자재·사진은 담는다', async () => {
+  it('작업 내역이 없어도 그날의 자재·사진은 담는다', async () => {
     const projectId = await setup();
     const data = await report(projectId, '2026-10-07');
 

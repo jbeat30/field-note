@@ -16,13 +16,14 @@ import {
   type WarrantyChange,
   type WarrantyStartBasis,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import type { MockAccount } from './data';
 import { DEMO_WARRANTIES } from './demoSource';
 import { listMockDocuments } from './documentHandlers';
 import { getCurrentAccount, getProjects } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -241,7 +242,7 @@ const toWarranty = (account: MockAccount, project: ProjectDetail): ProjectWarran
  * @param helpers 목업 공통 응답·본문 검사
  */
 export const createWarrantyHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
   const invalid = (path: string, message: string) =>
     apiError('VALIDATION_ERROR', [{ path, message }]);
 

@@ -24,9 +24,9 @@ export class ReportError extends Error {
 export type ReportFile = { filename: string; body: Buffer };
 
 export type ReportService = {
-  // 한 프로젝트의 하루 작업일보 (일지·인원·공수·자재·사진). 그날 일지가 없어도 자재·사진이 있으면 보고서가 만들어짐
+  // 한 프로젝트의 하루 작업일보 (작업 내역·인원·공수·자재·사진). 그날 작업 내역이 없어도 자재·사진이 있으면 보고서가 만들어짐
   daily: (companyId: string, projectId: string, date: string) => Promise<DailyReport>;
-  // 기간 안의 일지·공수·자재를 엑셀로 내보냄. 내보내기는 감사 기록으로 남는다 (서비스 기획서 §7.3)
+  // 기간 안의 작업 내역·공수·자재를 엑셀로 내보냄. 내보내기는 감사 기록으로 남는다 (서비스 기획서 §7.3)
   exportXlsx: (
     companyId: string,
     userId: string,
@@ -244,7 +244,7 @@ export const createReportService = (
         ['고객', project.client.name],
         ['기간', `${from} ~ ${to}`],
         ['공수 단위', unit],
-        ['일지 수', workLogs.length],
+        ['작업 내역 수', workLogs.length],
         ['자재 기록 수', records.length],
         ['내보낸 시각', now().toISOString()],
       ]);

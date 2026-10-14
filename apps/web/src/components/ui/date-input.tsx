@@ -7,7 +7,7 @@ import { ko } from 'react-day-picker/locale';
 import { cn } from '../../lib/cn';
 
 import { Button } from './button';
-import { Input } from './input';
+import { Input, type ControlSize } from './input';
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
 
@@ -32,8 +32,9 @@ export const DateInput = ({
   min,
   max,
   disabled,
+  size = 'md',
   ...props
-}: Omit<ComponentProps<'input'>, 'type'>) => {
+}: Omit<ComponentProps<'input'>, 'type' | 'size'> & { size?: ControlSize }) => {
   const inputRef = useRef<HTMLInputElement | null>(null);
   const [open, setOpen] = useState(false);
   const [selected, setSelected] = useState<Date | undefined>();
@@ -54,6 +55,13 @@ export const DateInput = ({
     Object.getOwnPropertyDescriptor(HTMLInputElement.prototype, 'value')?.set?.call(input, value);
     input.dispatchEvent(new Event('input', { bubbles: true }));
     setOpen(false);
+  };
+
+  const openCalendar = () => {
+    if (disabled || open) return;
+
+    setSelected(parseDay(inputRef.current?.value ?? ''));
+    setOpen(true);
   };
 
   const minDay = min ? parseDay(String(min)) : undefined;
@@ -77,17 +85,26 @@ export const DateInput = ({
             placeholder="YYYY-MM-DD"
             maxLength={10}
             disabled={disabled}
-            className={cn('pr-12', className)}
+            size={size}
+            className={cn(size === 'sm' ? 'pr-9' : 'pr-11', className)}
             {...props}
+            // 입력 칸을 눌러도 달력이 열린다 (직접 입력도 계속 가능)
+            onClick={(event) => {
+              props.onClick?.(event);
+              openCalendar();
+            }}
           />
           <Popover.Trigger asChild>
             <button
               type="button"
               aria-label="달력 열기"
               disabled={disabled}
-              className="absolute inset-y-0 right-0 flex w-11 items-center justify-center rounded-r-md text-foreground/70 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
+              className={cn(
+                'absolute inset-y-0 right-0 flex items-center justify-center rounded-r-control text-foreground/65 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50',
+                size === 'sm' ? 'w-9' : 'w-11',
+              )}
             >
-              <CalendarDays aria-hidden className="size-5" />
+              <CalendarDays aria-hidden className={size === 'sm' ? 'size-4' : 'size-4.5'} />
             </button>
           </Popover.Trigger>
         </div>
@@ -98,7 +115,13 @@ export const DateInput = ({
           sideOffset={6}
           collisionPadding={12}
           aria-label="날짜 선택"
-          className="z-30 rounded-xl border border-line bg-surface p-3 shadow-card"
+          // 입력 칸에 커서를 둔 채로 달력을 열어 직접 입력도 이어서 할 수 있게 함
+          onOpenAutoFocus={(event) => event.preventDefault()}
+          // 입력 칸을 누르는 것은 바깥 클릭으로 보지 않음
+          onInteractOutside={(event) => {
+            if (inputRef.current?.contains(event.target as Node)) event.preventDefault();
+          }}
+          className="z-30 rounded-lg border border-line bg-surface p-3 shadow-pop"
         >
           <DayPicker
             mode="single"
