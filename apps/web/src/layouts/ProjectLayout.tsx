@@ -1,5 +1,5 @@
 import { PROJECT_STATUS_LABELS, todayInSeoul, type ProjectStatus } from '@field-note/shared';
-import { CalendarRange, MapPin, MoreHorizontal, UserRound, Building2 } from 'lucide-react';
+import { CalendarRange, MapPin, MoreHorizontal, Printer, UserRound, Building2 } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 
@@ -217,25 +217,37 @@ export const ProjectLayout = () => {
       </nav>
 
       {(inCloseout || pathname.startsWith(`${base}/daily-report`)) && (
-        <nav
-          aria-label="마감·보증 메뉴"
-          className="flex gap-1 self-start rounded-xl bg-muted p-1 print:hidden"
-        >
-          {closeoutTabs.map((tab) => (
-            <NavLink
-              key={tab.to}
-              to={tab.to}
-              className={({ isActive }) =>
-                cn(
-                  'flex min-h-touch items-center rounded-lg px-4 text-sm font-medium whitespace-nowrap',
-                  isActive ? 'bg-surface text-foreground shadow-xs' : 'text-foreground/70',
-                )
-              }
-            >
-              {tab.label}
-            </NavLink>
-          ))}
-        </nav>
+        <div className="flex items-center justify-between gap-3 print:hidden">
+          <nav
+            aria-label="마감·보증 메뉴"
+            className="flex gap-1 self-start rounded-xl bg-muted p-1"
+          >
+            {closeoutTabs.map((tab) => (
+              <NavLink
+                key={tab.to}
+                to={tab.to}
+                className={({ isActive }) =>
+                  cn(
+                    'flex min-h-touch items-center rounded-lg px-4 text-sm font-medium whitespace-nowrap',
+                    isActive ? 'bg-surface text-foreground shadow-xs' : 'text-foreground/70',
+                  )
+                }
+              >
+                {tab.label}
+              </NavLink>
+            ))}
+          </nav>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            onClick={() => window.print()}
+            className="shrink-0"
+          >
+            <Printer aria-hidden />
+            인쇄·PDF
+          </Button>
+        </div>
       )}
 
       <Outlet />

@@ -100,18 +100,18 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
   return (
     <div className="flex flex-col gap-5">
       {show(section, 'overview') && (
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_22rem]">
+        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="flex min-w-0 flex-col gap-5">
             <Panel>
               <ProjectProgressPanel projectId={data.id} status={data.status} />
-            </Panel>
-            <Panel>
-              <ProjectStatusPanel project={data} />
             </Panel>
           </div>
           <aside className="flex min-w-0 flex-col gap-5 xl:sticky xl:top-6">
             <Panel>
               <ProjectInfoSummary project={data} />
+            </Panel>
+            <Panel>
+              <ProjectStatusPanel project={data} />
             </Panel>
           </aside>
         </div>

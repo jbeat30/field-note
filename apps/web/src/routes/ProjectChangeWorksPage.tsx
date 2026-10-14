@@ -17,8 +17,6 @@ import { Checkbox } from '../components/ui/checkbox';
 import { Select } from '../components/ui/select';
 import { useProject } from '../projects/useProjects';
 
-// 변경·추가 작업 (서비스 기획서 §10.5): 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청과 합의를 기록한다.
-// 말로 합의하고 먼저 작업하는 일이 많아 누가 언제 요청했는지가 근거가 된다. 금액은 기록하지 않는다
 export const ProjectChangeWorksPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);
@@ -26,21 +24,15 @@ export const ProjectChangeWorksPage = () => {
   const [confirmCompleted, setConfirmCompleted] = useState(false);
   const works = useChangeWorks(id, status || undefined);
 
-  if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
-  }
-
-  if (!project.data) {
-    return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
-  }
+  if (project.isPending) return <p className="text-sm">프로젝트를 불러오는 중</p>;
+  if (!project.data) return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
 
   const gate = changeWorkProjectCheck(project.data.status, true);
   const needsConfirm = project.data.status === 'COMPLETED';
-  // 보증 중·종료·취소는 조회만, 완료는 확인해야 기록·수정
   const editable = gate.ok && (!needsConfirm || confirmCompleted);
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-1">
         <PageHeader
           level={2}
@@ -63,49 +55,60 @@ export const ProjectChangeWorksPage = () => {
 
       <ChangeWorkUsagePanel projectId={id} />
 
-      {editable && (
-        <section className="flex flex-col gap-3" aria-labelledby="change-new-heading">
-          <h2 id="change-new-heading" className="text-lg font-bold">
-            새로 기록
-          </h2>
-          <ChangeWorkForm projectId={id} confirmCompleted={needsConfirm && confirmCompleted} />
-        </section>
-      )}
+      {/* xl+: 왼쪽 새로 기록 / 오른쪽 목록 */}
+      <div className="grid items-start gap-5 xl:grid-cols-[380px_1fr]">
+        {/* 왼쪽: 새로 기록 폼 */}
+        {editable && (
+          <div className="rounded-xl bg-surface-subtle p-4">
+            <section className="flex flex-col gap-3" aria-labelledby="change-new-heading">
+              <h2 id="change-new-heading" className="text-base font-semibold">
+                새로 기록
+              </h2>
+              <ChangeWorkForm projectId={id} confirmCompleted={needsConfirm && confirmCompleted} />
+            </section>
+          </div>
+        )}
 
-      <section className="flex flex-col gap-3" aria-labelledby="change-list-heading">
-        <h2 id="change-list-heading" className="text-lg font-bold">
-          기록 목록
-        </h2>
-        <Select
-          className="w-40"
-          aria-label="상태 필터"
-          value={status}
-          emptyLabel="전체 상태"
-          onValueChange={setStatus}
-          options={CHANGE_WORK_STATUSES.map((value) => ({
-            value: value,
-            label: CHANGE_WORK_STATUS_LABELS[value],
-          }))}
-        />
-        {works.isError && <Alert>변경·추가 작업을 불러오지 못했습니다</Alert>}
-        {works.isPending && <p className="text-sm">불러오는 중</p>}
-        {works.data && works.data.length === 0 && (
-          <p className="text-foreground/70">기록이 없습니다</p>
-        )}
-        {works.data && works.data.length > 0 && (
-          <ul className="flex flex-col gap-3">
-            {works.data.map((work) => (
-              <ChangeWorkItem
-                key={work.id}
-                work={work}
-                projectId={id}
-                editable={editable}
-                confirmCompleted={needsConfirm && confirmCompleted}
+        {/* 오른쪽: 기록 목록 */}
+        <section className={editable ? '' : 'xl:col-span-2'} aria-labelledby="change-list-heading">
+          <div className="flex flex-col gap-3">
+            <div className="flex items-center justify-between gap-3">
+              <h2 id="change-list-heading" className="text-base font-semibold">
+                기록 목록
+              </h2>
+              <Select
+                className="w-40"
+                aria-label="상태 필터"
+                value={status}
+                emptyLabel="전체 상태"
+                onValueChange={setStatus}
+                options={CHANGE_WORK_STATUSES.map((value) => ({
+                  value: value,
+                  label: CHANGE_WORK_STATUS_LABELS[value],
+                }))}
               />
-            ))}
-          </ul>
-        )}
-      </section>
+            </div>
+            {works.isError && <Alert>변경·추가 작업을 불러오지 못했습니다</Alert>}
+            {works.isPending && <p className="text-sm">불러오는 중</p>}
+            {works.data && works.data.length === 0 && (
+              <p className="text-foreground/70 text-sm">기록이 없습니다</p>
+            )}
+            {works.data && works.data.length > 0 && (
+              <ul className="flex flex-col gap-3">
+                {works.data.map((work) => (
+                  <ChangeWorkItem
+                    key={work.id}
+                    work={work}
+                    projectId={id}
+                    editable={editable}
+                    confirmCompleted={needsConfirm && confirmCompleted}
+                  />
+                ))}
+              </ul>
+            )}
+          </div>
+        </section>
+      </div>
     </div>
   );
 };

@@ -2,6 +2,8 @@ import { roundTo } from '@field-note/shared';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { useWorkLogList } from '../workLogs/useWorkLogs';
+
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { EmptyState } from '../components/ui/empty-state';
@@ -53,6 +55,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
   const summary = useWorkSummary(projectId, { unit: 'week', ...rangeQuery(range) });
   const employees = useEmployees({});
   const options = useOptions();
+  const workLogs = useWorkLogList(projectId);
 
   if (summary.isError) return <Alert>투입 인원 통계를 불러오지 못했습니다</Alert>;
 
@@ -200,11 +203,10 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
         <Modal
           open
           onOpenChange={(open) => !open && setDetailId(null)}
-          title={`${detailEmployee?.name ?? '직원'} · 일한 날 상세`}
+          title={`${detailEmployee?.name ?? '직원'} · 일한 날 (${detailRow.workedDays}일)`}
         >
           <StatGroup
             items={[
-              { label: '일한 날', value: detailRow.workedDays, unit: '일' },
               { label: '총 시간', value: hours(detailRow.totalMinutes), unit: '시간' },
               {
                 label: '하루 평균',
@@ -213,46 +215,37 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
               },
             ]}
           />
-          <dl className="flex flex-col gap-2 text-sm">
-            <div className="flex gap-2">
-              <dt className="w-24 shrink-0 text-foreground/70">처음 일한 날</dt>
-              <dd className="font-medium">
-                {detailRow.firstWorkDate ? formatDay(detailRow.firstWorkDate) : '-'}
-              </dd>
-            </div>
-            <div className="flex gap-2">
-              <dt className="w-24 shrink-0 text-foreground/70">가장 최근</dt>
-              <dd className="font-medium">
-                {detailRow.lastWorkDate ? formatDay(detailRow.lastWorkDate) : '-'}
-              </dd>
-            </div>
-          </dl>
-          {detailRow.categories.length > 0 && (
+          {/* 근무 날짜 목록: firstWorkDate ~ lastWorkDate 사이의 프로젝트 저장 작업 내역 날짜 */}
+          {workLogs.data && detailRow.firstWorkDate && detailRow.lastWorkDate ? (
             <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-semibold">작업 구분별</p>
-              <ul className="flex flex-col gap-1">
-                {detailRow.categories.map((item) => (
-                  <li key={item.categoryId} className="flex items-center justify-between text-sm">
-                    <span className="text-foreground/80">
-                      {categoryNames.get(item.categoryId) ?? '(알 수 없는 구분)'}
-                    </span>
-                    <span className="tabular-nums font-medium">{hours(item.totalMinutes)}시간</span>
-                  </li>
-                ))}
+              <p className="text-sm font-semibold">근무 날짜</p>
+              <ul className="divide-y divide-line rounded-lg border border-line text-sm">
+                {workLogs.data
+                  .filter(
+                    (log) =>
+                      log.status === 'SAVED' &&
+                      log.workDate >= detailRow.firstWorkDate! &&
+                      log.workDate <= detailRow.lastWorkDate!,
+                  )
+                  .map((log) => (
+                    <li key={log.workDate}>
+                      <Link
+                        to={`/projects/${projectId}/work/${log.workDate}`}
+                        onClick={() => setDetailId(null)}
+                        className="flex items-center justify-between px-3 py-2 hover:bg-muted"
+                      >
+                        <span className="font-medium">{formatDay(log.workDate)}</span>
+                        <span className="tabular-nums text-foreground/65">
+                          {hours(log.totalMinutes)}시간
+                        </span>
+                      </Link>
+                    </li>
+                  ))}
               </ul>
             </div>
+          ) : (
+            <p className="text-sm text-foreground/65">근무 날짜 정보가 없습니다</p>
           )}
-          <p className="text-sm text-foreground/60">
-            날짜별 상세는{' '}
-            <Link
-              className="text-primary underline"
-              to={`/projects/${projectId}`}
-              onClick={() => setDetailId(null)}
-            >
-              작업 달력
-            </Link>
-            에서 확인하세요
-          </p>
         </Modal>
       )}
     </Section>

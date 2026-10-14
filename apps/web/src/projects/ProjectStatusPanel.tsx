@@ -11,7 +11,7 @@ import {
   type ProjectStatus,
 } from '@field-note/shared';
 import { Check, MoreHorizontal } from 'lucide-react';
-import { Fragment, useState, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
@@ -255,48 +255,51 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
       </h2>
       {done && <Alert variant="info">{done}</Alert>}
 
-      {/* 프로그레스 바: 원 + 연결선 */}
+      {/* 프로그레스 바: 원 + 절대 위치 연결선 */}
       {project.status === 'CANCELLED' ? (
         <Alert>취소된 프로젝트입니다. 기록은 그대로 조회할 수 있고 더 수정할 수 없습니다</Alert>
       ) : (
-        <ol className="flex items-start" aria-label="진행 단계">
+        <div className="relative flex justify-between" aria-label="진행 단계">
+          {/* 전체 트랙 */}
+          <div className="absolute top-[17px] right-4 left-4 h-0.5 bg-muted" />
+          {/* 완료 트랙 */}
+          {stepIndex > 0 && (
+            <div
+              className="absolute top-[17px] left-4 h-0.5 bg-primary transition-all duration-500"
+              style={{
+                width: `calc(${(stepIndex / (STEPS.length - 1)) * 100}% - 2rem)`,
+              }}
+            />
+          )}
           {STEPS.map((step, index) => (
-            <Fragment key={step}>
-              <li
-                aria-current={index === stepIndex ? 'step' : undefined}
-                className="flex flex-col items-center gap-1.5 text-center"
-                style={{ flex: '0 0 auto', width: `${100 / STEPS.length}%` }}
+            <div
+              key={step}
+              role="listitem"
+              aria-current={index === stepIndex ? 'step' : undefined}
+              className="relative z-10 flex flex-col items-center gap-1.5"
+            >
+              <span
+                className={cn(
+                  'grid size-[34px] place-items-center rounded-full text-sm font-bold',
+                  index < stepIndex && 'bg-primary text-primary-foreground',
+                  index === stepIndex &&
+                    'bg-primary text-primary-foreground ring-4 ring-primary/20',
+                  index > stepIndex && 'bg-muted text-foreground/40',
+                )}
               >
-                <span
-                  className={cn(
-                    'grid size-9 place-items-center rounded-full text-sm font-bold ring-2 ring-offset-2',
-                    index < stepIndex &&
-                      'bg-primary ring-primary text-primary-foreground ring-offset-surface-subtle',
-                    index === stepIndex &&
-                      'bg-primary ring-primary text-primary-foreground ring-offset-surface-subtle',
-                    index > stepIndex &&
-                      'bg-muted ring-transparent text-foreground/50 ring-offset-transparent',
-                  )}
-                >
-                  {index < stepIndex ? <Check aria-hidden className="size-4" /> : index + 1}
-                </span>
-                <span
-                  className={cn(
-                    'text-xs font-medium leading-tight',
-                    index <= stepIndex ? 'text-foreground' : 'text-foreground/50',
-                  )}
-                >
-                  {PROJECT_STATUS_LABELS[step]}
-                </span>
-              </li>
-              {index < STEPS.length - 1 && (
-                <div
-                  className={cn('mt-4 h-0.5 flex-1', index < stepIndex ? 'bg-primary' : 'bg-muted')}
-                />
-              )}
-            </Fragment>
+                {index < stepIndex ? <Check aria-hidden className="size-4" /> : index + 1}
+              </span>
+              <span
+                className={cn(
+                  'text-center text-xs font-medium leading-tight',
+                  index <= stepIndex ? 'text-foreground' : 'text-foreground/40',
+                )}
+              >
+                {PROJECT_STATUS_LABELS[step]}
+              </span>
+            </div>
           ))}
-        </ol>
+        </div>
       )}
 
       {/* 상태 요약 + 버튼 한 줄 */}
