@@ -125,10 +125,9 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
               <TableHead>
                 <TableRow>
                   <TableHeaderCell>직원</TableHeaderCell>
-                  <TableHeaderCell className="text-right">일한 날</TableHeaderCell>
                   <TableHeaderCell className="text-right">총 시간</TableHeaderCell>
                   <TableHeaderCell className="text-right">하루 평균</TableHeaderCell>
-                  <TableHeaderCell>일한 기간</TableHeaderCell>
+                  <TableHeaderCell>일한 날</TableHeaderCell>
                   <TableHeaderCell>한 일</TableHeaderCell>
                 </TableRow>
               </TableHead>
@@ -144,19 +143,19 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                           <span className="ml-2 text-foreground/65">{employee.title}</span>
                         )}
                       </TableCell>
-                      <TableCell className="text-right tabular-nums">{row.workedDays}일</TableCell>
                       <TableCell className="text-right font-semibold tabular-nums">
                         {hours(row.totalMinutes)}시간
                       </TableCell>
                       <TableCell className="text-right tabular-nums text-foreground/75">
                         {hours(row.totalMinutes / Math.max(row.workedDays, 1))}시간
                       </TableCell>
-                      <TableCell className="whitespace-nowrap text-foreground/75">
-                        {row.firstWorkDate && row.lastWorkDate
-                          ? row.firstWorkDate === row.lastWorkDate
-                            ? formatDay(row.firstWorkDate)
-                            : `${formatDay(row.firstWorkDate)} ~ ${formatDay(row.lastWorkDate)}`
-                          : '-'}
+                      <TableCell className="whitespace-nowrap">
+                        <span className="font-semibold tabular-nums">{row.workedDays}일</span>
+                        {row.lastWorkDate && (
+                          <span className="ml-1.5 text-sm text-foreground/65">
+                            · 최근 {formatDay(row.lastWorkDate)}
+                          </span>
+                        )}
                       </TableCell>
                       <TableCell className="text-foreground/75">
                         {row.categories
@@ -173,14 +172,13 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                 })}
                 <TableRow>
                   <TableCell className="font-semibold">합계 {rows.length}명</TableCell>
-                  <TableCell className="text-right tabular-nums">
-                    {summary.data.workedDays}일
-                  </TableCell>
                   <TableCell className="text-right font-semibold tabular-nums">
                     {hours(totalMinutes)}시간
                   </TableCell>
                   <TableCell />
-                  <TableCell />
+                  <TableCell className="tabular-nums text-foreground/65">
+                    작업한 날 {summary.data.workedDays}일
+                  </TableCell>
                   <TableCell />
                 </TableRow>
               </TableBody>
