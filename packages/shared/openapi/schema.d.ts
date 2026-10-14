@@ -3169,6 +3169,7 @@ export interface paths {
                     from?: string;
                     to?: string;
                     q?: string;
+                    site?: string;
                     sortBy?: "recent" | "name" | "status" | "client" | "manager" | "plannedStart" | "plannedEnd";
                     sortDir?: "asc" | "desc";
                     page?: number;

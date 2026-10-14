@@ -187,6 +187,7 @@ export const createProjectService = (
       from,
       to,
       q,
+      site,
       sortBy = 'recent',
       sortDir,
       page = 1,
@@ -207,10 +208,10 @@ export const createProjectService = (
               OR: [
                 { name: { contains: q, mode: 'insensitive' } },
                 { code: { contains: q, mode: 'insensitive' } },
-                { siteName: { contains: q, mode: 'insensitive' } },
               ],
             }
           : {}),
+        siteName: site ? { contains: site, mode: 'insensitive' } : undefined,
       };
       const direction = sortDir ?? (sortBy === 'recent' ? 'desc' : 'asc');
       // 같은 값끼리는 최근 등록순(등록 순서 = 코드 번호 순서, id는 시간순 uuid)으로 이어 붙여 쪽을 넘겨도 순서가 흔들리지 않게 함

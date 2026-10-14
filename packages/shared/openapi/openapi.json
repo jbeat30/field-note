@@ -8514,6 +8514,15 @@
           {
             "schema": {
               "type": "string",
+              "maxLength": 100
+            },
+            "required": false,
+            "name": "site",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": [
                 "recent",
                 "name",
