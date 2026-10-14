@@ -26,6 +26,8 @@ export type UploadMeta = {
   description?: string;
   // 촬영일시(ISO). 비우면 서버가 등록 시각으로 정함
   takenAt?: string;
+  // 작업일. 비우면 서버가 촬영일(서울 기준)로 정함
+  workDate?: string;
 };
 
 export type UploadTicket = {

@@ -1,5 +1,5 @@
 import { PROJECT_STATUS_LABELS, todayInSeoul } from '@field-note/shared';
-import { Camera, ChevronLeft } from 'lucide-react';
+import { ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 
@@ -8,53 +8,20 @@ import { Button } from '../components/ui/button';
 import { PeriodNav } from '../components/ui/period-nav';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
 import { useEmployees } from '../employees/useEmployees';
-import { addDays, formatDay, formatLongDay } from '../lib/dates';
+import { addDays, formatDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
-import { PhotoGrid } from '../photos/PhotoGrid';
-import { usePhotoList } from '../photos/usePhotos';
 import { useAssignments } from '../projects/useAssignments';
 import { useProject } from '../projects/useProjects';
 import { useCompanySettings } from '../settings/useCompanySettings';
 import { useOptions } from '../settings/useOptions';
+import { DayMemosStep } from '../workLogs/DayMemosStep';
+import { DayPhotosStep } from '../workLogs/DayPhotosStep';
 import { WorkLogEditor } from '../workLogs/WorkLogEditor';
 import { useWorkLog, useWorkLogList } from '../workLogs/useWorkLogs';
 
 const WRITABLE = ['IN_PROGRESS', 'SUSPENDED', 'COMPLETED', 'WARRANTY'];
 
-// 그날의 사진: 이 프로젝트에서 그 작업일로 올린 사진 (올리기·자세히 보기는 사진첩)
-const DayPhotos = ({ projectId, date }: { projectId: string; date: string }) => {
-  const navigate = useNavigate();
-  const photos = usePhotoList(projectId, { workDate: date }, 12);
-  const items = photos.data?.pages.flatMap((page) => page.items) ?? [];
-
-  return (
-    <section
-      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-      aria-labelledby="day-photos-heading"
-    >
-      <div className="flex items-center justify-between gap-2">
-        <h3 id="day-photos-heading" className="text-lg font-bold">
-          {formatLongDay(date)} 작업 사진
-        </h3>
-        <Button asChild variant="secondary">
-          <Link to={`/projects/${projectId}/photos`}>
-            <Camera aria-hidden className="size-5" />
-            사진 올리기·전체 보기
-          </Link>
-        </Button>
-      </div>
-      {photos.isPending ? (
-        <p className="text-sm text-foreground/70">불러오는 중</p>
-      ) : items.length === 0 ? (
-        <p className="text-sm text-foreground/70">이 날 올린 사진이 없습니다</p>
-      ) : (
-        <PhotoGrid photos={items} onSelect={() => void navigate(`/projects/${projectId}/photos`)} />
-      )}
-    </section>
-  );
-};
-
-// 프로젝트의 하루 작업: 누가 몇 시간 무슨 일을 했는지(사람마다 다를 수 있음), 한 일, 그날 사진·자재를 한곳에서 남긴다
+// 프로젝트의 하루 작업: 누가 몇 시간 무슨 일을 했는지(사람마다 다를 수 있음), 한 일, 그날 사진·메모를 한곳에서 남긴다
 export const ProjectWorkDayPage = () => {
   const { id = '', date = '' } = useParams();
   const navigate = useNavigate();
@@ -150,7 +117,12 @@ export const ProjectWorkDayPage = () => {
               }}
             />
           )}
-          {!problem && <DayPhotos projectId={id} date={date} />}
+          {!problem && (
+            <div className="grid items-start gap-5 xl:grid-cols-[1fr_440px]">
+              <DayPhotosStep projectId={id} date={date} />
+              <DayMemosStep projectId={id} date={date} />
+            </div>
+          )}
           {!problem && (
             <p className="text-sm text-foreground/70">
               이 날 쓴 자재는{' '}
