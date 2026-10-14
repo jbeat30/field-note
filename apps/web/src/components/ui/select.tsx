@@ -95,7 +95,7 @@ export const Select = <T extends string>({
             'max-h-(--radix-select-content-available-height) w-(--radix-select-trigger-width) min-w-40',
           )}
         >
-          <SelectPrimitive.Viewport className="max-h-72 p-1">
+          <SelectPrimitive.Viewport className="max-h-80 p-1">
             {emptyLabel && <SelectItem option={{ value: EMPTY, label: emptyLabel }} muted />}
             {groupOptions(options).map((group) => (
               <Fragment key={group.label || '_'}>

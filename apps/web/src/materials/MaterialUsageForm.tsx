@@ -10,6 +10,7 @@ import { useId, useState, type FormEvent } from 'react';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { DateInput } from '../components/ui/date-input';
+import { FormNotice } from '../components/ui/form-notice';
 import { Input } from '../components/ui/input';
 import { getErrorCode } from '../lib/apiError';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -75,6 +76,7 @@ export const MaterialUsageForm = ({
   const [date, setDate] = useState(defaultDate);
   const [rows, setRows] = useState<Row[]>(() => [newRow()]);
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [notice, setNotice] = useState<string | null>(null);
   const [rootError, setRootError] = useState('');
   const [saved, setSaved] = useState('');
   const [busy, setBusy] = useState(false);
@@ -117,6 +119,7 @@ export const MaterialUsageForm = ({
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     setErrors({});
+    setNotice(null);
     setRootError('');
     setSaved('');
 
@@ -124,7 +127,7 @@ export const MaterialUsageForm = ({
     const found: Record<string, string> = {};
 
     if (filled.length === 0) {
-      setRootError('기록할 자재를 한 줄 이상 적어 주세요');
+      setNotice('기록할 자재를 한 줄 이상 적어 주세요');
       return;
     }
 
@@ -389,6 +392,7 @@ export const MaterialUsageForm = ({
           {busy ? '저장하는 중' : '자재 기록'}
         </Button>
       </div>
+      <FormNotice message={notice} />
       {rootError && <Alert>{rootError}</Alert>}
       {saved && <Alert variant="success">{saved}</Alert>}
     </form>

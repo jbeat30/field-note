@@ -28,7 +28,7 @@ import { cn } from '../lib/cn';
 import { Textarea } from '../components/ui/textarea';
 import { draftKey } from '../drafts/formDraft';
 import { useLocalDraft } from '../drafts/useLocalDraft';
-import { formatDay } from '../lib/dates';
+import { formatDay, formatLongDay } from '../lib/dates';
 import { getErrorCode } from '../lib/apiError';
 import { splitServerErrors } from '../lib/serverErrors';
 
@@ -877,15 +877,19 @@ export const WorkLogEditor = ({
         {errors.entries && <p className="text-sm text-danger">{errors.entries}</p>}
       </Step>
 
-      <Step number={4} title="그날 작업" description="이 날 현장에서 한 일을 적어 두세요">
+      <Step
+        number={4}
+        title={`${formatLongDay(date)} 작업 내용`}
+        description="이 날 현장에서 한 일을 적어 두세요"
+      >
         <FormField label="작업 내용" error={errors.content}>
           <Textarea value={content} onChange={(event) => setContent(event.target.value)} />
         </FormField>
         <div className="grid gap-4 md:grid-cols-2">
-          <FormField label="작업 구역" hint="층·호실·동 (선택)">
+          <FormField label="작업 구역">
             <Input value={area} onChange={(event) => setArea(event.target.value)} />
           </FormField>
-          <FormField label="날씨·특이사항" hint="선택 (우천 중단, 자재 지연 등)">
+          <FormField label="특이사항" hint="예: 비로 오후 작업 중단, 자재 입고 지연">
             <Input value={notes} onChange={(event) => setNotes(event.target.value)} />
           </FormField>
         </div>

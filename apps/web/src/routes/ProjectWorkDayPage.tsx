@@ -9,7 +9,7 @@ import { Button } from '../components/ui/button';
 import { PeriodNav } from '../components/ui/period-nav';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
 import { useEmployees } from '../employees/useEmployees';
-import { addDays, formatDay } from '../lib/dates';
+import { addDays, formatDay, formatLongDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 import { PhotoGrid } from '../photos/PhotoGrid';
 import { usePhotoList } from '../photos/usePhotos';
@@ -35,7 +35,7 @@ const DayPhotos = ({ projectId, date }: { projectId: string; date: string }) => 
     >
       <div className="flex items-center justify-between gap-2">
         <h3 id="day-photos-heading" className="text-lg font-bold">
-          이 날 사진
+          {formatLongDay(date)} 작업 사진
         </h3>
         <Button asChild variant="secondary">
           <Link to={`/projects/${projectId}/photos`}>

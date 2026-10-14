@@ -109,7 +109,7 @@ const ComboboxList = ({
           className="h-10 w-full bg-transparent text-base outline-none placeholder:text-foreground/55 md:text-[15px]"
         />
       </div>
-      <Command.List className="max-h-64 overflow-y-auto p-1">
+      <Command.List className="max-h-80 overflow-y-auto p-1">
         <Command.Empty className="px-3 py-6 text-center text-sm text-foreground/65">
           {emptyText}
         </Command.Empty>

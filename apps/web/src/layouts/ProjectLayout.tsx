@@ -1,11 +1,18 @@
 import { PROJECT_STATUS_LABELS, todayInSeoul, type ProjectStatus } from '@field-note/shared';
-import { CalendarRange, MapPin, UserRound, Building2 } from 'lucide-react';
+import { CalendarRange, MapPin, MoreHorizontal, UserRound, Building2 } from 'lucide-react';
+import { useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
 import { Skeleton } from '../components/ui/skeleton';
 import { useEmployees } from '../employees/useEmployees';
 import { cn } from '../lib/cn';
@@ -26,10 +33,10 @@ export const STATUS_TONE: Record<
   CANCELLED: 'danger',
 };
 
-// 보증 화면은 완료 이후 상태에서만 보인다 (종료는 조회만)
 const WARRANTY_STATUSES: readonly string[] = ['COMPLETED', 'WARRANTY', 'CLOSED'];
+// 오늘 기록 버튼을 보여 줄 상태
+const WRITABLE: readonly string[] = ['IN_PROGRESS', 'SUSPENDED', 'COMPLETED', 'WARRANTY'];
 
-// 오늘 기준 남은 일수 문구 (끝나기 전이면 "D-N", 지났으면 "N일 지남")
 const dueText = (end: string, status: ProjectStatus) => {
   if (['COMPLETED', 'WARRANTY', 'CLOSED', 'CANCELLED'].includes(status)) return null;
 
@@ -40,14 +47,22 @@ const dueText = (end: string, status: ProjectStatus) => {
   return days < 0 ? `${-days}일 지남` : days === 0 ? '오늘 종료 예정' : `D-${days}`;
 };
 
-// 프로젝트 작업 공간 공통 틀: 프로젝트 정보 머리 + 메뉴(개요·사진·메모·자재·문서·변경·일보·요약·보수·보증)
-// /projects/:id 아래 모든 화면이 이 틀 안에서 열려, 메뉴로 오가며 한 프로젝트를 관리한다
+// 프로젝트 작업 공간 공통 틀: 프로젝트 정보 머리 + 서브 메뉴 + 콘텐츠
 export const ProjectLayout = () => {
   const { id = '' } = useParams();
   const { pathname } = useLocation();
   const project = useProject(id);
   const partners = usePartners({});
   const employees = useEmployees({});
+  const navRef = useRef<HTMLElement>(null);
+
+  // 경로가 바뀌면 활성 탭이 보이도록 자동 스크롤
+  useEffect(() => {
+    const nav = navRef.current;
+    if (!nav) return;
+    const active = nav.querySelector<HTMLElement>('[aria-current="page"]');
+    active?.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+  }, [pathname]);
 
   if (project.isPending) {
     return (
@@ -79,6 +94,8 @@ export const ProjectLayout = () => {
   const closeout = [`${base}/summary`, `${base}/repairs`, `${base}/warranty`];
   const inCloseout = closeout.some((path) => pathname.startsWith(path));
   const showWarranty = WARRANTY_STATUSES.includes(data.status);
+  const showTodayBtn = WRITABLE.includes(data.status);
+
   const tabs: { to: string; label: string; end?: boolean; active?: boolean }[] = [
     { to: base, label: '작업 달력', end: true },
     { to: `${base}/overview`, label: '현황' },
@@ -90,7 +107,6 @@ export const ProjectLayout = () => {
     { to: `${base}/labor`, label: '공수·인건비' },
     { to: `${base}/change-works`, label: '추가 공사' },
     { to: `${base}/summary`, label: '마감·보증', active: inCloseout },
-    { to: `${base}/info`, label: '정보 수정' },
   ];
   const closeoutTabs = [
     { to: `${base}/summary`, label: '마감 요약' },
@@ -104,31 +120,49 @@ export const ProjectLayout = () => {
   ];
 
   return (
-    <div className="flex flex-col gap-5">
+    <div className="flex flex-col gap-4">
       <BackLink className="print:hidden" to="/projects">
         프로젝트 목록
       </BackLink>
 
-      <header className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-5 sm:p-6 print:hidden">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <div className="flex min-w-0 flex-col gap-1.5">
-            <div className="flex items-center gap-2 text-sm text-foreground/70">
+      {/* 프로젝트 머리: 1줄 번호·이름·상태·남은 기간 + 주 버튼·더보기, 2줄 현장·고객·담당자·기간 */}
+      <header className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4 sm:p-5 print:hidden">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-1">
+            <div className="flex flex-wrap items-center gap-1.5 text-sm text-foreground/70">
               <span className="font-medium">{data.code}</span>
               <Badge tone={STATUS_TONE[data.status]}>{PROJECT_STATUS_LABELS[data.status]}</Badge>
               {due && <Badge tone={due.includes('지남') ? 'danger' : 'neutral'}>{due}</Badge>}
             </div>
-            <h1 className="text-2xl font-bold tracking-tight break-keep">{data.name}</h1>
+            <h1 className="text-xl font-bold tracking-tight break-keep">{data.name}</h1>
           </div>
-          <div className="flex shrink-0 flex-wrap gap-2">
-            <Button asChild>
-              <Link to={projectWorkPath(data.id, todayInSeoul(new Date()))}>오늘 작업 입력</Link>
-            </Button>
-            <Button asChild variant="secondary">
-              <Link to={`/search?project=${data.id}`}>프로젝트 안에서 찾기</Link>
-            </Button>
+          <div className="flex shrink-0 items-center gap-1">
+            {showTodayBtn && (
+              <Button size="sm" asChild>
+                <Link to={projectWorkPath(data.id, todayInSeoul(new Date()))}>오늘 기록</Link>
+              </Button>
+            )}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button type="button" size="icon-sm" variant="ghost" aria-label="더보기">
+                  <MoreHorizontal aria-hidden />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent>
+                <DropdownMenuItem asChild>
+                  <Link to={`${base}/info`}>정보 수정</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={`${base}/daily-report`}>일보 출력</Link>
+                </DropdownMenuItem>
+                <DropdownMenuItem asChild>
+                  <Link to={`/search?project=${data.id}`}>프로젝트 안에서 찾기</Link>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
           </div>
         </div>
-        <ul className="hidden gap-x-8 gap-y-3 text-sm sm:grid sm:grid-cols-2 xl:grid-cols-4">
+        <ul className="hidden flex-wrap gap-x-6 gap-y-2 text-sm sm:flex">
           <Fact icon={MapPin} label="현장">
             {data.siteName || '-'}
             {data.siteMapUrl && (
@@ -154,9 +188,11 @@ export const ProjectLayout = () => {
         </ul>
       </header>
 
+      {/* 서브 메뉴: 가로 스크롤만, 세로 스크롤바 없음, 현재 탭 자동 스크롤 */}
       <nav
+        ref={navRef}
         aria-label="프로젝트 메뉴"
-        className="-mx-4 flex gap-1 overflow-x-auto border-b border-line px-4 sm:mx-0 sm:px-0 print:hidden"
+        className="-mx-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 print:hidden"
       >
         {tabs.map((tab) => (
           <NavLink
@@ -166,7 +202,6 @@ export const ProjectLayout = () => {
             className={({ isActive }) =>
               cn(
                 '-mb-px flex min-h-touch items-center border-b-2 px-4 text-sm font-medium whitespace-nowrap transition-colors',
-                // 하루 작업 화면(/work/날짜)에서도 "작업" 메뉴를 강조
                 isActive ||
                   tab.active ||
                   (tab.end && pathname.startsWith(`${tab.to}/work/`)) ||
@@ -217,11 +252,9 @@ const Fact = ({
   label: string;
   children: React.ReactNode;
 }) => (
-  <li className="flex items-start gap-2">
-    <Icon aria-hidden className="mt-0.5 size-4 shrink-0 text-foreground/70" />
-    <div className="min-w-0">
-      <span className="block text-xs text-foreground/70">{label}</span>
-      <span className="font-medium">{children}</span>
-    </div>
+  <li className="flex items-center gap-1.5">
+    <Icon aria-hidden className="size-4 shrink-0 text-foreground/70" />
+    <span className="text-foreground/70">{label}</span>
+    <span className="font-medium">{children}</span>
   </li>
 );

@@ -23,6 +23,17 @@ export const formatDay = (date: string) => {
 };
 
 /**
+ * @description 날짜를 "2026년 10월 14일 (수)"처럼 연도 포함해 표시
+ * @param date YYYY-MM-DD
+ * @returns 화면 표시용 날짜
+ */
+export const formatLongDay = (date: string) => {
+  const parsed = new Date(`${date}T00:00:00Z`);
+
+  return `${parsed.getUTCFullYear()}년 ${parsed.getUTCMonth() + 1}월 ${parsed.getUTCDate()}일 (${WEEKDAYS[parsed.getUTCDay()]})`;
+};
+
+/**
  * @description 서울 기준 오늘 날짜 (기기 시간대와 상관없이 현장 날짜로 판단)
  * @returns YYYY-MM-DD
  */

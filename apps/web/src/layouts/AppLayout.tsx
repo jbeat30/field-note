@@ -110,7 +110,7 @@ export const AppLayout = () => {
           <p className="font-emphasis shrink-0 text-lg font-bold text-primary">{APP_NAME}</p>
           <ThemeToggle />
         </header>
-        <main className="mx-auto w-full max-w-6xl flex-1 px-4 pt-4 pb-40 md:px-8 md:pt-8 md:pb-24 print:p-0">
+        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 pt-4 pb-40 md:px-8 md:pt-8 md:pb-24 xl:px-10 print:p-0">
           <Outlet />
         </main>
       </div>
