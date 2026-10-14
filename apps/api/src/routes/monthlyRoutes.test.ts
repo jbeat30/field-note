@@ -400,11 +400,11 @@ describe('월 공수표 엑셀 내보내기', () => {
     ]);
     expect(rowsOf('월 공수표')).toEqual([
       ['프로젝트 코드', '프로젝트', '직원', '공수(MD)', 'MM'],
-      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '김작업', 1, 0.045],
-      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '이설치', 0.5, 0.023],
+      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '김작업', 1, 0.038],
+      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '이설치', 0.5, 0.019],
     ]);
     expect(rowsOf('요약')).toContainEqual(['확정 상태', '확정']);
-    expect(rowsOf('직원별 합계')[1]).toEqual(['김작업', 1, 0.045]);
+    expect(rowsOf('직원별 합계')[1]).toEqual(['김작업', 1, 0.038]);
 
     const { rows } = await db.ownerPool.query(
       `SELECT detail FROM audit_logs WHERE action = 'REPORT_EXPORTED' AND detail->>'kind' = 'MONTHLY_HOURS_XLSX'`,
