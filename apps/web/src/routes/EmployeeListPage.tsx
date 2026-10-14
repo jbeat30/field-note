@@ -129,8 +129,8 @@ export const EmployeeListPage = () => {
         }
       />
 
-      {/* xl+ 2열: 간편 등록 / 직원 찾기 */}
-      <div className="grid items-start gap-5 xl:grid-cols-2">
+      {/* xl+ 2열: 간편 등록 / 직원 찾기 — items-stretch로 높이 통일 */}
+      <div className="grid gap-5 xl:grid-cols-2">
         <EmployeeQuickAdd />
 
         <section
