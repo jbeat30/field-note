@@ -46,7 +46,7 @@ import { createPrismaSessionStore } from '../session/sessionStore';
 import { withCompany } from '../db/withCompany';
 import { createWorkLogService } from '../workLog/workLogService';
 
-// 1단계(직원·프로젝트·투입·일지) 모든 엔드포인트의 회사 격리를 HTTP 수준에서 확인한다 (기술 기획서 §5.1)
+// 1단계(직원·프로젝트·투입·작업 내역) 모든 엔드포인트의 회사 격리를 HTTP 수준에서 확인한다 (기술 기획서 §5.1)
 // 회사 A의 데이터를 만들고, 회사 B의 세션으로 A의 ID를 쓰는 모든 경로를 호출해 막히는지 본다
 let db: TestDatabase;
 let documentIds: string[];
@@ -158,7 +158,7 @@ const client = (cookie: string) => {
 
 const FILE_REQUEST = { name: '현장.jpg', contentType: 'image/jpeg', purpose: 'PHOTO', size: 1000 };
 
-// 회사 A: 거래처·직원·프로젝트·투입·일지·선택 목록 항목을 한 벌씩
+// 회사 A: 거래처·직원·프로젝트·투입·작업 내역·선택 목록 항목을 한 벌씩
 const buildCompany = async () => {
   const cookie = await signUp();
   const c = client(cookie);
@@ -192,7 +192,7 @@ const buildCompany = async () => {
 
   await c.call('put', `/projects/${projectId}/work-logs/${DAY}`, {
     status: 'SAVED',
-    content: '회사 A의 일지',
+    content: '회사 A의 작업 내역',
     entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
   });
 
@@ -214,7 +214,7 @@ const buildCompany = async () => {
   // 수정 이력·기간 변경 이력도 한 건씩 만든다
   await c.call('put', `/projects/${projectId}/work-logs/${DAY}`, {
     status: 'SAVED',
-    content: '회사 A의 일지 (수정)',
+    content: '회사 A의 작업 내역 (수정)',
     expectedVersion: 1,
     entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
   });
@@ -375,6 +375,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /employees/{id}/work-history', 'get', `/employees/${a.worker}/work-history`],
     ['GET /partners/{id}', 'get', `/partners/${a.clientId}`],
     ['PATCH /partners/{id}', 'patch', `/partners/${a.clientId}`, { name: '침투' }],
+    ['DELETE /partners/{id}', 'delete', `/partners/${a.clientId}`],
     ['PATCH /company/options/{id}', 'patch', `/company/options/${a.category}`, { name: '침투' }],
     ['GET /projects/{id}', 'get', `/projects/${a.projectId}`],
     ['PATCH /projects/{id}', 'patch', `/projects/${a.projectId}`, { name: '침투' }],
@@ -783,7 +784,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(project.body).toMatchObject({ name: 'A동 판금 공사', status: 'IN_PROGRESS' });
     expect(employee.body.name).toBe('김작업');
     expect(logs.items).toHaveLength(1);
-    expect(log.body).toMatchObject({ content: '회사 A의 일지 (수정)', version: 2 });
+    expect(log.body).toMatchObject({ content: '회사 A의 작업 내역 (수정)', version: 2 });
     expect(assignments.body.items[0].cancelledAt).toBeNull();
 
     // 변경·추가 작업도 그대로: B의 침투 요청·철회·증빙 해제가 반영되지 않았다
@@ -816,7 +817,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     });
     expect(repair.body.history).toHaveLength(1);
 
-    // 월 공수표·확정도 회사마다 따로: 각자 자기 일지만 집계되고, A가 확정해도 B는 확정되지 않으며 B는 A의 확정을 재오픈할 수 없다
+    // 월 공수표·확정도 회사마다 따로: 각자 자기 작업 내역만 집계되고, A가 확정해도 B는 확정되지 않으며 B는 A의 확정을 재오픈할 수 없다
     const month = DAY.slice(0, 7);
     const monthOf = async (c: typeof a.c) =>
       (await c.call('get', `/monthly-hours?month=${month}`)).body;
@@ -1036,7 +1037,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       }),
     );
 
-    // B의 정상 프로젝트에 A의 직원을 투입·일지에 넣기
+    // B의 정상 프로젝트에 A의 직원을 투입·작업 내역에 넣기
     const bProject = await b.c.id('/projects', bOwn);
 
     await b.c.call('post', `/projects/${bProject}/status`, {
@@ -1052,7 +1053,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       }),
     );
     await record(
-      '일지 직원',
+      '작업 내역 직원',
       await b.c.call('put', `/projects/${bProject}/work-logs/${DAY}`, {
         status: 'DRAFT',
         content: '',
@@ -1060,7 +1061,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       }),
     );
     await record(
-      '일지 작업 구분',
+      '작업 내역 작업 구분',
       await b.c.call('put', `/projects/${bProject}/work-logs/${DAY}`, {
         status: 'DRAFT',
         content: '',
@@ -1081,7 +1082,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       expect({ name, rejected: status >= 400 && status < 500 }).toEqual({ name, rejected: true });
     }
 
-    // A의 직원에게 B의 투입·일지가 생기지 않았다
+    // A의 직원에게 B의 투입·작업 내역이 생기지 않았다
     const history = await a.c.call('get', `/employees/${a.worker}/work-history`);
 
     expect(history.body.projects).toHaveLength(1);

@@ -985,7 +985,7 @@ describe('목업 서버 계약', () => {
     // 목업 서버가 호출마다 지연을 흉내 내므로 호출이 많은 이 시험은 제한 시간을 늘림
   }, 120_000);
 
-  it('작업일지: 임시 저장·저장, 낙관적 잠금, 수정 이력, 날짜·상태·투입·하루 합계 규칙이 서버와 같다', async () => {
+  it('작업 내역: 임시 저장·저장, 낙관적 잠금, 수정 이력, 날짜·상태·투입·하루 합계 규칙이 서버와 같다', async () => {
     expect(
       (
         await client.GET('/api/v1/projects/{id}/work-logs', {
@@ -1018,7 +1018,7 @@ describe('목업 서버 계약', () => {
       });
     const entries = [{ employeeId: worker.id, categoryId: category.id, minutes: 480 }];
 
-    // 더미 일지: 임시 저장 1건 포함, 최근 날짜 순
+    // 더미 작업 내역: 임시 저장 1건 포함, 최근 날짜 순
     const listed = workLogsResponseSchema.parse(
       (
         await client.GET('/api/v1/projects/{id}/work-logs', {
@@ -1033,7 +1033,7 @@ describe('목업 서버 계약', () => {
     );
     expect(listed.some((item) => item.status === 'DRAFT')).toBe(true);
 
-    // 하루 합계: 같은 날 다른 프로젝트에도 저장된 일지가 있는 직원은 경고
+    // 하루 합계: 같은 날 다른 프로젝트에도 저장된 작업 내역이 있는 직원은 경고
     const seeded = workLogSchema.parse(
       (await client.GET('/api/v1/projects/{id}/work-logs/{workDate}', path('2026-09-02'))).data,
     );
@@ -1102,7 +1102,7 @@ describe('목업 서버 계약', () => {
       autoAssignedEmployeeIds: [stranger.id],
     });
     expect(saved.savedAt).not.toBeNull();
-    // 저장된 일지를 임시 저장으로 되돌릴 수 없고, 고치면 이력이 남는다
+    // 저장된 작업 내역을 임시 저장으로 되돌릴 수 없고, 고치면 이력이 남는다
     expect(
       (await put('2026-09-05', { status: 'DRAFT', content: '', entries: [], expectedVersion: 2 }))
         .response.status,
@@ -1250,7 +1250,7 @@ describe('목업 서버 계약', () => {
     ).toBe(400);
   });
 
-  it('공수 집계: 저장된 일지만 직원별·작업 구분별·주별로 합산하고 직원 이력은 프로젝트별로 나온다', async () => {
+  it('공수 집계: 저장된 작업 내역만 직원별·작업 구분별·주별로 합산하고 직원 이력은 프로젝트별로 나온다', async () => {
     expect(
       (
         await client.GET('/api/v1/projects/{id}/work-summary', {
@@ -1273,7 +1273,7 @@ describe('목업 서버 계약', () => {
       ).data,
     );
 
-    // 더미 일지: A동은 저장 3건 + 임시 저장 1건
+    // 더미 작업 내역: A동은 저장 3건 + 임시 저장 1건
     expect(summary.savedLogCount).toBe(3);
     expect(summary.draftLogCount).toBe(1);
     expect(summary.totalMinutes).toBe(480 * 6 + 240 * 2 + 0);

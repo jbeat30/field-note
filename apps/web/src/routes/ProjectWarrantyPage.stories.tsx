@@ -1,10 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, userEvent, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { findAccount, getProjects, saveProjects, signIn } from '../mocks/state';
 
 import { ProjectWarrantyPage } from './ProjectWarrantyPage';
+import { chooseOption } from '../lib/storyActions';
 
 const routerFor = (name: string) => ({
   initialEntries: [
@@ -45,7 +46,7 @@ export const UnconfiguredDefaults: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('12개월 (기본값, 아직 저장 전)')).toBeInTheDocument();
+    await expect(await canvas.findByText('12개월 (기본값)')).toBeInTheDocument();
     await expect(canvas.getAllByText(/2027-03-12/).length).toBeGreaterThan(0);
     await expect(canvas.getByText('아직 저장한 보증 설정이 없습니다')).toBeInTheDocument();
   },
@@ -109,7 +110,7 @@ export const InspectionNeedsStartDate: Story = {
     const canvas = within(canvasElement);
     const form = within(await canvas.findByRole('form', { name: '보증 설정' }));
 
-    await userEvent.selectOptions(form.getByLabelText('시작 기준'), '고객 검수일');
+    await chooseOption(form.getByLabelText('시작 기준'), '고객 검수일');
     await userEvent.click(form.getByRole('button', { name: '보증 설정 저장' }));
     await expect(await form.findByText('고객 검수일을 입력해 주세요')).toBeInTheDocument();
   },
@@ -145,10 +146,7 @@ export const RegisterAndRemoveCertificate: Story = {
       await form.findByText('만료일을 입력해 주세요', { exact: false }),
     ).toBeInTheDocument();
 
-    await waitFor(() =>
-      expect(form.getByRole('option', { name: '1층 시공도' })).toBeInTheDocument(),
-    );
-    await userEvent.selectOptions(form.getByLabelText('문서함에서 선택'), '1층 시공도');
+    await chooseOption(form.getByLabelText('문서함에서 선택'), '1층 시공도');
     await userEvent.type(form.getByLabelText('만료일'), '2027-03-01');
     await userEvent.type(form.getByLabelText('발급처 (선택)'), '서울보증');
     await userEvent.click(form.getByRole('button', { name: '보증서 등록' }));

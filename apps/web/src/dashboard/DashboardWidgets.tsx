@@ -9,23 +9,29 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { cn } from '../lib/cn';
+import { projectWorkPath } from '../lib/projectPaths';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { ProgressBar } from '../components/ui/progress-bar';
 
 // 알림이 많을 때 처음에 보여 줄 개수 (나머지는 펼쳐서 본다)
 const ALERTS_COLLAPSED = 5;
 
-const card = 'flex flex-col gap-2 rounded-md border border-border p-4';
+const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
 
 const Widget = ({
   title,
   id,
+  className,
   children,
 }: {
   title: string;
   id: string;
+  className?: string;
   children: React.ReactNode;
 }) => (
-  <section className={card} aria-labelledby={id}>
+  <section className={cn(card, className)} aria-labelledby={id}>
     <h2 id={id} className="text-lg font-bold">
       {title}
     </h2>
@@ -58,9 +64,20 @@ const ProjectRow = ({ project }: { project: DashboardProject }) => (
         공수 소진율{' '}
         {project.burnPercent === null ? '계획 없음' : `${Math.round(project.burnPercent)}%`}
       </span>
+      {project.progressPercent !== null && (
+        <ProgressBar
+          aria-label={`${project.name} 진행률`}
+          value={project.progressPercent}
+          className="mt-1"
+        />
+      )}
       {project.warnings.length > 0 && (
-        <span className="text-sm font-medium text-danger">
-          {project.warnings.map((warning) => PROJECT_WARNING_LABELS[warning]).join(' · ')}
+        <span className="flex flex-wrap gap-1">
+          {project.warnings.map((warning) => (
+            <Badge key={warning} tone="danger">
+              {PROJECT_WARNING_LABELS[warning]}
+            </Badge>
+          ))}
         </span>
       )}
     </Link>
@@ -68,7 +85,7 @@ const ProjectRow = ({ project }: { project: DashboardProject }) => (
 );
 
 // 홈 대시보드 (서비스 기획서 §15.2): 알림, 오늘 투입, 위험 프로젝트, 진행 프로젝트, 이번 주 인력,
-// 보증 종료 임박, 만료 임박(보증서·직원 서류), 할 일(임시 저장 일지·방치 메모·월 공수 미확정)
+// 보증 종료 임박, 만료 임박(보증서·직원 서류), 할 일(임시 저장 작업 내역·방치 메모·월 공수 미확정)
 export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
   const {
     alerts,
@@ -85,8 +102,8 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
   const shownAlerts = showAllAlerts ? alerts : alerts.slice(0, ALERTS_COLLAPSED);
 
   return (
-    <div className="flex flex-col gap-4">
-      <Widget title="알림" id="alerts-heading">
+    <div className="grid items-start gap-4 lg:grid-cols-2">
+      <Widget title="알림" id="alerts-heading" className="lg:col-span-2">
         {alerts.length === 0 ? (
           <Empty>지금 확인할 알림이 없습니다</Empty>
         ) : (
@@ -95,7 +112,7 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
               <li key={`${alert.kind}-${index}`}>
                 <Link
                   to={dashboardAlertPath(alert)}
-                  className="flex min-h-touch items-center rounded-md bg-danger/10 px-3 py-2 text-danger"
+                  className="flex min-h-touch items-center rounded-md bg-danger-subtle px-3 py-2 text-danger"
                 >
                   {dashboardAlertMessage(alert)}
                 </Link>
@@ -134,14 +151,14 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
               {todayAssignments.projects.map((item) => (
                 <li key={item.projectId}>
                   <Link
-                    to={`/work-logs?project=${item.projectId}`}
+                    to={projectWorkPath(item.projectId, dashboard.today)}
                     className="flex min-h-touch items-center justify-between gap-2 underline-offset-2 hover:underline"
                   >
                     <span>
                       {item.code} {item.name} · {item.headcount}명
                     </span>
                     <span className={item.hasLog ? 'text-sm' : 'text-sm font-medium text-danger'}>
-                      {item.hasLog ? '일지 입력함' : '일지 없음'}
+                      {item.hasLog ? '작업 내역 입력함' : '작업 내역 없음'}
                     </span>
                   </Link>
                 </li>
@@ -270,13 +287,13 @@ export const DashboardWidgets = ({ dashboard }: { dashboard: Dashboard }) => {
 
       <Widget title="할 일" id="todo-heading">
         <ul className="flex flex-col gap-1 text-sm">
-          <li>임시 저장된 작업일지 {todos.draftLogCount}건</li>
+          <li>임시 저장된 작업 내역 {todos.draftLogCount}건</li>
           <li>3일 넘게 쌓인 메모 {todos.staleInboxCount}건</li>
           <li>
             {todos.unclosedMonth ? (
               <Link
                 to={`/monthly-hours?month=${todos.unclosedMonth}`}
-                className="min-h-touch content-center text-primary underline"
+                className="flex min-h-touch items-center text-primary underline"
               >
                 {todos.unclosedMonth} 월 공수 확정 전
               </Link>

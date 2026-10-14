@@ -3,6 +3,7 @@ import { expect, fn, screen, userEvent, waitFor, within } from 'storybook/test';
 
 import { PhotoDetailDialog } from './PhotoDetailDialog';
 import { storyImage, storyPhoto } from './storyData';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Photos/사진 상세',
@@ -28,7 +29,7 @@ export const Default: Story = {
     await expect(dialog.getByLabelText('구역')).toHaveValue('3층 301호');
     await expect(dialog.getByLabelText('설명')).toHaveValue('철거 전 상태');
 
-    await userEvent.selectOptions(dialog.getByLabelText('구분'), '작업 후');
+    await chooseOption(dialog.getByLabelText('구분'), '작업 후');
     await userEvent.clear(dialog.getByLabelText('구역'));
     await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
@@ -60,7 +61,7 @@ export const DeleteNeedsConfirm: Story = {
     await userEvent.click(dialog.getByRole('button', { name: '삭제' }));
     await expect(args.onDelete).not.toHaveBeenCalled();
 
-    await userEvent.click(dialog.getByRole('button', { name: '정말 삭제' }));
+    await userEvent.click(within(document.body).getByRole('button', { name: '지우기' }));
     await waitFor(() => expect(args.onDelete).toHaveBeenCalledWith(args.photo.id));
   },
 };

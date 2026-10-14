@@ -221,7 +221,7 @@ describe('상태 전환 안내', () => {
     ).toEqual([]);
   });
 
-  it('임시 저장 일지·진행률·남은 자재·협의 중 변경 작업을 모두 알린다', async () => {
+  it('임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업을 모두 알린다', async () => {
     const { client, project, worker, categories } = await setup();
     const category = categories[0]!.id;
     const entries = [{ employeeId: worker, categoryId: category, minutes: 480 }];
@@ -348,7 +348,7 @@ describe('프로젝트 요약', () => {
     expect(summary.companyName).toMatch(/^요약회사/);
   });
 
-  it('공수는 저장된 일지만 직원별·작업 구분별로 합산하고 변경·사후 표시를 따로 센다', async () => {
+  it('공수는 저장된 작업 내역만 직원별·작업 구분별로 합산하고 변경·사후 표시를 따로 센다', async () => {
     const { client, project, worker, worker2, categories } = await setup();
     const [a, b] = categories;
     const log = (date: string, entries: object[], extra: object = {}) =>

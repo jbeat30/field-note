@@ -1,8 +1,9 @@
-import type {
-  ProjectCreate,
-  ProjectListQuery,
-  ProjectTransition,
-  ProjectUpdate,
+import {
+  PROJECT_PAGE_SIZE_MAX,
+  type ProjectCreate,
+  type ProjectListQuery,
+  type ProjectTransition,
+  type ProjectUpdate,
 } from '@field-note/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
@@ -18,27 +19,50 @@ const cleanFilter = (filter: ProjectListQuery): ProjectListQuery => ({
   from: filter.from || undefined,
   to: filter.to || undefined,
   q: filter.q?.trim() || undefined,
-  sort: filter.sort || undefined,
+  sortBy: filter.sortBy || undefined,
+  sortDir: filter.sortDir || undefined,
+  page: filter.page || undefined,
+  pageSize: filter.pageSize || undefined,
 });
 
+// 프로젝트 목록 한 쪽: 조건·정렬·쪽을 서버에 넘겨 그 쪽만 받는다 ({ items, total, page, pageSize })
 export const useProjects = (filter: ProjectListQuery) => {
   const query = cleanFilter(filter);
 
   return useQuery({
     queryKey: queryKeys.projects(query),
-    queryFn: async () => {
-      const { data } = await apiClient.GET('/api/v1/projects', { params: { query } });
+    // 조건이 바뀌어 새 조회가 시작되면 이전 요청은 취소된다 (signal)
+    queryFn: async ({ signal }) => {
+      const { data } = await apiClient.GET('/api/v1/projects', { params: { query }, signal });
 
       if (!data) {
         throw new Error('[web.useProjects] 프로젝트 목록 조회 실패');
       }
 
-      return data.items;
+      return data;
     },
-    // 필터를 바꾸는 동안 이전 목록을 유지해 화면이 깜빡이지 않게 함
+    // 조건·쪽을 바꾸는 동안 이전 쪽을 유지해 화면이 깜빡이지 않게 함
     placeholderData: (previous) => previous,
   });
 };
+
+// 선택 상자·이름 조회용 프로젝트 목록 (한 번에 받을 수 있는 최대 개수까지, 최근 등록순)
+export const useProjectChoices = () =>
+  useQuery({
+    queryKey: queryKeys.projects({ pageSize: PROJECT_PAGE_SIZE_MAX }),
+    queryFn: async ({ signal }) => {
+      const { data } = await apiClient.GET('/api/v1/projects', {
+        params: { query: { pageSize: PROJECT_PAGE_SIZE_MAX } },
+        signal,
+      });
+
+      if (!data) {
+        throw new Error('[web.useProjectChoices] 프로젝트 목록 조회 실패');
+      }
+
+      return data.items;
+    },
+  });
 
 export const useProject = (id: string) =>
   useQuery({

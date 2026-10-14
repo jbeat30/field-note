@@ -88,14 +88,12 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
       <FormField label="분류">
         <Select
           value={category}
-          onChange={(event) => setCategory(event.target.value as DocumentCategory)}
-        >
-          {DOCUMENT_CATEGORIES.map((value) => (
-            <option key={value} value={value}>
-              {DOCUMENT_CATEGORY_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          onValueChange={setCategory}
+          options={DOCUMENT_CATEGORIES.map((value) => ({
+            value,
+            label: DOCUMENT_CATEGORY_LABELS[value],
+          }))}
+        />
       </FormField>
       <label className="flex min-h-touch items-center gap-3 text-base">
         <input
@@ -123,7 +121,7 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
           {document.versions.map((version, index) => (
             <li
               key={version.versionNo}
-              className="flex flex-col gap-2 rounded-md border border-border p-3"
+              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
             >
               <p className="text-sm">
                 <span className="font-bold">v{version.versionNo}</span>
@@ -213,7 +211,7 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
             <p className="text-sm text-foreground/70">아직 열람 기록이 없습니다</p>
           )}
           {logs.isSuccess && logs.data.length > 0 && (
-            <ul className="divide-y divide-border rounded-md border border-border text-sm">
+            <ul className="divide-y divide-border rounded-xl border border-border text-sm">
               {logs.data.map((log) => (
                 <li key={log.id} className="flex flex-wrap justify-between gap-2 px-3 py-2">
                   <span>
@@ -253,7 +251,7 @@ export const DocumentDetailDialog = ({ documentId, onClose }: DocumentDetailDial
   return (
     <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-foreground/50" />
+        <Dialog.Overlay className="fixed inset-0 bg-overlay" />
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed inset-x-0 bottom-0 top-0 mx-auto flex max-w-xl flex-col gap-3 overflow-y-auto bg-surface p-4 sm:inset-y-6 sm:rounded-md"

@@ -1,15 +1,16 @@
 import { todayInSeoul } from '@field-note/shared';
 import { Dialog } from 'radix-ui';
 import { useState } from 'react';
-import { Link, useParams, useSearchParams } from 'react-router';
+import { useParams, useSearchParams } from 'react-router';
 
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { addDays, formatDay } from '../lib/dates';
 import { useProject } from '../projects/useProjects';
-import { downloadReportXlsx, printWhenReady } from '../reports/exportReport';
+import { downloadReportXlsx } from '../reports/exportReport';
 import { ReportSheet } from '../reports/ReportSheet';
 import { useDailyReport } from '../reports/useDailyReport';
 
@@ -62,12 +63,6 @@ export const DailyReportPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <div className="flex flex-col gap-3 print:hidden">
-        <Link
-          className="min-h-touch content-center text-sm text-primary underline"
-          to={`/projects/${id}`}
-        >
-          ← {project.data.name}
-        </Link>
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -75,10 +70,9 @@ export const DailyReportPage = () => {
             aria-label="전날"
             onClick={() => setDate(addDays(date, -1))}
           >
-            ◀
+            <ChevronLeft aria-hidden className="size-5" />
           </Button>
-          <Input
-            type="date"
+          <DateInput
             aria-label="일보 날짜"
             value={date}
             onChange={(event) => event.target.value && setDate(event.target.value)}
@@ -89,37 +83,28 @@ export const DailyReportPage = () => {
             aria-label="다음 날"
             onClick={() => setDate(addDays(date, 1))}
           >
-            ▶
+            <ChevronRight aria-hidden className="size-5" />
           </Button>
         </div>
-        <Button type="button" disabled={!report.data} onClick={() => void printWhenReady()}>
-          인쇄·PDF로 저장
-        </Button>
         <p className="text-sm text-foreground/70">
           인쇄 창에서 “PDF로 저장”을 고르면 {formatDay(date)} 작업일보를 파일로 보관·제출할 수
           있습니다
         </p>
-        <details className="rounded-md border border-border p-3">
+        <details className="rounded-xl bg-surface-subtle p-4">
           <summary className="min-h-touch cursor-pointer content-center text-base font-medium">
             엑셀로 내보내기
           </summary>
           <div className="mt-2 flex flex-col gap-3">
             <div className="grid grid-cols-2 gap-3">
               <FormField label="시작일">
-                <Input
-                  type="date"
+                <DateInput
                   value={from}
                   max={to}
                   onChange={(event) => setFrom(event.target.value)}
                 />
               </FormField>
               <FormField label="끝일">
-                <Input
-                  type="date"
-                  value={to}
-                  min={from}
-                  onChange={(event) => setTo(event.target.value)}
-                />
+                <DateInput value={to} min={from} onChange={(event) => setTo(event.target.value)} />
               </FormField>
             </div>
             {exportError && <Alert>{exportError}</Alert>}
@@ -142,15 +127,15 @@ export const DailyReportPage = () => {
 
       <Dialog.Root open={isConfirming} onOpenChange={setIsConfirming}>
         <Dialog.Portal>
-          <Dialog.Overlay className="fixed inset-0 bg-foreground/50 print:hidden" />
+          <Dialog.Overlay className="fixed inset-0 bg-overlay print:hidden" />
           <Dialog.Content
             aria-describedby="export-description"
             className="fixed inset-x-0 bottom-0 mx-auto flex max-w-xl flex-col gap-3 rounded-t-lg bg-surface p-4 print:hidden"
           >
             <Dialog.Title className="text-lg font-bold">엑셀로 내보낼까요?</Dialog.Title>
             <p id="export-description" className="text-base">
-              {from} ~ {to}의 일지·공수·자재를 엑셀로 내려받습니다. 내보낸 사람과 기간은 기록으로
-              남습니다.
+              {from} ~ {to}의 작업 내역·공수·자재를 엑셀로 내려받습니다. 내보낸 사람과 기간은
+              기록으로 남습니다.
             </p>
             <div className="flex gap-2">
               <Button

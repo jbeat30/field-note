@@ -395,17 +395,17 @@ describe('보증 종료와 보수 요청', () => {
 });
 
 describe('사후 작업 연결', () => {
-  // 보증 중에 사후 작업으로 표시한 일지 2건(공수 480·240)과 사용 자재 기록을 만든다
+  // 보증 중에 사후 작업으로 표시한 작업 내역 2건(공수 480·240)과 사용 자재 기록을 만든다
   const afterService = async () => {
     const base = await setup();
     const { client, worker, category } = base;
-    // 진행 중에 일반 일지·자재를 먼저 남기고, 보증 중에 사후 작업 일지·자재를 남긴다
+    // 진행 중에 일반 작업 내역·자재를 먼저 남기고, 보증 중에 사후 작업 작업 내역·자재를 남긴다
     const project = await base.create('사후 작업 시험');
     const entries = (minutes: number) => [{ employeeId: worker, categoryId: category, minutes }];
     const log = async (date: string, extra: object, minutes = 480) =>
       client.saveLog(project, date, {
         status: 'SAVED',
-        content: `일지 ${date}`,
+        content: `작업 내역 ${date}`,
         entries: entries(minutes),
         ...extra,
       });
@@ -450,7 +450,7 @@ describe('사후 작업 연결', () => {
     };
   };
 
-  it('사후 작업 일지와 자재 기록을 연결하면 건별 공수·자재가 합계된다', async () => {
+  it('사후 작업 작업 내역과 자재 기록을 연결하면 건별 공수·자재가 합계된다', async () => {
     const { client, project, afterLog1, afterLog2, afterMaterial, duct } = await afterService();
     const id = detail(await client.create(project, body)).id;
 
@@ -499,7 +499,7 @@ describe('사후 작업 연결', () => {
     expect((await client.link(id, { workLogId: afterLog1 })).status).toBe(200);
     expect((await client.link(id, { workLogId: afterLog1 })).status).toBe(400);
 
-    // 다른 프로젝트의 보수 요청에는 이 프로젝트의 일지를 연결할 수 없다
+    // 다른 프로젝트의 보수 요청에는 이 프로젝트의 작업 내역을 연결할 수 없다
     const other = await create('C동');
 
     await warranty(other);

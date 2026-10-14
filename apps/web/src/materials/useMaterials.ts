@@ -26,7 +26,7 @@ export const useMaterials = (q = '') =>
     },
   });
 
-// 그날 작업일지 화면에서 보는 하루치 기록
+// 그날 작업 내역 화면에서 보는 하루치 기록
 export const useMaterialRecordsOnDate = (projectId: string, date: string) =>
   useQuery({
     queryKey: queryKeys.materialRecords(projectId, { date }),

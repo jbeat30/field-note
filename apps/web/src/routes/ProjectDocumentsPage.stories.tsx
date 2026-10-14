@@ -6,6 +6,7 @@ import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
 
 import { ProjectDocumentsPage } from './ProjectDocumentsPage';
+import { chooseOption } from '../lib/storyActions';
 
 const projectId = DEMO_PROJECTS.find((project) => project.name === 'A동 외장 판금 공사')!.id;
 
@@ -43,8 +44,8 @@ export const Default: Story = {
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent);
 
-    // 고정한 문서 → 분류별 (도면은 고정되어 위로 올라감)
-    await expect(headings).toEqual(['문서 올리기', '고정한 문서', '시방·사양', '계약·행정']);
+    // 분류별로 묶임
+    await expect(headings).toEqual(['문서함', '문서 올리기']);
     await expect(canvas.getByText('민감')).toBeInTheDocument();
   },
 };
@@ -54,11 +55,11 @@ export const FilterAndSearch: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('1층 시공도');
-    await userEvent.selectOptions(canvas.getByLabelText('분류로 거르기'), '계약·행정');
+    await chooseOption(canvas.getByLabelText('분류로 거르기'), '계약·행정');
     await waitFor(() => expect(canvas.queryByText('외장 판금 시방서')).not.toBeInTheDocument());
     await expect(await canvas.findByText('도급 계약서')).toBeInTheDocument();
 
-    await userEvent.selectOptions(canvas.getByLabelText('분류로 거르기'), '모든 분류');
+    await chooseOption(canvas.getByLabelText('분류로 거르기'), '모든 분류');
     await userEvent.type(canvas.getByLabelText('문서 이름 검색'), '시방');
     await waitFor(() => expect(canvas.queryByText('도급 계약서')).not.toBeInTheDocument());
     await expect(await canvas.findByText('외장 판금 시방서')).toBeInTheDocument();
@@ -103,7 +104,7 @@ export const SensitiveNeedsConfirm: Story = {
   },
 };
 
-// 확인하면 열람 기록이 남고 상세의 열람 기록에서 확인됨
+// 확인하면 열람 기록이 남고 버전·기록의 열람 기록에서 확인됨
 export const SensitiveOpenIsLogged: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -117,7 +118,7 @@ export const SensitiveOpenIsLogged: Story = {
     );
     await waitFor(() => expect(popup.location.href).toContain('/mock-storage/document/'));
 
-    await userEvent.click(canvas.getByRole('button', { name: '도급 계약서 상세' }));
+    await userEvent.click(canvas.getByRole('button', { name: '도급 계약서 버전·기록' }));
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
@@ -134,13 +135,15 @@ export const UploadNewDocument: Story = {
       canvas.getByLabelText('문서 파일'),
       new File(['%PDF-1.7'], '안전점검표.pdf', { type: 'application/pdf' }),
     );
-    await userEvent.selectOptions(canvas.getByLabelText('분류'), '안전·검사');
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await chooseOption(canvas.getByLabelText('분류'), '안전·검사');
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(
       await canvas.findByRole('button', { name: '안전점검표 열기' }),
     ).toBeInTheDocument();
-    await expect(canvas.getByRole('heading', { name: '안전·검사', level: 2 })).toBeInTheDocument();
+    await expect(
+      within(canvas.getByRole('table', { name: '문서 목록' })).getByText('안전·검사'),
+    ).toBeInTheDocument();
     // 올린 뒤 입력이 비워짐
     await waitFor(() => expect(canvas.getByLabelText('문서 이름')).toHaveValue(''));
   },
@@ -155,22 +158,9 @@ export const UnsupportedFileIsRejected: Story = {
     await userEvent.upload(canvas.getByLabelText('문서 파일'), new File(['MZ'], '설치.exe'), {
       applyAccept: false,
     });
-    await userEvent.click(canvas.getByRole('button', { name: '문서 올리기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByRole('alert')).toHaveTextContent('올릴 수 없는 파일 형식');
-  },
-};
-
-export const PinFromList: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await userEvent.click(
-      await canvas.findByRole('button', { name: '외장 판금 시방서 첫 화면에 고정' }),
-    );
-    await expect(
-      await canvas.findByRole('button', { name: '외장 판금 시방서 고정 해제' }),
-    ).toBeInTheDocument();
   },
 };
 
@@ -178,7 +168,9 @@ export const DetailAddVersionAndDelete: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(await canvas.findByRole('button', { name: '외장 판금 시방서 상세' }));
+    await userEvent.click(
+      await canvas.findByRole('button', { name: '외장 판금 시방서 버전·기록' }),
+    );
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
@@ -188,7 +180,11 @@ export const DetailAddVersionAndDelete: Story = {
       new File(['%PDF-1.7'], '시방서_rev2.pdf', { type: 'application/pdf' }),
     );
     await userEvent.type(dialog.getByLabelText('개정 사유'), '마감 색상 변경');
-    await userEvent.click(dialog.getByRole('button', { name: '새 버전 올리기' }));
+    await userEvent.click(
+      within(dialog.getByLabelText('새 버전 파일').closest('form')!).getByRole('button', {
+        name: '저장',
+      }),
+    );
 
     // 최신본이 바뀌고 이전본이 남음
     await expect(await dialog.findByText('버전 (2개)')).toBeInTheDocument();
@@ -206,7 +202,7 @@ export const DetailAddVersionAndDelete: Story = {
   },
 };
 
-// 검색 결과에서 들어오면(?doc=) 그 문서의 상세가 바로 열리고, 닫으면 주소에서 doc이 빠진다
+// 검색 결과에서 들어오면(?doc=) 그 문서의 버전·기록가 바로 열리고, 닫으면 주소에서 doc이 빠진다
 export const OpensDetailFromSearchLink: Story = {
   parameters: {
     router: {
@@ -223,7 +219,7 @@ export const OpensDetailFromSearchLink: Story = {
       expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
     );
     await expect(
-      within(canvasElement).getByRole('button', { name: '도급 계약서 상세' }),
+      within(canvasElement).getByRole('button', { name: '도급 계약서 버전·기록' }),
     ).toBeInTheDocument();
   },
 };

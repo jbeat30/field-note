@@ -33,16 +33,18 @@ export const OutsideProject: Story = {
       'href',
       '/projects',
     );
-    await expect(dialog.getByRole('link', { name: '오늘 일지' })).toHaveAttribute(
+    await expect(dialog.getByRole('link', { name: '오늘 작업 (프로젝트 고르기)' })).toHaveAttribute(
       'href',
-      '/work-logs',
+      '/projects',
     );
 
     await userEvent.click(dialog.getByRole('button', { name: '메모' }));
-    await expect(dialog.getByText(/메모함에 저장합니다/)).toBeInTheDocument();
+    await expect(
+      dialog.getByText(/프로젝트를 고르면 해당 메모 노트에 저장됩니다/),
+    ).toBeInTheDocument();
 
     await userEvent.type(dialog.getByLabelText('메모'), '현장에서 적은 한 줄');
-    await userEvent.click(dialog.getByRole('button', { name: '메모함에 저장' }));
+    await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
     // 저장하면 닫힘
     await waitFor(() => expect(screen.queryByRole('dialog')).not.toBeInTheDocument());
@@ -60,13 +62,13 @@ export const InsideProject: Story = {
       'href',
       `/projects/${projectId}/photos`,
     );
-    await expect(dialog.getByRole('link', { name: '오늘 일지' })).toHaveAttribute(
+    await expect(dialog.getByRole('link', { name: '오늘 작업' })).toHaveAttribute(
       'href',
-      `/work-logs?project=${projectId}`,
+      expect.stringMatching(new RegExp(`/projects/${projectId}/work/\\d{4}-\\d{2}-\\d{2}$`)),
     );
-    await expect(dialog.getByRole('link', { name: '자재 (일지에서 입력)' })).toHaveAttribute(
+    await expect(dialog.getByRole('link', { name: '자재' })).toHaveAttribute(
       'href',
-      `/work-logs?project=${projectId}`,
+      `/projects/${projectId}/materials`,
     );
 
     await userEvent.click(dialog.getByRole('button', { name: '메모' }));
@@ -74,12 +76,12 @@ export const InsideProject: Story = {
   },
 };
 
-// 일지 화면에서도 보고 있는 프로젝트로 바로 연결 (일지를 쓰다가 사진·메모를 더하는 흐름)
+// 프로젝트의 하루 작업 화면에서도 보고 있는 프로젝트로 바로 연결 (작업을 적다가 사진·메모를 더하는 흐름)
 export const InsideWorkLogScreen: Story = {
   parameters: {
     router: {
-      initialEntries: [`/work-logs?project=${projectId}&date=2026-10-08`],
-      path: '/work-logs',
+      initialEntries: [`/projects/${projectId}/work/2026-10-08`],
+      path: '/projects/:id/work/:date',
     },
   },
   play: async () => {

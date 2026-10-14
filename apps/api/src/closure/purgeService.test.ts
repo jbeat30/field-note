@@ -77,7 +77,7 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       changedBy: account.userId,
     },
   });
-  // 일지는 프로젝트·직원·작업 구분을 참조하므로 삭제 순서(이력 → 공수 항목 → 일지 → 그 밖)까지 함께 확인
+  // 작업 내역은 프로젝트·직원·작업 구분을 참조하므로 삭제 순서(이력 → 공수 항목 → 작업 내역 → 그 밖)까지 함께 확인
   const category = await db.owner.optionItem.create({
     data: {
       companyId: account.companyId,
@@ -93,7 +93,7 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       projectId: project.id,
       workDate: new Date('2026-10-02T00:00:00Z'),
       status: 'SAVED',
-      content: '삭제될 일지',
+      content: '삭제될 작업 내역',
       savedAt: new Date(),
     },
   });

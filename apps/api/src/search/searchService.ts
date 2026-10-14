@@ -17,13 +17,13 @@ export class SearchError extends Error {
 }
 
 export type SearchService = {
-  // 프로젝트·직원·메모·자료·일지를 한 번에 찾음 (로그인한 회사 안에서만). projectId를 주면 그 프로젝트의 메모·자료·일지만
+  // 프로젝트·직원·메모·자료·작업 내역을 한 번에 찾음 (로그인한 회사 안에서만). projectId를 주면 그 프로젝트의 메모·자료·작업 내역만
   search: (companyId: string, query: SearchQuery) => Promise<SearchResponse>;
 };
 
 const TITLE_MAX = 40;
 
-// 첫 줄을 제목으로 쓰되 너무 길면 줄임 (메모·일지는 제목이 따로 없음)
+// 첫 줄을 제목으로 쓰되 너무 길면 줄임 (메모·작업 내역은 제목이 따로 없음)
 const firstLine = (text: string) => {
   const line = (text.split('\n').find((item) => item.trim()) ?? '').trim();
 

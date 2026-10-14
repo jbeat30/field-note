@@ -2,6 +2,7 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { PhotoUploader } from './PhotoUploader';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Photos/사진 올리기',
@@ -17,7 +18,7 @@ export const Default: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(canvas.getByLabelText('구분'), '작업 전');
+    await chooseOption(canvas.getByLabelText('구분'), '작업 전');
     await userEvent.type(canvas.getByLabelText('구역 (선택)'), ' 3층 301호 ');
 
     const input = canvas.getByLabelText('사진 파일 선택');

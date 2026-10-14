@@ -5,10 +5,11 @@ import {
   type AuditTargetType,
   type ErrorCode,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 import type { MockAccount } from './data';
 import { getCurrentAccount } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -96,7 +97,7 @@ const seoulStart = (date: string) => new Date(`${date}T00:00:00+09:00`).getTime(
  */
 export const createAuditHandlers = ({ apiError }: Helpers) => [
   http.get('/api/v1/audit-logs', async ({ request }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

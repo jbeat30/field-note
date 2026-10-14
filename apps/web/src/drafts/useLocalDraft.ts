@@ -24,7 +24,7 @@ export type DraftStatus =
 
 type Options<T> = {
   key: string;
-  // 지금 서버에 있는 일지의 버전 (없으면 null)
+  // 지금 서버에 있는 작업 내역의 버전 (없으면 null)
   baseVersion: number | null;
   // 서버 내용만으로 만든 처음 값의 비교용 글자. 같으면 초안을 만들지 않고 이미 있던 초안도 지움
   initialSignature: string;

@@ -202,10 +202,10 @@ export const companySettingsSchema = z.object({
 
 export type CompanySettings = z.infer<typeof companySettingsSchema>;
 
-// 설정을 저장하기 전 회사의 기본값 (서비스 기획서 §9.5: 하루 8시간, 월 22일, 비율 방식)
+// 기본값: 하루 8시간, 월 26일(주 6일 현장 연평균 365×6÷7÷12≈26.1일), 비율 방식 (결정 ①)
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   standardWorkMinutes: 480,
-  monthlyWorkDays: 22,
+  monthlyWorkDays: 26,
   workUnitMode: 'RATIO',
 };
 

@@ -1,13 +1,14 @@
 import { useState } from 'react';
 import { Link, useSearchParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Input } from '../components/ui/input';
 import { useProject } from '../projects/useProjects';
 import { SearchResults } from '../search/SearchResults';
 import { useDebouncedValue, useSearch } from '../search/useSearch';
 
-// 통합 검색: 프로젝트·직원·메모·자료·일지를 한 검색창에서 찾는다 (서비스 기획서 §14). `?project=`가 있으면 그 프로젝트 안에서만 찾는다
+// 통합 검색: 프로젝트·직원·메모·자료·작업 내역을 한 검색창에서 찾는다 (서비스 기획서 §14). `?project=`가 있으면 그 프로젝트 안에서만 찾는다
 export const SearchPage = () => {
   const [params, setParams] = useSearchParams();
   const projectId = params.get('project') ?? undefined;
@@ -30,7 +31,7 @@ export const SearchPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-2xl font-bold">찾기</h1>
+      <PageHeader title="찾기" description="프로젝트·직원·메모·자료·작업 내역을 한 번에 찾습니다" />
       {projectId && (
         <p className="text-sm text-foreground/70">
           {project.data ? (
@@ -40,7 +41,7 @@ export const SearchPage = () => {
           ) : (
             '프로젝트'
           )}{' '}
-          안에서 메모·자료·일지만 찾습니다 ·{' '}
+          안에서 메모·자료·작업 내역만 찾습니다 ·{' '}
           <Link
             className="text-primary underline"
             to={`/search${text ? `?q=${encodeURIComponent(text)}` : ''}`}
@@ -53,7 +54,7 @@ export const SearchPage = () => {
         type="search"
         autoFocus
         aria-label="검색어"
-        placeholder="프로젝트·직원·메모·자료·일지 찾기"
+        placeholder="프로젝트·직원·메모·자료·작업 내역 찾기"
         maxLength={50}
         value={text}
         onChange={(event) => change(event.target.value)}
