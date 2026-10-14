@@ -376,10 +376,10 @@ describe('프로젝트 인건비 (최소 추정)', () => {
   it('일급·시급·월급·연봉제를 직원별로 환산해 합산하고 금액 큰 순으로 돌려준다', async () => {
     const { client, project, worker, worker2, log } = await setup();
 
-    // 월급 440만원 → 22일·8시간 기준 일 20만원, 시급 15,000원 × 4시간 = 6만원
+    // 월급 520만원 → 26일·8시간 기준 일 20만원, 시급 15,000원 × 4시간 = 6만원
     await client.addRate(worker, {
       payType: 'MONTHLY',
-      amount: 4_400_000,
+      amount: 5_200_000,
       effectiveFrom: '2026-01-01',
     });
     await client.addRate(worker2, {

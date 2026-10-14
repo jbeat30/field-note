@@ -221,7 +221,7 @@ describe('월 공수표', () => {
       isClosed: false,
       closedAt: null,
       standardWorkMinutes: 480,
-      monthlyWorkDays: 22,
+      monthlyWorkDays: 26,
       draftLogCount: 1,
       events: [],
     });
@@ -258,7 +258,7 @@ describe('월 공수 확정·재오픈', () => {
 
     const closed = hours(await client.close({ month: '2026-09', confirmDrafts: true }));
 
-    expect(closed).toMatchObject({ isClosed: true, standardWorkMinutes: 480, monthlyWorkDays: 22 });
+    expect(closed).toMatchObject({ isClosed: true, standardWorkMinutes: 480, monthlyWorkDays: 26 });
     expect(closed.closedAt).not.toBeNull();
     expect(closed.events).toEqual([
       expect.objectContaining({ kind: 'CLOSED', reason: null, draftLogCount: 1 }),
@@ -313,7 +313,7 @@ describe('월 공수 확정·재오픈', () => {
     expect(hours(await client.month('2026-09'))).toMatchObject({
       isClosed: true,
       standardWorkMinutes: 480,
-      monthlyWorkDays: 22,
+      monthlyWorkDays: 26,
     });
     // 확정하지 않은 달은 현재 설정을 따른다
     expect(hours(await client.month('2026-10'))).toMatchObject({
