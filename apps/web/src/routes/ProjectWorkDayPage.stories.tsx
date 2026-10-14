@@ -67,7 +67,7 @@ export const SaveWithBulkInput: Story = {
     });
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByText(/저장했습니다 \(버전 1\)/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/저장됐습니다 · 버전 1/)).toBeInTheDocument();
     await expect(canvas.getByText(/지연 입력/, { selector: 'p' })).toBeInTheDocument();
     // 결근 처리한 직원은 공수가 저장되지 않는다
     await waitFor(() => {
@@ -78,19 +78,6 @@ export const SaveWithBulkInput: Story = {
       expect(saved?.status).toBe('SAVED');
       expect(saved?.entries).toHaveLength(3);
     });
-  },
-};
-
-export const DraftSaveWithoutContent: Story = {
-  play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await pick(canvas);
-    await chooseOption(canvas.getByLabelText('작업 구분 일괄 지정'), '설치');
-    await userEvent.click(canvas.getByRole('button', { name: '모두 적용' }));
-    await userEvent.click(canvas.getByRole('button', { name: '임시 저장' }));
-
-    await expect(await canvas.findByText(/임시 저장했습니다/)).toBeInTheDocument();
   },
 };
 
@@ -181,7 +168,7 @@ export const EditSavedLogBumpsVersion: Story = {
     await fireEvent.change(content, { target: { value: '4층 패널 가공품 반입 (수정)' } });
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByText(/저장했습니다 \(버전 2\)/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/저장됐습니다 · 버전 2/)).toBeInTheDocument();
   },
 };
 

@@ -105,7 +105,7 @@ export const AutoSavesWhileTypingAndClearsOnSave: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '모두 적용' }));
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByText(/저장했습니다 \(버전 1\)/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/저장됐습니다 · 버전 1/)).toBeInTheDocument();
     await waitFor(() => expect(useDraftStore.getState().drafts[key]).toBeUndefined());
   },
 };
