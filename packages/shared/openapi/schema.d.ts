@@ -3169,6 +3169,7 @@ export interface paths {
                     from?: string;
                     to?: string;
                     q?: string;
+                    site?: string;
                     sortBy?: "recent" | "name" | "status" | "client" | "manager" | "plannedStart" | "plannedEnd";
                     sortDir?: "asc" | "desc";
                     page?: number;
@@ -12410,6 +12411,7 @@ export interface paths {
                     scope: "INBOX" | "PROJECT";
                     projectId?: string;
                     tag?: "NEGOTIATION" | "INSTRUCTION" | "ISSUE" | "TODO" | "OTHER";
+                    memoDate?: string;
                     isDone?: "true" | "false";
                     cursor?: string;
                     limit?: number;

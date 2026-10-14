@@ -61,6 +61,8 @@ export const memoListQuerySchema = z
     scope: z.enum(MEMO_SCOPES),
     projectId: z.uuid().optional(),
     tag: memoTagSchema.optional(),
+    // 이 날짜의 메모만 (하루 기록 화면)
+    memoDate: dateSchema.optional(),
     // 할 일 메모의 완료 여부로 거르기
     isDone: z
       .enum(['true', 'false'])

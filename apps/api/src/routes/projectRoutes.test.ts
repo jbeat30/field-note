@@ -389,7 +389,10 @@ describe('목록·조회', () => {
     // 기간이 겹치는 것: 2026-04-01 ~ 2026-05-31 → 가(5~9월)만
     expect(await names('?from=2026-04-01&to=2026-05-31')).toEqual(['가 프로젝트']);
     expect(await names('?from=2026-12-01')).toEqual(['나 프로젝트']);
-    expect(await names(`?q=${encodeURIComponent('강남')}`)).toEqual(['가 프로젝트']);
+    // 검색칸은 프로젝트명·번호만, 현장명은 따로
+    expect(await names(`?q=${encodeURIComponent('강남')}`)).toEqual([]);
+    expect(await names(`?site=${encodeURIComponent('강남')}`)).toEqual(['가 프로젝트']);
+    expect(await names(`?q=${encodeURIComponent('가 프로')}`)).toEqual(['가 프로젝트']);
     expect(await names(`?q=${encodeURIComponent('2026-003')}`)).toEqual(['나 프로젝트']);
     expect(await names('?sortBy=plannedEnd')).toEqual([
       '다 프로젝트',

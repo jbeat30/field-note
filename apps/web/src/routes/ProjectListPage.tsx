@@ -55,6 +55,8 @@ const STATUS_CHIPS: { label: string; status: ProjectStatus | '' }[] = [
 
 // 열 → 서버 정렬 기준
 const SORT_KEY: Record<string, ProjectSortKey> = {
+  // 번호는 등록 순서대로 매겨지므로 등록순 정렬과 같음
+  code: 'recent',
   name: 'name',
   status: 'status',
   client: 'client',
@@ -64,15 +66,23 @@ const SORT_KEY: Record<string, ProjectSortKey> = {
 
 const helper = columnHelper<Row>();
 
-// 열 정의: 머리 글자를 누르면 그 열 기준으로 정렬된다 (이름·고객·담당자는 가나다순, 기간은 시작일순)
+// 열 정의: 머리 글자를 누르면 그 열 기준으로 정렬된다 (번호는 등록순, 이름·고객·담당자는 가나다순, 기간은 시작일순)
 const columns = helper.columns([
+  helper.accessor('code', {
+    id: 'code',
+    header: '번호',
+    meta: { className: 'hidden whitespace-nowrap tabular-nums text-foreground/70 md:table-cell' },
+  }),
   helper.accessor('name', {
     id: 'name',
-    header: '프로젝트',
-    meta: { className: 'min-w-56' },
+    header: '프로젝트명',
+    meta: { className: 'min-w-48' },
     cell: ({ row }) => (
       <>
-        <span className="block text-xs text-foreground/70">{row.original.code}</span>
+        {/* 좁은 화면은 번호·현장명 열이 없어 이름 위아래에 보임 */}
+        <span className="block text-xs tabular-nums text-foreground/70 md:hidden">
+          {row.original.code}
+        </span>
         <Link
           className="font-semibold hover:text-primary hover:underline"
           to={`/projects/${row.original.id}`}
@@ -81,10 +91,19 @@ const columns = helper.columns([
           {row.original.name}
         </Link>
         {row.original.siteName && (
-          <span className="block text-xs text-foreground/70">{row.original.siteName}</span>
+          <span className="block text-xs text-foreground/70 md:hidden">
+            {row.original.siteName}
+          </span>
         )}
       </>
     ),
+  }),
+  helper.accessor('siteName', {
+    id: 'site',
+    header: '현장명',
+    enableSorting: false,
+    meta: { className: 'hidden min-w-36 md:table-cell' },
+    cell: ({ getValue }) => getValue() || '-',
   }),
   helper.accessor((row) => PROJECT_STATUS_LABELS[row.status], {
     id: 'status',
@@ -123,20 +142,23 @@ const columns = helper.columns([
   }),
 ]);
 
-// 프로젝트 목록: 코드·이름·상태·현장·고객·담당자·공종·기간만 보여 준다 (현장 연락처·출입 메모는 카드에서만)
+// 프로젝트 목록: 번호·이름·현장명·상태·고객·담당자·공종·기간만 보여 준다 (현장 연락처·출입 메모는 카드에서만)
 export const ProjectListPage = () => {
   // 검색·필터는 서버 조회 조건, 정렬·쪽도 서버에 넘긴다 (한 쪽만 받음)
   const [filter, setFilter] = useState<ProjectListQuery>({});
   const [searchText, setSearchText] = useState('');
+  const [siteText, setSiteText] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   // 타이핑이 멈춘 뒤에만 검색어를 조회에 반영 (글자마다 요청이 나가지 않게)
   const debouncedSearch = useDebouncedValue(searchText, 300);
+  const debouncedSite = useDebouncedValue(siteText, 300);
   const sort = sorting[0];
   const projects = useProjects({
     ...filter,
     q: debouncedSearch,
+    site: debouncedSite,
     sortBy: sort ? SORT_KEY[sort.id] : undefined,
     sortDir: sort ? (sort.desc ? 'desc' : 'asc') : undefined,
     page: pagination.pageIndex + 1,
@@ -175,7 +197,7 @@ export const ProjectListPage = () => {
     [projects.data, names],
   );
   const trades = (options.data ?? []).filter((item) => item.kind === 'TRADE');
-  const isFiltered = Object.values(filter).some(Boolean) || searchText !== '';
+  const isFiltered = Object.values(filter).some(Boolean) || searchText !== '' || siteText !== '';
 
   return (
     <div className="flex flex-col gap-6">
@@ -195,7 +217,7 @@ export const ProjectListPage = () => {
         <Input
           type="search"
           aria-label="프로젝트 검색"
-          placeholder="프로젝트 이름·현장 이름·번호로 찾기"
+          placeholder="프로젝트명·번호로 찾기"
           value={searchText}
           onChange={(event) => {
             setSearchText(event.target.value);
@@ -222,7 +244,7 @@ export const ProjectListPage = () => {
           className="flex min-h-touch items-center gap-1 self-start text-sm font-medium text-primary"
           onClick={() => setShowAdvanced((value) => !value)}
         >
-          자세히 찾기 (고객·담당자·공종·기간)
+          자세히 찾기 (현장명·고객·담당자·공종·기간)
           <ChevronDown
             aria-hidden
             className={cn('size-4 transition-transform', showAdvanced && 'rotate-180')}
@@ -271,7 +293,19 @@ export const ProjectListPage = () => {
                 options={trades.map((item) => ({ value: item.id, label: item.name }))}
               />
             </div>
-            <div className="grid grid-cols-2 gap-2 lg:max-w-xl">
+            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
+              <label className="col-span-2 flex flex-col gap-1 text-sm">
+                현장명
+                <Input
+                  type="search"
+                  placeholder="예: 강남 사옥"
+                  value={siteText}
+                  onChange={(event) => {
+                    setSiteText(event.target.value);
+                    goFirstPage();
+                  }}
+                />
+              </label>
               <label className="flex flex-col gap-1 text-sm">
                 기간 시작
                 <DateInput
@@ -297,6 +331,7 @@ export const ProjectListPage = () => {
             onClick={() => {
               setFilter({});
               setSearchText('');
+              setSiteText('');
               goFirstPage();
             }}
           >

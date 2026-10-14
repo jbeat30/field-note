@@ -7,7 +7,7 @@ import { queryKeys } from '../query/queryKeys';
 // 메모함(INBOX) 또는 프로젝트 메모 노트(PROJECT). 프로젝트 노트는 projectId가 필요
 export type MemoScope = { scope: 'INBOX' } | { scope: 'PROJECT'; projectId: string };
 
-export type MemoFilter = { tag?: MemoTag; isDone?: boolean };
+export type MemoFilter = { tag?: MemoTag; memoDate?: string; isDone?: boolean };
 
 const PAGE_SIZE = 30;
 
@@ -15,6 +15,7 @@ const toQuery = (target: MemoScope, filter: MemoFilter) => ({
   scope: target.scope,
   projectId: target.scope === 'PROJECT' ? target.projectId : undefined,
   tag: filter.tag,
+  memoDate: filter.memoDate,
   // 서버가 'true'/'false' 문자열을 받음
   isDone: filter.isDone === undefined ? undefined : (String(filter.isDone) as 'true' | 'false'),
 });

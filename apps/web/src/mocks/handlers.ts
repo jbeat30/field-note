@@ -1337,12 +1337,14 @@ export const handlers = [
       from,
       to,
       q,
+      site,
       sortBy = 'recent',
       sortDir,
       page = 1,
       pageSize = PROJECT_PAGE_SIZE_DEFAULT,
     } = query.data;
     const needle = q?.toLowerCase();
+    const siteNeedle = site?.toLowerCase();
     const codeKey = (code: string) => {
       const [year, sequence] = code.split('-').map(Number) as [number, number];
 
@@ -1387,8 +1389,8 @@ export const handlers = [
           (!to || item.plannedStart <= to) &&
           (!needle ||
             item.name.toLowerCase().includes(needle) ||
-            item.code.toLowerCase().includes(needle) ||
-            item.siteName.toLowerCase().includes(needle)),
+            item.code.toLowerCase().includes(needle)) &&
+          (!siteNeedle || item.siteName.toLowerCase().includes(siteNeedle)),
       )
       .sort(compare);
     const items = matched.slice((page - 1) * pageSize, page * pageSize).map((item) => ({
