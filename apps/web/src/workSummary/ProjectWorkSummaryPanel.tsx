@@ -6,7 +6,7 @@ import {
 import { useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { useEmployees } from '../employees/useEmployees';
 import { formatDay } from '../lib/dates';
@@ -25,7 +25,7 @@ const Bar = ({ value, max }: { value: number; max: number }) => (
   </div>
 );
 
-// 프로젝트 공수 집계: 직원별·작업 구분별·기간별 (서비스 기획서 §9.6). 저장된 일지만 반영한다
+// 프로젝트 공수 집계: 직원별·작업 구분별·기간별 (서비스 기획서 §9.6). 저장된 작업 내역만 반영한다
 export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) => {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
@@ -65,21 +65,19 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
       </h2>
 
       <div className="grid grid-cols-2 gap-2">
-        <Input
-          type="date"
+        <DateInput
           aria-label="집계 시작일"
           value={from}
           onChange={(event) => setFrom(event.target.value)}
         />
-        <Input
-          type="date"
+        <DateInput
           aria-label="집계 종료일"
           value={to}
           onChange={(event) => setTo(event.target.value)}
         />
       </div>
 
-      <dl className="grid grid-cols-2 gap-2 rounded-md border border-border p-3 text-sm">
+      <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-surface-subtle p-4 text-sm">
         <div>
           <dt className="text-foreground/70">총 공수</dt>
           <dd className="font-bold">{formatWork(data.totalMinutes, config)}</dd>
@@ -103,18 +101,18 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
       </dl>
       {data.draftLogCount > 0 && (
         <p className="text-sm text-foreground/70">
-          임시 저장 일지 {data.draftLogCount}건은 집계에 포함되지 않았습니다
+          임시 저장 작업 내역 {data.draftLogCount}건은 집계에 포함되지 않았습니다
         </p>
       )}
 
       {data.savedLogCount === 0 ? (
-        <p className="text-sm">저장된 일지가 없어 집계할 공수가 없습니다</p>
+        <p className="text-sm">저장된 작업 내역이 없어 집계할 공수가 없습니다</p>
       ) : (
         <>
           <div className="flex flex-col gap-1">
             <h3 className="text-base font-bold">직원별</h3>
             <ul
-              className="divide-y divide-border rounded-md border border-border"
+              className="divide-y divide-border rounded-xl border border-border"
               aria-label="직원별 공수"
             >
               {data.byEmployee.map((row) => (
@@ -137,7 +135,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
           <div className="flex flex-col gap-1">
             <h3 className="text-base font-bold">작업 구분별</h3>
             <ul
-              className="flex flex-col gap-2 rounded-md border border-border p-3"
+              className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
               aria-label="작업 구분별 공수"
             >
               {data.byCategory.map((row) => (
@@ -159,17 +157,15 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
                 aria-label="기간 묶음"
                 className="w-28"
                 value={unit}
-                onChange={(event) => setUnit(event.target.value as WorkSummaryUnit)}
-              >
-                {WORK_SUMMARY_UNITS.map((item) => (
-                  <option key={item} value={item}>
-                    {WORK_SUMMARY_UNIT_LABELS[item]}
-                  </option>
-                ))}
-              </Select>
+                onValueChange={setUnit}
+                options={WORK_SUMMARY_UNITS.map((item) => ({
+                  value: item,
+                  label: WORK_SUMMARY_UNIT_LABELS[item],
+                }))}
+              />
             </div>
             <ul
-              className="flex flex-col gap-2 rounded-md border border-border p-3"
+              className="flex flex-col gap-2 rounded-xl border border-border bg-surface-subtle p-4"
               aria-label="기간별 공수"
             >
               {data.byPeriod.map((row) => (

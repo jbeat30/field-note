@@ -16,7 +16,11 @@ if (!migrateUrl || !appUrl || !authUrl || !operatorUrl || !queueUrl || !purgeUrl
 }
 
 // 마이그레이션은 소유 계정으로 적용
-execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], { stdio: 'inherit' });
+// Windows의 pnpm은 .cmd라 셸을 거쳐 실행
+execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
+  stdio: 'inherit',
+  shell: process.platform === 'win32',
+});
 
 // 앱·회사 범위 밖 전용·운영자 계정 비밀번호는 마이그레이션 파일에 두지 않고 환경 변수 값으로 설정
 const roleUrls = [appUrl, authUrl, operatorUrl, queueUrl, purgeUrl];

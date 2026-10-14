@@ -139,13 +139,13 @@ export const HoursMode: Story = {
   },
 };
 
-// 일지가 없는 날: 자재·사진만 있는 보고서
+// 작업 내역이 없는 날: 자재·사진만 있는 보고서
 export const NoWorkLog: Story = {
   args: { report: { ...base, workLog: null, entries: [], totals: { headcount: 0, minutes: 0 } } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByText('이 날 작성한 일지가 없습니다')).toBeInTheDocument();
+    await expect(canvas.getByText('이 날 작성한 작업 내역이 없습니다')).toBeInTheDocument();
     await expect(canvas.getByText('기록된 공수가 없습니다')).toBeInTheDocument();
   },
 };
@@ -165,7 +165,7 @@ export const EmptyDay: Story = {
     const canvas = within(canvasElement);
 
     for (const text of [
-      '이 날 작성한 일지가 없습니다',
+      '이 날 작성한 작업 내역이 없습니다',
       '기록된 공수가 없습니다',
       '기록된 자재가 없습니다',
       '이 날 올린 사진이 없습니다',
@@ -175,7 +175,7 @@ export const EmptyDay: Story = {
   },
 };
 
-// 임시 저장 일지는 확정되지 않았다고 표시, 사진이 많으면 일부만 실었다고 알림
+// 임시 저장 작업 내역은 확정되지 않았다고 표시, 사진이 많으면 일부만 실었다고 알림
 export const DraftAndManyPhotos: Story = {
   args: {
     report: { ...base, workLog: { ...base.workLog!, status: 'DRAFT' }, hasMorePhotos: true },
@@ -183,7 +183,7 @@ export const DraftAndManyPhotos: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByText(/임시 저장 상태의 일지입니다/)).toBeInTheDocument();
+    await expect(canvas.getByText(/임시 저장 상태의 작업 내역입니다/)).toBeInTheDocument();
     await expect(canvas.getByText(/사진이 많아 일부만 실었습니다/)).toBeInTheDocument();
   },
 };

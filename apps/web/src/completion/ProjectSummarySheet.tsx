@@ -80,7 +80,7 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
           {settings.workUnitMode === 'HOURS'
             ? `${value(work.totalMinutes)} ${unit} (${manDays(work.totalMinutes).toFixed(1)} MD · ${toManMonths(manDays(work.totalMinutes), settings.monthlyWorkDays).toFixed(2)} MM)`
             : `${manDays(work.totalMinutes).toFixed(1)} MD · ${toManMonths(manDays(work.totalMinutes), settings.monthlyWorkDays).toFixed(2)} MM`}{' '}
-          · 작업일 {work.workedDays}일 · 저장된 일지 {work.savedLogCount}건
+          · 작업일 {work.workedDays}일 · 저장된 작업 내역 {work.savedLogCount}건
           {work.plannedMinutes !== null
             ? ` · 계획 ${value(work.plannedMinutes)} ${unit}${burn !== null ? ` 대비 ${burn}%` : ''}`
             : ' · 계획 공수 없음'}
@@ -180,14 +180,14 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
           </ul>
         )}
         <p className="text-sm">
-          변경·추가 작업으로 표시한 일지 {changeWorks.workLogCount}건 · 공수{' '}
+          변경·추가 작업으로 표시한 작업 내역 {changeWorks.workLogCount}건 · 공수{' '}
           {value(changeWorks.minutes)} {unit}
         </p>
       </Section>
 
       <Section title="사후 작업">
         <p className="text-sm">
-          사후 작업으로 표시한 일지 {afterService.workLogCount}건 · 공수{' '}
+          사후 작업으로 표시한 작업 내역 {afterService.workLogCount}건 · 공수{' '}
           {value(afterService.minutes)} {unit} (보수 요청 기록은 이후 단계에서 추가됩니다)
         </p>
       </Section>

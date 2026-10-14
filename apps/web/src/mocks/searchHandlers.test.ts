@@ -83,7 +83,7 @@ describe('검색 목업 서버 계약', () => {
     expect(contract.documents.items[0]).toMatchObject({ title: '도급 계약서', badge: 'SENSITIVE' });
   });
 
-  it('일지 내용도 찾고 프로젝트를 지정하면 그 프로젝트만 찾는다', async () => {
+  it('작업 내역 내용도 찾고 프로젝트를 지정하면 그 프로젝트만 찾는다', async () => {
     await login();
 
     const { data } = await client.GET('/api/v1/projects', { params: { query: {} } });

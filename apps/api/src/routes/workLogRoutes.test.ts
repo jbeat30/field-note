@@ -67,8 +67,8 @@ const signedUp = async (instance: ReturnType<typeof app>) => {
   sequence += 1;
 
   const invitation = await createCompanyWithInvitation(db.operator, {
-    companyName: `일지회사${sequence}`,
-    adminName: '일지관리자',
+    companyName: `작업 내역회사${sequence}`,
+    adminName: '작업 내역관리자',
     operator: 'test',
   });
   const res = await request(instance)
@@ -189,7 +189,7 @@ const full = (setupResult: Awaited<ReturnType<typeof setup>>, extra: object = {}
 
 const DAY = '2026-10-05';
 
-describe('작업일지 저장·조회', () => {
+describe('작업 내역 저장·조회', () => {
   it('로그인하지 않으면 접근할 수 없다', async () => {
     const instance = app();
     const s = await setup(instance);
@@ -207,7 +207,7 @@ describe('작업일지 저장·조회', () => {
     ).toBe(401);
   });
 
-  it('그날 일지를 처음 저장하면 버전 1이고 저장 시각이 기록되며 다시 조회된다', async () => {
+  it('그날 작업 내역을 처음 저장하면 버전 1이고 저장 시각이 기록되며 다시 조회된다', async () => {
     const instance = app();
     const s = await setup(instance);
     const res = await s.client.put(
@@ -297,6 +297,8 @@ describe('작업일지 저장·조회', () => {
       totalMinutes: 600,
       hasContent: true,
     });
+    // 달력에 보여 줄 그날 일한 사람별 시간 (합이 총 시간과 같다)
+    expect(all[1]?.workers.reduce((sum, worker) => sum + worker.minutes, 0)).toBe(600);
     expect(all[0]).toMatchObject({
       status: 'DRAFT',
       entryCount: 0,
@@ -318,7 +320,7 @@ describe('작업일지 저장·조회', () => {
 });
 
 describe('낙관적 잠금과 수정 이력', () => {
-  it('이미 있는 일지를 버전 없이 보내거나 다른 버전으로 보내면 충돌이다', async () => {
+  it('이미 있는 작업 내역을 버전 없이 보내거나 다른 버전으로 보내면 충돌이다', async () => {
     const instance = app();
     const s = await setup(instance);
 
@@ -339,7 +341,7 @@ describe('낙관적 잠금과 수정 이력', () => {
     });
   });
 
-  it('없는 일지에 버전을 보내면 충돌이다 (화면이 지워진 일지를 보고 있다고 믿는 경우)', async () => {
+  it('없는 작업 내역에 버전을 보내면 충돌이다 (화면이 지워진 작업 내역을 보고 있다고 믿는 경우)', async () => {
     const instance = app();
     const s = await setup(instance);
 
@@ -388,7 +390,7 @@ describe('낙관적 잠금과 수정 이력', () => {
     ).toHaveLength(1);
   });
 
-  it('같은 날 일지를 동시에 처음 만들면 한 건만 만들어진다', async () => {
+  it('같은 날 작업 내역을 동시에 처음 만들면 한 건만 만들어진다', async () => {
     const instance = app();
     const s = await setup(instance);
     const results = await Promise.all([1, 2, 3].map(() => s.client.put(s.project, DAY, full(s))));
@@ -399,7 +401,7 @@ describe('낙관적 잠금과 수정 이력', () => {
     );
   });
 
-  it('저장된 일지를 고치면 고치기 전 값이 최근순 이력으로 남는다', async () => {
+  it('저장된 작업 내역을 고치면 고치기 전 값이 최근순 이력으로 남는다', async () => {
     const instance = app();
     const s = await setup(instance);
 
@@ -431,7 +433,7 @@ describe('낙관적 잠금과 수정 이력', () => {
     expect(JSON.stringify(items)).not.toContain('changedBy');
   });
 
-  it('임시 저장을 처음 저장하면 이력은 없고 저장 시각이 기록되며, 저장된 일지를 임시 저장으로 되돌릴 수 없다', async () => {
+  it('임시 저장을 처음 저장하면 이력은 없고 저장 시각이 기록되며, 저장된 작업 내역을 임시 저장으로 되돌릴 수 없다', async () => {
     const instance = app();
     const s = await setup(instance);
 
@@ -455,7 +457,7 @@ describe('낙관적 잠금과 수정 이력', () => {
     expect(errorResponseSchema.parse(back.body).error.details?.[0]?.path).toBe('body.status');
   });
 
-  it('이력은 앱 계정이 수정·삭제할 수 없고 일지도 지울 수 없다', async () => {
+  it('이력은 앱 계정이 수정·삭제할 수 없고 작업 내역도 지울 수 없다', async () => {
     const instance = app();
     const s = await setup(instance);
 
@@ -488,7 +490,7 @@ describe('작업 일자·프로젝트 상태', () => {
     expect((await s.client.put(s.project, 'not-a-date', full(s))).status).toBe(400);
   });
 
-  it('예정·취소 프로젝트에는 일지를 쓸 수 없다', async () => {
+  it('예정·취소 프로젝트에는 작업 내역을 쓸 수 없다', async () => {
     const instance = app();
     const s = await setup(instance);
     const planned = (await s.client.createProject(s.projectBody)).body.id as string;
@@ -649,7 +651,7 @@ describe('공수 항목 검증', () => {
     expect(workLogSchema.parse(split.body).entries).toHaveLength(2);
   });
 
-  it('숨긴 작업 구분은 새로 고를 수 없지만 이 일지가 이미 쓰고 있으면 유지할 수 있다', async () => {
+  it('숨긴 작업 구분은 새로 고를 수 없지만 이 작업 내역이 이미 쓰고 있으면 유지할 수 있다', async () => {
     const instance = app();
     const s = await setup(instance);
     const category = s.categories[1]!;
@@ -767,7 +769,7 @@ describe('투입이 없는 직원 (서비스 기획서 §9.3)', () => {
 });
 
 describe('하루 합계 공수 경고', () => {
-  it('같은 직원이 같은 날 다른 프로젝트에도 저장된 일지가 있어 합계가 기준시간의 1.5배를 넘으면 경고한다', async () => {
+  it('같은 직원이 같은 날 다른 프로젝트에도 저장된 작업 내역이 있어 합계가 기준시간의 1.5배를 넘으면 경고한다', async () => {
     const instance = app();
     const s = await setup(instance);
     const other = await s.make('B동 덕트');
@@ -792,7 +794,7 @@ describe('하루 합계 공수 경고', () => {
     ]);
   });
 
-  it('연장 1.5(하루 기준의 1.5배) 한 번이나 임시 저장 일지는 경고하지 않는다', async () => {
+  it('연장 1.5(하루 기준의 1.5배) 한 번이나 임시 저장 작업 내역은 경고하지 않는다', async () => {
     const instance = app();
     const s = await setup(instance);
     const other = await s.make('B동 덕트');
@@ -828,7 +830,7 @@ describe('하루 합계 공수 경고', () => {
     ).toEqual([expect.objectContaining({ type: 'DAILY_OVER', totalMinutes: 721 })]);
   });
 
-  it('같은 일지 안에서 작업 구분을 나눈 공수도 합쳐서 본다', async () => {
+  it('같은 작업 내역 안에서 작업 구분을 나눈 공수도 합쳐서 본다', async () => {
     const instance = app();
     const s = await setup(instance);
     const res = await s.client.put(s.project, DAY, {
@@ -847,7 +849,7 @@ describe('하루 합계 공수 경고', () => {
 });
 
 describe('회사 격리·DB 제약', () => {
-  it('다른 회사의 프로젝트 일지는 조회·저장·이력 어디에도 보이지 않는다', async () => {
+  it('다른 회사의 프로젝트 작업 내역은 조회·저장·이력 어디에도 보이지 않는다', async () => {
     const instance = app();
     const a = await setup(instance);
     const b = await setup(instance);
@@ -878,7 +880,7 @@ describe('회사 격리·DB 제약', () => {
     );
   });
 
-  it('없는 프로젝트나 일지는 404이고 잘못된 주소 형식은 400이다', async () => {
+  it('없는 프로젝트나 작업 내역은 404이고 잘못된 주소 형식은 400이다', async () => {
     const instance = app();
     const s = await setup(instance);
 
@@ -889,7 +891,7 @@ describe('회사 격리·DB 제약', () => {
     expect((await s.client.list('not-a-uuid')).status).toBe(400);
   });
 
-  it('저장됨인데 작업 내용·저장 시각이 없는 행, 공수 범위 밖, 같은 날 중복 일지, 다른 회사 연결을 DB가 거부한다', async () => {
+  it('저장됨인데 작업 내용·저장 시각이 없는 행, 공수 범위 밖, 같은 날 중복 작업 내역, 다른 회사 연결을 DB가 거부한다', async () => {
     const instance = app();
     const a = await setup(instance);
     const b = await setup(instance);
@@ -943,7 +945,7 @@ describe('공수 집계', () => {
   const fetch = (instance: ReturnType<typeof app>, cookie: string, path: string) =>
     request(instance).get(`/api/v1${path}`).set('Cookie', cookie);
 
-  it('프로젝트 집계는 저장된 일지만 직원별·작업 구분별·주별로 합산하고 임시 저장은 건수만 알린다', async () => {
+  it('프로젝트 집계는 저장된 작업 내역만 직원별·작업 구분별·주별로 합산하고 임시 저장은 건수만 알린다', async () => {
     const instance = app();
     const s = await setup(instance);
     const [cat1, cat2] = [s.categories[0]!.id, s.categories[1]!.id];
@@ -980,8 +982,18 @@ describe('공수 집계', () => {
       plannedMinutes: null,
     });
     expect(summary.byEmployee).toEqual([
-      { employeeId: s.worker, workedDays: 2, totalMinutes: 960, plannedMinutes: null },
-      { employeeId: s.worker2, workedDays: 1, totalMinutes: 720, plannedMinutes: null },
+      expect.objectContaining({
+        employeeId: s.worker,
+        workedDays: 2,
+        totalMinutes: 960,
+        plannedMinutes: null,
+      }),
+      expect.objectContaining({
+        employeeId: s.worker2,
+        workedDays: 1,
+        totalMinutes: 720,
+        plannedMinutes: null,
+      }),
     ]);
     expect(summary.byCategory).toEqual([
       { categoryId: cat2, totalMinutes: 960 },

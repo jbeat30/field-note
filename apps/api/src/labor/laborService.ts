@@ -30,7 +30,7 @@ export type LaborService = {
     employeeId: string,
     input: PayRateCreate,
   ) => Promise<PayRate>;
-  // 프로젝트 인건비 (최소 추정): 저장된 일지의 공수 × 근무일 단가, 투입 계획 공수 × 단가. 조회는 감사 기록으로 남는다
+  // 프로젝트 인건비 (최소 추정): 저장된 작업 내역의 공수 × 근무일 단가, 투입 계획 공수 × 단가. 조회는 감사 기록으로 남는다
   projectCost: (companyId: string, userId: string, projectId: string) => Promise<LaborCost>;
 };
 

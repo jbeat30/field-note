@@ -62,7 +62,7 @@ describe('weekRange', () => {
 });
 
 describe('assembleDashboard: 오늘 투입', () => {
-  it('프로젝트마다 오늘 나가는 인원을 한 번씩만 세고 일지가 없는 프로젝트를 먼저 보여 준다', () => {
+  it('프로젝트마다 오늘 나가는 인원을 한 번씩만 세고 작업 내역이 없는 프로젝트를 먼저 보여 준다', () => {
     const dashboard = assembleDashboard(
       base({
         projects: [project(P1, '2026-001'), project(P2, '2026-002')],
@@ -83,7 +83,7 @@ describe('assembleDashboard: 오늘 투입', () => {
     ]);
   });
 
-  it('일지가 없는 프로젝트마다 알림이 나온다', () => {
+  it('작업 내역이 없는 프로젝트마다 알림이 나온다', () => {
     const dashboard = assembleDashboard(
       base({ todayAssignments: [{ projectId: P1, employeeId: E1 }] }),
     );

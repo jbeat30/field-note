@@ -16,6 +16,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -131,14 +132,12 @@ export const WarrantyForm = ({
         <Select
           value={startBasis}
           disabled={!editable}
-          onChange={(event) => setStartBasis(event.target.value as WarrantyStartBasis)}
-        >
-          {WARRANTY_START_BASES.map((value) => (
-            <option key={value} value={value}>
-              {WARRANTY_START_BASIS_LABELS[value]}
-            </option>
-          ))}
-        </Select>
+          onValueChange={setStartBasis}
+          options={WARRANTY_START_BASES.map((value) => ({
+            value: value,
+            label: WARRANTY_START_BASIS_LABELS[value],
+          }))}
+        />
       </FormField>
       {startBasis === 'ACTUAL_END' ? (
         <p className="text-sm text-foreground/70">
@@ -149,8 +148,7 @@ export const WarrantyForm = ({
           label={`${WARRANTY_START_BASIS_LABELS[startBasis]}(시작일)`}
           error={errors.startOn}
         >
-          <Input
-            type="date"
+          <DateInput
             value={startOn}
             disabled={!editable}
             onChange={(event) => setStartOn(event.target.value)}
@@ -163,8 +161,7 @@ export const WarrantyForm = ({
           error={errors.endOn}
           hint="비우면 시작일 + 보증 기간으로 계산합니다. 재보수로 연장할 때 입력하며 사유가 필요합니다"
         >
-          <Input
-            type="date"
+          <DateInput
             value={endOn}
             disabled={!editable}
             onChange={(event) => setEndOn(event.target.value)}

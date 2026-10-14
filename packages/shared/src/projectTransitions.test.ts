@@ -192,7 +192,7 @@ describe('보증·종료 전환 조건 (§10.3)', () => {
     expect(check({ from: 'COMPLETED', to: 'WARRANTY', confirmSummary: true }).ok).toBe(true);
   });
 
-  it('종료는 임시 저장된 작업일지가 남아 있으면 막는다', () => {
+  it('종료는 임시 저장된 작업 내역가 남아 있으면 막는다', () => {
     expect(
       check({
         from: 'WARRANTY',

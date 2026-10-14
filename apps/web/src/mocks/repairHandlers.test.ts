@@ -187,11 +187,11 @@ describe('보수 요청 목업', () => {
     expect((await close({ reason: '조기 종료' })).response.status).toBe(200);
   });
 
-  it('사후 작업 일지·자재 기록을 연결하면 건별 공수가 합계되고 프로젝트 합계에 잡힌다', async () => {
+  it('사후 작업 작업 내역·자재 기록을 연결하면 건별 공수가 합계되고 프로젝트 합계에 잡힌다', async () => {
     const { running } = await setup();
     const account = findAccount(demo.loginId)!;
 
-    // 일지가 있는 A동을 보증 중으로 맞추고 저장된 일지 한 건을 사후 작업으로 표시한다
+    // 작업 내역이 있는 A동을 보증 중으로 맞추고 저장된 작업 내역 한 건을 사후 작업으로 표시한다
     saveProjects(
       account,
       getProjects(account).map((project) =>
@@ -213,7 +213,7 @@ describe('보수 요청 목업', () => {
       });
 
     expect((await link({})).response.status).toBe(400);
-    // 사후 작업이 아닌 일지는 연결할 수 없다
+    // 사후 작업이 아닌 작업 내역은 연결할 수 없다
     expect((await link({ workLogId: other!.id })).response.status).toBe(400);
 
     const linked = repairRequestDetailSchema.parse((await link({ workLogId: log!.id })).data);

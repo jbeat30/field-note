@@ -7,7 +7,7 @@ import {
   type DailyReport,
   type ErrorCode,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 
 import { listMockMaterialRecords } from './materialHandlers';
 import { listMockPhotos } from './photoHandlers';
@@ -19,19 +19,20 @@ import {
   getProjects,
   getWorkLogs,
 } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
 };
 
 /**
- * @description 작업일보·엑셀 내보내기 API 목업 핸들러 (서버와 같은 규칙: 그날의 일지·인원·공수·자재·사진 모음, 사진은 제한 개수까지, 기간 검사). 엑셀은 실제 서식이 아니라 내려받기 흐름 확인용 자리 파일이다
+ * @description 작업일보·엑셀 내보내기 API 목업 핸들러 (서버와 같은 규칙: 그날의 작업 내역·인원·공수·자재·사진 모음, 사진은 제한 개수까지, 기간 검사). 엑셀은 실제 서식이 아니라 내려받기 흐름 확인용 자리 파일이다
  * @param helpers 공통 오류 응답
  * @returns msw 핸들러 목록
  */
 export const createReportHandlers = ({ apiError }: Helpers) => [
   http.get('/api/v1/projects/:projectId/daily-reports/:date', async ({ params }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 
@@ -141,7 +142,7 @@ export const createReportHandlers = ({ apiError }: Helpers) => [
   }),
 
   http.get('/api/v1/projects/:projectId/daily-reports.xlsx', async ({ request, params }) => {
-    await delay(300);
+    await mockDelay(300);
 
     const account = getCurrentAccount();
 

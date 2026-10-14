@@ -61,7 +61,7 @@ describe('상태 전환 안내·프로젝트 요약 목업', () => {
     ).toBe(401);
   });
 
-  it('완료 전 안내: 진행률 40%와 협의 중 변경 작업, 임시 저장 일지를 알린다', async () => {
+  it('완료 전 안내: 진행률 40%와 협의 중 변경 작업, 임시 저장 작업 내역을 알린다', async () => {
     const a = await setup();
     const notices = transitionNoticesSchema.parse(
       (
@@ -72,7 +72,7 @@ describe('상태 전환 안내·프로젝트 요약 목업', () => {
     );
     const types = notices.items.map((item) => item.type);
 
-    // 더미: A동은 진행률 40%, 협의 중 변경 작업 1건, 임시 저장 일지 1건
+    // 더미: A동은 진행률 40%, 협의 중 변경 작업 1건, 임시 저장 작업 내역 1건
     expect(types).toEqual(
       expect.arrayContaining(['DRAFT_LOGS', 'PROGRESS_BELOW_100', 'NEGOTIATING_CHANGES']),
     );

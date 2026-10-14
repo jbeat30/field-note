@@ -103,7 +103,7 @@ describe('GET /audit-logs', () => {
 
     expect((await post('/monthly-hours/close', { month: '2026-09' })).status).toBe(200);
     expect(
-      (await post('/monthly-hours/reopen', { month: '2026-09', reason: '일지 정정' })).status,
+      (await post('/monthly-hours/reopen', { month: '2026-09', reason: '작업 내역 정정' })).status,
     ).toBe(200);
     await request(instance).get('/api/v1/monthly-hours.xlsx?month=2026-09').set('Cookie', cookie);
 
@@ -120,7 +120,7 @@ describe('GET /audit-logs', () => {
       summary: '월 공수표 엑셀 · 2026-09',
       actorName: '기록관리자',
     });
-    expect(items[1]).toMatchObject({ summary: '2026-09 · 일지 정정' });
+    expect(items[1]).toMatchObject({ summary: '2026-09 · 작업 내역 정정' });
     expect(items[2]).toMatchObject({ summary: '2026-09' });
   });
 

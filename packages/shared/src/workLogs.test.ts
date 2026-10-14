@@ -14,7 +14,7 @@ const UUID_B = '0198d000-0000-7000-8000-000000000002';
 const PERIOD = { plannedStart: '2026-10-01', plannedEnd: '2026-12-31' };
 const TODAY = '2026-10-20';
 
-describe('상태별 일지 입력 (서비스 기획서 §10.3 표)', () => {
+describe('상태별 작업 내역 입력 (서비스 기획서 §10.3 표)', () => {
   it('진행 중에는 바로 입력할 수 있다', () => {
     expect(
       workLogStatusCheck('IN_PROGRESS', { confirmStatus: false, isAfterService: false }).ok,
@@ -35,7 +35,7 @@ describe('상태별 일지 입력 (서비스 기획서 §10.3 표)', () => {
     }
   });
 
-  it('보증 중에는 사후 작업으로 표시한 일지만 입력할 수 있다', () => {
+  it('보증 중에는 사후 작업으로 표시한 작업 내역만 입력할 수 있다', () => {
     expect(
       workLogStatusCheck('WARRANTY', { confirmStatus: true, isAfterService: false }),
     ).toMatchObject({

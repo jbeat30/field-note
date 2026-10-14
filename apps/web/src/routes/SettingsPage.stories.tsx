@@ -24,6 +24,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -36,6 +37,7 @@ export const Default: Story = {
 };
 
 export const SaveSettings: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const hours = await canvas.findByLabelText(/하루 기준시간/);
@@ -51,6 +53,7 @@ export const SaveSettings: Story = {
 };
 
 export const InvalidInput: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const hours = await canvas.findByLabelText(/하루 기준시간/);
@@ -305,6 +308,7 @@ const closureSection = (canvas: ReturnType<typeof within>) =>
   within(canvas.getByRole('region', { name: '계정 해지' }));
 
 export const ClosureWrongPassword: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=etc'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -320,6 +324,7 @@ export const ClosureWrongPassword: Story = {
 };
 
 export const ClosureRequiresPassword: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=etc'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -335,6 +340,7 @@ export const ClosureRequiresPassword: Story = {
 
 // 요청하면 로그아웃되어 안내 화면으로 이동 (스토리에서는 서버 상태가 해지 중으로 바뀌는지 확인)
 export const ClosureRequested: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=etc'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -351,6 +357,7 @@ export const ClosureRequested: Story = {
 };
 
 export const ClosureCanGoBack: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=etc'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 

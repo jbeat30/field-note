@@ -60,7 +60,7 @@ describe('월 공수 목업', () => {
     ).toBe(401);
   });
 
-  it('더미 일지를 프로젝트·직원별로 합산하고 임시 저장은 목록으로만 알린다', async () => {
+  it('더미 작업 내역을 프로젝트·직원별로 합산하고 임시 저장은 목록으로만 알린다', async () => {
     await login();
 
     const data = await month('2026-09');
@@ -93,7 +93,7 @@ describe('월 공수 목업', () => {
     expect(closed.events).toEqual([expect.objectContaining({ kind: 'CLOSED', draftLogCount: 1 })]);
   });
 
-  it('확정된 달의 일지는 저장할 수 없고 재오픈(사유 필수)하면 다시 저장할 수 있다', async () => {
+  it('확정된 달의 작업 내역은 저장할 수 없고 재오픈(사유 필수)하면 다시 저장할 수 있다', async () => {
     await login();
 
     const projects = projectsResponseSchema.parse(

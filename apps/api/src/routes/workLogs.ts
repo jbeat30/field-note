@@ -36,9 +36,9 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 작업일지 라우트 (프로젝트 아래, 날짜마다 한 건). 회사 ID는 세션에서만 얻는다. 삭제 API는 없다
+ * @description 작업 내역 라우트 (프로젝트 아래, 날짜마다 한 건). 회사 ID는 세션에서만 얻는다. 삭제 API는 없다
  * @param registry 라우트 등록소
- * @param workLogs 작업일지 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
+ * @param workLogs 작업 내역 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */
 export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLogService) => {
   const add: RouteRegistry['add'] = (spec, handler) =>
@@ -48,7 +48,7 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
     {
       method: 'get',
       path: '/projects/{id}/work-logs',
-      summary: '프로젝트 작업일지 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시)',
+      summary: '프로젝트 작업 내역 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시)',
       auth: 'required',
       request: { params: projectParamsSchema, query: workLogListQuerySchema },
       response: { status: 200, schema: workLogsResponseSchema },
@@ -73,7 +73,7 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
     {
       method: 'get',
       path: '/projects/{id}/work-summary',
-      summary: '프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 일지만 반영)',
+      summary: '프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 작업 내역만 반영)',
       auth: 'required',
       request: { params: projectParamsSchema, query: workSummaryQuerySchema },
       response: { status: 200, schema: workSummarySchema },
@@ -96,7 +96,7 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
     {
       method: 'get',
       path: '/employees/{id}/work-history',
-      summary: '직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 일지만 반영)',
+      summary: '직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 작업 내역만 반영)',
       auth: 'required',
       request: { params: employeeParamsSchema },
       response: { status: 200, schema: employeeWorkHistorySchema },
@@ -115,7 +115,7 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
     {
       method: 'get',
       path: '/projects/{id}/work-logs/{workDate}',
-      summary: '그날의 작업일지 (공수 항목과 경고 포함)',
+      summary: '그날의 작업 내역 (공수 항목과 경고 포함)',
       auth: 'required',
       request: { params: workLogParamsSchema },
       response: { status: 200, schema: workLogSchema },
@@ -136,7 +136,7 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
     {
       method: 'put',
       path: '/projects/{id}/work-logs/{workDate}',
-      summary: '그날의 작업일지 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금)',
+      summary: '그날의 작업 내역 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금)',
       auth: 'required',
       request: { params: workLogParamsSchema, body: workLogSaveSchema },
       response: { status: 200, schema: workLogSchema },
@@ -163,7 +163,7 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
     {
       method: 'get',
       path: '/projects/{id}/work-logs/{workDate}/revisions',
-      summary: '작업일지 수정 이력 (고치기 전 값, 최근이 맨 앞)',
+      summary: '작업 내역 수정 이력 (고치기 전 값, 최근이 맨 앞)',
       auth: 'required',
       request: { params: workLogParamsSchema },
       response: { status: 200, schema: workLogRevisionsSchema },

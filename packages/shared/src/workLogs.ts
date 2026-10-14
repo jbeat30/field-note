@@ -3,7 +3,7 @@ import { z } from 'zod';
 import type { RuleCheck } from './assignments';
 import type { ProjectStatus } from './projects';
 
-// 작업일지 (서비스 기획서 §9.2~§9.4). 프로젝트 × 날짜마다 일지 한 건에 공통 내용을 쓰고,
+// 작업 내역 (서비스 기획서 §9.2~§9.4). 프로젝트 × 날짜마다 작업 내역 한 건에 공통 내용을 쓰고,
 // 직원별·작업 구분별 공수(분)를 항목으로 붙인다. 공수는 항상 분 단위로 저장한다
 export const WORK_LOG_STATUSES = ['DRAFT', 'SAVED'] as const;
 
@@ -85,11 +85,11 @@ export const workLogSaveSchema = z.object({
   isChange: z.boolean().default(false),
   isAfterService: z.boolean().default(false),
   entries: entriesSchema,
-  // 이미 있는 일지를 고칠 때 화면이 마지막으로 본 버전 (다르면 다른 곳에서 먼저 수정된 것이라 거부, 낙관적 잠금)
+  // 이미 있는 작업 내역을 고칠 때 화면이 마지막으로 본 버전 (다르면 다른 곳에서 먼저 수정된 것이라 거부, 낙관적 잠금)
   expectedVersion: z.number().int().min(1).nullish(),
   // 중단·완료 프로젝트에 입력하는 것을 관리자가 확인했다는 표시
   confirmStatus: z.boolean().optional(),
-  // 투입 등록이 안 된 직원을 일지에 넣을 때 투입을 자동으로 추가할지 (서비스 기획서 §9.3)
+  // 투입 등록이 안 된 직원을 작업 내역에 넣을 때 투입을 자동으로 추가할지 (서비스 기획서 §9.3)
   addMissingAssignments: z.boolean().optional(),
 });
 
@@ -100,7 +100,7 @@ export const workLogWarningSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('DAILY_OVER'),
     employeeId: z.uuid(),
-    // 그날 이 직원의 저장된 일지 공수 합 (이 일지 포함)
+    // 그날 이 직원의 저장된 작업 내역 공수 합 (이 작업 내역 포함)
     totalMinutes: z.number().int(),
     otherProjects: z.array(
       z.object({
@@ -131,7 +131,7 @@ export const workLogSchema = z.object({
   version: z.number().int(),
   // 처음 저장한 시각 (임시 저장 중에는 null)
   savedAt: z.iso.datetime().nullable(),
-  // 작업일에서 한참 지나 입력한 일지 (표시만)
+  // 작업일에서 한참 지나 입력한 작업 내역 (표시만)
   isLate: z.boolean(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -151,9 +151,11 @@ export const workLogSummarySchema = z.object({
   isAfterService: z.boolean(),
   isLate: z.boolean(),
   entryCount: z.number().int(),
-  // 공수 합(분). 집계에는 저장된 일지만 쓰고 임시 저장은 별도 표시한다 (§9.4)
+  // 공수 합(분). 집계에는 저장된 작업 내역만 쓰고 임시 저장은 별도 표시한다 (§9.4)
   totalMinutes: z.number().int(),
   hasContent: z.boolean(),
+  // 그날 일한 사람별 시간(분). 달력에서 누가 일했는지 바로 보여 주는 데 쓴다
+  workers: z.array(z.object({ employeeId: z.uuid(), minutes: z.int() })),
 });
 
 export type WorkLogSummary = z.infer<typeof workLogSummarySchema>;
@@ -170,7 +172,7 @@ export type WorkLogListQuery = z.infer<typeof workLogListQuerySchema>;
 
 export const workLogParamsSchema = z.object({ id: z.uuid(), workDate: dateSchema });
 
-// 수정 이력: 저장된 일지를 고칠 때마다 고치기 전 값을 남긴다 (서비스 기획서 §9.1, §9.4)
+// 수정 이력: 저장된 작업 내역을 고칠 때마다 고치기 전 값을 남긴다 (서비스 기획서 §9.1, §9.4)
 export const workLogSnapshotSchema = z.object({
   status: workLogStatusSchema,
   content: z.string(),
@@ -198,7 +200,7 @@ export type WorkLogRevision = z.infer<typeof workLogRevisionSchema>;
 export const workLogRevisionsSchema = z.object({ items: z.array(workLogRevisionSchema) });
 
 /**
- * @description 프로젝트 상태에서 일지를 입력할 수 있는지 (서비스 기획서 §10.3 "작업일지 입력" 행)
+ * @description 프로젝트 상태에서 작업 내역을 입력할 수 있는지 (서비스 기획서 §10.3 "작업 내역 입력" 행)
  * 진행은 가능, 중단·완료(소급)는 관리자 확인, 보증 중은 사후 작업 표시가 있을 때만, 예정·종료·취소는 불가
  * @param status 프로젝트 상태
  * @param flags 관리자 확인 여부와 사후 작업 표시 여부
@@ -217,7 +219,7 @@ export const workLogStatusCheck = (
         : {
             ok: false,
             path: 'confirmStatus',
-            message: '중단 중인 프로젝트입니다. 일지를 쓰려면 확인이 필요합니다',
+            message: '중단 중인 프로젝트입니다. 작업 내역을 쓰려면 확인이 필요합니다',
           };
     case 'COMPLETED':
       return flags.confirmStatus
@@ -225,7 +227,7 @@ export const workLogStatusCheck = (
         : {
             ok: false,
             path: 'confirmStatus',
-            message: '완료된 프로젝트입니다. 소급해서 일지를 쓰려면 확인이 필요합니다',
+            message: '완료된 프로젝트입니다. 소급해서 작업 내역을 쓰려면 확인이 필요합니다',
           };
     case 'WARRANTY':
       return flags.isAfterService
@@ -233,7 +235,7 @@ export const workLogStatusCheck = (
         : {
             ok: false,
             path: 'isAfterService',
-            message: '보증 중에는 사후 작업으로 표시한 일지만 쓸 수 있습니다',
+            message: '보증 중에는 사후 작업으로 표시한 작업 내역만 쓸 수 있습니다',
           };
     case 'PLANNED':
       return {
@@ -245,7 +247,7 @@ export const workLogStatusCheck = (
       return {
         ok: false,
         path: 'workDate',
-        message: '종료·취소된 프로젝트에는 일지를 쓸 수 없습니다',
+        message: '종료·취소된 프로젝트에는 작업 내역을 쓸 수 없습니다',
       };
   }
 };
@@ -263,7 +265,7 @@ export const checkWorkDate = (
   today: string,
 ): RuleCheck => {
   if (workDate > today) {
-    return { ok: false, path: 'workDate', message: '오늘 이후 날짜의 일지는 쓸 수 없습니다' };
+    return { ok: false, path: 'workDate', message: '오늘 이후 날짜의 작업 내역은 쓸 수 없습니다' };
   }
 
   if (workDate < project.plannedStart || workDate > project.plannedEnd) {

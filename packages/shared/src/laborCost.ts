@@ -128,7 +128,7 @@ export const laborCostSectionSchema = z.object({
 
 export type LaborCostSection = z.infer<typeof laborCostSectionSchema>;
 
-// 실제: 저장된 일지의 공수 × 근무일 단가. 계획: 투입의 계획 공수 × 오늘(투입 기간 안으로 맞춤)의 단가
+// 실제: 저장된 작업 내역의 공수 × 근무일 단가. 계획: 투입의 계획 공수 × 오늘(투입 기간 안으로 맞춤)의 단가
 export const laborCostSchema = z.object({
   actual: laborCostSectionSchema,
   planned: laborCostSectionSchema,

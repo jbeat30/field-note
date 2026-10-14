@@ -1,3 +1,4 @@
+import { withThemeByClassName } from '@storybook/addon-themes';
 import type { Preview } from '@storybook/react-vite';
 import { mswLoader } from 'msw-storybook-addon/csf3';
 import { MemoryRouter, Route, Routes } from 'react-router';
@@ -34,6 +35,8 @@ const preview: Preview = {
     mswLoader(),
   ],
   decorators: [
+    // 툴바에서 밝게·어둡게 전환 (앱과 같은 html.dark 클래스)
+    withThemeByClassName({ themes: { 밝게: '', 어둡게: 'dark' }, defaultTheme: '밝게' }),
     // 스토리마다 새 QueryClient를 만들어 캐시가 서로 영향을 주지 않게 함
     (Story, { parameters }) => {
       const router = parameters.router as { initialEntries?: string[]; path?: string } | undefined;

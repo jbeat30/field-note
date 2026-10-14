@@ -18,11 +18,12 @@ import {
   type MaterialRecord,
   type MaterialRecordCreate,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import type { MockAccount } from './data';
 import { getCurrentAccount, getOptions, getPartners, getProjects } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -185,6 +186,13 @@ const liveRecords = (account: MockAccount, projectId?: string) => {
   );
 };
 
+// 업체를 공급처로 쓴 자재 기록이 있는지 (명부 삭제 검사용)
+export const hasMockMaterialRecordForPartner = (account: MockAccount, partnerId: string) =>
+  [...records.values()].some(
+    (record) =>
+      record.scope === scopeOf(account) && !record.deletedAt && record.partnerId === partnerId,
+  );
+
 // 작업일보 목업이 쓰는 자재 기록 조회 (자재 이름·규격·단위를 붙여 돌려줌, 지운 기록 제외)
 export const listMockMaterialRecords = (account: MockAccount, projectId: string) =>
   liveRecords(account, projectId)
@@ -258,7 +266,7 @@ const newestFirst = (a: MockRecord, b: MockRecord) =>
  * @returns msw 핸들러 목록
  */
 export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
 
   const hasProject = (account: MockAccount, projectId: string) =>
     getProjects(account).some((project) => project.id === projectId);

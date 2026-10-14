@@ -29,7 +29,7 @@ const Hit = ({ hit }: { hit: SearchHit }) => (
   <li>
     <Link
       to={searchHitLink(hit)}
-      className="flex min-h-touch flex-col gap-0.5 rounded-md border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="flex min-h-touch flex-col gap-0.5 rounded-xl bg-surface-subtle px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       <span className="flex flex-wrap items-center gap-2 font-medium">
         {hit.title}
@@ -49,7 +49,7 @@ const Hit = ({ hit }: { hit: SearchHit }) => (
   </li>
 );
 
-// 통합 검색 결과: 프로젝트·직원·메모·자료·일지로 나눠 보여 주고, 종류마다 개수를 제한한 만큼 더 있으면 검색어를 좁히도록 안내
+// 통합 검색 결과: 프로젝트·직원·메모·자료·작업 내역으로 나눠 보여 주고, 종류마다 개수를 제한한 만큼 더 있으면 검색어를 좁히도록 안내
 export const SearchResults = ({ results }: SearchResultsProps) => {
   const visible = GROUPS.filter(({ key }) => results[key].items.length > 0);
 
