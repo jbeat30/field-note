@@ -79,7 +79,7 @@ export type TransitionCheckInput = {
   today: string;
   // 프로젝트 요약을 확인했는지 (완료 → 보증 중에서만 필요)
   confirmSummary: boolean;
-  // 임시 저장된 작업일지 건수 (종료에서는 0이어야 함)
+  // 임시 저장된 작업 내역 건수 (종료에서는 0이어야 함)
   draftLogCount: number;
   // 보증 기간(개월)과 종료 예정일. 설정이 없으면 기본 기간과 null
   warrantyMonths: number;
@@ -190,7 +190,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'toStatus',
-      message: `임시 저장된 작업일지가 ${input.draftLogCount}건 있어 종료할 수 없습니다. 저장하거나 삭제한 뒤 다시 시도해 주세요`,
+      message: `임시 저장된 작업 내역가 ${input.draftLogCount}건 있어 종료할 수 없습니다. 저장하거나 삭제한 뒤 다시 시도해 주세요`,
     };
   }
 

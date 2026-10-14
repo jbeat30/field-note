@@ -17,13 +17,14 @@ import {
   type DocumentVersion,
   type ErrorCode,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import { addMockAudit } from './auditHandlers';
 import type { MockAccount } from './data';
 import { addMockReadyFile, getMockFile } from './photoHandlers';
 import { getCurrentAccount, getProjects } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -213,7 +214,7 @@ const toDetail = (document: MockDocument): DocumentDetail => ({
  * @returns msw 핸들러 목록
  */
 export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
   const hasProject = (account: MockAccount, projectId: string) =>
     getProjects(account).some((project) => project.id === projectId);
 

@@ -99,6 +99,11 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
       optionsResponseSchema.parse(
         (await request(instance).get('/api/v1/company/options').set('Cookie', cookie)).body,
       ).items,
+    removePartner: (id: string) =>
+      request(instance)
+        .delete(`/api/v1/partners/${id}`)
+        .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+        .set('Cookie', cookie),
     list: (query = '') => request(instance).get(`/api/v1/projects${query}`).set('Cookie', cookie),
     get: (id: string) => request(instance).get(`/api/v1/projects/${id}`).set('Cookie', cookie),
     create: (body: object) => send('post', '/projects', body),
@@ -386,13 +391,111 @@ describe('목록·조회', () => {
     expect(await names('?from=2026-12-01')).toEqual(['나 프로젝트']);
     expect(await names(`?q=${encodeURIComponent('강남')}`)).toEqual(['가 프로젝트']);
     expect(await names(`?q=${encodeURIComponent('2026-003')}`)).toEqual(['나 프로젝트']);
-    expect(await names('?sort=endDate')).toEqual(['다 프로젝트', '가 프로젝트', '나 프로젝트']);
-    expect(await names('?sort=name')).toEqual(['가 프로젝트', '나 프로젝트', '다 프로젝트']);
+    expect(await names('?sortBy=plannedEnd')).toEqual([
+      '다 프로젝트',
+      '가 프로젝트',
+      '나 프로젝트',
+    ]);
+    expect(await names('?sortBy=name')).toEqual(['가 프로젝트', '나 프로젝트', '다 프로젝트']);
     expect(b.status).toBe(201);
     expect(managerId).toBeTruthy();
     expect((await client.list('?status=NOPE')).status).toBe(400);
-    expect((await client.list('?sort=random')).status).toBe(400);
+    expect((await client.list('?sortBy=random')).status).toBe(400);
+    expect((await client.list('?sortDir=up')).status).toBe(400);
+    expect((await client.list('?page=0')).status).toBe(400);
+    expect((await client.list('?pageSize=101')).status).toBe(400);
     expect((await client.list('?from=2026-99-99')).status).toBe(400);
+  });
+
+  it('쪽으로 나눠 돌려주고 총 건수·정렬 방향·고객·담당자 정렬을 지원한다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    // 고객·담당자 이름은 영문으로 둔다 (한글 정렬은 DB의 정렬 규칙에 따라 달라질 수 있음)
+    const clientA = await client.createPartner('CLIENT', 'A고객');
+    const clientZ = await client.createPartner('CLIENT', 'Z고객');
+    const managerA = await client.createEmployee('A담당');
+    const managerZ = await client.createEmployee('Z담당');
+    const make = (name: string, clientId: string, managerId: string) =>
+      client.create({ ...body, name, clientId, managerId });
+
+    // 등록 순서: 가·나·다·라·마 (최근 등록순은 마·라·다·나·가)
+    await make('가 프로젝트', clientA, managerA);
+    await make('나 프로젝트', clientZ, managerA);
+    await make('다 프로젝트', clientA, managerZ);
+    await make('라 프로젝트', clientA, managerA);
+    await make('마 프로젝트', clientA, managerA);
+
+    const page = async (query: string) => {
+      const res = await client.list(query);
+
+      return { ...projectsResponseSchema.parse(res.body), names: namesOf(res) };
+    };
+
+    // 기본: 최근 등록순, 한 쪽에 모두 (5건 < 기본 쪽당 개수)
+    const all = await page('');
+
+    expect(all.names).toEqual([
+      '마 프로젝트',
+      '라 프로젝트',
+      '다 프로젝트',
+      '나 프로젝트',
+      '가 프로젝트',
+    ]);
+    expect([all.total, all.page, all.pageSize]).toEqual([5, 1, 20]);
+
+    // 쪽 나누기: 총 건수는 그대로, 쪽마다 정해진 개수, 마지막 쪽은 남은 만큼
+    const first = await page('?pageSize=2&page=1');
+    const second = await page('?pageSize=2&page=2');
+    const third = await page('?pageSize=2&page=3');
+    const beyond = await page('?pageSize=2&page=4');
+
+    expect(first.names).toEqual(['마 프로젝트', '라 프로젝트']);
+    expect(second.names).toEqual(['다 프로젝트', '나 프로젝트']);
+    expect(third.names).toEqual(['가 프로젝트']);
+    expect(beyond.names).toEqual([]);
+    expect([first.total, third.total, beyond.total]).toEqual([5, 5, 5]);
+
+    // 정렬 방향과 쪽 나누기를 함께
+    expect((await page('?sortBy=name&sortDir=desc&pageSize=2')).names).toEqual([
+      '마 프로젝트',
+      '라 프로젝트',
+    ]);
+    expect((await page('?sortBy=recent&sortDir=asc&pageSize=2')).names).toEqual([
+      '가 프로젝트',
+      '나 프로젝트',
+    ]);
+
+    // 고객·담당자 이름으로 정렬 (같은 값끼리는 최근 등록순)
+    expect((await page('?sortBy=client&sortDir=asc')).names).toEqual([
+      '마 프로젝트',
+      '라 프로젝트',
+      '다 프로젝트',
+      '가 프로젝트',
+      '나 프로젝트',
+    ]);
+    expect((await page('?sortBy=client&sortDir=desc')).names[0]).toBe('나 프로젝트');
+    expect((await page('?sortBy=manager&sortDir=asc')).names[0]).toBe('마 프로젝트');
+    expect((await page('?sortBy=manager&sortDir=desc')).names[0]).toBe('다 프로젝트');
+
+    // 필터와 쪽 나누기: 조건에 맞는 건수만 total에 잡힌다
+    const filtered = await page(`?clientId=${clientA}&managerId=${managerA}&pageSize=2`);
+
+    expect(filtered.total).toBe(3);
+    expect(filtered.names).toEqual(['마 프로젝트', '라 프로젝트']);
+  });
+
+  it('프로젝트가 고객으로 쓰고 있는 명부는 삭제할 수 없고, 쓰지 않으면 삭제할 수 있다', async () => {
+    const instance = app();
+    const { client, body, clientId } = await setup(instance);
+    const spare = await client.createPartner('CLIENT', '안쓰는고객');
+
+    await client.create({ ...body, name: '고객이쓰는프로젝트' });
+
+    const blocked = await client.removePartner(clientId);
+
+    expect(blocked.status).toBe(400);
+    expect(JSON.stringify(blocked.body)).toContain('쓰고 있어 삭제할 수 없습니다');
+    expect((await client.removePartner(spare)).status).toBe(200);
   });
 
   it('코드는 숫자 순서로 정렬한다 (1000번이 999번 뒤에 온다)', async () => {

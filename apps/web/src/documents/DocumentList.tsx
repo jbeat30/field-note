@@ -1,18 +1,21 @@
-import {
-  DOCUMENT_CATEGORIES,
-  DOCUMENT_CATEGORY_LABELS,
-  type Document,
-  type DocumentCategory,
-} from '@field-note/shared';
+import { DOCUMENT_CATEGORY_LABELS, type Document } from '@field-note/shared';
 
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeaderCell,
+  TableRow,
+} from '../components/ui/table';
 import { formatDay } from '../lib/dates';
 
 type DocumentListProps = {
   documents: readonly Document[];
   onOpen: (document: Document, mode: 'view' | 'download') => void;
   onDetail: (document: Document) => void;
-  onTogglePin: (document: Document) => void;
 };
 
 const formatSize = (bytes: number) =>
@@ -20,103 +23,89 @@ const formatSize = (bytes: number) =>
     ? `${(bytes / 1024 / 1024).toFixed(1)}MB`
     : `${Math.max(1, Math.ceil(bytes / 1024))}KB`;
 
-const DocumentItem = ({
-  document,
-  onOpen,
-  onDetail,
-  onTogglePin,
-}: { document: Document } & Omit<DocumentListProps, 'documents'>) => {
-  const { latest } = document;
-  const isReady = latest.fileStatus === 'READY';
+// 문서 목록: 테이블 형태로 보여 주고 열기·내려받기·버전기록 버튼을 오른쪽에 배치
+export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps) => (
+  <Table aria-label="문서 목록">
+    <TableHead>
+      <TableRow>
+        <TableHeaderCell>문서명</TableHeaderCell>
+        <TableHeaderCell>분류</TableHeaderCell>
+        <TableHeaderCell className="text-right">판·크기</TableHeaderCell>
+        <TableHeaderCell>개정일</TableHeaderCell>
+        <TableHeaderCell>
+          <span className="sr-only">문서 작업</span>
+        </TableHeaderCell>
+      </TableRow>
+    </TableHead>
+    <TableBody>
+      {documents.map((document) => {
+        const { latest } = document;
+        const isReady = latest.fileStatus === 'READY';
 
-  return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="text-base font-bold">{document.title}</span>
-        {document.isSensitive && (
-          <span className="rounded bg-danger px-1.5 py-0.5 text-xs text-primary-foreground">
-            민감
-          </span>
-        )}
-        <span className="rounded bg-muted px-1.5 py-0.5 text-xs">
-          최신 v{latest.versionNo}
-          {document.versionCount > 1 ? ` (전체 ${document.versionCount}개)` : ''}
-        </span>
-      </div>
-      <p className="text-sm text-foreground/70">
-        {latest.fileName} · {formatSize(latest.size)} · {formatDay(latest.revisionDate)} 개정
-        {latest.reason ? ` · ${latest.reason}` : ''}
-      </p>
-      {!isReady && (
-        <p className="text-sm text-foreground/70" role="status">
-          {latest.fileStatus === 'REJECTED'
-            ? '검사에서 거부된 파일입니다'
-            : '파일을 검사하는 중입니다'}
-        </p>
-      )}
-      <div className="flex flex-wrap gap-2">
-        <Button
-          type="button"
-          disabled={!isReady}
-          aria-label={`${document.title} 열기`}
-          onClick={() => onOpen(document, 'view')}
-        >
-          열기
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          disabled={!isReady}
-          aria-label={`${document.title} 내려받기`}
-          onClick={() => onOpen(document, 'download')}
-        >
-          내려받기
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          aria-label={`${document.title} 상세`}
-          onClick={() => onDetail(document)}
-        >
-          버전·기록
-        </Button>
-        <Button
-          type="button"
-          variant="secondary"
-          aria-pressed={document.isPinned}
-          aria-label={`${document.title} ${document.isPinned ? '고정 해제' : '첫 화면에 고정'}`}
-          onClick={() => onTogglePin(document)}
-        >
-          {document.isPinned ? '★ 고정됨' : '☆ 고정'}
-        </Button>
-      </div>
-    </li>
-  );
-};
-
-// 문서 목록: 고정한 문서를 맨 위에 모으고 나머지는 분류별로 (분류 안에서는 받은 순서 = 최근 수정순)
-export const DocumentList = ({ documents, ...handlers }: DocumentListProps) => {
-  const pinned = documents.filter((document) => document.isPinned);
-  const groups: [string, readonly Document[]][] = [
-    ...(pinned.length > 0 ? ([['고정한 문서', pinned]] as [string, readonly Document[]][]) : []),
-    ...DOCUMENT_CATEGORIES.map((category: DocumentCategory): [string, readonly Document[]] => [
-      DOCUMENT_CATEGORY_LABELS[category],
-      documents.filter((document) => !document.isPinned && document.category === category),
-    ]).filter(([, items]) => items.length > 0),
-  ];
-
-  return (
-    <div className="flex flex-col gap-4">
-      {groups.map(([label, items]) => (
-        <section key={label} className="flex flex-col gap-2" aria-label={label}>
-          <h2 className="text-base font-bold">{label}</h2>
-          <ul className="flex flex-col gap-2">
-            {items.map((document) => (
-              <DocumentItem key={document.id} document={document} {...handlers} />
-            ))}
-          </ul>
-        </section>
-      ))}
-    </div>
-  );
-};
+        return (
+          <TableRow key={document.id}>
+            <TableCell>
+              <span className="font-semibold">{document.title}</span>
+              {document.isSensitive && (
+                <Badge tone="danger" className="ml-2">
+                  민감
+                </Badge>
+              )}
+              {!isReady && (
+                <span className="ml-2 text-xs text-foreground/55">
+                  {latest.fileStatus === 'REJECTED' ? '거부됨' : '검사 중'}
+                </span>
+              )}
+            </TableCell>
+            <TableCell className="text-foreground/70">
+              {DOCUMENT_CATEGORY_LABELS[document.category]}
+            </TableCell>
+            <TableCell className="text-right tabular-nums text-foreground/70">
+              v{latest.versionNo}
+              {document.versionCount > 1 && (
+                <span className="text-xs"> /{document.versionCount}</span>
+              )}
+              <span className="ml-1 text-xs">{formatSize(latest.size)}</span>
+            </TableCell>
+            <TableCell className="whitespace-nowrap text-foreground/70">
+              {formatDay(latest.revisionDate)}
+            </TableCell>
+            <TableCell className="text-right">
+              <div className="flex justify-end gap-1">
+                <Button
+                  type="button"
+                  variant="secondary"
+                  size="sm"
+                  disabled={!isReady}
+                  aria-label={`${document.title} 열기`}
+                  onClick={() => onOpen(document, 'view')}
+                >
+                  열기
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  disabled={!isReady}
+                  aria-label={`${document.title} 내려받기`}
+                  onClick={() => onOpen(document, 'download')}
+                >
+                  내려받기
+                </Button>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="sm"
+                  aria-label={`${document.title} 버전·기록`}
+                  onClick={() => onDetail(document)}
+                >
+                  버전·기록
+                </Button>
+              </div>
+            </TableCell>
+          </TableRow>
+        );
+      })}
+    </TableBody>
+  </Table>
+);

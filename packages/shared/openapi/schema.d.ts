@@ -2960,7 +2960,89 @@ export interface paths {
         };
         put?: never;
         post?: never;
-        delete?: never;
+        /** 명부 삭제 (프로젝트·자재 기록에서 쓰고 있으면 거부, 그때는 숨기기) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description VALIDATION_ERROR */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
         options?: never;
         head?: never;
         /** 명부 수정·숨기기 (구분은 바꿀 수 없음) */
@@ -3076,7 +3158,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 프로젝트 목록 (상태·고객·담당자·공종·기간·검색 필터와 정렬) */
+        /** 프로젝트 목록 (상태·고객·담당자·공종·기간·검색 필터, 정렬, 쪽 나누기) */
         get: {
             parameters: {
                 query?: {
@@ -3087,7 +3169,10 @@ export interface paths {
                     from?: string;
                     to?: string;
                     q?: string;
-                    sort?: "recent" | "endDate" | "name";
+                    sortBy?: "recent" | "name" | "status" | "client" | "manager" | "plannedStart" | "plannedEnd";
+                    sortDir?: "asc" | "desc";
+                    page?: number;
+                    pageSize?: number;
                 };
                 header?: never;
                 path?: never;
@@ -3120,6 +3205,9 @@ export interface paths {
                                 /** Format: date */
                                 plannedEnd: string;
                             }[];
+                            total: number;
+                            page: number;
+                            pageSize: number;
                         };
                     };
                 };
@@ -4593,7 +4681,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 프로젝트 작업일지 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시) */
+        /** 프로젝트 작업 내역 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시) */
         get: {
             parameters: {
                 query?: {
@@ -4629,6 +4717,11 @@ export interface paths {
                                 entryCount: number;
                                 totalMinutes: number;
                                 hasContent: boolean;
+                                workers: {
+                                    /** Format: uuid */
+                                    employeeId: string;
+                                    minutes: number;
+                                }[];
                             }[];
                         };
                     };
@@ -4707,7 +4800,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 일지만 반영) */
+        /** 프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 작업 내역만 반영) */
         get: {
             parameters: {
                 query?: {
@@ -4741,6 +4834,15 @@ export interface paths {
                                 workedDays: number;
                                 totalMinutes: number;
                                 plannedMinutes: number | null;
+                                /** Format: date */
+                                firstWorkDate: string | null;
+                                /** Format: date */
+                                lastWorkDate: string | null;
+                                categories: {
+                                    /** Format: uuid */
+                                    categoryId: string;
+                                    totalMinutes: number;
+                                }[];
                             }[];
                             byCategory: {
                                 /** Format: uuid */
@@ -4829,7 +4931,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 일지만 반영) */
+        /** 직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 작업 내역만 반영) */
         get: {
             parameters: {
                 query?: never;
@@ -4942,7 +5044,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 그날의 작업일지 (공수 항목과 경고 포함) */
+        /** 그날의 작업 내역 (공수 항목과 경고 포함) */
         get: {
             parameters: {
                 query?: never;
@@ -5077,7 +5179,7 @@ export interface paths {
                 };
             };
         };
-        /** 그날의 작업일지 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금) */
+        /** 그날의 작업 내역 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금) */
         put: {
             parameters: {
                 query?: never;
@@ -5269,7 +5371,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 작업일지 수정 이력 (고치기 전 값, 최근이 맨 앞) */
+        /** 작업 내역 수정 이력 (고치기 전 값, 최근이 맨 앞) */
         get: {
             parameters: {
                 query?: never;
@@ -6271,7 +6373,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 변경·추가 작업으로 쓴 공수·자재 (일지·자재 기록의 변경 작업 표시 합계) */
+        /** 변경·추가 작업으로 쓴 공수·자재 (작업 내역·자재 기록의 변경 작업 표시 합계) */
         get: {
             parameters: {
                 query?: never;
@@ -8908,7 +9010,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 사후 작업으로 쓴 공수·자재 (사후 작업 표시가 된 일지·자재 기록 합계) */
+        /** 사후 작업으로 쓴 공수·자재 (사후 작업 표시가 된 작업 내역·자재 기록 합계) */
         get: {
             parameters: {
                 query?: never;
@@ -9014,7 +9116,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 보수 요청 상세 (상태 이력, 연결한 일지·자재 기록, 쓴 공수·자재 포함) */
+        /** 보수 요청 상세 (상태 이력, 연결한 작업 내역·자재 기록, 쓴 공수·자재 포함) */
         get: {
             parameters: {
                 query?: never;
@@ -9539,7 +9641,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 사후 작업 연결 (사후 작업으로 표시한 같은 프로젝트의 저장된 일지 또는 자재 기록) */
+        /** 사후 작업 연결 (사후 작업으로 표시한 같은 프로젝트의 저장된 작업 내역 또는 자재 기록) */
         post: {
             parameters: {
                 query?: never;
@@ -9893,7 +9995,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 월 공수표 (프로젝트 × 직원별 저장된 일지 공수, 확정 상태·확정 당시 기준값·임시 저장 일지·이력) */
+        /** 월 공수표 (프로젝트 × 직원별 저장된 작업 내역 공수, 확정 상태·확정 당시 기준값·임시 저장 작업 내역·이력) */
         get: {
             parameters: {
                 query: {
@@ -10010,7 +10112,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 월 공수 확정 (이번 달까지, 임시 저장 일지가 남아 있으면 확인 필요, 확정 당시 기준값 고정, 이력에 남음) */
+        /** 월 공수 확정 (이번 달까지, 임시 저장 작업 내역이 남아 있으면 확인 필요, 확정 당시 기준값 고정, 이력에 남음) */
         post: {
             parameters: {
                 query?: never;
@@ -10130,7 +10232,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업일지를 다시 고칠 수 있다 */
+        /** 월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역를 다시 고칠 수 있다 */
         post: {
             parameters: {
                 query?: never;
@@ -10324,7 +10426,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 상태 전환 전 확인할 것 (완료: 임시 저장 일지·진행률·남은 자재·협의 중 변경 작업, 재개: 종료 예정일 경과). 막지 않고 알림 */
+        /** 상태 전환 전 확인할 것 (완료: 임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업, 재개: 종료 예정일 경과). 막지 않고 알림 */
         get: {
             parameters: {
                 query: {
@@ -14955,7 +15057,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 통합 검색 (프로젝트·직원·메모·자료·일지, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색) */
+        /** 통합 검색 (프로젝트·직원·메모·자료·작업 내역, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색) */
         get: {
             parameters: {
                 query: {
@@ -15144,7 +15246,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 작업일보 한 장 (그날의 일지·인원·공수·자재·사진, 인쇄·PDF용) */
+        /** 작업일보 한 장 (그날의 작업 내역·인원·공수·자재·사진, 인쇄·PDF용) */
         get: {
             parameters: {
                 query?: never;
@@ -15306,7 +15408,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 작업일보 엑셀 내보내기 (기간 안의 일지·공수·자재 시트, 내보낸 기록이 남음) */
+        /** 작업일보 엑셀 내보내기 (기간 안의 작업 내역·공수·자재 시트, 내보낸 기록이 남음) */
         get: {
             parameters: {
                 query: {

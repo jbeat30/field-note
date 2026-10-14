@@ -82,7 +82,7 @@ export const AllTypes: Story = {
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent);
 
-    await expect(headings).toEqual(['프로젝트', '직원', '메모', '자료', '일지']);
+    await expect(headings).toEqual(['프로젝트', '직원', '메모', '자료', '작업 내역']);
     // 종류마다 이동할 곳이 다름
     await expect(canvas.getByRole('link', { name: /B동 배관 공사 2026-002/ })).toHaveAttribute(
       'href',
@@ -102,7 +102,7 @@ export const AllTypes: Story = {
     );
     await expect(canvas.getByRole('link', { name: /외장 판넬 설치/ })).toHaveAttribute(
       'href',
-      '/work-logs?project=p1&date=2026-10-06',
+      '/projects/p1/work/2026-10-06',
     );
   },
 };

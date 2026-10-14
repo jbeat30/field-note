@@ -10,6 +10,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 
@@ -85,8 +86,7 @@ export const ChangeWorkForm = ({
       {rootError && <Alert>{rootError}</Alert>}
       {saved && <p role="status">{saved}</p>}
       <FormField label="요청일" error={errors.requestedOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={requestedOn}
           onChange={(event) => setRequestedOn(event.target.value)}
@@ -110,9 +110,11 @@ export const ChangeWorkForm = ({
           onChange={(event) => setContent(event.target.value)}
         />
       </FormField>
-      <Button type="submit" disabled={create.isPending}>
-        {create.isPending ? '기록 중' : '기록하기'}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" size="sm" disabled={create.isPending}>
+          {create.isPending ? '저장 중' : '저장'}
+        </Button>
+      </div>
     </form>
   );
 };

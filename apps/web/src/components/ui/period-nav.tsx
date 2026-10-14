@@ -1,0 +1,102 @@
+import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
+import { Popover } from 'radix-ui';
+import { useState } from 'react';
+import { DayPicker } from 'react-day-picker';
+import { ko } from 'react-day-picker/locale';
+
+import { Button } from './button';
+import { formatDay, parseDay } from './date-input';
+
+type PeriodNavProps = {
+  // 현재 기간 표시 (예: 2026-10-12 ~ 2026-10-18)
+  label: string;
+  prevLabel: string;
+  nextLabel: string;
+  onPrev: () => void;
+  onNext: () => void;
+  nextDisabled?: boolean;
+  // "오늘/이번 주/이번 달" 버튼
+  todayLabel: string;
+  onToday: () => void;
+  // 달력에서 날짜를 고르면 그 날짜(YYYY-MM-DD)를 돌려준다. 없으면 달력 없이 표시만 한다
+  onPick?: (date: string) => void;
+  pickValue?: string;
+  pickMax?: string;
+};
+
+// 기간(주·달·하루) 이동 줄: 큰 이전/다음 버튼, 가운데 기간(눌러서 달력으로 이동), 오른쪽 "오늘" 버튼
+export const PeriodNav = ({
+  label,
+  prevLabel,
+  nextLabel,
+  onPrev,
+  onNext,
+  nextDisabled,
+  todayLabel,
+  onToday,
+  onPick,
+  pickValue,
+  pickMax,
+}: PeriodNavProps) => {
+  const [open, setOpen] = useState(false);
+  const selected = pickValue ? parseDay(pickValue) : undefined;
+  const maxDay = pickMax ? parseDay(pickMax) : undefined;
+
+  const title = (
+    <>
+      <span className="font-bold">{label}</span>
+      {onPick && <CalendarDays aria-hidden className="size-4 text-foreground/70" />}
+    </>
+  );
+
+  return (
+    <div className="flex items-center gap-2 rounded-xl bg-surface-subtle p-2">
+      <Button variant="secondary" aria-label={prevLabel} onClick={onPrev}>
+        <ChevronLeft aria-hidden className="size-5" />
+      </Button>
+      {onPick ? (
+        <Popover.Root open={open} onOpenChange={setOpen}>
+          <Popover.Trigger asChild>
+            <button
+              type="button"
+              aria-label={`${label} 달력에서 이동`}
+              className="flex min-h-touch flex-1 items-center justify-center gap-2 rounded-full hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
+            >
+              {title}
+            </button>
+          </Popover.Trigger>
+          <Popover.Portal>
+            <Popover.Content
+              align="center"
+              sideOffset={6}
+              collisionPadding={12}
+              aria-label="날짜 선택"
+              className="z-30 rounded-xl border border-line bg-surface p-3 shadow-card"
+            >
+              <DayPicker
+                mode="single"
+                locale={ko}
+                selected={selected}
+                defaultMonth={selected ?? new Date()}
+                disabled={maxDay ? { after: maxDay } : undefined}
+                onSelect={(date) => {
+                  if (!date) return;
+                  onPick(formatDay(date));
+                  setOpen(false);
+                }}
+              />
+            </Popover.Content>
+          </Popover.Portal>
+        </Popover.Root>
+      ) : (
+        <p className="flex min-h-touch flex-1 items-center justify-center gap-2">{title}</p>
+      )}
+      <Button variant="secondary" aria-label={nextLabel} disabled={nextDisabled} onClick={onNext}>
+        <ChevronRight aria-hidden className="size-5" />
+      </Button>
+      <Button variant="secondary" onClick={onToday}>
+        {todayLabel}
+      </Button>
+    </div>
+  );
+};

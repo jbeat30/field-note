@@ -5,6 +5,7 @@ import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
 
 import { ProjectChangeWorksPage } from './ProjectChangeWorksPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/변경·추가 작업',
@@ -53,13 +54,13 @@ export const CreateWithValidation: Story = {
     const form = within(await canvas.findByRole('form', { name: '변경·추가 작업 기록' }));
 
     // 요청자·내용이 비어 있으면 서버에 보내기 전에 막는다
-    await userEvent.click(form.getByRole('button', { name: '기록하기' }));
+    await userEvent.click(form.getByRole('button', { name: '저장' }));
     await expect(await form.findByText('요청자를 입력해 주세요')).toBeInTheDocument();
     await expect(form.getByText('내용을 입력해 주세요')).toBeInTheDocument();
 
     await userEvent.type(form.getByLabelText('요청자'), '고객사 박과장');
     await userEvent.type(form.getByLabelText('요청 내용'), '2층 복도 천장 점검구 추가');
-    await userEvent.click(form.getByRole('button', { name: '기록하기' }));
+    await userEvent.click(form.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('#3 기록했습니다 (협의 중)')).toBeInTheDocument();
     await waitFor(() => expect(canvas.getByText('#3')).toBeInTheDocument());
@@ -123,10 +124,7 @@ export const LinkEvidence: Story = {
     const item = within(itemOf(canvas, 2));
 
     await expect(await item.findByText('연결한 증빙이 없습니다')).toBeInTheDocument();
-    await waitFor(() =>
-      expect(item.getByRole('option', { name: '1층 시공도' })).toBeInTheDocument(),
-    );
-    await userEvent.selectOptions(item.getByLabelText('문서함에서 연결'), '1층 시공도');
+    await chooseOption(item.getByLabelText('문서함에서 연결'), '1층 시공도');
     await userEvent.click(item.getByRole('button', { name: '연결' }));
 
     await expect(

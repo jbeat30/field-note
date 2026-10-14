@@ -12,6 +12,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { getErrorDetailMessage } from '../lib/apiError';
 
@@ -132,14 +133,12 @@ export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) 
             <Select
               value={category}
               disabled={isBusy}
-              onChange={(event) => setCategory(event.target.value as DocumentCategory)}
-            >
-              {DOCUMENT_CATEGORIES.map((value) => (
-                <option key={value} value={value}>
-                  {DOCUMENT_CATEGORY_LABELS[value]}
-                </option>
-              ))}
-            </Select>
+              onValueChange={setCategory}
+              options={DOCUMENT_CATEGORIES.map((value) => ({
+                value,
+                label: DOCUMENT_CATEGORY_LABELS[value],
+              }))}
+            />
           </FormField>
           <label className="flex min-h-touch items-center gap-3 text-base">
             <input
@@ -155,8 +154,7 @@ export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) 
       )}
       <div className="grid grid-cols-2 gap-3">
         <FormField label="개정일">
-          <Input
-            type="date"
+          <DateInput
             max={today}
             value={revisionDate}
             disabled={isBusy}
@@ -178,9 +176,11 @@ export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) 
           올리는 중 {Math.round(progress * 100)}%
         </p>
       )}
-      <Button type="submit" disabled={isBusy}>
-        {isBusy ? '올리는 중' : mode === 'create' ? '문서 올리기' : '새 버전 올리기'}
-      </Button>
+      <div className="flex justify-end">
+        <Button type="submit" size="sm" disabled={isBusy}>
+          {isBusy ? '올리는 중' : '저장'}
+        </Button>
+      </div>
     </form>
   );
 };

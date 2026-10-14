@@ -145,22 +145,40 @@ export const projectDetailSchema = projectSummarySchema.extend({
 
 export type ProjectDetail = z.infer<typeof projectDetailSchema>;
 
-export const projectsResponseSchema = z.object({ items: z.array(projectSummarySchema) });
+export const projectsResponseSchema = z.object({
+  items: z.array(projectSummarySchema),
+  // 조건에 맞는 전체 건수 (쪽 수 계산용)
+  total: z.number().int().min(0),
+  page: z.number().int().min(1),
+  pageSize: z.number().int().min(1),
+});
 
 export type ProjectsResponse = z.infer<typeof projectsResponseSchema>;
 
-// 정렬: 최근 등록(코드 내림차순), 종료 예정일이 가까운 순, 프로젝트명 순
-export const PROJECT_SORTS = ['recent', 'endDate', 'name'] as const;
+// 정렬 기준: 최근 등록(등록 순서 = 코드 번호 순서), 이름, 상태(진행 순서), 고객 이름, 담당자 이름, 시작·종료 예정일
+export const PROJECT_SORT_KEYS = [
+  'recent',
+  'name',
+  'status',
+  'client',
+  'manager',
+  'plannedStart',
+  'plannedEnd',
+] as const;
 
-export const projectSortSchema = z.enum(PROJECT_SORTS);
+export const projectSortKeySchema = z.enum(PROJECT_SORT_KEYS);
 
-export type ProjectSort = z.infer<typeof projectSortSchema>;
+export type ProjectSortKey = z.infer<typeof projectSortKeySchema>;
 
-export const PROJECT_SORT_LABELS: Record<ProjectSort, string> = {
-  recent: '최근 등록순',
-  endDate: '종료 예정일 빠른 순',
-  name: '이름순',
-};
+export const SORT_DIRECTIONS = ['asc', 'desc'] as const;
+
+export const sortDirectionSchema = z.enum(SORT_DIRECTIONS);
+
+export type SortDirection = z.infer<typeof sortDirectionSchema>;
+
+// 목록은 한 번에 한 쪽만 돌려준다 (데이터가 많아져도 응답 크기가 일정하도록)
+export const PROJECT_PAGE_SIZE_DEFAULT = 20;
+export const PROJECT_PAGE_SIZE_MAX = 100;
 
 export const projectListQuerySchema = z.object({
   status: projectStatusSchema.optional(),
@@ -172,7 +190,12 @@ export const projectListQuerySchema = z.object({
   to: dateSchema.optional(),
   // 프로젝트명·코드·현장 이름 검색 (부분 일치)
   q: z.string().trim().max(PROJECT_NAME_MAX_LENGTH).optional(),
-  sort: projectSortSchema.optional(),
+  // 정렬 기준과 방향 (기준을 안 주면 최근 등록 내림차순, 방향을 안 주면 최근 등록은 내림·나머지는 오름)
+  sortBy: projectSortKeySchema.optional(),
+  sortDir: sortDirectionSchema.optional(),
+  // 쪽 번호(1부터)와 쪽당 개수
+  page: z.coerce.number().int().min(1).optional(),
+  pageSize: z.coerce.number().int().min(1).max(PROJECT_PAGE_SIZE_MAX).optional(),
 });
 
 export type ProjectListQuery = z.infer<typeof projectListQuerySchema>;

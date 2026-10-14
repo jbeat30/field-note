@@ -11,6 +11,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 
@@ -77,8 +78,7 @@ export const RepairForm = ({ projectId }: { projectId: string }) => {
       {rootError && <Alert>{rootError}</Alert>}
       {saved && <p role="status">{saved}</p>}
       <FormField label="접수일" error={errors.receivedOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={receivedOn}
           onChange={(event) => setReceivedOn(event.target.value)}

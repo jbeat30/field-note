@@ -20,7 +20,7 @@ describe('auditSummary', () => {
       auditSummary('EMPLOYEE_DOCUMENT_VIEWED', { typeName: '건강검진', fileName: 'a.pdf' }),
     ).toBe('건강검진 · a.pdf');
     expect(auditSummary('MONTH_CLOSED', { month: '2026-09', draftLogCount: 2 })).toBe(
-      '2026-09 · 임시 저장 일지 2건 확인',
+      '2026-09 · 임시 저장 작업 내역 2건 확인',
     );
     expect(auditSummary('MONTH_REOPENED', { month: '2026-09', reason: '정정' })).toBe(
       '2026-09 · 정정',

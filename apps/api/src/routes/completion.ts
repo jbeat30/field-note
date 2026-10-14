@@ -35,7 +35,7 @@ export const registerCompletionRoutes = (
       method: 'get',
       path: '/projects/{id}/transition-notices',
       summary:
-        '상태 전환 전 확인할 것 (완료: 임시 저장 일지·진행률·남은 자재·협의 중 변경 작업, 재개: 종료 예정일 경과). 막지 않고 알림',
+        '상태 전환 전 확인할 것 (완료: 임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업, 재개: 종료 예정일 경과). 막지 않고 알림',
       auth: 'required',
       request: { params: projectParamsSchema, query: transitionNoticesQuerySchema },
       response: { status: 200, schema: transitionNoticesSchema },

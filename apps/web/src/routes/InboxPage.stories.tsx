@@ -5,6 +5,7 @@ import { signIn } from '../mocks/state';
 import { resetDraftStore } from '../stores/draftStore';
 
 import { InboxPage } from './InboxPage';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Pages/메모함',
@@ -47,12 +48,9 @@ export const LinkRemovesFromInbox: Story = {
 
     await canvas.findByText('자재 반입 시간 협의');
     await waitFor(() =>
-      expect(
-        within(canvas.getByLabelText('자재 반입 시간 협의 프로젝트에 연결')).getAllByRole('option')
-          .length,
-      ).toBeGreaterThan(1),
+      expect(canvas.getByLabelText('자재 반입 시간 협의 프로젝트에 연결')).toBeEnabled(),
     );
-    await userEvent.selectOptions(
+    await chooseOption(
       canvas.getByLabelText('자재 반입 시간 협의 프로젝트에 연결'),
       'A동 외장 판금 공사',
     );
@@ -80,7 +78,7 @@ export const DeleteMemo: Story = {
     const item = (await canvas.findByText('자재 반입 시간 협의')).closest('li')!;
 
     await userEvent.click(within(item).getByRole('button', { name: '삭제' }));
-    await userEvent.click(within(item).getByRole('button', { name: '정말 삭제' }));
+    await userEvent.click(await within(document.body).findByRole('button', { name: '지우기' }));
 
     await waitFor(() => expect(canvas.queryByText('자재 반입 시간 협의')).not.toBeInTheDocument());
   },

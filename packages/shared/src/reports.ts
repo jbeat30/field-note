@@ -66,7 +66,7 @@ export const dailyReportSchema = z.object({
     clientName: z.string().nullable(),
   }),
   date: dateSchema,
-  // 그날 일지가 없으면 null (자재·사진만 있는 날도 보고서는 만들어짐)
+  // 그날 작업 내역이 없으면 null (자재·사진만 있는 날도 보고서는 만들어짐)
   workLog: z
     .object({
       status: workLogStatusSchema,
@@ -90,7 +90,7 @@ export const dailyReportSchema = z.object({
 
 export type DailyReport = z.infer<typeof dailyReportSchema>;
 
-// 엑셀 내보내기: 기간 안의 일지·공수·자재를 시트로 나눠 내려받는다. 내보내기는 기록으로 남는다 (§7.3)
+// 엑셀 내보내기: 기간 안의 작업 내역·공수·자재를 시트로 나눠 내려받는다. 내보내기는 기록으로 남는다 (§7.3)
 export const reportExportQuerySchema = z
   .object({
     from: dateSchema,

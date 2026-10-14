@@ -32,7 +32,7 @@ export const registerReportRoutes = (registry: RouteRegistry, reports?: ReportSe
     {
       method: 'get',
       path: '/projects/{projectId}/daily-reports/{date}',
-      summary: '작업일보 한 장 (그날의 일지·인원·공수·자재·사진, 인쇄·PDF용)',
+      summary: '작업일보 한 장 (그날의 작업 내역·인원·공수·자재·사진, 인쇄·PDF용)',
       auth: 'required',
       request: { params: dailyReportParamsSchema },
       response: { status: 200, schema: dailyReportSchema },
@@ -53,7 +53,7 @@ export const registerReportRoutes = (registry: RouteRegistry, reports?: ReportSe
     {
       method: 'get',
       path: '/projects/{projectId}/daily-reports.xlsx',
-      summary: '작업일보 엑셀 내보내기 (기간 안의 일지·공수·자재 시트, 내보낸 기록이 남음)',
+      summary: '작업일보 엑셀 내보내기 (기간 안의 작업 내역·공수·자재 시트, 내보낸 기록이 남음)',
       auth: 'required',
       request: { params: projectFileParamsSchema, query: reportExportQuerySchema },
       response: { status: 200, schema: successResponseSchema },

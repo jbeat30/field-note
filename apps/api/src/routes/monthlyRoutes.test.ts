@@ -171,7 +171,7 @@ const setup = async () => {
   const log = (project: string, date: string, entries: [string, number][], status = 'SAVED') =>
     client.saveLog(project, date, {
       status,
-      content: `${date} 일지`,
+      content: `${date} 작업 내역`,
       entries: entries.map(([employeeId, minutes]) => ({
         employeeId,
         categoryId: category,
@@ -201,7 +201,7 @@ describe('월 공수표', () => {
     ).toBe(401);
   });
 
-  it('프로젝트 × 직원별로 저장된 일지 공수만 합산하고 다른 달·임시 저장은 뺀다', async () => {
+  it('프로젝트 × 직원별로 저장된 작업 내역 공수만 합산하고 다른 달·임시 저장은 뺀다', async () => {
     const { client, a, b, kim, lee, log } = await setup();
 
     await log(a, '2026-09-10', [
@@ -221,7 +221,7 @@ describe('월 공수표', () => {
       isClosed: false,
       closedAt: null,
       standardWorkMinutes: 480,
-      monthlyWorkDays: 22,
+      monthlyWorkDays: 26,
       draftLogCount: 1,
       events: [],
     });
@@ -245,7 +245,7 @@ describe('월 공수표', () => {
 });
 
 describe('월 공수 확정·재오픈', () => {
-  it('임시 저장 일지가 있으면 확인해야 확정하고 확정하면 이력과 확정 당시 기준값이 남는다', async () => {
+  it('임시 저장 작업 내역이 있으면 확인해야 확정하고 확정하면 이력과 확정 당시 기준값이 남는다', async () => {
     const { client, a, kim, log } = await setup();
 
     await log(a, '2026-09-10', [[kim, 480]]);
@@ -258,7 +258,7 @@ describe('월 공수 확정·재오픈', () => {
 
     const closed = hours(await client.close({ month: '2026-09', confirmDrafts: true }));
 
-    expect(closed).toMatchObject({ isClosed: true, standardWorkMinutes: 480, monthlyWorkDays: 22 });
+    expect(closed).toMatchObject({ isClosed: true, standardWorkMinutes: 480, monthlyWorkDays: 26 });
     expect(closed.closedAt).not.toBeNull();
     expect(closed.events).toEqual([
       expect.objectContaining({ kind: 'CLOSED', reason: null, draftLogCount: 1 }),
@@ -279,7 +279,7 @@ describe('월 공수 확정·재오픈', () => {
     expect((await client.close({ month: '2026-10' })).status).toBe(200);
   });
 
-  it('확정된 달의 일지는 저장할 수 없고 다른 달은 저장할 수 있다', async () => {
+  it('확정된 달의 작업 내역은 저장할 수 없고 다른 달은 저장할 수 있다', async () => {
     const { client, a, kim, log } = await setup();
 
     await log(a, '2026-09-10', [[kim, 480]]);
@@ -313,7 +313,7 @@ describe('월 공수 확정·재오픈', () => {
     expect(hours(await client.month('2026-09'))).toMatchObject({
       isClosed: true,
       standardWorkMinutes: 480,
-      monthlyWorkDays: 22,
+      monthlyWorkDays: 26,
     });
     // 확정하지 않은 달은 현재 설정을 따른다
     expect(hours(await client.month('2026-10'))).toMatchObject({
@@ -343,7 +343,7 @@ describe('월 공수 확정·재오픈', () => {
       'REOPENED:공수 정정',
       'CLOSED:null',
     ]);
-    // 이미 저장된 일지는 버전을 알려 주어야 고칠 수 있다 (낙관적 잠금)
+    // 이미 저장된 작업 내역은 버전을 알려 주어야 고칠 수 있다 (낙관적 잠금)
     expect(
       (
         await client.saveLog(a, '2026-09-10', {
@@ -400,11 +400,11 @@ describe('월 공수표 엑셀 내보내기', () => {
     ]);
     expect(rowsOf('월 공수표')).toEqual([
       ['프로젝트 코드', '프로젝트', '직원', '공수(MD)', 'MM'],
-      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '김작업', 1, 0.045],
-      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '이설치', 0.5, 0.023],
+      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '김작업', 1, 0.038],
+      [expect.stringMatching(/^\d{4}-\d{3}$/), 'A동', '이설치', 0.5, 0.019],
     ]);
     expect(rowsOf('요약')).toContainEqual(['확정 상태', '확정']);
-    expect(rowsOf('직원별 합계')[1]).toEqual(['김작업', 1, 0.045]);
+    expect(rowsOf('직원별 합계')[1]).toEqual(['김작업', 1, 0.038]);
 
     const { rows } = await db.ownerPool.query(
       `SELECT detail FROM audit_logs WHERE action = 'REPORT_EXPORTED' AND detail->>'kind' = 'MONTHLY_HOURS_XLSX'`,

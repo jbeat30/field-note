@@ -1,5 +1,7 @@
 import { Link } from 'react-router';
 
+import { projectWorkPath } from '../lib/projectPaths';
+
 import { formatDay } from '../lib/dates';
 
 import type { ResumableDraft } from './formDraft';
@@ -10,9 +12,9 @@ type ResumeDraftsProps = {
   projectNames: ReadonlyMap<string, string>;
 };
 
-const DRAFT_LABELS = { workLog: '일지', materials: '자재' } as const;
+const DRAFT_LABELS = { workLog: '작업 내역', materials: '자재' } as const;
 
-// 홈의 "이어서 작성": 저장하지 않고 닫았던 일지·자재 입력이 이 기기에 남아 있으면 바로 이어서 쓰도록 안내
+// 홈의 "이어서 작성": 저장하지 않고 닫았던 작업 내역·자재 입력이 이 기기에 남아 있으면 바로 이어서 쓰도록 안내
 export const ResumeDrafts = ({ drafts, projectNames }: ResumeDraftsProps) => {
   if (drafts.length === 0) return null;
 
@@ -28,8 +30,8 @@ export const ResumeDrafts = ({ drafts, projectNames }: ResumeDraftsProps) => {
         {drafts.map((draft) => (
           <li key={`${draft.projectId}:${draft.date}`}>
             <Link
-              to={`/work-logs?project=${draft.projectId}&date=${draft.date}`}
-              className="flex min-h-touch flex-col justify-center rounded-md border border-border px-3 py-2 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              to={projectWorkPath(draft.projectId, draft.date)}
+              className="flex min-h-touch flex-col justify-center rounded-xl bg-surface-subtle px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
             >
               <span className="font-medium">
                 {projectNames.get(draft.projectId) ?? '프로젝트'} · {formatDay(draft.date)}{' '}

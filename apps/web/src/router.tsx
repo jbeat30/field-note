@@ -2,6 +2,7 @@ import { createBrowserRouter } from 'react-router';
 
 import { RequireAuth } from './auth/RequireAuth';
 import { AppLayout } from './layouts/AppLayout';
+import { ProjectLayout } from './layouts/ProjectLayout';
 import { env } from './env';
 import { AuthLayout } from './layouts/AuthLayout';
 
@@ -70,53 +71,84 @@ export const routes = [
           },
           {
             path: '/projects/:id',
-            ...page(() => import('./routes/ProjectCardPage'), 'ProjectCardPage'),
-          },
-          {
-            path: '/projects/:id/memos',
-            ...page(() => import('./routes/ProjectMemosPage'), 'ProjectMemosPage'),
-          },
-          {
-            path: '/projects/:id/daily-report',
-            ...page(() => import('./routes/DailyReportPage'), 'DailyReportPage'),
-          },
-          {
-            path: '/projects/:id/documents',
-            ...page(() => import('./routes/ProjectDocumentsPage'), 'ProjectDocumentsPage'),
-          },
-          {
-            path: '/projects/:id/materials',
-            ...page(() => import('./routes/ProjectMaterialsPage'), 'ProjectMaterialsPage'),
-          },
-          {
-            path: '/projects/:id/change-works',
-            ...page(() => import('./routes/ProjectChangeWorksPage'), 'ProjectChangeWorksPage'),
-          },
-          {
-            path: '/projects/:id/repairs',
-            ...page(() => import('./routes/ProjectRepairsPage'), 'ProjectRepairsPage'),
-          },
-          {
-            path: '/projects/:id/warranty',
-            ...page(() => import('./routes/ProjectWarrantyPage'), 'ProjectWarrantyPage'),
-          },
-          {
-            path: '/projects/:id/summary',
-            ...page(() => import('./routes/ProjectSummaryPage'), 'ProjectSummaryPage'),
+            Component: ProjectLayout,
+            children: [
+              {
+                index: true,
+                ...page(() => import('./routes/ProjectWorkPage'), 'ProjectWorkPage'),
+              },
+              {
+                path: 'work/:date',
+                ...page(() => import('./routes/ProjectWorkDayPage'), 'ProjectWorkDayPage'),
+              },
+              {
+                path: 'overview',
+                ...page(() => import('./routes/ProjectCardPage'), 'ProjectOverviewPage'),
+              },
+              {
+                path: 'assignments',
+                ...page(() => import('./routes/ProjectCardPage'), 'ProjectAssignmentsPage'),
+              },
+              {
+                path: 'labor',
+                ...page(() => import('./routes/ProjectCardPage'), 'ProjectLaborPage'),
+              },
+              {
+                path: 'info',
+                ...page(() => import('./routes/ProjectCardPage'), 'ProjectInfoPage'),
+              },
+              {
+                path: 'memos',
+                ...page(() => import('./routes/ProjectMemosPage'), 'ProjectMemosPage'),
+              },
+              {
+                path: 'daily-report',
+                ...page(() => import('./routes/DailyReportPage'), 'DailyReportPage'),
+              },
+              {
+                path: 'documents',
+                ...page(() => import('./routes/ProjectDocumentsPage'), 'ProjectDocumentsPage'),
+              },
+              {
+                path: 'materials',
+                ...page(() => import('./routes/ProjectMaterialsPage'), 'ProjectMaterialsPage'),
+              },
+              {
+                path: 'change-works',
+                ...page(() => import('./routes/ProjectChangeWorksPage'), 'ProjectChangeWorksPage'),
+              },
+              {
+                path: 'repairs',
+                ...page(() => import('./routes/ProjectRepairsPage'), 'ProjectRepairsPage'),
+              },
+              {
+                path: 'warranty',
+                ...page(() => import('./routes/ProjectWarrantyPage'), 'ProjectWarrantyPage'),
+              },
+              {
+                path: 'summary',
+                ...page(() => import('./routes/ProjectSummaryPage'), 'ProjectSummaryPage'),
+              },
+              {
+                path: 'photos',
+                ...page(() => import('./routes/ProjectPhotosPage'), 'ProjectPhotosPage'),
+              },
+            ],
           },
           {
             path: '/monthly-hours',
             ...page(() => import('./routes/MonthlyHoursPage'), 'MonthlyHoursPage'),
           },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
-          { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
           {
-            path: '/projects/:id/photos',
-            ...page(() => import('./routes/ProjectPhotosPage'), 'ProjectPhotosPage'),
+            path: '/inbox',
+            lazy: async () =>
+              import('./routes/InboxPage').then((m) => ({ Component: m.InboxRedirect })),
           },
+          // 예전 작업 내역 주소: 프로젝트의 작업 내역으로 보냄
           {
             path: '/work-logs',
-            ...page(() => import('./routes/WorkLogPage'), 'WorkLogPage'),
+            ...page(() => import('./routes/WorkLogRedirect'), 'WorkLogRedirect'),
           },
           {
             path: '/employees',

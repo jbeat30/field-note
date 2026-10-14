@@ -18,6 +18,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { useDocuments } from '../documents/useDocuments';
@@ -100,7 +101,7 @@ const StatusForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label={`${TRANSITION_LABELS[to]} 확인`}
@@ -111,8 +112,7 @@ const StatusForm = ({
       </p>
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label="바뀐 날" error={errors.effectiveOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={effectiveOn}
           onChange={(event) => setEffectiveOn(event.target.value)}
@@ -192,15 +192,14 @@ const EditForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label="변경·추가 작업 수정"
     >
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label="요청일" error={errors.requestedOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={requestedOn}
           onChange={(event) => setRequestedOn(event.target.value)}
@@ -284,14 +283,12 @@ const Evidence = ({
       <div className="flex items-end gap-2">
         <div className="flex-1">
           <FormField label="문서함에서 연결">
-            <Select value={documentId} onChange={(event) => setDocumentId(event.target.value)}>
-              <option value="">문서 선택</option>
-              {choices.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={documentId}
+              onValueChange={setDocumentId}
+              placeholder="문서 선택"
+              options={choices.map((item) => ({ value: item.id, label: item.title }))}
+            />
           </FormField>
         </div>
         <Button
@@ -439,10 +436,10 @@ export const ChangeWorkItem = ({
   const stale = work.status === 'NEGOTIATING' && waited >= STALE_DAYS;
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
       <div className="flex flex-wrap items-center gap-2">
         <span className="font-bold">#{work.seq}</span>
-        <span className="rounded bg-muted px-2 py-0.5 text-sm">
+        <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-semibold">
           {CHANGE_WORK_STATUS_LABELS[work.status]}
         </span>
         {stale && <span className="text-sm font-medium text-danger">{waited}일째 협의 중</span>}

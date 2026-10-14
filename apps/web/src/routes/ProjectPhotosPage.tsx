@@ -5,8 +5,9 @@ import {
   type PhotoCategory,
 } from '@field-note/shared';
 import { useMemo, useState } from 'react';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Select } from '../components/ui/select';
@@ -59,13 +60,11 @@ export const ProjectPhotosPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <Link
-        className="min-h-touch content-center text-sm text-primary underline"
-        to={`/projects/${id}`}
-      >
-        ← {project.data.name}
-      </Link>
-      <h1 className="text-2xl font-bold">사진첩</h1>
+      <PageHeader
+        level={2}
+        title="사진첩"
+        description="현장 사진을 구분·구역별로 올리고 비교합니다"
+      />
       <PhotoUploader onSelect={(files, settings) => enqueueFiles(queue, id, files, settings)} />
       <UploadQueuePanel
         items={queueItems}
@@ -94,18 +93,16 @@ export const ProjectPhotosPage = () => {
         </div>
         {view === 'ALL' && (
           <Select
-            className="w-auto"
+            className="w-40"
             aria-label="구분으로 거르기"
             value={category}
-            onChange={(event) => setCategory(event.target.value as PhotoCategory | '')}
-          >
-            <option value="">모든 구분</option>
-            {PHOTO_CATEGORIES.map((value) => (
-              <option key={value} value={value}>
-                {PHOTO_CATEGORY_LABELS[value]}
-              </option>
-            ))}
-          </Select>
+            emptyLabel="모든 구분"
+            onValueChange={setCategory}
+            options={PHOTO_CATEGORIES.map((value) => ({
+              value: value,
+              label: PHOTO_CATEGORY_LABELS[value],
+            }))}
+          />
         )}
       </div>
       {photos.isPending && <p className="text-sm">사진을 불러오는 중</p>}

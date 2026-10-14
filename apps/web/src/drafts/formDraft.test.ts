@@ -61,7 +61,7 @@ describe('초안 저장 형식', () => {
 });
 
 describe('오래된 초안 정리', () => {
-  it('기한이 지난 일지·자재 초안만 지우고 최근 초안과 메모 초안은 남긴다', () => {
+  it('기한이 지난 작업 내역·자재 초안만 지우고 최근 초안과 메모 초안은 남긴다', () => {
     const drafts = {
       'workLog:p1:2026-09-01': draft(daysAgo(DRAFT_MAX_AGE_DAYS + 1)),
       'workLog:p1:2026-10-07': draft(daysAgo(1)),
@@ -75,7 +75,7 @@ describe('오래된 초안 정리', () => {
     ]);
   });
 
-  it('읽을 수 없는 일지 초안은 지우고, 지울 것이 없으면 같은 객체를 돌려준다', () => {
+  it('읽을 수 없는 작업 내역 초안은 지우고, 지울 것이 없으면 같은 객체를 돌려준다', () => {
     expect(Object.keys(pruneDrafts({ 'workLog:p1:2026-10-07': '{깨짐' }, NOW))).toEqual([]);
 
     const clean = { 'workLog:p1:2026-10-07': draft(daysAgo(2)) };
@@ -85,7 +85,7 @@ describe('오래된 초안 정리', () => {
 });
 
 describe('이어서 작성할 초안 목록', () => {
-  it('일지·자재 초안을 프로젝트·날짜 단위로 합치고 최근 저장이 먼저 나온다', () => {
+  it('작업 내역·자재 초안을 프로젝트·날짜 단위로 합치고 최근 저장이 먼저 나온다', () => {
     const list = listResumable({
       'workLog:p1:2026-10-07': draft(daysAgo(2)),
       'materials:p1:2026-10-07': draft(daysAgo(1)),

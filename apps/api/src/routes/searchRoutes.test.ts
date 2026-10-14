@@ -218,7 +218,7 @@ const searchFor = async (s: Awaited<ReturnType<typeof setup>>, query: string) =>
   return { res, data: res.status === 200 ? searchResponseSchema.parse(res.body) : null };
 };
 
-// 프로젝트·직원·메모·자료·일지가 모두 '배관'을 담은 회사 한 곳을 만든다
+// 프로젝트·직원·메모·자료·작업 내역이 모두 '배관'을 담은 회사 한 곳을 만든다
 const populate = async (s: Awaited<ReturnType<typeof setup>>) => {
   const memo = (
     await s.post('/memos', {
@@ -258,7 +258,7 @@ describe('통합 검색', () => {
     expect((await request(s.instance).get('/api/v1/search?q=배관')).status).toBe(401);
   });
 
-  it('프로젝트·직원·메모·자료·일지를 한꺼번에 찾고 종류마다 나눠 보여 준다', async () => {
+  it('프로젝트·직원·메모·자료·작업 내역을 한꺼번에 찾고 종류마다 나눠 보여 준다', async () => {
     const s = await setup();
     const found = await populate(s);
     const { data } = await searchFor(s, 'q=배관');
@@ -383,7 +383,7 @@ describe('통합 검색', () => {
     ).toMatchObject({ id: kim.id, badge: 'LEFT' });
   });
 
-  it('프로젝트를 지정하면 그 프로젝트의 메모·자료·일지만 찾는다', async () => {
+  it('프로젝트를 지정하면 그 프로젝트의 메모·자료·작업 내역만 찾는다', async () => {
     const s = await setup();
     const found = await populate(s);
     const other = await s.otherProject();

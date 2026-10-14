@@ -3,6 +3,7 @@ import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { MemoList } from './MemoList';
 import { storyMemo } from './storyData';
+import { chooseOption } from '../lib/storyActions';
 
 const meta = {
   title: 'Memos/메모 목록',
@@ -54,7 +55,7 @@ export const DeleteNeedsConfirm: Story = {
 
     await userEvent.click(canvas.getAllByRole('button', { name: '삭제' })[0]!);
     await expect(args.onDelete).not.toHaveBeenCalled();
-    await userEvent.click(canvas.getByRole('button', { name: '정말 삭제' }));
+    await userEvent.click(within(document.body).getByRole('button', { name: '지우기' }));
     await expect(args.onDelete).toHaveBeenCalledWith(args.memos[0]);
   },
 };
@@ -66,7 +67,7 @@ export const Edit: Story = {
     await userEvent.click(canvas.getAllByRole('button', { name: '수정' })[1]!);
     await userEvent.clear(canvas.getByLabelText('메모 내용'));
     await userEvent.type(canvas.getByLabelText('메모 내용'), '고친 지시');
-    await userEvent.selectOptions(canvas.getByLabelText('태그'), '이슈');
+    await chooseOption(canvas.getByLabelText('태그'), '이슈');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(args.onEdit).toHaveBeenCalledWith(args.memos[1], '고친 지시', 'ISSUE');
@@ -85,7 +86,7 @@ export const LinkToProject: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.selectOptions(
+    await chooseOption(
       canvas.getByLabelText('301호 천장 높이 다시 확인 프로젝트에 연결'),
       'B동 배관 공사',
     );

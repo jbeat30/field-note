@@ -42,7 +42,7 @@ export const alertKindSchema = z.enum(ALERT_KINDS);
 export type AlertKind = z.infer<typeof alertKindSchema>;
 
 export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
-  NO_LOG_TODAY: '오늘 투입된 프로젝트에 일지가 없을 때',
+  NO_LOG_TODAY: '오늘 투입된 프로젝트에 작업 내역이 없을 때',
   INBOX_STALE: '메모함에 메모가 3일 넘게 쌓여 있을 때',
   BURN_REACHED: '공수 소진율이 80%·100%에 도달했을 때',
   BURN_AHEAD: '진행률보다 공수가 빨리 소진될 때',
@@ -53,7 +53,7 @@ export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   REPAIR_UNHANDLED: '접수한 보수 요청이 3일 넘게 처리되지 않을 때',
   CERTIFICATE_EXPIRING: '보증서 만료가 30일 안으로 다가왔을 때',
   CREDENTIAL_EXPIRING: '직원 서류·자격 만료가 30일 안으로 다가왔을 때',
-  MONTH_UNCLOSED: '지난달에 저장한 일지가 있는데 월 공수를 확정하지 않았을 때',
+  MONTH_UNCLOSED: '지난달에 저장한 작업 내역이 있는데 월 공수를 확정하지 않았을 때',
 };
 
 // 메모함·협의 중 변경 작업을 오래 방치된 것으로 보는 기준 (§15.3)
@@ -183,7 +183,7 @@ export type DashboardProject = z.infer<typeof dashboardProjectSchema>;
 export const dashboardSchema = z.object({
   today: dateSchema,
   alerts: z.array(dashboardAlertSchema),
-  // 오늘 투입: 진행 중 프로젝트에 오늘 나가는 사람과 일지 입력 여부
+  // 오늘 투입: 진행 중 프로젝트에 오늘 나가는 사람과 작업 내역 입력 여부
   todayAssignments: z.object({
     headcount: z.number().int(),
     projects: z.array(
@@ -217,7 +217,7 @@ export const dashboardSchema = z.object({
   todos: z.object({
     draftLogCount: z.number().int(),
     staleInboxCount: z.number().int(),
-    // 저장한 일지가 있는데 확정하지 않은 지난달 (없으면 null)
+    // 저장한 작업 내역이 있는데 확정하지 않은 지난달 (없으면 null)
     unclosedMonth: z.string().nullable(),
   }),
   // 보증 종료 임박: 보증 중 프로젝트 (종료 예정일이 가까운 순)와 처리하지 않은(접수·처리 중) 보수 요청 건수
@@ -277,7 +277,7 @@ type RawProject = {
   status: ProjectStatus;
   plannedStart: string;
   plannedEnd: string;
-  // 계획 공수(분): 계획이 하나도 없으면 null. 투입 공수(분): 저장된 일지의 공수 합
+  // 계획 공수(분): 계획이 하나도 없으면 null. 투입 공수(분): 저장된 작업 내역의 공수 합
   plannedMinutes: number | null;
   usedMinutes: number;
   progressPercent: number | null;
@@ -290,7 +290,7 @@ export type DashboardInput = {
   projects: readonly RawProject[];
   // 진행 중 프로젝트에 오늘 투입되는 재직 직원 (프로젝트·직원)
   todayAssignments: readonly { projectId: string; employeeId: string }[];
-  // 오늘 저장된 일지가 있는 프로젝트
+  // 오늘 저장된 작업 내역이 있는 프로젝트
   todayLogProjectIds: readonly string[];
   // 메모함에서 3일 넘게 방치된 메모: 건수와 가장 오래된 것의 경과일
   staleInbox: { count: number; oldestDays: number };
@@ -328,7 +328,7 @@ export type DashboardInput = {
     typeName: string;
     expiresOn: string;
   }[];
-  // 저장한 일지가 있는데 확정하지 않은 지난달 (없으면 null)
+  // 저장한 작업 내역이 있는데 확정하지 않은 지난달 (없으면 null)
   unclosedMonth: string | null;
   // 켜 둔 알림 종류
   enabled: ReadonlySet<AlertKind>;
@@ -368,7 +368,7 @@ export const weekRange = (today: string) => {
 /**
  * @description 모아 온 기록으로 홈 대시보드를 만든다 (서버와 목업이 같은 규칙을 쓰도록 순수 함수로 둠)
  * 위젯은 지금 기록으로 만들 수 있는 것만 담고, 알림은 켜 둔 종류만 담는다
- * @param input 프로젝트·투입·일지·메모함·배치·변경 작업 현황과 켜 둔 알림 종류
+ * @param input 프로젝트·투입·작업 내역·메모함·배치·변경 작업 현황과 켜 둔 알림 종류
  * @returns 대시보드
  */
 export const assembleDashboard = (input: DashboardInput): Dashboard => {
@@ -685,7 +685,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
 export const dashboardAlertMessage = (alert: DashboardAlert): string => {
   switch (alert.kind) {
     case 'NO_LOG_TODAY':
-      return `${alert.projectName}: 오늘 투입됐는데 일지가 아직 없습니다`;
+      return `${alert.projectName}: 오늘 투입됐는데 작업 내역이 아직 없습니다`;
     case 'INBOX_STALE':
       return `${INBOX_STALE_DAYS}일 넘게 쌓인 메모가 ${alert.count}건 있습니다 (가장 오래된 것 ${alert.oldestDays}일째)`;
     case 'BURN_REACHED':
@@ -729,13 +729,14 @@ export const dashboardAlertMessage = (alert: DashboardAlert): string => {
 export const dashboardAlertPath = (alert: DashboardAlert): string => {
   switch (alert.kind) {
     case 'NO_LOG_TODAY':
-      return `/work-logs?project=${alert.projectId}`;
+      // 프로젝트의 작업 내역 목록(맨 위에 오늘 작업 입력)
+      return `/projects/${alert.projectId}`;
     case 'INBOX_STALE':
       return '/inbox';
     case 'BURN_REACHED':
     case 'BURN_AHEAD':
     case 'PROJECT_OVERDUE':
-      return `/projects/${alert.projectId}`;
+      return `/projects/${alert.projectId}/overview`;
     case 'DOUBLE_ASSIGNED':
       return '/staffing';
     case 'CHANGE_STALE':

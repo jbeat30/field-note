@@ -11,6 +11,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { splitServerErrors } from '../lib/serverErrors';
 import { OptionSelect } from '../employees/OptionSelect';
@@ -126,7 +127,7 @@ const CredentialRow = ({
   };
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3 text-sm">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
       <div className="flex flex-col gap-1">
         <span className="flex flex-wrap items-center gap-2 font-medium">
           {credential.typeName}
@@ -177,7 +178,7 @@ const CredentialRow = ({
         </div>
       )}
       {confirmDelete && (
-        <div className="flex flex-col gap-2 rounded-md border border-danger p-3">
+        <div className="flex flex-col gap-2 rounded-xl border border-danger p-4">
           <p>{credential.typeName} 서류를 삭제할까요? 목록에서 사라집니다</p>
           <div className="flex gap-2">
             <Button
@@ -202,18 +203,10 @@ const CredentialRow = ({
       {editing && (
         <div className="flex flex-col gap-3">
           <FormField label="취득일" error={errors.issuedOn}>
-            <Input
-              type="date"
-              value={issuedOn}
-              onChange={(event) => setIssuedOn(event.target.value)}
-            />
+            <DateInput value={issuedOn} onChange={(event) => setIssuedOn(event.target.value)} />
           </FormField>
           <FormField label="만료일" hint="갱신하면 새 만료일로 바꿉니다" error={errors.expiresOn}>
-            <Input
-              type="date"
-              value={expiresOn}
-              onChange={(event) => setExpiresOn(event.target.value)}
-            />
+            <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
           </FormField>
           <FormField label="메모" error={errors.memo}>
             <Input
@@ -359,26 +352,18 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
             options={options.data ?? []}
             emptyLabel="종류 선택"
             value={typeId}
-            onChange={(event) => setTypeId(event.target.value)}
+            onValueChange={setTypeId}
           />
         </FormField>
         <FormField label="취득일 (선택)" error={errors.issuedOn}>
-          <Input
-            type="date"
-            value={issuedOn}
-            onChange={(event) => setIssuedOn(event.target.value)}
-          />
+          <DateInput value={issuedOn} onChange={(event) => setIssuedOn(event.target.value)} />
         </FormField>
         <FormField
           label="만료일 (선택)"
           hint="비워 두면 만료 없는 서류입니다"
           error={errors.expiresOn}
         >
-          <Input
-            type="date"
-            value={expiresOn}
-            onChange={(event) => setExpiresOn(event.target.value)}
-          />
+          <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
         </FormField>
         <FormField label="메모 (선택)" error={errors.memo}>
           <Input

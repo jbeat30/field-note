@@ -1,10 +1,10 @@
 // 작성 중인 입력 폼 초안 (서비스 기획서 §14 "임시 저장": 통신이 불안정한 곳에서도 입력이 유실되지 않게 기기에 먼저 저장)
-// 서버 저장(임시 저장 상태의 일지)과는 별개로, 저장 버튼을 누르기 전의 입력 내용을 이 기기의 IndexedDB에 둔다
+// 서버 저장(임시 저장 상태의 작업 내역)과는 별개로, 저장 버튼을 누르기 전의 입력 내용을 이 기기의 IndexedDB에 둔다
 export const DRAFT_MAX_AGE_DAYS = 30;
 
 export type FormDraft<T> = {
   value: T;
-  // 초안을 쓰기 시작했을 때 서버에 있던 일지의 버전 (없었으면 null). 그사이 서버 내용이 바뀌었는지 가려내는 기준
+  // 초안을 쓰기 시작했을 때 서버에 있던 작업 내역의 버전 (없었으면 null). 그사이 서버 내용이 바뀌었는지 가려내는 기준
   baseVersion: number | null;
   savedAt: string;
 };
@@ -59,7 +59,7 @@ export const parseDraft = <T>(raw: string | undefined): FormDraft<T> | null => {
 };
 
 /**
- * @description 오래된 초안을 지움 (기기에 영원히 남지 않게). 일지·자재 초안만 대상이며 메모 초안 같은 다른 글자는 건드리지 않는다
+ * @description 오래된 초안을 지움 (기기에 영원히 남지 않게). 작업 내역·자재 초안만 대상이며 메모 초안 같은 다른 글자는 건드리지 않는다
  * @param drafts 저장된 초안 전체
  * @param now 현재 시각
  * @returns 오래된 초안을 뺀 새 객체 (지울 것이 없으면 같은 객체)
@@ -87,8 +87,8 @@ export type ResumableDraft = {
 };
 
 /**
- * @description 홈에서 "이어서 작성"으로 보여 줄 초안 목록 (읽을 수 있는 일지·자재 초안, 최근 저장이 먼저)
- * 같은 프로젝트·날짜의 일지와 자재 초안은 한 줄로 합친다 (같은 화면에서 이어 쓰므로)
+ * @description 홈에서 "이어서 작성"으로 보여 줄 초안 목록 (읽을 수 있는 작업 내역·자재 초안, 최근 저장이 먼저)
+ * 같은 프로젝트·날짜의 작업 내역과 자재 초안은 한 줄로 합친다 (같은 화면에서 이어 쓰므로)
  * @param drafts 저장된 초안 전체
  * @returns 이어 쓸 수 있는 초안 (프로젝트·날짜 단위)
  */
@@ -104,7 +104,7 @@ export const listResumable = (drafts: Record<string, string>): ResumableDraft[] 
     const place = `${parsed.projectId}:${parsed.date}`;
     const current = byPlace.get(place);
 
-    // 일지 초안을 대표로 하고(없으면 자재), 저장 시각은 더 최근 것을 씀
+    // 작업 내역 초안을 대표로 하고(없으면 자재), 저장 시각은 더 최근 것을 씀
     if (!current || draft.savedAt > current.savedAt || parsed.kind === 'workLog') {
       byPlace.set(place, {
         key,

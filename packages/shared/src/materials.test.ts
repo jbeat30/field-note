@@ -1,5 +1,6 @@
 import {
   compareMaterials,
+  findMaterialMatch,
   materialCreateSchema,
   materialRecordBatchSchema,
   materialRecordCreateSchema,
@@ -170,5 +171,22 @@ describe('자재 정렬', () => {
         .sort(compareMaterials)
         .map((item) => item.name),
     ).toEqual(['가', '나']);
+  });
+});
+
+describe('findMaterialMatch', () => {
+  const items = [
+    { name: '철문', spec: '900×2100 1.6T 백색' },
+    { name: '철문', spec: null },
+    { name: '실리콘', spec: null },
+  ];
+
+  it('공백·대소문자 차이를 무시하고 품명·규격이 같은 자재를 찾는다', () => {
+    expect(findMaterialMatch(items, ' 철 문 ', '900×2100  1.6t 백색')).toBe(items[0]);
+    expect(findMaterialMatch(items, '철문', '')).toBe(items[1]);
+  });
+
+  it('규격이 다르면 다른 자재로 본다', () => {
+    expect(findMaterialMatch(items, '철문', '800×2100')).toBeUndefined();
   });
 });

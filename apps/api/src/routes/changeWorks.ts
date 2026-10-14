@@ -103,7 +103,7 @@ export const registerChangeWorkRoutes = (
     {
       method: 'get',
       path: '/projects/{id}/change-usage',
-      summary: '변경·추가 작업으로 쓴 공수·자재 (일지·자재 기록의 변경 작업 표시 합계)',
+      summary: '변경·추가 작업으로 쓴 공수·자재 (작업 내역·자재 기록의 변경 작업 표시 합계)',
       auth: 'required',
       request: { params: projectParamsSchema },
       response: { status: 200, schema: changeUsageSchema },

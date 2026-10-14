@@ -20,7 +20,7 @@ describe('evaluateTransitionNotices (§10.3)', () => {
     expect(evaluateTransitionNotices(base)).toEqual([]);
   });
 
-  it('진행 → 완료에서 임시 저장 일지·진행률·남은 자재·협의 중 변경 작업을 알린다', () => {
+  it('진행 → 완료에서 임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업을 알린다', () => {
     const checks = evaluateTransitionNotices({
       ...base,
       draftLogCount: 2,
@@ -48,7 +48,7 @@ describe('evaluateTransitionNotices (§10.3)', () => {
     });
   });
 
-  it('종료 전환에서는 임시 저장 일지만 알리고 진행률·자재는 묻지 않는다', () => {
+  it('종료 전환에서는 임시 저장 작업 내역만 알리고 진행률·자재는 묻지 않는다', () => {
     const close = {
       ...base,
       from: 'WARRANTY' as const,
