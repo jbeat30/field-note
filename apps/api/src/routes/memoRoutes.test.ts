@@ -196,6 +196,12 @@ describe('메모함과 메모 노트 조회', () => {
       a2.id,
       a1.id,
     ]);
+    // 하루 기록 화면은 그 날짜의 메모만
+    expect(
+      (await s.list(`scope=PROJECT&projectId=${p1}&memoDate=2026-10-01`)).items.map(
+        (item) => item.id,
+      ),
+    ).toEqual([a1.id]);
   });
 
   it('태그와 완료 여부로 거르고 커서로 이어 읽으면 빠지거나 겹치지 않는다', async () => {

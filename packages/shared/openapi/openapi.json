@@ -36698,6 +36698,15 @@
           {
             "schema": {
               "type": "string",
+              "format": "date"
+            },
+            "required": false,
+            "name": "memoDate",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
               "enum": [
                 "true",
                 "false"

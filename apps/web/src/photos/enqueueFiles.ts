@@ -1,7 +1,7 @@
 import type { UploadMeta, UploadQueue } from './uploadQueue';
 import { compressImage, ImageConvertError } from './imageResize';
 
-export type EnqueueSettings = Pick<UploadMeta, 'category' | 'area' | 'description'>;
+export type EnqueueSettings = Pick<UploadMeta, 'category' | 'area' | 'description' | 'workDate'>;
 
 export type EnqueueFailure = { name: string; message: string };
 

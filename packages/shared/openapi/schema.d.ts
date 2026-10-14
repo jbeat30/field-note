@@ -12411,6 +12411,7 @@ export interface paths {
                     scope: "INBOX" | "PROJECT";
                     projectId?: string;
                     tag?: "NEGOTIATION" | "INSTRUCTION" | "ISSUE" | "TODO" | "OTHER";
+                    memoDate?: string;
                     isDone?: "true" | "false";
                     cursor?: string;
                     limit?: number;
