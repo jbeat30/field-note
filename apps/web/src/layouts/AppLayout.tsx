@@ -2,11 +2,9 @@ import { APP_NAME } from '@field-note/shared';
 import {
   BookUser,
   CalendarDays,
-  CalendarRange,
   FolderKanban,
   House,
   Menu,
-  NotebookPen,
   Plus,
   Settings,
   Users,
@@ -28,8 +26,6 @@ type NavItem = { to: string; label: string; end?: boolean; icon: typeof House };
 
 const HOME: NavItem = { to: '/', label: '홈', end: true, icon: House };
 const PROJECTS: NavItem = { to: '/projects', label: '프로젝트', icon: FolderKanban };
-const STAFFING: NavItem = { to: '/staffing', label: '인력 배치', icon: CalendarRange };
-const INBOX: NavItem = { to: '/inbox', label: '메모함', icon: NotebookPen };
 const EMPLOYEES: NavItem = { to: '/employees', label: '직원', icon: Users };
 const PARTNERS: NavItem = { to: '/partners', label: '명부', icon: BookUser };
 const MONTHLY: NavItem = { to: '/monthly-hours', label: '월 공수표', icon: CalendarDays };
@@ -37,13 +33,13 @@ const SETTINGS: NavItem = { to: '/settings', label: '설정', icon: Settings };
 
 // 왼쪽 메뉴(넓은 화면): 프로젝트 중심 업무와 회사 관리용을 나눈다. 작업 내역은 프로젝트 안에서 다룬다
 const SIDEBAR_GROUPS: { title: string; items: NavItem[] }[] = [
-  { title: '프로젝트 관리', items: [HOME, PROJECTS, STAFFING, INBOX] },
+  { title: '프로젝트 관리', items: [HOME, PROJECTS] },
   { title: '관리', items: [EMPLOYEES, PARTNERS, MONTHLY, SETTINGS] },
 ];
 
 // 아래 메뉴(좁은 화면): 자주 쓰는 네 가지 + 더보기
-const TAB_ITEMS: NavItem[] = [HOME, PROJECTS, STAFFING, EMPLOYEES];
-const MORE_ITEMS: NavItem[] = [INBOX, PARTNERS, MONTHLY, SETTINGS];
+const TAB_ITEMS: NavItem[] = [HOME, PROJECTS, EMPLOYEES, PARTNERS];
+const MORE_ITEMS: NavItem[] = [MONTHLY, SETTINGS];
 
 const tabClass = (isActive: boolean) =>
   cn(

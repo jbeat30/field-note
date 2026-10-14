@@ -1,4 +1,4 @@
-import { Link, useNavigate } from 'react-router';
+import { useNavigate } from 'react-router';
 import { useState } from 'react';
 
 import { useMe } from '../auth/useMe';
@@ -11,7 +11,6 @@ import { Skeleton } from '../components/ui/skeleton';
 import { Alert } from '../components/ui/alert';
 import { DashboardWidgets } from '../dashboard/DashboardWidgets';
 import { useDashboard } from '../dashboard/useDashboard';
-import { useMemoSummary } from '../memos/useMemos';
 import { useProjectChoices } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
 
@@ -19,7 +18,6 @@ import { useDraftStore } from '../stores/draftStore';
 // 정리 안 된 메모함, 이어서 작성할 초안
 export const HomePage = () => {
   const me = useMe();
-  const summary = useMemoSummary();
   const dashboard = useDashboard();
   const navigate = useNavigate();
   const [searchText, setSearchText] = useState('');
@@ -63,20 +61,6 @@ export const HomePage = () => {
         </div>
       )}
       {dashboard.data && <DashboardWidgets dashboard={dashboard.data.dashboard} />}
-      <Link
-        to="/inbox"
-        className="flex min-h-touch flex-col gap-1 rounded-xl bg-surface-subtle p-4 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
-      >
-        <span className="text-lg font-bold">메모함</span>
-        {summary.data ? (
-          <span className="text-sm" aria-live="polite">
-            정리 안 된 메모 {summary.data.inboxCount}건 · 끝내지 않은 할 일{' '}
-            {summary.data.openTodoCount}건
-          </span>
-        ) : (
-          <span className="text-sm text-foreground/70">불러오는 중</span>
-        )}
-      </Link>
       {isDraftReady && (
         <ResumeDrafts
           drafts={listResumable(drafts)}

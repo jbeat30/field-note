@@ -84,12 +84,12 @@ export const QuickAddSheet = () => {
               <p className="text-sm text-foreground/70">
                 {currentProject
                   ? '이 프로젝트의 메모 노트에 저장합니다'
-                  : '메모함에 저장합니다. 나중에 프로젝트에 연결하세요'}
+                  : '프로젝트를 고르면 해당 메모 노트에 저장됩니다'}
               </p>
               <MemoForm
                 autoFocus
                 draftKey={memoDraftKey(currentProject)}
-                submitLabel={currentProject ? '저장' : '메모함에 저장'}
+                submitLabel="저장"
                 onSubmit={async (value) => {
                   await create.mutateAsync({ ...value, projectId: currentProject });
                   close();

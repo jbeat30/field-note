@@ -1,5 +1,5 @@
 import type { Memo } from '@field-note/shared';
-import { Link } from 'react-router';
+import { Link, Navigate } from 'react-router';
 
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
@@ -66,3 +66,5 @@ export const InboxPage = () => {
     </div>
   );
 };
+
+export const InboxRedirect = () => <Navigate to="/" replace />;

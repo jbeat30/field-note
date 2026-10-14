@@ -10,7 +10,6 @@ import { Select } from '../components/ui/select';
 import type { EnqueueFailure, EnqueueSettings } from './enqueueFiles';
 
 type PhotoUploaderProps = {
-  // 고른 사진과 이번에 붙일 정보를 넘김. 대기열에 넣지 못한 사진은 사유와 함께 돌려줌
   onSelect: (files: File[], settings: EnqueueSettings) => Promise<EnqueueFailure[]>;
 };
 
@@ -25,9 +24,7 @@ export const PhotoUploader = ({ onSelect }: PhotoUploaderProps) => {
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = [...(event.target.files ?? [])];
 
-    // 같은 사진을 다시 골라도 변경 이벤트가 나도록 비움
     event.target.value = '';
-
     if (files.length === 0) return;
 
     setIsPreparing(true);
@@ -40,28 +37,10 @@ export const PhotoUploader = ({ onSelect }: PhotoUploaderProps) => {
       className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       aria-labelledby="upload-heading"
     >
-      <h2 id="upload-heading" className="text-lg font-bold">
-        사진 올리기
-      </h2>
-      <div className="grid items-end gap-3 md:grid-cols-[1fr_1fr_auto]">
-        <FormField label="구분">
-          <Select
-            value={category}
-            onValueChange={setCategory}
-            options={PHOTO_CATEGORIES.map((value) => ({
-              value,
-              label: PHOTO_CATEGORY_LABELS[value],
-            }))}
-          />
-        </FormField>
-        <FormField label="구역 (선택)">
-          <Input
-            value={area}
-            maxLength={100}
-            placeholder="예: 3층 301호"
-            onChange={(event) => setArea(event.target.value)}
-          />
-        </FormField>
+      <div className="flex items-center justify-between gap-2">
+        <h2 id="upload-heading" className="text-base font-semibold">
+          사진 올리기
+        </h2>
         <div>
           <input
             ref={inputRef}
@@ -81,6 +60,26 @@ export const PhotoUploader = ({ onSelect }: PhotoUploaderProps) => {
             {isPreparing ? '준비 중' : '사진 고르기·찍기'}
           </Button>
         </div>
+      </div>
+      <div className="grid grid-cols-2 gap-3">
+        <FormField label="구분">
+          <Select
+            value={category}
+            onValueChange={setCategory}
+            options={PHOTO_CATEGORIES.map((value) => ({
+              value,
+              label: PHOTO_CATEGORY_LABELS[value],
+            }))}
+          />
+        </FormField>
+        <FormField label="구역 (선택)">
+          <Input
+            value={area}
+            maxLength={100}
+            placeholder="예: 3층 301호"
+            onChange={(event) => setArea(event.target.value)}
+          />
+        </FormField>
       </div>
       {failures.length > 0 && (
         <Alert>

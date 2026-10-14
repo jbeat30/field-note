@@ -129,46 +129,49 @@ export const EmployeeListPage = () => {
         }
       />
 
-      <EmployeeQuickAdd />
+      {/* xl+ 2열: 간편 등록 / 직원 찾기 */}
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <EmployeeQuickAdd />
 
-      <section
-        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-        aria-labelledby="employee-list-heading"
-      >
-        <h2 id="employee-list-heading" className="text-lg font-bold">
-          직원 찾기
-        </h2>
-        <Input
-          type="search"
-          aria-label="이름 검색"
-          placeholder="이름 검색"
-          value={searchText}
-          onChange={(event) => setSearchText(event.target.value)}
-        />
-        <div className="grid grid-cols-2 gap-2">
-          <Select
-            aria-label="상태 필터"
-            value={filter.status ?? ''}
-            emptyLabel="전체 상태"
-            onValueChange={(status) => update({ status: status || undefined })}
-            options={EMPLOYEE_STATUSES.map((status) => ({
-              value: status,
-              label: EMPLOYEE_STATUS_LABELS[status],
-            }))}
-          />
-          <OptionSelect
-            aria-label="직종 필터"
-            kind="JOB_TYPE"
-            options={options.data ?? []}
-            value={filter.jobTypeId ?? ''}
-            emptyLabel="전체 직종"
-            onValueChange={(jobTypeId) => update({ jobTypeId: jobTypeId || undefined })}
-          />
-        </div>
+        <section
+          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+          aria-labelledby="employee-list-heading"
+        >
+          <h2 id="employee-list-heading" className="text-base font-bold">
+            직원 찾기
+          </h2>
+          <div className="grid gap-2 md:grid-cols-3">
+            <Input
+              type="search"
+              aria-label="이름 검색"
+              placeholder="이름 검색"
+              value={searchText}
+              onChange={(event) => setSearchText(event.target.value)}
+            />
+            <Select
+              aria-label="상태 필터"
+              value={filter.status ?? ''}
+              emptyLabel="전체 상태"
+              onValueChange={(status) => update({ status: status || undefined })}
+              options={EMPLOYEE_STATUSES.map((status) => ({
+                value: status,
+                label: EMPLOYEE_STATUS_LABELS[status],
+              }))}
+            />
+            <OptionSelect
+              aria-label="직종 필터"
+              kind="JOB_TYPE"
+              options={options.data ?? []}
+              value={filter.jobTypeId ?? ''}
+              emptyLabel="전체 직종"
+              onValueChange={(jobTypeId) => update({ jobTypeId: jobTypeId || undefined })}
+            />
+          </div>
 
-        {employees.isPending && <p className="text-sm">직원 목록을 불러오는 중</p>}
-        {employees.isError && <Alert>직원 목록을 불러오지 못했습니다</Alert>}
-      </section>
+          {employees.isPending && <p className="text-sm">직원 목록을 불러오는 중</p>}
+          {employees.isError && <Alert>직원 목록을 불러오지 못했습니다</Alert>}
+        </section>
+      </div>
 
       {employees.data && (
         <DataTable

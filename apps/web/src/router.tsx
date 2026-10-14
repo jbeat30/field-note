@@ -140,7 +140,11 @@ export const routes = [
             ...page(() => import('./routes/MonthlyHoursPage'), 'MonthlyHoursPage'),
           },
           { path: '/search', ...page(() => import('./routes/SearchPage'), 'SearchPage') },
-          { path: '/inbox', ...page(() => import('./routes/InboxPage'), 'InboxPage') },
+          {
+            path: '/inbox',
+            lazy: async () =>
+              import('./routes/InboxPage').then((m) => ({ Component: m.InboxRedirect })),
+          },
           // 예전 작업 내역 주소: 프로젝트의 작업 내역으로 보냄
           {
             path: '/work-logs',

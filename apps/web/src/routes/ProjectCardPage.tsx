@@ -144,12 +144,14 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
               <ProjectForm project={data} />
             </section>
           </Panel>
-          <Panel>
-            <ProjectPeriodHistory projectId={data.id} />
-          </Panel>
-          <Panel>
-            <RequiredCredentialsPanel projectId={data.id} />
-          </Panel>
+          <div className="grid items-start gap-5 xl:grid-cols-2">
+            <Panel>
+              <ProjectPeriodHistory projectId={data.id} />
+            </Panel>
+            <Panel>
+              <RequiredCredentialsPanel projectId={data.id} />
+            </Panel>
+          </div>
         </>
       )}
     </div>
