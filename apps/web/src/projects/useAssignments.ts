@@ -50,11 +50,12 @@ export const useCreateAssignment = (projectId: string) => {
   });
 };
 
-export const useUpdateAssignment = (projectId: string, assignmentId: string) => {
+// 어느 투입을 고칠지는 부를 때 넘김 (목록의 여러 줄에서 같은 훅을 씀)
+export const useUpdateAssignment = (projectId: string) => {
   const invalidate = useInvalidateAssignments();
 
   return useMutation({
-    mutationFn: async (body: AssignmentUpdate) => {
+    mutationFn: async ({ assignmentId, ...body }: AssignmentUpdate & { assignmentId: string }) => {
       const { data, error } = await apiClient.PATCH(
         '/api/v1/projects/{id}/assignments/{assignmentId}',
         {

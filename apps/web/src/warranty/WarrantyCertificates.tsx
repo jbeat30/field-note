@@ -9,6 +9,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { useDocuments } from '../documents/useDocuments';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -37,7 +38,7 @@ const CertificateRow = ({
   const [expiresOn, setExpiresOn] = useState(certificate.expiresOn);
 
   return (
-    <li className="flex flex-col gap-2 rounded-md border border-border p-3 text-sm">
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
       <div className="flex flex-col gap-0.5">
         <span className="font-medium">
           {certificate.title}
@@ -73,11 +74,7 @@ const CertificateRow = ({
         <div className="flex items-end gap-2">
           <div className="flex-1">
             <FormField label="만료일">
-              <Input
-                type="date"
-                value={expiresOn}
-                onChange={(event) => setExpiresOn(event.target.value)}
-              />
+              <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
             </FormField>
           </div>
           <Button
@@ -193,21 +190,15 @@ export const WarrantyCertificates = ({
             error={errors.documentId}
             hint="보증서 파일은 문서함에 올린 뒤 여기서 고릅니다"
           >
-            <Select value={documentId} onChange={(event) => setDocumentId(event.target.value)}>
-              <option value="">문서 선택</option>
-              {choices.map((item) => (
-                <option key={item.id} value={item.id}>
-                  {item.title}
-                </option>
-              ))}
-            </Select>
+            <Select
+              value={documentId}
+              onValueChange={setDocumentId}
+              placeholder="문서 선택"
+              options={choices.map((item) => ({ value: item.id, label: item.title }))}
+            />
           </FormField>
           <FormField label="만료일" error={errors.expiresOn}>
-            <Input
-              type="date"
-              value={expiresOn}
-              onChange={(event) => setExpiresOn(event.target.value)}
-            />
+            <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
           </FormField>
           <FormField label="발급처 (선택)" error={errors.issuer}>
             <Input

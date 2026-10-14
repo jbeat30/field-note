@@ -338,7 +338,7 @@ export type DemoWorkLog = {
   notes?: string;
   isChange?: boolean;
   entries: readonly DemoWorkLogEntry[];
-  // 저장된 일지를 고친 기록 (고치기 전 값, 오래된 것부터). 시드가 버전을 이에 맞춰 올림
+  // 저장된 작업 내역을 고친 기록 (고치기 전 값, 오래된 것부터). 시드가 버전을 이에 맞춰 올림
   revisions?: readonly { content: string; area?: string; entries: readonly DemoWorkLogEntry[] }[];
 };
 

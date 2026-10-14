@@ -225,7 +225,7 @@ const setup = async () => {
 
 const DAY = '2026-10-06';
 
-// 한 프로젝트에 하루치 일지(직원 2명·작업 구분)와 자재 기록, 사진 한 장을 만들어 둠
+// 한 프로젝트에 하루치 작업 내역(직원 2명·작업 구분)와 자재 기록, 사진 한 장을 만들어 둠
 const populate = async (s: Awaited<ReturnType<typeof setup>>) => {
   const project = await db.owner.project.findFirstOrThrow({ where: { id: s.projectId } });
   const kim = (await s.post('/employees', { name: '김설치' })).body.id as string;
@@ -324,7 +324,7 @@ describe('작업일보', () => {
     ).toBe(401);
   });
 
-  it('그날의 일지·인원·공수·자재·사진을 한 장에 모은다', async () => {
+  it('그날의 작업 내역·인원·공수·자재·사진을 한 장에 모은다', async () => {
     const s = await setup();
     const found = await populate(s);
     const { data } = await report(s);
@@ -383,7 +383,7 @@ describe('작업일보', () => {
     expect(data!.photos[0]!.thumbnailUrl).toContain('/thumbnail?download');
   });
 
-  it('그날 일지가 없어도 자재·사진이 있으면 보고서가 만들어지고, 아무것도 없으면 빈 보고서다', async () => {
+  it('그날 작업 내역이 없어도 자재·사진이 있으면 보고서가 만들어지고, 아무것도 없으면 빈 보고서다', async () => {
     const s = await setup();
 
     await populate(s);
@@ -512,7 +512,7 @@ describe('작업일보', () => {
     ).toBe(404);
   });
 
-  it('다른 회사의 일지·자재·사진은 보고서에 나오지 않는다', async () => {
+  it('다른 회사의 작업 내역·자재·사진은 보고서에 나오지 않는다', async () => {
     const a = await setup();
     const b = await setup();
 

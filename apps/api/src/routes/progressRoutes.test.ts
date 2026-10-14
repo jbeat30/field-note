@@ -271,7 +271,7 @@ describe('진행률 기록', () => {
 });
 
 describe('진행 점검', () => {
-  it('일지가 없고 진행률 기록도 없으면 계획만 보이고 경고가 없다', async () => {
+  it('작업 내역이 없고 진행률 기록도 없으면 계획만 보이고 경고가 없다', async () => {
     const { client, project } = await setup();
     const health = projectHealthSchema.parse((await client.health(project)).body);
 
@@ -286,7 +286,7 @@ describe('진행 점검', () => {
     expect(health.warnings).toEqual([]);
   });
 
-  it('저장된 일지의 공수만 투입 공수로 세고 임시 저장은 뺀다', async () => {
+  it('저장된 작업 내역의 공수만 투입 공수로 세고 임시 저장은 뺀다', async () => {
     const { client, project, worker, category } = await setup();
     const entries = [{ employeeId: worker, categoryId: category, minutes: 480 }];
 
@@ -300,7 +300,7 @@ describe('진행 점검', () => {
   it('기획서 예시: 계획 80MD·투입 56MD·진행률 45%면 소진율 70%, 필요 공수 약 124MD, 소진 과다 경고', async () => {
     const { client, project, worker, category } = await setup();
 
-    // 56MD = 3MD(1,440분) 18일 + 2MD(960분) 1일, 일지는 오늘(10/11)까지만 쓸 수 있어 9월 초부터 쓴다
+    // 56MD = 3MD(1,440분) 18일 + 2MD(960분) 1일, 작업 내역은 오늘(10/11)까지만 쓸 수 있어 9월 초부터 쓴다
     for (let day = 0; day < 19; day += 1) {
       const date = new Date(Date.UTC(2026, 8, 1 + day)).toISOString().slice(0, 10);
 

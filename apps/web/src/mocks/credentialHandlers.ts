@@ -15,7 +15,7 @@ import {
   type EmployeeCredential,
   type ErrorCode,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import { addMockAudit } from './auditHandlers';
@@ -23,6 +23,7 @@ import type { MockAccount } from './data';
 import { DEMO_CREDENTIALS, DEMO_REQUIRED_CREDENTIALS } from './demoSource';
 import { getMockFile } from './photoHandlers';
 import { getCurrentAccount, getEmployees, getOptions, getProjects } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -214,7 +215,7 @@ const toCredential = (account: MockAccount, row: MockCredential): EmployeeCreden
  * @returns msw 핸들러 목록
  */
 export const createCredentialHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
 
   // 자격 종류 목록에 있고 새로 쓰는 종류는 사용 중이어야 함
   const typeError = (account: MockAccount, typeId: string, path: string) => {

@@ -27,14 +27,11 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByRole('heading', { name: /가나다건설/ })).toBeInTheDocument();
-    // 카드에서는 담당자·연락처·메모가 보이고 전화 걸기 링크가 있음
+    // 카드에서는 담당자·연락처·메모가 보임 (전화 걸기 링크는 없음: 번호를 보고 직접 건다)
     await expect(canvas.getByLabelText('담당자')).toHaveValue('윤소장');
     await expect(canvas.getByLabelText('연락처')).toHaveValue('02-0000-0101');
     await expect(canvas.getByLabelText('메모')).toHaveValue('원청. 현장 출입증 사전 신청 필요');
-    await expect(canvas.getByRole('link', { name: /전화 걸기/ })).toHaveAttribute(
-      'href',
-      'tel:02-0000-0101',
-    );
+    await expect(canvas.queryByRole('link', { name: /전화/ })).not.toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '저장' })).toBeDisabled();
   },
 };
@@ -61,7 +58,6 @@ export const ClearOptionalFields: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('저장했습니다')).toBeInTheDocument();
-    await expect(canvas.queryByRole('link', { name: /전화 걸기/ })).not.toBeInTheDocument();
   },
 };
 
@@ -112,7 +108,8 @@ export const HideAndRestore: Story = {
 
     await expect(await canvas.findByText(/숨겼습니다/)).toBeInTheDocument();
     // 카드는 그대로 열리고 숨김 표시만 붙음
-    await expect(canvas.getByRole('heading', { name: /가나다건설/ })).toHaveTextContent('숨김');
+    await expect(canvas.getByRole('heading', { name: /가나다건설/ })).toBeInTheDocument();
+    await expect(canvas.getByText('숨김')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '다시 사용' }));
 
@@ -125,9 +122,8 @@ export const HiddenPartnerCard: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByRole('heading', { name: /옛날상가/ })).toHaveTextContent(
-      '숨김',
-    );
+    await expect(await canvas.findByRole('heading', { name: /옛날상가/ })).toBeInTheDocument();
+    await expect(canvas.getByText('숨김')).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '다시 사용' })).toBeInTheDocument();
   },
 };
@@ -143,5 +139,47 @@ export const NotFound: Story = {
     await expect(
       await within(canvasElement).findByRole('heading', { name: '업체를 찾을 수 없습니다' }),
     ).toBeInTheDocument();
+  },
+};
+
+// 쓰이지 않은 업체는 확인을 거쳐 삭제하고 명부 목록으로 돌아간다
+export const DeleteUnusedPartner: Story = {
+  parameters: { router: routerFor('든든도장') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '삭제' }));
+    await expect(canvas.getByText(/명부에서 삭제할까요/)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: '삭제 확인' }));
+
+    await expect(await canvas.findByTestId('navigated')).toBeInTheDocument();
+  },
+};
+
+export const DeleteCanBeCancelled: Story = {
+  parameters: { router: routerFor('든든도장') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '삭제' }));
+    await userEvent.click(canvas.getByRole('button', { name: '취소' }));
+
+    await expect(canvas.queryByText(/명부에서 삭제할까요/)).not.toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '삭제' })).toBeInTheDocument();
+  },
+};
+
+// 프로젝트가 고객으로 쓰고 있는 업체는 삭제되지 않고 이유와 숨기기 안내를 보여 줌
+export const DeleteInUseIsRejected: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '삭제' }));
+    await userEvent.click(canvas.getByRole('button', { name: '삭제 확인' }));
+
+    await expect(await canvas.findByRole('alert')).toHaveTextContent(
+      '쓰고 있어 삭제할 수 없습니다',
+    );
+    await expect(canvas.getByRole('heading', { name: /가나다건설/ })).toBeInTheDocument();
   },
 };

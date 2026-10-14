@@ -1,8 +1,10 @@
 import { Dialog } from 'radix-ui';
 import { useState } from 'react';
-import { Link, useLocation, useMatch } from 'react-router';
+import { todayInSeoul } from '@field-note/shared';
+import { Link, useMatch } from 'react-router';
 
 import { Button } from '../components/ui/button';
+import { projectWorkPath } from '../lib/projectPaths';
 import { MemoForm } from '../memos/MemoForm';
 import { memoDraftKey } from '../memos/memoDraft';
 import { useCreateMemo } from '../memos/useMemos';
@@ -13,20 +15,15 @@ type Mode = 'MENU' | 'MEMO';
 const linkClass =
   'flex min-h-touch items-center justify-center rounded-md bg-muted px-4 text-base font-medium text-foreground hover:bg-muted/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
-// 빠른 추가: 어느 화면에서든 한 번에 "메모 / 사진 / 오늘 일지"로 (서비스 기획서 §14). 프로젝트 화면에서는 그 프로젝트에 바로 연결하고, 아니면 메모함에 저장한다
+// 빠른 추가: 어느 화면에서든 한 번에 "메모 / 사진 / 오늘 작업"으로 (서비스 기획서 §14). 프로젝트 화면에서는 그 프로젝트에 바로 연결하고, 아니면 메모함에 저장한다
 export const QuickAddSheet = () => {
   const isOpen = useUiStore((state) => state.isQuickAddOpen);
   const setOpen = useUiStore((state) => state.setQuickAddOpen);
   const [mode, setMode] = useState<Mode>('MENU');
   const create = useCreateMemo();
   const projectId = useMatch('/projects/:id/*')?.params.id;
-  const { pathname, search } = useLocation();
-  // 일지 화면(/work-logs?project=)에서도 지금 보고 있는 프로젝트로 이어 감
-  const workLogProject =
-    pathname === '/work-logs' ? new URLSearchParams(search).get('project') : null;
   // 프로젝트 등록 화면(/projects/new)은 프로젝트가 아님
-  const currentProject =
-    projectId && projectId !== 'new' ? projectId : (workLogProject ?? undefined);
+  const currentProject = projectId && projectId !== 'new' ? projectId : undefined;
 
   const close = () => {
     setOpen(false);
@@ -36,7 +33,7 @@ export const QuickAddSheet = () => {
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => (open ? setOpen(true) : close())}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-foreground/50" />
+        <Dialog.Overlay className="fixed inset-0 bg-overlay" />
         <Dialog.Content
           aria-describedby={undefined}
           className="fixed inset-x-0 bottom-0 mx-auto flex max-w-xl flex-col gap-3 rounded-t-lg bg-surface p-4"
@@ -65,17 +62,21 @@ export const QuickAddSheet = () => {
               </Link>
               <Link
                 className={linkClass}
-                to={currentProject ? `/work-logs?project=${currentProject}` : '/work-logs'}
+                to={
+                  currentProject
+                    ? projectWorkPath(currentProject, todayInSeoul(new Date()))
+                    : '/projects'
+                }
                 onClick={close}
               >
-                오늘 일지
+                {currentProject ? '오늘 작업' : '오늘 작업 (프로젝트 고르기)'}
               </Link>
               <Link
                 className={linkClass}
-                to={currentProject ? `/work-logs?project=${currentProject}` : '/work-logs'}
+                to={currentProject ? `/projects/${currentProject}/materials` : '/projects'}
                 onClick={close}
               >
-                자재 (일지에서 입력)
+                {currentProject ? '자재' : '자재 (프로젝트 고르기)'}
               </Link>
             </div>
           ) : (
@@ -83,12 +84,12 @@ export const QuickAddSheet = () => {
               <p className="text-sm text-foreground/70">
                 {currentProject
                   ? '이 프로젝트의 메모 노트에 저장합니다'
-                  : '메모함에 저장합니다. 나중에 프로젝트에 연결하세요'}
+                  : '프로젝트를 고르면 해당 메모 노트에 저장됩니다'}
               </p>
               <MemoForm
                 autoFocus
                 draftKey={memoDraftKey(currentProject)}
-                submitLabel={currentProject ? '저장' : '메모함에 저장'}
+                submitLabel="저장"
                 onSubmit={async (value) => {
                   await create.mutateAsync({ ...value, projectId: currentProject });
                   close();

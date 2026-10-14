@@ -58,7 +58,7 @@ describe('validateMonthClose', () => {
     });
   });
 
-  it('임시 저장 일지가 있으면 확인해야 확정할 수 있다', () => {
+  it('임시 저장 작업 내역이 있으면 확인해야 확정할 수 있다', () => {
     expect(validateMonthClose({ ...base, draftLogCount: 2 })).toMatchObject({
       ok: false,
       path: 'confirmDrafts',

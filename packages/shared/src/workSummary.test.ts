@@ -60,8 +60,24 @@ describe('summarizeProjectWork', () => {
     expect(summary.draftLogCount).toBe(1);
     expect(summary.plannedMinutes).toBeNull();
     expect(summary.byEmployee).toEqual([
-      { employeeId: E2, workedDays: 2, totalMinutes: 960, plannedMinutes: null },
-      { employeeId: E1, workedDays: 1, totalMinutes: 480, plannedMinutes: null },
+      expect.objectContaining({
+        employeeId: E2,
+        workedDays: 2,
+        totalMinutes: 960,
+        plannedMinutes: null,
+      }),
+      {
+        employeeId: E1,
+        workedDays: 1,
+        totalMinutes: 480,
+        plannedMinutes: null,
+        firstWorkDate: '2026-10-05',
+        lastWorkDate: '2026-10-05',
+        categories: [
+          { categoryId: C1, totalMinutes: 240 },
+          { categoryId: C2, totalMinutes: 240 },
+        ].sort((a, b) => a.categoryId.localeCompare(b.categoryId)),
+      },
     ]);
     expect(summary.byCategory).toEqual([
       { categoryId: C2, totalMinutes: 1200 },
@@ -88,8 +104,24 @@ describe('summarizeProjectWork', () => {
 
     expect(summary.plannedMinutes).toBe(1440);
     expect(summary.byEmployee).toEqual([
-      { employeeId: E1, workedDays: 0, totalMinutes: 0, plannedMinutes: 1440 },
-      { employeeId: E2, workedDays: 0, totalMinutes: 0, plannedMinutes: null },
+      {
+        employeeId: E1,
+        workedDays: 0,
+        totalMinutes: 0,
+        plannedMinutes: 1440,
+        firstWorkDate: null,
+        lastWorkDate: null,
+        categories: [],
+      },
+      {
+        employeeId: E2,
+        workedDays: 0,
+        totalMinutes: 0,
+        plannedMinutes: null,
+        firstWorkDate: null,
+        lastWorkDate: null,
+        categories: [],
+      },
     ]);
   });
 });

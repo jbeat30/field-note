@@ -5,9 +5,9 @@ import { formatBurnRate, formatManMonths, formatWork } from './formatWork';
 const settings = DEFAULT_COMPANY_SETTINGS;
 
 describe('formatWork', () => {
-  it('기획서 §9.5 예시: 21.0 MD는 0.95 MM', () => {
+  it('21.0 MD는 0.81 MM (26일 기준)', () => {
     expect(formatWork(480 * 21, settings)).toBe('21.0 MD (168시간)');
-    expect(formatManMonths(480 * 21, settings)).toBe('0.95 MM');
+    expect(formatManMonths(480 * 21, settings)).toBe('0.81 MM');
   });
 
   it('시간 방식 회사는 시간을 앞에 보여 준다', () => {

@@ -551,7 +551,7 @@ describe('증빙 문서', () => {
 });
 
 describe('변경·추가 작업으로 쓴 공수·자재', () => {
-  it('변경 표시가 된 저장 일지의 공수와 자재 사용량만 합산한다', async () => {
+  it('변경 표시가 된 저장 작업 내역의 공수와 자재 사용량만 합산한다', async () => {
     const { client, project, worker, category } = await setup();
     const entries = [{ employeeId: worker, categoryId: category, minutes: 480 }];
 

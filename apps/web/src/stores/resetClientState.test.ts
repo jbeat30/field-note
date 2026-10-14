@@ -25,7 +25,7 @@ describe('resetClientState', () => {
 
     queryClient.setQueryData(queryKeys.session(), { companyId: '회사 A' });
     useUiStore.getState().setQuickAddOpen(true);
-    useDraftStore.getState().setDraft('log-1', '작성 중인 일지');
+    useDraftStore.getState().setDraft('log-1', '작성 중인 작업 내역');
     await Promise.resolve();
 
     expect(mockDb.size).toBe(1);

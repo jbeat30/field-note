@@ -220,7 +220,7 @@ describe('GET /dashboard', () => {
     expect(settings.items.every((item) => item.enabled)).toBe(true);
   });
 
-  it('오늘 투입된 프로젝트에 일지가 없으면 알리고 일지를 저장하면 사라진다', async () => {
+  it('오늘 투입된 프로젝트에 작업 내역이 없으면 알리고 작업 내역을 저장하면 사라진다', async () => {
     const { client, worker, worker2, category, make, assign } = await setup();
     const project = await make(client, 'A동 판금');
 
@@ -247,7 +247,7 @@ describe('GET /dashboard', () => {
     expect(kinds(second)).toEqual([]);
   });
 
-  it('임시 저장 일지는 일지 입력으로 보지 않고 할 일 건수에 센다', async () => {
+  it('임시 저장 작업 내역은 작업 내역 입력으로 보지 않고 할 일 건수에 센다', async () => {
     const { client, worker, category, make, assign } = await setup();
     const project = await make(client, 'A동 판금');
 
@@ -560,7 +560,7 @@ describe('4단계 알림·위젯', () => {
       expiresOn: '2027-10-01',
     });
 
-    // 지난달(2026-09)에 저장한 일지가 있는데 확정하지 않음
+    // 지난달(2026-09)에 저장한 작업 내역이 있는데 확정하지 않음
     const running = await make(client, 'B동 덕트 설치');
 
     await assign(running, worker);

@@ -10,21 +10,32 @@ import {
   type ProjectDetail,
   type ProjectStatus,
 } from '@field-note/shared';
+import { Check, MoreHorizontal } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Textarea } from '../components/ui/textarea';
+import { cn } from '../lib/cn';
 import { splitServerErrors } from '../lib/serverErrors';
 
 import { useTransitionNotices } from '../completion/useCompletion';
 import { useWarranty } from '../warranty/useWarranty';
 
 import { useProjectHistory, useTransitionProject } from './useProjects';
+
+// 진행 단계 순서 (중단은 진행 단계에서 잠시 멈춘 것, 취소는 별도)
+const STEPS: ProjectStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'WARRANTY', 'CLOSED'];
 
 // 전환 버튼 이름 (같은 '진행'이라도 처음 시작과 재개는 다르게 부른다)
 const actionLabel = (from: ProjectStatus, to: ProjectStatus) => {
@@ -38,7 +49,7 @@ const actionLabel = (from: ProjectStatus, to: ProjectStatus) => {
 };
 
 const confirmHint = (from: ProjectStatus, to: ProjectStatus) => {
-  if (to === 'IN_PROGRESS') return '작업일지를 입력할 수 있게 됩니다';
+  if (to === 'IN_PROGRESS') return '작업 내역를 입력할 수 있게 됩니다';
   if (to === 'SUSPENDED') return '중단 중에는 새 투입이 막힙니다. 사유를 남겨 주세요';
   if (to === 'COMPLETED') return '완료하면 보증 중 또는 종료로 이어서 관리할 수 있습니다';
   if (to === 'CANCELLED') {
@@ -118,7 +129,7 @@ const TransitionForm = ({
     });
 
     if (!checked.ok) {
-      // 전환 자체가 안 되는 경우(보증 기간·임시 저장 일지 등)는 입력칸이 아니라 전체 안내로 보여 준다
+      // 전환 자체가 안 되는 경우(보증 기간·임시 저장 작업 내역 등)는 입력칸이 아니라 전체 안내로 보여 준다
       if (checked.path === 'toStatus') {
         setRootError(checked.message);
       } else {
@@ -152,7 +163,7 @@ const TransitionForm = ({
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-md border border-border p-3"
+      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
       onSubmit={submit}
       noValidate
       aria-label={`${actionLabel(project.status, to)} 확인`}
@@ -173,8 +184,7 @@ const TransitionForm = ({
       )}
       {rootError && <Alert>{rootError}</Alert>}
       <FormField label={dateLabel} error={errors.effectiveOn}>
-        <Input
-          type="date"
+        <DateInput
           max={today}
           value={effectiveOn}
           onChange={(event) => setEffectiveOn(event.target.value)}
@@ -230,97 +240,182 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
   const [done, setDone] = useState('');
   const options = PROJECT_TRANSITIONS[project.status];
 
+  const stepIndex = STEPS.indexOf(project.status === 'SUSPENDED' ? 'IN_PROGRESS' : project.status);
+  const mainOptions = options.filter((to) => to !== 'SUSPENDED' && to !== 'CANCELLED');
+  const sideOptions = options.filter((to) => to === 'SUSPENDED' || to === 'CANCELLED');
+  const openAction = (to: ProjectStatus) => {
+    setDone('');
+    setOpen(to);
+  };
+
   return (
-    <section className="flex flex-col gap-3" aria-labelledby="status-heading">
+    <section className="flex flex-col gap-5" aria-labelledby="status-heading">
       <h2 id="status-heading" className="text-lg font-bold">
-        상태
+        진행 단계
       </h2>
       {done && <Alert variant="info">{done}</Alert>}
-      <dl className="grid grid-cols-[7rem_1fr] gap-y-1 text-sm">
-        <dt className="text-foreground/70">현재 상태</dt>
-        <dd className="font-medium">{PROJECT_STATUS_LABELS[project.status]}</dd>
-        <dt className="text-foreground/70">실제 시작일</dt>
-        <dd>{project.actualStart ?? '아직 시작 전'}</dd>
-        <dt className="text-foreground/70">실제 완료일</dt>
-        <dd>{project.actualEnd ?? '-'}</dd>
-        {showWarranty && warranty.data && (
-          <>
-            <dt className="text-foreground/70">보증</dt>
-            <dd>
-              {warranty.data.months === 0
-                ? '보증 없음'
-                : `${warranty.data.months}개월 · 종료 예정일 ${warranty.data.endOn ?? '-'}`}
-              {warranty.data.configured ? '' : ' (기본값)'}{' '}
-              <Link className="text-primary underline" to={`/projects/${project.id}/warranty`}>
-                보증 관리
-              </Link>
-            </dd>
-          </>
-        )}
-      </dl>
 
-      {options.length > 0 ? (
-        <div className="flex flex-col gap-2">
-          {open === null && (
-            <div className="flex flex-wrap gap-2">
-              {options.map((to) => (
-                <Button
-                  key={to}
-                  type="button"
-                  variant={to === 'CANCELLED' ? 'danger' : 'secondary'}
-                  onClick={() => {
-                    setDone('');
-                    setOpen(to);
-                  }}
-                >
-                  {actionLabel(project.status, to)}
-                </Button>
-              ))}
-            </div>
-          )}
-          {open !== null && (
-            <TransitionForm
-              key={`${project.status}-${open}`}
-              project={project}
-              to={open}
-              onClose={() => setOpen(null)}
-              onDone={(message) => {
-                setOpen(null);
-                setDone(message);
+      {/* 프로그레스 바: 원 + 절대 위치 연결선 */}
+      {project.status === 'CANCELLED' ? (
+        <Alert>취소된 프로젝트입니다. 기록은 그대로 조회할 수 있고 더 수정할 수 없습니다</Alert>
+      ) : (
+        <div className="relative flex justify-between" role="list" aria-label="진행 단계">
+          {/* 전체 트랙 */}
+          <div className="absolute top-[17px] right-4 left-4 h-0.5 bg-muted" />
+          {/* 완료 트랙 */}
+          {stepIndex > 0 && (
+            <div
+              className="absolute top-[17px] left-4 h-0.5 bg-primary transition-all duration-500"
+              style={{
+                width: `calc(${(stepIndex / (STEPS.length - 1)) * 100}% - 2rem)`,
               }}
             />
           )}
+          {STEPS.map((step, index) => (
+            <div
+              key={step}
+              role="listitem"
+              aria-current={index === stepIndex ? 'step' : undefined}
+              className="relative z-10 flex flex-col items-center gap-1.5"
+            >
+              <span
+                className={cn(
+                  'grid size-[34px] place-items-center rounded-full text-sm font-bold',
+                  index < stepIndex && 'bg-primary text-primary-foreground',
+                  index === stepIndex &&
+                    'bg-primary text-primary-foreground ring-4 ring-primary/20',
+                  index > stepIndex && 'bg-muted text-foreground/70',
+                )}
+              >
+                {index < stepIndex ? <Check aria-hidden className="size-4" /> : index + 1}
+              </span>
+              <span
+                className={cn(
+                  'text-center text-xs font-medium leading-tight',
+                  index <= stepIndex ? 'text-foreground' : 'text-foreground/70',
+                )}
+              >
+                {PROJECT_STATUS_LABELS[step]}
+              </span>
+            </div>
+          ))}
         </div>
-      ) : (
-        <p className="text-sm text-foreground/70">
-          {project.status === 'CANCELLED'
-            ? '취소된 프로젝트입니다. 기록은 그대로 조회할 수 있고 더 수정할 수 없습니다'
-            : '더 바꿀 수 있는 상태가 없습니다'}
-        </p>
       )}
 
-      <div className="flex flex-col gap-2">
-        <h3 className="text-sm font-bold">상태 변경 이력</h3>
-        {history.isPending && <p className="text-sm">이력을 불러오는 중</p>}
-        {history.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
-        {history.data && history.data.length === 0 && (
-          <p className="text-sm text-foreground/70">아직 상태를 바꾼 기록이 없습니다</p>
-        )}
-        {history.data && history.data.length > 0 && (
-          <ol className="divide-y divide-border">
-            {history.data.map((item) => (
-              <li key={item.id} className="flex flex-col gap-0.5 py-2 text-sm">
-                <span className="font-medium">
-                  {item.effectiveOn} {PROJECT_STATUS_LABELS[item.fromStatus]} →{' '}
-                  {PROJECT_STATUS_LABELS[item.toStatus]}
-                </span>
-                {item.reason && <span>사유: {item.reason}</span>}
-                <span className="text-foreground/70">기록 {formatChangedAt(item.changedAt)}</span>
-              </li>
-            ))}
-          </ol>
-        )}
-      </div>
+      {/* 상태 요약 + 버튼 한 줄 */}
+      {project.status !== 'CANCELLED' && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <div className="flex gap-1.5">
+              <dt className="text-foreground/65">현재 상태</dt>
+              <dd className="font-semibold">
+                {project.status === 'SUSPENDED'
+                  ? '작업 중단'
+                  : PROJECT_STATUS_LABELS[project.status]}
+              </dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-foreground/65">실제 시작일</dt>
+              <dd className="font-semibold">{project.actualStart ?? '-'}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-foreground/65">실제 완료일</dt>
+              <dd className="font-semibold">{project.actualEnd ?? '-'}</dd>
+            </div>
+            {showWarranty && warranty.data && warranty.data.configured && (
+              <div className="flex gap-1.5">
+                <dt className="text-foreground/65">보증</dt>
+                <dd className="font-semibold">
+                  {warranty.data.months === 0
+                    ? '보증 없음'
+                    : `${warranty.data.months}개월 · ~${warranty.data.endOn ?? '-'}`}
+                </dd>
+              </div>
+            )}
+          </dl>
+
+          {/* 전환 버튼: 주 버튼 1개 + 더보기(⋯)로 중단·취소 */}
+          {options.length > 0 && open === null && (
+            <div className="flex shrink-0 items-center gap-2">
+              {mainOptions.slice(0, 1).map((to) => (
+                <Button key={to} type="button" onClick={() => openAction(to)}>
+                  {actionLabel(project.status, to)}
+                </Button>
+              ))}
+              {mainOptions.length > 1 &&
+                mainOptions.slice(1).map((to) => (
+                  <Button key={to} type="button" variant="secondary" onClick={() => openAction(to)}>
+                    {actionLabel(project.status, to)}
+                  </Button>
+                ))}
+              {sideOptions.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label="그 밖의 처리">
+                      <MoreHorizontal aria-hidden />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {sideOptions.map((to) => (
+                      <DropdownMenuItem
+                        key={to}
+                        danger={to === 'CANCELLED'}
+                        onSelect={() => openAction(to)}
+                      >
+                        {actionLabel(project.status, to)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
+      {project.status === 'SUSPENDED' && (
+        <Alert variant="warning">지금은 작업이 중단된 상태입니다</Alert>
+      )}
+
+      {open !== null && (
+        <TransitionForm
+          key={`${project.status}-${open}`}
+          project={project}
+          to={open}
+          onClose={() => setOpen(null)}
+          onDone={(message) => {
+            setOpen(null);
+            setDone(message);
+          }}
+        />
+      )}
+
+      <details className="rounded-lg bg-surface-nested px-3 py-1 text-sm">
+        <summary className="min-h-touch cursor-pointer content-center font-medium">
+          상태 변경 이력{history.data ? ` (${history.data.length})` : ''}
+        </summary>
+        <div className="pb-2">
+          {history.isPending && <p>이력을 불러오는 중</p>}
+          {history.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
+          {history.data && history.data.length === 0 && (
+            <p className="text-foreground/70">아직 상태를 바꾼 기록이 없습니다</p>
+          )}
+          {history.data && history.data.length > 0 && (
+            <ol className="divide-y divide-line">
+              {history.data.map((item) => (
+                <li key={item.id} className="flex flex-col gap-0.5 py-2">
+                  <span className="font-medium">
+                    {item.effectiveOn} {PROJECT_STATUS_LABELS[item.fromStatus]} →{' '}
+                    {PROJECT_STATUS_LABELS[item.toStatus]}
+                  </span>
+                  {item.reason && <span>사유: {item.reason}</span>}
+                  <span className="text-foreground/70">기록 {formatChangedAt(item.changedAt)}</span>
+                </li>
+              ))}
+            </ol>
+          )}
+        </div>
+      </details>
     </section>
   );
 };

@@ -27,11 +27,11 @@ afterAll(async () => {
 const service = () => createCompanySettingsService(db.app);
 
 describe('회사 설정', () => {
-  it('저장한 적이 없으면 기본값(8시간·22일·비율)을 돌려준다', async () => {
+  it('저장한 적이 없으면 기본값(8시간·26일·비율)을 돌려준다', async () => {
     expect(await service().get(COMPANY_A)).toEqual(DEFAULT_COMPANY_SETTINGS);
     expect(DEFAULT_COMPANY_SETTINGS).toEqual({
       standardWorkMinutes: 480,
-      monthlyWorkDays: 22,
+      monthlyWorkDays: 26,
       workUnitMode: 'RATIO',
     });
   });

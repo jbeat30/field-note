@@ -36,7 +36,7 @@ export const registerMonthlyRoutes = (registry: RouteRegistry, monthly?: Monthly
       method: 'get',
       path: '/monthly-hours',
       summary:
-        '월 공수표 (프로젝트 × 직원별 저장된 일지 공수, 확정 상태·확정 당시 기준값·임시 저장 일지·이력)',
+        '월 공수표 (프로젝트 × 직원별 저장된 작업 내역 공수, 확정 상태·확정 당시 기준값·임시 저장 작업 내역·이력)',
       auth: 'required',
       request: { query: monthlyHoursQuerySchema },
       response: { status: 200, schema: monthlyHoursSchema },
@@ -56,7 +56,7 @@ export const registerMonthlyRoutes = (registry: RouteRegistry, monthly?: Monthly
       method: 'post',
       path: '/monthly-hours/close',
       summary:
-        '월 공수 확정 (이번 달까지, 임시 저장 일지가 남아 있으면 확인 필요, 확정 당시 기준값 고정, 이력에 남음)',
+        '월 공수 확정 (이번 달까지, 임시 저장 작업 내역이 남아 있으면 확인 필요, 확정 당시 기준값 고정, 이력에 남음)',
       auth: 'required',
       request: { body: monthlyCloseSchema },
       response: { status: 200, schema: monthlyHoursSchema },
@@ -76,7 +76,7 @@ export const registerMonthlyRoutes = (registry: RouteRegistry, monthly?: Monthly
       method: 'post',
       path: '/monthly-hours/reopen',
       summary:
-        '월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업일지를 다시 고칠 수 있다',
+        '월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역를 다시 고칠 수 있다',
       auth: 'required',
       request: { body: monthlyReopenSchema },
       response: { status: 200, schema: monthlyHoursSchema },

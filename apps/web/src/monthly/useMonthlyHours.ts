@@ -20,7 +20,7 @@ export const useMonthlyHours = (month: string) =>
     },
   });
 
-// 확정·재오픈은 바뀐 월 공수표를 돌려주므로 그 값을 바로 캐시에 반영하고, 일지 목록·집계는 잠금 상태가 달라졌으니 다시 읽는다
+// 확정·재오픈은 바뀐 월 공수표를 돌려주므로 그 값을 바로 캐시에 반영하고, 작업 내역 목록·집계는 잠금 상태가 달라졌으니 다시 읽는다
 const useApplyMonthly = (month: string) => {
   const queryClient = useQueryClient();
 

@@ -78,12 +78,12 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
             )}
             {workLog.status === 'DRAFT' && (
               <p className="text-sm text-danger">
-                {WORK_LOG_STATUS_LABELS.DRAFT} 상태의 일지입니다 (아직 확정되지 않음)
+                {WORK_LOG_STATUS_LABELS.DRAFT} 상태의 작업 내역입니다 (아직 확정되지 않음)
               </p>
             )}
           </>
         ) : (
-          <p className="text-sm text-foreground/70">이 날 작성한 일지가 없습니다</p>
+          <p className="text-sm text-foreground/70">이 날 작성한 작업 내역이 없습니다</p>
         )}
       </Section>
 

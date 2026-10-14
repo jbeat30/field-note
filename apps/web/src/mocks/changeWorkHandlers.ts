@@ -18,7 +18,7 @@ import {
   type ChangeWorkStatusChange,
   type ErrorCode,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import type { MockAccount } from './data';
@@ -26,6 +26,7 @@ import { DEMO_CHANGE_WORKS } from './demoSource';
 import { listMockDocuments } from './documentHandlers';
 import { listMockMaterialRecords } from './materialHandlers';
 import { getCurrentAccount, getProjects, getWorkLogs } from './state';
+import { mockDelay } from './latency';
 
 type Helpers = {
   apiError: (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
@@ -149,7 +150,7 @@ const toDetail = (account: MockAccount, work: MockChangeWork): ChangeWorkDetail 
  * @param helpers 목업 공통 응답·본문 검사
  */
 export const createChangeWorkHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
   const invalid = (path: string, message: string) =>
     apiError('VALIDATION_ERROR', [{ path, message }]);
   const queryError = (issues: { path: PropertyKey[]; message: string }[]) =>

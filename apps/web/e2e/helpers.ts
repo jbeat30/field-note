@@ -53,10 +53,17 @@ export const photoFile = (name: string) => ({ name, mimeType: 'image/jpeg', buff
  * @param label 목록의 접근성 이름
  * @param text 고를 항목에 들어 있는 글자
  */
-export const selectByText = async (page: Page, label: string, text: string) => {
-  const select = page.getByLabel(label, { exact: true });
-  const value = await select.locator('option', { hasText: text }).first().getAttribute('value');
+export const selectByText = async (page: Page, label: string, text: string | number) => {
+  await page.getByLabel(label, { exact: true }).click();
 
-  expect(value, `${label}에 '${text}' 항목이 있어야 함`).toBeTruthy();
-  await select.selectOption(value!);
+  // 목록은 화면 맨 위(portal)에 열림. 숫자면 몇 번째 항목(0부터), 글자면 이름 앞부분이 맞는 항목
+  const option =
+    typeof text === 'number'
+      ? page.getByRole('option').nth(text)
+      : page.getByRole('option', {
+          name: new RegExp(`^${text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}`),
+        });
+
+  await expect(option.first(), `${label}에 '${text}' 항목이 있어야 함`).toBeVisible();
+  await option.first().click();
 };

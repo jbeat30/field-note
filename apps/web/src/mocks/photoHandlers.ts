@@ -16,11 +16,12 @@ import {
   type PhotoCategory,
   type StoredFile,
 } from '@field-note/shared';
-import { delay, http, HttpResponse } from 'msw';
+import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
 
 import type { MockAccount } from './data';
 import { getCurrentAccount, getEmployees, getProjects } from './state';
+import { mockDelay } from './latency';
 
 type ApiError = (code: ErrorCode, details?: { path: string; message: string }[]) => Response;
 
@@ -208,7 +209,7 @@ const newestFirst = (a: MockPhoto, b: MockPhoto) =>
  * @returns msw 핸들러 목록
  */
 export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
-  const latency = () => delay(300);
+  const latency = () => mockDelay(300);
 
   return [
     http.post('/api/v1/projects/:projectId/files', async ({ request, params }) => {

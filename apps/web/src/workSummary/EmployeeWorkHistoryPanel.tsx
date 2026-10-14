@@ -7,7 +7,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 import { formatWork } from './formatWork';
 import { useEmployeeWorkHistory } from './useWorkSummary';
 
-// 직원 카드의 투입 이력: 프로젝트별 투입 기간·일수·총 공수와 이번 달·올해 공수 (서비스 기획서 §8.5). 저장된 일지만 반영한다
+// 직원 카드의 투입 이력: 프로젝트별 투입 기간·일수·총 공수와 이번 달·올해 공수 (서비스 기획서 §8.5). 저장된 작업 내역만 반영한다
 export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string }) => {
   const history = useEmployeeWorkHistory(employeeId);
   const settings = useCompanySettings();
@@ -28,7 +28,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
       <h2 id="history-heading" className="text-lg font-bold">
         투입 이력
       </h2>
-      <dl className="grid grid-cols-2 gap-2 rounded-md border border-border p-3 text-sm">
+      <dl className="grid grid-cols-2 gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
         <div>
           <dt className="text-foreground/70">이번 달 공수</dt>
           <dd className="font-bold">{formatWork(data.thisMonthMinutes, config)}</dd>
@@ -42,7 +42,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
         <p className="text-sm">아직 투입된 프로젝트가 없습니다</p>
       ) : (
         <ul
-          className="divide-y divide-border rounded-md border border-border"
+          className="divide-y divide-border rounded-xl border border-border"
           aria-label="프로젝트별 투입 이력"
         >
           {data.projects.map((row) => (

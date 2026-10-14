@@ -13,7 +13,7 @@ import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
 
 export class PartnerError extends Error {
-  constructor(readonly code: 'NOT_FOUND' | 'LIMIT' | 'DUPLICATE') {
+  constructor(readonly code: 'NOT_FOUND' | 'LIMIT' | 'DUPLICATE' | 'IN_USE') {
     super(`[partner.service] ${code}`);
   }
 }
@@ -24,6 +24,8 @@ export type PartnerService = {
   get: (companyId: string, id: string) => Promise<PartnerDetail>;
   create: (companyId: string, input: PartnerCreate) => Promise<PartnerDetail>;
   update: (companyId: string, id: string, input: PartnerUpdate) => Promise<PartnerDetail>;
+  // 삭제: 프로젝트·자재 기록이 쓰고 있는 업체는 IN_USE (숨기기를 쓴다)
+  remove: (companyId: string, id: string) => Promise<void>;
 };
 
 type Row = Prisma.PartnerGetPayload<object>;
@@ -50,7 +52,7 @@ const isUniqueViolation = (error: unknown) =>
   /unique|P2002|duplicate/i.test(`${error.message} ${(error as { code?: string }).code ?? ''}`);
 
 /**
- * @description 고객·협력업체·자재 공급처 명부 서비스 (앱 계정으로 자기 회사 범위에서만 조회·수정, 삭제하지 않고 숨김 처리)
+ * @description 고객·협력업체·자재 공급처 명부 서비스 (앱 계정으로 자기 회사 범위에서만 조회·수정·삭제, 쓰고 있는 업체는 삭제 대신 숨김 처리)
  * @param app 앱 계정(DATABASE_URL, RLS 적용) Prisma 클라이언트
  * @returns 명부 서비스
  */
@@ -158,5 +160,25 @@ export const createPartnerService = (app: PrismaClient): PartnerService => ({
       } catch (error) {
         throw isUniqueViolation(error) ? new PartnerError('DUPLICATE') : error;
       }
+    }),
+  remove: (companyId, id) =>
+    withCompany(app, companyId, async (tx) => {
+      const found = await tx.partner.findFirst({ where: { id } });
+
+      if (!found) {
+        throw new PartnerError('NOT_FOUND');
+      }
+
+      // 어디에 쓰였는지 먼저 확인 (외래 키가 마지막 안전망)
+      const [projects, records] = await Promise.all([
+        tx.project.count({ where: { clientId: id } }),
+        tx.materialRecord.count({ where: { partnerId: id } }),
+      ]);
+
+      if (projects + records > 0) {
+        throw new PartnerError('IN_USE');
+      }
+
+      await tx.partner.delete({ where: { companyId_id: { companyId, id } } });
     }),
 });

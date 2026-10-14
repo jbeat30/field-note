@@ -7,11 +7,13 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
+import { BackLink } from '../components/ui/back-link';
 import { useAuditLogs, type AuditFilter } from '../audit/useAuditLogs';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 
 // 기록 시각을 서울 기준으로 보여 줌
@@ -38,7 +40,7 @@ const Row = ({ item }: { item: AuditLog }) => {
   const path = targetPath(item);
 
   return (
-    <li className="flex flex-col gap-0.5 rounded-md border border-border p-3 text-sm">
+    <li className="grid gap-1 rounded-xl bg-surface-subtle px-5 py-4 text-sm md:grid-cols-[14rem_1fr_16rem] md:items-center md:gap-4">
       <span className="font-medium">{AUDIT_ACTION_TITLES[item.action]}</span>
       <span>
         {item.targetName ? (
@@ -80,35 +82,34 @@ export const AuditLogsPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <div className="flex flex-col gap-2">
-        <Link className="min-h-touch content-center text-sm text-primary underline" to="/settings">
-          ← 설정으로
-        </Link>
-        <h1 className="text-2xl font-bold">기록 조회</h1>
-        <p className="text-sm text-foreground/70">
-          누가 언제 무엇을 열람·내보내기·확정했는지 남은 기록입니다. 수정하거나 지울 수 없습니다
-        </p>
+        <BackLink to="/settings?tab=company">설정으로</BackLink>
+        <PageHeader
+          title="기록 조회"
+          description="누가 언제 무엇을 열람·내보내기·확정했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
+        />
       </div>
 
       <form
-        className="flex flex-col gap-3"
+        className="grid gap-3 rounded-xl bg-surface-subtle p-5 md:grid-cols-3"
         aria-label="기록 거르기"
         onSubmit={(e) => e.preventDefault()}
       >
         <FormField label="종류">
-          <Select value={action} onChange={(event) => setAction(event.target.value)}>
-            <option value="">전체</option>
-            {AUDIT_ACTIONS.map((kind) => (
-              <option key={kind} value={kind}>
-                {AUDIT_ACTION_TITLES[kind]}
-              </option>
-            ))}
-          </Select>
+          <Select
+            value={action}
+            emptyLabel="전체"
+            onValueChange={setAction}
+            options={AUDIT_ACTIONS.map((kind) => ({
+              value: kind,
+              label: AUDIT_ACTION_TITLES[kind],
+            }))}
+          />
         </FormField>
         <FormField label="시작 날짜">
-          <Input type="date" value={from} onChange={(event) => setFrom(event.target.value)} />
+          <DateInput value={from} onChange={(event) => setFrom(event.target.value)} />
         </FormField>
         <FormField label="끝 날짜" error={dateError}>
-          <Input type="date" value={to} onChange={(event) => setTo(event.target.value)} />
+          <DateInput value={to} onChange={(event) => setTo(event.target.value)} />
         </FormField>
       </form>
 

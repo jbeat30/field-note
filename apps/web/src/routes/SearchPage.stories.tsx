@@ -64,7 +64,7 @@ export const NoMatch: Story = {
   },
 };
 
-// 프로젝트 안 검색: 프로젝트·직원은 찾지 않고 그 프로젝트의 메모·자료·일지만
+// 프로젝트 안 검색: 프로젝트·직원은 찾지 않고 그 프로젝트의 메모·자료·작업 내역만
 export const SearchInsideProject: Story = {
   parameters: {
     router: {
@@ -78,7 +78,7 @@ export const SearchInsideProject: Story = {
     await expect(
       await canvas.findByRole('heading', { name: '자료', level: 2 }),
     ).toBeInTheDocument();
-    await expect(canvas.getByText(/안에서 메모·자료·일지만 찾습니다/)).toBeInTheDocument();
+    await expect(canvas.getByText(/안에서 메모·자료·작업 내역만 찾습니다/)).toBeInTheDocument();
     await expect(canvas.queryByRole('heading', { name: '프로젝트' })).not.toBeInTheDocument();
     await waitFor(() =>
       expect(canvas.getByRole('link', { name: '전체에서 찾기' })).toHaveAttribute(

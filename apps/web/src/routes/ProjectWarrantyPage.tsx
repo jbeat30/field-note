@@ -3,9 +3,11 @@ import {
   WARRANTY_START_BASIS_LABELS,
   warrantyProjectCheck,
 } from '@field-note/shared';
-import { Link, useParams } from 'react-router';
+import { useParams } from 'react-router';
 
+import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { useProject } from '../projects/useProjects';
 import { WarrantyCertificates } from '../warranty/WarrantyCertificates';
 import { WarrantyForm } from '../warranty/WarrantyForm';
@@ -40,65 +42,76 @@ export const ProjectWarrantyPage = () => {
   const gate = warrantyProjectCheck(project.data.status);
   const data = warranty.data;
 
+  const showPeriod = data.months > 0 && data.endOn !== null && data.daysLeft !== null;
+  const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
+
   return (
-    <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold">보증</h1>
-        <Link className="text-primary underline" to={`/projects/${id}`}>
-          {project.data.name}
-        </Link>
+    <div className="flex flex-col gap-5">
+      <PageHeader level={2} title="보증" description="보증 기간과 보증서를 관리합니다" />
+
+      {!gate.ok && <Alert variant="info">{gate.message}. 조회만 할 수 있습니다</Alert>}
+
+      <section className={card} aria-labelledby="warranty-state-heading">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <h2 id="warranty-state-heading" className="text-lg font-bold">
+            현재 보증
+          </h2>
+          {showPeriod && (
+            <Badge
+              tone={data.daysLeft! < 0 ? 'neutral' : data.daysLeft! <= 30 ? 'warning' : 'success'}
+            >
+              {daysText(data.daysLeft!)}
+            </Badge>
+          )}
+        </div>
+        <dl className="grid grid-cols-2 gap-3 text-sm lg:grid-cols-4">
+          {[
+            ['프로젝트 상태', PROJECT_STATUS_LABELS[project.data.status]],
+            [
+              '보증 기간',
+              `${data.months === 0 ? '보증 없음' : `${data.months}개월`}${data.configured ? '' : ' (기본값)'}`,
+            ],
+            ['시작일', data.startOn ?? '-'],
+            ['종료 예정일', data.endOn ?? '-'],
+          ].map(([label, value]) => (
+            <div key={label} className="rounded-lg bg-surface-nested p-3">
+              <dt className="text-xs text-foreground/70">{label}</dt>
+              <dd className="font-semibold">{value}</dd>
+            </div>
+          ))}
+        </dl>
+        <p className="text-xs text-foreground/70">
+          시작 기준: {WARRANTY_START_BASIS_LABELS[data.startBasis]}
+        </p>
+      </section>
+
+      <div className="grid items-start gap-5 xl:grid-cols-2">
+        <section className={card} aria-labelledby="warranty-form-heading">
+          <h2 id="warranty-form-heading" className="text-lg font-bold">
+            보증 설정
+          </h2>
+          <WarrantyForm project={project.data} warranty={data} editable={gate.ok} />
+        </section>
+
+        <section className={card} aria-labelledby="warranty-cert-heading">
+          <h2 id="warranty-cert-heading" className="text-lg font-bold">
+            보증서
+          </h2>
+          <WarrantyCertificates projectId={id} warranty={data} editable={gate.ok} />
+        </section>
       </div>
 
-      {!gate.ok && <Alert>{gate.message}. 조회만 할 수 있습니다</Alert>}
-
-      <section className="flex flex-col gap-2" aria-labelledby="warranty-state-heading">
-        <h2 id="warranty-state-heading" className="text-lg font-bold">
-          현재 보증
-        </h2>
-        <dl className="grid grid-cols-[7rem_1fr] gap-y-1 text-sm">
-          <dt className="text-foreground/70">프로젝트 상태</dt>
-          <dd>{PROJECT_STATUS_LABELS[project.data.status]}</dd>
-          <dt className="text-foreground/70">보증 기간</dt>
-          <dd>
-            {data.months === 0 ? '보증 없음' : `${data.months}개월`}
-            {data.configured ? '' : ' (기본값, 아직 저장 전)'}
-          </dd>
-          <dt className="text-foreground/70">시작 기준</dt>
-          <dd>{WARRANTY_START_BASIS_LABELS[data.startBasis]}</dd>
-          <dt className="text-foreground/70">시작일</dt>
-          <dd>{data.startOn ?? '-'}</dd>
-          <dt className="text-foreground/70">종료 예정일</dt>
-          <dd>
-            {data.endOn ?? '-'}
-            {data.endOn && data.daysLeft !== null && data.months > 0
-              ? ` (${daysText(data.daysLeft)})`
-              : ''}
-          </dd>
-        </dl>
-      </section>
-
-      <section className="flex flex-col gap-3" aria-labelledby="warranty-form-heading">
-        <h2 id="warranty-form-heading" className="text-lg font-bold">
-          보증 설정
-        </h2>
-        <WarrantyForm project={project.data} warranty={data} editable={gate.ok} />
-      </section>
-
-      <section className="flex flex-col gap-3" aria-labelledby="warranty-cert-heading">
-        <h2 id="warranty-cert-heading" className="text-lg font-bold">
-          보증서
-        </h2>
-        <WarrantyCertificates projectId={id} warranty={data} editable={gate.ok} />
-      </section>
-
-      <section className="flex flex-col gap-2" aria-labelledby="warranty-history-heading">
-        <h2 id="warranty-history-heading" className="text-lg font-bold">
-          변경 이력
-        </h2>
+      <details className={card}>
+        <summary
+          id="warranty-history-heading"
+          className="min-h-touch cursor-pointer content-center text-lg font-bold"
+        >
+          변경 이력 ({data.changes.length})
+        </summary>
         {data.changes.length === 0 ? (
           <p className="text-sm text-foreground/70">아직 저장한 보증 설정이 없습니다</p>
         ) : (
-          <ol className="divide-y divide-border">
+          <ol className="divide-y divide-line">
             {data.changes.map((change) => (
               <li key={change.id} className="flex flex-col gap-0.5 py-2 text-sm">
                 <span className="font-medium">
@@ -118,7 +131,7 @@ export const ProjectWarrantyPage = () => {
             ))}
           </ol>
         )}
-      </section>
+      </details>
     </div>
   );
 };
