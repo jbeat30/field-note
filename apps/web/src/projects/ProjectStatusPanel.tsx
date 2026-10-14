@@ -10,13 +10,19 @@ import {
   type ProjectDetail,
   type ProjectStatus,
 } from '@field-note/shared';
-import { Check } from 'lucide-react';
-import { useState, type FormEvent } from 'react';
+import { Check, MoreHorizontal } from 'lucide-react';
+import { Fragment, useState, type FormEvent } from 'react';
 import { Link } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from '../components/ui/dropdown-menu';
 import { FormField } from '../components/ui/form-field';
 import { DateInput } from '../components/ui/date-input';
 import { Textarea } from '../components/ui/textarea';
@@ -243,114 +249,131 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
   };
 
   return (
-    <section className="flex flex-col gap-4" aria-labelledby="status-heading">
+    <section className="flex flex-col gap-5" aria-labelledby="status-heading">
       <h2 id="status-heading" className="text-lg font-bold">
         진행 단계
       </h2>
       {done && <Alert variant="info">{done}</Alert>}
 
+      {/* 프로그레스 바: 원 + 연결선 */}
       {project.status === 'CANCELLED' ? (
         <Alert>취소된 프로젝트입니다. 기록은 그대로 조회할 수 있고 더 수정할 수 없습니다</Alert>
       ) : (
-        <ol className="grid grid-cols-5 gap-1" aria-label="진행 단계">
+        <ol className="flex items-start" aria-label="진행 단계">
           {STEPS.map((step, index) => (
-            <li
-              key={step}
-              aria-current={index === stepIndex ? 'step' : undefined}
-              className="flex flex-col items-center gap-1.5 text-center"
-            >
-              <span
-                className={cn(
-                  'grid size-8 place-items-center rounded-full text-sm font-bold',
-                  index < stepIndex && 'bg-primary/15 text-primary',
-                  index === stepIndex && 'bg-primary text-primary-foreground',
-                  index > stepIndex && 'bg-muted text-foreground/70',
-                )}
+            <Fragment key={step}>
+              <li
+                aria-current={index === stepIndex ? 'step' : undefined}
+                className="flex flex-col items-center gap-1.5 text-center"
+                style={{ flex: '0 0 auto', width: `${100 / STEPS.length}%` }}
               >
-                {index < stepIndex ? <Check aria-hidden className="size-4" /> : index + 1}
-              </span>
-              <span
-                className={cn(
-                  'text-xs font-medium',
-                  index === stepIndex ? 'text-foreground' : 'text-foreground/70',
-                )}
-              >
-                {PROJECT_STATUS_LABELS[step]}
-              </span>
-            </li>
+                <span
+                  className={cn(
+                    'grid size-9 place-items-center rounded-full text-sm font-bold ring-2 ring-offset-2',
+                    index < stepIndex &&
+                      'bg-primary ring-primary text-primary-foreground ring-offset-surface-subtle',
+                    index === stepIndex &&
+                      'bg-primary ring-primary text-primary-foreground ring-offset-surface-subtle',
+                    index > stepIndex &&
+                      'bg-muted ring-transparent text-foreground/50 ring-offset-transparent',
+                  )}
+                >
+                  {index < stepIndex ? <Check aria-hidden className="size-4" /> : index + 1}
+                </span>
+                <span
+                  className={cn(
+                    'text-xs font-medium leading-tight',
+                    index <= stepIndex ? 'text-foreground' : 'text-foreground/50',
+                  )}
+                >
+                  {PROJECT_STATUS_LABELS[step]}
+                </span>
+              </li>
+              {index < STEPS.length - 1 && (
+                <div
+                  className={cn('mt-4 h-0.5 flex-1', index < stepIndex ? 'bg-primary' : 'bg-muted')}
+                />
+              )}
+            </Fragment>
           ))}
         </ol>
       )}
+
+      {/* 상태 요약 + 버튼 한 줄 */}
+      {project.status !== 'CANCELLED' && (
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
+            <div className="flex gap-1.5">
+              <dt className="text-foreground/65">현재 상태</dt>
+              <dd className="font-semibold">
+                {project.status === 'SUSPENDED'
+                  ? '작업 중단'
+                  : PROJECT_STATUS_LABELS[project.status]}
+              </dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-foreground/65">실제 시작일</dt>
+              <dd className="font-semibold">{project.actualStart ?? '-'}</dd>
+            </div>
+            <div className="flex gap-1.5">
+              <dt className="text-foreground/65">실제 완료일</dt>
+              <dd className="font-semibold">{project.actualEnd ?? '-'}</dd>
+            </div>
+            {showWarranty && warranty.data && warranty.data.configured && (
+              <div className="flex gap-1.5">
+                <dt className="text-foreground/65">보증</dt>
+                <dd className="font-semibold">
+                  {warranty.data.months === 0
+                    ? '보증 없음'
+                    : `${warranty.data.months}개월 · ~${warranty.data.endOn ?? '-'}`}
+                </dd>
+              </div>
+            )}
+          </dl>
+
+          {/* 전환 버튼: 주 버튼 1개 + 더보기(⋯)로 중단·취소 */}
+          {options.length > 0 && open === null && (
+            <div className="flex shrink-0 items-center gap-2">
+              {mainOptions.slice(0, 1).map((to) => (
+                <Button key={to} type="button" onClick={() => openAction(to)}>
+                  {actionLabel(project.status, to)}
+                </Button>
+              ))}
+              {mainOptions.length > 1 &&
+                mainOptions.slice(1).map((to) => (
+                  <Button key={to} type="button" variant="secondary" onClick={() => openAction(to)}>
+                    {actionLabel(project.status, to)}
+                  </Button>
+                ))}
+              {sideOptions.length > 0 && (
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button type="button" variant="ghost" size="icon-sm" aria-label="그 밖의 처리">
+                      <MoreHorizontal aria-hidden />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent>
+                    {sideOptions.map((to) => (
+                      <DropdownMenuItem
+                        key={to}
+                        danger={to === 'CANCELLED'}
+                        onSelect={() => openAction(to)}
+                      >
+                        {actionLabel(project.status, to)}
+                      </DropdownMenuItem>
+                    ))}
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              )}
+            </div>
+          )}
+        </div>
+      )}
+
       {project.status === 'SUSPENDED' && (
         <Alert variant="warning">지금은 작업이 중단된 상태입니다</Alert>
       )}
 
-      <dl className="grid grid-cols-2 gap-3 text-sm sm:grid-cols-4">
-        <div className="rounded-lg bg-surface-nested p-3">
-          <dt className="text-xs text-foreground/70">현재 상태</dt>
-          <dd className="font-semibold">{PROJECT_STATUS_LABELS[project.status]}</dd>
-        </div>
-        <div className="rounded-lg bg-surface-nested p-3">
-          <dt className="text-xs text-foreground/70">실제 시작일</dt>
-          <dd className="font-semibold">{project.actualStart ?? '아직 시작 전'}</dd>
-        </div>
-        <div className="rounded-lg bg-surface-nested p-3">
-          <dt className="text-xs text-foreground/70">실제 완료일</dt>
-          <dd className="font-semibold">{project.actualEnd ?? '-'}</dd>
-        </div>
-        {showWarranty && warranty.data && (
-          <div className="col-span-2 rounded-lg bg-surface-nested p-3 sm:col-span-4">
-            <dt className="text-xs text-foreground/70">보증</dt>
-            <dd className="font-semibold">
-              {warranty.data.months === 0
-                ? '보증 없음'
-                : `${warranty.data.months}개월 · ~${warranty.data.endOn ?? '-'}`}
-              {warranty.data.configured ? '' : ' (기본값)'}{' '}
-              <Link
-                className="text-sm font-medium text-primary underline"
-                to={`/projects/${project.id}/warranty`}
-              >
-                보증 관리
-              </Link>
-            </dd>
-          </div>
-        )}
-      </dl>
-
-      {options.length > 0 && open === null && (
-        <div className="flex flex-col gap-3">
-          {mainOptions.length > 0 && (
-            <div className="flex flex-wrap gap-2">
-              {mainOptions.map((to, index) => (
-                <Button
-                  key={to}
-                  type="button"
-                  variant={index === 0 ? 'primary' : 'secondary'}
-                  onClick={() => openAction(to)}
-                >
-                  {actionLabel(project.status, to)}
-                </Button>
-              ))}
-            </div>
-          )}
-          {sideOptions.length > 0 && (
-            <div className="flex flex-wrap items-center gap-2 border-t border-line pt-3">
-              <span className="text-xs text-foreground/70">그 밖의 처리</span>
-              {sideOptions.map((to) => (
-                <Button
-                  key={to}
-                  type="button"
-                  size="sm"
-                  variant={to === 'CANCELLED' ? 'danger' : 'ghost'}
-                  onClick={() => openAction(to)}
-                >
-                  {actionLabel(project.status, to)}
-                </Button>
-              ))}
-            </div>
-          )}
-        </div>
-      )}
       {open !== null && (
         <TransitionForm
           key={`${project.status}-${open}`}
@@ -362,9 +385,6 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
             setDone(message);
           }}
         />
-      )}
-      {options.length === 0 && project.status !== 'CANCELLED' && (
-        <p className="text-sm text-foreground/70">더 바꿀 수 있는 상태가 없습니다</p>
       )}
 
       <details className="rounded-lg bg-surface-nested px-3 py-1 text-sm">

@@ -1,10 +1,9 @@
 import { PROJECT_STATUS_LABELS, todayInSeoul } from '@field-note/shared';
-import { Camera } from 'lucide-react';
+import { Camera, ChevronLeft } from 'lucide-react';
 import { useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
-import { BackLink } from '../components/ui/back-link';
 import { Button } from '../components/ui/button';
 import { PeriodNav } from '../components/ui/period-nav';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
@@ -110,7 +109,12 @@ export const ProjectWorkDayPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink to={projectWorkPath(id)}>작업 내역 목록</BackLink>
+      <Button asChild variant="secondary" size="sm" className="self-start">
+        <Link to={projectWorkPath(id)}>
+          <ChevronLeft aria-hidden />
+          작업 달력으로
+        </Link>
+      </Button>
       <PeriodNav
         label={formatDay(date)}
         prevLabel="전날"

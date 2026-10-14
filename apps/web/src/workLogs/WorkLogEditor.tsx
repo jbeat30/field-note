@@ -524,12 +524,6 @@ export const WorkLogEditor = ({
           <span className="rounded-full border border-border px-2.5 py-0.5 text-xs">지연 입력</span>
         )}
       </div>
-      {log?.status === 'DRAFT' && (
-        <p className="text-sm text-foreground/70">
-          임시 저장은 공수 집계에 반영되지 않습니다. 마무리하면 저장해 주세요
-        </p>
-      )}
-
       {!statusAllowed.ok &&
         statusAllowed.path !== 'confirmStatus' &&
         statusAllowed.path !== 'isAfterService' && <Alert>{statusAllowed.message}</Alert>}
@@ -925,35 +919,18 @@ export const WorkLogEditor = ({
           <div
             className={cn(
               'flex items-center gap-2 rounded-xl p-3 ring-1',
-              result?.status === 'SAVED'
-                ? 'bg-success-subtle ring-success/25'
-                : 'bg-surface-subtle ring-line',
+              result ? 'bg-success-subtle ring-success/25' : 'bg-surface-subtle ring-line',
             )}
           >
-            {result?.status === 'SAVED' ? (
-              <Check aria-hidden className="size-4 shrink-0 text-success" />
-            ) : null}
+            {result ? <Check aria-hidden className="size-4 shrink-0 text-success" /> : null}
             <p
-              className={cn(
-                'min-w-0 flex-1 text-sm font-semibold',
-                result?.status === 'SAVED' && 'text-success',
-              )}
+              className={cn('min-w-0 flex-1 text-sm font-semibold', result && 'text-success')}
               aria-live="polite"
             >
               {result
-                ? result.status === 'SAVED'
-                  ? `저장됐습니다 · 버전 ${result.version}${result.isLate ? ' · 지연 입력' : ''}${result.autoAssigned.length > 0 ? ` · 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
-                  : `임시 저장됐습니다 · 버전 ${result.version}`
+                ? `저장됐습니다 · 버전 ${result.version}${result.isLate ? ' · 지연 입력' : ''}${result.autoAssigned.length > 0 ? ` · 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
                 : summaryText}
             </p>
-            <Button
-              type="button"
-              variant="secondary"
-              disabled={save.isPending}
-              onClick={() => void doSave('DRAFT', false)}
-            >
-              임시 저장
-            </Button>
             <Button
               type="button"
               disabled={save.isPending}

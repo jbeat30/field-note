@@ -46,9 +46,9 @@ const newRow = (patch: Partial<Row> = {}): Row => {
 
 const isBlank = (row: Row) => !row.name.trim() && !row.spec.trim() && !row.quantity.trim();
 
-// 칸 머리 (넓은 화면의 열 배치와 같은 값)
+// 칸 머리: 품명 | 규격 | 수량 | 단위 | 위치(선택) | 액션
 const GRID =
-  'md:grid md:grid-cols-[minmax(0,1.3fr)_minmax(0,1.6fr)_5.5rem_5rem_minmax(0,1fr)_minmax(0,1fr)_4.5rem] md:gap-2';
+  'md:grid md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.4fr)_5.5rem_5rem_minmax(0,1fr)_4.5rem] md:gap-2';
 
 /**
  * @description 사용한 자재 기록: 목록에서 고르지 않고 품명·규격(치수·두께·재질·색)·수량·단위를 그 자리에서 쓴다
@@ -255,8 +255,7 @@ export const MaterialUsageForm = ({
           <span>규격 (치수·두께·재질·색)</span>
           <span>수량</span>
           <span>단위</span>
-          <span>위치</span>
-          <span>메모</span>
+          <span>위치 (선택)</span>
           <span />
         </div>
         <ul className="flex flex-col gap-3 md:gap-2" aria-label="자재 줄">
@@ -319,13 +318,6 @@ export const MaterialUsageForm = ({
                   value={row.area}
                   onChange={(event) => patch(row.key, { area: event.target.value })}
                 />
-                <Input
-                  size="sm"
-                  aria-label={`${label} 메모`}
-                  placeholder="메모 (선택)"
-                  value={row.memo}
-                  onChange={(event) => patch(row.key, { memo: event.target.value })}
-                />
                 <div className="col-span-2 flex justify-end gap-0.5 md:col-span-1">
                   <Button
                     type="button"
@@ -353,7 +345,7 @@ export const MaterialUsageForm = ({
                 {(errors[`${row.key}.name`] ||
                   errors[`${row.key}.quantity`] ||
                   errors[`${row.key}.unit`]) && (
-                  <p className="col-span-2 text-sm text-danger md:col-span-7">
+                  <p className="col-span-2 text-sm text-danger md:col-span-6">
                     {[
                       errors[`${row.key}.name`],
                       errors[`${row.key}.quantity`],
