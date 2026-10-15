@@ -1,4 +1,4 @@
-import { type Device, type WorkUnitMode } from '@field-note/shared';
+import { type WorkUnitMode } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -17,12 +17,11 @@ import { Input } from '../components/ui/input';
 import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { getErrorMessage } from '../lib/apiError';
 import { hoursToMinutes, minutesToHours } from '../lib/workTime';
-import { EmailChangeForm } from '../settings/EmailChangeForm';
-import { PasswordChangeForm } from '../settings/PasswordChangeForm';
 import { ClosureSection } from '../settings/ClosureSection';
 import { SocialLoginSection } from '../settings/SocialLoginSection';
 import { useCompanySettings, useSaveCompanySettings } from '../settings/useCompanySettings';
-import { useDevices, useRevokeDevice } from '../settings/useDevices';
+import { DevicesSection } from '../settings/DevicesSection';
+import { SecurityRows } from '../settings/SecurityRows';
 
 const settingsFormSchema = z.object({
   standardWorkHours: z
@@ -154,61 +153,6 @@ const CompanySettingsSection = () => {
   );
 };
 
-const formatLastActive = (iso: string) =>
-  new Intl.DateTimeFormat('ko-KR', {
-    month: 'long',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  }).format(new Date(iso));
-
-// 로그인 기기: 분실 대비 원격 로그아웃 (§6.4)
-const DevicesSection = () => {
-  const devices = useDevices();
-  const revoke = useRevokeDevice();
-
-  if (devices.isPending) {
-    return <p className="text-sm">기기 목록을 불러오는 중</p>;
-  }
-
-  if (devices.isError) {
-    return <Alert>기기 목록을 불러오지 못했습니다</Alert>;
-  }
-
-  const renderDevice = (device: Device) => (
-    <li key={device.id} className="flex min-h-touch items-center justify-between gap-3 py-2">
-      <div>
-        <p className="font-medium">
-          {device.label}
-          {device.isCurrent && (
-            <span className="ml-2 text-sm font-normal text-primary">이 기기</span>
-          )}
-        </p>
-        <p className="text-sm text-foreground/70">
-          마지막 사용 {formatLastActive(device.lastActiveAt)}
-        </p>
-      </div>
-      {!device.isCurrent && (
-        <Button
-          variant="secondary"
-          aria-label={`${device.label} 로그아웃`}
-          disabled={revoke.isPending}
-          onClick={() => revoke.mutate(device.id)}
-        >
-          로그아웃
-        </Button>
-      )}
-    </li>
-  );
-
-  return (
-    <div className="flex flex-col gap-2">
-      {revoke.isError && <Alert>기기를 로그아웃하지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
-      <ul className="divide-y divide-border">{devices.data.map(renderDevice)}</ul>
-    </div>
-  );
-};
-
 const SETTINGS_TABS = [
   { value: 'account', label: '내 계정' },
   { value: 'company', label: '회사 관리' },
@@ -264,50 +208,41 @@ export const SettingsPage = () => {
         </TabsList>
         <TabsContent value="account">
           <p className="mb-4 text-sm text-foreground/70">로그인과 보안에 관한 설정</p>
-          <div className="gap-4 lg:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
-            <section
-              className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="account-heading"
-            >
-              <h2 id="account-heading" className="text-lg font-bold">
-                계정
-              </h2>
-              <dl className="grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
-                <dt className="text-foreground/70">회사</dt>
-                <dd>{me.data?.companyName}</dd>
-                <dt className="text-foreground/70">이름</dt>
-                <dd>{me.data?.displayName}</dd>
-                <dt className="text-foreground/70">이메일</dt>
-                <dd>{me.data?.email}</dd>
-              </dl>
-            </section>
-            <section
-              className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="password-heading"
-            >
-              <h2 id="password-heading" className="text-lg font-bold">
-                비밀번호 변경
-              </h2>
-              <PasswordChangeForm />
-            </section>
-            <section
-              className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="email-heading"
-            >
-              <h2 id="email-heading" className="text-lg font-bold">
-                이메일 변경
-              </h2>
-              <EmailChangeForm />
-            </section>
-            <section
-              className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="social-heading"
-            >
-              <h2 id="social-heading" className="text-lg font-bold">
-                소셜 로그인
-              </h2>
-              <SocialLoginSection />
-            </section>
+          <div className="grid items-start gap-4 lg:grid-cols-2">
+            <div className="flex flex-col gap-4">
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                aria-labelledby="account-heading"
+              >
+                <h2 id="account-heading" className="text-lg font-bold">
+                  계정
+                </h2>
+                <dl className="grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
+                  <dt className="text-foreground/70">회사</dt>
+                  <dd>{me.data?.companyName}</dd>
+                  <dt className="text-foreground/70">이름</dt>
+                  <dd>{me.data?.displayName}</dd>
+                </dl>
+              </section>
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                aria-labelledby="security-heading"
+              >
+                <h2 id="security-heading" className="text-lg font-bold">
+                  보안
+                </h2>
+                <SecurityRows email={me.data?.email} />
+              </section>
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                aria-labelledby="social-heading"
+              >
+                <h2 id="social-heading" className="text-lg font-bold">
+                  소셜 로그인
+                </h2>
+                <SocialLoginSection />
+              </section>
+            </div>
             <section
               className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
               aria-labelledby="devices-heading"

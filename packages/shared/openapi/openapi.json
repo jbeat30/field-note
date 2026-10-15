@@ -2259,13 +2259,27 @@
                           },
                           "isCurrent": {
                             "type": "boolean"
+                          },
+                          "ipAddress": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "lastIp": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
                           }
                         },
                         "required": [
                           "id",
                           "label",
                           "lastActiveAt",
-                          "isCurrent"
+                          "isCurrent",
+                          "ipAddress",
+                          "lastIp"
                         ]
                       }
                     }

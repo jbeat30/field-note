@@ -215,6 +215,9 @@ export const deviceSchema = z.object({
   label: z.string(),
   lastActiveAt: z.iso.datetime(),
   isCurrent: z.boolean(),
+  // 로그인 때 접속 IP와 마지막으로 쓴 때의 IP (모르면 null)
+  ipAddress: z.string().nullable(),
+  lastIp: z.string().nullable(),
 });
 
 export const devicesResponseSchema = z.object({ devices: z.array(deviceSchema) });

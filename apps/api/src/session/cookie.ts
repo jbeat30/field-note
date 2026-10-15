@@ -1,3 +1,4 @@
+import { clientIp } from './clientIp';
 import type { CookieOptions, Request, Response } from 'express';
 
 import type { AuthResolver } from '../http/types';
@@ -48,5 +49,5 @@ export const createSessionResolver =
   async (req) => {
     const token = readSessionToken(req);
 
-    return token ? store.find(token) : null;
+    return token ? store.find(token, clientIp(req)) : null;
   };

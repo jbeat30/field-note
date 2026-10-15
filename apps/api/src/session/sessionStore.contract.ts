@@ -104,6 +104,39 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
       expect(second.token).not.toBe(first.token);
     });
 
+    it('로그인 때 IP와 마지막으로 쓴 때의 IP를 기기 목록에 담고, 사용 시각을 갱신할 때 마지막 IP도 갱신한다', async () => {
+      const { token } = await store.create(
+        { userId: USER_1, companyId: COMPANY_1 },
+        { deviceLabel: 'Chrome · macOS', ipAddress: '203.0.113.5' },
+      );
+
+      expect((await store.listDevices(USER_1, token))[0]).toMatchObject({
+        ipAddress: '203.0.113.5',
+        lastIp: '203.0.113.5',
+      });
+
+      // 갱신 간격이 지나기 전에는 마지막 IP도 그대로
+      nowMs += LAST_ACTIVE_TOUCH_INTERVAL_MS - 1000;
+      await store.find(token, '198.51.100.9');
+      expect((await store.listDevices(USER_1, token))[0]?.lastIp).toBe('203.0.113.5');
+
+      nowMs += 2000;
+      await store.find(token, '198.51.100.9');
+      expect((await store.listDevices(USER_1, token))[0]).toMatchObject({
+        ipAddress: '203.0.113.5',
+        lastIp: '198.51.100.9',
+      });
+    });
+
+    it('IP를 모르면 null이다', async () => {
+      const { token } = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+
+      expect((await store.listDevices(USER_1, token))[0]).toMatchObject({
+        ipAddress: null,
+        lastIp: null,
+      });
+    });
+
     it('기기 식별자는 토큰이나 해시와 무관하다', async () => {
       const { token } = await store.create({ userId: USER_1, companyId: COMPANY_1 });
       const [device] = await store.listDevices(USER_1, token);

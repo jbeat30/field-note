@@ -919,6 +919,8 @@ export interface paths {
                                 /** Format: date-time */
                                 lastActiveAt: string;
                                 isCurrent: boolean;
+                                ipAddress: string | null;
+                                lastIp: string | null;
                             }[];
                         };
                     };
