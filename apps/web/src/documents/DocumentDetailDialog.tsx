@@ -2,6 +2,7 @@ import {
   AUDIT_ACTION_LABELS,
   DOCUMENT_CATEGORIES,
   DOCUMENT_CATEGORY_LABELS,
+  SUMMARY_DOCUMENT_CATEGORIES,
   type DocumentCategory,
   type DocumentDetail,
 } from '@field-note/shared';
@@ -54,6 +55,10 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
   const [title, setTitle] = useState(document.title);
   const [category, setCategory] = useState<DocumentCategory>(document.category);
   const [isSensitive, setIsSensitive] = useState(document.isSensitive);
+  const [includeInSummary, setIncludeInSummary] = useState(document.includeInSummary);
+  // 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 실을 수 있다
+  const canSummarize =
+    (SUMMARY_DOCUMENT_CATEGORIES as readonly string[]).includes(category) && !isSensitive;
   const [error, setError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
@@ -61,7 +66,10 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
     setError(null);
 
     try {
-      await update.mutateAsync({ id: document.id, body: { title, category, isSensitive } });
+      await update.mutateAsync({
+        id: document.id,
+        body: { title, category, isSensitive, includeInSummary: canSummarize && includeInSummary },
+      });
     } catch (caught) {
       setError(getErrorDetailMessage(caught));
     }
@@ -103,6 +111,21 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
           onChange={(event) => setIsSensitive(event.target.checked)}
         />
         민감 자료 (열람·내려받기 기록이 남습니다)
+      </label>
+      <label className="flex min-h-touch items-start gap-3 text-base">
+        <input
+          type="checkbox"
+          className="mt-0.5 size-5 shrink-0"
+          checked={includeInSummary}
+          disabled={!canSummarize}
+          onChange={(event) => setIncludeInSummary(event.target.checked)}
+        />
+        <span>
+          준공 요약에 넣기
+          <span className="block text-sm text-foreground/65">
+            안전·검사, 계약·공문 분류의 민감하지 않은 문서만 넣을 수 있습니다
+          </span>
+        </span>
       </label>
       {error && <Alert>{error}</Alert>}
       <Button

@@ -8,6 +8,8 @@ export const OPTION_KINDS = [
   'TRADE',
   'WORKER_TYPE',
   'CREDENTIAL_TYPE',
+  'EXPENSE_CATEGORY',
+  'INCOME_CATEGORY',
 ] as const;
 
 export const optionKindSchema = z.enum(OPTION_KINDS);
@@ -20,6 +22,8 @@ export const OPTION_KIND_LABELS: Record<OptionKind, string> = {
   TRADE: '공종',
   WORKER_TYPE: '직원 구분',
   CREDENTIAL_TYPE: '자격 종류',
+  EXPENSE_CATEGORY: '지출 분류',
+  INCOME_CATEGORY: '수입 분류',
 };
 
 // 항목 이름 최대 길이와 종류별 최대 개수 (DB도 같은 값으로 검사)

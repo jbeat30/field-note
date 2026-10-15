@@ -116,6 +116,21 @@ export const InspectionNeedsStartDate: Story = {
   },
 };
 
+// 완료 전에는 설정 폼·보증서를 숨기고 한 줄 안내와 기본값만 보인다
+export const BeforeCompletion: Story = {
+  parameters: { router: routerFor('A동 외장 판금 공사') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      await canvas.findByText('프로젝트를 완료하면 보증을 설정할 수 있습니다'),
+    ).toBeInTheDocument();
+    await expect(canvas.getByText(/기본값은 12개월/)).toBeInTheDocument();
+    await expect(canvas.queryByRole('form', { name: '보증 설정' })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('heading', { name: '보증서' })).not.toBeInTheDocument();
+  },
+};
+
 // 종료된 프로젝트는 설정과 보증서를 바꿀 수 없고 이력은 조회된다
 export const ClosedProjectReadOnly: Story = {
   parameters: { router: routerFor('C동 환기 설비') },

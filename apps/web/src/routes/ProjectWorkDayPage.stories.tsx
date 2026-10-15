@@ -296,3 +296,41 @@ export const DifferentHoursPerPerson: Story = {
     await expect(canvas.getByText('3명 · 12시간')).toBeInTheDocument();
   },
 };
+
+// 사진은 이 화면에서 바로 올리고, 메모는 이 날짜로 남아 이 날 화면에만 보인다
+export const DayPhotosAndMemos: Story = {
+  parameters: { router: routerFor('A동 외장 판금 공사', '2026-09-08') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      await canvas.findByRole('heading', { name: '2026년 9월 8일 (화) 작업 사진' }),
+    ).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '사진 올리기' })).toBeInTheDocument();
+    await expect(canvas.getByLabelText('사진 파일 선택')).toHaveAttribute('accept', 'image/*');
+
+    const memoStep = within(canvas.getByRole('region', { name: '2026년 9월 8일 (화) 메모' }));
+
+    await userEvent.type(memoStep.getByLabelText('메모'), '301호 천장 높이 다시 확인');
+    await userEvent.click(memoStep.getByRole('button', { name: '메모 저장' }));
+
+    await expect(await memoStep.findByText('301호 천장 높이 다시 확인')).toBeInTheDocument();
+    await waitFor(() => expect(memoStep.getByLabelText('메모')).toHaveValue(''));
+  },
+};
+
+// 다른 날짜에 쓴 메모는 보이지 않음
+export const DayMemosOnlyThatDate: Story = {
+  parameters: { router: routerFor('A동 외장 판금 공사', '2026-09-07') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const memoStep = within(
+      await canvas.findByRole('region', { name: '2026년 9월 7일 (월) 메모' }),
+    );
+
+    await userEvent.type(memoStep.getByLabelText('메모'), '9월 7일 메모');
+    await userEvent.click(memoStep.getByRole('button', { name: '메모 저장' }));
+    await expect(await memoStep.findByText('9월 7일 메모')).toBeInTheDocument();
+    await expect(memoStep.queryByText('301호 천장 높이 다시 확인')).not.toBeInTheDocument();
+  },
+};

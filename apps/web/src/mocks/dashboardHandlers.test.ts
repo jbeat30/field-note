@@ -60,14 +60,16 @@ describe('대시보드·알림 설정 목업', () => {
     // 더미: 진행·예정·중단 프로젝트가 있고 A동 변경 작업 #2는 오래 협의 중이다
     expect(data.projectCounts.inProgress).toBeGreaterThan(0);
     expect(data.activeProjects.length).toBeGreaterThan(0);
-    expect(data.alerts).toContainEqual(expect.objectContaining({ kind: 'CHANGE_STALE', seq: 2 }));
+    expect(data.alerts.map((item) => item.alert)).toContainEqual(
+      expect.objectContaining({ kind: 'CHANGE_STALE', seq: 2 }),
+    );
     expect(data.todos.draftLogCount).toBe(1);
-    expect(settings.items).toHaveLength(12);
+    expect(settings.items).toHaveLength(11);
     // 더미 직원 서류: 정판금의 건강검진은 이미 만료 (날짜가 지나도 계속 알림)
     expect(data.expiring.credentials).toContainEqual(
       expect.objectContaining({ employeeName: '정판금', typeName: '건강검진' }),
     );
-    expect(data.alerts).toContainEqual(
+    expect(data.alerts.map((item) => item.alert)).toContainEqual(
       expect.objectContaining({ kind: 'CREDENTIAL_EXPIRING', typeName: '건강검진' }),
     );
     expect(settings.items.every((item) => item.enabled)).toBe(true);
@@ -83,13 +85,28 @@ describe('대시보드·알림 설정 목업', () => {
 
     expect(saved.response.status).toBe(200);
     expect(alertSettingsSchema.parse(saved.data).items.filter((item) => item.enabled)).toHaveLength(
-      11,
+      10,
     );
 
     const after = await dashboard();
 
-    expect(after.dashboard.alerts.some((alert) => alert.kind === 'CHANGE_STALE')).toBe(false);
+    expect(after.dashboard.alerts.some((item) => item.alert.kind === 'CHANGE_STALE')).toBe(false);
     expect(after.dashboard.activeProjects).toEqual(before.dashboard.activeProjects);
+  });
+
+  it('알림을 숨기면 같은 조건에서는 다시 나오지 않고 숨긴 개수를 알려 준다', async () => {
+    await login();
+
+    const before = (await dashboard()).dashboard;
+    const first = before.alerts[0]!;
+    const hidden = await client.POST('/api/v1/alerts/dismiss', { body: { keys: [first.key] } });
+
+    expect(hidden.response.status).toBe(200);
+
+    const after = (await dashboard()).dashboard;
+
+    expect(after.alerts.map((item) => item.key)).not.toContain(first.key);
+    expect(after.hiddenAlertCount).toBe(before.hiddenAlertCount + 1);
   });
 
   it('잘못된 알림 설정은 거부한다', async () => {

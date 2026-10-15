@@ -383,6 +383,8 @@ describe('사진첩 조회', () => {
     expect(await ids()).toEqual([c, b, a]);
     expect(await ids('?category=AFTER')).toEqual([c, b]);
     expect(await ids('?area=301호')).toEqual([b, a]);
+    // 구역은 부분 일치
+    expect(await ids('?area=30')).toEqual([c, b, a]);
     expect(await ids('?workDate=2026-10-05')).toEqual([a]);
     expect(await ids('?category=SAFETY')).toEqual([]);
   });

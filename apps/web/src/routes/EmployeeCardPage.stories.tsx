@@ -9,8 +9,9 @@ import { EmployeeCardPage } from './EmployeeCardPage';
 import { chooseOption } from '../lib/storyActions';
 
 const idOf = (name: string) => DEMO_EMPLOYEES.find((employee) => employee.name === name)!.id;
-const routerFor = (name: string) => ({
-  initialEntries: [`/employees/${idOf(name)}`],
+// 직원 카드는 탭(개요·투입 이력·단가·서류·자격·기본정보)으로 나뉜다. 탭은 주소의 tab으로 고른다
+const routerFor = (name: string, tab?: string) => ({
+  initialEntries: [`/employees/${idOf(name)}${tab ? `?tab=${tab}` : ''}`],
   path: '/employees/:id',
 });
 
@@ -32,6 +33,7 @@ export default meta;
 type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {
+  parameters: { router: routerFor('정판금', 'info') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -50,6 +52,7 @@ export const Default: Story = {
 };
 
 export const EditAndSave: Story = {
+  parameters: { router: routerFor('정판금', 'info') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const title = await canvas.findByLabelText('직책');
@@ -64,6 +67,7 @@ export const EditAndSave: Story = {
 };
 
 export const ClearOptionalFields: Story = {
+  parameters: { router: routerFor('정판금', 'info') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -76,6 +80,7 @@ export const ClearOptionalFields: Story = {
 };
 
 export const InvalidPhone: Story = {
+  parameters: { router: routerFor('정판금', 'info') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const phone = await canvas.findByLabelText('연락처');
@@ -89,6 +94,7 @@ export const InvalidPhone: Story = {
 };
 
 export const EmptyName: Story = {
+  parameters: { router: routerFor('정판금', 'info') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
@@ -199,7 +205,7 @@ export const NotFound: Story = {
 
 // 최설치: A동(2026-09-01, 09-02)과 B동 덕트 설치(09-02)에 저장된 작업 내역이 있음
 export const WorkHistory: Story = {
-  parameters: { router: routerFor('최설치') },
+  parameters: { router: routerFor('최설치', 'history') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const history = within(await canvas.findByRole('region', { name: '투입 이력' }));
@@ -216,7 +222,7 @@ export const WorkHistory: Story = {
 };
 
 export const WorkHistoryEmpty: Story = {
-  parameters: { router: routerFor('오전기') },
+  parameters: { router: routerFor('오전기', 'history') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const history = within(await canvas.findByRole('region', { name: '투입 이력' }));
@@ -225,38 +231,63 @@ export const WorkHistoryEmpty: Story = {
   },
 };
 
+// 머리 수치 줄(상태·직종·현재 단가·이번 달 공수)과 개요 탭
+export const SummaryAndOverview: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText('현재 단가')).toBeInTheDocument();
+    await expect(await canvas.findByText('250,000')).toBeInTheDocument();
+    await expect(canvas.getByText('이번 달 공수')).toBeInTheDocument();
+    await expect(
+      within(await canvas.findByRole('region', { name: '개요' })).getByText('반장'),
+    ).toBeInTheDocument();
+    // 탭을 옮길 수 있다
+    await userEvent.click(canvas.getByRole('tab', { name: '단가' }));
+    await expect(await canvas.findByRole('region', { name: '단가' })).toBeInTheDocument();
+  },
+};
+
 export const PayRates: Story = {
+  parameters: { router: routerFor('정판금', 'pay') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '단가' }));
 
     // 더미 단가: 2026-09-01부터 일급 25만원, 그 전에는 23만원 (이력이 남아 있음)
-    await expect(await panel.findByText(/일급제 250,000원/)).toBeInTheDocument();
+    await expect(await panel.findByText('현재 단가')).toBeInTheDocument();
     const history = () => panel.getAllByRole('listitem').map((item) => item.textContent ?? '');
 
     await expect(history()).toEqual([
-      expect.stringContaining('일급제 250,000원'),
-      expect.stringContaining('일급제 230,000원'),
+      expect.stringContaining('250,000'),
+      expect.stringContaining('230,000'),
     ]);
 
-    // 금액을 비우면 서버에 보내기 전에 막는다
-    await userEvent.click(panel.getByRole('button', { name: '단가 저장' }));
-    await expect(await panel.findByText('금액을 입력해 주세요')).toBeInTheDocument();
+    // `단가 변경`은 창에서: 금액을 비우면 서버에 보내기 전에 막는다
+    await userEvent.click(panel.getByRole('button', { name: '단가 변경' }));
 
-    // 월급제로 바꿔 저장하면 새 이력이 맨 앞에 쌓이고 기존 이력은 그대로
-    await chooseOption(panel.getByLabelText('단가 종류'), '월급제');
-    await userEvent.type(panel.getByLabelText('월급 (원)'), '5500000');
-    await userEvent.click(panel.getByRole('button', { name: '단가 저장' }));
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    await userEvent.click(dialog.getByRole('button', { name: '단가 저장' }));
+    await expect(await dialog.findByText('금액을 입력해 주세요')).toBeInTheDocument();
+
+    // 월급제로 바꿔 저장하면 창이 닫히고 새 이력이 맨 앞에 쌓이며 기존 이력은 그대로
+    await chooseOption(dialog.getByLabelText('단가 종류'), '월급제');
+    await userEvent.type(dialog.getByLabelText('월급 (원)'), '5500000');
+    await userEvent.click(dialog.getByRole('button', { name: '단가 저장' }));
     await waitFor(() => expect(history()).toHaveLength(3));
     await expect(history()).toEqual([
-      expect.stringContaining('월급제 5,500,000원'),
-      expect.stringContaining('일급제 250,000원'),
-      expect.stringContaining('일급제 230,000원'),
+      expect.stringContaining('5,500,000'),
+      expect.stringContaining('250,000'),
+      expect.stringContaining('230,000'),
     ]);
+    // 월급제는 일 환산이 함께 보인다
+    await expect(panel.getByText(/일 환산 약/)).toBeInTheDocument();
   },
 };
 
 export const Credentials: Story = {
+  parameters: { router: routerFor('정판금', 'credentials') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
@@ -275,10 +306,14 @@ export const Credentials: Story = {
 };
 
 export const AddCredential: Story = {
+  parameters: { router: routerFor('정판금', 'credentials') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
-    const form = within(await panel.findByRole('form', { name: '서류 등록' }));
+    // 서류 등록은 창에서 한다
+    await userEvent.click(await panel.findByRole('button', { name: '서류 등록' }));
+
+    const form = within(await within(document.body).findByRole('form', { name: '서류 등록' }));
 
     // 종류를 고르지 않으면 서버에 보내기 전에 막는다
     await userEvent.click(form.getByRole('button', { name: '서류 등록' }));
@@ -296,12 +331,17 @@ export const AddCredential: Story = {
 
     await waitFor(() => expect(panel.getAllByRole('listitem')).toHaveLength(3));
     await expect(panel.getByText(/전기기능사/, { selector: 'li span' })).toBeInTheDocument();
-    // 등록하면 입력칸이 비워진다
-    await expect(form.getByLabelText('서류 종류')).toHaveTextContent('종류 선택');
+    // 등록하면 창이 닫힌다
+    await waitFor(() =>
+      expect(
+        within(document.body).queryByRole('form', { name: '서류 등록' }),
+      ).not.toBeInTheDocument(),
+    );
   },
 };
 
 export const RenewCredential: Story = {
+  parameters: { router: routerFor('정판금', 'credentials') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
@@ -322,6 +362,7 @@ export const RenewCredential: Story = {
 };
 
 export const RemoveCredential: Story = {
+  parameters: { router: routerFor('정판금', 'credentials') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));

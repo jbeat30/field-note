@@ -36,6 +36,7 @@ import { AppError } from '../http/AppError';
 import type { Logger } from '../logger';
 import type { InvitationStore } from '../invitation/invitationStore';
 import { buildDeviceLabel } from '../session/deviceLabel';
+import { clientIp } from '../session/clientIp';
 import { readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionStore } from '../session/sessionStore';
 import type { RouteHandler, RouteRegistry } from '../http/route';
@@ -226,7 +227,10 @@ export const registerAccountRoutes = (
             // 가입 직후 로그인 상태(이메일 인증 전)로 두어 인증 화면으로 이어지게 함
             const session = await sessionStore.create(
               { userId: account.userId, companyId: account.companyId },
-              { deviceLabel: buildDeviceLabel(request.get('user-agent')) },
+              {
+                deviceLabel: buildDeviceLabel(request.get('user-agent')),
+                ipAddress: clientIp(request),
+              },
             );
 
             setSessionCookie(response, session, isSecureCookie);
@@ -325,6 +329,7 @@ export const registerAccountRoutes = (
             const session = await sessionStore.create(account, {
               isRemembered: input.isRemembered,
               deviceLabel: buildDeviceLabel(request.get('user-agent')),
+              ipAddress: clientIp(request),
             });
 
             setSessionCookie(response, session, isSecureCookie);
@@ -404,6 +409,8 @@ export const registerAccountRoutes = (
               label: device.label,
               lastActiveAt: device.lastActiveAt.toISOString(),
               isCurrent: device.isCurrent,
+              ipAddress: device.ipAddress,
+              lastIp: device.lastIp,
             })),
           };
         }

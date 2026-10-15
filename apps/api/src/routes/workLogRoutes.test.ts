@@ -1,4 +1,5 @@
 import {
+  employeeProjectDaysSchema,
   employeeWorkHistorySchema,
   errorResponseSchema,
   optionsResponseSchema,
@@ -1089,6 +1090,71 @@ describe('공수 집계', () => {
     });
   });
 
+  it('사람별 일한 날은 그 사람이 이 프로젝트에서 저장한 날만 날짜별로 준다', async () => {
+    const instance = app();
+    const s = await setup(instance);
+    const other = await s.make('B동 설비 공사');
+    const [cat1, cat2] = [s.categories[0]!.id, s.categories[1]!.id];
+
+    await s.client.put(
+      s.project,
+      '2026-10-05',
+      full(s, {
+        entries: [
+          { employeeId: s.worker, categoryId: cat1, minutes: 120 },
+          { employeeId: s.worker, categoryId: cat2, minutes: 360 },
+        ],
+      }),
+    );
+    // 다른 사람만 일한 날은 빠진다
+    await s.client.put(
+      s.project,
+      '2026-10-06',
+      full(s, { entries: [{ employeeId: s.worker2, categoryId: cat1, minutes: 480 }] }),
+    );
+    await s.client.put(
+      s.project,
+      '2026-10-04',
+      full(s, { entries: [{ employeeId: s.worker, categoryId: cat1, minutes: 480 }] }),
+    );
+    await s.client.put(s.project, '2026-10-03', {
+      status: 'DRAFT',
+      content: '',
+      entries: [{ employeeId: s.worker, categoryId: cat1, minutes: 480 }],
+    });
+    await s.client.put(
+      other,
+      '2026-10-02',
+      full(s, { entries: [{ employeeId: s.worker, categoryId: cat1, minutes: 480 }] }),
+    );
+
+    const path = `/projects/${s.project}/work-summary/employees/${s.worker}`;
+    const res = await fetch(instance, s.cookie, path);
+
+    expect(res.status).toBe(200);
+    expect(employeeProjectDaysSchema.parse(res.body).days).toEqual([
+      {
+        workDate: '2026-10-05',
+        minutes: 480,
+        categories: [
+          { categoryId: cat2, totalMinutes: 360 },
+          { categoryId: cat1, totalMinutes: 120 },
+        ],
+      },
+      {
+        workDate: '2026-10-04',
+        minutes: 480,
+        categories: [{ categoryId: cat1, totalMinutes: 480 }],
+      },
+    ]);
+
+    const ranged = employeeProjectDaysSchema.parse(
+      (await fetch(instance, s.cookie, `${path}?from=2026-10-05&to=2026-10-31`)).body,
+    );
+
+    expect(ranged.days.map((day) => day.workDate)).toEqual(['2026-10-05']);
+  });
+
   it('다른 회사의 프로젝트·직원이나 없는 대상은 찾을 수 없고 로그인이 필요하다', async () => {
     const instance = app();
     const a = await setup(instance);
@@ -1100,6 +1166,15 @@ describe('공수 집계', () => {
     expect((await fetch(instance, b.cookie, `/employees/${a.worker}/work-history`)).status).toBe(
       404,
     );
+    expect(
+      (await fetch(instance, b.cookie, `/projects/${a.project}/work-summary/employees/${a.worker}`))
+        .status,
+    ).toBe(404);
+    // 내 프로젝트여도 다른 회사 직원이면 찾을 수 없다
+    expect(
+      (await fetch(instance, a.cookie, `/projects/${a.project}/work-summary/employees/${b.worker}`))
+        .status,
+    ).toBe(404);
     expect((await request(instance).get(`/api/v1/projects/${a.project}/work-summary`)).status).toBe(
       401,
     );

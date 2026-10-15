@@ -78,6 +78,8 @@ export const purgeCompany = (
     deleted.warranty_certificates = (await tx.warrantyCertificate.deleteMany({ where })).count;
     deleted.project_warranty_changes = (await tx.projectWarrantyChange.deleteMany({ where })).count;
     deleted.project_warranties = (await tx.projectWarranty.deleteMany({ where })).count;
+    // 지출·수입 기록은 프로젝트·추가 공사·문서·업체·분류를 참조하므로 그보다 먼저 지움
+    deleted.ledger_entries = (await tx.ledgerEntry.deleteMany({ where })).count;
     deleted.change_work_documents = (await tx.changeWorkDocument.deleteMany({ where })).count;
     deleted.change_work_status_changes = (
       await tx.changeWorkStatusChange.deleteMany({ where })
@@ -112,6 +114,7 @@ export const purgeCompany = (
     deleted.password_resets = (await tx.passwordReset.deleteMany({ where })).count;
     deleted.social_accounts = (await tx.socialAccount.deleteMany({ where })).count;
     deleted.user_credentials = (await tx.userCredential.deleteMany({ where })).count;
+    deleted.alert_dismissals = (await tx.alertDismissal.deleteMany({ where })).count;
     deleted.alert_preferences = (await tx.alertPreference.deleteMany({ where })).count;
     deleted.company_settings = (await tx.companySettings.deleteMany({ where })).count;
 

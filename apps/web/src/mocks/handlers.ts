@@ -17,10 +17,14 @@ import {
   validateWorkLogForSave,
   summarizeEmployeeWork,
   summarizeProjectWork,
+  employeeProjectDays,
+  employeeProjectDaysParamsSchema,
+  employeeProjectDaysQuerySchema,
   workLogListQuerySchema,
   canRecordProgress,
   payRateCreateSchema,
   summarizeLaborCost,
+  summarizePayRates,
   type PayRate,
   evaluateProjectHealth,
   progressRecordCreateSchema,
@@ -164,6 +168,7 @@ import {
 import { createCompletionHandlers } from './completionHandlers';
 import { createDashboardHandlers } from './dashboardHandlers';
 import { createDocumentHandlers } from './documentHandlers';
+import { createLedgerHandlers } from './ledgerHandlers';
 import { createMaterialHandlers, hasMockMaterialRecordForPartner } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
 import { createSearchHandlers } from './searchHandlers';
@@ -428,6 +433,7 @@ export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
   ...createMemoHandlers({ apiError, parseBody }),
   ...createMaterialHandlers({ apiError, parseBody }),
+  ...createLedgerHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
   ...createChangeWorkHandlers({ apiError, parseBody }),
   ...createWarrantyHandlers({ apiError, parseBody }),
@@ -1337,12 +1343,14 @@ export const handlers = [
       from,
       to,
       q,
+      site,
       sortBy = 'recent',
       sortDir,
       page = 1,
       pageSize = PROJECT_PAGE_SIZE_DEFAULT,
     } = query.data;
     const needle = q?.toLowerCase();
+    const siteNeedle = site?.toLowerCase();
     const codeKey = (code: string) => {
       const [year, sequence] = code.split('-').map(Number) as [number, number];
 
@@ -1387,8 +1395,8 @@ export const handlers = [
           (!to || item.plannedStart <= to) &&
           (!needle ||
             item.name.toLowerCase().includes(needle) ||
-            item.code.toLowerCase().includes(needle) ||
-            item.siteName.toLowerCase().includes(needle)),
+            item.code.toLowerCase().includes(needle)) &&
+          (!siteNeedle || item.siteName.toLowerCase().includes(siteNeedle)),
       )
       .sort(compare);
     const items = matched.slice((page - 1) * pageSize, page * pageSize).map((item) => ({
@@ -2034,7 +2042,51 @@ export const handlers = [
           ]
         : [];
     });
-    const assigned = new Set(assignments.map((item) => item.employeeId));
+    const workDays = new Map<
+      string,
+      {
+        employeeId: string;
+        workDate: string;
+        projectId: string;
+        projectCode: string;
+        projectName: string;
+        projectStatus: ProjectStatus;
+        minutes: number;
+      }
+    >();
+
+    // 저장된 작업 내역에 그 사람이 들어간 날만 (임시 저장·취소된 프로젝트 제외)
+    for (const log of getWorkLogs(account)) {
+      const project = projects.find((item) => item.id === log.projectId);
+
+      if (log.status !== 'SAVED' || !project || project.status === 'CANCELLED') continue;
+
+      if (log.workDate < from || log.workDate > to) continue;
+
+      for (const entry of log.entries) {
+        const key = `${entry.employeeId}|${log.workDate}|${project.id}`;
+        const current = workDays.get(key);
+
+        if (current) {
+          current.minutes += entry.minutes;
+        } else if (entry.minutes > 0) {
+          workDays.set(key, {
+            employeeId: entry.employeeId,
+            workDate: log.workDate,
+            projectId: project.id,
+            projectCode: project.code,
+            projectName: project.name,
+            projectStatus: project.status,
+            minutes: entry.minutes,
+          });
+        }
+      }
+    }
+
+    const assigned = new Set([
+      ...assignments.map((item) => item.employeeId),
+      ...[...workDays.values()].map((item) => item.employeeId),
+    ]);
     const employees = getEmployees(account)
       .filter((item) => item.status !== 'LEFT' || assigned.has(item.id))
       .map((item) => ({
@@ -2046,7 +2098,18 @@ export const handlers = [
       }))
       .sort((a, b) => a.name.localeCompare(b.name, 'ko') || a.id.localeCompare(b.id));
 
-    return HttpResponse.json({ from, to, employees, assignments });
+    return HttpResponse.json({
+      from,
+      to,
+      employees,
+      assignments,
+      workDays: [...workDays.values()].sort(
+        (a, b) =>
+          a.workDate.localeCompare(b.workDate) ||
+          a.projectCode.localeCompare(b.projectCode) ||
+          a.employeeId.localeCompare(b.employeeId),
+      ),
+    });
   }),
 
   http.get('/api/v1/projects/:id/progress', async ({ params }) => {
@@ -2157,6 +2220,26 @@ export const handlers = [
         today: todayInSeoul(new Date()),
       }),
     );
+  }),
+
+  http.get('/api/v1/pay-rates', async () => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const today = todayInSeoul(new Date());
+
+    return HttpResponse.json({
+      items: getEmployees(account).flatMap((employee) => {
+        const rates = getPayRates(account, employee.id);
+
+        return rates.length === 0
+          ? []
+          : [{ employeeId: employee.id, ...summarizePayRates(rates, today) }];
+      }),
+    });
   }),
 
   http.get('/api/v1/employees/:id/pay-rates', async ({ params }) => {
@@ -2332,6 +2415,69 @@ export const handlers = [
       }),
     );
   }),
+
+  http.get(
+    '/api/v1/projects/:id/work-summary/employees/:employeeId',
+    async ({ request, params }) => {
+      await simulateLatency();
+
+      const account = getCurrentAccount();
+
+      if (!account) return apiError('UNAUTHORIZED');
+
+      const parsed = employeeProjectDaysParamsSchema.safeParse(params);
+
+      if (!parsed.success) {
+        return apiError('VALIDATION_ERROR', [{ path: 'params', message: 'Invalid UUID' }]);
+      }
+
+      const { id, employeeId } = parsed.data;
+
+      if (
+        !getProjects(account).some((item) => item.id === id) ||
+        !getEmployees(account).some((item) => item.id === employeeId)
+      )
+        return apiError('NOT_FOUND');
+
+      const query = employeeProjectDaysQuerySchema.safeParse(
+        Object.fromEntries(new URL(request.url).searchParams),
+      );
+
+      if (!query.success) {
+        return apiError(
+          'VALIDATION_ERROR',
+          query.error.issues.map((issue) => ({
+            path: ['query', ...issue.path].join('.'),
+            message: issue.message,
+          })),
+        );
+      }
+
+      const { from, to } = query.data;
+
+      return HttpResponse.json(
+        employeeProjectDays(
+          getWorkLogs(account)
+            .filter(
+              (log) =>
+                log.projectId === id &&
+                log.status === 'SAVED' &&
+                (!from || log.workDate >= from) &&
+                (!to || log.workDate <= to),
+            )
+            .flatMap((log) =>
+              log.entries
+                .filter((entry) => entry.employeeId === employeeId)
+                .map((entry) => ({
+                  workDate: log.workDate,
+                  categoryId: entry.categoryId,
+                  minutes: entry.minutes,
+                })),
+            ),
+        ),
+      );
+    },
+  ),
 
   http.get('/api/v1/employees/:id/work-history', async ({ params }) => {
     await simulateLatency();

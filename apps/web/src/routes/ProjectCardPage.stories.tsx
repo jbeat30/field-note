@@ -493,6 +493,33 @@ export const PeopleStats: Story = {
   },
 };
 
+// 사람 이름을 누르면 그 사람이 일한 날만 달력·목록으로 보이고, 날짜는 그날 하루 기록으로 이어진다
+export const PeopleStatsWorkDays: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = panel(canvasElement);
+    const table = within(await canvas.findByRole('table', { name: '사람별 통계' }));
+
+    await userEvent.click(await table.findByRole('button', { name: '정판금' }));
+
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    await expect(dialog.getByRole('heading', { name: '정판금 · 일한 날' })).toBeInTheDocument();
+
+    const calendar = within(await dialog.findByRole('region', { name: '일한 날 달력' }));
+    const list = within(dialog.getByRole('region', { name: '일한 날 목록' }));
+    const listLinks = list.getAllByRole('link');
+
+    await expect(calendar.getByText('2026년 9월')).toBeInTheDocument();
+    // 달력에 색칠한 날과 목록의 날 수가 같고, 목록은 최근 날짜가 맨 앞
+    await expect(calendar.getAllByRole('link')).toHaveLength(listLinks.length);
+    await expect(listLinks[0]).toHaveAttribute(
+      'href',
+      expect.stringMatching(/\/work\/2026-09-0\d$/),
+    );
+    await expect(calendar.getByRole('button', { name: '다음 달' })).toBeDisabled();
+  },
+};
+
 export const PeopleStatsThisMonthEmpty: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);

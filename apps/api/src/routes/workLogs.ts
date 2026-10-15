@@ -1,4 +1,5 @@
 import {
+  type WorkLog,
   workLogListQuerySchema,
   workLogParamsSchema,
   workLogRevisionsSchema,
@@ -7,15 +8,20 @@ import {
   workLogsResponseSchema,
   projectParamsSchema,
   employeeParamsSchema,
+  employeeProjectDaysParamsSchema,
+  employeeProjectDaysQuerySchema,
+  employeeProjectDaysSchema,
   employeeWorkHistorySchema,
   workSummaryQuerySchema,
   workSummarySchema,
+  type EmployeeProjectDaysQuery,
   type WorkSummaryQuery,
   type WorkLogListQuery,
   type WorkLogSave,
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
+import { workLogChanges, workLogFacts } from '../audit/changes';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 import { WorkLogError, type WorkLogService } from '../workLog/workLogService';
 
@@ -95,6 +101,32 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
   add(
     {
       method: 'get',
+      path: '/projects/{id}/work-summary/employees/{employeeId}',
+      summary: '한 사람이 이 프로젝트에서 일한 날 (날짜별 시간·한 일, 저장된 작업 내역만 반영)',
+      auth: 'required',
+      request: { params: employeeProjectDaysParamsSchema, query: employeeProjectDaysQuerySchema },
+      response: { status: 200, schema: employeeProjectDaysSchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params, query }) => {
+      const { id, employeeId } = params as { id: string; employeeId: string };
+
+      try {
+        return await workLogs!.employeeDays(
+          auth!.companyId,
+          id,
+          employeeId,
+          query as EmployeeProjectDaysQuery,
+        );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'get',
       path: '/employees/{id}/work-history',
       summary: '직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 작업 내역만 반영)',
       auth: 'required',
@@ -141,6 +173,36 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
       request: { params: workLogParamsSchema, body: workLogSaveSchema },
       response: { status: 200, schema: workLogSchema },
       errors: ['NOT_FOUND', 'CONFLICT'],
+      // 활동 기록: 저장된 작업 내역의 첫 저장과 이후 수정 (임시 저장은 남기지 않음)
+      audit: {
+        before: ({ auth, params }) => {
+          const { id, workDate } = params as { id: string; workDate: string };
+
+          return workLogs!.get(auth!.companyId, id, workDate);
+        },
+        entry: ({ params }, result, before) => {
+          const log = result as WorkLog;
+          const { workDate } = params as { id: string; workDate: string };
+
+          if (log.status !== 'SAVED') return null;
+
+          const previous = before as WorkLog | null;
+          const wasSaved = previous?.status === 'SAVED';
+          const now = workLogFacts(log);
+
+          return {
+            action: wasSaved ? 'WORK_LOG_UPDATED' : 'WORK_LOG_SAVED',
+            targetId: log.projectId,
+            projectId: log.projectId,
+            detail: {
+              workDate,
+              totalMinutes: now.totalMinutes,
+              people: now.people,
+              ...(wasSaved ? { changes: workLogChanges(previous, log) } : {}),
+            },
+          };
+        },
+      },
     },
     async ({ auth, params, body }) => {
       const { id, workDate } = params as { id: string; workDate: string };

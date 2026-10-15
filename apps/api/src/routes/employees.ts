@@ -12,6 +12,7 @@ import {
 
 import { EmployeeError, type EmployeeService } from '../employee/employeeService';
 import { AppError } from '../http/AppError';
+import { diffChanges, EMPLOYEE_CHANGE_FIELDS } from '../audit/changes';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 
 const notImplemented: RouteHandler = async () => {
@@ -106,6 +107,26 @@ export const registerEmployeeRoutes = (registry: RouteRegistry, employees?: Empl
       request: { params: employeeParamsSchema, body: employeeUpdateSchema },
       response: { status: 200, schema: employeeDetailSchema },
       errors: ['NOT_FOUND'],
+      // 활동 기록: 바뀐 항목의 전·후 (연락처·생년월일·메모는 값을 복사하지 않고 바뀌었다는 것만)
+      audit: {
+        before: ({ auth, params }) =>
+          employees!.get(auth!.companyId, (params as { id: string }).id),
+        entry: ({ params, body }, _result, before) => {
+          const changes = diffChanges(
+            before as Record<string, unknown> | null,
+            body as Record<string, unknown>,
+            EMPLOYEE_CHANGE_FIELDS,
+          );
+
+          return changes.length > 0
+            ? {
+                action: 'EMPLOYEE_UPDATED',
+                targetId: (params as { id: string }).id,
+                detail: { changes },
+              }
+            : null;
+        },
+      },
     },
     async ({ auth, params, body }) => {
       try {

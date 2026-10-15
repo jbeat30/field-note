@@ -36,6 +36,8 @@ import { registerSearchRoutes } from './routes/search';
 import type { SearchService } from './search/searchService';
 import type { DocumentService } from './document/documentService';
 import { registerMaterialRoutes } from './routes/materials';
+import { registerLedgerRoutes } from './routes/ledger';
+import type { LedgerService } from './ledger/ledgerService';
 import type { MaterialService } from './material/materialService';
 import type { MemoService } from './memo/memoService';
 import type { PhotoService } from './photo/photoService';
@@ -115,6 +117,8 @@ export type AppOptions = {
   memos?: MemoService;
   // 없으면 자재 API는 501
   materials?: MaterialService;
+  // 없으면 지출·수입 API는 501
+  ledger?: LedgerService;
   // 없으면 작업자료 문서함 API는 501
   documents?: DocumentService;
   // 없으면 통합 검색 API는 501
@@ -151,6 +155,11 @@ export const createRegistry = (options: AppOptions = {}) => {
   const registry = createRouteRegistry({
     resolveAuth: options.resolveAuth ?? createSessionResolver(sessionStore),
     idempotencyStore: options.idempotencyStore ?? createMemoryIdempotencyStore(),
+    recordAudit: options.audit
+      ? (companyId, actorId, entry) => options.audit!.record(companyId, actorId, entry)
+      : undefined,
+    onAuditError: (error) =>
+      options.logger?.error({ error }, '[api.audit] 활동 기록을 남기지 못했습니다'),
   });
 
   registerHealthRoutes(registry);
@@ -175,7 +184,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerWorkLogRoutes(registry, options.workLogs);
   registerProgressRoutes(registry, options.progress);
   registerLaborRoutes(registry, options.labor);
-  registerChangeWorkRoutes(registry, options.changeWorks);
+  registerChangeWorkRoutes(registry, options.changeWorks, options.documents);
   registerWarrantyRoutes(registry, options.warranty);
   registerCredentialRoutes(registry, options.credentials);
   registerAuditRoutes(registry, options.audit);
@@ -187,6 +196,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerPhotoRoutes(registry, options.photos);
   registerMemoRoutes(registry, options.memos);
   registerMaterialRoutes(registry, options.materials);
+  registerLedgerRoutes(registry, options.ledger);
   registerDocumentRoutes(registry, options.documents);
   registerSearchRoutes(registry, options.search);
   registerReportRoutes(registry, options.reports);

@@ -1,6 +1,5 @@
 import {
   ALERT_KINDS,
-  INBOX_STALE_DAYS,
   CERTIFICATE_EXPIRING_DAYS,
   assembleDashboard,
   monthRange,
@@ -8,7 +7,7 @@ import {
   shiftDate,
   todayInSeoul,
   weekRange,
-  type AlertKind,
+  type AlertDismiss,
   type AlertSettings,
   type AlertSettingsUpdate,
   type DashboardResponse,
@@ -24,13 +23,14 @@ export type DashboardService = {
   getSettings: (companyId: string) => Promise<AlertSettings>;
   // 보낸 종류만 켜고 끈다 (행이 없는 종류는 켜짐이 기본값)
   saveSettings: (companyId: string, update: AlertSettingsUpdate) => Promise<AlertSettings>;
+  // 알림 숨기기: 키를 남기면 조건이 바뀌기 전까지 홈·알림에 나오지 않는다 (같은 키를 다시 숨겨도 무시)
+  dismiss: (companyId: string, userId: string, input: AlertDismiss) => Promise<void>;
 };
 
 const fromDate = (value: Date) => value.toISOString().slice(0, 10);
 
-const DAY_MS = 86_400_000;
-
-const toSettings = (rows: { kind: AlertKind; enabled: boolean }[]): AlertSettings => {
+// 예전에 저장된 알림 종류(메모함 알림 등 지금은 없는 것)는 무시한다
+const toSettings = (rows: { kind: string; enabled: boolean }[]): AlertSettings => {
   const saved = new Map(rows.map((row) => [row.kind, row.enabled]));
 
   return { items: ALERT_KINDS.map((kind) => ({ kind, enabled: saved.get(kind) ?? true })) };
@@ -57,7 +57,6 @@ export const createDashboardService = (
       const week = weekRange(today);
       const calendar = await assignments.calendar(companyId, week);
       const settings = await loadSettings(companyId);
-      const staleBefore = new Date(now().getTime() - INBOX_STALE_DAYS * DAY_MS);
       const data = await withCompany(app, companyId, async (tx) => {
         const projects = await tx.project.findMany({
           where: { status: { in: ['PLANNED', 'IN_PROGRESS', 'SUSPENDED'] } },
@@ -66,6 +65,7 @@ export const createDashboardService = (
             code: true,
             name: true,
             status: true,
+            siteName: true,
             plannedStart: true,
             plannedEnd: true,
           },
@@ -79,7 +79,7 @@ export const createDashboardService = (
           records,
           todayRows,
           todayLogs,
-          staleInbox,
+          dismissals,
           draftLogCount,
           changes,
           warranties,
@@ -114,13 +114,9 @@ export const createDashboardService = (
           }),
           tx.workLog.findMany({
             where: { workDate: new Date(`${today}T00:00:00.000Z`), status: 'SAVED' },
-            select: { projectId: true },
+            select: { projectId: true, entries: { select: { employeeId: true } } },
           }),
-          tx.memo.aggregate({
-            where: { deletedAt: null, projectId: null, createdAt: { lte: staleBefore } },
-            _count: true,
-            _min: { createdAt: true },
-          }),
+          tx.alertDismissal.findMany({ select: { alertKey: true } }),
           tx.workLog.count({ where: { status: 'DRAFT' } }),
           tx.changeWork.findMany({
             where: { status: 'NEGOTIATING' },
@@ -194,7 +190,7 @@ export const createDashboardService = (
           records,
           todayRows,
           todayLogs,
-          staleInbox,
+          dismissals,
           draftLogCount,
           changes,
           warranties,
@@ -254,8 +250,6 @@ export const createDashboardService = (
         }
       }
 
-      const oldest = data.staleInbox._min.createdAt;
-
       return {
         dashboard: assembleDashboard({
           today,
@@ -263,6 +257,7 @@ export const createDashboardService = (
             id: project.id,
             code: project.code,
             name: project.name,
+            siteName: project.siteName,
             status: project.status,
             plannedStart: fromDate(project.plannedStart),
             plannedEnd: fromDate(project.plannedEnd),
@@ -273,19 +268,9 @@ export const createDashboardService = (
           })),
           todayAssignments: data.todayRows,
           todayLogProjectIds: data.todayLogs.map((log) => log.projectId),
-          staleInbox: {
-            count: data.staleInbox._count,
-            oldestDays: oldest
-              ? Math.max(
-                  0,
-                  Math.round(
-                    (Date.parse(`${today}T00:00:00Z`) -
-                      Date.parse(`${todayInSeoul(oldest)}T00:00:00Z`)) /
-                      DAY_MS,
-                  ),
-                )
-              : 0,
-          },
+          todayLoggedEmployeeIds: data.todayLogs.flatMap((log) =>
+            log.entries.map((entry) => entry.employeeId),
+          ),
           draftLogCount: data.draftLogCount,
           calendar,
           negotiatingChanges: data.changes.map((change) => ({
@@ -319,12 +304,26 @@ export const createDashboardService = (
           ),
           unclosedMonth: data.unclosedMonth,
           enabled: new Set(settings.items.filter((item) => item.enabled).map((item) => item.kind)),
+          dismissedKeys: new Set(data.dismissals.map((item) => item.alertKey)),
         }),
         settings,
       };
     },
 
     getSettings: loadSettings,
+
+    dismiss: (companyId, userId, input) =>
+      withCompany(app, companyId, async (tx) => {
+        await tx.alertDismissal.createMany({
+          data: [...new Set(input.keys)].map((alertKey) => ({
+            companyId,
+            alertKey,
+            dismissedBy: userId,
+            dismissedAt: now(),
+          })),
+          skipDuplicates: true,
+        });
+      }),
 
     saveSettings: (companyId, update) =>
       withCompany(app, companyId, async (tx) => {

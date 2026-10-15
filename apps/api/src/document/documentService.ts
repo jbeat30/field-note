@@ -97,6 +97,7 @@ const toDocument = (row: Row): Document => ({
   title: row.title,
   isSensitive: row.isSensitive,
   isPinned: row.isPinned,
+  includeInSummary: row.includeInSummary,
   createdBy: row.createdBy,
   createdAt: row.createdAt.toISOString(),
   updatedAt: row.updatedAt.toISOString(),
@@ -299,6 +300,7 @@ export const createDocumentService = (
             category: input.category,
             isSensitive: input.isSensitive,
             isPinned: input.isPinned,
+            includeInSummary: input.includeInSummary,
           },
         });
 

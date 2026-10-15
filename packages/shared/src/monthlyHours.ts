@@ -62,7 +62,7 @@ export const monthlyCloseEventSchema = z.object({
   // 그때의 임시 저장 작업 내역 건수 (확정 시 확인한 건수)
   draftLogCount: z.number().int(),
   standardWorkMinutes: z.number().int(),
-  monthlyWorkDays: z.number().int(),
+  monthlyWorkDays: z.number(),
   createdAt: z.iso.datetime(),
 });
 
@@ -74,7 +74,7 @@ export const monthlyHoursSchema = z.object({
   closedAt: z.iso.datetime().nullable(),
   // 확정된 달은 확정 당시의 값, 아니면 현재 회사 설정 값
   standardWorkMinutes: z.number().int(),
-  monthlyWorkDays: z.number().int(),
+  monthlyWorkDays: z.number(),
   workUnitMode: workUnitModeSchema,
   // 그달의 임시 저장 작업 내역 (집계에는 저장된 작업 내역만 반영되므로 확정 전에 정리). 최대 50건까지 보여 주고 전체 건수를 따로 준다
   draftLogCount: z.number().int(),
@@ -209,4 +209,69 @@ export const summarizeMonthlyHours = (rows: readonly MonthlyHoursRow[]) => {
     );
 
   return { byEmployee: sorted(byEmployee), byProject: sorted(byProject), total };
+};
+
+export type MonthlyMatrixAxis = 'EMPLOYEE' | 'PROJECT';
+
+export type MonthlyMatrix = {
+  // 열 (직원별이면 프로젝트, 프로젝트별이면 직원). 합계가 큰 것이 먼저
+  columns: { id: string; label: string }[];
+  // 행 (직원별이면 직원, 프로젝트별이면 프로젝트). 합계가 큰 것이 먼저
+  rows: {
+    id: string;
+    label: string;
+    // 열 id → 분 (그 칸에 공수가 없으면 키가 없다)
+    cells: Record<string, number>;
+    total: number;
+  }[];
+  columnTotals: Record<string, number>;
+  total: number;
+};
+
+/**
+ * @description 월 공수표 행을 "행 × 열" 표로 바꾼다 (직원별: 행 직원·열 프로젝트, 프로젝트별: 행 프로젝트·열 직원).
+ * 합계는 분을 먼저 더하므로 보여 줄 때 환산해도 오차가 쌓이지 않는다
+ * @param rows 월 공수표 행
+ * @param axis 행으로 삼을 것
+ * @returns 표 (행·열은 합계가 큰 순, 같으면 이름순)
+ */
+export const pivotMonthlyHours = (
+  rows: readonly MonthlyHoursRow[],
+  axis: MonthlyMatrixAxis,
+): MonthlyMatrix => {
+  const rowOf = (item: MonthlyHoursRow) =>
+    axis === 'EMPLOYEE'
+      ? { id: item.employeeId, label: item.employeeName }
+      : { id: item.projectId, label: `${item.projectCode} ${item.projectName}` };
+  const columnOf = (item: MonthlyHoursRow) =>
+    axis === 'EMPLOYEE'
+      ? { id: item.projectId, label: `${item.projectCode} ${item.projectName}` }
+      : { id: item.employeeId, label: item.employeeName };
+  const rowMap = new Map<string, MonthlyMatrix['rows'][number]>();
+  const columnMap = new Map<string, { id: string; label: string; total: number }>();
+  let total = 0;
+
+  for (const item of rows) {
+    const row = rowOf(item);
+    const column = columnOf(item);
+    const current = rowMap.get(row.id) ?? { ...row, cells: {}, total: 0 };
+    const col = columnMap.get(column.id) ?? { ...column, total: 0 };
+
+    current.cells[column.id] = (current.cells[column.id] ?? 0) + item.minutes;
+    current.total += item.minutes;
+    col.total += item.minutes;
+    total += item.minutes;
+    rowMap.set(row.id, current);
+    columnMap.set(column.id, col);
+  }
+
+  const bySize = <T extends { label: string; total: number }>(a: T, b: T) =>
+    b.total - a.total || a.label.localeCompare(b.label, 'ko');
+
+  return {
+    columns: [...columnMap.values()].sort(bySize).map(({ id, label }) => ({ id, label })),
+    rows: [...rowMap.values()].sort(bySize),
+    columnTotals: Object.fromEntries([...columnMap.values()].map((item) => [item.id, item.total])),
+    total,
+  };
 };

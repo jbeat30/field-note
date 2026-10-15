@@ -53,3 +53,21 @@ export const useSaveAlertSettings = () => {
     },
   });
 };
+
+// 알림 숨기기 (모두 숨기기도 같은 요청): 끝나면 홈·알림 개수를 다시 읽는다
+export const useDismissAlerts = () => {
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (keys: string[]) => {
+      const { data, error } = await apiClient.POST('/api/v1/alerts/dismiss', { body: { keys } });
+
+      if (!data) {
+        throw error ?? new Error('[web.useDismissAlerts] 알림 숨기기 실패');
+      }
+
+      return data;
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: queryKeys.dashboard() }),
+  });
+};

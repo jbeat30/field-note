@@ -21,6 +21,7 @@ import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
+import { createLedgerService } from '../ledger/ledgerService';
 import { createMemoService } from '../memo/memoService';
 import { createDashboardService } from '../dashboard/dashboardService';
 import { createCompletionService } from '../completion/completionService';
@@ -107,6 +108,7 @@ const instance = () =>
     photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
     memos: createMemoService(db.app, () => NOW),
     materials: createMaterialService(db.app, () => NOW),
+    ledger: createLedgerService(db.app, () => NOW),
     search: createSearchService(db.app),
     reports: createReportService(db.app, createMemoryStorage().storage, () => NOW),
     documents: createDocumentService(db.app, createMemoryStorage().storage, () => NOW),
@@ -198,8 +200,11 @@ const buildCompany = async () => {
 
   // 알림 설정 한 건 (끈 알림)
   await c.call('put', '/company/alert-settings', {
-    items: [{ kind: 'INBOX_STALE', enabled: false }],
+    items: [{ kind: 'WARRANTY_ENDING', enabled: false }],
   });
+
+  // 숨긴 알림 한 건
+  await c.call('post', '/alerts/dismiss', { keys: ['NO_LOG_TODAY|isolation|2026-10-11'] });
 
   // 직원 단가 한 건 (민감 정보)
   await c.call('post', `/employees/${worker}/pay-rates`, {
@@ -338,6 +343,11 @@ const buildCompany = async () => {
     kind: 'RECEIVED',
     quantity: 10,
   });
+  const ledgerEntryId = await c.id(`/projects/${projectId}/ledger-entries`, {
+    entryDate: '2026-10-05',
+    kind: 'EXPENSE',
+    amount: 12000,
+  });
 
   return {
     cookie,
@@ -354,6 +364,7 @@ const buildCompany = async () => {
     memoId,
     materialId,
     materialRecordId,
+    ledgerEntryId,
     docFileId,
     documentId,
     changeWorkId,
@@ -441,6 +452,12 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'post',
       `/change-works/${a.changeWorkId}/documents`,
       { documentId: a.documentId },
+    ],
+    [
+      'POST /change-works/{id}/evidence',
+      'post',
+      `/change-works/${a.changeWorkId}/evidence`,
+      { fileId: '0198d000-0000-7000-8000-00000000dead', title: '침투 증빙' },
     ],
     [
       'DELETE /change-works/{id}/documents/{documentId}',
@@ -556,6 +573,11 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /projects/{id}/health', 'get', `/projects/${a.projectId}/health`],
     ['GET /projects/{id}/work-logs', 'get', `/projects/${a.projectId}/work-logs`],
     ['GET /projects/{id}/work-summary', 'get', `/projects/${a.projectId}/work-summary`],
+    [
+      'GET /projects/{id}/work-summary/employees/{employeeId}',
+      'get',
+      `/projects/${a.projectId}/work-summary/employees/${a.worker}`,
+    ],
     ['GET /projects/{id}/work-logs/{workDate}', 'get', `/projects/${a.projectId}/work-logs/${DAY}`],
     [
       'PUT /projects/{id}/work-logs/{workDate}',
@@ -657,6 +679,16 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       { quantity: 99 },
     ],
     ['DELETE /material-records/{id}', 'delete', `/material-records/${a.materialRecordId}`],
+    [
+      'POST /projects/{projectId}/ledger-entries',
+      'post',
+      `/projects/${a.projectId}/ledger-entries`,
+      { entryDate: '2026-10-05', kind: 'EXPENSE', amount: 1000 },
+    ],
+    ['GET /projects/{projectId}/ledger-entries', 'get', `/projects/${a.projectId}/ledger-entries`],
+    ['GET /projects/{projectId}/ledger-summary', 'get', `/projects/${a.projectId}/ledger-summary`],
+    ['PATCH /ledger-entries/{id}', 'patch', `/ledger-entries/${a.ledgerEntryId}`, { amount: 99 }],
+    ['DELETE /ledger-entries/{id}', 'delete', `/ledger-entries/${a.ledgerEntryId}`],
   ] as const;
 
 // ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다 (로그인이 필요한 엔드포인트는 전부 이 목록·위의 공격 목록·본인 계정 전용 목록 중 하나에 있어야 함)
@@ -667,6 +699,7 @@ const COLLECTIONS = [
   'GET /employees',
   'POST /employees',
   'GET /materials',
+  'GET /pay-rates',
   'GET /audit-logs',
   'GET /monthly-hours',
   'POST /monthly-hours/close',
@@ -706,6 +739,8 @@ const OWN_ACCOUNT_ONLY = [
   'PUT /company/settings',
   'GET /company/alert-settings',
   'PUT /company/alert-settings',
+  // 알림 숨기기: 다른 회사의 ID를 받지 않고 자기 회사의 알림 키만 남긴다 (dashboardRoutes: 회사마다 따로)
+  'POST /alerts/dismiss',
 ];
 
 describe('회사 격리: 전 엔드포인트', () => {
@@ -734,6 +769,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       memoId: '{id}',
       materialId: '{id}',
       materialRecordId: '{id}',
+      ledgerEntryId: '{id}',
       docFileId: '{id}',
       documentId: '{id}',
       changeWorkId: '{id}',
@@ -875,7 +911,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       };
     // 두 회사 모두 같은 더미를 만들었으므로 B만 다시 켜서 A의 설정이 B에 영향을 주지 않는지 본다
     await b.c.call('put', '/company/alert-settings', {
-      items: [{ kind: 'INBOX_STALE', enabled: true }],
+      items: [{ kind: 'WARRANTY_ENDING', enabled: true }],
     });
 
     const aDashboard = await dashboardOf(a);
@@ -883,10 +919,10 @@ describe('회사 격리: 전 엔드포인트', () => {
 
     expect(aDashboard.dashboard.activeProjects.map((item) => item.id)).toContain(a.projectId);
     expect(bDashboard.dashboard.activeProjects.map((item) => item.id)).not.toContain(a.projectId);
-    expect(aDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+    expect(aDashboard.settings.items.find((item) => item.kind === 'WARRANTY_ENDING')?.enabled).toBe(
       false,
     );
-    expect(bDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+    expect(bDashboard.settings.items.find((item) => item.kind === 'WARRANTY_ENDING')?.enabled).toBe(
       true,
     );
 
@@ -1151,6 +1187,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       'project_progress_records',
       'employee_pay_rates',
       'alert_preferences',
+      'alert_dismissals',
       'change_works',
       'change_work_status_changes',
       'change_work_documents',
@@ -1164,6 +1201,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       'memos',
       'materials',
       'material_records',
+      'ledger_entries',
       'documents',
       'document_versions',
     ]) {
