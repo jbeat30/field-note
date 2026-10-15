@@ -11213,13 +11213,64 @@
                           "endDate"
                         ]
                       }
+                    },
+                    "workDays": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "employeeId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "workDate": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "projectId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "projectCode": {
+                            "type": "string"
+                          },
+                          "projectName": {
+                            "type": "string"
+                          },
+                          "projectStatus": {
+                            "type": "string",
+                            "enum": [
+                              "PLANNED",
+                              "IN_PROGRESS",
+                              "SUSPENDED",
+                              "COMPLETED",
+                              "WARRANTY",
+                              "CLOSED",
+                              "CANCELLED"
+                            ]
+                          },
+                          "minutes": {
+                            "type": "integer"
+                          }
+                        },
+                        "required": [
+                          "employeeId",
+                          "workDate",
+                          "projectId",
+                          "projectCode",
+                          "projectName",
+                          "projectStatus",
+                          "minutes"
+                        ]
+                      }
                     }
                   },
                   "required": [
                     "from",
                     "to",
                     "employees",
-                    "assignments"
+                    "assignments",
+                    "workDays"
                   ]
                 }
               }

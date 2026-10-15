@@ -2039,7 +2039,51 @@ export const handlers = [
           ]
         : [];
     });
-    const assigned = new Set(assignments.map((item) => item.employeeId));
+    const workDays = new Map<
+      string,
+      {
+        employeeId: string;
+        workDate: string;
+        projectId: string;
+        projectCode: string;
+        projectName: string;
+        projectStatus: ProjectStatus;
+        minutes: number;
+      }
+    >();
+
+    // 저장된 작업 내역에 그 사람이 들어간 날만 (임시 저장·취소된 프로젝트 제외)
+    for (const log of getWorkLogs(account)) {
+      const project = projects.find((item) => item.id === log.projectId);
+
+      if (log.status !== 'SAVED' || !project || project.status === 'CANCELLED') continue;
+
+      if (log.workDate < from || log.workDate > to) continue;
+
+      for (const entry of log.entries) {
+        const key = `${entry.employeeId}|${log.workDate}|${project.id}`;
+        const current = workDays.get(key);
+
+        if (current) {
+          current.minutes += entry.minutes;
+        } else if (entry.minutes > 0) {
+          workDays.set(key, {
+            employeeId: entry.employeeId,
+            workDate: log.workDate,
+            projectId: project.id,
+            projectCode: project.code,
+            projectName: project.name,
+            projectStatus: project.status,
+            minutes: entry.minutes,
+          });
+        }
+      }
+    }
+
+    const assigned = new Set([
+      ...assignments.map((item) => item.employeeId),
+      ...[...workDays.values()].map((item) => item.employeeId),
+    ]);
     const employees = getEmployees(account)
       .filter((item) => item.status !== 'LEFT' || assigned.has(item.id))
       .map((item) => ({
@@ -2051,7 +2095,18 @@ export const handlers = [
       }))
       .sort((a, b) => a.name.localeCompare(b.name, 'ko') || a.id.localeCompare(b.id));
 
-    return HttpResponse.json({ from, to, employees, assignments });
+    return HttpResponse.json({
+      from,
+      to,
+      employees,
+      assignments,
+      workDays: [...workDays.values()].sort(
+        (a, b) =>
+          a.workDate.localeCompare(b.workDate) ||
+          a.projectCode.localeCompare(b.projectCode) ||
+          a.employeeId.localeCompare(b.employeeId),
+      ),
+    });
   }),
 
   http.get('/api/v1/projects/:id/progress', async ({ params }) => {

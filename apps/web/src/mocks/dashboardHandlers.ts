@@ -80,6 +80,7 @@ const calendarOf = (account: MockAccount, from: string, to: string): StaffingCal
     from,
     to,
     assignments,
+    workDays: [],
     employees: getEmployees(account)
       .filter((item) => item.status !== 'LEFT' || assigned.has(item.id))
       .map((item) => ({

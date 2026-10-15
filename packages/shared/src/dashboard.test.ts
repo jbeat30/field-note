@@ -42,7 +42,7 @@ const base = (patch: Partial<DashboardInput> = {}): DashboardInput => ({
   todayLogProjectIds: [],
   staleInbox: { count: 0, oldestDays: 0 },
   draftLogCount: 0,
-  calendar: { from: '2026-10-05', to: '2026-10-11', employees: [], assignments: [] },
+  calendar: { from: '2026-10-05', to: '2026-10-11', employees: [], assignments: [], workDays: [] },
   negotiatingChanges: [],
   warrantyProjects: [],
   openRepairs: [],
@@ -147,6 +147,7 @@ describe('assembleDashboard: 이번 주 인력', () => {
       { id: E2, name: '이한가', title: null, status: 'ACTIVE' as const, leftOn: null },
       { id: E3, name: '박휴직', title: null, status: 'ON_LEAVE' as const, leftOn: null },
     ],
+    workDays: [],
     assignments: [
       {
         id: '0198d000-0000-7000-8000-0000000000b1',

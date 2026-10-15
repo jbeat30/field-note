@@ -1212,6 +1212,33 @@ describe('목업 서버 계약', () => {
     ).toBe(404);
   });
 
+  it('인력 배치 일한 날: 저장된 작업 내역만 사람·날짜·프로젝트별로, 같은 날 두 프로젝트는 둘 다 담긴다', async () => {
+    await login();
+
+    const calendar = staffingCalendarSchema.parse(
+      (
+        await client.GET('/api/v1/staffing-calendar', {
+          params: { query: { from: '2026-08-31', to: '2026-09-06' } },
+        })
+      ).data,
+    );
+    const nameOf = (id: string) => calendar.employees.find((item) => item.id === id)?.name;
+    const days = calendar.workDays.map((item) => [
+      nameOf(item.employeeId),
+      item.workDate,
+      item.projectCode,
+      item.minutes,
+    ]);
+
+    // 더미: 9/1~9/3 A동(2026-001), 9/2에 최설치는 B동(2026-003)에도 들어감, 임시 저장(9/4)은 빠짐
+    expect(days).toContainEqual(['정판금', '2026-09-01', '2026-001', 480]);
+    expect(days).toContainEqual(['최설치', '2026-09-02', '2026-001', 480]);
+    expect(days).toContainEqual(['최설치', '2026-09-02', '2026-003', 480]);
+    expect(calendar.workDays.every((item) => item.workDate <= '2026-09-03')).toBe(true);
+    // 한용접은 9/1에 두 작업 구분(생산·가공 240 + 설치 240)이 한 칸으로 합산된다
+    expect(days).toContainEqual(['한용접', '2026-09-01', '2026-001', 480]);
+  });
+
   it('인력 배치 캘린더: 기간과 겹치는 투입만 나오고 로그인과 기간을 검사한다', async () => {
     const query = { from: '2026-10-05', to: '2026-10-11' };
 

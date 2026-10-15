@@ -4056,6 +4056,19 @@ export interface paths {
                                 /** Format: date */
                                 endDate: string;
                             }[];
+                            workDays: {
+                                /** Format: uuid */
+                                employeeId: string;
+                                /** Format: date */
+                                workDate: string;
+                                /** Format: uuid */
+                                projectId: string;
+                                projectCode: string;
+                                projectName: string;
+                                /** @enum {string} */
+                                projectStatus: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                minutes: number;
+                            }[];
                         };
                     };
                 };

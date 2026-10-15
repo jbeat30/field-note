@@ -70,12 +70,24 @@ const staffingAssignmentSchema = z.object({
   endDate: dateSchema,
 });
 
-// 취소한 투입과 취소된 프로젝트의 투입은 담지 않는다. 퇴사 직원은 기간 안에 투입이 있을 때만 담는다
+// 저장된 작업 내역에 들어간 사람·날짜·프로젝트별 시간 (취소된 프로젝트 제외)
+const staffingWorkDaySchema = z.object({
+  employeeId: z.uuid(),
+  workDate: dateSchema,
+  projectId: z.uuid(),
+  projectCode: z.string(),
+  projectName: z.string(),
+  projectStatus: projectStatusSchema,
+  minutes: z.number().int(),
+});
+
+// 취소한 투입과 취소된 프로젝트의 투입은 담지 않는다. 퇴사 직원은 기간 안에 투입이나 일한 기록이 있을 때만 담는다
 export const staffingCalendarSchema = z.object({
   from: dateSchema,
   to: dateSchema,
   employees: z.array(staffingEmployeeSchema),
   assignments: z.array(staffingAssignmentSchema),
+  workDays: z.array(staffingWorkDaySchema),
 });
 
 export type StaffingCalendar = z.infer<typeof staffingCalendarSchema>;
@@ -83,6 +95,8 @@ export type StaffingCalendar = z.infer<typeof staffingCalendarSchema>;
 export type StaffingEmployee = z.infer<typeof staffingEmployeeSchema>;
 
 export type StaffingAssignment = z.infer<typeof staffingAssignmentSchema>;
+
+export type StaffingWorkDay = z.infer<typeof staffingWorkDaySchema>;
 
 // 그날의 상태: 비어 있음 / 투입 한 곳 / 겹침(두 프로젝트 이상) / 근무 불가(휴직·퇴사)
 export type StaffingCellState = 'FREE' | 'ASSIGNED' | 'CONFLICT' | 'UNAVAILABLE';
@@ -187,3 +201,124 @@ export const findStaffingConflicts = (rows: StaffingRow[]) =>
  */
 export const shiftDate = (date: string, days: number) =>
   new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
+
+// ── 사람 행 × 날짜 열 타임라인 (09 문서 §4) ──
+// 투입 계획은 두지 않고, 저장된 작업 내역에 그 사람이 들어간 날만 막대로 보인다 (같은 프로젝트에 이어진 날은 막대 하나)
+
+export type StaffingTimelineDay = { date: string; minutes: number; conflict: boolean };
+
+// 한 프로젝트에서 이어서 일한 날 묶음 (startIndex는 표 날짜 열의 0부터 센 위치)
+export type StaffingTimelineSegment = { startIndex: number; days: StaffingTimelineDay[] };
+
+export type StaffingTimelineLane = {
+  projectId: string;
+  code: string;
+  name: string;
+  status: z.infer<typeof projectStatusSchema>;
+  segments: StaffingTimelineSegment[];
+};
+
+// WORKING: 기간 안에 일한 기록이 있음 / IDLE: 일한 기록이 없는 재직 직원 / AWAY: 일한 기록이 없는 휴직·퇴사 직원
+export type StaffingTimelineGroup = 'WORKING' | 'IDLE' | 'AWAY';
+
+export type StaffingTimelineRow = {
+  employee: StaffingEmployee;
+  group: StaffingTimelineGroup;
+  // 프로젝트마다 한 줄 (먼저 일한 프로젝트가 위)
+  lanes: StaffingTimelineLane[];
+  totalMinutes: number;
+  workedDays: number;
+  // 같은 날 두 프로젝트 이상에서 일한 날
+  conflictDates: string[];
+};
+
+/**
+ * @description 캘린더 응답을 사람 행 × 날짜 타임라인으로 만든다. 같은 프로젝트에 이어진 날은 막대 하나(segment)로 묶고,
+ * 같은 날 두 프로젝트 이상에서 일했으면 그 날을 겹침으로 표시한다
+ * @param calendar 캘린더 응답 (workDays는 저장된 작업 내역의 사람·날짜·프로젝트별 시간)
+ * @returns 직원 행 (직원 순서는 응답 그대로)
+ */
+export const buildStaffingTimeline = (calendar: StaffingCalendar): StaffingTimelineRow[] => {
+  const dates = listDates(calendar.from, calendar.to);
+
+  return calendar.employees.map((employee) => {
+    const mine = calendar.workDays.filter(
+      (item) => item.employeeId === employee.id && item.minutes > 0,
+    );
+    const projectsByDate = new Map<string, Set<string>>();
+
+    for (const item of mine) {
+      projectsByDate.set(
+        item.workDate,
+        (projectsByDate.get(item.workDate) ?? new Set()).add(item.projectId),
+      );
+    }
+
+    const conflictDates = dates.filter((date) => (projectsByDate.get(date)?.size ?? 0) > 1);
+    const lanes = [...new Set(mine.map((item) => item.projectId))]
+      .map((projectId): StaffingTimelineLane => {
+        const own = mine.filter((item) => item.projectId === projectId);
+        const first = own[0]!;
+        const minutesOf = new Map<string, number>();
+
+        for (const item of own) {
+          minutesOf.set(item.workDate, (minutesOf.get(item.workDate) ?? 0) + item.minutes);
+        }
+
+        const segments: StaffingTimelineSegment[] = [];
+
+        dates.forEach((date, index) => {
+          const minutes = minutesOf.get(date);
+
+          if (!minutes) return;
+
+          const day = { date, minutes, conflict: conflictDates.includes(date) };
+          const last = segments.at(-1);
+
+          if (last && last.startIndex + last.days.length === index) last.days.push(day);
+          else segments.push({ startIndex: index, days: [day] });
+        });
+
+        return {
+          projectId,
+          code: first.projectCode,
+          name: first.projectName,
+          status: first.projectStatus,
+          segments,
+        };
+      })
+      .sort(
+        (a, b) =>
+          (a.segments[0]?.startIndex ?? 0) - (b.segments[0]?.startIndex ?? 0) ||
+          a.code.localeCompare(b.code),
+      );
+    const workedDates = new Set(mine.map((item) => item.workDate));
+
+    return {
+      employee,
+      group: lanes.length > 0 ? 'WORKING' : employee.status === 'ACTIVE' ? 'IDLE' : 'AWAY',
+      lanes,
+      totalMinutes: mine.reduce((sum, item) => sum + item.minutes, 0),
+      workedDays: workedDates.size,
+      conflictDates,
+    };
+  });
+};
+
+/**
+ * @description 타임라인의 요약: 일한 사람·일한 기록이 없는 사람·휴직/퇴사 수와 겹침 건수 (한 사람의 이어진 겹침 날은 1건)
+ * @param rows 타임라인 행
+ */
+export const summarizeStaffingTimeline = (rows: readonly StaffingTimelineRow[]) => ({
+  working: rows.filter((row) => row.group === 'WORKING').length,
+  idle: rows.filter((row) => row.group === 'IDLE').length,
+  away: rows.filter((row) => row.group === 'AWAY').length,
+  conflicts: rows.reduce(
+    (sum, row) =>
+      sum +
+      row.conflictDates.filter(
+        (date, index) => index === 0 || shiftDate(row.conflictDates[index - 1]!, 1) !== date,
+      ).length,
+    0,
+  ),
+});
