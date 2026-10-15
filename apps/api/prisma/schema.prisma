@@ -91,6 +91,7 @@ model Company {
   workLogRevisions           WorkLogRevision[]
   employeeCredentials        EmployeeCredential[]
   projectRequiredCredentials ProjectRequiredCredential[]
+  alertDismissals AlertDismissal[]
 
   @@map("companies")
 }
@@ -454,6 +455,7 @@ model User {
   documents               Document[]                  @relation("DocumentCreatedBy")
   documentVersions        DocumentVersion[]           @relation("DocumentVersionUploadedBy")
   auditLogs               AuditLog[]                  @relation("AuditLogActor")
+  alertDismissals AlertDismissal[] @relation("AlertDismissedBy")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -1449,6 +1451,19 @@ enum AlertKind {
 }
 
 // 회사별 알림 설정. 행이 없는 종류는 켜짐(기본값). 삭제 없이 켜짐 여부만 바꾼다
+// 숨긴 알림: 알림은 저장하지 않고 계산하므로 숨긴 알림의 키(종류|대상|조건 값)만 남긴다. 조건이 바뀌면 키가 달라져 다시 보임
+model AlertDismissal {
+  companyId   String   @map("company_id") @db.Uuid
+  alertKey    String   @map("alert_key")
+  dismissedBy String   @map("dismissed_by") @db.Uuid
+  dismissedAt DateTime @default(now()) @map("dismissed_at") @db.Timestamptz(3)
+  company     Company  @relation(fields: [companyId], references: [id])
+  user        User     @relation("AlertDismissedBy", fields: [companyId, dismissedBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, alertKey])
+  @@map("alert_dismissals")
+}
+
 model AlertPreference {
   companyId String    @map("company_id") @db.Uuid
   kind      AlertKind

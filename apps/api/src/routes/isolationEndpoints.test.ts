@@ -198,8 +198,11 @@ const buildCompany = async () => {
 
   // 알림 설정 한 건 (끈 알림)
   await c.call('put', '/company/alert-settings', {
-    items: [{ kind: 'INBOX_STALE', enabled: false }],
+    items: [{ kind: 'WARRANTY_ENDING', enabled: false }],
   });
+
+  // 숨긴 알림 한 건
+  await c.call('post', '/alerts/dismiss', { keys: ['NO_LOG_TODAY|isolation|2026-10-11'] });
 
   // 직원 단가 한 건 (민감 정보)
   await c.call('post', `/employees/${worker}/pay-rates`, {
@@ -717,6 +720,8 @@ const OWN_ACCOUNT_ONLY = [
   'PUT /company/settings',
   'GET /company/alert-settings',
   'PUT /company/alert-settings',
+  // 알림 숨기기: 다른 회사의 ID를 받지 않고 자기 회사의 알림 키만 남긴다 (dashboardRoutes: 회사마다 따로)
+  'POST /alerts/dismiss',
 ];
 
 describe('회사 격리: 전 엔드포인트', () => {
@@ -886,7 +891,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       };
     // 두 회사 모두 같은 더미를 만들었으므로 B만 다시 켜서 A의 설정이 B에 영향을 주지 않는지 본다
     await b.c.call('put', '/company/alert-settings', {
-      items: [{ kind: 'INBOX_STALE', enabled: true }],
+      items: [{ kind: 'WARRANTY_ENDING', enabled: true }],
     });
 
     const aDashboard = await dashboardOf(a);
@@ -894,10 +899,10 @@ describe('회사 격리: 전 엔드포인트', () => {
 
     expect(aDashboard.dashboard.activeProjects.map((item) => item.id)).toContain(a.projectId);
     expect(bDashboard.dashboard.activeProjects.map((item) => item.id)).not.toContain(a.projectId);
-    expect(aDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+    expect(aDashboard.settings.items.find((item) => item.kind === 'WARRANTY_ENDING')?.enabled).toBe(
       false,
     );
-    expect(bDashboard.settings.items.find((item) => item.kind === 'INBOX_STALE')?.enabled).toBe(
+    expect(bDashboard.settings.items.find((item) => item.kind === 'WARRANTY_ENDING')?.enabled).toBe(
       true,
     );
 
@@ -1162,6 +1167,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       'project_progress_records',
       'employee_pay_rates',
       'alert_preferences',
+      'alert_dismissals',
       'change_works',
       'change_work_status_changes',
       'change_work_documents',

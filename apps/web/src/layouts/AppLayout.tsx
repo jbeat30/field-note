@@ -13,6 +13,7 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 
 import { useMe } from '../auth/useMe';
+import { AlertBell } from '../dashboard/AlertBell';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
 import { Toaster } from '../components/ui/toaster';
@@ -61,7 +62,10 @@ export const AppLayout = () => {
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-4 border-r border-line bg-surface p-4 md:flex print:hidden">
-        <p className="font-emphasis px-3 py-2 text-xl font-bold text-primary">{APP_NAME}</p>
+        <div className="flex items-center justify-between gap-2">
+          <p className="font-emphasis px-3 py-2 text-xl font-bold text-primary">{APP_NAME}</p>
+          <AlertBell />
+        </div>
         <nav aria-label="주 메뉴" className="flex flex-1 flex-col gap-5 overflow-y-auto">
           {SIDEBAR_GROUPS.map((group) => (
             <div key={group.title} className="flex flex-col gap-1">
@@ -104,7 +108,10 @@ export const AppLayout = () => {
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-surface/90 px-4 backdrop-blur md:hidden print:hidden">
           <p className="font-emphasis shrink-0 text-lg font-bold text-primary">{APP_NAME}</p>
-          <ThemeToggle />
+          <span className="flex items-center">
+            <AlertBell />
+            <ThemeToggle />
+          </span>
         </header>
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 pt-4 pb-40 md:px-8 md:pt-8 md:pb-24 xl:px-10 print:p-0">
           <Outlet />

@@ -634,6 +634,12 @@ export const saveAlertSettings = (
   persist();
 };
 
+// 알림 숨기기: 같은 키는 한 번만 남김
+export const dismissAlerts = (account: MockAccount, keys: string[]) => {
+  account.dismissedAlerts = [...new Set([...(account.dismissedAlerts ?? []), ...keys])];
+  persist();
+};
+
 export const updateSettings = (account: MockAccount, settings: CompanySettings) => {
   account.settings = settings;
   persist();

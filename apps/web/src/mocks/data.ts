@@ -79,6 +79,8 @@ export type MockAccount = {
   projectPeriodHistory?: Record<string, ProjectPeriodChange[]>;
   // 알림 종류별 켜짐 여부 (설정하지 않은 종류는 켜짐)
   alertSettings?: Partial<Record<AlertKind, boolean>>;
+  // 숨긴 알림 키 (알림은 저장하지 않고 계산하므로 키만 남김)
+  dismissedAlerts?: string[];
   // 프로젝트별 진행률 기록 (프로젝트 id → 오래된 것부터)
   progressRecords?: Record<string, ProgressRecord[]>;
   // 직원별 단가 기록 (직원 id → 입력 순서)

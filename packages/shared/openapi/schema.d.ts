@@ -11083,106 +11083,115 @@ export interface paths {
                             dashboard: {
                                 /** Format: date */
                                 today: string;
-                                alerts: ({
-                                    /** @enum {string} */
-                                    kind: "NO_LOG_TODAY";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "INBOX_STALE";
-                                    count: number;
-                                    oldestDays: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "BURN_REACHED";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** @enum {string} */
-                                    level: "WARN" | "LIMIT";
-                                    burnPercent: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "BURN_AHEAD";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    burnPercent: number;
-                                    progressPercent: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "PROJECT_OVERDUE";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: date */
-                                    plannedEnd: string;
-                                    daysLate: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "DOUBLE_ASSIGNED";
-                                    /** Format: uuid */
-                                    employeeId: string;
-                                    employeeName: string;
-                                    dateCount: number;
-                                    /** Format: date */
-                                    firstDate: string;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "CHANGE_STALE";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: uuid */
-                                    changeWorkId: string;
-                                    seq: number;
-                                    days: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "WARRANTY_ENDING";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: date */
-                                    endOn: string;
-                                    daysLeft: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "REPAIR_UNHANDLED";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: uuid */
-                                    repairId: string;
-                                    seq: number;
-                                    days: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "CERTIFICATE_EXPIRING";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    title: string;
-                                    /** Format: date */
-                                    expiresOn: string;
-                                    daysLeft: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "CREDENTIAL_EXPIRING";
-                                    /** Format: uuid */
-                                    employeeId: string;
-                                    employeeName: string;
-                                    typeName: string;
-                                    /** Format: date */
-                                    expiresOn: string;
-                                    daysLeft: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "MONTH_UNCLOSED";
-                                    month: string;
-                                })[];
+                                alerts: {
+                                    key: string;
+                                    urgent: boolean;
+                                    alert: {
+                                        /** @enum {string} */
+                                        kind: "NO_LOG_TODAY";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "BURN_REACHED";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** @enum {string} */
+                                        level: "WARN" | "LIMIT";
+                                        burnPercent: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "BURN_AHEAD";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        burnPercent: number;
+                                        progressPercent: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "PROJECT_OVERDUE";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: date */
+                                        plannedEnd: string;
+                                        daysLate: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "DOUBLE_ASSIGNED";
+                                        /** Format: uuid */
+                                        employeeId: string;
+                                        employeeName: string;
+                                        dateCount: number;
+                                        /** Format: date */
+                                        firstDate: string;
+                                        /** Format: date */
+                                        lastDate: string;
+                                        projectNames: string[];
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "CHANGE_STALE";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: uuid */
+                                        changeWorkId: string;
+                                        seq: number;
+                                        days: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "WARRANTY_ENDING";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: date */
+                                        endOn: string;
+                                        daysLeft: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "REPAIR_UNHANDLED";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: uuid */
+                                        repairId: string;
+                                        seq: number;
+                                        days: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "CERTIFICATE_EXPIRING";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        title: string;
+                                        /** Format: date */
+                                        expiresOn: string;
+                                        daysLeft: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "CREDENTIAL_EXPIRING";
+                                        /** Format: uuid */
+                                        employeeId: string;
+                                        employeeName: string;
+                                        typeName: string;
+                                        /** Format: date */
+                                        expiresOn: string;
+                                        daysLeft: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "MONTH_UNCLOSED";
+                                        month: string;
+                                    };
+                                }[];
+                                hiddenAlertCount: number;
+                                stats: {
+                                    inProgress: number;
+                                    todayLoggedHeadcount: number;
+                                    todayHeadcount: number;
+                                    weekMinutes: number;
+                                };
                                 todayAssignments: {
                                     headcount: number;
                                     projects: {
@@ -11204,8 +11213,13 @@ export interface paths {
                                     id: string;
                                     code: string;
                                     name: string;
+                                    siteName: string;
                                     /** @enum {string} */
                                     status: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                    /** Format: date */
+                                    plannedEnd: string;
+                                    hasLogToday: boolean;
+                                    weekMinutes: number;
                                     progressPercent: number | null;
                                     burnPercent: number | null;
                                     warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
@@ -11215,8 +11229,13 @@ export interface paths {
                                     id: string;
                                     code: string;
                                     name: string;
+                                    siteName: string;
                                     /** @enum {string} */
                                     status: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                    /** Format: date */
+                                    plannedEnd: string;
+                                    hasLogToday: boolean;
+                                    weekMinutes: number;
                                     progressPercent: number | null;
                                     burnPercent: number | null;
                                     warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
@@ -11232,12 +11251,11 @@ export interface paths {
                                         name: string;
                                         dateCount: number;
                                     }[];
-                                    freeCount: number;
-                                    freeNames: string[];
+                                    workingCount: number;
+                                    idleCount: number;
                                 };
                                 todos: {
                                     draftLogCount: number;
-                                    staleInboxCount: number;
                                     unclosedMonth: string | null;
                                 };
                                 warranty: {
@@ -11276,7 +11294,7 @@ export interface paths {
                             settings: {
                                 items: {
                                     /** @enum {string} */
-                                    kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                                    kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                     enabled: boolean;
                                 }[];
                             };
@@ -11338,7 +11356,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                                kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                 enabled: boolean;
                             }[];
                         };
@@ -11378,7 +11396,7 @@ export interface paths {
                     "application/json": {
                         items: {
                             /** @enum {string} */
-                            kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                            kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                             enabled: boolean;
                         }[];
                     };
@@ -11394,7 +11412,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                                kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                 enabled: boolean;
                             }[];
                         };
@@ -11441,6 +11459,89 @@ export interface paths {
             };
         };
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 알림 숨기기 (알림 키를 남겨 조건이 바뀌기 전까지 보이지 않게 함, 모두 숨기기도 같은 요청) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        keys: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;

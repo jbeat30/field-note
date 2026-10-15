@@ -20,6 +20,7 @@ export const PURGE_POLICY = {
   employee_pay_rates: 'DELETE',
   change_works: 'DELETE',
   alert_preferences: 'DELETE',
+  alert_dismissals: 'DELETE',
   change_work_status_changes: 'DELETE',
   change_work_documents: 'DELETE',
   project_warranties: 'DELETE',

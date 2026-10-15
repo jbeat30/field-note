@@ -260,7 +260,7 @@ const EmployeeRow = ({
             return (
               <div
                 key={`${lane.projectId}-${segment.startIndex}`}
-                className="pointer-events-none z-10 flex min-w-0 flex-col overflow-hidden rounded-md border-l-4 p-px"
+                className="pointer-events-none relative z-10 flex min-w-0 flex-col overflow-hidden rounded-md border-l-4 p-px"
                 style={{
                   gridColumn: `${segment.startIndex + 1} / span ${segment.days.length}`,
                   gridRow: laneIndex + 1,
@@ -272,7 +272,7 @@ const EmployeeRow = ({
                   {lane.name}
                 </span>
                 <span
-                  className="grid min-h-0 flex-1"
+                  className="absolute inset-0 grid"
                   style={{ gridTemplateColumns: `repeat(${segment.days.length}, minmax(0, 1fr))` }}
                 >
                   {segment.days.map((day) => {
@@ -289,7 +289,8 @@ const EmployeeRow = ({
                         title={label}
                         data-conflict={day.conflict || undefined}
                         className={cn(
-                          'pointer-events-auto flex items-center justify-center rounded text-[11px] tabular-nums text-foreground/80 hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-primary',
+                          // 제목 칸까지 포함해 막대의 그날 세로 전체가 눌린다
+                          'pointer-events-auto flex items-end justify-center rounded pb-1.5 text-[11px] tabular-nums text-foreground/80 hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-primary',
                           day.conflict && 'font-bold text-danger ring-2 ring-danger ring-inset',
                         )}
                       >
