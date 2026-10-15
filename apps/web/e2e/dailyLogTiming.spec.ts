@@ -130,7 +130,19 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
   await user.tap(() => page.getByRole('button', { name: '저장', exact: true }).click());
   await expect(page.getByText(/저장됐습니다 · 버전 1/)).toBeVisible();
 
-  // 5) 자재: 최근 쓴 자재를 한 번 눌러 수량만 적고 저장
+  // 5) 사진: 같은 화면의 작업 사진에서 두 장 올리기 (이 날 작업일, 구분은 작업 중)
+  const photoStarted = Date.now();
+
+  await user.tap(() => page.getByRole('button', { name: '사진 올리기' }).click());
+  await page.waitForTimeout(PHOTO_PICKER_MS);
+  await page
+    .getByLabel('사진 파일 선택')
+    .setInputFiles([photoFile('측정-1.jpg'), photoFile('측정-2.jpg')]);
+  await expect(page.getByText('2장을 모두 올렸습니다')).toBeVisible({ timeout: 60_000 });
+  await expect(page.getByRole('button', { name: /작업 중.*사진 열기/ })).toHaveCount(2);
+  const photoStepMs = Date.now() - photoStarted;
+
+  // 6) 자재: 최근 쓴 자재를 한 번 눌러 수량만 적고 저장
   await user.tap(() => page.getByRole('link', { name: '자재 메뉴' }).click());
   await user.tap(() =>
     page
@@ -141,20 +153,6 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
   await user.type(page.getByLabel('1번 줄 수량'), '12');
   await user.tap(() => page.getByRole('button', { name: '저장', exact: true }).click());
   await expect(page.getByText('자재 1건을 기록했습니다')).toBeVisible();
-
-  // 6) 프로젝트 메뉴의 사진첩에서 구분을 고르고 두 장 올리기
-  await user.tap(() => page.getByRole('link', { name: '사진', exact: true }).click());
-  await user.tap(() => selectByText(page, '구분', '작업 후'));
-
-  const photoStarted = Date.now();
-
-  await page.waitForTimeout(PHOTO_PICKER_MS);
-  await page
-    .getByLabel('사진 파일 선택')
-    .setInputFiles([photoFile('측정-1.jpg'), photoFile('측정-2.jpg')]);
-  watch.taps += 1;
-  await expect(page.getByText('2장을 모두 올렸습니다')).toBeVisible({ timeout: 60_000 });
-  const photoStepMs = Date.now() - photoStarted;
 
   const seconds = (Date.now() - started) / 1000;
   const summary = `하루 작업 내역 입력 ${seconds.toFixed(1)}초 (목표 ${GOAL_SECONDS}초), 누르기·고르기 ${watch.taps}번, 글자 ${watch.typedChars}자, 사진 두 장 올리기 ${(photoStepMs / 1000).toFixed(1)}초(고르기 창 ${PHOTO_PICKER_MS / 1000}초 포함)`;

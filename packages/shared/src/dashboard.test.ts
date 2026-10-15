@@ -2,11 +2,15 @@ import {
   ALERT_KINDS,
   alertSettingsUpdateSchema,
   assembleDashboard,
+  dashboardAlertKey,
   dashboardAlertMessage,
   dashboardAlertPath,
+  isUrgentAlert,
   previousMonth,
   weekRange,
   type AlertKind,
+  type Dashboard,
+  type DashboardAlert,
   type DashboardInput,
 } from './dashboard';
 
@@ -25,6 +29,7 @@ const project = (id: string, code: string, patch: object = {}) => ({
   id,
   code,
   name: `프로젝트 ${code}`,
+  siteName: `현장 ${code}`,
   status: 'IN_PROGRESS' as const,
   plannedStart: '2026-09-01',
   plannedEnd: '2026-12-31',
@@ -40,9 +45,9 @@ const base = (patch: Partial<DashboardInput> = {}): DashboardInput => ({
   projects: [project(P1, '2026-001')],
   todayAssignments: [],
   todayLogProjectIds: [],
-  staleInbox: { count: 0, oldestDays: 0 },
+  todayLoggedEmployeeIds: [],
   draftLogCount: 0,
-  calendar: { from: '2026-10-05', to: '2026-10-11', employees: [], assignments: [] },
+  calendar: { from: '2026-10-05', to: '2026-10-11', employees: [], assignments: [], workDays: [] },
   negotiatingChanges: [],
   warrantyProjects: [],
   openRepairs: [],
@@ -50,8 +55,12 @@ const base = (patch: Partial<DashboardInput> = {}): DashboardInput => ({
   credentials: [],
   unclosedMonth: null,
   enabled: new Set<AlertKind>(ALERT_KINDS),
+  dismissedKeys: new Set<string>(),
   ...patch,
 });
+
+const inner = (dashboard: Dashboard): DashboardAlert[] =>
+  dashboard.alerts.map((item) => item.alert);
 
 describe('weekRange', () => {
   it('월요일부터 일요일까지', () => {
@@ -88,7 +97,7 @@ describe('assembleDashboard: 오늘 투입', () => {
       base({ todayAssignments: [{ projectId: P1, employeeId: E1 }] }),
     );
 
-    expect(dashboard.alerts).toEqual([
+    expect(inner(dashboard)).toEqual([
       { kind: 'NO_LOG_TODAY', projectId: P1, projectName: '프로젝트 2026-001' },
     ]);
   });
@@ -124,7 +133,7 @@ describe('assembleDashboard: 프로젝트와 위험', () => {
         ],
       }),
     );
-    const byKind = (kind: string) => dashboard.alerts.filter((alert) => alert.kind === kind);
+    const byKind = (kind: string) => inner(dashboard).filter((alert) => alert.kind === kind);
 
     expect(byKind('BURN_AHEAD')).toEqual([
       expect.objectContaining({ projectId: P1, burnPercent: 70, progressPercent: 45 }),
@@ -139,6 +148,21 @@ describe('assembleDashboard: 프로젝트와 위험', () => {
 });
 
 describe('assembleDashboard: 이번 주 인력', () => {
+  const workDay = (
+    employeeId: string,
+    workDate: string,
+    projectId: string,
+    projectName: string,
+    minutes = 480,
+  ) => ({
+    employeeId,
+    workDate,
+    projectId,
+    projectCode: projectId === P1 ? '2026-001' : '2026-002',
+    projectName,
+    projectStatus: 'IN_PROGRESS' as const,
+    minutes,
+  });
   const calendar = {
     from: '2026-10-05',
     to: '2026-10-11',
@@ -147,57 +171,122 @@ describe('assembleDashboard: 이번 주 인력', () => {
       { id: E2, name: '이한가', title: null, status: 'ACTIVE' as const, leftOn: null },
       { id: E3, name: '박휴직', title: null, status: 'ON_LEAVE' as const, leftOn: null },
     ],
-    assignments: [
-      {
-        id: '0198d000-0000-7000-8000-0000000000b1',
-        employeeId: E1,
-        projectId: P1,
-        projectCode: '2026-001',
-        projectName: 'A',
-        projectStatus: 'IN_PROGRESS' as const,
-        startDate: '2026-10-05',
-        endDate: '2026-10-07',
-      },
-      {
-        id: '0198d000-0000-7000-8000-0000000000b2',
-        employeeId: E1,
-        projectId: P2,
-        projectCode: '2026-002',
-        projectName: 'B',
-        projectStatus: 'IN_PROGRESS' as const,
-        startDate: '2026-10-06',
-        endDate: '2026-10-08',
-      },
+    assignments: [],
+    workDays: [
+      workDay(E1, '2026-10-05', P1, 'A', 480),
+      workDay(E1, '2026-10-06', P1, 'A', 240),
+      workDay(E1, '2026-10-06', P2, 'B', 240),
+      workDay(E1, '2026-10-07', P1, 'A', 240),
+      workDay(E1, '2026-10-07', P2, 'B', 240),
     ],
   };
 
-  it('겹치는 직원과 일수, 비는 사람을 알려 준다 (휴직은 비는 사람이 아님)', () => {
+  it('같은 날 두 프로젝트에서 일한 직원을 이름·기간과 함께 알리고, 일한 사람·기록 없는 사람을 센다 (휴직은 기록 없는 사람이 아님)', () => {
     const dashboard = assembleDashboard(base({ calendar }));
 
     expect(dashboard.week).toMatchObject({
       from: '2026-10-05',
       to: '2026-10-11',
       conflicts: [{ employeeId: E1, name: '김겹침', dateCount: 2 }],
-      freeCount: 1,
-      freeNames: ['이한가'],
+      workingCount: 1,
+      idleCount: 1,
     });
-    expect(dashboard.alerts).toEqual([
+    expect(dashboard.stats.weekMinutes).toBe(480 + 480 + 480);
+    expect(inner(dashboard)).toEqual([
       {
         kind: 'DOUBLE_ASSIGNED',
         employeeId: E1,
         employeeName: '김겹침',
         dateCount: 2,
         firstDate: '2026-10-06',
+        lastDate: '2026-10-07',
+        projectNames: ['A', 'B'],
       },
     ]);
+    expect(dashboardAlertMessage(inner(dashboard)[0]!)).toBe(
+      '김겹침이(가) 10월 6일~10월 7일 A와 B에 함께 들어가 있습니다',
+    );
+    expect(dashboardAlertPath(inner(dashboard)[0]!, TODAY)).toBe(
+      `/staffing?from=2026-10-06&employee=${E1}`,
+    );
   });
 });
 
-describe('assembleDashboard: 메모함·변경 작업·할 일', () => {
-  it('메모함 방치와 협의 중 변경 작업 7일 경과를 알린다', () => {
+describe('알림 키·급함·숨기기', () => {
+  it('종류·대상·조건 값으로 키를 만들고, 조건이 바뀌면 키도 달라진다', () => {
+    const wide: DashboardAlert = {
+      kind: 'DOUBLE_ASSIGNED',
+      employeeId: E1,
+      employeeName: '김',
+      dateCount: 2,
+      firstDate: '2026-10-06',
+      lastDate: '2026-10-07',
+      projectNames: ['A', 'B'],
+    };
+
+    expect(dashboardAlertKey(wide, TODAY)).toBe(`DOUBLE_ASSIGNED|${E1}|2026-10-06|2026-10-07`);
+    expect(dashboardAlertKey({ ...wide, lastDate: '2026-10-08' }, TODAY)).not.toBe(
+      dashboardAlertKey(wide, TODAY),
+    );
+    // 오늘 기록 없음은 날마다 다시 보인다
+    const noLog: DashboardAlert = { kind: 'NO_LOG_TODAY', projectId: P1, projectName: 'A' };
+
+    expect(dashboardAlertKey(noLog, TODAY)).not.toBe(dashboardAlertKey(noLog, '2026-10-12'));
+  });
+
+  it('오늘 처리해야 하는 알림(오늘 기록 없음, 이미 만료)만 급하다', () => {
+    expect(isUrgentAlert({ kind: 'NO_LOG_TODAY', projectId: P1, projectName: 'A' })).toBe(true);
+    expect(
+      isUrgentAlert({
+        kind: 'CREDENTIAL_EXPIRING',
+        employeeId: E1,
+        employeeName: '김',
+        typeName: '검진',
+        expiresOn: '2026-10-01',
+        daysLeft: -10,
+      }),
+    ).toBe(true);
+    expect(
+      isUrgentAlert({
+        kind: 'CREDENTIAL_EXPIRING',
+        employeeId: E1,
+        employeeName: '김',
+        typeName: '검진',
+        expiresOn: '2026-10-20',
+        daysLeft: 9,
+      }),
+    ).toBe(false);
+    expect(isUrgentAlert({ kind: 'MONTH_UNCLOSED', month: '2026-09' })).toBe(false);
+  });
+
+  it('급한 알림이 먼저 나오고, 숨긴 키는 빠지며 숨긴 개수를 알려 준다', () => {
+    const input = base({
+      todayAssignments: [{ projectId: P1, employeeId: E1 }],
+      unclosedMonth: '2026-09',
+    });
+    const all = assembleDashboard(input);
+
+    expect(all.alerts.map((item) => [item.alert.kind, item.urgent])).toEqual([
+      ['NO_LOG_TODAY', true],
+      ['MONTH_UNCLOSED', false],
+    ]);
+    expect(all.hiddenAlertCount).toBe(0);
+
+    const hidden = assembleDashboard({
+      ...input,
+      dismissedKeys: new Set([all.alerts[0]!.key, 'NOT|A|CURRENT|ALERT']),
+    });
+
+    expect(inner(hidden).map((alert) => alert.kind)).toEqual(['MONTH_UNCLOSED']);
+    // 지금 해당하지 않는 키는 숨긴 개수에 세지 않는다
+    expect(hidden.hiddenAlertCount).toBe(1);
+  });
+});
+
+describe('assembleDashboard: 변경 작업·할 일', () => {
+  it('협의 중 변경 작업 7일 경과를 알린다', () => {
     const dashboard = assembleDashboard(
       base({
-        staleInbox: { count: 4, oldestDays: 9 },
         draftLogCount: 2,
         negotiatingChanges: [
           { id: C1, projectId: P1, seq: 2, statusChangedOn: '2026-10-04' },
@@ -208,11 +297,9 @@ describe('assembleDashboard: 메모함·변경 작업·할 일', () => {
 
     expect(dashboard.todos).toEqual({
       draftLogCount: 2,
-      staleInboxCount: 4,
       unclosedMonth: null,
     });
-    expect(dashboard.alerts).toEqual([
-      { kind: 'INBOX_STALE', count: 4, oldestDays: 9 },
+    expect(inner(dashboard)).toEqual([
       expect.objectContaining({ kind: 'CHANGE_STALE', seq: 2, days: 7 }),
     ]);
   });
@@ -222,7 +309,6 @@ describe('알림 켜고 끄기', () => {
   it('꺼 둔 종류는 알림에서 빠지지만 위젯은 그대로 나온다', () => {
     const input = base({
       todayAssignments: [{ projectId: P1, employeeId: E1 }],
-      staleInbox: { count: 1, oldestDays: 4 },
       projects: [project(P1, '2026-001', { usedMinutes: 80 * 480, progressPercent: 90 })],
     });
     const on = assembleDashboard(input);
@@ -231,21 +317,22 @@ describe('알림 켜고 끄기', () => {
       enabled: new Set<AlertKind>(['BURN_REACHED']),
     });
 
-    expect(on.alerts.map((alert) => alert.kind).sort()).toEqual(
-      ['BURN_REACHED', 'INBOX_STALE', 'NO_LOG_TODAY'].sort(),
-    );
-    expect(off.alerts.map((alert) => alert.kind)).toEqual(['BURN_REACHED']);
+    expect(
+      inner(on)
+        .map((alert) => alert.kind)
+        .sort(),
+    ).toEqual(['BURN_REACHED', 'NO_LOG_TODAY'].sort());
+    expect(inner(off).map((alert) => alert.kind)).toEqual(['BURN_REACHED']);
     expect(off.todayAssignments).toEqual(on.todayAssignments);
     expect(off.risks).toEqual(on.risks);
-    expect(assembleDashboard({ ...input, enabled: new Set() }).alerts).toEqual([]);
+    expect(inner(assembleDashboard({ ...input, enabled: new Set() }))).toEqual([]);
   });
 });
 
 describe('알림 문장·이동 주소', () => {
   it('모든 종류가 문장과 주소를 갖는다', () => {
-    const alerts = [
+    const alerts: DashboardAlert[] = [
       { kind: 'NO_LOG_TODAY', projectId: P1, projectName: 'A' },
-      { kind: 'INBOX_STALE', count: 3, oldestDays: 5 },
       { kind: 'BURN_REACHED', projectId: P1, projectName: 'A', level: 'WARN', burnPercent: 82 },
       { kind: 'BURN_AHEAD', projectId: P1, projectName: 'A', burnPercent: 70, progressPercent: 45 },
       {
@@ -261,17 +348,21 @@ describe('알림 문장·이동 주소', () => {
         employeeName: '김',
         dateCount: 2,
         firstDate: '2026-10-06',
+        lastDate: '2026-10-07',
+        projectNames: ['A', 'B'],
       },
       { kind: 'CHANGE_STALE', projectId: P1, projectName: 'A', changeWorkId: C1, seq: 2, days: 8 },
-    ] as const;
+    ];
 
     for (const alert of alerts) {
       expect(dashboardAlertMessage(alert).length).toBeGreaterThan(5);
-      expect(dashboardAlertPath(alert).startsWith('/')).toBe(true);
+      expect(dashboardAlertPath(alert, TODAY).startsWith('/')).toBe(true);
     }
 
-    expect(dashboardAlertPath(alerts[6])).toBe(`/projects/${P1}/change-works`);
-    expect(dashboardAlertMessage(alerts[2])).toContain('82%에 도달');
+    expect(dashboardAlertPath(alerts[5]!, TODAY)).toBe(`/projects/${P1}/change-works`);
+    expect(dashboardAlertMessage(alerts[1]!)).toContain('82%에 도달');
+    // 오늘 기록 없음은 그 프로젝트의 오늘 하루 기록으로 간다
+    expect(dashboardAlertPath(alerts[0]!, TODAY)).toBe(`/projects/${P1}/work/${TODAY}`);
   });
 });
 
@@ -281,8 +372,8 @@ describe('alertSettingsUpdateSchema', () => {
     expect(
       alertSettingsUpdateSchema.safeParse({
         items: [
-          { kind: 'INBOX_STALE', enabled: false },
-          { kind: 'INBOX_STALE', enabled: true },
+          { kind: 'WARRANTY_ENDING', enabled: false },
+          { kind: 'WARRANTY_ENDING', enabled: true },
         ],
       }).success,
     ).toBe(false);
@@ -290,14 +381,14 @@ describe('alertSettingsUpdateSchema', () => {
       alertSettingsUpdateSchema.safeParse({ items: [{ kind: 'NOPE', enabled: false }] }).success,
     ).toBe(false);
     expect(
-      alertSettingsUpdateSchema.safeParse({ items: [{ kind: 'INBOX_STALE', enabled: false }] })
+      alertSettingsUpdateSchema.safeParse({ items: [{ kind: 'WARRANTY_ENDING', enabled: false }] })
         .success,
     ).toBe(true);
   });
 });
 
 describe('assembleDashboard: 4단계 알림', () => {
-  const alertsOf = (patch: Partial<DashboardInput>) => assembleDashboard(base(patch)).alerts;
+  const alertsOf = (patch: Partial<DashboardInput>) => inner(assembleDashboard(base(patch)));
 
   it('보증 종료가 60일 안이면 알리고 가까운 순으로 보여 주며 지난 것도 계속 알린다', () => {
     const dashboard = assembleDashboard(
@@ -316,7 +407,7 @@ describe('assembleDashboard: 4단계 알림', () => {
       ['D', 0],
       ['A', 60],
     ]);
-    expect(dashboard.alerts.map((alert) => dashboardAlertMessage(alert))).toEqual([
+    expect(inner(dashboard).map((alert) => dashboardAlertMessage(alert))).toEqual([
       'B: 보증 종료 예정일(2026-10-09)이 2일 지났습니다',
       'D: 오늘 보증이 끝납니다',
       'A: 보증 종료까지 60일 남았습니다 (2026-12-10)',
@@ -347,7 +438,7 @@ describe('assembleDashboard: 4단계 알림', () => {
       }),
     );
 
-    expect(dashboard.alerts).toEqual([
+    expect(inner(dashboard)).toEqual([
       { kind: 'REPAIR_UNHANDLED', projectId: P1, projectName: 'A', repairId: E1, seq: 1, days: 3 },
     ]);
     expect(dashboard.warranty.openRepairCount).toBe(3);
@@ -380,20 +471,21 @@ describe('assembleDashboard: 4단계 알림', () => {
       ['정판금', -11],
       ['한용접', 30],
     ]);
-    expect(dashboard.alerts.map((alert) => alert.kind)).toEqual([
+    expect(inner(dashboard).map((alert) => alert.kind)).toEqual([
+      // 이미 만료된 것이 급해서 먼저 나온다
+      'CREDENTIAL_EXPIRING',
       'CERTIFICATE_EXPIRING',
       'CREDENTIAL_EXPIRING',
-      'CREDENTIAL_EXPIRING',
     ]);
-    expect(dashboardAlertMessage(dashboard.alerts[1]!)).toContain('11일 전에 만료됐습니다');
+    expect(dashboardAlertMessage(inner(dashboard)[0]!)).toContain('11일 전에 만료됐습니다');
   });
 
   it('지난달 월 공수가 확정되지 않았으면 알림과 할 일에 보이고 알림을 끄면 알림만 빠진다', () => {
     const on = assembleDashboard(base({ unclosedMonth: '2026-09' }));
 
     expect(on.todos.unclosedMonth).toBe('2026-09');
-    expect(on.alerts).toEqual([{ kind: 'MONTH_UNCLOSED', month: '2026-09' }]);
-    expect(dashboardAlertPath(on.alerts[0]!)).toBe('/monthly-hours?month=2026-09');
+    expect(inner(on)).toEqual([{ kind: 'MONTH_UNCLOSED', month: '2026-09' }]);
+    expect(dashboardAlertPath(inner(on)[0]!, TODAY)).toBe('/monthly-hours?month=2026-09');
 
     const off = assembleDashboard(
       base({
@@ -402,7 +494,7 @@ describe('assembleDashboard: 4단계 알림', () => {
       }),
     );
 
-    expect(off.alerts).toEqual([]);
+    expect(inner(off)).toEqual([]);
     expect(off.todos.unclosedMonth).toBe('2026-09');
   });
 
@@ -414,7 +506,7 @@ describe('assembleDashboard: 4단계 알림', () => {
       }),
     );
 
-    expect(dashboard.alerts).toEqual([]);
+    expect(inner(dashboard)).toEqual([]);
     expect(dashboard.warranty.ending).toHaveLength(1);
     expect(alertsOf({})).toEqual([]);
   });

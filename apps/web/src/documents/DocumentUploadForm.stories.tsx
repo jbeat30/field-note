@@ -43,14 +43,14 @@ export const CreateWithSuggestedTitle: Story = {
   },
 };
 
-// 계약·행정을 고르면 민감 자료가 자동으로 켜지고, 직접 바꾸면 그 값을 보냄
+// 계약·공문을 고르면 민감 자료가 자동으로 켜지고, 직접 바꾸면 그 값을 보냄
 export const ContractIsSensitiveByDefault: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
     const checkbox = canvas.getByLabelText(/민감 자료/);
 
     await expect(checkbox).not.toBeChecked();
-    await chooseOption(canvas.getByLabelText('분류'), '계약·행정');
+    await chooseOption(canvas.getByLabelText('분류'), '계약·공문');
     await expect(checkbox).toBeChecked();
 
     await userEvent.click(checkbox);

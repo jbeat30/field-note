@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { login, photoFile, seoulDate, selectByText, uniqueName } from './helpers';
 
-// 핵심 흐름(기술 기획서 §13): 로그인 → 프로젝트 → 투입 → 작업 내역 일괄 입력(공수·자재) → 사진 업로드 → 저장 → 작업일보
+// 핵심 흐름(기술 기획서 §13): 로그인 → 프로젝트 → 투입 → 작업 내역 일괄 입력(공수·자재) → 지출 기록 → 사진 업로드 → 저장 → 작업일보
 test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 이어진다', async ({ page }) => {
   const projectName = uniqueName('E2E 판금 공사');
   // 자재 이름은 회사 안에서 겹칠 수 없으므로 시험마다 다르게 (같은 DB로 다시 돌려도 되게)
@@ -60,16 +60,30 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
     await expect(page.getByText('자재 1건을 기록했습니다')).toBeVisible();
   });
 
-  await test.step('사진을 올리면 사진첩에 나타난다', async () => {
-    await page.goto(`/projects/${projectId}/photos`);
-    await selectByText(page, '구분', '작업 후');
-    await page.getByLabel('구역 (선택)').fill('3층 301호');
+  await test.step('비용·자재 메뉴에서 지출을 기록하면 합계와 내역에 나타난다', async () => {
+    await page.getByRole('button', { name: '지출·수입 기록' }).click();
+
+    const dialog = page.getByRole('dialog');
+
+    await dialog.getByLabel('금액').fill('84000');
+    await dialog.getByLabel('내용·메모').fill('E2E 실리콘 코킹');
+    await dialog.getByRole('button', { name: '저장', exact: true }).click();
+    await expect(page.getByRole('table', { name: '지출·수입 내역' })).toContainText(
+      'E2E 실리콘 코킹',
+    );
+    await expect(page.getByRole('table', { name: '지출·수입 내역' })).toContainText('84,000');
+  });
+
+  await test.step('하루 기록에서 사진을 올리면 나타난다', async () => {
+    // 사진은 하루 기록 화면에서 바로 올린다 (사진 탭은 모아 보기)
+    await page.goto(`/projects/${projectId}/work/${today}`);
+    await page.getByRole('button', { name: '사진 올리기' }).click();
     await page
       .getByLabel('사진 파일 선택')
       .setInputFiles([photoFile('e2e-1.jpg'), photoFile('e2e-2.jpg')]);
     await expect(page.getByText('2장을 모두 올렸습니다')).toBeVisible({ timeout: 60_000 });
     // 썸네일은 서버가 검사한 뒤 만들어지므로 나타날 때까지 기다림
-    await expect(page.getByRole('button', { name: /작업 후.*사진 열기/ })).toHaveCount(2, {
+    await expect(page.getByRole('button', { name: /작업 중.*사진 열기/ })).toHaveCount(2, {
       timeout: 30_000,
     });
   });

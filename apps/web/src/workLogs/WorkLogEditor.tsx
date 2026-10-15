@@ -13,7 +13,7 @@ import {
 } from '@field-note/shared';
 import { useQueryClient } from '@tanstack/react-query';
 import { Check, History, Minus, Plus, Search, X } from 'lucide-react';
-import { useEffect, useState, type ReactNode } from 'react';
+import { useEffect, useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
@@ -44,6 +44,7 @@ import {
   type EntryLine,
 } from './workLogForm';
 import { WorkLogRevisionsPanel } from './WorkLogRevisionsPanel';
+import { WorkStep } from './WorkStep';
 import { readWorkLog, useSaveWorkLog } from './useWorkLogs';
 
 const FIELDS = [
@@ -94,45 +95,6 @@ const signatureOf = (snapshot: EditorSnapshot) =>
       included,
     })),
   });
-
-// 입력 단계 하나 (번호·제목·설명·오른쪽 도구). 위에서 아래로 순서대로 채운다
-const Step = ({
-  number,
-  title,
-  description,
-  aside,
-  children,
-}: {
-  number: number;
-  title: string;
-  description: string;
-  aside?: ReactNode;
-  children: ReactNode;
-}) => (
-  <section
-    className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-4 md:p-5"
-    aria-labelledby={`step-${number}`}
-  >
-    <header className="flex flex-wrap items-start justify-between gap-x-4 gap-y-2">
-      <div className="flex min-w-0 items-start gap-3">
-        <span
-          aria-hidden
-          className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-foreground text-xs font-semibold text-surface"
-        >
-          {number}
-        </span>
-        <div className="flex min-w-0 flex-col gap-0.5">
-          <h3 id={`step-${number}`} className="text-lg font-semibold">
-            {title}
-          </h3>
-          <p className="text-sm text-foreground/65">{description}</p>
-        </div>
-      </div>
-      {aside}
-    </header>
-    {children}
-  </section>
-);
 
 // 한 줄의 일한 시간: −30분 · 시간 칸 · +30분 · 반일/하루/연장
 const HoursInput = ({
@@ -644,7 +606,7 @@ export const WorkLogEditor = ({
       {/* xl+: 왼쪽 Steps 1-3, 오른쪽 Step 4 */}
       <div className="grid gap-5 xl:grid-cols-[1fr_440px]">
         <div className="flex flex-col gap-5">
-          <Step
+          <WorkStep
             number={1}
             title="일한 사람"
             description="이 날 이 현장에서 일한 직원을 고르세요"
@@ -699,9 +661,9 @@ export const WorkLogEditor = ({
             {pickable.length === 0 && (
               <p className="text-sm text-foreground/65">찾는 직원이 없습니다</p>
             )}
-          </Step>
+          </WorkStep>
 
-          <Step
+          <WorkStep
             number={2}
             title="일한 시간"
             description="사람마다 일한 시간을 정하세요. 처음에는 하루(8시간)로 채워집니다"
@@ -759,9 +721,9 @@ export const WorkLogEditor = ({
                 })}
               </ul>
             )}
-          </Step>
+          </WorkStep>
 
-          <Step
+          <WorkStep
             number={3}
             title="한 일"
             description="사람마다 무슨 일을 했는지 고르세요. 한 사람이 여러 일을 했으면 나눠서 적습니다"
@@ -871,12 +833,12 @@ export const WorkLogEditor = ({
               </ul>
             )}
             {errors.entries && <p className="text-sm text-danger">{errors.entries}</p>}
-          </Step>
+          </WorkStep>
         </div>
         {/* left col end */}
         <div className="flex flex-col gap-5">
           {/* right col start */}
-          <Step
+          <WorkStep
             number={4}
             title={`${formatLongDay(date)} 작업 내용`}
             description="이 날 현장에서 한 일을 적어 두세요"
@@ -896,7 +858,7 @@ export const WorkLogEditor = ({
               <Checkbox checked={isChange} onCheckedChange={(next) => setChange(next === true)} />
               변경·추가 작업이 포함되어 있습니다
             </label>
-          </Step>
+          </WorkStep>
 
           {(errors.workDate || errors.confirmStatus || errors.isAfterService || errors.status) && (
             <>

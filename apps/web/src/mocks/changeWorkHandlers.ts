@@ -1,6 +1,7 @@
 import {
   changeWorkCreateSchema,
   changeWorkDocumentParamsSchema,
+  changeWorkEvidenceCreateSchema,
   changeWorkLinkSchema,
   changeWorkListQuerySchema,
   changeWorkParamsSchema,
@@ -23,7 +24,7 @@ import type { ZodType } from 'zod';
 
 import type { MockAccount } from './data';
 import { DEMO_CHANGE_WORKS } from './demoSource';
-import { listMockDocuments } from './documentHandlers';
+import { createMockEvidenceDocument, listMockDocuments } from './documentHandlers';
 import { listMockMaterialRecords } from './materialHandlers';
 import { getCurrentAccount, getProjects, getWorkLogs } from './state';
 import { mockDelay } from './latency';
@@ -141,6 +142,8 @@ const toDetail = (account: MockAccount, work: MockChangeWork): ChangeWorkDetail 
       title: document.title,
       category: document.category,
       isSensitive: document.isSensitive,
+      latestVersionNo: document.latest.versionNo,
+      contentType: document.latest.contentType,
       linkedAt: link.linkedAt,
     })),
 });
@@ -498,6 +501,51 @@ export const createChangeWorkHandlers = ({ apiError, parseBody }: Helpers) => {
         linkedAt: new Date().toISOString(),
         unlinkedAt: null,
       });
+
+      return HttpResponse.json(toDetail(account, work), { status: 201 });
+    }),
+
+    http.post('/api/v1/change-works/:id/evidence', async ({ request, params }) => {
+      await latency();
+
+      const account = getCurrentAccount();
+
+      if (!account) return apiError('UNAUTHORIZED');
+
+      const parsed = changeWorkParamsSchema.safeParse(params);
+
+      if (!parsed.success) return invalid('params.id', 'Invalid UUID');
+
+      const body = await parseBody(request, changeWorkEvidenceCreateSchema);
+
+      if ('response' in body) return body.response;
+
+      const work = mine(account).find((item) => item.id === parsed.data.id);
+
+      if (!work) return apiError('NOT_FOUND');
+
+      // 기록할 수 없는 프로젝트 상태면 문서를 만들기 전에 막는다
+      const blocked = projectCheck(
+        account,
+        work.projectId,
+        body.data.confirmCompleted,
+        'body.confirmCompleted',
+      );
+
+      if (blocked) return blocked;
+
+      const created = createMockEvidenceDocument(account, work.projectId, body.data);
+
+      if ('error' in created) return invalid(created.error.path, created.error.message);
+
+      // 같은 파일로 다시 부르면 이미 연결된 증빙을 그대로 돌려준다
+      if (!work.links.some((link) => link.documentId === created.id && !link.unlinkedAt)) {
+        work.links.push({
+          documentId: created.id,
+          linkedAt: new Date().toISOString(),
+          unlinkedAt: null,
+        });
+      }
 
       return HttpResponse.json(toDetail(account, work), { status: 201 });
     }),

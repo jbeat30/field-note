@@ -9,9 +9,9 @@ import { useAlertSettings, useSaveAlertSettings } from '../dashboard/useDashboar
 // 알림을 성격별로 묶어서 보여 준다 (모든 알림 종류가 한 묶음에 들어가야 함)
 const GROUPS: { title: string; description: string; kinds: AlertKind[] }[] = [
   {
-    title: '작업 내역·메모',
-    description: '매일 챙겨야 할 입력',
-    kinds: ['NO_LOG_TODAY', 'INBOX_STALE'],
+    title: '작업 내역',
+    description: '매일 챙겨야 할 기록',
+    kinds: ['NO_LOG_TODAY'],
   },
   {
     title: '공수·일정',

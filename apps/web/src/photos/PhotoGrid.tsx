@@ -13,7 +13,7 @@ const placeholder = (photo: Photo) =>
 
 // 사진 썸네일 그리드: 한 줄에 3장(모바일), 사진을 누르면 상세. 느린 회선을 위해 이미지는 필요할 때 읽음
 export const PhotoGrid = ({ photos, onSelect }: PhotoGridProps) => (
-  <ul className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-6">
+  <ul className="grid grid-cols-3 gap-1.5 sm:grid-cols-4 md:grid-cols-6 xl:grid-cols-8 2xl:grid-cols-10">
     {photos.map((photo) => (
       <li key={photo.id}>
         <button
@@ -38,6 +38,11 @@ export const PhotoGrid = ({ photos, onSelect }: PhotoGridProps) => (
             {PHOTO_CATEGORY_LABELS[photo.category]}
             {photo.area ? ` · ${photo.area}` : ''}
           </span>
+          {photo.includeInSummary && (
+            <span className="absolute right-1 top-1 rounded bg-foreground/75 px-1 text-xs text-primary-foreground">
+              요약
+            </span>
+          )}
           {photo.isCover && (
             <span className="absolute left-1 top-1 rounded bg-primary px-1 text-xs text-primary-foreground">
               대표

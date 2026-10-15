@@ -100,7 +100,7 @@ export const ProjectLayout = () => {
     { to: base, label: '작업 달력', end: true },
     { to: `${base}/overview`, label: '현황' },
     { to: `${base}/assignments`, label: '인원' },
-    { to: `${base}/materials`, label: '자재' },
+    { to: `${base}/materials`, label: '비용·자재' },
     { to: `${base}/photos`, label: '사진' },
     { to: `${base}/memos`, label: '메모' },
     { to: `${base}/documents`, label: '문서' },

@@ -22,6 +22,22 @@ export const usePayRates = (employeeId: string) =>
     staleTime: 60_000,
   });
 
+// 단가표: 단가가 있는 직원마다 현재·이전·적용 예정 단가 (직원 목록·단가표 탭)
+export const usePayRateSummaries = () =>
+  useQuery({
+    queryKey: queryKeys.payRateSummaries(),
+    queryFn: async () => {
+      const { data } = await apiClient.GET('/api/v1/pay-rates');
+
+      if (!data) {
+        throw new Error('[web.usePayRateSummaries] 단가표 조회 실패');
+      }
+
+      return data.items;
+    },
+    staleTime: 60_000,
+  });
+
 export const useAddPayRate = (employeeId: string) => {
   const queryClient = useQueryClient();
 

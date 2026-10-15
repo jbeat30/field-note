@@ -2,6 +2,7 @@ import {
   assignmentStatusCheck,
   checkWorkDate,
   dailyOverMinutes,
+  employeeProjectDays,
   isLateInput,
   summarizeEmployeeWork,
   summarizeProjectWork,
@@ -15,6 +16,8 @@ import {
   type WorkLogSave,
   type WorkLogSummary,
   type WorkLogWarning,
+  type EmployeeProjectDays,
+  type EmployeeProjectDaysQuery,
   type EmployeeWorkHistory,
   type WorkSummary,
   type WorkSummaryQuery,
@@ -56,6 +59,13 @@ export type WorkLogService = {
   revisions: (companyId: string, projectId: string, workDate: string) => Promise<WorkLogRevision[]>;
   // 프로젝트 공수 집계 (직원별·작업 구분별·기간별). 저장된 작업 내역만 반영
   summary: (companyId: string, projectId: string, query: WorkSummaryQuery) => Promise<WorkSummary>;
+  // 한 사람이 이 프로젝트에서 일한 날 (날짜별 시간·한 일). 저장된 작업 내역만 반영
+  employeeDays: (
+    companyId: string,
+    projectId: string,
+    employeeId: string,
+    query: EmployeeProjectDaysQuery,
+  ) => Promise<EmployeeProjectDays>;
   // 직원 카드의 프로젝트별 투입 이력과 이번 달·올해 공수
   employeeHistory: (companyId: string, employeeId: string) => Promise<EmployeeWorkHistory>;
 };
@@ -278,6 +288,38 @@ export const createWorkLogService = (
         assignments,
         unit: unit ?? 'week',
       });
+    }),
+
+  employeeDays: (companyId, projectId, employeeId, { from, to }) =>
+    withCompany(app, companyId, async (tx) => {
+      const [project, employee] = await Promise.all([
+        tx.project.findFirst({ where: { id: projectId }, select: { id: true } }),
+        tx.employee.findFirst({ where: { id: employeeId }, select: { id: true } }),
+      ]);
+
+      if (!project || !employee) {
+        throw new WorkLogError('NOT_FOUND');
+      }
+
+      const entries = await tx.workLogEntry.findMany({
+        where: {
+          employeeId,
+          workLog: {
+            projectId,
+            status: 'SAVED',
+            workDate: { gte: from ? toDate(from) : undefined, lte: to ? toDate(to) : undefined },
+          },
+        },
+        select: { categoryId: true, minutes: true, workLog: { select: { workDate: true } } },
+      });
+
+      return employeeProjectDays(
+        entries.map((entry) => ({
+          workDate: fromDate(entry.workLog.workDate),
+          categoryId: entry.categoryId,
+          minutes: entry.minutes,
+        })),
+      );
     }),
 
   employeeHistory: (companyId, employeeId) =>

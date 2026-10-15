@@ -183,3 +183,40 @@ export const summarizeLaborCost = (
     employees,
   };
 };
+
+// 단가표 한 줄 (직원 목록·단가표 탭): 지금 적용 중인 단가, 그 바로 이전 단가, 적용 예정 단가
+export const payRateSummarySchema = z.object({
+  employeeId: z.uuid(),
+  current: payRateSchema.nullable(),
+  previous: payRateSchema.nullable(),
+  upcoming: payRateSchema.nullable(),
+});
+
+export type PayRateSummary = z.infer<typeof payRateSummarySchema>;
+
+// 단가가 한 번이라도 등록된 직원만 나온다 (없는 직원은 단가 없음)
+export const payRateSummariesResponseSchema = z.object({ items: z.array(payRateSummarySchema) });
+
+export type PayRateSummariesResponse = z.infer<typeof payRateSummariesResponseSchema>;
+
+/**
+ * @description 한 직원의 단가 기록에서 현재·이전·적용 예정 단가를 가려냄 (서버와 목업이 같은 규칙을 쓴다)
+ * 현재 = 오늘까지 시작한 단가 중 가장 최근, 이전 = 현재보다 앞서 시작한 것 중 가장 최근, 예정 = 오늘 이후 시작하는 것 중 가장 이른 것
+ * @param rates 직원의 단가 기록 (순서 무관)
+ * @param today 오늘 (서울 기준)
+ * @returns 현재·이전·예정 단가 (없으면 null)
+ */
+export const summarizePayRates = <T extends DatedRate>(rates: readonly T[], today: string) => {
+  const current = rateOn(rates, today);
+  const byStart = (a: T, b: T) =>
+    b.effectiveFrom.localeCompare(a.effectiveFrom) || b.createdAt.localeCompare(a.createdAt);
+  const previous =
+    current === null
+      ? null
+      : ([...rates].sort(byStart).find((rate) => byStart(current, rate) < 0) ?? null);
+  const upcoming =
+    [...rates].filter((rate) => rate.effectiveFrom > today).sort((a, b) => byStart(b, a))[0] ??
+    null;
+
+  return { current, previous, upcoming };
+};

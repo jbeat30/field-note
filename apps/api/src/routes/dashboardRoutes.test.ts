@@ -141,7 +141,10 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
 
 type Client = ReturnType<typeof api>;
 
-const kinds = (response: DashboardResponse) => response.dashboard.alerts.map((alert) => alert.kind);
+const alertsOf = (response: DashboardResponse) =>
+  response.dashboard.alerts.map((item) => item.alert);
+
+const kinds = (response: DashboardResponse) => alertsOf(response).map((alert) => alert.kind);
 
 // 회사 하나: 직원 셋과 프로젝트 만드는 도구
 const setup = async () => {
@@ -210,13 +213,15 @@ describe('GET /dashboard', () => {
       activeProjects: [],
       risks: [],
       week: { from: '2026-10-05', to: '2026-10-11', conflicts: [] },
-      todos: { draftLogCount: 0, staleInboxCount: 0, unclosedMonth: null },
+      todos: { draftLogCount: 0, unclosedMonth: null },
+      hiddenAlertCount: 0,
+      stats: { inProgress: 0, todayLoggedHeadcount: 0, todayHeadcount: 0, weekMinutes: 0 },
       warranty: { ending: [], openRepairCount: 0 },
       expiring: { certificates: [], credentials: [] },
     });
-    // 직원 세 명(박소장·김작업·이작업)은 이번 주 내내 비어 있다
-    expect(dashboard.week.freeCount).toBe(3);
-    expect(settings.items).toHaveLength(12);
+    // 직원 세 명(박소장·김작업·이작업)은 이번 주 일한 기록이 없다
+    expect(dashboard.week).toMatchObject({ workingCount: 0, idleCount: 3 });
+    expect(settings.items).toHaveLength(11);
     expect(settings.items.every((item) => item.enabled)).toBe(true);
   });
 
@@ -307,7 +312,7 @@ describe('GET /dashboard', () => {
     await client.send('post', `/projects/${ahead}/progress`, { percent: 40 });
 
     const result = await client.dashboard();
-    const alerts = result.dashboard.alerts;
+    const alerts = alertsOf(result);
 
     expect(alerts).toEqual(
       expect.arrayContaining([
@@ -332,44 +337,96 @@ describe('GET /dashboard', () => {
     expect(result.dashboard.projectCounts).toEqual({ planned: 0, inProgress: 3, suspended: 0 });
   });
 
-  it('이번 주 같은 날 두 프로젝트에 겹친 직원을 알린다', async () => {
-    const { client, worker, make, assign } = await setup();
+  it('이번 주 같은 날 두 프로젝트에서 일한 기록이 있는 직원을 프로젝트 이름과 함께 알린다', async () => {
+    const { client, worker, category, make } = await setup();
     const a = await make(client, 'A동');
     const b = await make(client, 'B동');
+    const log = (project: string, date: string, minutes: number) =>
+      client.saveLog(project, date, {
+        status: 'SAVED',
+        content: date,
+        addMissingAssignments: true,
+        entries: [{ employeeId: worker, categoryId: category, minutes }],
+      });
 
-    await assign(a, worker, { startDate: '2026-10-05', endDate: '2026-10-07' });
-    await assign(b, worker, { startDate: '2026-10-06', endDate: '2026-10-08' });
+    // 10/6·10/7 두 곳, 10/5는 한 곳, 임시 저장은 세지 않는다
+    await log(a, '2026-10-05', 480);
+    await log(a, '2026-10-06', 240);
+    await log(b, '2026-10-06', 240);
+    await log(a, '2026-10-07', 240);
+    await log(b, '2026-10-07', 240);
+    await client.saveLog(b, '2026-10-08', {
+      status: 'DRAFT',
+      content: '임시',
+      entries: [{ employeeId: worker, categoryId: category, minutes: 480 }],
+    });
 
     const result = await client.dashboard();
 
     expect(result.dashboard.week.conflicts).toEqual([
       { employeeId: worker, name: '김작업', dateCount: 2 },
     ]);
-    expect(result.dashboard.alerts).toContainEqual(
-      expect.objectContaining({
-        kind: 'DOUBLE_ASSIGNED',
-        employeeId: worker,
-        firstDate: '2026-10-06',
-      }),
-    );
+    expect(alertsOf(result)).toContainEqual({
+      kind: 'DOUBLE_ASSIGNED',
+      employeeId: worker,
+      employeeName: '김작업',
+      dateCount: 2,
+      firstDate: '2026-10-06',
+      lastDate: '2026-10-07',
+      projectNames: ['A동', 'B동'],
+    });
+    // 이번 주 일한 시간과 일한 사람이 수치 줄에 모인다 (5일 중 하루 8시간, 둘째·셋째 날 하루 8시간 = 32시간)
+    expect(result.dashboard.stats.weekMinutes).toBe(480 + 480 + 480);
+    expect(result.dashboard.week).toMatchObject({ workingCount: 1, idleCount: 2 });
+    expect(result.dashboard.activeProjects.find((item) => item.id === a)).toMatchObject({
+      siteName: 'A동 현장',
+      weekMinutes: 480 + 240 + 240,
+    });
   });
 
-  it('메모함에서 3일 넘게 방치된 메모와 7일 넘게 협의 중인 변경 작업을 알린다', async () => {
+  it('알림을 숨기면 조건이 바뀌기 전까지 나오지 않고 다른 회사에는 영향이 없다', async () => {
+    const a = await setup();
+    const b = await setup();
+    const project = await a.make(a.client, 'A동');
+    const other = await b.make(b.client, 'B동');
+
+    await a.assign(project, a.worker);
+    await b.assign(other, b.worker);
+
+    const first = await a.client.dashboard();
+    const [item] = first.dashboard.alerts;
+
+    expect(item).toMatchObject({
+      urgent: true,
+      alert: { kind: 'NO_LOG_TODAY', projectId: project },
+    });
+    expect(item!.key).toBe(`NO_LOG_TODAY|${project}|2026-10-11`);
+
+    const hide = await a.client.send('post', '/alerts/dismiss', { keys: [item!.key, item!.key] });
+
+    expect(hide.status).toBe(200);
+
+    const after = await a.client.dashboard();
+
+    expect(after.dashboard.alerts).toEqual([]);
+    expect(after.dashboard.hiddenAlertCount).toBe(1);
+    // 같은 키를 다시 숨겨도 오류 없이 무시
+    expect((await a.client.send('post', '/alerts/dismiss', { keys: [item!.key] })).status).toBe(
+      200,
+    );
+    // 다른 회사는 그대로
+    expect(kinds(await b.client.dashboard())).toEqual(['NO_LOG_TODAY']);
+
+    // 잘못된 요청
+    expect((await a.client.send('post', '/alerts/dismiss', { keys: [] })).status).toBe(400);
+    expect((await a.client.send('post', '/alerts/dismiss', {})).status).toBe(400);
+    // DB에서도 숨긴 기록은 고치거나 지울 수 없다
+    await expect(db.app.$executeRawUnsafe('DELETE FROM alert_dismissals')).rejects.toThrow();
+  });
+
+  it('7일 넘게 협의 중인 변경 작업을 알린다', async () => {
     const { client, make } = await setup();
     const project = await make(client, 'A동');
-    const fresh = await client.id('/memos', { content: '방금 쓴 메모' });
-    const old = await client.id('/memos', { content: '오래된 메모' });
-    const filed = await client.id('/memos', { content: '정리된 오래된 메모', projectId: project });
-
-    await db.ownerPool.query(`UPDATE memos SET created_at = $2 WHERE id = $1`, [
-      old,
-      '2026-10-06T03:00:00Z',
-    ]);
-    await db.ownerPool.query(`UPDATE memos SET created_at = $2 WHERE id = $1`, [
-      filed,
-      '2026-10-01T03:00:00Z',
-    ]);
-    void fresh;
 
     await client.send('post', `/projects/${project}/change-works`, {
       requestedOn: '2026-10-03',
@@ -384,16 +441,12 @@ describe('GET /dashboard', () => {
 
     const result = await client.dashboard();
 
-    expect(result.dashboard.todos.staleInboxCount).toBe(1);
-    expect(result.dashboard.alerts).toEqual(
+    expect(alertsOf(result)).toEqual(
       expect.arrayContaining([
-        { kind: 'INBOX_STALE', count: 1, oldestDays: 5 },
         expect.objectContaining({ kind: 'CHANGE_STALE', projectId: project, seq: 1, days: 8 }),
       ]),
     );
-    expect(result.dashboard.alerts.filter((alert) => alert.kind === 'CHANGE_STALE')).toHaveLength(
-      1,
-    );
+    expect(alertsOf(result).filter((alert) => alert.kind === 'CHANGE_STALE')).toHaveLength(1);
   });
 
   it('회사마다 따로 계산한다', async () => {
@@ -433,7 +486,7 @@ describe('알림 설정', () => {
     });
     // 보내지 않은 종류는 그대로 켜짐
     expect(alertSettingsSchema.parse(saved.body).items.filter((item) => item.enabled)).toHaveLength(
-      11,
+      10,
     );
 
     const off = await client.dashboard();
@@ -452,7 +505,7 @@ describe('알림 설정', () => {
     const b = await setup();
 
     await a.client.send('put', '/company/alert-settings', {
-      items: [{ kind: 'INBOX_STALE', enabled: false }],
+      items: [{ kind: 'WARRANTY_ENDING', enabled: false }],
     });
 
     const bSettings = alertSettingsSchema.parse(
@@ -466,8 +519,8 @@ describe('알림 설정', () => {
       { items: [{ kind: 'NOPE', enabled: false }] },
       {
         items: [
-          { kind: 'INBOX_STALE', enabled: false },
-          { kind: 'INBOX_STALE', enabled: true },
+          { kind: 'WARRANTY_ENDING', enabled: false },
+          { kind: 'WARRANTY_ENDING', enabled: true },
         ],
       },
       {},
@@ -486,7 +539,7 @@ describe('알림 설정', () => {
     const { client } = await setup();
 
     await client.send('put', '/company/alert-settings', {
-      items: [{ kind: 'INBOX_STALE', enabled: false }],
+      items: [{ kind: 'WARRANTY_ENDING', enabled: false }],
     });
     await expect(db.app.$executeRawUnsafe('DELETE FROM alert_preferences')).rejects.toThrow();
     await expect(

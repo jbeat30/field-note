@@ -19,6 +19,7 @@ import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createMaterialService } from '../material/materialService';
 import { createCompanyWithInvitation } from '../operator/operatorService';
 import { createPartnerService } from '../partner/partnerService';
+import { createPhotoService } from '../photo/photoService';
 import { createProgressService } from '../progress/progressService';
 import { createProjectService } from '../project/projectService';
 import { createMemoryQueue } from '../queue/jobQueue';
@@ -72,6 +73,7 @@ const app = () => {
     }),
     materials: createMaterialService(db.app, () => NOW),
     documents: createDocumentService(db.app, storage, () => NOW),
+    photos: createPhotoService(db.app, storage, () => NOW),
     progress: createProgressService(db.app, () => NOW),
     changeWorks: createChangeWorkService(db.app, () => NOW),
     completion: createCompletionService(db.app, storage, () => NOW),
@@ -107,10 +109,12 @@ const signedUp = async (instance: ReturnType<typeof app>) => {
 };
 
 const api = (instance: ReturnType<typeof app>, cookie: string) => {
-  const send = (method: 'post' | 'put', path: string, body: object) =>
+  const send = (method: 'post' | 'put' | 'patch', path: string, body: object) =>
     (method === 'post'
       ? request(instance).post(`/api/v1${path}`)
-      : request(instance).put(`/api/v1${path}`)
+      : method === 'put'
+        ? request(instance).put(`/api/v1${path}`)
+        : request(instance).patch(`/api/v1${path}`)
     )
       .set(CSRF_HEADER, CSRF_HEADER_VALUE)
       .set('Cookie', cookie)
@@ -126,6 +130,8 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     summary: (projectId: string) => get(`/projects/${projectId}/summary`),
     saveLog: (projectId: string, date: string, body: object) =>
       send('put', `/projects/${projectId}/work-logs/${date}`, body),
+    updateDocument: (id: string, body: object) => send('patch', `/documents/${id}`, body),
+    updatePhoto: (id: string, body: object) => send('patch', `/photos/${id}`, body),
     makeDocument: async (
       projectId: string,
       title: string,
@@ -429,26 +435,38 @@ describe('프로젝트 요약', () => {
     ]);
   });
 
-  it('민감 문서는 목록에서 빼고 건수만 알리며 문서마다 버전 수와 최신 개정일을 보여 준다', async () => {
+  it('안전·검사, 계약·공문 분류의 민감하지 않은 문서만 싣고, 고른 것이 있으면 그것만 싣는다', async () => {
     const { client, project } = await setup();
 
     await client.makeDocument(project, '도면', 'DRAWING');
-    await client.makeDocument(project, '도급 계약서', 'CONTRACT');
+    const contract = await client.makeDocument(project, '도급 계약서', 'CONTRACT');
     // 계약은 기본이 민감, 다른 분류도 직접 민감으로 표시할 수 있다
     await client.makeDocument(project, '안전 점검표', 'SAFETY', { isSensitive: true });
+    const safe = await client.makeDocument(project, '준공 검사서', 'SAFETY');
+    const summary = async () =>
+      projectCompletionSummarySchema.parse((await client.summary(project)).body).documents;
 
-    const { documents } = projectCompletionSummarySchema.parse(
-      (await client.summary(project)).body,
-    );
+    // 고르지 않으면 안전·검사, 계약·공문 중 민감하지 않은 문서 모두 (도면은 해당 분류가 아님)
+    let documents = await summary();
 
     expect(documents.sensitiveExcluded).toBe(2);
     expect(documents.items).toEqual([
-      expect.objectContaining({ title: '도면', category: 'DRAWING', versionCount: 1 }),
+      expect.objectContaining({ title: '준공 검사서', category: 'SAFETY', versionCount: 1 }),
     ]);
     expect(JSON.stringify(documents)).not.toContain('계약서');
+
+    // 민감 자료는 요약에 넣기로 표시해도 싣지 않는다
+    expect((await client.updateDocument(contract, { includeInSummary: true })).status).toBe(200);
+    documents = await summary();
+    expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
+
+    // 고른 문서가 있으면 그것만 싣는다
+    await client.updateDocument(safe, { includeInSummary: true });
+    documents = await summary();
+    expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
   });
 
-  it('대표 사진이 먼저이고 6장까지만 싣고 검사에서 거부된 사진은 세지 않는다', async () => {
+  it('고른 사진이 있으면 최근 촬영순으로 그것만, 없으면 작업 후 사진 최근 8장을 싣고 거부된 사진은 세지 않는다', async () => {
     const { client, project } = await setup();
     const row = await db.owner.project.findFirstOrThrow({ where: { id: project } });
     const user = await db.owner.user.findFirstOrThrow({ where: { companyId: row.companyId } });
@@ -486,13 +504,49 @@ describe('프로젝트 요약', () => {
       });
     };
 
-    for (let index = 0; index < 8; index += 1) await photo(index, 'READY', index === 0);
+    const ids: string[] = [];
+
+    // 작업 전 2장 + 작업 후 10장 (촬영일이 서로 다름)
+    for (let index = 0; index < 12; index += 1) {
+      const created = await photo(index, 'READY', index === 0);
+
+      await db.owner.photo.update({
+        where: { companyId_id: { companyId: created.companyId, id: created.id } },
+        data: { category: index < 2 ? 'BEFORE' : 'AFTER' },
+      });
+      ids.push(created.id);
+    }
+
     await photo(20, 'REJECTED');
 
-    const { photos } = projectCompletionSummarySchema.parse((await client.summary(project)).body);
+    const summary = async () =>
+      projectCompletionSummarySchema.parse((await client.summary(project)).body).photos;
 
-    expect(photos.total).toBe(8);
-    expect(photos.items).toHaveLength(6);
+    // 고르지 않았으면 작업 후 사진 최근 8장 (작업 전 사진은 싣지 않음)
+    let photos = await summary();
+
+    expect(photos.total).toBe(12);
+    expect(photos.items).toHaveLength(8);
+    expect(photos.items.every((item) => item.category === 'AFTER')).toBe(true);
     expect(photos.items[0]!.thumbnailUrl).toContain('/thumb?download');
+
+    // 직접 고른 사진이 있으면 종류와 상관없이 그것만 싣는다
+    expect((await client.updatePhoto(ids[0]!, { includeInSummary: true })).status).toBe(200);
+    expect((await client.updatePhoto(ids[5]!, { includeInSummary: true })).status).toBe(200);
+    photos = await summary();
+    expect(photos.items.map((item) => item.id).sort()).toEqual([ids[0]!, ids[5]!].sort());
+
+    // 최대 12장까지만 고를 수 있다 (이미 2장을 골랐으니 10장까지 더 가능)
+    for (const id of ids.filter((item) => item !== ids[0] && item !== ids[5])) {
+      expect((await client.updatePhoto(id, { includeInSummary: true })).status).toBe(200);
+    }
+
+    const extra = await photo(30, 'READY');
+    const over = await client.updatePhoto(extra.id, { includeInSummary: true });
+
+    expect(over.status).toBe(400);
+    expect(over.body.error.details).toEqual([
+      expect.objectContaining({ path: 'body.includeInSummary' }),
+    ]);
   });
 });
