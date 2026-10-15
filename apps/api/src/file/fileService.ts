@@ -324,7 +324,7 @@ export const createFileService = ({
 
 /**
  * @description 파일 처리 작업 처리기 등록. 저장소 장애처럼 일시적인 오류는 예외로 던져 재시도하고,
- * 파일 자체의 문제(형식 위조 등)는 거부 상태로 기록한 뒤 정상 종료한다
+ * 파일 자체의 문제(형식 위조 등)는 거부 상태로 기록한 뒤 정상 종료
  * @param queue 작업 큐
  * @param service 파일 서비스
  */

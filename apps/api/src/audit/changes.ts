@@ -73,7 +73,7 @@ export const PROJECT_CHANGE_FIELDS: Record<string, ChangeField> = {
   memo: { label: '메모' },
 };
 
-// 직원 정보 수정에서 기록할 항목 (개인정보는 값을 복사하지 않는다)
+// 직원 정보 수정의 기록 항목 (개인정보는 값 복사 제외)
 export const EMPLOYEE_CHANGE_FIELDS: Record<string, ChangeField> = {
   name: { label: '이름' },
   title: { label: '직책' },

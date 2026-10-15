@@ -18,7 +18,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 홈: 확인할 일(알림)과 진행 중 프로젝트 표가 보이고 알림 설정으로 이동할 수 있다
+// 홈: 확인할 일(알림)과 진행 중 프로젝트 표 표시, 알림 설정으로 이동 가능
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

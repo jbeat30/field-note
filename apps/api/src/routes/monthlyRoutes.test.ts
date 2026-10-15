@@ -210,7 +210,7 @@ describe('월 공수표', () => {
     ]);
     await log(a, '2026-09-11', [[kim, 480]]);
     await log(b, '2026-09-10', [[kim, 120]]);
-    // 임시 저장과 다른 달은 합산하지 않는다
+    // 임시 저장과 다른 달은 합산 제외
     await log(a, '2026-09-12', [[lee, 999]], 'DRAFT');
     await log(a, '2026-10-02', [[kim, 480]]);
 
@@ -275,7 +275,7 @@ describe('월 공수 확정·재오픈', () => {
     expect(again.status).toBe(400);
     expect(errorPath(again.body)).toBe('body.month');
     expect((await client.close({ month: '2026-11' })).status).toBe(400);
-    // 이번 달은 확정할 수 있다
+    // 이번 달은 확정 가능
     expect((await client.close({ month: '2026-10' })).status).toBe(200);
   });
 
@@ -289,7 +289,7 @@ describe('월 공수 확정·재오픈', () => {
 
     expect(blocked.status).toBe(400);
     expect(errorPath(blocked.body)).toBe('body.workDate');
-    // 새 일자·임시 저장도 막힌다
+    // 새 일자·임시 저장도 차단
     expect((await log(a, '2026-09-15', [[kim, 60]])).status).toBe(400);
     expect((await log(a, '2026-09-15', [[kim, 60]], 'DRAFT')).status).toBe(400);
     expect((await log(a, '2026-10-05', [[kim, 60]])).status).toBe(200);
@@ -315,7 +315,7 @@ describe('월 공수 확정·재오픈', () => {
       standardWorkMinutes: 480,
       monthlyWorkDays: 26,
     });
-    // 확정하지 않은 달은 현재 설정을 따른다
+    // 확정하지 않은 달은 현재 설정 기준
     expect(hours(await client.month('2026-10'))).toMatchObject({
       isClosed: false,
       standardWorkMinutes: 420,
@@ -328,7 +328,7 @@ describe('월 공수 확정·재오픈', () => {
 
     await log(a, '2026-09-10', [[kim, 480]]);
 
-    // 확정하지 않은 달은 재오픈할 수 없다
+    // 확정하지 않은 달은 재오픈 불가
     expect((await client.reopen({ month: '2026-09', reason: '정정' })).status).toBe(400);
 
     await client.close({ month: '2026-09' });
@@ -355,7 +355,7 @@ describe('월 공수 확정·재오픈', () => {
       ).status,
     ).toBe(200);
 
-    // 다시 확정하면 정정한 값으로 집계된다
+    // 다시 확정하면 정정한 값으로 집계
     const again = hours(await client.close({ month: '2026-09' }));
 
     expect(again.rows[0]).toMatchObject({ minutes: 240 });

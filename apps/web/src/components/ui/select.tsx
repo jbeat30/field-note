@@ -40,8 +40,8 @@ type SelectProps<T extends string> = {
   'aria-describedby'?: string;
 };
 
-// 짧은 목록에서 하나 고르는 칸 (상태·분류·쪽당 개수 등). 항목이 많아 찾아야 하면 Combobox
-// 콤보박스·날짜 칸과 같은 모양으로 열리고, 키보드(위아래·Enter·Esc·글자로 찾기)로도 고를 수 있다
+// 짧은 목록에서 하나 고르는 칸 (상태·분류·쪽당 개수 등), 항목이 많아 찾아야 하면 Combobox
+// 콤보박스·날짜 칸과 같은 모양으로 열리고 키보드(위아래·Enter·Esc·글자로 찾기) 선택 지원
 export const Select = <T extends string>({
   options,
   value,

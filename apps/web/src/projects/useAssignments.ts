@@ -23,7 +23,7 @@ export const useAssignments = (projectId: string, includeCancelled = false) =>
     },
   });
 
-// 투입은 서로 경고(겹침)에 영향을 주므로 어느 프로젝트의 투입이 바뀌어도 모든 투입 목록을 다시 읽는다
+// 투입은 서로 경고(겹침)에 영향을 주므로 어느 프로젝트의 투입이 바뀌어도 모든 투입 목록 재조회
 const useInvalidateAssignments = () => {
   const queryClient = useQueryClient();
 

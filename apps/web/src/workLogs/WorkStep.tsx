@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
 
-// 입력 단계 하나 (번호·제목·설명·오른쪽 도구). 위에서 아래로 순서대로 채운다
+// 입력 단계 하나 (번호·제목·설명·오른쪽 도구), 위에서 아래로 순서대로 입력
 export const WorkStep = ({
   number,
   title,

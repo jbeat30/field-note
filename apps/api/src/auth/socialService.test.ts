@@ -86,7 +86,7 @@ describe('소셜 연동', () => {
     await social().link(account, 'KAKAO', 'kakao-link-1');
 
     expect(await social().findAccount('KAKAO', 'kakao-link-1')).toEqual(account);
-    expect(await social().methods(account)).toEqual({ hasPassword: true, isKakaoLinked: true });
+    expect(await social().methods(account)).toEqual({ hasPassword: true, linked: ['KAKAO'] });
   });
 
   it('이메일이 같다는 이유로는 연결되지 않고, 연동하지 않은 소셜 계정은 찾지 못한다', async () => {
@@ -94,7 +94,7 @@ describe('소셜 연동', () => {
 
     // 카카오가 같은 이메일을 인증해 줘도 연동하지 않았다면 어떤 계정과도 연결되지 않음
     expect(await social().findAccount('KAKAO', `email-${email}`)).toBeNull();
-    expect(await social().methods(account)).toEqual({ hasPassword: true, isKakaoLinked: false });
+    expect(await social().methods(account)).toEqual({ hasPassword: true, linked: [] });
   });
 
   it('같은 소셜 계정을 같은 계정에 다시 연동해도 성공한다 (새로고침 대비)', async () => {
@@ -146,13 +146,13 @@ describe('소셜 연동 해제', () => {
     await social().unlink(account, 'KAKAO');
 
     expect(await social().findAccount('KAKAO', 'kakao-unlink')).toBeNull();
-    expect((await social().methods(account)).isKakaoLinked).toBe(false);
+    expect((await social().methods(account)).linked).toEqual([]);
   });
 
   it('소셜 로그인만 있는 계정은 마지막 로그인 수단이라 해제할 수 없다', async () => {
     const { account } = await socialOnlyAccount('kakao-only-1', 'only1@example.com');
 
-    expect(await social().methods(account)).toEqual({ hasPassword: false, isKakaoLinked: true });
+    expect(await social().methods(account)).toEqual({ hasPassword: false, linked: ['KAKAO'] });
     await expectCode(social().unlink(account, 'KAKAO'), 'LAST_LOGIN_METHOD');
     expect(await social().findAccount('KAKAO', 'kakao-only-1')).toEqual(account);
   });
@@ -179,24 +179,32 @@ describe('초대 링크로 소셜 가입', () => {
     expect(await createPrismaInvitationStore(db.auth).find(invitation.token)).toBeNull();
   });
 
-  it('인증된 이메일이 없으면 가입할 수 없고 링크는 소모되지 않는다', async () => {
+  it('인증된 이메일이 없어도 가입되고 이메일 인증 전 계정으로 남으며 링크는 소모된다', async () => {
     const invitation = await createCompanyWithInvitation(db.operator, {
       companyName: '이메일없음',
       adminName: '무',
       operator: 'test',
     });
 
-    await expectCode(
-      social().signup({
-        inviteToken: invitation.token,
-        consents: consents(),
-        provider: 'KAKAO',
-        providerUserId: 'kakao-no-email',
-        verifiedEmail: null,
-      }),
-      'SOCIAL_EMAIL_REQUIRED',
-    );
-    expect(await createPrismaInvitationStore(db.auth).find(invitation.token)).not.toBeNull();
+    const account = await social().signup({
+      inviteToken: invitation.token,
+      consents: consents(),
+      provider: 'NAVER',
+      providerUserId: 'naver-no-email',
+      verifiedEmail: null,
+    });
+    const user = await db.owner.user.findFirstOrThrow({
+      where: { companyId: account.companyId, id: account.userId },
+    });
+
+    expect(account.email).toBeNull();
+    expect(user).toMatchObject({ email: null, emailVerifiedAt: null, status: 'INVITED' });
+    expect(user.ageConfirmedAt).not.toBeNull();
+    expect(await social().findAccount('NAVER', 'naver-no-email')).toEqual({
+      userId: account.userId,
+      companyId: account.companyId,
+    });
+    expect(await createPrismaInvitationStore(db.auth).find(invitation.token)).toBeNull();
   });
 
   it('필수 약관에 동의하지 않으면 전체가 취소된다', async () => {

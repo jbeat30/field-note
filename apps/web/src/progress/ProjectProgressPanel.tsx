@@ -29,7 +29,7 @@ import { useProgressRecords, useProjectHealth, useRecordProgress } from './usePr
 // 자주 쓰는 진행률 (한 번 눌러 고름)
 const QUICK_PERCENTS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
 
-// 진행률 바꾸기 창: 누르기만 하면 되도록 10% 단위 단추 + 직접 입력. 기준일은 오늘
+// 진행률 바꾸기 창: 누르기만 하면 되도록 10% 단위 단추 + 직접 입력, 기준일은 오늘
 const ProgressDialog = ({
   projectId,
   current,
@@ -112,7 +112,7 @@ const ProgressDialog = ({
 
 /**
  * @description 프로젝트 진행 현황 (서비스 기획서 §10.4): 진행률·공수 소진율·투입 공수를 한 줄로 보고, 진행률은 한 번에 바꾼다
- * 경고(일정보다 뒤처짐 등)는 점 + 글자로, 진행률 이력은 접어 둔다
+ * 경고(일정보다 뒤처짐 등)는 점 + 글자로 표시, 진행률 이력은 접어 둠
  */
 export const ProjectProgressPanel = ({
   projectId,

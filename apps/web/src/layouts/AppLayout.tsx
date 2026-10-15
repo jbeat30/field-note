@@ -32,7 +32,7 @@ const PARTNERS: NavItem = { to: '/partners', label: '명부', icon: BookUser };
 const MONTHLY: NavItem = { to: '/monthly-hours', label: '월 공수표', icon: CalendarDays };
 const SETTINGS: NavItem = { to: '/settings', label: '설정', icon: Settings };
 
-// 왼쪽 메뉴(넓은 화면): 프로젝트 중심 업무와 회사 관리용을 나눈다. 작업 내역은 프로젝트 안에서 다룬다
+// 왼쪽 메뉴(넓은 화면): 프로젝트 중심 업무와 회사 관리용 구분, 작업 내역은 프로젝트 안에서 처리
 const SIDEBAR_GROUPS: { title: string; items: NavItem[] }[] = [
   { title: '프로젝트 관리', items: [HOME, PROJECTS] },
   { title: '관리', items: [EMPLOYEES, PARTNERS, MONTHLY, SETTINGS] },
@@ -48,7 +48,7 @@ const tabClass = (isActive: boolean) =>
     isActive ? 'text-primary' : 'text-foreground/70',
   );
 
-// 모든 화면 공통 틀: 넓은 화면은 왼쪽 고정 메뉴(관리 화면 방식), 좁은 화면은 상단 헤더 + 하단 탭 메뉴. 빠른 추가 버튼(터치 영역 44px 이상)
+// 모든 화면 공통 틀: 넓은 화면은 왼쪽 고정 메뉴(관리 화면 방식), 좁은 화면은 상단 헤더 + 하단 탭 메뉴, 빠른 추가 버튼(터치 영역 44px 이상)
 export const AppLayout = () => {
   const setQuickAddOpen = useUiStore((state) => state.setQuickAddOpen);
   const me = useMe();
@@ -56,7 +56,7 @@ export const AppLayout = () => {
   const [isMoreOpen, setMoreOpen] = useState(false);
   // 더보기 안의 화면을 보고 있으면 더보기 탭을 강조
   const isInMore = MORE_ITEMS.some((item) => pathname.startsWith(item.to));
-  // 빠른 추가(+)는 모바일의 프로젝트 밖 화면에서만. 프로젝트 안에서는 머리의 주 버튼이 같은 일을 하고, 넓은 화면은 왼쪽 메뉴·머리 버튼으로 충분
+  // 빠른 추가(+)는 모바일의 프로젝트 밖 화면에서만 표시, 프로젝트 안에서는 머리의 주 버튼이 같은 역할, 넓은 화면은 왼쪽 메뉴·머리 버튼으로 충분
   const showQuickAdd = !/^\/projects\/(?!new$)[^/]+/.test(pathname);
 
   return (

@@ -34,7 +34,7 @@ export const login = async (page: Page) => {
  */
 export const uniqueName = (prefix: string) => `${prefix} ${String(Date.now()).slice(-6)}`;
 
-// 작은 JPEG 사진 (96x72). 브라우저가 열어 압축·변환하고 서버가 내용을 검사하므로 실제로 열리는 이미지여야 함
+// 작은 JPEG 사진 (96x72), 브라우저가 열어 압축·변환하고 서버가 내용을 검사하므로 실제로 열리는 이미지여야 함
 export const PHOTO_JPEG = Buffer.from(
   '/9j/2wBDAA0JCgsKCA0LCgsODg0PEyAVExISEyccHhcgLikxMC4pLSwzOko+MzZGNywtQFdBRkxOUlNSMj5aYVpQYEpRUk//2wBDAQ4ODhMREyYVFSZPNS01T09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT0//wAARCABIAGADASIAAhEBAxEB/8QAFQABAQAAAAAAAAAAAAAAAAAAAAH/xAAUEAEAAAAAAAAAAAAAAAAAAAAA/8QAFQEBAQAAAAAAAAAAAAAAAAAAAAX/xAAUEQEAAAAAAAAAAAAAAAAAAAAA/9oADAMBAAIRAxEAPwCAIy+AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA//Z',
   'base64',
@@ -56,7 +56,7 @@ export const photoFile = (name: string) => ({ name, mimeType: 'image/jpeg', buff
 export const selectByText = async (page: Page, label: string, text: string | number) => {
   await page.getByLabel(label, { exact: true }).click();
 
-  // 목록은 화면 맨 위(portal)에 열림. 숫자면 몇 번째 항목(0부터), 글자면 이름 앞부분이 맞는 항목
+  // 목록은 화면 맨 위(portal)에 열림, 숫자는 몇 번째 항목(0부터), 글자는 이름 앞부분이 일치하는 항목
   const option =
     typeof text === 'number'
       ? page.getByRole('option').nth(text)

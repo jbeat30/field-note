@@ -24,7 +24,7 @@ import { cn } from '../../lib/cn';
 type SortableListProps = {
   // 현재 순서의 항목 id
   ids: string[];
-  // 끌어서 또는 키보드로 순서를 바꾸면 새 순서의 id를 돌려준다
+  // 끌어서 또는 키보드로 순서를 바꾸면 새 순서의 id 반환
   onReorder: (ids: string[]) => void;
   // 항목 이름 조회 (스크린 리더 안내용)
   getLabel: (id: string) => string;
@@ -35,7 +35,7 @@ type SortableListProps = {
 };
 
 // 순서 변경 목록: 마우스·터치는 손잡이를 끌고(터치는 살짝 눌렀다가), 키보드는 손잡이에서 Space → 방향키 → Space
-// 손잡이 없이도 바꿀 수 있도록 화면마다 위/아래 버튼을 대안으로 함께 둔다
+// 손잡이 없이도 변경할 수 있도록 화면마다 위/아래 버튼을 대안으로 병행 배치
 export const SortableList = ({
   ids,
   onReorder,
@@ -99,7 +99,7 @@ type SortableItemProps = {
   label: string;
   className?: string;
   disabled?: boolean;
-  // 손잡이 버튼을 받아 원하는 자리에 놓는다
+  // 손잡이 버튼을 받아 원하는 자리에 배치
   children: (handle: ReactNode) => ReactNode;
 };
 

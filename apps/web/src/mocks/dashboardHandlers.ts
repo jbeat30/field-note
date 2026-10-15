@@ -28,6 +28,7 @@ import {
   getEmployees,
   getProgressRecords,
   getProjects,
+  getRules,
   getWorkLogs,
   dismissAlerts,
   saveAlertSettings,
@@ -154,6 +155,7 @@ const buildDashboard = (account: MockAccount) => {
   return {
     dashboard: assembleDashboard({
       today,
+      rules: getRules(account),
       projects: projects.map((project) => {
         const plans = assignments
           .filter((item) => item.projectId === project.id && item.plannedMinutes !== null)

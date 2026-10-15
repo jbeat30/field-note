@@ -38,7 +38,7 @@ type MockClose = {
 
 type Store = { closes: Map<string, MockClose>; events: Map<string, MonthlyCloseEvent[]> };
 
-// 목업 저장소: 회사별 월 공수 확정 상태와 이력 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 월 공수 확정 상태와 이력 (새로고침하면 초기화), 실제 서버 동작을 모사
 const stores = new Map<string, Store>();
 
 export const resetMockMonthly = () => stores.clear();
@@ -317,7 +317,7 @@ export const createMonthlyHandlers = ({ apiError, parseBody }: Helpers) => {
         summary: `월 공수표 엑셀 · ${query.month}`,
       });
 
-      // 서버와 같은 파일 이름 규칙. 내용은 자리 파일 (실제 엑셀 서식은 서버가 만든다)
+      // 서버와 같은 파일 이름 규칙, 내용은 자리 파일 (실제 엑셀 서식은 서버가 생성)
       return new HttpResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04]), {
         headers: {
           'Content-Type': REPORT_XLSX_CONTENT_TYPE,

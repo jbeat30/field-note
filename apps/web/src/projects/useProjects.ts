@@ -20,6 +20,7 @@ const cleanFilter = (filter: ProjectListQuery): ProjectListQuery => ({
   to: filter.to || undefined,
   q: filter.q?.trim() || undefined,
   site: filter.site?.trim() || undefined,
+  hasWarning: filter.hasWarning || undefined,
   sortBy: filter.sortBy || undefined,
   sortDir: filter.sortDir || undefined,
   page: filter.page || undefined,
@@ -150,7 +151,7 @@ export const useProjectHistory = (id: string) =>
     },
   });
 
-// 상태 전환: 서버가 규칙을 확인한 뒤에만 반영 (낙관적 업데이트 없음). 규칙 위반은 호출한 쪽이 화면에 보여 줌
+// 상태 전환: 서버가 규칙을 확인한 뒤에만 반영 (낙관적 업데이트 없음), 규칙 위반은 호출한 쪽이 화면에 보여 줌
 export const useTransitionProject = (id: string) => {
   const queryClient = useQueryClient();
 

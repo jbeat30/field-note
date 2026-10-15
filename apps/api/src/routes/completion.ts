@@ -1,7 +1,9 @@
 import {
+  REPORT_XLSX_CONTENT_TYPE,
   projectCompletionSummarySchema,
   projectParamsSchema,
   transitionNoticesQuerySchema,
+  successResponseSchema,
   transitionNoticesSchema,
   type TransitionNoticesQuery,
 } from '@field-note/shared';
@@ -68,6 +70,31 @@ export const registerCompletionRoutes = (
     async ({ auth, params }) => {
       try {
         return await completion!.summary(auth!.companyId, (params as { id: string }).id);
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/projects/{id}/summary.xlsx',
+      summary:
+        '프로젝트 요약 엑셀 내보내기 (요약과 같은 내용, 금액·민감 문서 제외, 내보낸 기록이 남음)',
+      auth: 'required',
+      request: { params: projectParamsSchema },
+      response: { status: 200, schema: successResponseSchema },
+      file: { contentType: REPORT_XLSX_CONTENT_TYPE },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params }) => {
+      try {
+        return await completion!.exportXlsx(
+          auth!.companyId,
+          auth!.userId,
+          (params as { id: string }).id,
+        );
       } catch (error) {
         throw toAppError(error);
       }

@@ -1,5 +1,5 @@
 -- 문서 분류 정리 (09 문서 §3.6): 도면·시방·작업지시 → 도면·작업지시서(DRAWING), 견적·정산(QUOTE) 추가
--- 기존 문서는 시방(SPEC)·작업지시(WORK_ORDER)를 DRAWING으로 옮기고 나머지 분류는 그대로 둔다
+-- 기존 문서의 시방(SPEC)·작업지시(WORK_ORDER)는 DRAWING으로 이동, 나머지 분류는 유지
 ALTER TYPE "document_category" RENAME TO "document_category_old";
 CREATE TYPE "document_category" AS ENUM ('DRAWING', 'CONTRACT', 'SAFETY', 'QUOTE', 'OTHER');
 

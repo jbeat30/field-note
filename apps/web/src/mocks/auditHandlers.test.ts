@@ -66,7 +66,7 @@ describe('기록 조회 목업', () => {
     ]);
     expect(nextCursor).toBeNull();
 
-    // 종류와 프로젝트로도 거른다
+    // 종류와 프로젝트로도 필터
     expect((await list({ kind: 'DELETE' })).items.map((item) => item.action)).toEqual([
       'PHOTO_DELETED',
     ]);

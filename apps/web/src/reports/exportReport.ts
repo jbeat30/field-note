@@ -20,7 +20,7 @@ export const filenameFromDisposition = (disposition: string | null, fallback: st
   }
 };
 
-// 엑셀 내려받기 공통: 오류는 파일 대신 JSON으로 오므로 화면이 바뀌지 않게 직접 받아 처리한다
+// 엑셀 내려받기 공통: 오류는 파일 대신 JSON으로 수신되므로 화면이 바뀌지 않게 직접 받아 처리
 const downloadXlsx = async (url: string, fallbackName: string) => {
   let response: Response;
 
@@ -65,6 +65,56 @@ export const downloadReportXlsx = (projectId: string, from: string, to: string) 
     `/api/v1/projects/${projectId}/daily-reports.xlsx?${new URLSearchParams({ from, to })}`,
     `작업일보_${from}_${to}.xlsx`,
   );
+
+/**
+ * @description 회사 전체 데이터를 엑셀로 내려받음 (해지 전 데이터 반환). 비밀번호 로그인 계정은 비밀번호 재확인, 내보내기는 서버에 기록으로 남는다
+ * @param currentPassword 현재 비밀번호 (소셜 로그인만 쓰는 계정은 생략)
+ * @returns 내려받은 파일 이름
+ * @throws 비밀번호가 틀리거나 서버 오류일 때 사유와 함께
+ */
+export const downloadCompanyDataXlsx = async (currentPassword?: string) => {
+  let response: Response;
+
+  try {
+    response = await fetch('/api/v1/company/export', {
+      method: 'POST',
+      credentials: 'same-origin',
+      headers: { 'Content-Type': 'application/json', 'X-Field-Note-Client': 'web' },
+      body: JSON.stringify(currentPassword ? { currentPassword } : {}),
+    });
+  } catch {
+    throw new ReportExportError('연결이 끊겼습니다. 연결을 확인하고 다시 시도해 주세요');
+  }
+
+  if (!response.ok) {
+    throw new ReportExportError(getErrorDetailMessage(await response.json().catch(() => null)));
+  }
+
+  const filename = filenameFromDisposition(
+    response.headers.get('Content-Disposition'),
+    '전체데이터.xlsx',
+  );
+  const objectUrl = URL.createObjectURL(await response.blob());
+  const link = document.createElement('a');
+
+  link.href = objectUrl;
+  link.download = filename;
+  document.body.append(link);
+  link.click();
+  link.remove();
+  setTimeout(() => URL.revokeObjectURL(objectUrl), 10_000);
+
+  return filename;
+};
+
+/**
+ * @description 프로젝트 요약을 엑셀로 내려받음 (요약과 같은 내용). 내보내기는 서버에 기록으로 남는다
+ * @param projectId 프로젝트 ID
+ * @returns 내려받은 파일 이름
+ * @throws 서버 오류일 때 사유와 함께
+ */
+export const downloadSummaryXlsx = (projectId: string) =>
+  downloadXlsx(`/api/v1/projects/${projectId}/summary.xlsx`, '프로젝트요약.xlsx');
 
 /**
  * @description 월 공수표를 엑셀로 내려받음 (급여·정산 담당에게 전달하는 용도). 내보내기는 서버에 기록으로 남는다

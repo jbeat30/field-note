@@ -25,11 +25,11 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 표의 번호 칸으로 그 줄을 찾는다
+// 표의 번호 칸으로 해당 줄 탐색
 const rowOf = (canvas: ReturnType<typeof within>, seq: number) =>
   canvas.getByRole('cell', { name: `#${seq}`, hidden: true }).closest('tr') as HTMLElement;
 
-// 표에서 번호를 눌러 상세 창을 연다
+// 표에서 번호를 눌러 상세 창 열기
 const openDetail = async (canvas: ReturnType<typeof within>, seq: number) => {
   await userEvent.click(await canvas.findByRole('button', { name: `#${seq} 자세히 보기` }));
 
@@ -41,7 +41,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByText(/옥상 배수구 주변 방수 판금/)).toBeInTheDocument();
-    // 번호 큰 것이 먼저, 협의 중으로 오래 남은 건은 경과일을 알려 준다
+    // 번호가 큰 것이 먼저, 협의 중으로 오래 남은 건은 경과일 표시
     const table = within(canvas.getByRole('table', { name: '추가 공사 목록' }));
     const rows = table.getAllByRole('row').slice(1);
 
@@ -50,7 +50,7 @@ export const Default: Story = {
     await expect(rows[0]).toHaveTextContent(/\d+일째 협의 중/);
     await expect(rows[1]).toHaveTextContent('#1');
     await expect(rows[1]).toHaveTextContent('합의됨');
-    // 기록 폼은 평소에는 보이지 않고, 변경·추가 작업으로 쓴 공수·자재 합계 구역이 있다
+    // 기록 폼은 평소에는 숨김, 변경·추가 작업으로 쓴 공수·자재 합계 구역 존재
     await expect(
       canvas.queryByRole('form', { name: '변경·추가 작업 기록' }),
     ).not.toBeInTheDocument();
@@ -71,7 +71,7 @@ export const CreateWithValidation: Story = {
       await within(document.body).findByRole('form', { name: '변경·추가 작업 기록' }),
     );
 
-    // 요청자·내용이 비어 있으면 서버에 보내기 전에 막는다
+    // 요청자·내용이 비어 있으면 서버 전송 전에 차단
     await userEvent.click(form.getByRole('button', { name: '저장' }));
     await expect(await form.findByText('요청자를 입력해 주세요')).toBeInTheDocument();
     await expect(form.getByText('내용을 입력해 주세요')).toBeInTheDocument();
@@ -80,7 +80,7 @@ export const CreateWithValidation: Story = {
     await userEvent.type(form.getByLabelText('요청 내용'), '2층 복도 천장 점검구 추가');
     await userEvent.click(form.getByRole('button', { name: '저장' }));
 
-    // 저장하면 창이 닫히고 표에 새 번호가 생긴다
+    // 저장하면 창이 닫히고 표에 새 번호 추가
     await expect(await canvas.findByText('#3 기록했습니다 (협의 중)')).toBeInTheDocument();
     await waitFor(() => expect(canvas.getByRole('cell', { name: '#3' })).toBeInTheDocument());
     await waitFor(() =>
@@ -101,7 +101,7 @@ export const WithdrawNeedsReason: Story = {
 
     const form = within(await dialog.findByRole('form', { name: '철회 확인' }));
 
-    // 사유 없이는 철회할 수 없다
+    // 사유 없이는 철회 불가
     await userEvent.click(form.getByRole('button', { name: '확인' }));
     await expect(await form.findByText('철회 사유를 입력해 주세요')).toBeInTheDocument();
 
@@ -109,7 +109,7 @@ export const WithdrawNeedsReason: Story = {
     await userEvent.click(form.getByRole('button', { name: '확인' }));
 
     await expect(await dialog.findByText("'철회' 상태로 바꿨습니다")).toBeInTheDocument();
-    // 이력에 남는다
+    // 이력에 기록
     await expect(await dialog.findByText(/고객이 요청을 취소함/)).toBeInTheDocument();
   },
 };
@@ -122,14 +122,14 @@ export const AgreedIsLocked: Story = {
 
     const dialog = await openDetail(canvas, 1);
 
-    // 합의된 기록은 내용을 고칠 수 없고 상태만 바꿀 수 있으며 이력이 남아 있다
+    // 합의된 기록은 내용 수정 불가, 상태만 변경 가능하며 이력 보존
     await expect(await dialog.findByText(/현장에서 구두 합의/)).toBeInTheDocument();
     await expect(dialog.queryByRole('button', { name: '내용 수정' })).not.toBeInTheDocument();
     await expect(dialog.getByRole('button', { name: '다시 협의 중으로' })).toBeInTheDocument();
   },
 };
 
-// 문서함에 있는 문서를 연결하고, 풀 때는 확인 창을 거친다
+// 문서함에 있는 문서를 연결하고 해제할 때는 확인 창 경유
 export const LinkEvidence: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -158,7 +158,7 @@ export const LinkEvidence: Story = {
   },
 };
 
-// 증빙 올리기: 파일을 고르면 문서함에 계약·공문 문서로 만들어 이 추가 공사에 바로 연결된다
+// 증빙 올리기: 파일을 고르면 문서함에 계약·공문 문서로 생성되어 이 추가 공사에 바로 연결
 export const UploadEvidence: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -175,7 +175,7 @@ export const UploadEvidence: Story = {
     const item = await dialog.findByRole('button', { name: '고객 합의 공문 열기' });
 
     await expect(item).toBeInTheDocument();
-    // 계약·공문 분류의 민감 자료로 만들어진다
+    // 계약·공문 분류의 민감 자료로 생성
     await expect(item).toHaveTextContent('계약·공문 · 민감');
     await waitFor(() => expect(rowOf(canvas, 2)).toHaveTextContent(/[1-9]$/));
   },

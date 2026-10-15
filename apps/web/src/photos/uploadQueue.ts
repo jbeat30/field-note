@@ -4,7 +4,7 @@ import type { PhotoCategory } from '@field-note/shared';
 // 실패하면 다시 시도하고, 앱을 닫아도 IndexedDB에 남아 다시 열면 이어서 올린다 (기술 기획서 §6)
 //
 // 한 장의 진행 단계: REQUEST(업로드 신청) → PUT(저장소에 올리기) → COMPLETE(완료 알림) → REGISTER(사진으로 등록)
-// 각 단계는 다시 보내도 안전해서(서버가 중복을 막음) 어느 단계에서 끊겨도 그 단계부터 이어간다
+// 각 단계는 재전송해도 안전(서버가 중복 차단)하므로 어느 단계에서 끊겨도 그 단계부터 재개
 export const UPLOAD_STEPS = ['REQUEST', 'PUT', 'COMPLETE', 'REGISTER'] as const;
 
 export type UploadStep = (typeof UPLOAD_STEPS)[number];
@@ -24,9 +24,9 @@ export type UploadMeta = {
   category: PhotoCategory;
   area?: string;
   description?: string;
-  // 촬영일시(ISO). 비우면 서버가 등록 시각으로 정함
+  // 촬영일시(ISO), 비우면 서버가 등록 시각으로 정함
   takenAt?: string;
-  // 작업일. 비우면 서버가 촬영일(서울 기준)로 정함
+  // 작업일, 비우면 서버가 촬영일(서울 기준)로 결정
   workDate?: string;
 };
 
@@ -262,7 +262,7 @@ export const createUploadQueue = (deps: UploadQueueDeps): UploadQueue => {
     items.some((item) => item.status === 'QUEUED' || item.status === 'WAITING');
 
   // 차례대로 한 장씩 처리하는 반복 (이미 돌고 있으면 새로 시작하지 않음)
-  // 반복이 바로 끝나는 경우(처리할 항목이 없음)에도 running이 남지 않도록 정리는 finally 콜백(비동기)에서 한다
+  // 반복이 즉시 끝나는 경우(처리할 항목 없음)에도 running이 남지 않도록 정리는 finally 콜백(비동기)에서 수행
   const kick = () => {
     if (running) return;
 

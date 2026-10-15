@@ -50,7 +50,7 @@ export const UrgentAndNormal: Story = {
   },
 };
 
-// 같은 종류가 3건을 넘으면 한 줄로 묶고, 펼치면 하나씩 보인다. 묶음 숨기기는 키를 모두 보낸다
+// 같은 종류가 3건을 넘으면 한 줄로 묶고 펼치면 하나씩 표시, 묶음 숨기기는 키 전체 전송
 export const Grouped: Story = {
   args: { alerts: noLog(5) },
   play: async ({ canvasElement, args }) => {

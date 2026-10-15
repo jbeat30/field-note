@@ -43,7 +43,7 @@ export const Default: Story = {
       '/employees/0198d000-0000-7000-8000-000000000101',
     );
     await expect(rows[3]).toHaveTextContent('작업 내역 수정');
-    // 인건비·단가 조회는 더 남기지 않으므로 종류 칩에도 없다
+    // 인건비·단가 조회는 기록 중단이므로 종류 칩에도 없음
     await expect(canvas.queryByRole('button', { name: '조회' })).not.toBeInTheDocument();
     await expect(canvas.getByText(/수정하거나 지울 수 없습니다/)).toBeInTheDocument();
   },
@@ -67,7 +67,7 @@ export const FilterByKind: Story = {
   },
 };
 
-// 행을 누르면 바뀐 내용의 전·후가 보이고, 개인정보는 값 없이 바뀌었다는 것만 보인다
+// 행을 누르면 바뀐 내용의 전·후 표시, 개인정보는 값 없이 바뀌었다는 사실만 표시
 export const ShowChanges: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -92,7 +92,7 @@ export const FilterByProject: Story = {
     await canvas.findByRole('list', { name: '기록 목록' });
     await chooseOption(canvas.getByLabelText('프로젝트'), 'A동 외장 판금 공사');
 
-    // 직원 정보 수정은 프로젝트에 속하지 않아 빠진다
+    // 직원 정보 수정은 프로젝트에 속하지 않으므로 제외
     await waitFor(() => expect(canvas.getAllByRole('listitem')).toHaveLength(3));
     await expect(canvas.queryByText('직원 정보 수정')).not.toBeInTheDocument();
   },
@@ -108,7 +108,7 @@ export const FilterByDate: Story = {
     await waitFor(() => expect(canvas.getAllByRole('listitem')).toHaveLength(2));
     await expect(canvas.getAllByRole('listitem')[1]).toHaveTextContent('내보내기');
 
-    // 끝 날짜가 시작 날짜보다 빠르면 막는다
+    // 끝 날짜가 시작 날짜보다 빠르면 차단
     fireEvent.change(canvas.getByLabelText('끝 날짜'), { target: { value: '2026-10-01' } });
     await expect(
       await canvas.findByText('끝 날짜는 시작 날짜보다 빠를 수 없습니다'),

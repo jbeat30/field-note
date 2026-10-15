@@ -336,7 +336,7 @@ describe('프로젝트 상태별 기록 (§10.3)', () => {
       expect.objectContaining({ path: 'body.confirmCompleted' }),
     ]);
     expect((await client.create(project, { ...body, confirmCompleted: true })).status).toBe(201);
-    // 조회는 계속 된다
+    // 조회는 계속 가능
     expect((await client.list(project)).status).toBe(200);
 
     const cancelled = await setup();
@@ -482,7 +482,7 @@ describe('상태 변경과 이력', () => {
       db.app.$executeRawUnsafe(`UPDATE change_work_status_changes SET note = 'x'`),
     ).rejects.toThrow();
     await expect(db.app.$executeRawUnsafe('DELETE FROM change_works')).rejects.toThrow();
-    // 앱 계정은 번호·작성자 같은 고정 열을 바꿀 수 없다
+    // 앱 계정은 번호·작성자 같은 고정 열 수정 불가
     await expect(db.app.$executeRawUnsafe(`UPDATE change_works SET seq = 99`)).rejects.toThrow();
     await expect(
       db.ownerPool.query(`UPDATE change_works SET content = '' WHERE id = $1`, [id]),
@@ -509,7 +509,7 @@ describe('증빙 문서', () => {
       documentCount: 1,
       documents: [{ documentId: doc, title: '카톡 캡처', category: 'OTHER', isSensitive: false }],
     });
-    // 목록에도 문서 수가 보인다
+    // 목록에도 문서 수 표시
     expect(
       changeWorksResponseSchema.parse((await client.list(project)).body).items[0]!.documentCount,
     ).toBe(1);
@@ -523,7 +523,7 @@ describe('증빙 문서', () => {
     expect(unlinked.body.documents).toEqual([]);
     expect((await client.unlink(id, doc)).status).toBe(404);
 
-    // 풀었다가 다시 연결할 수 있고, 이전 연결 행은 해제 시각과 함께 남아 있다
+    // 해제 후 다시 연결 가능, 이전 연결 행은 해제 시각과 함께 보존
     expect((await client.link(id, { documentId: doc })).status).toBe(201);
 
     const { rows } = await db.ownerPool.query<{ unlinked_at: Date | null }>(
@@ -574,7 +574,7 @@ describe('증빙 올리기', () => {
       documents: [{ title: '카톡 캡처', category: 'CONTRACT', isSensitive: true }],
     });
 
-    // 재시도: 새 문서도 중복 연결도 만들지 않고 같은 결과를 준다
+    // 재시도: 새 문서도 중복 연결도 만들지 않고 같은 결과 반환
     const again = await client.evidence(id, { fileId, title: '카톡 캡처' });
 
     expect(again.status).toBe(201);
@@ -606,7 +606,7 @@ describe('증빙 올리기', () => {
       (await client.evidence('0198d000-0000-7000-8000-00000000dead', { fileId, title: '증빙' }))
         .status,
     ).toBe(404);
-    // 다른 프로젝트에 올린 파일은 증빙으로 쓸 수 없다
+    // 다른 프로젝트에 올린 파일은 증빙으로 사용 불가
     const other = await client.id('/projects', { ...projectBody, name: 'B동' });
     const foreign = await client.uploadFile(other, '다른 프로젝트 파일');
 
@@ -632,7 +632,7 @@ describe('변경·추가 작업으로 쓴 공수·자재', () => {
       entries: [{ employeeId: worker, categoryId: category, minutes: 240 }],
       isChange: true,
     });
-    // 임시 저장은 합산하지 않는다
+    // 임시 저장은 합산 제외
     await client.saveLog(project, '2026-10-08', {
       status: 'DRAFT',
       content: '임시 변경',

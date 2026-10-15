@@ -1,13 +1,13 @@
 import { z } from 'zod';
 
-// 파일 업로드 공통 규칙 (서비스 기획서 §12.1, 기술 기획서 §10). 서버와 웹 목업이 같은 규칙을 쓴다
+// 파일 업로드 공통 규칙 (서비스 기획서 §12.1, 기술 기획서 §10), 서버와 웹 목업이 같은 규칙 사용
 export const FILE_PURPOSES = ['PHOTO', 'DOCUMENT', 'EMPLOYEE_DOCUMENT'] as const;
 
 export const filePurposeSchema = z.enum(FILE_PURPOSES);
 
 export type FilePurpose = z.infer<typeof filePurposeSchema>;
 
-// 업로드 → 내용 검사·썸네일 작업 → 사용 가능. 검사에서 걸러지면 거부됨
+// 업로드 → 내용 검사·썸네일 작업 → 사용 가능, 검사에서 걸러지면 거부
 export const FILE_STATUSES = ['PENDING', 'PROCESSING', 'READY', 'REJECTED'] as const;
 
 export const fileStatusSchema = z.enum(FILE_STATUSES);
@@ -55,7 +55,7 @@ export const FILE_UPLOAD_URL_TTL_SECONDS = 15 * 60;
 export const FILE_DOWNLOAD_URL_TTL_SECONDS = 5 * 60;
 
 // 허용 형식 목록 (이미지·PDF·오피스 문서만, 실행 파일 등은 목록에 없으므로 모두 거부)
-// 확장자가 아니라 내용으로 판별한 형식(mime)을 이 표와 비교한다
+// 확장자가 아니라 내용으로 판별한 형식(mime)을 이 표와 비교
 export const ALLOWED_FILE_TYPES: readonly {
   mime: string;
   extensions: readonly string[];
@@ -209,7 +209,7 @@ export const fileUploadRequestSchema = z
   .object({ ...uploadFields, purpose: projectFilePurposeSchema })
   .superRefine(checkUpload);
 
-// 직원 서류 업로드 신청: 용도는 직원 서류로 정해져 있고 이미지·PDF만 올릴 수 있다
+// 직원 서류 업로드 신청: 용도는 직원 서류로 고정, 이미지·PDF만 업로드 가능
 export const employeeFileUploadRequestSchema = z
   .object(uploadFields)
   .superRefine((value, context) =>

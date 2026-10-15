@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '../../lib/cn';
 
-// 켜고 끄는 스위치 (터치하기 쉽게 48×28). 이름은 aria-label이나 감싼 label로 준다
+// 켜고 끄는 스위치 (터치하기 쉽게 48×28), 이름은 aria-label이나 감싼 label로 지정
 export const Switch = ({ className, ...props }: ComponentProps<typeof SwitchPrimitive.Root>) => (
   <SwitchPrimitive.Root
     className={cn(

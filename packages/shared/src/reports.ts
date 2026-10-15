@@ -49,7 +49,7 @@ export const dailyReportPhotoSchema = z.object({
   takenAt: z.iso.datetime(),
   // 검사가 끝나 썸네일이 있을 때만 (짧은 만료 주소라 출력 화면을 연 직후 인쇄해야 함)
   thumbnailUrl: z.url().nullable(),
-  // 파일 검사·썸네일 작업이 아직 끝나지 않음 (화면이 잠시 뒤 다시 읽음). 검사에서 거부된 사진은 보고서에 싣지 않는다
+  // 파일 검사·썸네일 작업이 아직 끝나지 않음 (화면이 잠시 뒤 재조회), 검사에서 거부된 사진은 보고서에서 제외
   isProcessing: z.boolean(),
 });
 
@@ -78,7 +78,7 @@ export const dailyReportSchema = z.object({
     })
     .nullable(),
   entries: z.array(dailyReportEntrySchema),
-  // 인원은 같은 직원이 여러 줄이어도 한 명으로 센다
+  // 인원은 같은 직원이 여러 줄이어도 한 명으로 집계
   totals: z.object({ headcount: z.number().int(), minutes: z.number().int() }),
   // 공수 표시 방식 (회사 설정: 비율 MD 또는 시간)
   settings: z.object({ workUnitMode: workUnitModeSchema, standardWorkMinutes: z.number().int() }),
@@ -90,7 +90,7 @@ export const dailyReportSchema = z.object({
 
 export type DailyReport = z.infer<typeof dailyReportSchema>;
 
-// 엑셀 내보내기: 기간 안의 작업 내역·공수·자재를 시트로 나눠 내려받는다. 내보내기는 기록으로 남는다 (§7.3)
+// 엑셀 내보내기: 기간 안의 작업 내역·공수·자재를 시트로 나눠 다운로드, 내보내기는 기록 저장 (§7.3)
 export const reportExportQuerySchema = z
   .object({
     from: dateSchema,

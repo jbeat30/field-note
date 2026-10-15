@@ -6,8 +6,8 @@ import pg from 'pg';
 
 import { withDatabase } from './connectionUrl';
 
-// 테스트 실행 전체가 PostgreSQL 컨테이너 하나를 공유한다 (스위트마다 컨테이너를 띄우면 느리고 종료 시점에 연결 오류가 난다)
-// 스위트는 마이그레이션이 끝난 템플릿 DB를 복제해 자기만의 DB를 쓴다
+// 테스트 실행 전체가 PostgreSQL 컨테이너 하나 공유 (스위트마다 컨테이너를 띄우면 느리고 종료 시점에 연결 오류 발생)
+// 스위트는 마이그레이션이 끝난 템플릿 DB를 복제해 전용 DB 사용
 export const SHARED_URL_ENV = 'FIELD_NOTE_TEST_PG_URL';
 export const TEMPLATE_DB = 'field_note_template';
 
@@ -23,7 +23,7 @@ const API_ROOT = path.resolve(__dirname, '../..');
 
 /**
  * @description 마이그레이션 적용과 역할 비밀번호 설정을 마친 템플릿 DB가 있는 컨테이너 시작
- * 역할(계정)은 클러스터 전체에 속하므로 여기서 한 번만 설정하면 복제한 모든 DB에서 쓸 수 있다
+ * 역할(계정)은 클러스터 전체 소속이므로 한 번만 설정하면 복제한 모든 DB에서 사용 가능
  * @returns 컨테이너와 관리용 접속 주소 (`postgres` DB)
  */
 export const startSharedPostgres = async (): Promise<{

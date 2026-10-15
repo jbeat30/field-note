@@ -51,7 +51,7 @@ type MockDocument = Omit<Document, 'versionCount' | 'latest'> & {
 
 type MockLog = DocumentAccessLog & { scope: string; documentId: string };
 
-// 목업 저장소: 회사별 문서·열람 기록 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 문서·열람 기록 (새로고침하면 초기화), 실제 서버 동작을 모사
 const documents = new Map<string, MockDocument>();
 const logs: MockLog[] = [];
 const seeded = new Set<string>();

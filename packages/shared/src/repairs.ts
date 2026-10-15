@@ -5,8 +5,8 @@ import { changeUsageSchema } from './changeWorks';
 import { materialRecordKindSchema } from './materials';
 import type { ProjectStatus } from './projects';
 
-// 보수 요청 (서비스 기획서 §10.6): 보증 중에 고객이 요청한 하자 보수를 접수부터 처리까지 기록한다.
-// 보수 작업은 작업 내역·자재 기록에 "사후 작업"으로 입력하고 이 요청에 연결해 쓴 공수·자재를 건별로 본다
+// 보수 요청 (서비스 기획서 §10.6): 보증 중 고객이 요청한 하자 보수를 접수부터 처리까지 기록
+// 보수 작업은 작업 내역·자재 기록에 "사후 작업"으로 입력하고 이 요청에 연결해 사용한 공수·자재를 건별로 확인
 export const REPAIR_STATUSES = ['RECEIVED', 'IN_PROGRESS', 'ON_HOLD', 'DONE'] as const;
 
 export const repairStatusSchema = z.enum(REPAIR_STATUSES);
@@ -87,7 +87,7 @@ export const repairTransitionSchema = z.object({
 
 export type RepairTransition = z.infer<typeof repairTransitionSchema>;
 
-// 사후 작업으로 표시한 작업 내역 또는 자재 기록 중 하나를 이 요청에 연결한다
+// 사후 작업으로 표시한 작업 내역 또는 자재 기록 중 하나를 이 요청에 연결
 export const repairLinkSchema = z
   .object({ workLogId: z.uuid().optional(), materialRecordId: z.uuid().optional() })
   .refine((value) => (value.workLogId === undefined) !== (value.materialRecordId === undefined), {
@@ -197,7 +197,7 @@ export const isRepairOpen = (status: RepairStatus) =>
  */
 export const canEditRepair = (status: RepairStatus) => status !== 'DONE';
 
-// 보수 요청은 보증 중인 프로젝트에서만 기록·변경한다. 완료·종료·그 전 상태는 조회만 (§10.3 "보증 중: 보수 요청 기록")
+// 보수 요청은 보증 중인 프로젝트에서만 기록·변경, 완료·종료·그 전 상태는 조회만 (§10.3 "보증 중: 보수 요청 기록")
 export const repairProjectCheck = (status: ProjectStatus): RuleCheck => {
   if (status === 'WARRANTY') {
     return { ok: true };

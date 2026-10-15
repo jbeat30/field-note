@@ -19,7 +19,7 @@ import { useCreateRepair } from './useRepairs';
 
 const FIELDS = ['receivedOn', 'requester', 'content', 'location', 'projectId'] as const;
 
-// 보수 요청 접수: 누가 언제 어디의 무엇을 요청했는지 적는다. 처음에는 "접수"로 저장된다
+// 보수 요청 접수: 누가 언제 어디의 무엇을 요청했는지 입력, 처음에는 "접수"로 저장
 export const RepairForm = ({ projectId }: { projectId: string }) => {
   const create = useCreateRepair(projectId);
   const today = todayInSeoul(new Date());

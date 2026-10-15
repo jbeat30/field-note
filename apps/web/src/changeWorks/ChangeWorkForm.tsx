@@ -18,7 +18,7 @@ import { useCreateChangeWork } from './useChangeWorks';
 
 const FIELDS = ['requestedOn', 'requester', 'content', 'confirmCompleted'] as const;
 
-// 변경·추가 작업 기록: 누가 언제 무엇을 요청했는지만 적으면 된다 (금액은 기록하지 않음). 처음에는 "협의 중"으로 저장된다
+// 변경·추가 작업 기록: 누가 언제 무엇을 요청했는지만 입력 (금액은 기록하지 않음), 처음에는 "협의 중"으로 저장
 export const ChangeWorkForm = ({
   projectId,
   confirmCompleted,
@@ -26,7 +26,7 @@ export const ChangeWorkForm = ({
 }: {
   projectId: string;
   confirmCompleted: boolean;
-  // 저장하면 안내 문구를 넘겨 호출 (창 안에서 쓸 때 창을 닫고 화면에 알린다). 없으면 폼 위에 보임
+  // 저장하면 안내 문구를 넘겨 호출 (창 안에서 쓸 때 창을 닫고 화면에 알린다), 없으면 폼 위에 보임
   onSaved?: (message: string) => void;
 }) => {
   const create = useCreateChangeWork(projectId);

@@ -26,7 +26,7 @@ export class PasswordError extends Error {
 }
 
 export type PasswordService = {
-  // 재설정 메일 요청. 가입 여부·제한 초과와 관계없이 항상 같은 결과를 돌려줘 계정 존재를 알 수 없게 함
+  // 재설정 메일 요청, 가입 여부·제한 초과와 관계없이 항상 같은 결과를 돌려줘 계정 존재를 알 수 없게 함
   requestReset: (email: string) => Promise<void>;
   // 작업 처리기에서 호출: 링크 토큰을 만들어 해시를 저장하고 메일 발송
   deliverReset: (account: AuthenticatedAccount) => Promise<void>;
@@ -75,7 +75,7 @@ export const createPasswordService = ({
       include: { credential: true, company: true },
     });
 
-    // 이메일 인증을 마친 일반(아이디) 계정만 대상. 그 외에는 아무 일도 하지 않고 같은 결과를 돌려줌
+    // 이메일 인증을 마친 일반(아이디) 계정만 대상, 그 외에는 아무 일도 하지 않고 같은 결과를 돌려줌
     if (
       !user?.emailVerifiedAt ||
       !user.credential?.passwordHash ||

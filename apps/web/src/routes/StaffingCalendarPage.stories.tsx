@@ -40,7 +40,7 @@ export const Default: Story = {
       expect.stringMatching(/\/projects\/.+\/work\/2026-09-01$/),
     );
     await expect(day1.parentElement).toBe(day2.parentElement);
-    // 일한 사람이 먼저, 기록이 없는 사람은 따로 묶는다
+    // 일한 사람 우선 표시, 기록이 없는 사람은 별도 그룹
     await expect(
       within(canvas.getByRole('group', { name: '인력 배치 타임라인' })).getByText('일한 사람 4명'),
     ).toBeInTheDocument();
@@ -49,14 +49,14 @@ export const Default: Story = {
         /일한 기록이 없는 사람 \d+명/,
       ),
     ).toBeInTheDocument();
-    // 임시 저장(9/4)은 막대로 보이지 않는다
+    // 임시 저장(9/4)은 막대로 표시되지 않음
     await expect(
       canvas.queryByRole('link', { name: /정판금 2026년 9월 4일/ }),
     ).not.toBeInTheDocument();
   },
 };
 
-// 같은 날 두 프로젝트에서 일하면 막대가 위아래로 쌓이고 그 날이 겹침으로 표시된다
+// 같은 날 두 프로젝트에서 일하면 막대가 위아래로 쌓이고 해당 날짜를 겹침으로 표시
 export const OverlapShowsStackedBars: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -70,7 +70,7 @@ export const OverlapShowsStackedBars: Story = {
       await expect(link).toHaveAccessibleName(/덕트/);
     }
 
-    // 겹침 있는 사람만 거르면 겹치는 사람만 남는다
+    // 겹침 있는 사람만 필터하면 겹치는 사람만 표시
     await userEvent.click(canvas.getByRole('button', { name: '겹침 있는 사람만' }));
     await waitFor(() =>
       expect(canvas.queryByRole('link', { name: '정판금' })).not.toBeInTheDocument(),
@@ -112,7 +112,7 @@ export const FilterByTitle: Story = {
   },
 };
 
-// 빈 칸을 누르면 프로젝트를 고를 수 있다 (고르면 그 프로젝트의 그날 하루 기록으로 간다)
+// 빈 칸을 누르면 프로젝트 선택 가능 (선택하면 그 프로젝트의 그날 하루 기록으로 이동)
 export const PickProjectOnEmptyCell: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

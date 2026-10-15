@@ -28,7 +28,7 @@ export class AssignmentError extends Error {
 export type AssignmentService = {
   // 인력 배치 캘린더: 기간 안의 직원과 투입 (취소한 투입·취소된 프로젝트 제외)
   calendar: (companyId: string, query: StaffingCalendarQuery) => Promise<StaffingCalendar>;
-  // 프로젝트의 투입 목록 (기본은 취소하지 않은 것만). 겹침·휴직·퇴사 경고가 함께 붙음
+  // 프로젝트의 투입 목록 (기본은 취소하지 않은 것만), 겹침·휴직·퇴사 경고가 함께 붙음
   list: (companyId: string, projectId: string, includeCancelled: boolean) => Promise<Assignment[]>;
   create: (companyId: string, projectId: string, input: AssignmentCreate) => Promise<Assignment>;
   update: (
@@ -55,7 +55,7 @@ const invalid = (path: string, message: string) =>
   new AssignmentError('INVALID', { path, message });
 
 // 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음, 서비스 기획서 §9.4)
-// 취소된 프로젝트·취소한 투입은 겹침으로 보지 않는다
+// 취소된 프로젝트와 취소한 투입은 겹침 판정에서 제외
 const warningsFor = async (tx: Prisma.TransactionClient, rows: Row[]) => {
   const warnings = new Map<string, AssignmentWarning[]>(rows.map((row) => [row.id, []]));
   const employeeIds = [...new Set(rows.map((row) => row.employeeId))];
@@ -296,7 +296,7 @@ export const createAssignmentService = (app: PrismaClient): AssignmentService =>
         ...rows.map((row) => row.employeeId),
         ...[...workDays.values()].map((item) => item.employeeId),
       ]);
-      // 퇴사 직원은 기간 안에 투입이나 일한 기록이 있을 때만 보여 준다
+      // 퇴사 직원은 기간 안의 투입 또는 일한 기록이 있을 때만 표시
       const employees = await tx.employee.findMany({
         where: { OR: [{ status: { not: 'LEFT' } }, { id: { in: [...assigned] } }] },
         select: { id: true, name: true, title: true, status: true, leftOn: true },

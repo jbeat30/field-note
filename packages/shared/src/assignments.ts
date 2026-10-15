@@ -3,12 +3,12 @@ import { z } from 'zod';
 import { credentialGapReasonSchema } from './credentials';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
-// 투입 (서비스 기획서 §9.1, §9.4). 직원을 프로젝트 예정 기간 안의 일정 기간에 배정한다
+// 투입 (서비스 기획서 §9.1, §9.4), 직원을 프로젝트 예정 기간 안의 일정 기간에 배정
 export const ASSIGNMENT_MAX_PLANNED_MINUTES = 6_000_000;
 
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
-// 같은 날 다른 프로젝트에 겹쳐 배정되면 경고(막지는 않음, §9.4). 휴직·퇴사 직원도 경고
+// 같은 날 다른 프로젝트에 겹쳐 배정되면 경고(막지는 않음, §9.4), 휴직·퇴사 직원도 경고
 export const assignmentWarningSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('OVERLAP'),
@@ -39,7 +39,7 @@ export const assignmentSchema = z.object({
   employeeId: z.uuid(),
   startDate: z.iso.date(),
   endDate: z.iso.date(),
-  // 계획 공수(분). 보여 줄 때 회사 기준시간으로 MD·시간으로 환산
+  // 계획 공수(분), 보여 줄 때 회사 기준시간으로 MD·시간으로 환산
   plannedMinutes: z.number().int().nullable(),
   // 취소한 투입은 지우지 않고 취소 시각만 남김
   cancelledAt: z.iso.datetime().nullable(),
@@ -135,7 +135,7 @@ export type RuleCheck = { ok: true } | { ok: false; path: string; message: strin
 /**
  * @description 이 프로젝트 상태에서 투입을 만들거나 바꿀 수 있는지 (§10.3 "투입 배정" 행)
  * 예정·진행은 가능, 중단은 관리자 확인이 있을 때만, 완료·보증 중·종료·취소는 불가
- * (보증 중의 "사후 작업만 투입"은 보증 기능과 함께 4단계에서 연다)
+ * (보증 중의 "사후 작업만 투입"은 보증 기능과 함께 4단계에서 개방)
  * @param status 프로젝트 상태
  * @param confirmedSuspended 중단 중 투입을 관리자가 확인했는지
  * @returns 통과 여부와 거부 사유

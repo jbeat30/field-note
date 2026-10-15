@@ -45,7 +45,7 @@ export const useSaveAlertSettings = () => {
 
       return data;
     },
-    // 켜고 끈 즉시 홈의 알림에 반영된다
+    // 켜고 끈 즉시 홈의 알림에 반영
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.alertSettings(), saved.items);
 
@@ -54,7 +54,7 @@ export const useSaveAlertSettings = () => {
   });
 };
 
-// 알림 숨기기 (모두 숨기기도 같은 요청): 끝나면 홈·알림 개수를 다시 읽는다
+// 알림 숨기기 (모두 숨기기도 같은 요청): 완료 후 홈·알림 개수 재조회
 export const useDismissAlerts = () => {
   const queryClient = useQueryClient();
 

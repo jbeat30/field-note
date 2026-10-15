@@ -9,7 +9,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 자재 목록 (최근 기록한 자재가 먼저). 숨긴 자재는 새 기록에 쓸 수 없으므로 기본으로 뺀다
+// 자재 목록 (최근 기록한 자재 우선), 숨긴 자재는 새 기록에 쓸 수 없으므로 기본 제외
 export const useMaterials = (q = '') =>
   useQuery({
     queryKey: queryKeys.materials({ q }),

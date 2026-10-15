@@ -35,13 +35,13 @@ const stubWindowOpen = () => {
   return popup;
 };
 
-// 행 오른쪽 더보기 메뉴에서 항목을 고른다
+// 행 오른쪽 더보기 메뉴에서 항목 선택
 const pickRowMenu = async (canvas: ReturnType<typeof within>, title: string, item: string) => {
   await userEvent.click(await canvas.findByRole('button', { name: `${title} 더보기` }));
   await userEvent.click(await within(document.body).findByRole('menuitem', { name: item }));
 };
 
-// 맨 위 `문서 올리기` 버튼으로 올리기 창을 연다
+// 맨 위 `문서 올리기` 버튼으로 올리기 창 열기
 const openUpload = async (canvas: ReturnType<typeof within>) => {
   await userEvent.click(await canvas.findByRole('button', { name: '문서 올리기' }));
 
@@ -173,7 +173,7 @@ export const UploadNewDocument: Story = {
   },
 };
 
-// 같은 이름의 문서를 올리면 새 판으로 올릴지 묻고, 확인하면 그 문서의 판이 늘어난다
+// 같은 이름의 문서를 올리면 새 판으로 올릴지 확인하고, 확인하면 그 문서의 판 증가
 export const SameNameOffersNewVersion: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -222,7 +222,7 @@ export const UnsupportedFileIsRejected: Story = {
   },
 };
 
-// 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 넣을 수 있다
+// 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 포함 가능
 export const SummaryCheckboxNeedsEligibleDocument: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -231,7 +231,7 @@ export const SummaryCheckboxNeedsEligibleDocument: Story = {
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
-    // 도면·작업지시서 분류라 넣을 수 없다
+    // 도면·작업지시서 분류라 포함 불가
     await expect(await dialog.findByRole('checkbox', { name: /준공 요약에 넣기/ })).toBeDisabled();
   },
 };
@@ -272,7 +272,7 @@ export const DetailAddVersionAndDelete: Story = {
   },
 };
 
-// 검색 결과에서 들어오면(?doc=) 그 문서의 버전·기록가 바로 열리고, 닫으면 주소에서 doc이 빠진다
+// 검색 결과에서 진입하면(?doc=) 그 문서의 버전·기록이 바로 열리고 닫으면 주소에서 doc 제거
 export const OpensDetailFromSearchLink: Story = {
   parameters: {
     router: {

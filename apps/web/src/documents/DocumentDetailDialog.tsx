@@ -56,7 +56,7 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
   const [category, setCategory] = useState<DocumentCategory>(document.category);
   const [isSensitive, setIsSensitive] = useState(document.isSensitive);
   const [includeInSummary, setIncludeInSummary] = useState(document.includeInSummary);
-  // 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 실을 수 있다
+  // 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 포함 가능
   const canSummarize =
     (SUMMARY_DOCUMENT_CATEGORIES as readonly string[]).includes(category) && !isSensitive;
   const [error, setError] = useState<string | null>(null);

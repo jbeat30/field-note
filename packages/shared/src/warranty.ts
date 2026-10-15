@@ -3,8 +3,8 @@ import { z } from 'zod';
 import type { RuleCheck } from './assignments';
 import type { ProjectStatus } from './projects';
 
-// 보증 기간과 보증서 (서비스 기획서 §10.6): 완료 후 일정 기간 무상으로 보수하는 약속을 프로젝트별로 관리한다.
-// 종료 예정일은 시작일 + 보증 기간으로 계산하고, 고칠 때는 사유와 이력을 남긴다
+// 보증 기간과 보증서 (서비스 기획서 §10.6): 완료 후 일정 기간 무상으로 보수하는 약속을 프로젝트별로 관리
+// 종료 예정일은 시작일 + 보증 기간으로 계산, 수정 시 사유와 이력 기록
 export const DEFAULT_WARRANTY_MONTHS = 12;
 
 export const WARRANTY_MONTHS_MAX = 120;
@@ -114,7 +114,7 @@ export type WarrantyUpdateResult =
 
 /**
  * @description 보증 설정 입력을 검사하고 시작일·종료 예정일을 확정한다.
- * 시작일은 실제 완료일 기준이면 프로젝트의 완료일, 아니면 입력값이다. 종료 예정일은 시작일 + 기간이고, 직접 바꾸면 사유가 필수다.
+ * 시작일은 실제 완료일 기준이면 프로젝트의 완료일, 아니면 입력값, 종료 예정일은 시작일 + 기간이고 직접 변경하면 사유 필수
  * 이미 설정이 있으면 바꿀 때도 사유가 필수이다 (이력의 신뢰성)
  * @param params 입력, 프로젝트 실제 완료일, 기존 설정 여부
  * @returns 확정된 시작일·종료 예정일·사유 또는 어느 입력이 왜 안 되는지
@@ -219,7 +219,7 @@ export const warrantyChangeSchema = z.object({
 export type WarrantyChange = z.infer<typeof warrantyChangeSchema>;
 
 export const projectWarrantySchema = z.object({
-  // 저장된 설정이 있는지. 없으면 기본 기간(12개월)과 실제 완료일로 계산한 값을 미리 보여 준다
+  // 저장된 설정 여부, 없으면 기본 기간(12개월)과 실제 완료일로 계산한 값을 미리 표시
   configured: z.boolean(),
   months: z.number().int(),
   startBasis: warrantyStartBasisSchema,

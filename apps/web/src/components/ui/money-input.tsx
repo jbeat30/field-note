@@ -25,7 +25,7 @@ type MoneyInputProps = Omit<
   unit?: string;
 };
 
-// 금액 입력: 숫자만 받고 입력하는 동안 쉼표를 붙여 보여 준다. 값은 원 단위 정수
+// 금액 입력: 숫자만 입력 가능, 입력 중 쉼표 표시, 값은 원 단위 정수
 export const MoneyInput = ({
   value,
   onValueChange,
