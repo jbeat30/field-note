@@ -22,9 +22,15 @@ export type SignupInput = {
 
 export type AuthenticatedAccount = { userId: string; companyId: string };
 
+export type SignupResult = AuthenticatedAccount & {
+  email: string;
+  // 복구·소유자 이전 링크로 다시 등록한 경우의 이전 이메일 (보안 알림 수신처)
+  previousEmail: string | null;
+};
+
 export type AccountService = {
   // 초대 링크를 사용해 가입 (이메일 인증 전 상태). 한 트랜잭션이라 실패하면 링크도 소모되지 않음
-  signup: (input: SignupInput) => Promise<AuthenticatedAccount & { email: string }>;
+  signup: (input: SignupInput) => Promise<SignupResult>;
   login: (input: { loginId: string; password: string }) => Promise<AuthenticatedAccount>;
   // 로그인한 상태에서 비밀번호를 다시 확인 (비밀번호·이메일 변경 전). 틀리면 로그인과 같은 실패 횟수·잠금 정책 적용
   verifyCurrentPassword: (account: AuthenticatedAccount, password: string) => Promise<void>;
@@ -132,7 +138,10 @@ export const createAccountService = ({
             throw new AccountError('LOGIN_ID_TAKEN');
           }
 
-          if (await tx.user.findUnique({ where: { email: input.email } })) {
+          const emailOwner = await tx.user.findUnique({ where: { email: input.email } });
+
+          // 복구 때 같은 이메일 재사용 허용 (이전 값은 링크 사용 시점에 비워짐)
+          if (emailOwner && emailOwner.id !== invitation.userId) {
             throw new AccountError('EMAIL_TAKEN');
           }
 
@@ -141,8 +150,13 @@ export const createAccountService = ({
             where: { companyId_id: { companyId: invitation.companyId, id: invitation.userId } },
             data: { email: input.email, ageConfirmedAt: at },
           });
-          await tx.userCredential.create({
-            data: {
+          // 복구·소유자 이전은 비워 둔 기존 행 갱신, 새 가입은 행 생성
+          await tx.userCredential.upsert({
+            where: {
+              companyId_userId: { companyId: invitation.companyId, userId: invitation.userId },
+            },
+            update: { loginId: input.loginId, passwordHash },
+            create: {
               companyId: invitation.companyId,
               userId: invitation.userId,
               loginId: input.loginId,
@@ -151,7 +165,12 @@ export const createAccountService = ({
           });
           await recordConsents(tx, invitation, input.consents, at);
 
-          return { userId: invitation.userId, companyId: invitation.companyId, email: input.email };
+          return {
+            userId: invitation.userId,
+            companyId: invitation.companyId,
+            email: input.email,
+            previousEmail: invitation.previousEmail,
+          };
         });
       } catch (error) {
         throw mapUniqueViolation(error) ?? error;

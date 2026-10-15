@@ -175,6 +175,8 @@ export interface paths {
                             adminName: string;
                             /** Format: date-time */
                             expiresAt: string;
+                            /** @enum {string} */
+                            purpose: "SIGNUP" | "RECOVERY" | "TRANSFER";
                             documents: {
                                 /** Format: uuid */
                                 id: string;

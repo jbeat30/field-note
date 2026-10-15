@@ -29,7 +29,11 @@ export const buildPasswordResetEmail = (
 });
 
 export type SecurityNoticeKind =
-  'PASSWORD_CHANGED' | 'PASSWORD_RESET_DONE' | 'EMAIL_CHANGED' | 'CLOSURE_CANCELLED';
+  | 'PASSWORD_CHANGED'
+  | 'PASSWORD_RESET_DONE'
+  | 'EMAIL_CHANGED'
+  | 'CLOSURE_CANCELLED'
+  | 'OWNER_REGISTERED_AGAIN';
 
 const NOTICES: Record<SecurityNoticeKind, { subject: string; lines: (hint?: string) => string[] }> =
   {
@@ -45,6 +49,13 @@ const NOTICES: Record<SecurityNoticeKind, { subject: string; lines: (hint?: stri
       lines: () => [
         '비밀번호 재설정이 완료되었습니다.',
         '모든 기기의 로그인이 해제되었습니다. 새 비밀번호로 다시 로그인해 주세요.',
+      ],
+    },
+    OWNER_REGISTERED_AGAIN: {
+      subject: '[field-note] 계정이 운영자 확인을 거쳐 다시 등록되었습니다',
+      lines: () => [
+        '운영자의 본인 확인을 거쳐 이 계정의 로그인 정보(아이디·비밀번호·이메일)가 새로 등록되었습니다.',
+        '이전 로그인은 모두 해제되었고 이 주소로는 더 이상 로그인할 수 없습니다.',
       ],
     },
     CLOSURE_CANCELLED: {

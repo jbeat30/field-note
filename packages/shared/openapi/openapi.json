@@ -360,6 +360,14 @@
                       "type": "string",
                       "format": "date-time"
                     },
+                    "purpose": {
+                      "type": "string",
+                      "enum": [
+                        "SIGNUP",
+                        "RECOVERY",
+                        "TRANSFER"
+                      ]
+                    },
                     "documents": {
                       "type": "array",
                       "items": {
@@ -405,6 +413,7 @@
                     "companyName",
                     "adminName",
                     "expiresAt",
+                    "purpose",
                     "documents"
                   ]
                 }

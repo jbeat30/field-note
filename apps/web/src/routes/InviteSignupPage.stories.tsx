@@ -131,3 +131,29 @@ export const KakaoEmailRequired: Story = {
     );
   },
 };
+
+// 계정 복구 링크는 기존 로그인이 해제된다는 안내를 함께 표시
+export const RecoveryLink: Story = {
+  parameters: {
+    router: { initialEntries: ['/invite/demo-recovery-0001'], path: '/invite/:token' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText(/계정 복구 링크입니다/)).toBeInTheDocument();
+    await expect(canvas.getByText(/기존 로그인은 모두 해제됩니다/)).toBeInTheDocument();
+  },
+};
+
+// 소유자 이전 링크는 새 소유자 이름으로 안내
+export const TransferLink: Story = {
+  parameters: {
+    router: { initialEntries: ['/invite/demo-transfer-0001'], path: '/invite/:token' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText(/새소유자님을 위한 초대입니다/)).toBeInTheDocument();
+    await expect(canvas.getByText(/소유자 이전 링크입니다/)).toBeInTheDocument();
+  },
+};

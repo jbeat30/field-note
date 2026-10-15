@@ -458,6 +458,15 @@ const projectWarningsOf = (account: MockAccount, project: ProjectDetail) => {
   }).warnings;
 };
 
+// 복구·소유자 이전 링크 시연 토큰: 용도와 새 소유자 이름
+const TAKEOVER_DEMO_TOKENS: Record<
+  string,
+  { purpose: 'RECOVERY' | 'TRANSFER'; adminName: string }
+> = {
+  'demo-recovery-0001': { purpose: 'RECOVERY', adminName: DEMO_INVITATION.adminName },
+  'demo-transfer-0001': { purpose: 'TRANSFER', adminName: '새소유자' },
+};
+
 export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
   ...createMemoHandlers({ apiError, parseBody }),
@@ -486,13 +495,17 @@ export const handlers = [
 
     const parsed = invitationParamsSchema.safeParse(params);
 
-    if (!parsed.success || parsed.data.token !== DEMO_INVITATION.token) {
+    // 복구·소유자 이전 링크 시연용 토큰 (화면 안내 확인용, 가입 처리는 가입 링크만 지원)
+    const takeover = parsed.success ? TAKEOVER_DEMO_TOKENS[parsed.data.token] : undefined;
+
+    if (!parsed.success || (parsed.data.token !== DEMO_INVITATION.token && !takeover)) {
       return apiError('NOT_FOUND');
     }
 
     return HttpResponse.json({
       companyName: DEMO_INVITATION.companyName,
-      adminName: DEMO_INVITATION.adminName,
+      adminName: takeover?.adminName ?? DEMO_INVITATION.adminName,
+      purpose: takeover?.purpose ?? 'SIGNUP',
       expiresAt: new Date(Date.now() + DEMO_INVITATION.expiresInDays * 86_400_000).toISOString(),
       documents: LEGAL_DOCUMENTS,
     });

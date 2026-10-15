@@ -191,6 +191,7 @@ export const registerAccountRoutes = (
             companyName: invitation.companyName,
             adminName: invitation.adminName,
             expiresAt: invitation.expiresAt.toISOString(),
+            purpose: invitation.purpose,
             documents: documents.map((document) => ({
               id: document.id,
               type: document.type,
@@ -236,6 +237,15 @@ export const registerAccountRoutes = (
             );
 
             setSessionCookie(response, session, isSecureCookie);
+
+            // 복구·소유자 이전은 이전 이메일로 알림 (본인 확인 외 변경 시 운영자 연락 안내)
+            if (account.previousEmail) {
+              await notifier
+                ?.notify('OWNER_REGISTERED_AGAIN', account.previousEmail)
+                .catch((error: unknown) => {
+                  logger?.error({ err: error }, '[routes.signup] 이전 이메일 알림 요청 실패');
+                });
+            }
 
             // 가입은 이미 완료됐으므로 발송 요청이 실패해도 가입은 유지하고, 인증 화면의 재발송으로 이어지게 함
             await emailVerification?.request(account).catch((error: unknown) => {

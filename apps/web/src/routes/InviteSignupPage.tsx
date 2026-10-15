@@ -75,6 +75,13 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
         <p className="mt-1 text-sm">
           {invitation.adminName}님을 위한 초대입니다. 약관을 확인하고 동의해 주세요
         </p>
+        {invitation.purpose !== 'SIGNUP' && (
+          <p className="mt-2 rounded-lg bg-warning-subtle px-3 py-2 text-sm font-medium text-warning">
+            {invitation.purpose === 'RECOVERY'
+              ? '계정 복구 링크입니다. 새 아이디·비밀번호·이메일을 등록하면 기존 로그인은 모두 해제됩니다'
+              : '소유자 이전 링크입니다. 새 소유자의 아이디·비밀번호·이메일을 등록하면 기존 로그인은 모두 해제됩니다'}
+          </p>
+        )}
       </div>
       <label className="flex min-h-touch items-center gap-3 border-b border-border pb-2 font-medium">
         <Checkbox checked={isAll} onCheckedChange={(checked) => toggleAll(checked === true)} />

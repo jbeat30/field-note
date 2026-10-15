@@ -41,6 +41,8 @@ export const invitationResponseSchema = z.object({
   companyName: z.string(),
   adminName: z.string(),
   expiresAt: z.iso.datetime(),
+  // 가입 링크 또는 가입을 마친 계정의 복구·소유자 이전 링크
+  purpose: z.enum(['SIGNUP', 'RECOVERY', 'TRANSFER']),
   documents: z.array(legalDocumentSummarySchema),
 });
 

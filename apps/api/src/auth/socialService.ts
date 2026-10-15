@@ -146,7 +146,9 @@ export const createSocialService = ({ auth, now = () => new Date() }: Deps): Soc
         throw new AccountError('SOCIAL_ALREADY_LINKED');
       }
 
-      if (await tx.user.findUnique({ where: { email } })) {
+      const emailOwner = await tx.user.findUnique({ where: { email } });
+
+      if (emailOwner && emailOwner.id !== invitation.userId) {
         throw new AccountError('EMAIL_TAKEN');
       }
 

@@ -102,6 +102,84 @@ export const reissueInvitation = (
     return { companyId: user.companyId, userId: user.id, token, expiresAt };
   });
 
+export class TakeoverIssueError extends Error {
+  constructor(reason: 'COMPANY_NOT_FOUND' | 'NOT_REGISTERED' | 'NOTE_REQUIRED') {
+    super(`[operator.issueTakeoverInvitation] ${reason}`);
+  }
+}
+
+// 복구·소유자 이전 링크의 기본 유효 일수 (가입 링크보다 짧게 유지)
+export const DEFAULT_TAKEOVER_DAYS = 3;
+
+/**
+ * @description 가입을 마친 계정의 복구(이메일 사용 불가) 또는 소유자 이전 링크 발급 (운영자 계정 전용, 서비스 기획서 §6.3·§6.6)
+ * 링크를 쓰기 전까지 기존 로그인은 유지되고, 사용 시점에 기존 로그인 수단이 모두 해제됨
+ * 본인 확인 방법은 운영자 작업 기록에 필수로 남김 (개인정보 제외)
+ * @param prisma 운영자 계정(DATABASE_OPERATOR_URL) Prisma 클라이언트
+ * @param input 회사 ID, 종류, 본인 확인 방법, 소유자 이전 때 새 소유자 이름, 유효 일수
+ * @returns 발급된 링크 (토큰 원문 포함)
+ * @throws 회사가 없거나 가입을 마치지 않은 계정이거나 본인 확인 방법이 비어 있는 경우
+ */
+export const issueTakeoverInvitation = (
+  prisma: PrismaClient,
+  input: {
+    companyId: string;
+    kind: 'RECOVERY' | 'TRANSFER';
+    note: string;
+    newDisplayName?: string;
+    days?: number;
+  } & OperatorContext,
+): Promise<IssuedInvitation> =>
+  prisma.$transaction(async (tx) => {
+    const now = (input.now ?? (() => new Date()))();
+    const note = input.note.trim();
+
+    if (!note) {
+      throw new TakeoverIssueError('NOTE_REQUIRED');
+    }
+
+    const user = await tx.user.findFirst({ where: { companyId: input.companyId } });
+
+    if (!user) {
+      throw new TakeoverIssueError('COMPANY_NOT_FOUND');
+    }
+
+    // 가입 전 계정은 가입 링크 재발급(reissue) 대상
+    if (user.status !== 'ACTIVE') {
+      throw new TakeoverIssueError('NOT_REGISTERED');
+    }
+
+    // 이전에 발급한 미사용 링크는 즉시 만료
+    await tx.invitation.updateMany({
+      where: { companyId: user.companyId, userId: user.id, usedAt: null, expiresAt: { gt: now } },
+      data: { expiresAt: now },
+    });
+
+    const token = generateToken();
+    const expiresAt = new Date(now.getTime() + (input.days ?? DEFAULT_TAKEOVER_DAYS) * DAY_MS);
+
+    await tx.invitation.create({
+      data: {
+        tokenHash: hashToken(token),
+        companyId: user.companyId,
+        userId: user.id,
+        expiresAt,
+        purpose: input.kind,
+        newDisplayName: input.kind === 'TRANSFER' ? input.newDisplayName?.trim() || null : null,
+      },
+    });
+    await tx.operatorAction.create({
+      data: {
+        companyId: user.companyId,
+        action: input.kind === 'RECOVERY' ? 'ACCOUNT_RECOVERY_ISSUED' : 'OWNER_TRANSFER_ISSUED',
+        operator: input.operator,
+        note,
+      },
+    });
+
+    return { companyId: user.companyId, userId: user.id, token, expiresAt };
+  });
+
 export type CompanySummary = {
   companyId: string;
   companyName: string;

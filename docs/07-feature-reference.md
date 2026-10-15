@@ -127,6 +127,8 @@ pnpm test:stories   # 스토리 동작·접근성 검사 (최초 1회 `pnpm --fi
 ```bash
 pnpm operator create-company --company "한빛판금" --admin "김한빛"   # 회사 + 관리자(가입 전) + 초대 링크 (기본 7일)
 pnpm operator reissue --company-id <회사 ID>                        # 링크 재발급 (기존 링크는 즉시 만료, 가입 전 회사만)
+pnpm operator recover --company-id <회사 ID> --note "본인 확인 방법"   # 계정 복구 링크 (이메일을 쓸 수 없는 가입 완료 계정, 링크를 쓰면 기존 로그인 해제)
+pnpm operator transfer --company-id <회사 ID> --new-name "새 소유자" --note "본인 확인 방법"   # 소유자 이전 링크
 pnpm operator list                                                  # 회사 목록과 가입 상태
 pnpm operator legal-register                                        # 약관·처리방침 문서를 DB에 등록 (운영 환경 최초 1회, 문서를 바꿔 버전을 올릴 때마다)
 pnpm operator closures                                              # 해지 요청 현황 (유예 중·삭제 예정 시각, 삭제 대상 표시)
