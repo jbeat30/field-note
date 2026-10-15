@@ -103,7 +103,7 @@ ALTER TABLE "warranty_certificates" ADD CONSTRAINT warranty_certificates_issuer_
 -- 같은 문서를 같은 프로젝트의 보증서로 중복 등록할 수 없음 (지운 행은 제외)
 CREATE UNIQUE INDEX warranty_certificates_active_unique ON "warranty_certificates"("company_id", "project_id", "document_id") WHERE "removed_at" IS NULL;
 
--- 앱 계정은 자기 회사 행만. 보증 설정은 값 열만 고칠 수 있고 지울 수 없음, 변경 이력은 추가만, 보증서는 만료일·발급처·삭제 시각만 고침
+-- 앱 계정은 자기 회사 행만, 보증 설정은 값 열만 고칠 수 있고 지울 수 없음, 변경 이력은 추가만, 보증서는 만료일·발급처·삭제 시각만 고침
 ALTER TABLE "project_warranties" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "project_warranties" FORCE ROW LEVEL SECURITY;
 CREATE POLICY company_isolation ON "project_warranties" TO field_note_app

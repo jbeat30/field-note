@@ -58,7 +58,7 @@ ALTER TABLE "monthly_close_events" ADD CONSTRAINT monthly_close_events_reason_le
 -- 재오픈은 사유 필수
 ALTER TABLE "monthly_close_events" ADD CONSTRAINT monthly_close_events_reopen_reason CHECK ("kind" <> 'REOPENED' OR "reason" IS NOT NULL);
 
--- 앱 계정은 자기 회사 행만. 확정 상태는 값 열만 고칠 수 있고 지울 수 없음, 이력은 추가만
+-- 앱 계정은 자기 회사 행만, 확정 상태는 값 열만 고칠 수 있고 지울 수 없음, 이력은 추가만
 ALTER TABLE "monthly_closes" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "monthly_closes" FORCE ROW LEVEL SECURITY;
 CREATE POLICY company_isolation ON "monthly_closes" TO field_note_app

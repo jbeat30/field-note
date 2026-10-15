@@ -5,8 +5,14 @@ import {
   closureCancelSchema,
   closureRequestSchema,
   closureTokenParamsSchema,
+  REPORT_XLSX_CONTENT_TYPE,
+  companyExportRequestSchema,
+  companyRulesSchema,
   companySettingsSchema,
+  passwordSetSchema,
+  socialProviderSchema,
   socialStartRequestSchema,
+  type SocialProviderKey,
   EMPLOYEE_MAX_PER_COMPANY,
   PARTNER_KINDS,
   allowedProjectFields,
@@ -99,7 +105,7 @@ import {
   MOCK_CLOSURE_TOKEN,
   MOCK_EMAIL_CODE,
   MOCK_LOCKED_LOGIN_ID,
-  MOCK_KAKAO_PROFILES,
+  MOCK_SOCIAL_PROFILES,
   MOCK_RESET_TOKEN,
   MOCK_TAKEN_LOGIN_ID,
   type AssignmentRow,
@@ -143,8 +149,9 @@ import {
   setPendingEmail,
   clearFailedLogins,
   findAccount,
-  findAccountByKakao,
-  setKakaoProfile,
+  findAccountBySocial,
+  setLoginCredentials,
+  setSocialProfile,
   getCurrentAccount,
   isLoginLocked,
   listDevices,
@@ -152,7 +159,9 @@ import {
   removeDevice,
   signIn,
   signOut,
+  updateRules,
   updateSettings,
+  getRules,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
@@ -213,12 +222,12 @@ const parseBody = async <T>(request: Request, schema: ZodType<T>): Promise<Parse
 
 const toMe = (account: MockAccount): MeResponse => ({
   displayName: account.displayName,
-  email: account.email,
+  email: account.email || null,
   isEmailVerified: account.isEmailVerified,
   companyName: account.companyName,
 });
 
-// 쓰기 요청에 CSRF 헤더가 빠지면 서버처럼 거부해 웹 클라이언트 회귀를 잡는다
+// 쓰기 요청에 CSRF 헤더가 없으면 서버처럼 거부해 웹 클라이언트 회귀 검출
 const hasCsrfHeader = (request: Request) => request.headers.get(CSRF_HEADER) === 'web';
 
 // 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있고, 숨긴 항목은 새로 고를 수 없음 (서버와 같은 규칙)
@@ -429,6 +438,41 @@ const toMockWorkLog = (
   };
 };
 
+// 목록·점검 응답이 함께 쓰는 프로젝트 경고 (서버의 loadProjectWarnings와 같은 규칙: 진행·중단 프로젝트만, 회사별 기준을 따름)
+const projectWarningsOf = (account: MockAccount, project: ProjectDetail) => {
+  if (project.status !== 'IN_PROGRESS' && project.status !== 'SUSPENDED') return [];
+
+  const planned = getAssignments(account)
+    .filter((item) => item.projectId === project.id && !item.cancelledAt)
+    .flatMap((item) => (item.plannedMinutes === null ? [] : [item.plannedMinutes]));
+  const used = getWorkLogs(account)
+    .filter((log) => log.projectId === project.id && log.status === 'SAVED')
+    .flatMap((log) => log.entries)
+    .reduce((sum, entry) => sum + entry.minutes, 0);
+  const latest = sortedProgress(getProgressRecords(account, project.id))[0];
+
+  return evaluateProjectHealth({
+    status: project.status,
+    plannedMinutes: planned.length > 0 ? planned.reduce((sum, value) => sum + value, 0) : null,
+    usedMinutes: used,
+    progressPercent: latest?.percent ?? null,
+    progressRecordedOn: latest?.recordedOn ?? null,
+    plannedStart: project.plannedStart,
+    plannedEnd: project.plannedEnd,
+    today: todayInSeoul(new Date()),
+    rules: getRules(account),
+  }).warnings;
+};
+
+// 복구·소유자 이전 링크 시연 토큰: 용도와 새 소유자 이름
+const TAKEOVER_DEMO_TOKENS: Record<
+  string,
+  { purpose: 'RECOVERY' | 'TRANSFER'; adminName: string }
+> = {
+  'demo-recovery-0001': { purpose: 'RECOVERY', adminName: DEMO_INVITATION.adminName },
+  'demo-transfer-0001': { purpose: 'TRANSFER', adminName: '새소유자' },
+};
+
 export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
   ...createMemoHandlers({ apiError, parseBody }),
@@ -457,13 +501,17 @@ export const handlers = [
 
     const parsed = invitationParamsSchema.safeParse(params);
 
-    if (!parsed.success || parsed.data.token !== DEMO_INVITATION.token) {
+    // 복구·소유자 이전 링크 시연용 토큰 (화면 안내 확인용, 가입 처리는 가입 링크만 지원)
+    const takeover = parsed.success ? TAKEOVER_DEMO_TOKENS[parsed.data.token] : undefined;
+
+    if (!parsed.success || (parsed.data.token !== DEMO_INVITATION.token && !takeover)) {
       return apiError('NOT_FOUND');
     }
 
     return HttpResponse.json({
       companyName: DEMO_INVITATION.companyName,
-      adminName: DEMO_INVITATION.adminName,
+      adminName: takeover?.adminName ?? DEMO_INVITATION.adminName,
+      purpose: takeover?.purpose ?? 'SIGNUP',
       expiresAt: new Date(Date.now() + DEMO_INVITATION.expiresInDays * 86_400_000).toISOString(),
       documents: LEGAL_DOCUMENTS,
     });
@@ -603,6 +651,97 @@ export const handlers = [
     return account ? HttpResponse.json(account.settings) : apiError('UNAUTHORIZED');
   }),
 
+  http.get('/api/v1/company/rules', async () => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    return account ? HttpResponse.json(getRules(account)) : apiError('UNAUTHORIZED');
+  }),
+
+  // 저장 용량 시연값: 한도 5GB, 프로젝트마다 사진·문서가 쌓인 모습 (실제 서버는 업로드한 파일 크기를 집계)
+  http.get('/api/v1/company/storage', async () => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const byProject = getProjects(account)
+      .slice(0, 4)
+      .map((project, index) => ({
+        projectId: project.id,
+        name: project.name,
+        bytes: (400 - index * 90) * 1_048_576,
+        count: 120 - index * 25,
+      }));
+    const photoBytes = byProject.reduce((sum, row) => sum + row.bytes, 0);
+
+    return HttpResponse.json({
+      quotaBytes: 5_368_709_120,
+      usedBytes: photoBytes + 85 * 1_048_576 + 6 * 1_048_576,
+      byPurpose: [
+        { purpose: 'PHOTO', bytes: photoBytes, count: byProject.reduce((s, r) => s + r.count, 0) },
+        { purpose: 'DOCUMENT', bytes: 85 * 1_048_576, count: 12 },
+        { purpose: 'EMPLOYEE_DOCUMENT', bytes: 6 * 1_048_576, count: 4 },
+      ],
+      byProject,
+    });
+  }),
+
+  http.post('/api/v1/company/export', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, companyExportRequestSchema.partial());
+
+    if ('response' in body) return body.response;
+
+    // 비밀번호 로그인이 있는 계정만 비밀번호를 다시 확인
+    if (account.hasPassword !== false) {
+      if (!body.data.currentPassword) {
+        return apiError('VALIDATION_ERROR', [
+          { path: 'body.currentPassword', message: '비밀번호를 입력해 주세요' },
+        ]);
+      }
+
+      if (account.password !== body.data.currentPassword) {
+        return apiError('CURRENT_PASSWORD_INVALID');
+      }
+    }
+
+    // 서버와 같은 파일 이름 규칙, 내용은 자리 파일 (실제 엑셀 서식은 서버가 생성)
+    return new HttpResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04]), {
+      headers: {
+        'Content-Type': REPORT_XLSX_CONTENT_TYPE,
+        'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(`전체데이터_${todayInSeoul(new Date())}.xlsx`)}`,
+      },
+    });
+  }),
+
+  http.put('/api/v1/company/rules', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, companyRulesSchema);
+
+    if ('response' in body) return body.response;
+
+    updateRules(account, body.data);
+
+    return HttpResponse.json(getRules(account));
+  }),
+
   http.put('/api/v1/company/settings', async ({ request }) => {
     await simulateLatency();
 
@@ -724,6 +863,32 @@ export const handlers = [
 
     clearFailedLogins(account.loginId);
     setPassword(account, body.data.newPassword);
+
+    return HttpResponse.json({ success: true });
+  }),
+
+  http.post('/api/v1/me/password/set', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, passwordSetSchema);
+
+    if ('response' in body) return body.response;
+
+    if (account.hasPassword !== false) {
+      return apiError('VALIDATION_ERROR', [
+        { path: 'body', message: '이미 아이디·비밀번호 로그인이 설정되어 있습니다' },
+      ]);
+    }
+
+    if (findAccount(body.data.loginId)) return apiError('LOGIN_ID_TAKEN');
+
+    setLoginCredentials(account, body.data.loginId, body.data.newPassword);
 
     return HttpResponse.json({ success: true });
   }),
@@ -1344,6 +1509,7 @@ export const handlers = [
       to,
       q,
       site,
+      hasWarning,
       sortBy = 'recent',
       sortDir,
       page = 1,
@@ -1396,7 +1562,8 @@ export const handlers = [
           (!needle ||
             item.name.toLowerCase().includes(needle) ||
             item.code.toLowerCase().includes(needle)) &&
-          (!siteNeedle || item.siteName.toLowerCase().includes(siteNeedle)),
+          (!siteNeedle || item.siteName.toLowerCase().includes(siteNeedle)) &&
+          (!hasWarning || projectWarningsOf(account, item).length > 0),
       )
       .sort(compare);
     const items = matched.slice((page - 1) * pageSize, page * pageSize).map((item) => ({
@@ -1410,6 +1577,7 @@ export const handlers = [
       tradeIds: item.tradeIds,
       plannedStart: item.plannedStart,
       plannedEnd: item.plannedEnd,
+      warnings: projectWarningsOf(account, item),
     }));
 
     return HttpResponse.json({ items, total: matched.length, page, pageSize });
@@ -1709,7 +1877,7 @@ export const handlers = [
       projects.map((item) => (item.id === current.id ? updated : item)),
     );
 
-    // 처음 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 만든다
+    // 처음 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 생성
     if (body.data.toStatus === 'WARRANTY') ensureMockDefaultWarranty(account, updated);
 
     addProjectStatusChange(account, current.id, {
@@ -2218,6 +2386,7 @@ export const handlers = [
         plannedStart: project.plannedStart,
         plannedEnd: project.plannedEnd,
         today: todayInSeoul(new Date()),
+        rules: getRules(account),
       }),
     );
   }),
@@ -2911,17 +3080,20 @@ export const handlers = [
 
     if ('response' in body) return body.response;
 
-    if (isLoginLocked(account.loginId)) return apiError('ACCOUNT_LOCKED');
+    // 비밀번호가 없는 계정(소셜 로그인만 사용)은 비밀번호 확인을 건너뜀 (실제 서버와 같은 규칙)
+    if (account.hasPassword !== false) {
+      if (isLoginLocked(account.loginId)) return apiError('ACCOUNT_LOCKED');
 
-    if (account.password !== body.data.currentPassword) {
-      if (recordFailedLogin(account.loginId) >= MOCK_MAX_FAILED_LOGINS) {
-        return apiError('ACCOUNT_LOCKED');
+      if (account.password !== body.data.currentPassword) {
+        if (recordFailedLogin(account.loginId) >= MOCK_MAX_FAILED_LOGINS) {
+          return apiError('ACCOUNT_LOCKED');
+        }
+
+        return apiError('CURRENT_PASSWORD_INVALID');
       }
 
-      return apiError('CURRENT_PASSWORD_INVALID');
+      clearFailedLogins(account.loginId);
     }
-
-    clearFailedLogins(account.loginId);
 
     const newEmail = body.data.newEmail.trim().toLowerCase();
 
@@ -2942,14 +3114,14 @@ export const handlers = [
     return HttpResponse.json({ resendAfterSeconds: 30 });
   }),
 
-  // 소셜 로그인 (카카오). 시작은 목업 카카오 화면(/mock-kakao) 주소를 돌려줌
+  // 소셜 로그인 (카카오·네이버·구글), 시작은 목업 소셜 화면(/mock-social) 주소를 돌려줌
   http.get('/api/v1/auth/social/providers', async () => {
     await simulateLatency();
 
-    return HttpResponse.json({ kakao: true });
+    return HttpResponse.json({ kakao: true, naver: true, google: true });
   }),
 
-  http.post('/api/v1/auth/kakao/start', async ({ request }) => {
+  http.post('/api/v1/auth/:provider/start', async ({ request, params }) => {
     await simulateLatency();
 
     if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
@@ -2958,8 +3130,12 @@ export const handlers = [
 
     if ('response' in body) return body.response;
 
+    const provider = socialProviderSchema.safeParse(params.provider);
+
+    if (!provider.success) return apiError('VALIDATION_ERROR');
+
     if (body.data.purpose === 'login') {
-      return HttpResponse.json({ url: '/mock-kakao?purpose=login' });
+      return HttpResponse.json({ url: `/mock-social?provider=${provider.data}&purpose=login` });
     }
 
     if (body.data.inviteToken !== DEMO_INVITATION.token) return apiError('NOT_FOUND');
@@ -2968,21 +3144,26 @@ export const handlers = [
       .filter((consent) => consent.isAgreed)
       .map((consent) => consent.documentId);
     const query = new URLSearchParams({
+      provider: provider.data,
       purpose: 'signup',
       token: body.data.inviteToken,
       agreed: agreed.join(','),
     });
 
-    return HttpResponse.json({ url: `/mock-kakao?${query.toString()}` });
+    return HttpResponse.json({ url: `/mock-social?${query.toString()}` });
   }),
 
-  http.post('/api/v1/me/social/kakao/start', async ({ request }) => {
+  http.post('/api/v1/me/social/:provider/start', async ({ request, params }) => {
     await simulateLatency();
 
     if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
     if (!getCurrentAccount()) return apiError('UNAUTHORIZED');
 
-    return HttpResponse.json({ url: '/mock-kakao?purpose=link' });
+    const provider = socialProviderSchema.safeParse(params.provider);
+
+    if (!provider.success) return apiError('VALIDATION_ERROR');
+
+    return HttpResponse.json({ url: `/mock-social?provider=${provider.data}&purpose=link` });
   }),
 
   http.get('/api/v1/me/social', async () => {
@@ -2994,11 +3175,13 @@ export const handlers = [
 
     return HttpResponse.json({
       hasPassword: account.hasPassword !== false,
-      kakao: { isLinked: account.kakaoProfileKey !== undefined },
+      kakao: { isLinked: account.socialProfiles?.kakao !== undefined },
+      naver: { isLinked: account.socialProfiles?.naver !== undefined },
+      google: { isLinked: account.socialProfiles?.google !== undefined },
     });
   }),
 
-  http.delete('/api/v1/me/social/kakao', async ({ request }) => {
+  http.delete('/api/v1/me/social/:provider', async ({ request, params }) => {
     await simulateLatency();
 
     if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
@@ -3007,25 +3190,39 @@ export const handlers = [
 
     if (!account) return apiError('UNAUTHORIZED');
 
-    // 비밀번호 로그인이 없으면 마지막 로그인 수단이라 해제할 수 없음 (실제 서버와 같은 규칙)
-    if (account.hasPassword === false) return apiError('LAST_LOGIN_METHOD');
+    const provider = socialProviderSchema.safeParse(params.provider);
 
-    setKakaoProfile(account, undefined);
+    if (!provider.success) return apiError('VALIDATION_ERROR');
+
+    // 비밀번호 로그인이 없고 다른 소셜 계정도 없으면 마지막 로그인 수단이라 해제할 수 없음 (실제 서버와 같은 규칙)
+    const others = Object.entries(account.socialProfiles ?? {}).filter(
+      ([name, key]) => name !== provider.data && key !== undefined,
+    );
+
+    if (account.hasPassword === false && others.length === 0) return apiError('LAST_LOGIN_METHOD');
+
+    setSocialProfile(account, provider.data, undefined);
 
     return HttpResponse.json({ success: true });
   }),
 
-  // 계약 밖의 목업 전용 주소: 목업 카카오 화면에서 계정을 고르면 서버 콜백이 하던 일을 흉내 내고 이동할 주소를 돌려줌
-  http.post('/api/__mock/kakao/complete', async ({ request }) => {
+  // 계약 밖의 목업 전용 주소: 목업 소셜 화면에서 계정을 고르면 서버 콜백이 하던 일을 흉내 내고 이동할 주소를 돌려줌
+  http.post('/api/__mock/social/complete', async ({ request }) => {
     await simulateLatency();
 
-    const { purpose, profileKey, token, agreed } = (await request.json()) as {
+    const { provider, purpose, profileKey, token, agreed } = (await request.json()) as {
+      provider: SocialProviderKey;
       purpose: 'login' | 'link' | 'signup';
       profileKey: string | null;
       token?: string;
       agreed?: string;
     };
-    const profile = MOCK_KAKAO_PROFILES.find((item) => item.key === profileKey);
+    const found = MOCK_SOCIAL_PROFILES.find((item) => item.key === profileKey);
+    // 네이버는 인증된 이메일을 주지 않음 (서버의 가짜 제공자와 같은 규칙)
+    const profile = found && {
+      ...found,
+      verifiedEmail: provider === 'naver' ? null : found.verifiedEmail,
+    };
     const returnPath =
       purpose === 'link' ? '/settings' : purpose === 'signup' ? `/invite/${token ?? ''}` : '/login';
     const to = (path: string, result?: string) => ({
@@ -3035,7 +3232,7 @@ export const handlers = [
     if (!profile) return HttpResponse.json(to(returnPath, 'cancelled'));
 
     if (purpose === 'login') {
-      const account = findAccountByKakao(profile.key);
+      const account = findAccountBySocial(provider, profile.key);
 
       if (!account) return HttpResponse.json(to('/login', 'not-linked'));
 
@@ -3051,16 +3248,18 @@ export const handlers = [
 
       if (!current) return HttpResponse.json(to('/settings', 'failed'));
 
-      if (findAccountByKakao(profile.key) && findAccountByKakao(profile.key) !== current) {
+      const owner = findAccountBySocial(provider, profile.key);
+
+      if (owner && owner !== current) {
         return HttpResponse.json(to('/settings', 'already-linked'));
       }
 
-      setKakaoProfile(current, profile.key);
+      setSocialProfile(current, provider, profile.key);
 
       return HttpResponse.json(to('/settings', 'linked'));
     }
 
-    // 초대 가입: 인증된 이메일이 있는 카카오 계정만 가능, 필수 약관 동의 확인
+    // 초대 가입: 필수 약관 동의 확인, 인증된 이메일이 없으면 이메일 없이 가입하고 이메일 등록 화면으로 보냄
     if (token !== DEMO_INVITATION.token)
       return HttpResponse.json(to('/login', 'invitation-invalid'));
 
@@ -3074,21 +3273,21 @@ export const handlers = [
       return HttpResponse.json(to(returnPath, 'failed'));
     }
 
-    if (!profile.verifiedEmail) return HttpResponse.json(to(returnPath, 'email-required'));
-
-    if (isEmailInUse(profile.verifiedEmail))
+    if (profile.verifiedEmail && isEmailInUse(profile.verifiedEmail))
       return HttpResponse.json(to(returnPath, 'email-taken'));
 
-    if (findAccountByKakao(profile.key)) return HttpResponse.json(to(returnPath, 'already-linked'));
+    if (findAccountBySocial(provider, profile.key)) {
+      return HttpResponse.json(to(returnPath, 'already-linked'));
+    }
 
     const account: MockAccount = {
-      loginId: `kakao-${profile.key}`,
+      loginId: `${provider}-${profile.key}`,
       password: '',
       hasPassword: false,
-      kakaoProfileKey: profile.key,
+      socialProfiles: { [provider]: profile.key },
       displayName: DEMO_INVITATION.adminName,
-      email: profile.verifiedEmail,
-      isEmailVerified: true,
+      email: profile.verifiedEmail ?? '',
+      isEmailVerified: profile.verifiedEmail !== null,
       companyName: DEMO_INVITATION.companyName,
       settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
     };
@@ -3096,6 +3295,6 @@ export const handlers = [
     addAccount(account);
     signIn(account.loginId);
 
-    return HttpResponse.json(to('/'));
+    return HttpResponse.json(to(account.isEmailVerified ? '/' : '/verify-email'));
   }),
 ];

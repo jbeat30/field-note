@@ -133,7 +133,7 @@ const Lockable = ({ locked, children }: { locked: boolean; children: ReactNode }
 
 /**
  * @description 프로젝트 기본정보 폼 (등록과 수정이 같은 화면을 쓴다)
- * 고객·담당자·공종은 명부·직원·선택 목록에서 고르고, 목록에 없으면 그 자리에서 추가할 수 있다
+ * 고객·담당자·공종은 명부·직원·선택 목록에서 선택, 목록에 없으면 그 자리에서 추가 가능
  * @param props project가 있으면 수정, 없으면 등록
  */
 export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
@@ -175,7 +175,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   const isReadOnly = allowed !== 'all' && allowed.length === 0;
   const isBusy = create.isPending || update.isPending;
 
-  // 숨긴 고객·퇴사한 직원·숨긴 공종은 새로 고를 수 없지만, 이미 고른 값이면 계속 보여 준다
+  // 숨긴 고객·퇴사한 직원·숨긴 공종은 새로 선택할 수 없지만 이미 선택한 값이면 계속 표시
   const clients = (partners.data ?? []).filter(
     (item) => item.isActive || item.id === project?.clientId,
   );

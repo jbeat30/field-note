@@ -10,6 +10,8 @@ import {
   buildInvitationLink,
   createCompanyWithInvitation,
   InvitationReissueError,
+  TakeoverIssueError,
+  issueTakeoverInvitation,
   listCompanies,
   reissueInvitation,
 } from '../src/operator/operatorService';
@@ -19,6 +21,8 @@ const USAGE = `운영자 CLI (회사 업무 데이터는 조회하지 않음)
 사용법
   pnpm operator create-company --company "회사 이름" --admin "관리자 이름" [--days 7]
   pnpm operator reissue --company-id <회사 ID> [--days 7]
+  pnpm operator recover --company-id <회사 ID> --note "본인 확인 방법" [--days 3]
+  pnpm operator transfer --company-id <회사 ID> --new-name "새 소유자 이름" --note "본인 확인 방법" [--days 3]
   pnpm operator list
   pnpm operator legal-register
   pnpm operator closures                       # 해지 요청 목록 (삭제 전용 계정 필요)
@@ -54,6 +58,8 @@ const main = async () => {
       company: { type: 'string' },
       admin: { type: 'string' },
       'company-id': { type: 'string' },
+      note: { type: 'string' },
+      'new-name': { type: 'string' },
       'dry-run': { type: 'boolean' },
       days: { type: 'string' },
     },
@@ -92,6 +98,33 @@ const main = async () => {
       printInvitation(
         env.APP_ORIGIN,
         await reissueInvitation(prisma, { companyId: values['company-id'], days, operator }),
+      );
+    } else if (command === 'recover' || command === 'transfer') {
+      if (!values['company-id']) {
+        throw new Error('--company-id 필요');
+      }
+
+      if (!values.note?.trim()) {
+        throw new Error('--note 필요 (본인 확인 방법, 이름·연락처 같은 개인정보는 적지 않음)');
+      }
+
+      if (command === 'transfer' && !values['new-name']?.trim()) {
+        throw new Error('--new-name 필요 (새 소유자 이름)');
+      }
+
+      printInvitation(
+        env.APP_ORIGIN,
+        await issueTakeoverInvitation(prisma, {
+          companyId: values['company-id'],
+          kind: command === 'recover' ? 'RECOVERY' : 'TRANSFER',
+          note: values.note,
+          newDisplayName: values['new-name'],
+          days,
+          operator,
+        }),
+      );
+      console.log(
+        '※ 링크를 쓰는 순간 기존 로그인(세션·소셜 연동·아이디·비밀번호)이 모두 해제되고 새 아이디·비밀번호·이메일을 등록합니다. 사용 전까지 기존 로그인은 유지됩니다',
       );
     } else if (command === 'legal-register') {
       console.log(LEGAL_USAGE_NOTE);
@@ -147,6 +180,8 @@ main().catch((error: unknown) => {
     console.error(error.message);
   } else if (error instanceof InvitationReissueError) {
     console.error(`재발급할 수 없음: ${error.message}`);
+  } else if (error instanceof TakeoverIssueError) {
+    console.error(`발급할 수 없음: ${error.message}`);
   } else {
     console.error(error instanceof Error ? error.message : error);
   }

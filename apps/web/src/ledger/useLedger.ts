@@ -4,7 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 내역과 합계가 같은 조건으로 걸러지도록 필터는 한 모양을 쓴다
+// 내역과 합계가 같은 조건으로 걸러지도록 필터는 한 가지 모양 사용
 export type LedgerFilter = {
   kind?: LedgerKind;
   categoryId?: string;

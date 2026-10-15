@@ -25,7 +25,7 @@ const formatChangedAt = (iso: string) =>
 const daysText = (daysLeft: number) =>
   daysLeft < 0 ? `${-daysLeft}일 지남` : daysLeft === 0 ? '오늘 종료' : `${daysLeft}일 남음`;
 
-// 보증 (서비스 기획서 §10.6): 보증 기간과 종료 예정일, 보증서, 변경 이력을 관리한다. 완료·보증 중에만 바꿀 수 있다
+// 보증 (서비스 기획서 §10.6): 보증 기간과 종료 예정일, 보증서, 변경 이력 관리, 완료·보증 중에만 변경 가능
 export const ProjectWarrantyPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);
@@ -41,7 +41,7 @@ export const ProjectWarrantyPage = () => {
 
   const gate = warrantyProjectCheck(project.data.status);
   const data = warranty.data;
-  // 아직 완료하지 않은 프로젝트는 설정할 것이 없으므로 폼·보증서 대신 한 줄 안내와 기본값만 보인다
+  // 아직 완료하지 않은 프로젝트는 설정할 것이 없으므로 폼·보증서 대신 한 줄 안내와 기본값만 표시
   const projectStatus = project.data.status;
   const beforeCompletion = (['PLANNED', 'IN_PROGRESS', 'SUSPENDED'] as const).some(
     (status) => status === projectStatus,

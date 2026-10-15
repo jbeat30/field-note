@@ -13,7 +13,7 @@ type SectionProps = Omit<ComponentProps<'section'>, 'title'> & {
   divided?: boolean;
 };
 
-// 카드 없이 제목·설명·오른쪽 동작·내용만 있는 구역. 화면의 주 구역은 카드 대신 이것으로 나눈다
+// 카드 없이 제목·설명·오른쪽 동작·내용만 있는 구역, 화면의 주 구역은 카드 대신 이 구역으로 구분
 export const Section = ({
   title,
   description,

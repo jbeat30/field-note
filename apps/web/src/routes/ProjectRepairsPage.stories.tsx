@@ -17,7 +17,7 @@ const routerFor = (name: string) => ({
 
 // 프로젝트를 보증 중으로 맞춘다 (보수 요청은 보증 중에만 접수)
 const warrantyOf = (name: string) => () => {
-  // 스토리를 다시 그릴 때마다 보수 요청이 처음 상태로 돌아가야 같은 순서로 확인할 수 있다
+  // 스토리를 다시 그릴 때마다 보수 요청이 처음 상태로 돌아가야 같은 순서로 확인 가능
   resetMockRepairs();
   signIn('hanbit');
 
@@ -56,7 +56,7 @@ export const Empty: Story = {
   },
 };
 
-// 종료된 프로젝트는 접수 없이 완료된 보수 요청 이력만 본다
+// 종료된 프로젝트는 접수 없이 완료된 보수 요청 이력만 조회
 export const ClosedProjectReadOnly: Story = {
   parameters: { router: routerFor('C동 환기 설비') },
   loaders: [() => signIn('hanbit')],
@@ -118,7 +118,7 @@ export const HoldNeedsReasonThenDone: Story = {
 
     const hold = within(await canvas.findByRole('form', { name: '보류 확인' }));
 
-    // 사유 없이는 보류할 수 없다
+    // 사유 없이는 보류 불가
     await userEvent.click(hold.getByRole('button', { name: '확인' }));
     await expect(await hold.findByText('보류 사유를 입력해 주세요')).toBeInTheDocument();
 
@@ -138,12 +138,12 @@ export const HoldNeedsReasonThenDone: Story = {
     await expect(
       await canvas.findByText("'완료' 상태로 바꿨습니다", {}, { timeout: 4000 }),
     ).toBeInTheDocument();
-    // 완료된 건은 내용을 고칠 수 없다
+    // 완료된 건은 내용 수정 불가
     await expect(canvas.queryByRole('button', { name: '내용 수정' })).not.toBeInTheDocument();
   },
 };
 
-// 사후 작업으로 표시한 작업 내역을 보수 요청에 연결하면 건별 공수가 보인다
+// 사후 작업으로 표시한 작업 내역을 보수 요청에 연결하면 건별 공수 표시
 export const LinkAfterServiceLog: Story = {
   parameters: { router: routerFor('A동 외장 판금 공사') },
   loaders: [

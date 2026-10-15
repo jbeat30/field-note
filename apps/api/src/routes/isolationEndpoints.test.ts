@@ -48,7 +48,7 @@ import { withCompany } from '../db/withCompany';
 import { createWorkLogService } from '../workLog/workLogService';
 
 // 1단계(직원·프로젝트·투입·작업 내역) 모든 엔드포인트의 회사 격리를 HTTP 수준에서 확인한다 (기술 기획서 §5.1)
-// 회사 A의 데이터를 만들고, 회사 B의 세션으로 A의 ID를 쓰는 모든 경로를 호출해 막히는지 본다
+// 회사 A의 데이터를 만들고 회사 B의 세션으로 A의 ID를 쓰는 모든 경로를 호출해 차단 여부 확인
 let db: TestDatabase;
 let documentIds: string[];
 
@@ -216,7 +216,7 @@ const buildCompany = async () => {
   // 진행률 기록 한 건
   await c.call('post', `/projects/${projectId}/progress`, { percent: 40, recordedOn: DAY });
 
-  // 수정 이력·기간 변경 이력도 한 건씩 만든다
+  // 수정 이력·기간 변경 이력도 한 건씩 생성
   await c.call('put', `/projects/${projectId}/work-logs/${DAY}`, {
     status: 'SAVED',
     content: '회사 A의 작업 내역 (수정)',
@@ -233,7 +233,7 @@ const buildCompany = async () => {
     .id as string;
   const photoId = await c.id(`/projects/${projectId}/photos`, { fileId });
   const memoId = await c.id('/memos', { content: '회사 A의 메모', projectId });
-  // 문서용 파일을 올려 신청해 두고(검사 전이어도 됨) 민감 문서를 한 건 만든다
+  // 문서용 파일을 올려 신청해 두고(검사 전이어도 됨) 민감 문서 한 건 생성
   const docFileId = (
     await c.call('post', `/projects/${projectId}/files`, {
       name: '계약서.pdf',
@@ -247,7 +247,7 @@ const buildCompany = async () => {
     title: '회사 A의 계약서',
     category: 'CONTRACT',
   });
-  // 변경·추가 작업 한 건: 상태를 한 번 바꾸고 증빙 문서를 연결해 둔다
+  // 변경·추가 작업 한 건: 상태를 한 번 바꾸고 증빙 문서 연결
   const changeWorkId = await c.id(`/projects/${projectId}/change-works`, {
     requestedOn: DAY,
     requester: '회사 A의 고객',
@@ -260,7 +260,7 @@ const buildCompany = async () => {
   });
   await c.call('post', `/change-works/${changeWorkId}/documents`, { documentId });
 
-  // 보증: 완료한 두 번째 프로젝트에 보증 설정과 보증서를 한 건씩 만든다
+  // 보증: 완료한 두 번째 프로젝트에 보증 설정과 보증서를 한 건씩 생성
   const warrantyProjectId = await c.id('/projects', {
     name: '회사 A의 완료 공사',
     siteName: 'A동 현장',
@@ -304,7 +304,7 @@ const buildCompany = async () => {
     })
   ).body.certificates[0].id as string;
 
-  // 보수 요청: 완료한 프로젝트를 보증 중으로 올린 뒤 한 건 접수하고 상태를 한 번 바꿔 둔다
+  // 보수 요청: 완료한 프로젝트를 보증 중으로 올린 뒤 한 건 접수하고 상태를 한 번 변경
   await c.call('post', `/projects/${warrantyProjectId}/status`, {
     toStatus: 'WARRANTY',
     effectiveOn: '2026-09-21',
@@ -378,7 +378,7 @@ const buildCompany = async () => {
   };
 };
 
-// B에게 A의 ID로 접근하는 요청 전부. 하나라도 성공하면 격리가 깨진 것이다
+// B가 A의 ID로 접근하는 요청 전부, 하나라도 성공하면 격리가 깨진 것
 const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
   [
     ['GET /employees/{id}', 'get', `/employees/${a.worker}`],
@@ -622,6 +622,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'get',
       `/projects/${a.projectId}/daily-reports.xlsx?from=${DAY}&to=${DAY}`,
     ],
+    ['GET /projects/{id}/summary.xlsx', 'get', `/projects/${a.projectId}/summary.xlsx`],
     ['GET /search', 'get', `/search?q=A&projectId=${a.projectId}`],
     ['GET /documents/{id}', 'get', `/documents/${a.documentId}`],
     ['PATCH /documents/{id}', 'patch', `/documents/${a.documentId}`, { title: '침투' }],
@@ -700,6 +701,8 @@ const COLLECTIONS = [
   'POST /employees',
   'GET /materials',
   'GET /pay-rates',
+  'GET /company/storage',
+  'POST /company/export',
   'GET /audit-logs',
   'GET /monthly-hours',
   'POST /monthly-hours/close',
@@ -717,8 +720,8 @@ const COLLECTIONS = [
   'GET /dashboard',
 ];
 
-// 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트.
-// 회사 업무 데이터를 다루는 새 엔드포인트는 여기에 넣지 말고 위의 시험 목록(attacks·COLLECTIONS)에 넣는다.
+// 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트
+// 회사 업무 데이터를 다루는 새 엔드포인트는 여기에 넣지 않고 위의 시험 목록(attacks·COLLECTIONS)에 추가
 // 각자 전용 시험이 있다: 계정(accountRoutes)·기기(deviceRoutes: 다른 회사 사용자의 기기 로그아웃 불가)·소셜(socialRoutes)·회사 설정(companySettingsRoutes: 두 회사의 설정은 서로 독립)
 const OWN_ACCOUNT_ONLY = [
   // 틀 검증용 샘플 쓰기 API (업무 데이터 없음)
@@ -733,10 +736,13 @@ const OWN_ACCOUNT_ONLY = [
   'GET /me/devices',
   'DELETE /me/devices/{id}',
   'GET /me/social',
-  'POST /me/social/kakao/start',
-  'DELETE /me/social/kakao',
+  'POST /me/password/set',
+  'POST /me/social/{provider}/start',
+  'DELETE /me/social/{provider}',
   'GET /company/settings',
   'PUT /company/settings',
+  'GET /company/rules',
+  'PUT /company/rules',
   'GET /company/alert-settings',
   'PUT /company/alert-settings',
   // 알림 숨기기: 다른 회사의 ID를 받지 않고 자기 회사의 알림 키만 남긴다 (dashboardRoutes: 회사마다 따로)
@@ -823,7 +829,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(log.body).toMatchObject({ content: '회사 A의 작업 내역 (수정)', version: 2 });
     expect(assignments.body.items[0].cancelledAt).toBeNull();
 
-    // 변경·추가 작업도 그대로: B의 침투 요청·철회·증빙 해제가 반영되지 않았다
+    // 변경·추가 작업도 유지: B의 침투 요청·철회·증빙 해제가 반영되지 않음
     const changeWork = await a.c.call('get', `/change-works/${a.changeWorkId}`);
 
     expect(changeWork.body).toMatchObject({
@@ -835,7 +841,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       (await a.c.call('get', `/projects/${a.projectId}/change-works`)).body.items,
     ).toHaveLength(1);
 
-    // 보증도 그대로: B의 침투(0개월 변경, 보증서 삭제·만료일 변경)가 반영되지 않았다
+    // 보증도 유지: B의 침투(0개월 변경, 보증서 삭제·만료일 변경)가 반영되지 않음
     const warranty = await a.c.call('get', `/projects/${a.warrantyProjectId}/warranty`);
 
     expect(warranty.body).toMatchObject({ configured: true, months: 12, endOn: '2027-09-20' });
@@ -843,7 +849,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(warranty.body.certificates[0]).toMatchObject({ expiresOn: '2027-09-20' });
     expect(warranty.body.changes).toHaveLength(1);
 
-    // 보수 요청도 그대로: B의 침투(완료 처리·내용 수정)가 반영되지 않았다
+    // 보수 요청도 유지: B의 침투(완료 처리·내용 수정)가 반영되지 않음
     const repair = await a.c.call('get', `/repair-requests/${a.repairId}`);
 
     expect(repair.body).toMatchObject({
@@ -853,7 +859,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     });
     expect(repair.body.history).toHaveLength(1);
 
-    // 월 공수표·확정도 회사마다 따로: 각자 자기 작업 내역만 집계되고, A가 확정해도 B는 확정되지 않으며 B는 A의 확정을 재오픈할 수 없다
+    // 월 공수표·확정도 회사마다 별도: 각자 자기 작업 내역만 집계, A가 확정해도 B는 미확정, B는 A의 확정 재오픈 불가
     const month = DAY.slice(0, 7);
     const monthOf = async (c: typeof a.c) =>
       (await c.call('get', `/monthly-hours?month=${month}`)).body;
@@ -872,13 +878,13 @@ describe('회사 격리: 전 엔드포인트', () => {
     ).toBe(400);
     expect(await monthOf(a.c)).toMatchObject({ isClosed: true });
 
-    // 단가도 그대로: B의 침투 단가(999,999원)가 들어가지 않았다
+    // 단가도 유지: B의 침투 단가(999,999원)가 반영되지 않음
     const rates = await a.c.call('get', `/employees/${a.worker}/pay-rates`);
 
     expect(rates.body.items).toHaveLength(1);
     expect(rates.body.items[0]).toMatchObject({ payType: 'DAILY', amount: 200_000 });
 
-    // 진행률도 그대로: B의 침투 기록(99%)이 들어가지 않았다
+    // 진행률도 유지: B의 침투 기록(99%)이 반영되지 않음
     const progress = await a.c.call('get', `/projects/${a.projectId}/progress`);
 
     expect(progress.body.items).toHaveLength(1);
@@ -909,7 +915,7 @@ describe('회사 격리: 전 엔드포인트', () => {
         dashboard: { activeProjects: { id: string }[] };
         settings: { items: { kind: string; enabled: boolean }[] };
       };
-    // 두 회사 모두 같은 더미를 만들었으므로 B만 다시 켜서 A의 설정이 B에 영향을 주지 않는지 본다
+    // 두 회사 모두 같은 더미를 만들었으므로 B만 다시 켜서 A의 설정이 B에 영향을 주지 않는지 확인
     await b.c.call('put', '/company/alert-settings', {
       items: [{ kind: 'WARRANTY_ENDING', enabled: true }],
     });
@@ -944,7 +950,7 @@ describe('회사 격리: 전 엔드포인트', () => {
         (await b.c.call('get', `/search?q=${encodeURIComponent(q)}&limit=20`)).body,
       );
 
-    // 회사 A에만 있는 말을 직원·메모에 심어 둠 (회사마다 같은 더미 데이터가 있으므로 A 전용 값을 따로 만든다)
+    // 회사 A에만 있는 문구를 직원·메모에 삽입 (회사마다 같은 더미 데이터가 있으므로 A 전용 값을 별도 생성)
     await a.c.call('post', '/employees', { name: '에이전용직원' });
     await a.c.call('post', '/memos', { content: '에이전용메모키워드' });
 
@@ -1118,7 +1124,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       expect({ name, rejected: status >= 400 && status < 500 }).toEqual({ name, rejected: true });
     }
 
-    // A의 직원에게 B의 투입·작업 내역이 생기지 않았다
+    // A의 직원에게 B의 투입·작업 내역이 생기지 않음
     const history = await a.c.call('get', `/employees/${a.worker}/work-history`);
 
     expect(history.body.projects).toHaveLength(1);
@@ -1162,7 +1168,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     const seen: Record<string, { own: number; other: number }> = {};
 
     for (const { table_name: table } of tables) {
-      // 테이블 이름은 information_schema에서 읽은 값이라 직접 끼워 넣어도 안전하다
+      // 테이블 이름은 information_schema에서 읽은 값이므로 직접 삽입해도 안전
       const [row] = await withCompany(db.app, companyA, (tx) =>
         tx.$queryRawUnsafe<{ own: bigint; other: bigint }[]>(
           `SELECT count(*) FILTER (WHERE company_id = $1::uuid) AS own,

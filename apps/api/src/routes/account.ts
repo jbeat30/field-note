@@ -1,5 +1,6 @@
 import {
   LEGAL_DOCUMENT_META,
+  companyRulesSchema,
   companySettingsSchema,
   deviceParamsSchema,
   devicesResponseSchema,
@@ -13,12 +14,15 @@ import {
   emailChangeSchema,
   emailResendResponseSchema as emailChangeResponseSchema,
   passwordChangeSchema,
+  passwordSetSchema,
   passwordResetConfirmSchema,
   passwordResetParamsSchema,
   passwordResetRequestSchema,
+  type CompanyRules,
   type CompanySettings,
   type EmailChange,
   type PasswordChange,
+  type PasswordSet,
   type PasswordResetConfirm,
   type LoginRequest,
   type SignupRequest,
@@ -41,7 +45,7 @@ import { readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionStore } from '../session/sessionStore';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 
-// 계약 선행 라우트: 화면은 이 계약(OpenAPI)으로 목업과 함께 먼저 만들고, 실제 구현은 P0-2~P0-8에서 채운다
+// 계약 선행 라우트: 화면은 이 계약(OpenAPI)으로 목업과 함께 먼저 구현하고 실제 구현은 P0-2~P0-8에서 채움
 const notImplemented: RouteHandler = async () => {
   throw new AppError('NOT_IMPLEMENTED');
 };
@@ -94,7 +98,6 @@ const toAppError = (error: unknown): unknown => {
     case 'SOCIAL_NOT_LINKED':
       return new AppError('NOT_FOUND');
     case 'SOCIAL_ALREADY_LINKED':
-    case 'SOCIAL_EMAIL_REQUIRED':
       return new AppError('VALIDATION_ERROR', [
         { path: 'body', message: '소셜 계정을 사용할 수 없습니다' },
       ]);
@@ -102,6 +105,10 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('LAST_LOGIN_METHOD');
     case 'ACCOUNT_CLOSING':
       return new AppError('ACCOUNT_CLOSING');
+    case 'PASSWORD_ALREADY_SET':
+      return new AppError('VALIDATION_ERROR', [
+        { path: 'body', message: '이미 아이디·비밀번호 로그인이 설정되어 있습니다' },
+      ]);
   }
 };
 
@@ -189,6 +196,7 @@ export const registerAccountRoutes = (
             companyName: invitation.companyName,
             adminName: invitation.adminName,
             expiresAt: invitation.expiresAt.toISOString(),
+            purpose: invitation.purpose,
             documents: documents.map((document) => ({
               id: document.id,
               type: document.type,
@@ -234,6 +242,15 @@ export const registerAccountRoutes = (
             );
 
             setSessionCookie(response, session, isSecureCookie);
+
+            // 복구·소유자 이전은 이전 이메일로 알림 (본인 확인 외 변경 시 운영자 연락 안내)
+            if (account.previousEmail) {
+              await notifier
+                ?.notify('OWNER_REGISTERED_AGAIN', account.previousEmail)
+                .catch((error: unknown) => {
+                  logger?.error({ err: error }, '[routes.signup] 이전 이메일 알림 요청 실패');
+                });
+            }
 
             // 가입은 이미 완료됐으므로 발송 요청이 실패해도 가입은 유지하고, 인증 화면의 재발송으로 이어지게 함
             await emailVerification?.request(account).catch((error: unknown) => {
@@ -385,6 +402,34 @@ export const registerAccountRoutes = (
     },
     companySettings
       ? async ({ auth, body }) => companySettings.save(auth!.companyId, body as CompanySettings)
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/company/rules',
+      summary: '회사 경고 기준·보증 기본 기간 조회 (저장한 적이 없으면 기본값)',
+      auth: 'required',
+      response: { status: 200, schema: companyRulesSchema },
+    },
+    companySettings
+      ? async ({ auth }) => companySettings.getRules(auth!.companyId)
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'put',
+      path: '/company/rules',
+      summary:
+        '회사 경고 기준·보증 기본 기간 변경 (공수 소진율 경고·한도, 진행률 간격, 보증 기본 개월 수)',
+      auth: 'required',
+      request: { body: companyRulesSchema },
+      response: { status: 200, schema: companyRulesSchema },
+    },
+    companySettings
+      ? async ({ auth, body }) => companySettings.saveRules(auth!.companyId, body as CompanyRules)
       : notImplemented,
   );
 
@@ -555,7 +600,8 @@ export const registerAccountRoutes = (
     {
       method: 'post',
       path: '/me/email/change',
-      summary: '이메일 변경 요청 (새 주소로 인증 코드 발송, 인증해야 반영)',
+      summary:
+        '이메일 변경·등록 요청 (새 주소로 인증 코드 발송, 인증해야 반영, 비밀번호가 있는 계정은 현재 비밀번호 필요)',
       auth: 'required',
       request: { body: emailChangeSchema },
       response: { status: 200, schema: emailChangeResponseSchema },
@@ -568,7 +614,10 @@ export const registerAccountRoutes = (
 
           try {
             // 계정 탈취 시 이메일을 바꿔 복구 수단을 가로채지 못하도록 비밀번호를 먼저 재확인
-            await accountService.verifyCurrentPassword(auth!, input.currentPassword);
+            // 비밀번호가 없는 계정(소셜 로그인만 사용)은 확인할 수단이 없어 건너뜀
+            if (await accountService.hasPassword(auth!)) {
+              await accountService.verifyCurrentPassword(auth!, input.currentPassword ?? '');
+            }
 
             return await emailVerification.requestChange(
               auth!,
@@ -577,6 +626,30 @@ export const registerAccountRoutes = (
           } catch (error) {
             throw toVerificationError(toAppError(error));
           }
+        }
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/me/password/set',
+      summary: '소셜 로그인만 쓰는 계정의 아이디·비밀번호 로그인 설정 (이미 있으면 거부)',
+      auth: 'required',
+      request: { body: passwordSetSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: ['LOGIN_ID_TAKEN'],
+      rateLimit: { windowMs: 60_000, limit: 10 },
+    },
+    accountService
+      ? async ({ auth, body }) => {
+          try {
+            await accountService.setPassword(auth!, body as PasswordSet);
+          } catch (error) {
+            throw toAppError(error);
+          }
+
+          return { success: true };
         }
       : notImplemented,
   );

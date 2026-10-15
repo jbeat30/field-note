@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { materialRemaining, roundTo } from './workUnits';
 
-// 사용 자재 관리 (서비스 기획서 §11). 가격·구매·발주·재고는 다루지 않고, 어떤 자재가 언제 얼마나 들어오고 쓰이고 나갔는지만 기록한다
+// 사용 자재 관리 (서비스 기획서 §11), 가격·구매·발주·재고는 제외하고 어떤 자재가 언제 얼마나 들어오고 쓰이고 나갔는지만 기록
 export const MATERIAL_CATEGORIES = ['RAW', 'SUB', 'FINISH', 'CONSUMABLE'] as const;
 
 export const materialCategorySchema = z.enum(MATERIAL_CATEGORIES);
@@ -47,7 +47,7 @@ export const MATERIAL_PAGE_MAX_LIMIT = 100;
 
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
-// 같은 이름도 규격이 다르면 별도 자재이므로 이름·규격의 공백·대소문자 차이만 없앤 비교용 값을 쓴다
+// 같은 이름도 규격이 다르면 별도 자재이므로 이름·규격의 공백·대소문자 차이만 제거한 비교용 값 사용
 export const normalizeMaterialText = (value: string | null | undefined) =>
   (value ?? '').normalize('NFKC').toLowerCase().replace(/\s+/g, '');
 
@@ -93,7 +93,7 @@ export const materialCreateSchema = z.object({
 
 export type MaterialCreate = z.infer<typeof materialCreateSchema>;
 
-// 단위는 기록이 있으면 바꿀 수 없다 (수량의 뜻이 달라지므로). 쓰지 않는 자재는 숨긴다
+// 단위는 기록이 있으면 변경 불가 (수량의 뜻이 달라지므로), 쓰지 않는 자재는 숨김
 export const materialUpdateSchema = z
   .object({
     name: nameSchema,
@@ -126,15 +126,15 @@ export const materialSchema = z.object({
   unit: z.string(),
   category: materialCategorySchema,
   isActive: z.boolean(),
-  // 가장 최근에 기록한 날짜 (회사 전체 기준, 없으면 null). 최근 쓴 자재를 위에 보여 주는 기준
+  // 가장 최근에 기록한 날짜 (회사 전체 기준, 없으면 null), 최근 쓴 자재를 위에 보여 주는 기준
   lastUsedOn: dateSchema.nullable(),
-  // 가장 최근에 기록을 입력한 시각. 같은 날 쓴 자재끼리는 방금 입력한 자재가 먼저 오게 하는 기준
+  // 가장 최근에 기록을 입력한 시각, 같은 날 쓴 자재끼리는 방금 입력한 자재를 먼저 정렬하는 기준
   lastRecordedAt: z.iso.datetime().nullable(),
 });
 
 export type Material = z.infer<typeof materialSchema>;
 
-// 최근 쓴 자재가 먼저(같은 날이면 방금 입력한 자재가 먼저), 그다음 이름순 (서버와 목업이 같은 순서를 쓴다)
+// 최근 쓴 자재 우선(같은 날이면 방금 입력한 자재 우선), 그다음 이름순 (서버와 목업이 같은 순서 사용)
 export const compareMaterials = (a: Material, b: Material) => {
   if (a.lastUsedOn !== b.lastUsedOn) {
     if (a.lastUsedOn === null) return 1;
@@ -156,7 +156,7 @@ export const compareMaterials = (a: Material, b: Material) => {
 
 /**
  * @description 현장에서 바로 쓴 품명·규격이 회사 자재 중 어느 것과 같은지 찾음 (공백·대소문자·전각 차이는 무시)
- * 같은 것이 없으면 새 자재로 만들면 된다. 판금 인테리어처럼 현장마다 규격이 다른 맞춤 자재를 그때그때 적기 위한 규칙
+ * 같은 것이 없으면 새 자재로 생성, 판금 인테리어처럼 현장마다 규격이 다른 맞춤 자재를 그때그때 기록하기 위한 규칙
  * @param materials 회사 자재 목록
  * @param name 품명
  * @param spec 규격 (없으면 빈 글자)
@@ -202,7 +202,7 @@ export const materialRecordCreateSchema = z.object(recordFields);
 
 export type MaterialRecordCreate = z.infer<typeof materialRecordCreateSchema>;
 
-// 한 번에 여러 자재를 입력하는 목록형 입력: 한 건이라도 잘못되면 전부 저장하지 않는다
+// 한 번에 여러 자재를 입력하는 목록형 입력: 한 건이라도 잘못되면 전체 저장 제외
 export const materialRecordBatchSchema = z.object({
   records: z.array(materialRecordCreateSchema).min(1).max(MATERIAL_RECORD_BATCH_MAX),
 });

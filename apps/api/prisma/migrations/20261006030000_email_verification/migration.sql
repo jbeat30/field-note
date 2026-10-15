@@ -21,7 +21,7 @@ ALTER TABLE "email_verifications" ADD CONSTRAINT "email_verifications_company_id
 ALTER TABLE "email_verifications" ADD CONSTRAINT "email_verifications_company_id_user_id_fkey" FOREIGN KEY ("company_id", "user_id") REFERENCES "users"("company_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 
--- 인증 코드는 회사 범위 밖 전용 계정만 접근 (코드 해시 보호). 삭제 권한은 두지 않고 성공 시 코드 값만 비움
+-- 인증 코드는 회사 범위 밖 전용 계정만 접근 (코드 해시 보호), 삭제 권한은 두지 않고 성공 시 코드 값만 비움
 ALTER TABLE "email_verifications" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "email_verifications" FORCE ROW LEVEL SECURITY;
 CREATE POLICY auth_module_only ON "email_verifications" TO field_note_auth USING (true) WITH CHECK (true);

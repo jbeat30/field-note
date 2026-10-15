@@ -298,7 +298,7 @@ describe('작업 내역 저장·조회', () => {
       totalMinutes: 600,
       hasContent: true,
     });
-    // 달력에 보여 줄 그날 일한 사람별 시간 (합이 총 시간과 같다)
+    // 달력에 표시할 그날 일한 사람별 시간 (합계는 총 시간과 동일)
     expect(all[1]?.workers.reduce((sum, worker) => sum + worker.minutes, 0)).toBe(600);
     expect(all[0]).toMatchObject({
       status: 'DRAFT',
@@ -335,7 +335,7 @@ describe('낙관적 잠금과 수정 이력', () => {
       (await s.client.put(s.project, DAY, full(s, { content: '다른 내용', expectedVersion: 7 })))
         .status,
     ).toBe(409);
-    // 충돌한 요청은 아무것도 바꾸지 않는다
+    // 충돌한 요청은 아무것도 변경하지 않음
     expect((await s.client.get(s.project, DAY)).body).toMatchObject({
       version: 1,
       content: '외장 패널 1차 설치',
@@ -721,7 +721,7 @@ describe('투입이 없는 직원 (서비스 기획서 §9.3)', () => {
       startDate: DAY,
       endDate: DAY,
     });
-    // 다시 고칠 때는 이미 투입이 있어 확인이 필요 없다
+    // 다시 수정할 때는 이미 투입이 있어 확인 불필요
     expect(
       (await s.client.put(s.project, DAY, { ...body, content: '수정', expectedVersion: 1 })).body
         .autoAssignedEmployeeIds,
@@ -789,7 +789,7 @@ describe('하루 합계 공수 경고', () => {
         ],
       },
     ]);
-    // 먼저 저장한 쪽을 다시 읽어도 같은 경고가 보인다
+    // 먼저 저장한 쪽을 다시 읽어도 같은 경고 표시
     expect((await s.client.get(other, DAY)).body.warnings).toEqual([
       expect.objectContaining({ type: 'DAILY_OVER', totalMinutes: 960 }),
     ]);
@@ -1106,7 +1106,7 @@ describe('공수 집계', () => {
         ],
       }),
     );
-    // 다른 사람만 일한 날은 빠진다
+    // 다른 사람만 일한 날은 제외
     await s.client.put(
       s.project,
       '2026-10-06',
@@ -1170,7 +1170,7 @@ describe('공수 집계', () => {
       (await fetch(instance, b.cookie, `/projects/${a.project}/work-summary/employees/${a.worker}`))
         .status,
     ).toBe(404);
-    // 내 프로젝트여도 다른 회사 직원이면 찾을 수 없다
+    // 내 프로젝트여도 다른 회사 직원이면 조회 불가
     expect(
       (await fetch(instance, a.cookie, `/projects/${a.project}/work-summary/employees/${b.worker}`))
         .status,

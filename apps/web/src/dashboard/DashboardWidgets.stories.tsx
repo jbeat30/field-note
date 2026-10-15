@@ -97,7 +97,7 @@ export const StatsAndProjects: Story = {
   },
 };
 
-// 홈에는 알림 5건만 보이고 나머지는 알림 창으로 안내한다
+// 홈에는 알림 5건만 표시하고 나머지는 알림 창으로 안내
 export const ManyAlertsCollapsed: Story = {
   args: { dashboard: dashboard(12) },
   play: async ({ canvasElement }) => {

@@ -24,7 +24,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 시드 기록이 자재별 합계와 날짜별 기록에 나온다
+// 시드 기록이 자재별 합계와 날짜별 기록에 표시
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -35,7 +35,7 @@ export const Default: Story = {
   },
 };
 
-// 맞춤 자재: 목록에서 고르지 않고 품명·규격을 바로 쓰고, 줄을 복사해 규격만 바꿔 여러 개 넣는다
+// 맞춤 자재: 목록에서 고르지 않고 품명·규격을 바로 입력, 줄을 복사해 규격만 바꿔 여러 개 입력
 export const RecordCustomMaterials: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -62,7 +62,7 @@ export const RecordCustomMaterials: Story = {
   },
 };
 
-// 품명만 쓰고 수량·단위를 빼면 저장하기 전에 알려 준다
+// 품명만 입력하고 수량·단위를 비우면 저장 전에 안내
 export const NeedsQuantityAndUnit: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

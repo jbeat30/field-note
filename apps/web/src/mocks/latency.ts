@@ -1,6 +1,6 @@
 import { delay } from 'msw';
 
-// Jest 시험에서는 기다리지 않음 (요청이 많은 시험이 제한 시간을 넘지 않게). 브라우저(목업 모드·Storybook)에서는 그대로 기다림
+// Jest 시험에서는 기다리지 않음 (요청이 많은 시험이 제한 시간을 넘지 않게), 브라우저(목업 모드·Storybook)에서는 그대로 기다림
 const isJest = typeof process !== 'undefined' && process.env.JEST_WORKER_ID !== undefined;
 
 /**

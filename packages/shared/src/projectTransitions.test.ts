@@ -161,9 +161,9 @@ describe('보증·종료 전환 조건 (§10.3)', () => {
       path: 'reason',
     });
     expect(check({ ...base, effectiveOn: '2026-10-04', reason: '고객 요청' }).ok).toBe(true);
-    // 종료 예정일 당일·이후는 사유 없이 종료할 수 있다
+    // 종료 예정일 당일·이후는 사유 없이 종료 가능
     expect(check({ ...base, effectiveOn: '2026-10-05', reason: null }).ok).toBe(true);
-    // 종료 예정일을 모르면 사유를 받는다
+    // 종료 예정일을 모르면 사유 필요
     expect(check({ ...base, warrantyEndOn: null, reason: null }).ok).toBe(false);
     expect(transitionNeedsReason('WARRANTY', 'CLOSED')).toBe(true);
   });

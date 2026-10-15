@@ -27,7 +27,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 더미 기록: 지출 3건(27만 원)과 고철 판매 수입 1건(7만 원)이 합계와 내역 표에 나온다
+// 더미 기록: 지출 3건(27만 원)과 고철 판매 수입 1건(7만 원)이 합계와 내역 표에 표시
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -40,7 +40,7 @@ export const Default: Story = {
   },
 };
 
-// 구분 단추로 수입만 보면 내역과 지출 합계가 같은 조건을 따른다
+// 구분 단추로 수입만 보면 내역과 지출 합계가 같은 조건 적용
 export const FilterIncome: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -58,7 +58,7 @@ export const FilterIncome: Story = {
   },
 };
 
-// 지출 한 건을 적으면 내역과 합계가 바로 바뀐다
+// 지출 한 건 입력 시 내역과 합계 즉시 변경
 export const AddExpense: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -77,7 +77,7 @@ export const AddExpense: Story = {
   },
 };
 
-// 금액을 비우고 저장하면 저장하기 전에 알려 준다
+// 금액을 비우고 저장하면 저장 전에 안내
 export const NeedsAmount: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -93,7 +93,7 @@ export const NeedsAmount: Story = {
   },
 };
 
-// 지우기는 확인 창을 거치고, 지우면 합계에서 빠진다
+// 지우기는 확인 창을 거치고 지우면 합계에서 제외
 export const DeleteEntry: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

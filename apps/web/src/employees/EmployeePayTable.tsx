@@ -24,7 +24,7 @@ import { useEmployees } from './useEmployees';
 export const rateText = (rate: Pick<PayRate, 'payType' | 'amount'>) =>
   `${PAY_TYPE_LABELS[rate.payType]} ${formatWon(rate.amount)}`;
 
-// 단가표 탭 (09 §7): 직원별 현재 단가·적용 시작일·이전 단가를 한 표로 보고 여기서 바로 `단가 변경`을 한다. 퇴사한 직원은 뺀다
+// 단가표 탭 (09 §7): 직원별 현재 단가·적용 시작일·이전 단가를 한 표로 표시하고 `단가 변경` 직접 수행, 퇴사한 직원은 제외
 export const EmployeePayTable = () => {
   const employees = useEmployees({});
   const summaries = usePayRateSummaries();

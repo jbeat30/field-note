@@ -18,7 +18,7 @@ export const usePayRates = (employeeId: string) =>
 
       return data.items;
     },
-    // 단가는 민감 정보라 조회가 감사 기록으로 남으므로 화면을 열 때마다가 아니라 필요할 때만 다시 읽는다
+    // 단가는 민감 정보이므로 화면을 열 때마다가 아니라 필요할 때만 재조회
     staleTime: 60_000,
   });
 
@@ -54,7 +54,7 @@ export const useAddPayRate = (employeeId: string) => {
 
       return data;
     },
-    // 단가가 바뀌면 단가 목록과 모든 프로젝트의 인건비가 달라진다
+    // 단가가 바뀌면 단가 목록과 모든 프로젝트의 인건비 변경
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['labor'] }),
   });
 };

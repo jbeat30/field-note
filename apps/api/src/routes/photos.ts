@@ -140,7 +140,7 @@ export const registerPhotoRoutes = (registry: RouteRegistry, photos?: PhotoServi
       request: { params: photoParamsSchema },
       response: { status: 200, schema: successResponseSchema },
       errors: ['NOT_FOUND'],
-      // 활동 기록: 지우기 전에 어떤 사진이었는지 읽어 둔다
+      // 활동 기록: 삭제 전 사진 정보 조회
       audit: {
         before: ({ auth, params }) => photos!.get(auth!.companyId, (params as { id: string }).id),
         entry: ({ params }, _result, before) => {

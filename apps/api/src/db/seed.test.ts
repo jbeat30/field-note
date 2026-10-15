@@ -154,7 +154,7 @@ describe('seedDemoData', () => {
     expect(welder.workerType?.name).toBe('계약직');
     expect(welder.companyId).toBe(welder.jobType?.companyId);
 
-    // 앱 계정은 자기 회사 직원만 본다
+    // 앱 계정은 자기 회사 직원만 조회
     const visible = await withCompany(db.app, saeron.companyId, (tx) => tx.employee.findMany());
 
     expect(visible).toHaveLength(count(saeron.companyId));

@@ -1,4 +1,4 @@
-import { companySettingsSchema, errorResponseSchema } from '@field-note/shared';
+import { companyRulesSchema, companySettingsSchema, errorResponseSchema } from '@field-note/shared';
 import request from 'supertest';
 
 import { createApp } from '../app';
@@ -74,6 +74,82 @@ const put = (instance: ReturnType<typeof app>, cookie: string, body: unknown) =>
     .set(CSRF_HEADER, CSRF_HEADER_VALUE)
     .set('Cookie', cookie)
     .send(body as object);
+
+describe('GET·PUT /api/v1/company/rules', () => {
+  const putRules = (instance: ReturnType<typeof app>, cookie: string, body: unknown) =>
+    request(instance)
+      .put('/api/v1/company/rules')
+      .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+      .set('Cookie', cookie)
+      .send(body as object);
+
+  it('처음에는 기본값이고 저장한 값이 다시 조회되며 회사 설정(기준시간 등)은 그대로다', async () => {
+    const instance = app();
+    const cookie = await signedUp(instance);
+    const rulesOf = async () =>
+      companyRulesSchema.parse(
+        (await request(instance).get('/api/v1/company/rules').set('Cookie', cookie)).body,
+      );
+
+    expect(await rulesOf()).toEqual({
+      burnWarnPercent: 80,
+      burnLimitPercent: 100,
+      aheadGapPercent: 20,
+      warrantyDefaultMonths: 12,
+    });
+
+    const next = {
+      burnWarnPercent: 70,
+      burnLimitPercent: 95,
+      aheadGapPercent: 15,
+      warrantyDefaultMonths: 24,
+    };
+
+    expect((await putRules(instance, cookie, next)).body).toEqual(next);
+    expect(await rulesOf()).toEqual(next);
+    // 기준시간 같은 기존 설정은 변경 없음
+    expect(
+      (await request(instance).get('/api/v1/company/settings').set('Cookie', cookie)).body,
+    ).toMatchObject({ standardWorkMinutes: 480, monthlyWorkDays: 26 });
+  });
+
+  it('범위를 벗어나거나 한도가 경고보다 크지 않으면 400이다', async () => {
+    const instance = app();
+    const cookie = await signedUp(instance);
+    const ok = {
+      burnWarnPercent: 80,
+      burnLimitPercent: 100,
+      aheadGapPercent: 20,
+      warrantyDefaultMonths: 12,
+    };
+
+    for (const bad of [
+      { ...ok, burnLimitPercent: 80 },
+      { ...ok, burnWarnPercent: 10 },
+      { ...ok, aheadGapPercent: 0 },
+      { ...ok, warrantyDefaultMonths: 200 },
+    ]) {
+      expect((await putRules(instance, cookie, bad)).status).toBe(400);
+    }
+  });
+
+  it('두 회사의 기준은 서로 독립이다', async () => {
+    const instance = app();
+    const first = await signedUp(instance);
+    const second = await signedUp(instance);
+
+    await putRules(instance, first, {
+      burnWarnPercent: 60,
+      burnLimitPercent: 90,
+      aheadGapPercent: 10,
+      warrantyDefaultMonths: 6,
+    });
+
+    expect(
+      (await request(instance).get('/api/v1/company/rules').set('Cookie', second)).body,
+    ).toMatchObject({ burnWarnPercent: 80, warrantyDefaultMonths: 12 });
+  });
+});
 
 describe('GET·PUT /api/v1/company/settings', () => {
   it('처음에는 기본값이고, 저장한 값이 다시 조회된다', async () => {
@@ -152,7 +228,7 @@ describe('GET·PUT /api/v1/company/settings', () => {
     const cases = [
       { standardWorkMinutes: 30, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480, monthlyWorkDays: 0, workUnitMode: 'RATIO' },
-      // 소수 둘째 자리와 31일 초과는 받지 않는다
+      // 소수 둘째 자리와 31일 초과는 거부
       { standardWorkMinutes: 480, monthlyWorkDays: 21.75, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480, monthlyWorkDays: 31.5, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480.5, monthlyWorkDays: 22, workUnitMode: 'RATIO' },

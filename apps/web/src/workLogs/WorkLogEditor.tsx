@@ -193,7 +193,7 @@ export const WorkLogEditor = ({
 }: Props) => {
   const queryClient = useQueryClient();
   const save = useSaveWorkLog(project.id);
-  // 작업 입력은 항상 "시간"으로 받는다 (공수 환산은 집계 화면에서만). 회사의 공수 입력 방식 설정과 무관하게 입력은 시간
+  // 작업 입력은 항상 "시간"으로 받는다 (공수 환산은 집계 화면에서만), 회사의 공수 입력 방식 설정과 무관하게 입력은 시간
   const settings = { ...companySettings, workUnitMode: 'HOURS' as const };
   const employeeById = new Map(employees.map((employee) => [employee.id, employee]));
   const names = new Map(employees.map((employee) => [employee.id, employee.name]));
@@ -261,7 +261,7 @@ export const WorkLogEditor = ({
   const snapshot: EditorSnapshot = { lines, content, area, notes, isChange, isAfterService };
   const snapshotSignature = signatureOf(snapshot);
 
-  // 입력이 바뀔 때마다 (잠깐 멈추면) 기기에 저장. 서버 내용과 같아지면 초안을 지움
+  // 입력이 바뀔 때마다 (잠시 멈추면) 기기에 저장, 서버 내용과 같아지면 초안 삭제
   useEffect(() => {
     draft.write(snapshot);
     // 값이 바뀐 것만 보면 되므로 비교용 글자에만 반응
@@ -352,7 +352,7 @@ export const WorkLogEditor = ({
   const toggleEmployee = (employeeId: string, checked: boolean) =>
     checked ? addEmployees([employeeId]) : removeEmployee(employeeId);
 
-  // 고를 수 있는 직원: 퇴사자는 이미 이 날 기록에 있을 때만. 이 현장 투입 인원이 먼저, 그다음 이름순
+  // 선택 가능한 직원: 퇴사자는 이미 이 날 기록에 있을 때만, 이 현장 투입 인원 우선, 그다음 이름순
   const keyword = search.trim().toLowerCase();
   const pickable = employees
     .filter((employee) => employee.status !== 'LEFT' || employeeIds.includes(employee.id))
@@ -368,7 +368,7 @@ export const WorkLogEditor = ({
         a.name.localeCompare(b.name, 'ko'),
     );
 
-  // 다른 날짜에서 불러오기: 그날의 사람·시간·한 일과 작업 내용을 복사 (퇴사한 직원은 뺌). 저장하기 전에 확인하도록 안내만 한다
+  // 다른 날짜에서 불러오기: 그날의 사람·시간·한 일과 작업 내용 복사 (퇴사한 직원 제외), 저장 전 확인 안내만 제공
   const loadFrom = async (source: string) => {
     if (!source) return;
 
@@ -446,7 +446,7 @@ export const WorkLogEditor = ({
 
       const { byField, root } = splitServerErrors(error, FIELDS);
 
-      // 투입 등록이 없는 직원: 자동으로 추가할지 묻는다
+      // 투입 등록이 없는 직원: 자동 추가 여부 확인
       if (byField.addMissingAssignments) {
         setPendingAssignment({ status, message: byField.addMissingAssignments });
         return;

@@ -24,8 +24,8 @@ export const parseDay = (value: string): Date | undefined => {
 export const formatDay = (date: Date) =>
   `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
 
-// 날짜 입력: 직접 쓰거나(YYYY-MM-DD) 달력에서 고른다. 값 형식과 onChange는 기존 날짜 입력과 같아
-// react-hook-form의 register()와 value/onChange를 그대로 쓸 수 있다
+// 날짜 입력: 직접 입력(YYYY-MM-DD) 또는 달력 선택, 값 형식과 onChange는 기존 날짜 입력과 동일
+// react-hook-form의 register()와 value/onChange를 그대로 사용 가능
 export const DateInput = ({
   className,
   ref,

@@ -22,7 +22,7 @@ import { useWorkLog, useWorkLogList } from '../workLogs/useWorkLogs';
 
 const WRITABLE = ['IN_PROGRESS', 'SUSPENDED', 'COMPLETED', 'WARRANTY'];
 
-// 프로젝트의 하루 작업: 누가 몇 시간 무슨 일을 했는지(사람마다 다를 수 있음), 한 일, 그날 사진·메모를 한곳에서 남긴다
+// 프로젝트의 하루 작업: 누가 몇 시간 무슨 일을 했는지(사람마다 다를 수 있음), 한 일, 그날 사진·메모를 한곳에서 기록
 export const ProjectWorkDayPage = () => {
   const { id = '', date = '' } = useParams();
   const navigate = useNavigate();

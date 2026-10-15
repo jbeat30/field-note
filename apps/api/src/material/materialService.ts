@@ -34,7 +34,7 @@ export type MaterialService = {
   list: (companyId: string, query: MaterialListQuery) => Promise<Material[]>;
   // 즉석 추가: 같은 이름·규격이 이미 있으면 DUPLICATE
   create: (companyId: string, input: MaterialCreate) => Promise<Material>;
-  // 이름·규격·분류 수정과 숨김. 기록이 있는 자재는 단위를 바꿀 수 없음
+  // 이름·규격·분류 수정과 숨김, 기록이 있는 자재는 단위를 바꿀 수 없음
   update: (companyId: string, id: string, input: MaterialUpdate) => Promise<Material>;
   createRecord: (
     companyId: string,
@@ -59,7 +59,7 @@ export type MaterialService = {
     id: string,
     input: MaterialRecordUpdate,
   ) => Promise<MaterialRecord>;
-  // 소프트 삭제. 지운 기록의 요약(활동 기록용)을 돌려준다
+  // 소프트 삭제, 삭제한 기록의 요약(활동 기록용) 반환
   removeRecord: (companyId: string, id: string) => Promise<RemovedMaterialRecord>;
   // 프로젝트별 자재 현황 (반입·사용·반출·폐기·잔량)
   balance: (companyId: string, projectId: string) => Promise<MaterialBalanceResponse>;
@@ -141,7 +141,7 @@ const isUniqueViolation = (error: unknown) =>
 
 /**
  * @description 사용 자재 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 자재 목록 관리와 프로젝트별 반입·사용·반출·폐기 기록, 잔량 집계를 맡는다 (서비스 기획서 §11)
- * 단가·구매·재고는 다루지 않는다
+ * 단가·구매·재고는 범위 밖
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (소프트 삭제 시각 기록용)
  * @returns 자재 서비스
