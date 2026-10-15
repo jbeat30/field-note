@@ -2,6 +2,7 @@ import {
   laborCostSchema,
   optionsResponseSchema,
   payRateSchema,
+  payRateSummariesResponseSchema,
   payRatesResponseSchema,
 } from '@field-note/shared';
 import request from 'supertest';
@@ -242,6 +243,37 @@ describe('직원 단가표', () => {
     expect((await client.addRate(worker, { ...ok, effectiveFrom: '1999-12-31' })).status).toBe(400);
     expect((await client.addRate(worker, { ...ok, effectiveFrom: '2028-01-01' })).status).toBe(400);
     expect(payRatesResponseSchema.parse((await client.rates(worker)).body).items).toEqual([]);
+  });
+
+  it('단가표는 단가가 있는 직원마다 현재·이전·적용 예정 단가를 준다', async () => {
+    const { client, worker, worker2 } = await setup();
+
+    await client.addRate(worker, {
+      payType: 'DAILY',
+      amount: 180_000,
+      effectiveFrom: '2026-01-01',
+    });
+    await client.addRate(worker, {
+      payType: 'DAILY',
+      amount: 200_000,
+      effectiveFrom: '2026-06-01',
+    });
+    await client.addRate(worker, {
+      payType: 'DAILY',
+      amount: 230_000,
+      effectiveFrom: '2026-12-01',
+    });
+
+    const { items } = payRateSummariesResponseSchema.parse((await client.get('/pay-rates')).body);
+
+    // 단가가 없는 직원은 나오지 않는다
+    expect(items.map((item) => item.employeeId)).toEqual([worker]);
+    expect(items[0]).toMatchObject({
+      current: { amount: 200_000 },
+      previous: { amount: 180_000 },
+      upcoming: { amount: 230_000 },
+    });
+    expect(items.some((item) => item.employeeId === worker2)).toBe(false);
   });
 
   it('없는 직원은 404다', async () => {

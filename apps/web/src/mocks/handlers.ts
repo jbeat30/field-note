@@ -24,6 +24,7 @@ import {
   canRecordProgress,
   payRateCreateSchema,
   summarizeLaborCost,
+  summarizePayRates,
   type PayRate,
   evaluateProjectHealth,
   progressRecordCreateSchema,
@@ -2219,6 +2220,26 @@ export const handlers = [
         today: todayInSeoul(new Date()),
       }),
     );
+  }),
+
+  http.get('/api/v1/pay-rates', async () => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const today = todayInSeoul(new Date());
+
+    return HttpResponse.json({
+      items: getEmployees(account).flatMap((employee) => {
+        const rates = getPayRates(account, employee.id);
+
+        return rates.length === 0
+          ? []
+          : [{ employeeId: employee.id, ...summarizePayRates(rates, today) }];
+      }),
+    });
   }),
 
   http.get('/api/v1/employees/:id/pay-rates', async ({ params }) => {

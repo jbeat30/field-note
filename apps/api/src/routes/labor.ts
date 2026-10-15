@@ -3,6 +3,7 @@ import {
   laborCostSchema,
   payRateCreateSchema,
   payRateSchema,
+  payRateSummariesResponseSchema,
   payRatesResponseSchema,
   projectParamsSchema,
   type PayRateCreate,
@@ -40,8 +41,19 @@ export const registerLaborRoutes = (registry: RouteRegistry, labor?: LaborServic
   add(
     {
       method: 'get',
+      path: '/pay-rates',
+      summary: '단가표: 단가가 있는 직원마다 현재·이전·적용 예정 단가 (직원 목록·단가표 탭)',
+      auth: 'required',
+      response: { status: 200, schema: payRateSummariesResponseSchema },
+    },
+    async ({ auth }) => ({ items: await labor!.listCurrent(auth!.companyId) }),
+  );
+
+  add(
+    {
+      method: 'get',
       path: '/employees/{id}/pay-rates',
-      summary: '직원 단가 기록 (적용 시작일 최근순, 조회는 감사 기록으로 남음)',
+      summary: '직원 단가 기록 (적용 시작일 최근순)',
       auth: 'required',
       request: { params: employeeParamsSchema },
       response: { status: 200, schema: payRatesResponseSchema },
@@ -67,7 +79,7 @@ export const registerLaborRoutes = (registry: RouteRegistry, labor?: LaborServic
       method: 'post',
       path: '/employees/{id}/pay-rates',
       summary:
-        '직원 단가 추가 (기존 단가는 고치지 않고 적용 시작일부터 새 단가, 감사 기록으로 남음)',
+        '직원 단가 추가 (기존 단가는 고치지 않고 적용 시작일부터 새 단가, 단가 변경 기록으로 남음)',
       auth: 'required',
       request: { params: employeeParamsSchema, body: payRateCreateSchema },
       response: { status: 201, schema: payRateSchema },
@@ -91,8 +103,7 @@ export const registerLaborRoutes = (registry: RouteRegistry, labor?: LaborServic
     {
       method: 'get',
       path: '/projects/{id}/labor-cost',
-      summary:
-        '프로젝트 인건비 최소 추정 (실제 공수 × 근무일 단가, 계획 공수 기준 예상, 조회는 감사 기록으로 남음)',
+      summary: '프로젝트 인건비 최소 추정 (실제 공수 × 근무일 단가, 계획 공수 기준 예상)',
       auth: 'required',
       request: { params: projectParamsSchema },
       response: { status: 200, schema: laborCostSchema },

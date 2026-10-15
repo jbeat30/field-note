@@ -11,6 +11,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { Modal } from '../components/ui/modal';
 import { DateInput } from '../components/ui/date-input';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { splitServerErrors } from '../lib/serverErrors';
@@ -257,6 +258,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
   const [file, setFile] = useState<File | null>(null);
   const [fileKey, setFileKey] = useState(0);
   const [busy, setBusy] = useState(false);
+  const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rootError, setRootError] = useState('');
 
@@ -301,6 +303,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
       setFile(null);
       // 같은 파일을 다시 고를 수 있도록 입력칸을 새로 그림
       setFileKey((key) => key + 1);
+      setOpen(false);
     } catch (caught) {
       const { byField, root } = splitServerErrors(caught, FIELDS);
 
@@ -315,12 +318,20 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="credentials-heading">
-      <h2 id="credentials-heading" className="text-lg font-bold">
-        서류·자격
-      </h2>
-      <p className="text-sm text-foreground/70">
-        서류 사본에 주민등록번호가 보이면 가리고 올려 주세요. 서류 파일을 열면 열람 기록이 남습니다
-      </p>
+      <div className="flex flex-wrap items-start justify-between gap-3">
+        <div className="flex flex-col gap-1">
+          <h2 id="credentials-heading" className="text-lg font-bold">
+            서류·자격
+          </h2>
+          <p className="text-sm text-foreground/70">
+            서류 사본에 주민등록번호가 보이면 가리고 올려 주세요. 서류 파일을 열면 열람 기록이
+            남습니다
+          </p>
+        </div>
+        <Button type="button" onClick={() => setOpen(true)}>
+          서류 등록
+        </Button>
+      </div>
       {rootError && <Alert>{rootError}</Alert>}
       {credentials.isPending ? (
         <p className="text-sm">서류를 불러오는 중</p>
@@ -340,50 +351,58 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
           ))}
         </ul>
       )}
-      <form
-        className="flex flex-col gap-3"
-        onSubmit={(event) => void submit(event)}
-        noValidate
-        aria-label="서류 등록"
-      >
-        <FormField label="서류 종류" error={errors.typeId}>
-          <OptionSelect
-            kind="CREDENTIAL_TYPE"
-            options={options.data ?? []}
-            emptyLabel="종류 선택"
-            value={typeId}
-            onValueChange={setTypeId}
-          />
-        </FormField>
-        <FormField label="취득일 (선택)" error={errors.issuedOn}>
-          <DateInput value={issuedOn} onChange={(event) => setIssuedOn(event.target.value)} />
-        </FormField>
-        <FormField
-          label="만료일 (선택)"
-          hint="비워 두면 만료 없는 서류입니다"
-          error={errors.expiresOn}
-        >
-          <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
-        </FormField>
-        <FormField label="메모 (선택)" error={errors.memo}>
-          <Input
-            maxLength={CREDENTIAL_MEMO_MAX_LENGTH}
-            value={memo}
-            onChange={(event) => setMemo(event.target.value)}
-          />
-        </FormField>
-        <FormField label="파일 (선택)" hint="이미지·PDF만 올릴 수 있습니다" error={errors.fileId}>
-          <Input
-            key={fileKey}
-            type="file"
-            accept={EMPLOYEE_DOCUMENT_ACCEPT}
-            onChange={(event) => setFile(event.target.files?.[0] ?? null)}
-          />
-        </FormField>
-        <Button type="submit" disabled={busy}>
-          {busy ? '등록 중' : '서류 등록'}
-        </Button>
-      </form>
+      <Modal open={open} onOpenChange={setOpen} title="서류 등록">
+        {open && (
+          <form
+            className="flex flex-col gap-3"
+            onSubmit={(event) => void submit(event)}
+            noValidate
+            aria-label="서류 등록"
+          >
+            <FormField label="서류 종류" error={errors.typeId}>
+              <OptionSelect
+                kind="CREDENTIAL_TYPE"
+                options={options.data ?? []}
+                emptyLabel="종류 선택"
+                value={typeId}
+                onValueChange={setTypeId}
+              />
+            </FormField>
+            <FormField label="취득일 (선택)" error={errors.issuedOn}>
+              <DateInput value={issuedOn} onChange={(event) => setIssuedOn(event.target.value)} />
+            </FormField>
+            <FormField
+              label="만료일 (선택)"
+              hint="비워 두면 만료 없는 서류입니다"
+              error={errors.expiresOn}
+            >
+              <DateInput value={expiresOn} onChange={(event) => setExpiresOn(event.target.value)} />
+            </FormField>
+            <FormField label="메모 (선택)" error={errors.memo}>
+              <Input
+                maxLength={CREDENTIAL_MEMO_MAX_LENGTH}
+                value={memo}
+                onChange={(event) => setMemo(event.target.value)}
+              />
+            </FormField>
+            <FormField
+              label="파일 (선택)"
+              hint="이미지·PDF만 올릴 수 있습니다"
+              error={errors.fileId}
+            >
+              <Input
+                key={fileKey}
+                type="file"
+                accept={EMPLOYEE_DOCUMENT_ACCEPT}
+                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              />
+            </FormField>
+            <Button type="submit" disabled={busy}>
+              {busy ? '등록 중' : '서류 등록'}
+            </Button>
+          </form>
+        )}
+      </Modal>
     </section>
   );
 };

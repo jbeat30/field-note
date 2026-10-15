@@ -16827,9 +16827,240 @@
         }
       }
     },
+    "/api/v1/pay-rates": {
+      "get": {
+        "summary": "단가표: 단가가 있는 직원마다 현재·이전·적용 예정 단가 (직원 목록·단가표 탭)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "items": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "employeeId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "current": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "payType": {
+                                "type": "string",
+                                "enum": [
+                                  "DAILY",
+                                  "HOURLY",
+                                  "MONTHLY",
+                                  "ANNUAL"
+                                ]
+                              },
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "effectiveFrom": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "payType",
+                              "amount",
+                              "effectiveFrom",
+                              "createdAt"
+                            ]
+                          },
+                          "previous": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "payType": {
+                                "type": "string",
+                                "enum": [
+                                  "DAILY",
+                                  "HOURLY",
+                                  "MONTHLY",
+                                  "ANNUAL"
+                                ]
+                              },
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "effectiveFrom": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "payType",
+                              "amount",
+                              "effectiveFrom",
+                              "createdAt"
+                            ]
+                          },
+                          "upcoming": {
+                            "type": [
+                              "object",
+                              "null"
+                            ],
+                            "properties": {
+                              "id": {
+                                "type": "string",
+                                "format": "uuid"
+                              },
+                              "payType": {
+                                "type": "string",
+                                "enum": [
+                                  "DAILY",
+                                  "HOURLY",
+                                  "MONTHLY",
+                                  "ANNUAL"
+                                ]
+                              },
+                              "amount": {
+                                "type": "integer"
+                              },
+                              "effectiveFrom": {
+                                "type": "string",
+                                "format": "date"
+                              },
+                              "createdAt": {
+                                "type": "string",
+                                "format": "date-time"
+                              }
+                            },
+                            "required": [
+                              "id",
+                              "payType",
+                              "amount",
+                              "effectiveFrom",
+                              "createdAt"
+                            ]
+                          }
+                        },
+                        "required": [
+                          "employeeId",
+                          "current",
+                          "previous",
+                          "upcoming"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "items"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/employees/{id}/pay-rates": {
       "get": {
-        "summary": "직원 단가 기록 (적용 시작일 최근순, 조회는 감사 기록으로 남음)",
+        "summary": "직원 단가 기록 (적용 시작일 최근순)",
         "security": [
           {
             "sessionCookie": []
@@ -17111,7 +17342,7 @@
         }
       },
       "post": {
-        "summary": "직원 단가 추가 (기존 단가는 고치지 않고 적용 시작일부터 새 단가, 감사 기록으로 남음)",
+        "summary": "직원 단가 추가 (기존 단가는 고치지 않고 적용 시작일부터 새 단가, 단가 변경 기록으로 남음)",
         "security": [
           {
             "sessionCookie": []
@@ -17419,7 +17650,7 @@
     },
     "/api/v1/projects/{id}/labor-cost": {
       "get": {
-        "summary": "프로젝트 인건비 최소 추정 (실제 공수 × 근무일 단가, 계획 공수 기준 예상, 조회는 감사 기록으로 남음)",
+        "summary": "프로젝트 인건비 최소 추정 (실제 공수 × 근무일 단가, 계획 공수 기준 예상)",
         "security": [
           {
             "sessionCookie": []

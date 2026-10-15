@@ -19,6 +19,7 @@ import {
   workLogsResponseSchema,
   laborCostSchema,
   payRateSchema,
+  payRateSummariesResponseSchema,
   payRatesResponseSchema,
   staffingCalendarSchema,
   workSummarySchema,
@@ -1156,6 +1157,14 @@ describe('목업 서버 계약', () => {
       ['2026-09-01', 'DAILY', 250_000],
       ['2026-01-01', 'DAILY', 230_000],
     ]);
+
+    // 단가표: 단가가 있는 직원마다 현재·이전 단가
+    const summary = payRateSummariesResponseSchema
+      .parse((await client.GET('/api/v1/pay-rates')).data)
+      .items.find((item) => item.employeeId === id)!;
+
+    expect(summary.current?.amount).toBe(250_000);
+    expect(summary.previous?.amount).toBe(230_000);
 
     const created = await client.POST('/api/v1/employees/{id}/pay-rates', {
       params: { path: { id } },

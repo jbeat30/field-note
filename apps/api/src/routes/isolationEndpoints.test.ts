@@ -699,6 +699,7 @@ const COLLECTIONS = [
   'GET /employees',
   'POST /employees',
   'GET /materials',
+  'GET /pay-rates',
   'GET /audit-logs',
   'GET /monthly-hours',
   'POST /monthly-hours/close',

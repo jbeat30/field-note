@@ -300,7 +300,7 @@ export const DashboardWidgets = ({
               {expiring.credentials.map((item, index) => (
                 <DueRow
                   key={`credential-${index}`}
-                  to={`/employees/${item.employeeId}`}
+                  to={`/employees/${item.employeeId}?tab=credentials`}
                   label={`${item.employeeName} · ${item.typeName}`}
                   due={`${daysLabel(item.daysLeft)} (${item.expiresOn})`}
                   urgent={item.daysLeft < 0}

@@ -894,7 +894,7 @@ export const dashboardAlertPath = (alert: DashboardAlert, today: string): string
     case 'REPAIR_UNHANDLED':
       return `/projects/${alert.projectId}/repairs`;
     case 'CREDENTIAL_EXPIRING':
-      return `/employees/${alert.employeeId}`;
+      return `/employees/${alert.employeeId}?tab=credentials`;
     case 'MONTH_UNCLOSED':
       return `/monthly-hours?month=${alert.month}`;
   }
