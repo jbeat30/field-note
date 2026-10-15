@@ -172,7 +172,7 @@ describe('직원 서류 목업', () => {
         .status,
     ).toBe(404);
 
-    // 다른 직원의 서류 파일은 연결할 수 없다
+    // 다른 직원의 서류 파일은 연결 불가
     const other = await client.POST('/api/v1/employees/{id}/credentials', {
       params: { path: { id: employeeId('한용접') } },
       body: { typeId: typeId('건강검진'), fileId },

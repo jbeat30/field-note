@@ -30,7 +30,7 @@ const formatSize = (bytes: number) =>
     ? `${(bytes / 1024 / 1024).toFixed(1)}MB`
     : `${Math.max(1, Math.ceil(bytes / 1024))}KB`;
 
-// 문서 목록: 문서명·분류·최신 판(개정일)·판 수·민감 표시. 행 오른쪽에 열기 버튼과 더보기(내려받기·새 판 올리기·기록)
+// 문서 목록: 문서명·분류·최신 판(개정일)·판 수·민감 표시, 행 오른쪽에 열기 버튼과 더보기(내려받기·새 판 올리기·기록)
 export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps) => (
   <Table aria-label="문서 목록">
     <TableHead>

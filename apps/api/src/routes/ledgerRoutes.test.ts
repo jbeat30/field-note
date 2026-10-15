@@ -14,6 +14,7 @@ import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { createAuditService } from '../audit/auditService';
 import { createEmployeeService } from '../employee/employeeService';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
+import { createPrismaIdempotencyStore } from '../http/idempotencyStore';
 import { createLedgerService } from '../ledger/ledgerService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createDocumentService } from '../document/documentService';
@@ -60,6 +61,7 @@ const harness = () =>
     changeWorks: createChangeWorkService(db.app, () => NOW),
     ledger: createLedgerService(db.app, () => NOW),
     audit: createAuditService(db.app, () => NOW),
+    idempotencyStore: createPrismaIdempotencyStore(db.app),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -311,6 +313,35 @@ describe('지출·수입 기록', () => {
 
     expect(rows).toHaveLength(1);
     expect(rows[0]!.detail.amount).toBe(30000);
+  });
+
+  it('같은 멱등 키로 다시 보낸 등록은 한 번만 저장하고 같은 응답을 돌려준다', async () => {
+    const s = await setup();
+    const projectId = await s.project();
+    const send = (key: string, amount: number) =>
+      s
+        .post(`/projects/${projectId}/ledger-entries`, {
+          entryDate: '2026-10-05',
+          kind: 'EXPENSE',
+          amount,
+        })
+        .set('Idempotency-Key', key);
+    const first = await send('retry-key-0001', 5000);
+    const again = await send('retry-key-0001', 5000);
+
+    expect(first.status).toBe(201);
+    expect(again.status).toBe(201);
+    expect(again.headers['idempotent-replayed']).toBe('true');
+    expect(again.body.id).toBe(first.body.id);
+    expect(
+      ledgerEntriesResponseSchema.parse((await s.get(`/projects/${projectId}/ledger-entries`)).body)
+        .items,
+    ).toHaveLength(1);
+
+    // 같은 키에 다른 내용은 거부, 실패한 요청은 같은 키로 재시도 가능
+    expect((await send('retry-key-0001', 9000)).status).toBe(422);
+    expect((await send('retry-key-0002', 0)).status).toBe(400);
+    expect((await send('retry-key-0002', 7000)).status).toBe(201);
   });
 
   it('페이지를 넘겨 가며 볼 수 있다', async () => {

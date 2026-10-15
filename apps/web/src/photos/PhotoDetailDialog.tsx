@@ -28,14 +28,14 @@ type PhotoDetailDialogProps = {
   onClose: () => void;
   onSave: (id: string, body: PhotoUpdate) => Promise<void>;
   onDelete: (id: string) => Promise<void>;
-  // 앞뒤 사진으로 넘기기 (없으면 버튼을 숨김). 좌우 화살표 키로도 넘긴다
+  // 앞뒤 사진 넘기기 (없으면 버튼 숨김), 좌우 화살표 키 지원
   onPrev?: () => void;
   onNext?: () => void;
   // 원본 주소를 받아 오는 함수 (스토리에서 교체)
   loadOriginalUrl?: (fileId: string) => Promise<string>;
 };
 
-// 사진 상세: 원본 보기, 앞뒤 넘기기, 구분·구역·설명 수정, 대표 지정, 삭제. 서버가 확인한 뒤에만 닫는다
+// 사진 상세: 원본 보기, 앞뒤 넘기기, 구분·구역·설명 수정, 대표 지정, 삭제, 서버 확인 후에만 닫기
 export const PhotoDetailDialog = ({
   photo,
   onClose,

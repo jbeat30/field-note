@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 import { fileStatusSchema } from './files';
 
-// 직원 서류·자격 (서비스 기획서 §8.4): 자격증, 안전교육 이수증, 건강검진 서류 등을 직원 카드에 올리고 만료일을 관리한다
-// 종류는 회사가 관리하는 선택 목록(자격 종류)이다
+// 직원 서류·자격 (서비스 기획서 §8.4): 자격증, 안전교육 이수증, 건강검진 서류 등을 직원 카드에 올리고 만료일 관리
+// 종류는 회사가 관리하는 선택 목록(자격 종류)
 
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
@@ -117,7 +117,7 @@ export const credentialCreateSchema = z
 
 export type CredentialCreate = z.infer<typeof credentialCreateSchema>;
 
-// 수정: 종류·날짜·파일·메모. null로 보내면 값을 지운다
+// 수정: 종류·날짜·파일·메모, null로 보내면 값 삭제
 export const credentialUpdateSchema = z
   .object({
     typeId: z.uuid(),

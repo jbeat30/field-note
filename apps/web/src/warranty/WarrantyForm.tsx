@@ -25,7 +25,7 @@ import { useSaveWarranty } from './useWarranty';
 
 const FIELDS = ['months', 'startBasis', 'startOn', 'endOn', 'reason', 'projectId'] as const;
 
-// 보증 설정: 기간(개월)과 시작 기준을 정하면 종료 예정일이 계산된다. 이미 설정이 있거나 종료 예정일을 직접 바꾸면 사유를 남긴다
+// 보증 설정: 기간(개월)과 시작 기준을 정하면 종료 예정일 계산, 이미 설정이 있거나 종료 예정일을 직접 바꾸면 사유 기록
 export const WarrantyForm = ({
   project,
   warranty,

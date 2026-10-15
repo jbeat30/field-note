@@ -28,8 +28,8 @@ type ColumnMeta = {
   className?: string;
 };
 
-// 정렬(머리 글자를 누르면 오름→내림→원래 순서)과 쪽 나누기를 쓰는 목록 표. 라이브러리: TanStack Table
-// 두 가지로 쓴다. features는 모듈 값으로 고정해 렌더마다 다시 만들지 않는다
+// 정렬(머리 글자를 누르면 오름→내림→원래 순서)과 쪽 나누기를 지원하는 목록 표, 라이브러리: TanStack Table
+// 두 가지 방식 지원, features는 모듈 값으로 고정해 렌더마다 재생성 방지
 //  - 서버 방식(`server`를 넘김): 정렬·쪽 나누기를 서버가 하므로 표는 상태만 들고, 바뀌면 부모가 서버에 다시 조회한다 (프로젝트처럼 많아질 수 있는 목록)
 //  - 화면 방식(`server` 없음): 받아 둔 전체 줄을 표가 직접 정렬·쪽 나눔 (직원처럼 회사당 상한이 정해진 목록)
 export const dataTableFeatures = tableFeatures({
@@ -41,7 +41,7 @@ export const dataTableFeatures = tableFeatures({
   paginatedRowModel: createPaginatedRowModel(),
 });
 
-// 화면에서 `const columns = columnHelper<Row>().columns([...])`로 열을 만든다
+// 화면에서 `const columns = columnHelper<Row>().columns([...])`로 열 생성
 export const columnHelper = <TData extends object>() =>
   createColumnHelper<typeof dataTableFeatures, TData>();
 
@@ -55,7 +55,7 @@ type ServerState = {
 };
 
 type DataTableProps<TData extends object> = {
-  // columnHelper<TData>().columns(...)의 결과. 화면 바깥(모듈 값)에 두어 렌더마다 새로 만들지 않는다
+  // columnHelper<TData>().columns(...)의 결과, 화면 바깥(모듈 값)에 두어 렌더마다 재생성 방지
   columns: Parameters<typeof useTable<typeof dataTableFeatures, TData>>[0]['columns'];
   // 서버 방식이면 지금 쪽의 줄들, 화면 방식이면 전체 줄들
   data: TData[];
@@ -127,7 +127,7 @@ export const DataTable = <TData extends object>({
             className="w-24"
             value={String(pageSize)}
             onValueChange={(value) =>
-              // 개수를 바꾸면 첫 쪽부터 다시 본다
+              // 개수를 바꾸면 첫 쪽부터 재조회
               changePagination({ pageIndex: 0, pageSize: Number(value) })
             }
             options={pageSizes.map((size) => ({ value: String(size), label: `${size}개` }))}

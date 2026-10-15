@@ -91,7 +91,7 @@ const toSummary = (
   updatedAt: row.updatedAt.toISOString(),
 });
 
-// 연결이 풀리지 않았고 삭제되지 않은 문서만 증빙으로 센다
+// 연결이 풀리지 않았고 삭제되지 않은 문서만 증빙으로 집계
 const LIVE_LINK = { unlinkedAt: null, document: { deletedAt: null } };
 
 const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<ChangeWorkDetail> => {
@@ -275,7 +275,7 @@ export const createChangeWorkService = (
 
           data.requestedOn = toDate(input.requestedOn);
 
-          // 상태가 한 번도 바뀐 적 없으면 "현재 상태가 된 날"도 요청일을 따라간다
+          // 상태가 한 번도 바뀐 적 없으면 "현재 상태가 된 날"도 요청일 기준
           if (!first) {
             data.statusChangedOn = toDate(input.requestedOn);
           }

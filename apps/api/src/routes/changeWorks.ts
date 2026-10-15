@@ -229,7 +229,7 @@ export const registerChangeWorkRoutes = (
       const input = body as ChangeWorkEvidenceCreate;
 
       try {
-        // 기록할 수 없는 상태(취소·완료 미확인 등)면 문서를 만들기 전에 막는다
+        // 기록할 수 없는 상태(취소·완료 미확인 등)는 문서 생성 전에 차단
         const { projectId } = await changeWorks!.evidenceTarget(
           auth!.companyId,
           id,

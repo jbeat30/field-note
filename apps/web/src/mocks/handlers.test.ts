@@ -19,6 +19,7 @@ import {
   workLogsResponseSchema,
   laborCostSchema,
   payRateSchema,
+  companyRulesSchema,
   payRateSummariesResponseSchema,
   payRatesResponseSchema,
   staffingCalendarSchema,
@@ -52,14 +53,14 @@ import { handlers } from './handlers';
 import { resetMockState } from './state';
 
 // 목업 응답이 서버 계약(공유 스키마)을 지키는지 검사: 목업과 실제 API가 어긋나면 화면만 통과하는 일을 막음
-// 핸들러 경로는 상대 경로라 Node에서는 기준 주소(location)가 필요
+// 핸들러 경로는 상대 경로이므로 Node에서는 기준 주소(location) 필요
 Object.defineProperty(globalThis, 'location', {
   value: new URL('http://localhost/'),
   configurable: true,
 });
 
 const server = setupServer(...handlers);
-// openapi-fetch는 생성 시점의 fetch를 붙잡으므로 msw가 fetch를 가로챈 뒤에 만든다
+// openapi-fetch는 생성 시점의 fetch를 보관하므로 msw가 fetch를 가로챈 뒤에 생성
 let client: ReturnType<typeof createApiClient>;
 const demo = DEMO_ACCOUNTS[0]!;
 
@@ -471,7 +472,7 @@ describe('목업 서버 계약', () => {
       jobTypeId: jobId,
     });
 
-    // 퇴사하면 퇴사일이 채워지고, 재입사하면 지워진다
+    // 퇴사하면 퇴사일 기록, 재입사하면 삭제
     const left = employeeDetailSchema.parse(
       (
         await client.PATCH('/api/v1/employees/{id}', {
@@ -635,7 +636,7 @@ describe('목업 서버 계약', () => {
       plannedEnd: '2026-12-31',
     };
 
-    // 최근 등록순(코드 숫자 순서), 목록에는 현장 연락처·출입 메모·계약일이 없다
+    // 최근 등록순(코드 숫자 순서), 목록에는 현장 연락처·출입 메모·계약일 제외
     expect(JSON.stringify(listed)).not.toMatch(/siteContact|accessMemo|contractDate/);
     expect(listed.items.length).toBeGreaterThan(0);
 
@@ -676,7 +677,7 @@ describe('목업 서버 계약', () => {
 
     expect(filtered.items.every((item) => item.status === 'PLANNED')).toBe(true);
 
-    // 수정: 보낸 항목만 바꾸고 null로 비우며, 코드·상태는 바꿀 수 없다
+    // 수정: 보낸 항목만 변경하고 null로 비움, 코드·상태는 변경 불가
     const patched = await client.PATCH('/api/v1/projects/{id}', {
       params: { path: { id: card.id } },
       body: { name: '고침', siteAddress: '주소', tradeIds: [] },
@@ -801,7 +802,7 @@ describe('목업 서버 계약', () => {
     ]);
     expect(history.find((item) => item.toStatus === 'SUSPENDED')?.reason).toBe('우천');
 
-    // 완료는 기본정보를 계속 수정할 수 있지만 취소하면 수정할 수 없다
+    // 완료는 기본정보 수정 가능, 취소하면 수정 불가
     expect(
       (await client.PATCH('/api/v1/projects/{id}', { ...path, body: { name: '완료 후 수정' } }))
         .response.status,
@@ -860,7 +861,7 @@ describe('목업 서버 계약', () => {
     const assign = (id: string, body: object) =>
       client.POST('/api/v1/projects/{id}/assignments', { ...path(id), body: body as never });
 
-    // 더미 투입(취소한 것 제외)이 목록에 있고 겹침 경고가 붙는다
+    // 더미 투입(취소한 것 제외)이 목록에 있고 겹침 경고 부착
     const seeded = assignmentsResponseSchema.parse(
       (await client.GET('/api/v1/projects/{id}/assignments', path(running.id))).data,
     ).items;
@@ -894,11 +895,11 @@ describe('목업 서버 계약', () => {
     );
 
     expect(created).toMatchObject({ plannedMinutes: 960, cancelledAt: null });
-    // 같은 프로젝트에 같은 직원이 겹치게 다시 투입할 수 없다
+    // 같은 프로젝트에 같은 직원을 겹치게 재투입 불가
     expect((await assign(planned.id, { employeeId: worker.id, ...full })).response.status).toBe(
       400,
     );
-    // 휴직 직원은 경고와 함께 투입된다
+    // 휴직 직원은 경고와 함께 투입
     expect(
       assignmentSchema.parse((await assign(planned.id, { employeeId: onLeave.id, ...full })).data)
         .warnings,
@@ -1104,7 +1105,7 @@ describe('목업 서버 계약', () => {
       autoAssignedEmployeeIds: [stranger.id],
     });
     expect(saved.savedAt).not.toBeNull();
-    // 저장된 작업 내역을 임시 저장으로 되돌릴 수 없고, 고치면 이력이 남는다
+    // 저장된 작업 내역은 임시 저장으로 되돌릴 수 없고 수정하면 이력 기록
     expect(
       (await put('2026-09-05', { status: 'DRAFT', content: '', entries: [], expectedVersion: 2 }))
         .response.status,
@@ -1190,6 +1191,56 @@ describe('목업 서버 계약', () => {
     expect((await rates('0198d000-0000-7000-8000-00000000dead')).response.status).toBe(404);
   });
 
+  it('프로젝트 목록 경고: 진행 중 프로젝트에만 붙고 hasWarning으로 걸러 본다', async () => {
+    await login();
+
+    const all = projectsResponseSchema.parse((await client.GET('/api/v1/projects')).data);
+
+    expect(all.items.every((item) => Array.isArray(item.warnings))).toBe(true);
+    expect(
+      all.items
+        .filter((item) => item.status === 'COMPLETED')
+        .every((item) => item.warnings.length === 0),
+    ).toBe(true);
+
+    const warned = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects', { params: { query: { hasWarning: 'true' } } })).data,
+    );
+
+    expect(warned.total).toBe(all.items.filter((item) => item.warnings.length > 0).length);
+    expect(warned.items.every((item) => item.warnings.length > 0)).toBe(true);
+  });
+
+  it('회사 경고 기준: 기본값을 보여 주고 바꿔 저장하며 잘못된 값은 거부한다', async () => {
+    expect((await client.GET('/api/v1/company/rules')).response.status).toBe(401);
+
+    await login();
+
+    const rules = async () =>
+      companyRulesSchema.parse((await client.GET('/api/v1/company/rules')).data);
+
+    expect(await rules()).toEqual({
+      burnWarnPercent: 80,
+      burnLimitPercent: 100,
+      aheadGapPercent: 20,
+      warrantyDefaultMonths: 12,
+    });
+
+    const next = {
+      burnWarnPercent: 70,
+      burnLimitPercent: 95,
+      aheadGapPercent: 15,
+      warrantyDefaultMonths: 24,
+    };
+
+    expect((await client.PUT('/api/v1/company/rules', { body: next })).response.status).toBe(200);
+    expect(await rules()).toEqual(next);
+    expect(
+      (await client.PUT('/api/v1/company/rules', { body: { ...next, burnLimitPercent: 60 } }))
+        .response.status,
+    ).toBe(400);
+  });
+
   it('프로젝트 인건비: 단가가 있는 공수만 금액에 넣고 없는 공수는 따로 센다', async () => {
     await login();
 
@@ -1210,7 +1261,7 @@ describe('목업 서버 계약', () => {
     expect(cost.actual.employees.reduce((sum, row) => sum + row.amount, 0)).toBe(
       cost.actual.totalAmount,
     );
-    // 더미 단가가 없는 직원의 공수는 따로 센다
+    // 더미 단가가 없는 직원의 공수는 별도 집계
     expect(cost.actual.unpricedMinutes).toBeGreaterThan(0);
     expect(
       (
@@ -1244,7 +1295,7 @@ describe('목업 서버 계약', () => {
     expect(days).toContainEqual(['최설치', '2026-09-02', '2026-001', 480]);
     expect(days).toContainEqual(['최설치', '2026-09-02', '2026-003', 480]);
     expect(calendar.workDays.every((item) => item.workDate <= '2026-09-03')).toBe(true);
-    // 한용접은 9/1에 두 작업 구분(생산·가공 240 + 설치 240)이 한 칸으로 합산된다
+    // 한용접은 9/1에 두 작업 구분(생산·가공 240 + 설치 240)이 한 칸으로 합산
     expect(days).toContainEqual(['한용접', '2026-09-01', '2026-001', 480]);
   });
 
@@ -1342,7 +1393,7 @@ describe('목업 서버 계약', () => {
     expect(history.projects.length).toBeGreaterThan(0);
     expect(history.totalMinutes).toBeGreaterThan(0);
 
-    // 사람별 일한 날: 그 사람이 일한 날의 시간 합이 집계와 같다
+    // 사람별 일한 날: 그 사람이 일한 날의 시간 합이 집계와 일치
     const days = employeeProjectDaysSchema.parse(
       (
         await client.GET('/api/v1/projects/{id}/work-summary/employees/{employeeId}', {
@@ -1416,12 +1467,12 @@ describe('목업 서버 계약', () => {
     );
   });
 
-  describe('카카오 로그인', () => {
+  describe('소셜 로그인', () => {
     const complete = async (body: Record<string, unknown>) => {
-      const response = await fetch('http://localhost/api/__mock/kakao/complete', {
+      const response = await fetch('http://localhost/api/__mock/social/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ provider: 'kakao', ...body }),
       });
 
       return ((await response.json()) as { redirect: string }).redirect;
@@ -1432,11 +1483,18 @@ describe('목업 서버 계약', () => {
       .join(',');
 
     it('제공자 목록과 시작 주소를 돌려준다', async () => {
-      expect((await client.GET('/api/v1/auth/social/providers')).data).toEqual({ kakao: true });
+      expect((await client.GET('/api/v1/auth/social/providers')).data).toEqual({
+        kakao: true,
+        naver: true,
+        google: true,
+      });
 
-      const start = await client.POST('/api/v1/auth/kakao/start', { body: { purpose: 'login' } });
+      const start = await client.POST('/api/v1/auth/{provider}/start', {
+        params: { path: { provider: 'naver' } },
+        body: { purpose: 'login' },
+      });
 
-      expect(start.data?.url).toBe('/mock-kakao?purpose=login');
+      expect(start.data?.url).toBe('/mock-social?provider=naver&purpose=login');
     });
 
     it('연동하지 않은 카카오 계정은 로그인할 수 없고, 연동하면 로그인된다', async () => {
@@ -1451,6 +1509,8 @@ describe('목업 서버 계약', () => {
       expect((await client.GET('/api/v1/me/social')).data).toEqual({
         hasPassword: true,
         kakao: { isLinked: true },
+        naver: { isLinked: false },
+        google: { isLinked: false },
       });
 
       await client.POST('/api/v1/auth/logout');
@@ -1498,29 +1558,25 @@ describe('목업 서버 계약', () => {
 
       const me = meResponseSchema.parse((await client.GET('/api/v1/me')).data);
 
-      expect(me).toMatchObject({ email: 'kakao-new@example.com', isEmailVerified: true });
+      expect(me).toMatchObject({ email: 'social-new@example.com', isEmailVerified: true });
       expect((await client.GET('/api/v1/me/social')).data).toEqual({
         hasPassword: false,
         kakao: { isLinked: true },
+        naver: { isLinked: false },
+        google: { isLinked: false },
       });
 
-      const unlink = await client.DELETE('/api/v1/me/social/kakao');
+      const unlink = await client.DELETE('/api/v1/me/social/{provider}', {
+        params: { path: { provider: 'kakao' } },
+      });
 
       expect(unlink.response.status).toBe(409);
       expect(errorResponseSchema.parse(unlink.error).error.code).toBe('LAST_LOGIN_METHOD');
     });
 
-    it('초대 가입: 인증된 이메일이 없거나 필수 약관에 동의하지 않았거나 없는 링크면 가입되지 않는다', async () => {
+    it('초대 가입: 필수 약관에 동의하지 않았거나 없는 링크면 가입되지 않는다', async () => {
       const link = `/invite/${DEMO_INVITATION.token}`;
 
-      expect(
-        await complete({
-          purpose: 'signup',
-          profileKey: 'new-unverified',
-          token: DEMO_INVITATION.token,
-          agreed: agreedAll,
-        }),
-      ).toBe(`${link}?social=email-required`);
       expect(
         await complete({
           purpose: 'signup',
@@ -1540,11 +1596,101 @@ describe('목업 서버 계약', () => {
       expect((await client.GET('/api/v1/me')).response.status).toBe(401);
     });
 
+    it('연동은 제공자별로 따로이고 다른 제공자로는 로그인할 수 없다', async () => {
+      await login();
+      await complete({ provider: 'google', purpose: 'link', profileKey: 'hanbit' });
+      await client.POST('/api/v1/auth/logout');
+
+      expect(await complete({ provider: 'naver', purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/login?social=not-linked',
+      );
+      expect(await complete({ provider: 'google', purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/',
+      );
+    });
+
+    it('네이버는 인증된 이메일을 주지 않아 이메일 없이 가입되고, 이메일 등록·인증 뒤 아이디·비밀번호를 설정할 수 있다', async () => {
+      expect(
+        await complete({
+          provider: 'naver',
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: DEMO_INVITATION.token,
+          agreed: agreedAll,
+        }),
+      ).toBe('/verify-email');
+      expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data)).toMatchObject({
+        email: null,
+        isEmailVerified: false,
+      });
+
+      // 비밀번호가 없는 계정은 현재 비밀번호 없이 이메일을 등록
+      const emailRequest = await client.POST('/api/v1/me/email/change', {
+        body: { newEmail: 'registered@example.com' },
+      });
+
+      expect(emailRequest.response.status).toBe(200);
+      await client.POST('/api/v1/auth/email/verify', { body: { code: MOCK_EMAIL_CODE } });
+      expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data)).toMatchObject({
+        email: 'registered@example.com',
+        isEmailVerified: true,
+      });
+
+      const set = await client.POST('/api/v1/me/password/set', {
+        body: { loginId: 'naver-owner', newPassword: 'Naver-owner-2026!' },
+      });
+
+      expect(set.response.status).toBe(200);
+      expect((await client.GET('/api/v1/me/social')).data?.hasPassword).toBe(true);
+
+      // 이미 설정했으면 다시 설정할 수 없고, 이제 이메일 변경에 비밀번호가 필요
+      expect(
+        (
+          await client.POST('/api/v1/me/password/set', {
+            body: { loginId: 'naver-owner-2', newPassword: 'Naver-owner-2026!' },
+          })
+        ).response.status,
+      ).toBe(400);
+      expect(
+        (await client.POST('/api/v1/me/email/change', { body: { newEmail: 'next@example.com' } }))
+          .response.status,
+      ).toBe(400);
+
+      await client.POST('/api/v1/auth/logout');
+      await login('naver-owner', 'Naver-owner-2026!');
+
+      expect((await client.GET('/api/v1/me')).response.status).toBe(200);
+    });
+
+    it('이미 쓰는 아이디로는 아이디·비밀번호를 설정할 수 없다', async () => {
+      await complete({
+        provider: 'naver',
+        purpose: 'signup',
+        profileKey: 'new-verified',
+        token: DEMO_INVITATION.token,
+        agreed: agreedAll,
+      });
+
+      expect(
+        (
+          await client.POST('/api/v1/me/password/set', {
+            body: { loginId: DEMO_ACCOUNTS[0]!.loginId, newPassword: 'Naver-owner-2026!' },
+          })
+        ).response.status,
+      ).toBe(409);
+    });
+
     it('비밀번호 로그인이 있으면 연동을 해제할 수 있다', async () => {
       await login();
       await complete({ purpose: 'link', profileKey: 'hanbit' });
 
-      expect((await client.DELETE('/api/v1/me/social/kakao')).response.status).toBe(200);
+      expect(
+        (
+          await client.DELETE('/api/v1/me/social/{provider}', {
+            params: { path: { provider: 'kakao' } },
+          })
+        ).response.status,
+      ).toBe(200);
       expect((await client.GET('/api/v1/me/social')).data?.kakao.isLinked).toBe(false);
     });
   });

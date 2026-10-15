@@ -19,7 +19,7 @@ const formatLastActive = (iso: string) =>
     minute: '2-digit',
   }).format(new Date(iso));
 
-// IP는 마지막으로 쓴 때의 것을 보이고, 로그인 때와 다르면 로그인 때 IP를 안내 문구로 단다
+// IP는 마지막으로 쓴 때의 값을 표시하고 로그인 때와 다르면 로그인 때 IP를 안내 문구로 부착
 const ipText = (device: Device) => {
   const ip = device.lastIp ?? device.ipAddress;
 
@@ -63,12 +63,12 @@ const DeviceRow = ({
   </li>
 );
 
-// 로그인한 기기: 이 기기를 맨 위에, 이 기기가 아닌 로그인에만 로그아웃(확인 창). 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃 (§6.4)
+// 로그인한 기기: 이 기기를 맨 위에, 이 기기가 아닌 로그인에만 로그아웃(확인 창), 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃 (§6.4)
 export const DevicesSection = () => {
   const devices = useDevices();
   const revoke = useRevokeDevice();
   const { confirm, dialog } = useConfirm();
-  // 렌더 중에 시계를 읽지 않도록 처음 그릴 때의 시각을 쓴다
+  // 렌더 중에 시계를 읽지 않도록 처음 그릴 때의 시각 사용
   const [renderedAt] = useState(() => Date.now());
 
   if (devices.isPending) {

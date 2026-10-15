@@ -219,7 +219,7 @@ describe('GET /dashboard', () => {
       warranty: { ending: [], openRepairCount: 0 },
       expiring: { certificates: [], credentials: [] },
     });
-    // 직원 세 명(박소장·김작업·이작업)은 이번 주 일한 기록이 없다
+    // 직원 세 명(박소장·김작업·이작업)은 이번 주 일한 기록 없음
     expect(dashboard.week).toMatchObject({ workingCount: 0, idleCount: 3 });
     expect(settings.items).toHaveLength(11);
     expect(settings.items.every((item) => item.enabled)).toBe(true);
@@ -349,7 +349,7 @@ describe('GET /dashboard', () => {
         entries: [{ employeeId: worker, categoryId: category, minutes }],
       });
 
-    // 10/6·10/7 두 곳, 10/5는 한 곳, 임시 저장은 세지 않는다
+    // 10/6·10/7 두 곳, 10/5는 한 곳, 임시 저장은 집계 제외
     await log(a, '2026-10-05', 480);
     await log(a, '2026-10-06', 240);
     await log(b, '2026-10-06', 240);
@@ -420,7 +420,7 @@ describe('GET /dashboard', () => {
     // 잘못된 요청
     expect((await a.client.send('post', '/alerts/dismiss', { keys: [] })).status).toBe(400);
     expect((await a.client.send('post', '/alerts/dismiss', {})).status).toBe(400);
-    // DB에서도 숨긴 기록은 고치거나 지울 수 없다
+    // DB에서도 숨긴 기록은 수정·삭제 불가
     await expect(db.app.$executeRawUnsafe('DELETE FROM alert_dismissals')).rejects.toThrow();
   });
 
@@ -594,7 +594,7 @@ describe('4단계 알림·위젯', () => {
       expiresOn: '2026-10-25',
     });
 
-    // 직원 서류: 용접 기능사 만료 임박, 같은 종류의 갱신본이 있는 안전교육은 알리지 않는다
+    // 직원 서류: 용접 기능사 만료 임박, 같은 종류의 갱신본이 있는 안전교육은 알림 제외
     const types = optionsResponseSchema
       .parse((await client.get('/company/options')).body)
       .items.filter((item) => item.kind === 'CREDENTIAL_TYPE');
@@ -647,7 +647,7 @@ describe('4단계 알림·위젯', () => {
     ]);
     expect(result.dashboard.todos.unclosedMonth).toBe('2026-09');
 
-    // 월 공수를 확정하면 월 미확정이 사라지고 서류를 지우면 서류 알림도 사라진다
+    // 월 공수 확정 시 월 미확정 알림 해소, 서류 삭제 시 서류 알림 해소
     await client.send('post', '/monthly-hours/close', { month: '2026-09' });
 
     const after = await client.dashboard();

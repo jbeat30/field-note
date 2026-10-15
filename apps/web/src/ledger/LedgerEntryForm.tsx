@@ -41,7 +41,7 @@ type Props = {
   onDone: () => void;
 };
 
-// 지출·수입 한 건 입력 (08 문서 §6.2): 지출이 기본이고 수입은 구분 단추로 바꿔 입력한다. 분류·거래처·추가 공사·증빙 문서는 선택
+// 지출·수입 한 건 입력 (08 문서 §6.2): 지출이 기본이고 수입은 구분 단추로 전환, 분류·거래처·추가 공사·증빙 문서는 선택
 export const LedgerEntryForm = ({
   projectId,
   entry,
@@ -75,7 +75,7 @@ export const LedgerEntryForm = ({
 
   const changeKind = (next: LedgerKind) => {
     setKind(next);
-    // 구분마다 분류 목록이 다르므로 이전 구분의 분류는 비운다
+    // 구분마다 분류 목록이 다르므로 이전 구분의 분류 초기화
     setCategoryId('');
   };
 

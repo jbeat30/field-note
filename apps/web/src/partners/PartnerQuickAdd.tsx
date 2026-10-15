@@ -15,7 +15,7 @@ import { splitServerErrors } from '../lib/serverErrors';
 
 import { useCreatePartner } from './usePartners';
 
-// 간편 등록: 구분과 상호만 넣으면 된다. 담당자·연락처·메모는 카드에서 나중에 채운다
+// 간편 등록: 구분과 상호만 입력, 담당자·연락처·메모는 카드에서 추후 입력
 export const PartnerQuickAdd = () => {
   const create = useCreatePartner();
   const [kind, setKind] = useState<PartnerKind>('CLIENT');

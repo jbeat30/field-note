@@ -37,6 +37,8 @@ import type { SearchService } from './search/searchService';
 import type { DocumentService } from './document/documentService';
 import { registerMaterialRoutes } from './routes/materials';
 import { registerLedgerRoutes } from './routes/ledger';
+import { registerCompanyDataRoutes } from './routes/companyData';
+import type { CompanyDataService } from './companyData/companyDataService';
 import type { LedgerService } from './ledger/ledgerService';
 import type { MaterialService } from './material/materialService';
 import type { MemoService } from './memo/memoService';
@@ -68,8 +70,8 @@ import { createLogger, type Logger } from './logger';
 import { registerAccountRoutes } from './routes/account';
 import { registerSocialRoutes } from './routes/social';
 import type { SocialService } from './auth/socialService';
-import { mountFakeKakaoRoutes } from './social/fakeKakaoRoutes';
-import type { SocialProviderChoice } from './social/provider';
+import { mountFakeSocialRoutes } from './social/fakeSocialRoutes';
+import type { SocialProviderChoices } from './social/provider';
 import { registerAuthRoutes } from './routes/auth';
 import { registerHealthRoutes } from './routes/health';
 import { registerSampleRoutes } from './routes/samples';
@@ -119,6 +121,8 @@ export type AppOptions = {
   materials?: MaterialService;
   // 없으면 지출·수입 API는 501
   ledger?: LedgerService;
+  // 없으면 저장 용량·전체 데이터 내보내기 API는 501
+  companyData?: CompanyDataService;
   // 없으면 작업자료 문서함 API는 501
   documents?: DocumentService;
   // 없으면 통합 검색 API는 501
@@ -127,7 +131,7 @@ export type AppOptions = {
   reports?: ReportService;
   // 소셜 로그인 설정 (없으면 소셜 로그인 API는 501)
   social?: {
-    choice: SocialProviderChoice;
+    choices: SocialProviderChoices;
     service: SocialService;
     // 진행 상태 쿠키 암호화용 서버 비밀 값
     cookieSecret: string;
@@ -197,6 +201,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerMemoRoutes(registry, options.memos);
   registerMaterialRoutes(registry, options.materials);
   registerLedgerRoutes(registry, options.ledger);
+  registerCompanyDataRoutes(registry, options.companyData);
   registerDocumentRoutes(registry, options.documents);
   registerSearchRoutes(registry, options.search);
   registerReportRoutes(registry, options.reports);
@@ -204,7 +209,7 @@ export const createRegistry = (options: AppOptions = {}) => {
     registry,
     options.social && options.accountService
       ? {
-          choice: options.social.choice,
+          choices: options.social.choices,
           socialService: options.social.service,
           accountService: options.accountService,
           sessionStore,
@@ -243,9 +248,9 @@ export const createApp = (options: AppOptions = {}) => {
     );
   }
 
-  // 개발 환경에서만 켜지는 가짜 카카오 로그인 화면 (운영에서는 지정되지 않음)
+  // 개발 환경에서만 켜지는 가짜 소셜 로그인 화면 (운영에서는 지정되지 않음)
   if (options.social?.fakeSecret) {
-    mountFakeKakaoRoutes(app, options.social.fakeSecret);
+    mountFakeSocialRoutes(app, options.social.fakeSecret);
   }
 
   app.use(API_PREFIX, csrfGuard(options.appOrigin ?? 'http://localhost:5173'), registry.router);

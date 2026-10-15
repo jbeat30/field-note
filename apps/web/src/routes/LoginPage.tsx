@@ -1,14 +1,14 @@
-import { loginRequestSchema, type LoginRequest } from '@field-note/shared';
+import { SOCIAL_PROVIDER_KEYS, loginRequestSchema, type LoginRequest } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router';
 
 import { apiClient } from '../api/client';
-import { KakaoButton } from '../auth/KakaoButton';
+import { SocialButton } from '../auth/SocialButton';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useMe } from '../auth/useMe';
-import { useKakaoStart, useSocialProviders } from '../auth/useSocial';
+import { useSocialProviders, useSocialStart } from '../auth/useSocial';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -22,7 +22,8 @@ export const LoginPage = () => {
   const queryClient = useQueryClient();
   const me = useMe();
   const providers = useSocialProviders();
-  const kakaoStart = useKakaoStart();
+  const socialStart = useSocialStart();
+  const enabledProviders = SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider]);
   const {
     register,
     control,
@@ -85,16 +86,19 @@ export const LoginPage = () => {
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '로그인 중' : '로그인'}
       </Button>
-      {providers.data?.kakao && (
+      {enabledProviders.length > 0 && (
         <>
           <p className="text-center text-sm text-foreground/70">또는</p>
-          <KakaoButton
-            disabled={kakaoStart.isPending}
-            onClick={() => kakaoStart.mutate({ purpose: 'login' })}
-          >
-            카카오로 로그인
-          </KakaoButton>
-          {kakaoStart.isError && <Alert>{kakaoStart.error.message}</Alert>}
+          {enabledProviders.map((provider) => (
+            <SocialButton
+              key={provider}
+              provider={provider}
+              action="로그인"
+              disabled={socialStart.isPending}
+              onClick={() => socialStart.mutate({ provider, body: { purpose: 'login' } })}
+            />
+          ))}
+          {socialStart.isError && <Alert>{socialStart.error.message}</Alert>}
         </>
       )}
       <Link

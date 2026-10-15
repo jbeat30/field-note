@@ -33,11 +33,11 @@ export type MonthlyFile = { filename: string; body: Buffer };
 export type MonthlyService = {
   // 월 공수표: 프로젝트 × 직원별 저장된 작업 내역 공수, 확정 상태·확정 당시 기준값·임시 저장 작업 내역·이력
   get: (companyId: string, month: string) => Promise<MonthlyHours>;
-  // 월 공수 확정 (이번 달까지, 임시 저장 작업 내역이 남아 있으면 확인 필요). 그달의 작업 내역는 재오픈 전까지 고칠 수 없다
+  // 월 공수 확정 (이번 달까지, 임시 저장 작업 내역이 남아 있으면 확인 필요), 해당 월의 작업 내역은 재오픈 전까지 수정 불가
   close: (companyId: string, userId: string, input: MonthlyClose) => Promise<MonthlyHours>;
   // 재오픈 (사유 필수, 이력에 남음)
   reopen: (companyId: string, userId: string, input: MonthlyReopen) => Promise<MonthlyHours>;
-  // 월 공수표를 엑셀로 내보냄. 급여·정산 담당에게 전달하는 용도이며 내보내기는 감사 기록으로 남는다 (서비스 기획서 §7.3)
+  // 월 공수표 엑셀 내보내기, 급여·정산 담당 전달용이며 내보내기는 감사 기록 저장 (서비스 기획서 §7.3)
   exportXlsx: (companyId: string, userId: string, month: string) => Promise<MonthlyFile>;
 };
 
@@ -340,7 +340,7 @@ export const createMonthlyService = (
         const data = await load(tx, month);
         const company = await tx.company.findUniqueOrThrow({ where: { id: companyId } });
 
-        // 내보내기는 기록으로 남김 (데이터를 만든 같은 트랜잭션 안에서). 대상은 회사 단위라 회사 id를 대상으로 둔다
+        // 내보내기 기록 저장 (데이터를 만든 같은 트랜잭션 안), 대상은 회사 단위이므로 회사 id를 대상으로 지정
         await tx.auditLog.create({
           data: {
             companyId,

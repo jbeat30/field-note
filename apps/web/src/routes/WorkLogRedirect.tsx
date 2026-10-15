@@ -2,7 +2,7 @@ import { Navigate, useSearchParams } from 'react-router';
 
 import { projectWorkPath } from '../lib/projectPaths';
 
-// 예전 주소(/work-logs?project=&date=)로 들어오면 프로젝트의 작업 내역 화면으로 보냄. 작업은 프로젝트 안에서 다룬다
+// 예전 주소(/work-logs?project=&date=)로 진입하면 프로젝트의 작업 내역 화면으로 이동, 작업은 프로젝트 안에서 처리
 export const WorkLogRedirect = () => {
   const [params] = useSearchParams();
   const project = params.get('project');

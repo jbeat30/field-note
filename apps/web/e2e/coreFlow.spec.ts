@@ -27,7 +27,7 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
   const projectId = page.url().split('/projects/')[1]!;
 
   await test.step('작업 시작으로 바꾸면 작업 내역을 쓸 수 있게 된다', async () => {
-    // 프로젝트 상태는 "현황" 메뉴에서 바꾼다
+    // 프로젝트 상태는 "현황" 메뉴에서 변경
     await page.getByRole('link', { name: '현황', exact: true }).click();
     await page.getByRole('button', { name: '작업 시작' }).click();
     await page.getByLabel('실제 시작일').fill(seoulDate(-7));

@@ -12,14 +12,14 @@ import { useDraftStore } from '../stores/draftStore';
 type MemoFormProps = {
   // 임시 저장 키 (저장 위치별로 다르게)
   draftKey: string;
-  // 저장은 서버가 확인한 뒤에만 입력을 비운다. 실패하면 던져서 알린다
+  // 저장은 서버 확인 뒤에만 입력 초기화, 실패 시 예외로 알림
   onSubmit: (value: { content: string; tag: MemoTag }) => Promise<void>;
   // 저장 버튼 문구 (예: "메모함에 저장", "저장")
   submitLabel?: string;
   autoFocus?: boolean;
 };
 
-// 한 줄 메모 입력: 내용만 적어도 저장되고 태그는 기본 "기타". 쓰는 중인 글은 기기에 임시 저장해 앱을 닫아도 남는다
+// 한 줄 메모 입력: 내용만 입력해도 저장, 태그는 기본 "기타", 작성 중인 글은 기기에 임시 저장해 앱을 닫아도 유지
 export const MemoForm = ({
   draftKey,
   onSubmit,

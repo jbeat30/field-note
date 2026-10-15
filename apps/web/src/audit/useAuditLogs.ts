@@ -14,7 +14,7 @@ export type AuditFilter = {
 
 const PAGE_SIZE = 30;
 
-// 기록 조회: 최근순으로 더 보기 방식. 감사 기록은 조회만 한다
+// 기록 조회: 최근순 더 보기 방식, 감사 기록은 조회 전용
 export const useAuditLogs = (filter: AuditFilter) =>
   useInfiniteQuery({
     queryKey: queryKeys.auditLogs({ ...filter, limit: PAGE_SIZE }),

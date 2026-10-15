@@ -11,7 +11,7 @@ import { useLedgerEntriesOnDate } from '../ledger/useLedger';
 
 const wonText = (amount: number) => amount.toLocaleString('ko-KR');
 
-// 하루 기록의 지출·수입 (08 문서 §6.2): 그날 나간 돈을 한 줄로 바로 추가한다. 전체 내역·수정은 비용·자재 메뉴
+// 하루 기록의 지출·수입 (08 문서 §6.2): 그날 나간 돈을 한 줄로 바로 추가, 전체 내역·수정은 비용·자재 메뉴
 export const DayLedgerStep = ({
   projectId,
   date,

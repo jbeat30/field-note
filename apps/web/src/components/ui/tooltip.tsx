@@ -8,7 +8,7 @@ type TooltipProps = {
   side?: 'top' | 'bottom' | 'left' | 'right';
 };
 
-// 아이콘 버튼 같은 곳에 짧은 설명을 붙임. 설명이 꼭 필요한 정보면 화면에 글자로 쓰고, 여기에는 보조 설명만 둔다
+// 아이콘 버튼 같은 곳에 짧은 설명 추가, 설명이 꼭 필요한 정보는 화면에 글자로 표시하고 여기에는 보조 설명만 배치
 export const Tooltip = ({ content, children, side = 'top' }: TooltipProps) => (
   <TooltipPrimitive.Provider delayDuration={300}>
     <TooltipPrimitive.Root>

@@ -141,7 +141,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
   };
 };
 
-// 진행 중 프로젝트(2026-09-01 ~ 2026-12-31)를 만들어 보증 중까지 올린다
+// 진행 중 프로젝트(2026-09-01 ~ 2026-12-31)를 생성해 보증 중까지 진행
 const setup = async () => {
   const instance = app();
   const cookie = await signedUp(instance);
@@ -172,7 +172,7 @@ const setup = async () => {
 
     return project;
   };
-  // 완료 → 보증 중까지 올린다
+  // 완료 → 보증 중까지 진행
   const warranty = async (project: string) => {
     await client.projectStatus(project, { toStatus: 'COMPLETED', effectiveOn: '2026-09-20' });
     await client.projectStatus(project, { toStatus: 'WARRANTY', confirmSummary: true });
@@ -334,7 +334,7 @@ describe('보수 요청 수정·상태 변경', () => {
       'RECEIVED>IN_PROGRESS',
     ]);
 
-    // 완료된 건은 고칠 수 없고, 되돌릴 때는 사유가 필요하며 되돌리면 완료일이 지워진다
+    // 완료된 건은 수정 불가, 되돌릴 때는 사유 필요, 되돌리면 완료일 삭제
     expect((await client.update(id, { content: '수정' })).status).toBe(400);
     expect(errorPath((await client.transition(id, { toStatus: 'IN_PROGRESS' })).body)).toBe(
       'body.note',
@@ -361,7 +361,7 @@ describe('보수 요청 수정·상태 변경', () => {
       expect(errorPath(res.body)).toBe('body.projectId');
     }
 
-    // 조회는 계속 된다
+    // 조회는 계속 가능
     expect(detail(await client.detail(id)).status).toBe('DONE');
   });
 });
@@ -395,11 +395,11 @@ describe('보증 종료와 보수 요청', () => {
 });
 
 describe('사후 작업 연결', () => {
-  // 보증 중에 사후 작업으로 표시한 작업 내역 2건(공수 480·240)과 사용 자재 기록을 만든다
+  // 보증 중 사후 작업으로 표시한 작업 내역 2건(공수 480·240)과 사용 자재 기록 생성
   const afterService = async () => {
     const base = await setup();
     const { client, worker, category } = base;
-    // 진행 중에 일반 작업 내역·자재를 먼저 남기고, 보증 중에 사후 작업 작업 내역·자재를 남긴다
+    // 진행 중에는 일반 작업 내역·자재를 먼저 기록하고, 보증 중에는 사후 작업 작업 내역·자재 기록
     const project = await base.create('사후 작업 시험');
     const entries = (minutes: number) => [{ employeeId: worker, categoryId: category, minutes }];
     const log = async (date: string, extra: object, minutes = 480) =>
@@ -499,7 +499,7 @@ describe('사후 작업 연결', () => {
     expect((await client.link(id, { workLogId: afterLog1 })).status).toBe(200);
     expect((await client.link(id, { workLogId: afterLog1 })).status).toBe(400);
 
-    // 다른 프로젝트의 보수 요청에는 이 프로젝트의 작업 내역을 연결할 수 없다
+    // 다른 프로젝트의 보수 요청에는 이 프로젝트의 작업 내역 연결 불가
     const other = await create('C동');
 
     await warranty(other);

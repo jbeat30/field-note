@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
-// 작업 사진 (서비스 기획서 §12.2). 파일 자체는 파일 업로드(files)에 있고 사진은 구분·구역·촬영일시·설명을 덧붙인 기록이다
+// 작업 사진 (서비스 기획서 §12.2), 파일 자체는 파일 업로드(files)에 있고 사진은 구분·구역·촬영일시·설명을 덧붙인 기록
 export const PHOTO_CATEGORIES = [
   'BEFORE',
   'DURING',
@@ -51,7 +51,7 @@ const descriptionSchema = z
 
 export const photoParamsSchema = z.object({ id: z.uuid() });
 
-// 파일을 올린 뒤 사진으로 등록. 촬영일시를 비우면 등록 시각, 작업일을 비우면 촬영일(서울 기준)로 정한다
+// 파일을 올린 뒤 사진으로 등록, 촬영일시를 비우면 등록 시각, 작업일을 비우면 촬영일(서울 기준)로 결정
 export const photoCreateSchema = z.object({
   fileId: z.uuid(),
   category: photoCategorySchema.default('OTHER'),
@@ -70,7 +70,7 @@ export const photoUpdateSchema = z
     takenAt: z.iso.datetime({ offset: true }),
     workDate: dateSchema,
     description: descriptionSchema.nullable(),
-    // true로 바꾸면 같은 프로젝트의 기존 대표 사진은 해제된다
+    // true로 변경하면 같은 프로젝트의 기존 대표 사진 해제
     isCover: z.boolean(),
     // 마감 요약(준공 보고서)에 넣을 사진으로 고름 (프로젝트마다 SUMMARY_PHOTO_MAX장까지)
     includeInSummary: z.boolean(),

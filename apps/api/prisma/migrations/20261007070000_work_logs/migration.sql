@@ -100,7 +100,7 @@ ALTER TABLE "work_logs" ADD CONSTRAINT work_logs_saved_consistency
   CHECK ("status" <> 'SAVED' OR (char_length(btrim("content")) >= 1 AND "saved_at" IS NOT NULL));
 ALTER TABLE "work_log_entries" ADD CONSTRAINT work_log_entries_minutes_range CHECK ("minutes" BETWEEN 1 AND 1440);
 
--- 앱 계정은 자기 회사 행만 조회·생성·수정 (일지는 지우지 않음. 공수 항목은 수정할 때 바뀐 행을 지우지만 이전 값은 수정 이력에 남음, 수정 이력은 추가만)
+-- 앱 계정은 자기 회사 행만 조회·생성·수정 (일지는 지우지 않음, 공수 항목은 수정할 때 바뀐 행을 지우지만 이전 값은 수정 이력에 남음, 수정 이력은 추가만)
 ALTER TABLE "work_logs" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "work_logs" FORCE ROW LEVEL SECURITY;
 CREATE POLICY company_isolation ON "work_logs" TO field_note_app

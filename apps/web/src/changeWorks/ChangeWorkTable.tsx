@@ -31,7 +31,7 @@ type ChangeWorkTableProps = {
   onOpen: (work: ChangeWork) => void;
 };
 
-// 추가 공사 목록 표: 번호·내용·요청자·요청일·상태·증빙 수. 내용을 누르면 상세 창이 열린다 (좁은 화면은 요청자·요청일을 내용 아래로)
+// 추가 공사 목록 표: 번호·내용·요청자·요청일·상태·증빙 수, 내용을 누르면 상세 창 표시 (좁은 화면은 요청자·요청일을 내용 아래에 배치)
 export const ChangeWorkTable = ({ works, onOpen }: ChangeWorkTableProps) => {
   const today = todayInSeoul(new Date());
 

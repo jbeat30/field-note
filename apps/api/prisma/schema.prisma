@@ -28,7 +28,7 @@ enum UserStatus {
   @@map("user_status")
 }
 
-// 동의 대상 문서 종류. 마케팅 수신은 별도 선택 동의
+// 동의 대상 문서 종류, 마케팅 수신은 별도 선택 동의
 enum LegalDocumentType {
   TERMS_OF_SERVICE
   PRIVACY_POLICY
@@ -41,7 +41,7 @@ model Company {
   id                         String                      @id @default(dbgenerated("uuidv7()")) @db.Uuid
   name                       String
   status                     CompanyStatus               @default(ACTIVE)
-  // 회사별 저장 용량 한도(바이트). 운영자가 서버 용량에 맞춰 조정 (서비스 기획서 §12.1)
+  // 회사별 저장 용량 한도(바이트), 운영자가 서버 용량에 맞춰 조정 (서비스 기획서 §12.1)
   storageQuotaBytes          BigInt                      @default(5368709120) @map("storage_quota_bytes")
   createdAt                  DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
   users                      User[]
@@ -88,6 +88,7 @@ model Company {
   auditLogs                  AuditLog[]
   materialRecords            MaterialRecord[]
   ledgerEntries              LedgerEntry[]
+  idempotencyKeys            IdempotencyKey[]
   workLogEntries             WorkLogEntry[]
   workLogRevisions           WorkLogRevision[]
   employeeCredentials        EmployeeCredential[]
@@ -97,7 +98,7 @@ model Company {
   @@map("companies")
 }
 
-// 프로젝트 상태 (서비스 기획서 §10.3). 전환 규칙과 이력은 P1-6에서 구현하고, P1-5에서는 등록 시 '예정'으로만 만든다
+// 프로젝트 상태 (서비스 기획서 §10.3), 전환 규칙과 이력은 P1-6에서 구현하고 P1-5에서는 등록 시 '예정'으로만 생성
 enum ProjectStatus {
   PLANNED
   IN_PROGRESS
@@ -110,12 +111,12 @@ enum ProjectStatus {
   @@map("project_status")
 }
 
-// 프로젝트 (서비스 기획서 §10.2). 계약 금액은 저장하지 않음
+// 프로젝트 (서비스 기획서 §10.2), 계약 금액은 저장하지 않음
 // 고객·담당자·공종은 같은 회사의 명부·직원·선택 목록만 복합 키로 가리킬 수 있음
 model Project {
   companyId            String                      @map("company_id") @db.Uuid
   id                   String                      @default(dbgenerated("uuidv7()")) @db.Uuid
-  // 회사별 자동 번호 (예: 2026-012). 등록 때 정해지고 수정할 수 없음
+  // 회사별 자동 번호 (예: 2026-012), 등록 때 정해지고 수정할 수 없음
   code                 String
   name                 String
   status               ProjectStatus               @default(PLANNED)
@@ -167,7 +168,7 @@ model Project {
   @@map("projects")
 }
 
-// 프로젝트 상태 변경 이력 (변경자·시각·사유, 서비스 기획서 §10.3). 추가만 가능하고 수정·삭제할 수 없음
+// 프로젝트 상태 변경 이력 (변경자·시각·사유, 서비스 기획서 §10.3), 추가만 가능하고 수정·삭제할 수 없음
 model ProjectStatusChange {
   companyId   String        @map("company_id") @db.Uuid
   id          String        @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -220,8 +221,8 @@ enum PayType {
   @@map("pay_type")
 }
 
-// 직원 단가표 (민감 정보). 단가를 바꾸면 기존 행을 고치지 않고 적용 시작일과 함께 새 행을 추가하므로
-// 근무일에 적용되는 단가는 그 날짜 이전에 시작한 가장 최근 행이다 (같은 시작일이면 나중에 입력한 행). 추가만 가능
+// 직원 단가표 (민감 정보), 단가를 바꾸면 기존 행을 고치지 않고 적용 시작일과 함께 새 행을 추가하므로
+// 근무일에 적용되는 단가는 그 날짜 이전에 시작한 가장 최근 행이다 (같은 시작일이면 나중에 입력한 행), 추가만 가능
 model EmployeePayRate {
   companyId     String   @map("company_id") @db.Uuid
   id            String   @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -250,7 +251,7 @@ model ProjectAssignment {
   employeeId     String    @map("employee_id") @db.Uuid
   startDate      DateTime  @map("start_date") @db.Date
   endDate        DateTime  @map("end_date") @db.Date
-  // 계획 공수(분). 공수는 항상 분으로 저장하고 MD로의 환산은 보여 줄 때 회사 기준시간으로 함 (비어 있으면 계획 없음)
+  // 계획 공수(분), 공수는 항상 분으로 저장하고 MD로의 환산은 보여 줄 때 회사 기준시간으로 함 (비어 있으면 계획 없음)
   plannedMinutes Int?      @map("planned_minutes")
   createdAt      DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -265,7 +266,7 @@ model ProjectAssignment {
   @@map("project_assignments")
 }
 
-// 프로젝트 예정 기간 변경 이력 (연장·단축한 날짜와 사유, 서비스 기획서 §10.2). 추가만 가능
+// 프로젝트 예정 기간 변경 이력 (연장·단축한 날짜와 사유, 서비스 기획서 §10.2), 추가만 가능
 model ProjectPeriodChange {
   companyId String   @map("company_id") @db.Uuid
   id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -294,7 +295,7 @@ enum WorkLogStatus {
   @@map("work_log_status")
 }
 
-// 작업일지: 프로젝트 × 날짜마다 한 건. 공통 내용은 여기에, 직원별·작업 구분별 공수는 항목(work_log_entries)에 둠
+// 작업일지: 프로젝트 × 날짜마다 한 건, 공통 내용은 여기에, 직원별·작업 구분별 공수는 항목(work_log_entries)에 둠
 // version은 저장(수정)할 때마다 올라가는 낙관적 잠금 값
 model WorkLog {
   companyId      String              @map("company_id") @db.Uuid
@@ -308,7 +309,7 @@ model WorkLog {
   isChange       Boolean             @default(false) @map("is_change")
   isAfterService Boolean             @default(false) @map("is_after_service")
   version        Int                 @default(1)
-  // 처음 저장(임시 저장 → 저장됨)한 시각. 지연 입력 표시의 기준
+  // 처음 저장(임시 저장 → 저장됨)한 시각, 지연 입력 표시의 기준
   savedAt        DateTime?           @map("saved_at") @db.Timestamptz(3)
   createdAt      DateTime            @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt      DateTime            @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -324,7 +325,7 @@ model WorkLog {
   @@map("work_logs")
 }
 
-// 직원별·작업 구분별 공수(분). 같은 일지에 같은 직원·작업 구분 조합은 한 번만
+// 직원별·작업 구분별 공수(분), 같은 일지에 같은 직원·작업 구분 조합은 한 번만
 model WorkLogEntry {
   companyId  String     @map("company_id") @db.Uuid
   id         String     @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -343,7 +344,7 @@ model WorkLogEntry {
   @@map("work_log_entries")
 }
 
-// 수정 이력: 저장된 일지를 고칠 때마다 고치기 전 값을 JSON 스냅샷으로 남김. 추가만 가능
+// 수정 이력: 저장된 일지를 고칠 때마다 고치기 전 값을 JSON 스냅샷으로 남김, 추가만 가능
 model WorkLogRevision {
   companyId String   @map("company_id") @db.Uuid
   id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -386,7 +387,7 @@ model ProjectCodeSequence {
   @@map("project_code_sequences")
 }
 
-// 서버 세션 (토큰 원문은 저장하지 않고 SHA-256 해시만 저장). 로그인 전 조회가 필요해 회사 범위 밖 전용 계정만 접근
+// 서버 세션 (토큰 원문은 저장하지 않고 SHA-256 해시만 저장), 로그인 전 조회가 필요해 회사 범위 밖 전용 계정만 접근
 model Session {
   tokenHash    String   @id @map("token_hash")
   userId       String   @map("user_id") @db.Uuid
@@ -410,7 +411,7 @@ model Session {
   @@map("sessions")
 }
 
-// 회사 관리자 계정 (회사당 하나). 직원은 계정이 없음
+// 회사 관리자 계정 (회사당 하나), 직원은 계정이 없음
 model User {
   id                      String                      @default(dbgenerated("uuidv7()")) @db.Uuid
   companyId               String                      @map("company_id") @db.Uuid
@@ -466,7 +467,7 @@ model User {
   @@map("users")
 }
 
-// 로그인 자격 (회사 범위 밖 전용 계정만 접근). 소셜 로그인만 쓰면 행이 없거나 값이 비어 있음
+// 로그인 자격 (회사 범위 밖 전용 계정만 접근), 소셜 로그인만 쓰면 행이 없거나 값이 비어 있음
 model UserCredential {
   companyId        String    @map("company_id") @db.Uuid
   userId           String    @map("user_id") @db.Uuid
@@ -503,7 +504,7 @@ model LegalDocument {
   @@map("legal_documents")
 }
 
-// 동의 이력 (추가만 가능). 철회는 is_agreed=false 행을 새로 추가하고 가장 최근 행이 현재 상태
+// 동의 이력 (추가만 가능), 철회는 is_agreed=false 행을 새로 추가하고 가장 최근 행이 현재 상태
 model Consent {
   id         String        @default(dbgenerated("uuidv7()")) @db.Uuid
   companyId  String        @map("company_id") @db.Uuid
@@ -522,16 +523,28 @@ model Consent {
 
 // 운영자가 발급하는 1회용 초대 링크 (토큰 원문은 저장하지 않고 SHA-256 해시만 저장)
 // 가입 전에는 회사를 알 수 없어 회사 범위 밖 전용 계정과 운영자 계정만 접근
+// 초대 링크의 용도: 가입(운영자가 회사를 만들 때), 복구(이메일을 쓸 수 없는 소유자), 소유자 이전
+enum InvitationPurpose {
+  SIGNUP
+  RECOVERY
+  TRANSFER
+
+  @@map("invitation_purpose")
+}
+
 model Invitation {
-  tokenHash String    @id @map("token_hash")
-  companyId String    @map("company_id") @db.Uuid
-  userId    String    @map("user_id") @db.Uuid
-  expiresAt DateTime  @map("expires_at") @db.Timestamptz(3)
-  // 가입에 사용된 시각. 값이 있으면 폐기된 링크
-  usedAt    DateTime? @map("used_at") @db.Timestamptz(3)
-  createdAt DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
-  company   Company   @relation(fields: [companyId], references: [id])
-  user      User      @relation(fields: [companyId, userId], references: [companyId, id])
+  tokenHash      String            @id @map("token_hash")
+  companyId      String            @map("company_id") @db.Uuid
+  userId         String            @map("user_id") @db.Uuid
+  expiresAt      DateTime          @map("expires_at") @db.Timestamptz(3)
+  // 가입에 사용된 시각, 값이 있으면 폐기된 링크
+  usedAt         DateTime?         @map("used_at") @db.Timestamptz(3)
+  createdAt      DateTime          @default(now()) @map("created_at") @db.Timestamptz(3)
+  // 복구·소유자 이전 링크는 이미 가입한 계정의 재등록 용도, 이전은 새 소유자 이름 보관
+  purpose        InvitationPurpose @default(SIGNUP)
+  newDisplayName String?           @map("new_display_name")
+  company        Company           @relation(fields: [companyId], references: [id])
+  user           User              @relation(fields: [companyId, userId], references: [companyId, id])
 
   @@index([companyId, userId])
   @@index([expiresAt])
@@ -541,17 +554,21 @@ model Invitation {
 enum OperatorActionType {
   COMPANY_CREATED
   INVITATION_ISSUED
+  ACCOUNT_RECOVERY_ISSUED
+  OWNER_TRANSFER_ISSUED
 
   @@map("operator_action_type")
 }
 
-// 운영자 작업 기록 (추가만 가능, §5.4). 개인정보는 담지 않고 대상 회사 식별값과 작업자만 기록
+// 운영자 작업 기록 (추가만 가능, §5.4), 개인정보는 담지 않고 대상 회사 식별값과 작업자만 기록
 model OperatorAction {
   id        String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
   companyId String             @map("company_id") @db.Uuid
   action    OperatorActionType
   // 작업을 실행한 운영자 (OS 사용자명)
   operator  String
+  // 본인 확인 방법 같은 짧은 메모 (개인정보는 적지 않음)
+  note      String?
   createdAt DateTime           @default(now()) @map("created_at") @db.Timestamptz(3)
   company   Company            @relation(fields: [companyId], references: [id])
 
@@ -559,7 +576,7 @@ model OperatorAction {
   @@map("operator_actions")
 }
 
-// 이메일 인증 코드 상태 (사용자당 한 행). 코드 원문은 저장하지 않고 서버 비밀 값으로 만든 HMAC 해시만 저장
+// 이메일 인증 코드 상태 (사용자당 한 행), 코드 원문은 저장하지 않고 서버 비밀 값으로 만든 HMAC 해시만 저장
 // 요청 기록(횟수·간격 제한)과 코드를 한 곳에 두고, 회사 범위 밖 전용 계정만 접근
 model EmailVerification {
   companyId       String    @map("company_id") @db.Uuid
@@ -584,7 +601,7 @@ model EmailVerification {
   @@map("email_verifications")
 }
 
-// 비밀번호 재설정 링크 상태 (사용자당 한 행). 토큰 원문은 저장하지 않고 SHA-256 해시만 저장하며, 사용하면 해시를 비워 폐기
+// 비밀번호 재설정 링크 상태 (사용자당 한 행), 토큰 원문은 저장하지 않고 SHA-256 해시만 저장하며, 사용하면 해시를 비워 폐기
 model PasswordReset {
   companyId       String    @map("company_id") @db.Uuid
   userId          String    @map("user_id") @db.Uuid
@@ -609,17 +626,22 @@ enum WorkUnitMode {
   @@map("work_unit_mode")
 }
 
-// 회사 설정 (회사당 한 행, 행이 없으면 기본값으로 동작). 저장은 항상 분 단위라 기준을 바꿔도 과거 기록은 변하지 않음
+// 회사 설정 (회사당 한 행, 행이 없으면 기본값으로 동작), 저장은 항상 분 단위라 기준을 바꿔도 과거 기록은 변하지 않음
 model CompanySettings {
-  companyId           String       @id @map("company_id") @db.Uuid
-  // 하루 기준시간(분). 공수 1.0에 해당
-  standardWorkMinutes Int          @default(480) @map("standard_work_minutes")
+  companyId             String       @id @map("company_id") @db.Uuid
+  // 하루 기준시간(분), 공수 1.0에 해당
+  standardWorkMinutes   Int          @default(480) @map("standard_work_minutes")
   // MM(맨먼스) 계산에 쓰는 월 기준일수
-  monthlyWorkDays     Float        @default(26) @map("monthly_work_days")
-  workUnitMode        WorkUnitMode @default(RATIO) @map("work_unit_mode")
-  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company             Company      @relation(fields: [companyId], references: [id])
+  monthlyWorkDays       Float        @default(26) @map("monthly_work_days")
+  workUnitMode          WorkUnitMode @default(RATIO) @map("work_unit_mode")
+  // 경고 기준(서비스 기획서 §10.4)과 보증 기본 기간(§10.6)
+  burnWarnPercent       Int          @default(80) @map("burn_warn_percent")
+  burnLimitPercent      Int          @default(100) @map("burn_limit_percent")
+  aheadGapPercent       Int          @default(20) @map("ahead_gap_percent")
+  warrantyDefaultMonths Int          @default(12) @map("warranty_default_months")
+  createdAt             DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company               Company      @relation(fields: [companyId], references: [id])
 
   @@map("company_settings")
 }
@@ -637,7 +659,7 @@ enum OptionKind {
   @@map("option_kind")
 }
 
-// 회사별 선택 목록 항목. 쓰지 않는 항목은 삭제하지 않고 숨김(is_active=false)으로 두어 기록에 쓰인 이름이 사라지지 않게 함
+// 회사별 선택 목록 항목, 쓰지 않는 항목은 삭제하지 않고 숨김(is_active=false)으로 두어 기록에 쓰인 이름이 사라지지 않게 함
 // name_key는 공백·대소문자 차이를 없앤 비교용 값으로 같은 이름의 중복을 막음
 model OptionItem {
   companyId             String                      @map("company_id") @db.Uuid
@@ -674,8 +696,8 @@ enum EmployeeStatus {
   @@map("employee_status")
 }
 
-// 직원 카드. 직원은 서비스에 로그인하지 않으며 관리자가 기록한다 (서비스 기획서 §8)
-// 주민등록번호·계좌번호·급여는 저장하지 않음. 목록 API에는 생년월일·연락처를 내보내지 않고 카드(상세)에서만 보여 줌
+// 직원 카드, 직원은 서비스에 로그인하지 않고 관리자가 기록 (서비스 기획서 §8)
+// 주민등록번호·계좌번호·급여는 저장 제외, 목록 API에는 생년월일·연락처를 제외하고 카드(상세)에서만 표시
 model Employee {
   companyId       String               @map("company_id") @db.Uuid
   id              String               @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -717,7 +739,7 @@ enum PartnerKind {
   @@map("partner_kind")
 }
 
-// 고객·협력업체·자재 공급처 명부. 금액·거래 내역은 다루지 않음
+// 고객·협력업체·자재 공급처 명부, 금액·거래 내역은 다루지 않음
 // 쓰지 않는 업체는 삭제하지 않고 숨김(is_active=false)으로 두어 프로젝트·자재 기록에 쓰인 상호가 사라지지 않게 함
 model Partner {
   companyId       String           @map("company_id") @db.Uuid
@@ -743,14 +765,16 @@ model Partner {
   @@map("partners")
 }
 
-// 소셜 로그인 제공자 (초기에는 카카오, 네이버·구글은 5단계)
+// 소셜 로그인 제공자
 enum SocialProvider {
   KAKAO
+  NAVER
+  GOOGLE
 
   @@map("social_provider")
 }
 
-// 소셜 계정 연동. 제공자가 준 사용자 번호로만 계정을 찾고 이메일이 같다는 이유로 연결하지 않음 (§6.1)
+// 소셜 계정 연동, 제공자가 준 사용자 번호로만 계정을 찾고 이메일이 같다는 이유로는 연결 제외 (§6.1)
 // 로그인 전에 조회해야 하므로 회사 범위 밖 전용 계정만 접근
 model SocialAccount {
   provider       SocialProvider
@@ -768,8 +792,8 @@ model SocialAccount {
   @@map("social_accounts")
 }
 
-// 계정 해지 진행 상태 (회사당 한 행). 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제 (서비스 기획서 §6.5)
-// 취소 토큰 원문은 저장하지 않고 해시만 저장. 삭제를 마치면 purged_at만 남겨 파기했다는 기록으로 보존 (개인정보 없음)
+// 계정 해지 진행 상태 (회사당 한 행), 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제 (서비스 기획서 §6.5)
+// 취소 토큰은 원문 대신 해시만 저장, 삭제 완료 후 purged_at만 남겨 파기 기록으로 보존 (개인정보 없음)
 model CompanyClosure {
   companyId       String    @id @map("company_id") @db.Uuid
   requestedAt     DateTime  @map("requested_at") @db.Timestamptz(3)
@@ -812,7 +836,7 @@ enum FileRejectReason {
   @@map("file_reject_reason")
 }
 
-// 업로드 파일의 메타데이터 (실제 내용은 객체 저장소). 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남긴다 (서비스 기획서 §12.1)
+// 업로드 파일의 메타데이터 (실제 내용은 객체 저장소), 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남긴다 (서비스 기획서 §12.1)
 model StoredFile {
   companyId       String               @map("company_id") @db.Uuid
   id              String               @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -824,7 +848,7 @@ model StoredFile {
   originalName    String               @map("original_name")
   // 신청 때는 브라우저가 알려 준 형식, 사용 가능해진 뒤에는 내용으로 판별한 형식
   contentType     String               @map("content_type")
-  // 신청한 크기. 올라온 크기와 다르면 거부
+  // 신청한 크기, 올라온 크기와 다르면 거부
   sizeBytes       BigInt               @map("size_bytes")
   objectKey       String               @map("object_key")
   thumbnailKey    String?              @map("thumbnail_key")
@@ -863,8 +887,8 @@ enum PhotoCategory {
   @@map("photo_category")
 }
 
-// 작업 사진: 업로드 파일(files)에 구분·구역·촬영일시·설명을 붙인 기록. 파일 한 개당 사진 한 건
-// workDate는 어느 날 작업의 사진인지(작업일지와 프로젝트×날짜로 연결, 일지가 아직 없어도 됨). 지우면 deleted_at만 채우는 소프트 삭제
+// 작업 사진: 업로드 파일(files)에 구분·구역·촬영일시·설명을 붙인 기록, 파일 한 개당 사진 한 건
+// workDate는 어느 날 작업의 사진인지(작업일지와 프로젝트×날짜로 연결, 일지가 아직 없어도 됨), 지우면 deleted_at만 채우는 소프트 삭제
 model Photo {
   companyId        String        @map("company_id") @db.Uuid
   id               String        @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -904,7 +928,7 @@ enum MemoTag {
   @@map("memo_tag")
 }
 
-// 프로젝트 메모 노트 / 메모함: projectId가 없으면 메모함(아직 정리하지 않은 메모). 날짜별로 쌓이고, 지우면 deleted_at만 채우는 소프트 삭제
+// 프로젝트 메모 노트 / 메모함: projectId가 없으면 메모함(아직 정리하지 않은 메모), 날짜별로 쌓이고, 지우면 deleted_at만 채우는 소프트 삭제
 // 완료 표시는 "할 일" 메모에만 (done_at이 있어야 완료)
 model Memo {
   companyId String    @map("company_id") @db.Uuid
@@ -948,7 +972,7 @@ enum MaterialRecordKind {
   @@map("material_record_kind")
 }
 
-// 회사 자재 목록. 같은 이름도 규격이 다르면 별도 자재(예: 아연도강판 0.8T / 1.0T). 쓰지 않는 자재는 삭제하지 않고 숨김
+// 회사 자재 목록, 같은 이름도 규격이 다르면 별도 자재(예: 아연도강판 0.8T / 1.0T), 쓰지 않는 자재는 삭제 대신 숨김
 // name_key·spec_key는 공백·대소문자 차이를 없앤 비교용 값 (규격이 없으면 빈 문자열)
 model Material {
   companyId String           @map("company_id") @db.Uuid
@@ -970,6 +994,23 @@ model Material {
   @@map("materials")
 }
 
+// 멱등 키 저장소: 같은 쓰기 요청의 재전송 한 번 처리를 위한 키(해시)와 성공 응답의 24시간 보관, 처리 중 표시는 짧게 만료
+model IdempotencyKey {
+  companyId   String   @map("company_id") @db.Uuid
+  keyHash     String   @map("key_hash")
+  fingerprint String
+  state       String
+  status      Int?
+  body        Json?
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@id([companyId, keyHash])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
+}
+
 enum LedgerKind {
   EXPENSE
   INCOME
@@ -977,7 +1018,7 @@ enum LedgerKind {
   @@map("ledger_kind")
 }
 
-// 지출·수입 기록 (08 문서 §6): 프로젝트에서 나간 돈과 가끔 생기는 수입. 금액은 원 단위 정수, 지우면 deleted_at만 채우는 소프트 삭제
+// 지출·수입 기록 (08 문서 §6): 프로젝트에서 나간 돈과 가끔 생기는 수입, 금액은 원 단위 정수, 삭제는 deleted_at 기록의 소프트 삭제
 // 증빙은 문서함의 문서를 연결하고, 추가 공사 번호를 붙일 수 있음
 model LedgerEntry {
   companyId    String      @map("company_id") @db.Uuid
@@ -1010,7 +1051,7 @@ model LedgerEntry {
   @@map("ledger_entries")
 }
 
-// 프로젝트별 자재 기록. 잔량 = 반입 - 사용 - 반출 - 폐기. 지우면 deleted_at만 채우는 소프트 삭제
+// 프로젝트별 자재 기록, 잔량 = 반입 - 사용 - 반출 - 폐기, 삭제는 deleted_at 기록의 소프트 삭제
 // 작업일지는 프로젝트 × record_date로 연결 (일지가 아직 없어도 기록 가능)
 model MaterialRecord {
   companyId      String              @map("company_id") @db.Uuid
@@ -1080,8 +1121,8 @@ enum AuditAction {
   @@map("audit_action")
 }
 
-// 작업자료 문서: 프로젝트에 붙는 개정되는 문서. 파일은 버전(document_versions)에 있고 최신 버전이 기본으로 보임
-// 민감 자료(is_sensitive)는 열람·다운로드를 감사 기록으로 남김. 지우면 deleted_at만 채우는 소프트 삭제
+// 작업자료 문서: 프로젝트에 붙는 개정 문서, 파일은 버전(document_versions)에 있고 최신 버전을 기본 표시
+// 민감 자료(is_sensitive)는 열람·다운로드의 감사 기록 저장, 삭제는 deleted_at 기록의 소프트 삭제
 model Document {
   companyId            String                @map("company_id") @db.Uuid
   id                   String                @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1108,7 +1149,7 @@ model Document {
   @@map("documents")
 }
 
-// 문서의 버전: 새 버전은 새 파일로 추가하고 이전 버전은 보존 (덮어쓰지 않음). 추가만 가능
+// 문서의 버전: 새 버전은 새 파일로 추가하고 이전 버전은 보존 (덮어쓰지 않음), 추가만 가능
 model DocumentVersion {
   companyId    String     @map("company_id") @db.Uuid
   id           String     @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1130,7 +1171,7 @@ model DocumentVersion {
   @@map("document_versions")
 }
 
-// 회사 감사 기록: 수정·삭제할 수 없고 추가만 가능 (서비스 기획서 §13.1). 운영자 기록(operator_actions)과 분리
+// 회사 감사 기록: 수정·삭제할 수 없고 추가만 가능 (서비스 기획서 §13.1), 운영자 기록(operator_actions)과 분리
 model AuditLog {
   companyId String      @map("company_id") @db.Uuid
   id        String      @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1161,7 +1202,7 @@ enum ChangeWorkStatus {
 }
 
 // 변경·추가 작업 기록: 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청과 합의 (금액은 기록하지 않음)
-// 번호(seq)는 프로젝트마다 1부터. 내용은 협의 중일 때만 고칠 수 있고, 합의·철회된 기록은 상태 이력과 함께 보존
+// 번호(seq)는 프로젝트마다 1부터, 내용은 협의 중일 때만 수정 가능, 합의·철회된 기록은 상태 이력과 함께 보존
 model ChangeWork {
   companyId       String                   @map("company_id") @db.Uuid
   id              String                   @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1190,7 +1231,7 @@ model ChangeWork {
   @@map("change_works")
 }
 
-// 변경·추가 작업의 상태 변경 이력. 추가만 가능
+// 변경·추가 작업의 상태 변경 이력, 추가만 가능
 model ChangeWorkStatusChange {
   companyId    String           @map("company_id") @db.Uuid
   id           String           @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1212,7 +1253,7 @@ model ChangeWorkStatusChange {
   @@map("change_work_status_changes")
 }
 
-// 변경·추가 작업의 증빙: 문서함의 문서(대화 캡처, 합의서 등)를 연결. 연결을 풀어도 행은 남기고 해제 시각만 기록
+// 변경·추가 작업의 증빙: 문서함의 문서(대화 캡처, 합의서 등) 연결, 연결 해제 시에도 행은 유지하고 해제 시각만 기록
 model ChangeWorkDocument {
   companyId    String     @map("company_id") @db.Uuid
   id           String     @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1241,7 +1282,7 @@ enum WarrantyStartBasis {
   @@map("warranty_start_basis")
 }
 
-// 프로젝트 보증 설정 (프로젝트당 한 행). 종료 예정일은 시작일 + 기간으로 계산하되 직접 고칠 수 있고 고칠 때마다 이력을 남김
+// 프로젝트 보증 설정 (프로젝트당 한 행), 종료 예정일은 시작일 + 기간으로 계산하되 직접 고칠 수 있고 고칠 때마다 이력을 남김
 // 기간 0은 보증 없음 (종료 예정일 = 시작일)
 model ProjectWarranty {
   companyId  String             @map("company_id") @db.Uuid
@@ -1262,7 +1303,7 @@ model ProjectWarranty {
   @@map("project_warranties")
 }
 
-// 보증 설정 변경 이력 (처음 설정 포함). 추가만 가능
+// 보증 설정 변경 이력 (처음 설정 포함), 추가만 가능
 model ProjectWarrantyChange {
   companyId  String             @map("company_id") @db.Uuid
   id         String             @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1285,7 +1326,7 @@ model ProjectWarrantyChange {
   @@map("project_warranty_changes")
 }
 
-// 보증서 (보증증권 등): 문서함에 올린 문서에 만료일을 붙여 관리. 지울 때는 removed_at만 기록
+// 보증서 (보증증권 등): 문서함의 문서에 만료일을 붙여 관리, 삭제는 removed_at만 기록
 model WarrantyCertificate {
   companyId  String    @map("company_id") @db.Uuid
   id         String    @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1317,8 +1358,8 @@ enum RepairStatus {
   @@map("repair_status")
 }
 
-// 보수 요청: 보증 중에 고객이 요청한 하자 보수의 접수부터 처리까지. 번호(seq)는 프로젝트마다 1부터
-// 내용은 완료 전까지만 고칠 수 있고, 지우는 API는 없음. 사후 작업으로 쓴 일지·자재 기록은 RepairRequestLink로 연결
+// 보수 요청: 보증 중 고객이 요청한 하자 보수의 접수부터 처리까지, 번호(seq)는 프로젝트마다 1부터
+// 내용은 완료 전까지만 수정 가능, 삭제 API 없음, 사후 작업의 일지·자재 기록은 RepairRequestLink로 연결
 model RepairRequest {
   companyId       String                      @map("company_id") @db.Uuid
   id              String                      @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1350,7 +1391,7 @@ model RepairRequest {
   @@map("repair_requests")
 }
 
-// 보수 요청 상태 변경 이력. 추가만 가능
+// 보수 요청 상태 변경 이력, 추가만 가능
 model RepairRequestStatusChange {
   companyId       String        @map("company_id") @db.Uuid
   id              String        @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1370,7 +1411,7 @@ model RepairRequestStatusChange {
   @@map("repair_request_status_changes")
 }
 
-// 보수 요청에 연결한 사후 작업: 작업일지 또는 자재 기록 중 하나. 해제해도 행은 남기고 해제 시각만 기록
+// 보수 요청에 연결한 사후 작업: 작업일지 또는 자재 기록 중 하나, 해제 시에도 행은 유지하고 해제 시각만 기록
 model RepairRequestLink {
   companyId        String          @map("company_id") @db.Uuid
   id               String          @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1401,7 +1442,7 @@ enum MonthlyCloseKind {
   @@map("monthly_close_kind")
 }
 
-// 월 공수 확정 상태 (회사·월마다 한 행, 한 번이라도 확정하면 생김). 확정된 달은 그달의 작업일지를 고칠 수 없고 재오픈(사유 기록)으로만 정정
+// 월 공수 확정 상태 (회사·월마다 한 행, 한 번이라도 확정하면 생김), 확정된 달은 그달의 작업일지를 고칠 수 없고 재오픈(사유 기록)으로만 정정
 // 하루 기준시간·월 기준일수는 확정 시점의 값으로 고정 (월 공수표는 이 값으로 환산)
 model MonthlyClose {
   companyId           String    @map("company_id") @db.Uuid
@@ -1420,7 +1461,7 @@ model MonthlyClose {
   @@map("monthly_closes")
 }
 
-// 월 공수 확정·재오픈 이력. 추가만 가능
+// 월 공수 확정·재오픈 이력, 추가만 가능
 model MonthlyCloseEvent {
   companyId           String           @map("company_id") @db.Uuid
   id                  String           @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1441,8 +1482,8 @@ model MonthlyCloseEvent {
   @@map("monthly_close_events")
 }
 
-// 직원 서류·자격 (서비스 기획서 §8.4): 자격증·안전교육 이수증·건강검진 서류 등. 종류는 회사가 관리하는 목록(CREDENTIAL_TYPE)
-// 만료일이 없으면 만료 없는 서류. 지울 때는 removed_at만 기록하고, 파일은 직원 서류 용도로 올린 것을 연결
+// 직원 서류·자격 (서비스 기획서 §8.4): 자격증·안전교육 이수증·건강검진 서류 등, 종류는 회사가 관리하는 목록(CREDENTIAL_TYPE)
+// 만료일이 없으면 만료 없는 서류, 삭제는 removed_at만 기록, 파일은 직원 서류 용도로 올린 것을 연결
 model EmployeeCredential {
   companyId  String      @map("company_id") @db.Uuid
   id         String      @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1482,7 +1523,7 @@ model ProjectRequiredCredential {
   @@map("project_required_credentials")
 }
 
-// 알림 종류 (서비스 기획서 §15.3). 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산하며, 종류별로 켜고 끈다
+// 알림 종류 (서비스 기획서 §15.3), 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산, 종류별 켜기·끄기
 enum AlertKind {
   NO_LOG_TODAY
   INBOX_STALE
@@ -1500,8 +1541,8 @@ enum AlertKind {
   @@map("alert_kind")
 }
 
-// 회사별 알림 설정. 행이 없는 종류는 켜짐(기본값). 삭제 없이 켜짐 여부만 바꾼다
-// 숨긴 알림: 알림은 저장하지 않고 계산하므로 숨긴 알림의 키(종류|대상|조건 값)만 남긴다. 조건이 바뀌면 키가 달라져 다시 보임
+// 회사별 알림 설정, 행이 없는 종류는 켜짐(기본값), 삭제 없이 켜짐 여부만 변경
+// 숨긴 알림: 알림은 저장하지 않고 계산하므로 숨긴 알림의 키(종류|대상|조건 값)만 보관, 조건이 바뀌면 키가 달라져 재표시
 model AlertDismissal {
   companyId   String   @map("company_id") @db.Uuid
   alertKey    String   @map("alert_key")

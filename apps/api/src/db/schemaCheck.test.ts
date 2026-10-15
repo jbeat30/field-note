@@ -65,12 +65,14 @@ describe('스키마 검사', () => {
     // 예외: 프로젝트의 공종 선택은 수정할 때 연결 행을 지워야 하는 연결 테이블이다 (업무 기록이 아니라 선택 관계일 뿐이며 삭제만 허용)
     // 프로젝트 필요 자격도 같은 연결 테이블이라 목록을 바꿀 때 빠진 종류의 행을 지운다 (업무 기록이 아니라 선택 관계일 뿐)
     // 작업 내역 공수 항목도 수정할 때 바뀐 행을 지워야 하는 하위 행이다 (이전 값은 수정 이력 스냅샷에 보존됨)
+    // 멱등 키는 업무 기록이 아니라 재전송 방지용 임시 기록이라 처리가 실패하면 선점을 풀고 만료된 것을 치운다 (RLS가 자기 회사 행으로 제한)
     // 명부도 쓰이지 않은 업체는 직접 삭제할 수 있다 (RLS가 자기 회사 행으로 제한하고, 쓰고 있는 업체는 외래 키 Restrict가 막음)
     expect(rows).toEqual([
       { table_name: 'partners', privilege_type: 'DELETE' },
       { table_name: 'project_trades', privilege_type: 'DELETE' },
       { table_name: 'work_log_entries', privilege_type: 'DELETE' },
       { table_name: 'project_required_credentials', privilege_type: 'DELETE' },
+      { table_name: 'idempotency_keys', privilege_type: 'DELETE' },
     ]);
   });
 

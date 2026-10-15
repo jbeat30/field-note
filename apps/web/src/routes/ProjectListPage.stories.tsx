@@ -38,7 +38,7 @@ export const Default: Story = {
     await waitFor(() => expect(rows(canvas)[0]).toContain('2026-004'));
     await expect(rows(canvas).at(-1)).toContain('2025-012');
     // 번호·현장명·상태·고객·담당자·기간·공종이 보이고, 현장 연락처·출입 메모는 목록에 없음
-    // 고객·담당자 이름은 명부·직원 목록을 불러온 뒤에 채워진다
+    // 고객·담당자 이름은 명부·직원 목록 로딩 후 채움
     await waitFor(() =>
       expect(rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))).toContain(
         '가나다건설',
@@ -201,7 +201,7 @@ export const NoResult: Story = {
   },
 };
 
-// 프로젝트가 많으면 쪽으로 나뉘고, 필터를 바꾸면 첫 쪽으로 돌아온다
+// 프로젝트가 많으면 쪽으로 나뉘고 필터를 바꾸면 첫 쪽으로 복귀
 export const Pagination: Story = {
   loaders: [
     () => {
@@ -255,7 +255,7 @@ export const SortByClientColumn: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    // 고객 이름까지 불러온 뒤에 정렬한다
+    // 고객 이름 로딩 후 정렬
     await waitFor(() =>
       expect(rows(canvas).some((text) => text.includes('가나다건설'))).toBe(true),
     );
@@ -266,7 +266,7 @@ export const SortByClientColumn: Story = {
   },
 };
 
-// 타이핑 중에는 조회하지 않고, 멈춘 뒤 검색어 전체로 한 번만 조회한다
+// 타이핑 중에는 조회하지 않고 멈춘 뒤 검색어 전체로 한 번만 조회
 const searchedTerms: string[] = [];
 
 export const SearchIsDebounced: Story = {
@@ -297,7 +297,7 @@ export const SearchIsDebounced: Story = {
   },
 };
 
-// 상태는 위의 버튼 한 번으로 거르고, 고객·담당자·공종·기간은 "자세히 찾기"를 펼쳐서 고른다
+// 상태는 위의 버튼 한 번으로 필터, 고객·담당자·공종·기간은 "자세히 찾기"를 펼쳐서 선택
 export const StatusButtonsAndAdvancedToggle: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -318,5 +318,28 @@ export const StatusButtonsAndAdvancedToggle: Story = {
 
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     await expect(canvas.getByLabelText('고객 필터')).toBeInTheDocument();
+  },
+};
+
+// `경고 있음`을 누르면 경고가 있는 진행·중단 프로젝트만 남고 줄마다 경고 표시
+export const FilterByWarning: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('A동 외장 판금 공사');
+
+    await userEvent.click(canvas.getByRole('button', { name: '경고 있음' }));
+
+    await waitFor(
+      () => {
+        const rows = canvas.getAllByRole('row').slice(1);
+
+        expect(rows.length).toBeGreaterThan(0);
+        for (const row of rows) {
+          expect(row.textContent).toMatch(/경고 기준|한도|소진|지났는데|뒤처짐/);
+        }
+      },
+      { timeout: 5000 },
+    );
   },
 };

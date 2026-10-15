@@ -24,7 +24,7 @@ type Story = StoryObj<typeof meta>;
 
 export const Default: Story = {};
 
-// 빈 줄을 늘리고 지울 수 있고, 한 줄만 남으면 지우기가 꺼진다
+// 빈 줄을 늘리고 지울 수 있고 한 줄만 남으면 지우기 비활성
 export const AddAndRemoveRows: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -37,7 +37,7 @@ export const AddAndRemoveRows: Story = {
   },
 };
 
-// 하루 기록 화면처럼 날짜가 정해진 곳에서는 날짜 칸이 없다
+// 하루 기록 화면처럼 날짜가 정해진 곳에서는 날짜 칸 없음
 export const FixedDate: Story = {
   args: { fixedDate: true },
   play: async ({ canvasElement }) => {

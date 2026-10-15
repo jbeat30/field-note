@@ -80,7 +80,7 @@ export const CompanySettingsForm = () => {
   const choosePattern = (key: string) => {
     const found = WORK_PATTERNS.find((item) => item.key === key);
 
-    // 직접 입력을 고르면 지금 값을 그대로 두고 고칠 수 있게 한다
+    // 직접 입력을 고르면 현재 값을 그대로 두고 수정 가능
     if (found) setValue('monthlyWorkDays', found.days, { shouldDirty: true, shouldValidate: true });
   };
 

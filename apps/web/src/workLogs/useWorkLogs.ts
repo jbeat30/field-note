@@ -53,7 +53,7 @@ export const readWorkLog = (queryClient: QueryClient, projectId: string, workDat
     staleTime: 0,
   });
 
-// 저장은 서버가 확인한 뒤에만 반영 (낙관적 업데이트 없음). 충돌·검증 오류는 호출한 쪽이 화면에 보여 줌
+// 저장은 서버가 확인한 뒤에만 반영 (낙관적 업데이트 없음), 충돌·검증 오류는 호출한 쪽이 화면에 보여 줌
 export const useSaveWorkLog = (projectId: string) => {
   const queryClient = useQueryClient();
 
@@ -73,7 +73,7 @@ export const useSaveWorkLog = (projectId: string) => {
     onSuccess: (saved) => {
       queryClient.setQueryData(queryKeys.workLog(projectId, saved.workDate), saved);
 
-      // 목록·수정 이력과 (자동으로 추가된) 투입·다른 작업 내역의 하루 합계 경고를 다시 읽는다
+      // 목록·수정 이력과 (자동으로 추가된) 투입·다른 작업 내역의 하루 합계 경고 재조회
       return Promise.all([
         queryClient.invalidateQueries({ queryKey: ['work-logs', 'list'] }),
         queryClient.invalidateQueries({

@@ -19,7 +19,7 @@ type Helpers = {
 
 const MOCK_USER_ID = '0198d000-0000-7000-8000-000000000001';
 
-// 목업 저장소: 회사별 감사 기록 (새로고침하면 초기화). 실제 서버는 각 기능이 기록을 남기고 이 화면은 읽기만 한다
+// 목업 저장소: 회사별 감사 기록 (새로고침하면 초기화), 실제 서버는 각 기능이 기록을 남기고 이 화면은 읽기 전용
 const stores = new Map<string, AuditLog[]>();
 
 export const resetMockAudit = () => stores.clear();
