@@ -995,10 +995,9 @@ model MaterialRecord {
 // 작업자료 분류 (서비스 기획서 §12.3)
 enum DocumentCategory {
   DRAWING
-  SPEC
-  WORK_ORDER
   CONTRACT
   SAFETY
+  QUOTE
   OTHER
 
   @@map("document_category")

@@ -271,7 +271,7 @@ describe('문서 만들기', () => {
     expect(detail!.versions).toHaveLength(1);
   });
 
-  it('계약·행정 분류는 기본적으로 민감 자료이고 직접 바꿀 수 있다', async () => {
+  it('계약·공문 분류는 기본적으로 민감 자료이고 직접 바꿀 수 있다', async () => {
     const s = await setup();
 
     expect((await doc(s, { category: 'CONTRACT' })).detail!.isSensitive).toBe(true);
@@ -440,7 +440,7 @@ describe('버전 관리', () => {
 describe('문서함 조회·수정', () => {
   it('고정한 문서가 먼저 나오고 분류·이름으로 거를 수 있다', async () => {
     const s = await setup();
-    const a = await doc(s, { title: '시방서 A', category: 'SPEC' });
+    const a = await doc(s, { title: '시방서 A', category: 'QUOTE' });
     const b = await doc(s, { title: '시공도 B', category: 'DRAWING' });
     const c = await doc(s, { title: '시공도 C', category: 'DRAWING' });
     const ids = async (query = '') =>

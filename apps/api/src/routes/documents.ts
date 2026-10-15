@@ -52,7 +52,7 @@ export const registerDocumentRoutes = (registry: RouteRegistry, documents?: Docu
       method: 'post',
       path: '/projects/{projectId}/documents',
       summary:
-        '올린 파일로 문서 만들기 (첫 버전, 계약·행정은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서)',
+        '올린 파일로 문서 만들기 (첫 버전, 계약·공문은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서)',
       auth: 'required',
       request: { params: projectFileParamsSchema, body: documentCreateSchema },
       response: { status: 201, schema: documentDetailSchema },

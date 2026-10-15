@@ -18173,10 +18173,9 @@
                             "type": "string",
                             "enum": [
                               "DRAWING",
-                              "SPEC",
-                              "WORK_ORDER",
                               "CONTRACT",
                               "SAFETY",
+                              "QUOTE",
                               "OTHER"
                             ]
                           },
@@ -18851,10 +18850,9 @@
                             "type": "string",
                             "enum": [
                               "DRAWING",
-                              "SPEC",
-                              "WORK_ORDER",
                               "CONTRACT",
                               "SAFETY",
+                              "QUOTE",
                               "OTHER"
                             ]
                           },
@@ -19269,10 +19267,9 @@
                             "type": "string",
                             "enum": [
                               "DRAWING",
-                              "SPEC",
-                              "WORK_ORDER",
                               "CONTRACT",
                               "SAFETY",
+                              "QUOTE",
                               "OTHER"
                             ]
                           },
@@ -19695,10 +19692,9 @@
                             "type": "string",
                             "enum": [
                               "DRAWING",
-                              "SPEC",
-                              "WORK_ORDER",
                               "CONTRACT",
                               "SAFETY",
+                              "QUOTE",
                               "OTHER"
                             ]
                           },
@@ -20108,10 +20104,9 @@
                             "type": "string",
                             "enum": [
                               "DRAWING",
-                              "SPEC",
-                              "WORK_ORDER",
                               "CONTRACT",
                               "SAFETY",
+                              "QUOTE",
                               "OTHER"
                             ]
                           },
@@ -20519,10 +20514,9 @@
                             "type": "string",
                             "enum": [
                               "DRAWING",
-                              "SPEC",
-                              "WORK_ORDER",
                               "CONTRACT",
                               "SAFETY",
+                              "QUOTE",
                               "OTHER"
                             ]
                           },
@@ -31408,10 +31402,9 @@
                                 "type": "string",
                                 "enum": [
                                   "DRAWING",
-                                  "SPEC",
-                                  "WORK_ORDER",
                                   "CONTRACT",
                                   "SAFETY",
+                                  "QUOTE",
                                   "OTHER"
                                 ]
                               },
@@ -41421,7 +41414,7 @@
     },
     "/api/v1/projects/{projectId}/documents": {
       "post": {
-        "summary": "올린 파일로 문서 만들기 (첫 버전, 계약·행정은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서)",
+        "summary": "올린 파일로 문서 만들기 (첫 버전, 계약·공문은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서)",
         "security": [
           {
             "sessionCookie": []
@@ -41458,10 +41451,9 @@
                     "type": "string",
                     "enum": [
                       "DRAWING",
-                      "SPEC",
-                      "WORK_ORDER",
                       "CONTRACT",
                       "SAFETY",
+                      "QUOTE",
                       "OTHER"
                     ],
                     "default": "OTHER"
@@ -41507,10 +41499,9 @@
                       "type": "string",
                       "enum": [
                         "DRAWING",
-                        "SPEC",
-                        "WORK_ORDER",
                         "CONTRACT",
                         "SAFETY",
+                        "QUOTE",
                         "OTHER"
                       ]
                     },
@@ -41939,10 +41930,9 @@
               "type": "string",
               "enum": [
                 "DRAWING",
-                "SPEC",
-                "WORK_ORDER",
                 "CONTRACT",
                 "SAFETY",
+                "QUOTE",
                 "OTHER"
               ]
             },
@@ -41997,10 +41987,9 @@
                             "type": "string",
                             "enum": [
                               "DRAWING",
-                              "SPEC",
-                              "WORK_ORDER",
                               "CONTRACT",
                               "SAFETY",
+                              "QUOTE",
                               "OTHER"
                             ]
                           },
@@ -42375,10 +42364,9 @@
                       "type": "string",
                       "enum": [
                         "DRAWING",
-                        "SPEC",
-                        "WORK_ORDER",
                         "CONTRACT",
                         "SAFETY",
+                        "QUOTE",
                         "OTHER"
                       ]
                     },
@@ -42819,10 +42807,9 @@
                     "type": "string",
                     "enum": [
                       "DRAWING",
-                      "SPEC",
-                      "WORK_ORDER",
                       "CONTRACT",
                       "SAFETY",
+                      "QUOTE",
                       "OTHER"
                     ]
                   },
@@ -42857,10 +42844,9 @@
                       "type": "string",
                       "enum": [
                         "DRAWING",
-                        "SPEC",
-                        "WORK_ORDER",
                         "CONTRACT",
                         "SAFETY",
+                        "QUOTE",
                         "OTHER"
                       ]
                     },
@@ -43584,10 +43570,9 @@
                       "type": "string",
                       "enum": [
                         "DRAWING",
-                        "SPEC",
-                        "WORK_ORDER",
                         "CONTRACT",
                         "SAFETY",
+                        "QUOTE",
                         "OTHER"
                       ]
                     },

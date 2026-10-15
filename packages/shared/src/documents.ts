@@ -4,39 +4,30 @@ import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
 // 작업자료 문서함 (서비스 기획서 §12.3). 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 모은다.
 // 파일은 덮어쓰지 않고 새 버전으로 추가하며(최신본이 기본, 이전본 보존), 민감 자료는 열람·다운로드를 감사 기록으로 남긴다 (§7.3, §13.1)
-export const DOCUMENT_CATEGORIES = [
-  'DRAWING',
-  'SPEC',
-  'WORK_ORDER',
-  'CONTRACT',
-  'SAFETY',
-  'OTHER',
-] as const;
+export const DOCUMENT_CATEGORIES = ['DRAWING', 'CONTRACT', 'SAFETY', 'QUOTE', 'OTHER'] as const;
 
 export const documentCategorySchema = z.enum(DOCUMENT_CATEGORIES);
 
 export type DocumentCategory = z.infer<typeof documentCategorySchema>;
 
 export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
-  DRAWING: '도면',
-  SPEC: '시방·사양',
-  WORK_ORDER: '작업지시',
-  CONTRACT: '계약·행정',
+  DRAWING: '도면·작업지시서',
+  CONTRACT: '계약·공문',
   SAFETY: '안전·검사',
+  QUOTE: '견적·정산',
   OTHER: '기타',
 };
 
 export const DOCUMENT_CATEGORY_HINTS: Record<DocumentCategory, string> = {
-  DRAWING: '시공도, 가공도, 평면도',
-  SPEC: '시방서, 자재 사양서',
-  WORK_ORDER: '작업지시서, 작업 순서, 현장 유의사항',
+  DRAWING: '시공도, 가공도, 시방서, 작업지시서',
   CONTRACT: '계약서, 변경 합의서, 공문',
   SAFETY: '안전 점검표, 검사·확인서, 준공 서류',
+  QUOTE: '견적서, 정산서, 거래명세서',
   OTHER: '',
 };
 
 /**
- * @description 분류별 민감 자료 기본값: 계약·행정은 기본적으로 민감 자료 (서비스 기획서 §12.3). 직접 정하면 그 값을 쓴다
+ * @description 분류별 민감 자료 기본값: 계약·공문은 기본적으로 민감 자료 (서비스 기획서 §12.3). 직접 정하면 그 값을 쓴다
  * @param category 문서 분류
  * @param explicit 사용자가 직접 정한 값 (없으면 분류 기본값)
  * @returns 민감 자료 여부

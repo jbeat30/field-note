@@ -6,6 +6,7 @@ import {
   todayInSeoul,
   type DocumentCategory,
 } from '@field-note/shared';
+import { FileUp } from 'lucide-react';
 import { useRef, useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
@@ -15,6 +16,7 @@ import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { getErrorDetailMessage } from '../lib/apiError';
+import { cn } from '../lib/cn';
 
 import { DOCUMENT_ACCEPT, titleFromFileName } from './documentFile';
 import { DocumentUploadError } from './uploadDocument';
@@ -36,7 +38,7 @@ type DocumentUploadFormProps = {
   onSubmit: (values: DocumentFormValues, onProgress: (ratio: number) => void) => Promise<void>;
 };
 
-// 문서 올리기: 파일을 고르고 이름·분류를 정한다. 계약·행정은 민감 자료가 기본으로 켜지고 직접 바꿀 수 있다
+// 문서 올리기: 파일을 고르고 이름·분류를 정한다. 계약·공문은 민감 자료가 기본으로 켜지고 직접 바꿀 수 있다
 export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) => {
   const today = todayInSeoul(new Date());
   const inputRef = useRef<HTMLInputElement>(null);
@@ -51,16 +53,22 @@ export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) 
   const [reason, setReason] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [progress, setProgress] = useState<number | null>(null);
+  const [isDragging, setIsDragging] = useState(false);
 
   const isSensitive = sensitiveOverride ?? resolveSensitive(category);
   const isBusy = progress !== null;
 
-  const pick = (event: React.ChangeEvent<HTMLInputElement>) => {
-    const picked = event.target.files?.[0] ?? null;
-
+  const choose = (picked: File | null) => {
     setFile(picked);
     // 새 문서일 때 이름을 직접 고치기 전이면 파일 이름을 제안
     if (picked && mode === 'create' && !isTitleEdited) setTitle(titleFromFileName(picked.name));
+  };
+
+  const drop = (event: React.DragEvent) => {
+    event.preventDefault();
+    setIsDragging(false);
+
+    if (!isBusy) choose(event.dataTransfer.files[0] ?? null);
   };
 
   const submit = async (event: React.FormEvent) => {
@@ -106,16 +114,46 @@ export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) 
 
   return (
     <form className="flex flex-col gap-3" onSubmit={submit} noValidate>
-      <FormField label={mode === 'create' ? '문서 파일' : '새 버전 파일'}>
+      <div
+        onDragOver={(event) => {
+          event.preventDefault();
+          setIsDragging(true);
+        }}
+        onDragLeave={() => setIsDragging(false)}
+        onDrop={drop}
+        className={cn(
+          'flex flex-col items-center gap-2 rounded-xl border-2 border-dashed px-4 py-6 text-center transition-colors',
+          isDragging ? 'border-primary bg-primary-subtle' : 'border-control-border bg-surface',
+        )}
+      >
+        <FileUp aria-hidden className="size-6 text-foreground/55" />
+        {file ? (
+          <p className="text-sm font-semibold break-all">{file.name}</p>
+        ) : (
+          <p className="text-sm text-foreground/70">
+            {mode === 'create' ? '문서 파일을' : '새 버전 파일을'} 여기에 끌어 놓으세요 (PDF·이미지)
+          </p>
+        )}
+        <Button
+          type="button"
+          size="sm"
+          variant="secondary"
+          disabled={isBusy}
+          onClick={() => inputRef.current?.click()}
+        >
+          {file ? '다른 파일 고르기' : '파일 고르기'}
+        </Button>
         <input
           ref={inputRef}
           type="file"
           accept={DOCUMENT_ACCEPT}
           disabled={isBusy}
-          className="min-h-touch w-full text-base file:mr-3 file:min-h-touch file:rounded-md file:border-0 file:bg-muted file:px-4 file:text-base"
-          onChange={pick}
+          aria-label={mode === 'create' ? '문서 파일' : '새 버전 파일'}
+          className="sr-only"
+          tabIndex={-1}
+          onChange={(event) => choose(event.target.files?.[0] ?? null)}
         />
-      </FormField>
+      </div>
       {mode === 'create' && (
         <>
           <FormField label="문서 이름">

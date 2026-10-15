@@ -146,7 +146,7 @@ const seed = (account: MockAccount) => {
     addDocument(account, project.id, {
       id: seedDocumentId(project.id, 2),
       title: '외장 판금 시방서',
-      category: 'SPEC',
+      category: 'DRAWING',
       versions: [{ name: '시방서.pdf', date: '2026-09-10' }],
     });
   }

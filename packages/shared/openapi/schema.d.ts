@@ -6404,7 +6404,7 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
                                 /** Format: date-time */
                                 linkedAt: string;
@@ -6645,7 +6645,7 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
                                 /** Format: date-time */
                                 linkedAt: string;
@@ -6782,7 +6782,7 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
                                 /** Format: date-time */
                                 linkedAt: string;
@@ -6926,7 +6926,7 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
                                 /** Format: date-time */
                                 linkedAt: string;
@@ -7071,7 +7071,7 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
                                 /** Format: date-time */
                                 linkedAt: string;
@@ -7212,7 +7212,7 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
                                 /** Format: date-time */
                                 linkedAt: string;
@@ -10793,7 +10793,7 @@ export interface paths {
                                     id: string;
                                     title: string;
                                     /** @enum {string} */
-                                    category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                    category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                     versionCount: number;
                                     /** Format: date */
                                     latestRevisionDate: string;
@@ -14137,7 +14137,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    category?: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                    category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                     q?: string;
                     pinned?: "true" | "false";
                 };
@@ -14162,7 +14162,7 @@ export interface paths {
                                 /** Format: uuid */
                                 projectId: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 title: string;
                                 isSensitive: boolean;
                                 isPinned: boolean;
@@ -14256,7 +14256,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** 올린 파일로 문서 만들기 (첫 버전, 계약·행정은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서) */
+        /** 올린 파일로 문서 만들기 (첫 버전, 계약·공문은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서) */
         post: {
             parameters: {
                 query?: never;
@@ -14276,7 +14276,7 @@ export interface paths {
                          * @default OTHER
                          * @enum {string}
                          */
-                        category?: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                        category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                         isSensitive?: boolean;
                         /** Format: date */
                         revisionDate?: string;
@@ -14297,7 +14297,7 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
@@ -14445,7 +14445,7 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
@@ -14658,7 +14658,7 @@ export interface paths {
                     "application/json": {
                         title?: string;
                         /** @enum {string} */
-                        category?: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                        category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                         isSensitive?: boolean;
                         isPinned?: boolean;
                     };
@@ -14677,7 +14677,7 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
@@ -14833,7 +14833,7 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
