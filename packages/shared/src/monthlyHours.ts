@@ -62,7 +62,7 @@ export const monthlyCloseEventSchema = z.object({
   // 그때의 임시 저장 작업 내역 건수 (확정 시 확인한 건수)
   draftLogCount: z.number().int(),
   standardWorkMinutes: z.number().int(),
-  monthlyWorkDays: z.number().int(),
+  monthlyWorkDays: z.number(),
   createdAt: z.iso.datetime(),
 });
 
@@ -74,7 +74,7 @@ export const monthlyHoursSchema = z.object({
   closedAt: z.iso.datetime().nullable(),
   // 확정된 달은 확정 당시의 값, 아니면 현재 회사 설정 값
   standardWorkMinutes: z.number().int(),
-  monthlyWorkDays: z.number().int(),
+  monthlyWorkDays: z.number(),
   workUnitMode: workUnitModeSchema,
   // 그달의 임시 저장 작업 내역 (집계에는 저장된 작업 내역만 반영되므로 확정 전에 정리). 최대 50건까지 보여 주고 전체 건수를 따로 준다
   draftLogCount: z.number().int(),

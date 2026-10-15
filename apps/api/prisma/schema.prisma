@@ -610,7 +610,7 @@ model CompanySettings {
   // 하루 기준시간(분). 공수 1.0에 해당
   standardWorkMinutes Int          @default(480) @map("standard_work_minutes")
   // MM(맨먼스) 계산에 쓰는 월 기준일수
-  monthlyWorkDays     Int          @default(22) @map("monthly_work_days")
+  monthlyWorkDays     Float        @default(26) @map("monthly_work_days")
   workUnitMode        WorkUnitMode @default(RATIO) @map("work_unit_mode")
   createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -1346,7 +1346,7 @@ model MonthlyClose {
   month               DateTime  @db.Date
   isClosed            Boolean   @map("is_closed")
   standardWorkMinutes Int       @map("standard_work_minutes")
-  monthlyWorkDays     Int       @map("monthly_work_days")
+  monthlyWorkDays     Float     @map("monthly_work_days")
   closedAt            DateTime? @map("closed_at") @db.Timestamptz(3)
   closedBy            String?   @map("closed_by") @db.Uuid
   updatedAt           DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
@@ -1367,7 +1367,7 @@ model MonthlyCloseEvent {
   // 그때의 임시 저장 일지 건수 (확정할 때 확인한 건수)
   draftLogCount       Int              @map("draft_log_count")
   standardWorkMinutes Int              @map("standard_work_minutes")
-  monthlyWorkDays     Int              @map("monthly_work_days")
+  monthlyWorkDays     Float            @map("monthly_work_days")
   createdBy           String           @map("created_by") @db.Uuid
   createdAt           DateTime         @default(now()) @map("created_at") @db.Timestamptz(3)
   company             Company          @relation(fields: [companyId], references: [id])

@@ -164,7 +164,7 @@ export const projectCompletionSummarySchema = z.object({
   settings: z.object({
     workUnitMode: workUnitModeSchema,
     standardWorkMinutes: z.number().int(),
-    monthlyWorkDays: z.number().int(),
+    monthlyWorkDays: z.number(),
   }),
   work: z.object({
     totalMinutes: z.number().int(),

@@ -29,7 +29,9 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByDisplayValue('8')).toBeInTheDocument();
-    await expect(canvas.getByLabelText(/월 기준일수/)).toHaveValue(22);
+    await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(22);
+    // 22일은 근무 형태 표준값이 아니라 직접 입력으로 보인다
+    await expect(canvas.getByRole('radio', { name: /직접 입력/ })).toBeChecked();
     await expect(canvas.getByRole('radio', { name: /비율/ })).toBeChecked();
     // 변경하기 전에는 저장할 수 없음
     await expect(canvas.getByRole('button', { name: '저장' })).toBeDisabled();
@@ -40,7 +42,7 @@ export const SaveSettings: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const hours = await canvas.findByLabelText(/하루 기준시간/);
+    const hours = await canvas.findByLabelText('하루 기준시간 (시간)');
 
     await userEvent.clear(hours);
     await userEvent.type(hours, '7.5');
@@ -52,20 +54,47 @@ export const SaveSettings: Story = {
   },
 };
 
+// 근무 형태를 고르면 표준값이 채워지고 소수 첫째 자리까지 저장된다
+export const PickWorkPattern: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByLabelText('월 기준일수 (일)');
+    await userEvent.click(canvas.getByRole('radio', { name: /주 5일 21.7일/ }));
+    await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(21.7);
+    await expect(canvas.getByText(/이 값이면 1MM = 21.7일/)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+
+    await expect(await canvas.findByText('저장했습니다')).toBeInTheDocument();
+    await expect(canvas.getByRole('radio', { name: /주 5일 21.7일/ })).toBeChecked();
+
+    await userEvent.click(canvas.getByRole('button', { name: '표준값(26일)으로' }));
+    await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(26);
+    await expect(canvas.getByRole('radio', { name: /주 6일 26일/ })).toBeChecked();
+  },
+};
+
 export const InvalidInput: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const hours = await canvas.findByLabelText(/하루 기준시간/);
+    const hours = await canvas.findByLabelText('하루 기준시간 (시간)');
 
     await userEvent.clear(hours);
     await userEvent.type(hours, '7.3');
-    await userEvent.clear(canvas.getByLabelText(/월 기준일수/));
-    await userEvent.type(canvas.getByLabelText(/월 기준일수/), '40');
+    await userEvent.clear(canvas.getByLabelText('월 기준일수 (일)'));
+    await userEvent.type(canvas.getByLabelText('월 기준일수 (일)'), '40');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('0.5시간 단위로 입력해 주세요')).toBeInTheDocument();
     await expect(canvas.getByText('31일 이하로 입력해 주세요')).toBeInTheDocument();
+
+    // 소수 둘째 자리는 받지 않는다
+    await userEvent.clear(canvas.getByLabelText('월 기준일수 (일)'));
+    await userEvent.type(canvas.getByLabelText('월 기준일수 (일)'), '21.75');
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+    await expect(await canvas.findByText('소수 첫째 자리까지 입력해 주세요')).toBeInTheDocument();
   },
 };
 

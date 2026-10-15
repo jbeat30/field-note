@@ -1917,7 +1917,7 @@
                       "maximum": 960
                     },
                     "monthlyWorkDays": {
-                      "type": "integer",
+                      "type": "number",
                       "minimum": 1,
                       "maximum": 31
                     },
@@ -2029,7 +2029,7 @@
                     "maximum": 960
                   },
                   "monthlyWorkDays": {
-                    "type": "integer",
+                    "type": "number",
                     "minimum": 1,
                     "maximum": 31
                   },
@@ -2064,7 +2064,7 @@
                       "maximum": 960
                     },
                     "monthlyWorkDays": {
-                      "type": "integer",
+                      "type": "number",
                       "minimum": 1,
                       "maximum": 31
                     },
@@ -29957,7 +29957,7 @@
                       "type": "integer"
                     },
                     "monthlyWorkDays": {
-                      "type": "integer"
+                      "type": "number"
                     },
                     "workUnitMode": {
                       "type": "string",
@@ -30058,7 +30058,7 @@
                             "type": "integer"
                           },
                           "monthlyWorkDays": {
-                            "type": "integer"
+                            "type": "number"
                           },
                           "createdAt": {
                             "type": "string",
@@ -30290,7 +30290,7 @@
                       "type": "integer"
                     },
                     "monthlyWorkDays": {
-                      "type": "integer"
+                      "type": "number"
                     },
                     "workUnitMode": {
                       "type": "string",
@@ -30391,7 +30391,7 @@
                             "type": "integer"
                           },
                           "monthlyWorkDays": {
-                            "type": "integer"
+                            "type": "number"
                           },
                           "createdAt": {
                             "type": "string",
@@ -30626,7 +30626,7 @@
                       "type": "integer"
                     },
                     "monthlyWorkDays": {
-                      "type": "integer"
+                      "type": "number"
                     },
                     "workUnitMode": {
                       "type": "string",
@@ -30727,7 +30727,7 @@
                             "type": "integer"
                           },
                           "monthlyWorkDays": {
-                            "type": "integer"
+                            "type": "number"
                           },
                           "createdAt": {
                             "type": "string",
@@ -31642,7 +31642,7 @@
                           "type": "integer"
                         },
                         "monthlyWorkDays": {
-                          "type": "integer"
+                          "type": "number"
                         }
                       },
                       "required": [
