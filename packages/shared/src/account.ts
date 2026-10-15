@@ -110,16 +110,45 @@ export const passwordChangeSchema = z.object({
 
 export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 
-// 이메일 변경: 비밀번호를 다시 확인하고 새 이메일의 인증 코드를 확인해야 반영 (§6.7)
+// 소셜 로그인만 쓰는 계정이 아이디·비밀번호 로그인을 처음 설정 (이미 소셜 로그인으로 본인이 확인된 상태라 현재 비밀번호는 없음)
+export const passwordSetSchema = z.object({
+  loginId: loginIdSchema,
+  newPassword: passwordSchema,
+});
+
+export type PasswordSet = z.infer<typeof passwordSetSchema>;
+
+// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 이메일의 인증 코드를 확인해야 반영 (§6.7)
+// 소셜 로그인만 쓰는 계정은 확인할 비밀번호가 없어 생략하고, 소셜 가입 직후 이메일 등록에도 같은 요청을 씀
 export const emailChangeSchema = z.object({
   newEmail: z.email().max(254),
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().min(1).optional(),
 });
 
 export type EmailChange = z.infer<typeof emailChangeSchema>;
 
 // 소셜 로그인 (§6.1): 제공자는 서버 설정에 따라 켜지고, 시작 요청은 로그인 화면 주소를 돌려줌
-export const socialProvidersResponseSchema = z.object({ kakao: z.boolean() });
+export const SOCIAL_PROVIDER_KEYS = ['kakao', 'naver', 'google'] as const;
+
+export const socialProviderSchema = z.enum(SOCIAL_PROVIDER_KEYS);
+
+export type SocialProviderKey = z.infer<typeof socialProviderSchema>;
+
+export const SOCIAL_PROVIDER_LABELS: Record<SocialProviderKey, string> = {
+  kakao: '카카오',
+  naver: '네이버',
+  google: '구글',
+};
+
+export const socialProviderParamsSchema = z.object({ provider: socialProviderSchema });
+
+export const socialProvidersResponseSchema = z.object({
+  kakao: z.boolean(),
+  naver: z.boolean(),
+  google: z.boolean(),
+});
+
+export type SocialProvidersResponse = z.infer<typeof socialProvidersResponseSchema>;
 
 export const socialStartRequestSchema = z.discriminatedUnion('purpose', [
   z.object({ purpose: z.literal('login') }),
@@ -149,7 +178,6 @@ export const SOCIAL_RESULTS = [
   'failed',
   'not-linked',
   'already-linked',
-  'email-required',
   'email-taken',
   'invitation-invalid',
   'closing',
@@ -161,6 +189,8 @@ export const socialMethodsResponseSchema = z.object({
   // 아이디·비밀번호 로그인 설정 여부 (없으면 소셜 연동을 해제할 수 없음)
   hasPassword: z.boolean(),
   kakao: z.object({ isLinked: z.boolean() }),
+  naver: z.object({ isLinked: z.boolean() }),
+  google: z.object({ isLinked: z.boolean() }),
 });
 
 export type SocialMethodsResponse = z.infer<typeof socialMethodsResponseSchema>;

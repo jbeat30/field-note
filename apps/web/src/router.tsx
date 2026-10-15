@@ -41,12 +41,12 @@ export const routes = [
         path: '/closure/requested',
         ...page(() => import('./routes/ClosureRequestedPage'), 'ClosureRequestedPage'),
       },
-      // 목업 모드에서만 존재하는 가짜 카카오 로그인 화면
+      // 목업 모드에서만 존재하는 가짜 소셜 로그인 화면
       ...(env.isMockApi
         ? [
             {
-              path: '/mock-kakao',
-              ...page(() => import('./routes/MockKakaoPage'), 'MockKakaoPage'),
+              path: '/mock-social',
+              ...page(() => import('./routes/MockSocialPage'), 'MockSocialPage'),
             },
           ]
         : []),

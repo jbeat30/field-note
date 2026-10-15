@@ -109,26 +109,16 @@ export const SignupSuccess: Story = {
   },
 };
 
-export const KakaoSignupOption: Story = {
+export const SocialSignupOptions: Story = {
   play: async ({ canvasElement }) => {
     const canvas = await goToAccountStep(canvasElement);
 
     await expect(await canvas.findByRole('button', { name: '카카오로 가입' })).toBeInTheDocument();
-    await expect(canvas.getByText(/인증된 이메일이 있는 카카오 계정만/)).toBeInTheDocument();
-  },
-};
-
-export const KakaoEmailRequired: Story = {
-  parameters: {
-    router: {
-      initialEntries: ['/invite/demo-invite-0001?social=email-required'],
-      path: '/invite/:token',
-    },
-  },
-  play: async ({ canvasElement }) => {
-    await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent(
-      '인증된 이메일이 없는 카카오 계정',
-    );
+    await expect(canvas.getByRole('button', { name: '구글로 가입' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '네이버로 가입' })).toBeInTheDocument();
+    await expect(
+      canvas.getByText(/이메일 등록과 아이디·비밀번호 설정은 가입 뒤에/),
+    ).toBeInTheDocument();
   },
 };
 

@@ -1,12 +1,12 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, userEvent, waitFor, within } from 'storybook/test';
+import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import {
   addAccount,
   findAccount,
   getCurrentAccount,
   getRules,
-  setKakaoProfile,
+  setSocialProfile,
   signIn,
 } from '../mocks/state';
 
@@ -324,27 +324,63 @@ export const ChangeEmailWrongCode: Story = {
   },
 };
 
-const kakaoSection = async (canvas: ReturnType<typeof within>) =>
+const socialSection = async (canvas: ReturnType<typeof within>) =>
   within(await canvas.findByRole('region', { name: '소셜 로그인' }));
 
 export const SocialNotLinked: Story = {
   play: async ({ canvasElement }) => {
-    const section = await kakaoSection(within(canvasElement));
+    const section = await socialSection(within(canvasElement));
 
-    await expect(await section.findByText('연동하지 않음')).toBeInTheDocument();
+    await expect(await section.findAllByText('연동하지 않음')).toHaveLength(3);
     await expect(section.getByRole('button', { name: '카카오 연동' })).toBeEnabled();
   },
 };
 
-export const SocialLinkedAndUnlink: Story = {
-  loaders: [() => setKakaoProfile(findAccount('hanbit')!, 'hanbit')],
+export const SocialProvidersListed: Story = {
   play: async ({ canvasElement }) => {
-    const section = await kakaoSection(within(canvasElement));
+    const section = await socialSection(within(canvasElement));
+
+    for (const name of ['카카오', '네이버', '구글']) {
+      await expect(await section.findByRole('button', { name: `${name} 연동` })).toBeEnabled();
+    }
+  },
+};
+
+// 소셜 계정이 둘이면 하나를 해제해도 로그인 수단이 남음
+export const SocialOnlyWithTwoCanUnlinkOne: Story = {
+  loaders: [
+    () => {
+      addAccount({
+        loginId: 'two-social',
+        password: '',
+        hasPassword: false,
+        socialProfiles: { kakao: 'other', google: 'other' },
+        displayName: '소셜 두 개',
+        email: 'social-other@example.com',
+        isEmailVerified: true,
+        companyName: '미래설비',
+        settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
+      });
+      signIn('two-social');
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const section = await socialSection(within(canvasElement));
+
+    await expect(await section.findByRole('button', { name: '카카오 연동 해제' })).toBeEnabled();
+    await expect(section.getByRole('button', { name: '구글 연동 해제' })).toBeEnabled();
+  },
+};
+
+export const SocialLinkedAndUnlink: Story = {
+  loaders: [() => setSocialProfile(findAccount('hanbit')!, 'kakao', 'hanbit')],
+  play: async ({ canvasElement }) => {
+    const section = await socialSection(within(canvasElement));
 
     await expect(await section.findByText('연동됨')).toBeInTheDocument();
     await userEvent.click(section.getByRole('button', { name: '카카오 연동 해제' }));
 
-    await expect(await section.findByText('연동하지 않음')).toBeInTheDocument();
+    await waitFor(() => expect(section.getAllByText('연동하지 않음')).toHaveLength(3));
   },
 };
 
@@ -353,33 +389,76 @@ export const SocialOnlyCannotUnlink: Story = {
   loaders: [
     () => {
       addAccount({
-        loginId: 'kakao-only',
+        loginId: 'social-only',
         password: '',
         hasPassword: false,
-        kakaoProfileKey: 'other',
-        displayName: '카카오 전용',
-        email: 'kakao-other@example.com',
+        socialProfiles: { kakao: 'other' },
+        displayName: '소셜 전용',
+        email: 'social-other@example.com',
         isEmailVerified: true,
         companyName: '미래설비',
         settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
       });
-      signIn('kakao-only');
+      signIn('social-only');
     },
   ],
   play: async ({ canvasElement }) => {
-    const section = await kakaoSection(within(canvasElement));
+    const section = await socialSection(within(canvasElement));
 
     await expect(await section.findByRole('button', { name: '카카오 연동 해제' })).toBeDisabled();
     await expect(section.getByText(/로그인 수단이 하나는 남아 있어야/)).toBeInTheDocument();
   },
 };
 
+// 소셜 로그인만 쓰는 계정은 현재 비밀번호 없이 아이디·비밀번호를 설정하고, 이후 비밀번호 변경으로 바뀜
+export const SocialOnlySetsPassword: Story = {
+  loaders: [
+    () => {
+      addAccount({
+        loginId: 'social-setter',
+        password: '',
+        hasPassword: false,
+        socialProfiles: { kakao: 'other' },
+        displayName: '소셜 설정',
+        email: 'social-other@example.com',
+        isEmailVerified: true,
+        companyName: '미래설비',
+        settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
+      });
+      signIn('social-setter');
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '아이디·비밀번호 설정하기' }));
+
+    const dialog = within(
+      await within(document.body).findByRole('dialog', { name: '아이디·비밀번호 설정' }),
+    );
+
+    await userEvent.type(dialog.getByLabelText('아이디'), 'social-setter-id');
+    await userEvent.type(
+      dialog.getByLabelText('비밀번호', { selector: 'input' }),
+      'Setter-2026-pass!',
+    );
+    await userEvent.type(dialog.getByLabelText('비밀번호 확인'), 'Setter-2026-pass!');
+    await userEvent.click(dialog.getByRole('button', { name: '아이디·비밀번호 설정' }));
+
+    await expect(await dialog.findByText(/아이디와 비밀번호를 설정했습니다/)).toBeInTheDocument();
+    await userEvent.click(dialog.getByRole('button', { name: '완료' }));
+    await expect(
+      await canvas.findByRole('button', { name: '비밀번호 변경하기' }),
+    ).toBeInTheDocument();
+  },
+};
+
 export const SocialLinkedNotice: Story = {
   parameters: { router: { initialEntries: ['/settings?social=linked'], path: '/settings' } },
   play: async ({ canvasElement }) => {
-    const section = await kakaoSection(within(canvasElement));
+    const section = await socialSection(within(canvasElement));
 
-    await expect(await section.findByText('카카오 계정을 연동했습니다')).toBeInTheDocument();
+    await expect(await section.findByText('소셜 계정을 연동했습니다')).toBeInTheDocument();
   },
 };
 
@@ -388,10 +467,10 @@ export const SocialAlreadyLinkedNotice: Story = {
     router: { initialEntries: ['/settings?social=already-linked'], path: '/settings' },
   },
   play: async ({ canvasElement }) => {
-    const section = await kakaoSection(within(canvasElement));
+    const section = await socialSection(within(canvasElement));
 
     await expect(
-      await section.findByText('이미 다른 계정에 연동된 카카오 계정입니다'),
+      await section.findByText('이미 다른 계정에 연동된 소셜 계정입니다'),
     ).toBeInTheDocument();
   },
 };
@@ -536,6 +615,50 @@ export const CompanyRulesInvalid: Story = {
 
     await expect(
       await canvas.findByText('한도 기준은 경고 기준보다 커야 합니다'),
+    ).toBeInTheDocument();
+  },
+};
+
+// 저장 용량: 사용량과 한도, 용도별·프로젝트별 사용량 표시
+export const StorageUsage: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText(/사용 \(/)).toBeInTheDocument();
+    await expect(canvas.getByRole('progressbar', { name: '저장 용량 사용률' })).toBeInTheDocument();
+    await expect(canvas.getByText('프로젝트별 (큰 순)')).toBeInTheDocument();
+    await expect(canvas.getByText('사진')).toBeInTheDocument();
+  },
+};
+
+// 전체 데이터 내보내기: 비밀번호를 비우면 안내하고, 입력하면 파일 이름과 함께 완료 안내
+export const DataExport: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 실제 파일 저장 창을 열지 않도록 주소 만들기를 가로챔
+    URL.createObjectURL = fn(() => 'blob:mock');
+    URL.revokeObjectURL = fn();
+    HTMLAnchorElement.prototype.click = fn();
+
+    await userEvent.click(await canvas.findByRole('button', { name: '전체 데이터 내려받기' }));
+    await expect(await canvas.findByText('현재 비밀번호를 입력해 주세요')).toBeInTheDocument();
+
+    const field = canvas.getAllByLabelText('현재 비밀번호')[0]!;
+
+    await userEvent.type(field, 'wrong-password');
+    await userEvent.click(canvas.getByRole('button', { name: '전체 데이터 내려받기' }));
+    await waitFor(() =>
+      expect(canvas.queryByText(/파일을 내려받았습니다/)).not.toBeInTheDocument(),
+    );
+
+    await userEvent.clear(field);
+    await userEvent.type(field, 'Hanbit-demo-2026!');
+    await userEvent.click(await canvas.findByRole('button', { name: '전체 데이터 내려받기' }));
+    await expect(
+      await canvas.findByText(/전체데이터_.*\.xlsx 파일을 내려받았습니다/),
     ).toBeInTheDocument();
   },
 };

@@ -7,6 +7,8 @@ import { Button } from '../components/ui/button';
 import { PageHeader } from '../components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ClosureSection } from '../settings/ClosureSection';
+import { DataExportSection } from '../settings/DataExportSection';
+import { StorageSection } from '../settings/StorageSection';
 import { SocialLoginSection } from '../settings/SocialLoginSection';
 import { CompanyRulesForm } from '../settings/CompanyRulesForm';
 import { CompanySettingsForm } from '../settings/CompanySettingsForm';
@@ -129,6 +131,26 @@ export const SettingsPage = () => {
               </h2>
               <CompanyRulesForm />
             </section>
+            <div className="grid items-start gap-4 lg:grid-cols-2">
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                aria-labelledby="storage-heading"
+              >
+                <h2 id="storage-heading" className="text-lg font-bold">
+                  저장 용량
+                </h2>
+                <StorageSection />
+              </section>
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                aria-labelledby="export-heading"
+              >
+                <h2 id="export-heading" className="text-lg font-bold">
+                  데이터 내보내기
+                </h2>
+                <DataExportSection />
+              </section>
+            </div>
             <div className="grid items-start gap-4 lg:grid-cols-3">
               <section
                 className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"

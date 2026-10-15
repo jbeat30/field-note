@@ -1,4 +1,5 @@
 import {
+  SOCIAL_PROVIDER_KEYS,
   loginIdSchema,
   passwordSchema,
   type InvitationResponse,
@@ -12,9 +13,9 @@ import { Link, useNavigate, useParams } from 'react-router';
 import { z } from 'zod';
 
 import { apiClient } from '../api/client';
-import { KakaoButton } from '../auth/KakaoButton';
+import { SocialButton } from '../auth/SocialButton';
 import { SocialNotice } from '../auth/SocialNotice';
-import { useKakaoStart, useSocialProviders } from '../auth/useSocial';
+import { useSocialProviders, useSocialStart } from '../auth/useSocial';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -139,7 +140,8 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const providers = useSocialProviders();
-  const kakaoStart = useKakaoStart();
+  const socialStart = useSocialStart();
+  const signupProviders = SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider]);
   const {
     register,
     handleSubmit,
@@ -182,19 +184,26 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
       <h1 className="text-xl font-bold">계정 만들기</h1>
       {errors.root && <Alert>{errors.root.message}</Alert>}
-      {providers.data?.kakao && (
+      {signupProviders.length > 0 && (
         <>
-          <KakaoButton
-            disabled={kakaoStart.isPending}
-            onClick={() =>
-              kakaoStart.mutate({ purpose: 'signup', inviteToken, isAgeConfirmed: true, consents })
-            }
-          >
-            카카오로 가입
-          </KakaoButton>
-          {kakaoStart.isError && <Alert>{kakaoStart.error.message}</Alert>}
+          {signupProviders.map((provider) => (
+            <SocialButton
+              key={provider}
+              provider={provider}
+              action="가입"
+              disabled={socialStart.isPending}
+              onClick={() =>
+                socialStart.mutate({
+                  provider,
+                  body: { purpose: 'signup', inviteToken, isAgeConfirmed: true, consents },
+                })
+              }
+            />
+          ))}
+          {socialStart.isError && <Alert>{socialStart.error.message}</Alert>}
           <p className="text-center text-sm text-foreground/70">
-            또는 아이디로 가입 (인증된 이메일이 있는 카카오 계정만 가입할 수 있습니다)
+            또는 아이디로 가입 (소셜로 가입하면 이메일 등록과 아이디·비밀번호 설정은 가입 뒤에 할 수
+            있습니다)
           </p>
         </>
       )}

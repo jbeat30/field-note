@@ -16,6 +16,7 @@ import {
   type ProjectDetail,
   type ProjectPeriodChange,
   type ProjectStatusChange,
+  type SocialProviderKey,
   type WorkLogRevision,
 } from '@field-note/shared';
 
@@ -146,6 +147,18 @@ export const setPassword = (account: MockAccount, password: string) => {
   persist();
 };
 
+// 소셜 로그인만 쓰던 계정에 아이디·비밀번호 로그인 설정 (진행 중인 로그인 상태는 새 아이디로 이어감)
+export const setLoginCredentials = (account: MockAccount, loginId: string, password: string) => {
+  if (state.currentLoginId === account.loginId) {
+    state.currentLoginId = loginId;
+  }
+
+  account.loginId = loginId;
+  account.password = password;
+  account.hasPassword = true;
+  persist();
+};
+
 export const setPendingEmail = (account: MockAccount, email: string) => {
   account.pendingEmail = email;
   persist();
@@ -162,11 +175,15 @@ export const applyPendingEmail = (account: MockAccount) => {
   persist();
 };
 
-export const findAccountByKakao = (profileKey: string) =>
-  state.accounts.find((account) => account.kakaoProfileKey === profileKey);
+export const findAccountBySocial = (provider: SocialProviderKey, profileKey: string) =>
+  state.accounts.find((account) => account.socialProfiles?.[provider] === profileKey);
 
-export const setKakaoProfile = (account: MockAccount, profileKey: string | undefined) => {
-  account.kakaoProfileKey = profileKey;
+export const setSocialProfile = (
+  account: MockAccount,
+  provider: SocialProviderKey,
+  profileKey: string | undefined,
+) => {
+  account.socialProfiles = { ...account.socialProfiles, [provider]: profileKey };
   persist();
 };
 

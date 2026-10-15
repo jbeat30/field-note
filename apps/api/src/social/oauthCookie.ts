@@ -1,5 +1,6 @@
 import { createCipheriv, createDecipheriv, createHash, randomBytes } from 'node:crypto';
 
+import { socialProviderSchema, type SocialProviderKey } from '@field-note/shared';
 import type { CookieOptions, Request, Response } from 'express';
 import { z } from 'zod';
 
@@ -22,10 +23,20 @@ const sessionSchema = z.discriminatedUnion('purpose', [
 const envelopeSchema = z.object({
   state: z.string(),
   expiresAt: z.number(),
+  // 시작한 제공자: 다른 제공자의 콜백으로는 이어갈 수 없음
+  provider: socialProviderSchema,
+  // PKCE 코드 검증값 (구글), 제공자 화면을 거쳐 돌아올 때 토큰 교환에 필요
+  codeVerifier: z.string(),
   session: sessionSchema,
 });
 
 export type OAuthSession = z.infer<typeof sessionSchema>;
+
+export type OAuthContext = {
+  provider: SocialProviderKey;
+  codeVerifier: string;
+  session: OAuthSession;
+};
 
 const deriveKey = (secret: string) =>
   createHash('sha256').update(`oauth-cookie:${secret}`).digest();
@@ -34,20 +45,20 @@ const deriveKey = (secret: string) =>
  * @description 진행 상태를 AES-256-GCM으로 암호화 (변조·위조·내용 열람 방지)
  * @param secret 서버 비밀 값
  * @param state 제공자로 보낸 state 값 (돌아올 때 대조)
- * @param session 진행 상태
+ * @param context 제공자, PKCE 검증값, 진행 상태
  * @param now 현재 시각
  * @returns 쿠키에 담을 문자열
  */
 export const sealOAuthSession = (
   secret: string,
   state: string,
-  session: OAuthSession,
+  context: OAuthContext,
   now = Date.now(),
 ) => {
   const iv = randomBytes(12);
   const cipher = createCipheriv('aes-256-gcm', deriveKey(secret), iv);
   const body = Buffer.concat([
-    cipher.update(JSON.stringify({ state, session, expiresAt: now + OAUTH_TTL_MS }), 'utf8'),
+    cipher.update(JSON.stringify({ state, ...context, expiresAt: now + OAUTH_TTL_MS }), 'utf8'),
     cipher.final(),
   ]);
 
@@ -60,14 +71,14 @@ export const sealOAuthSession = (
  * @param sealed 쿠키 값
  * @param state 제공자가 돌려준 state
  * @param now 현재 시각
- * @returns 진행 상태 (검증 실패 시 null)
+ * @returns 제공자와 진행 상태 (검증 실패 시 null)
  */
 export const openOAuthSession = (
   secret: string,
   sealed: string | undefined,
   state: string | undefined,
   now = Date.now(),
-): OAuthSession | null => {
+): OAuthContext | null => {
   if (!sealed || !state) {
     return null;
   }
@@ -84,7 +95,13 @@ export const openOAuthSession = (
     const envelope = envelopeSchema.parse(JSON.parse(plain));
 
     // state는 쿠키 안의 값과 정확히 같아야 하고 만료 전이어야 함
-    return envelope.state === state && envelope.expiresAt > now ? envelope.session : null;
+    return envelope.state === state && envelope.expiresAt > now
+      ? {
+          provider: envelope.provider,
+          codeVerifier: envelope.codeVerifier,
+          session: envelope.session,
+        }
+      : null;
   } catch {
     // 변조·손상·형식 오류는 모두 같은 실패로 취급
     return null;

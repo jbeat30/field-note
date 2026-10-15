@@ -34,6 +34,13 @@ export type AccountService = {
   login: (input: { loginId: string; password: string }) => Promise<AuthenticatedAccount>;
   // 로그인한 상태에서 비밀번호를 다시 확인 (비밀번호·이메일 변경 전), 틀리면 로그인과 같은 실패 횟수·잠금 정책 적용
   verifyCurrentPassword: (account: AuthenticatedAccount, password: string) => Promise<void>;
+  // 아이디·비밀번호 로그인이 설정되어 있는지 (소셜 로그인만 쓰는 계정은 false)
+  hasPassword: (account: AuthenticatedAccount) => Promise<boolean>;
+  // 소셜 로그인만 쓰는 계정이 아이디·비밀번호 로그인을 처음 설정, 이미 있으면 거부
+  setPassword: (
+    account: AuthenticatedAccount,
+    input: { loginId: string; newPassword: string },
+  ) => Promise<void>;
   // 로그인한 관리자 정보 (회사 식별값은 응답에 없음)
   getMe: (account: AuthenticatedAccount) => Promise<MeResponse>;
 };
@@ -226,6 +233,37 @@ export const createAccountService = ({
       }
 
       await assertPassword(credential, password, at, 'CURRENT_PASSWORD_INVALID');
+    },
+
+    hasPassword: async ({ userId, companyId }) => {
+      const credential = await auth.userCredential.findUnique({
+        where: { companyId_userId: { companyId, userId } },
+      });
+
+      return Boolean(credential?.passwordHash);
+    },
+
+    setPassword: async ({ userId, companyId }, { loginId, newPassword }) => {
+      const where = { companyId_userId: { companyId, userId } };
+      const passwordHash = await hashPassword(newPassword);
+
+      try {
+        await auth.$transaction(async (tx) => {
+          const credential = await tx.userCredential.findUnique({ where });
+
+          if (credential?.passwordHash) {
+            throw new AccountError('PASSWORD_ALREADY_SET');
+          }
+
+          await tx.userCredential.upsert({
+            where,
+            update: { loginId, passwordHash, failedLoginCount: 0, lockedUntil: null },
+            create: { companyId, userId, loginId, passwordHash },
+          });
+        });
+      } catch (error) {
+        throw mapUniqueViolation(error) ?? error;
+      }
     },
 
     getMe: ({ userId, companyId }) =>

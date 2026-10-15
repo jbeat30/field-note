@@ -1467,12 +1467,12 @@ describe('목업 서버 계약', () => {
     );
   });
 
-  describe('카카오 로그인', () => {
+  describe('소셜 로그인', () => {
     const complete = async (body: Record<string, unknown>) => {
-      const response = await fetch('http://localhost/api/__mock/kakao/complete', {
+      const response = await fetch('http://localhost/api/__mock/social/complete', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body),
+        body: JSON.stringify({ provider: 'kakao', ...body }),
       });
 
       return ((await response.json()) as { redirect: string }).redirect;
@@ -1483,11 +1483,18 @@ describe('목업 서버 계약', () => {
       .join(',');
 
     it('제공자 목록과 시작 주소를 돌려준다', async () => {
-      expect((await client.GET('/api/v1/auth/social/providers')).data).toEqual({ kakao: true });
+      expect((await client.GET('/api/v1/auth/social/providers')).data).toEqual({
+        kakao: true,
+        naver: true,
+        google: true,
+      });
 
-      const start = await client.POST('/api/v1/auth/kakao/start', { body: { purpose: 'login' } });
+      const start = await client.POST('/api/v1/auth/{provider}/start', {
+        params: { path: { provider: 'naver' } },
+        body: { purpose: 'login' },
+      });
 
-      expect(start.data?.url).toBe('/mock-kakao?purpose=login');
+      expect(start.data?.url).toBe('/mock-social?provider=naver&purpose=login');
     });
 
     it('연동하지 않은 카카오 계정은 로그인할 수 없고, 연동하면 로그인된다', async () => {
@@ -1502,6 +1509,8 @@ describe('목업 서버 계약', () => {
       expect((await client.GET('/api/v1/me/social')).data).toEqual({
         hasPassword: true,
         kakao: { isLinked: true },
+        naver: { isLinked: false },
+        google: { isLinked: false },
       });
 
       await client.POST('/api/v1/auth/logout');
@@ -1549,29 +1558,25 @@ describe('목업 서버 계약', () => {
 
       const me = meResponseSchema.parse((await client.GET('/api/v1/me')).data);
 
-      expect(me).toMatchObject({ email: 'kakao-new@example.com', isEmailVerified: true });
+      expect(me).toMatchObject({ email: 'social-new@example.com', isEmailVerified: true });
       expect((await client.GET('/api/v1/me/social')).data).toEqual({
         hasPassword: false,
         kakao: { isLinked: true },
+        naver: { isLinked: false },
+        google: { isLinked: false },
       });
 
-      const unlink = await client.DELETE('/api/v1/me/social/kakao');
+      const unlink = await client.DELETE('/api/v1/me/social/{provider}', {
+        params: { path: { provider: 'kakao' } },
+      });
 
       expect(unlink.response.status).toBe(409);
       expect(errorResponseSchema.parse(unlink.error).error.code).toBe('LAST_LOGIN_METHOD');
     });
 
-    it('초대 가입: 인증된 이메일이 없거나 필수 약관에 동의하지 않았거나 없는 링크면 가입되지 않는다', async () => {
+    it('초대 가입: 필수 약관에 동의하지 않았거나 없는 링크면 가입되지 않는다', async () => {
       const link = `/invite/${DEMO_INVITATION.token}`;
 
-      expect(
-        await complete({
-          purpose: 'signup',
-          profileKey: 'new-unverified',
-          token: DEMO_INVITATION.token,
-          agreed: agreedAll,
-        }),
-      ).toBe(`${link}?social=email-required`);
       expect(
         await complete({
           purpose: 'signup',
@@ -1591,11 +1596,101 @@ describe('목업 서버 계약', () => {
       expect((await client.GET('/api/v1/me')).response.status).toBe(401);
     });
 
+    it('연동은 제공자별로 따로이고 다른 제공자로는 로그인할 수 없다', async () => {
+      await login();
+      await complete({ provider: 'google', purpose: 'link', profileKey: 'hanbit' });
+      await client.POST('/api/v1/auth/logout');
+
+      expect(await complete({ provider: 'naver', purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/login?social=not-linked',
+      );
+      expect(await complete({ provider: 'google', purpose: 'login', profileKey: 'hanbit' })).toBe(
+        '/',
+      );
+    });
+
+    it('네이버는 인증된 이메일을 주지 않아 이메일 없이 가입되고, 이메일 등록·인증 뒤 아이디·비밀번호를 설정할 수 있다', async () => {
+      expect(
+        await complete({
+          provider: 'naver',
+          purpose: 'signup',
+          profileKey: 'new-verified',
+          token: DEMO_INVITATION.token,
+          agreed: agreedAll,
+        }),
+      ).toBe('/verify-email');
+      expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data)).toMatchObject({
+        email: null,
+        isEmailVerified: false,
+      });
+
+      // 비밀번호가 없는 계정은 현재 비밀번호 없이 이메일을 등록
+      const emailRequest = await client.POST('/api/v1/me/email/change', {
+        body: { newEmail: 'registered@example.com' },
+      });
+
+      expect(emailRequest.response.status).toBe(200);
+      await client.POST('/api/v1/auth/email/verify', { body: { code: MOCK_EMAIL_CODE } });
+      expect(meResponseSchema.parse((await client.GET('/api/v1/me')).data)).toMatchObject({
+        email: 'registered@example.com',
+        isEmailVerified: true,
+      });
+
+      const set = await client.POST('/api/v1/me/password/set', {
+        body: { loginId: 'naver-owner', newPassword: 'Naver-owner-2026!' },
+      });
+
+      expect(set.response.status).toBe(200);
+      expect((await client.GET('/api/v1/me/social')).data?.hasPassword).toBe(true);
+
+      // 이미 설정했으면 다시 설정할 수 없고, 이제 이메일 변경에 비밀번호가 필요
+      expect(
+        (
+          await client.POST('/api/v1/me/password/set', {
+            body: { loginId: 'naver-owner-2', newPassword: 'Naver-owner-2026!' },
+          })
+        ).response.status,
+      ).toBe(400);
+      expect(
+        (await client.POST('/api/v1/me/email/change', { body: { newEmail: 'next@example.com' } }))
+          .response.status,
+      ).toBe(400);
+
+      await client.POST('/api/v1/auth/logout');
+      await login('naver-owner', 'Naver-owner-2026!');
+
+      expect((await client.GET('/api/v1/me')).response.status).toBe(200);
+    });
+
+    it('이미 쓰는 아이디로는 아이디·비밀번호를 설정할 수 없다', async () => {
+      await complete({
+        provider: 'naver',
+        purpose: 'signup',
+        profileKey: 'new-verified',
+        token: DEMO_INVITATION.token,
+        agreed: agreedAll,
+      });
+
+      expect(
+        (
+          await client.POST('/api/v1/me/password/set', {
+            body: { loginId: DEMO_ACCOUNTS[0]!.loginId, newPassword: 'Naver-owner-2026!' },
+          })
+        ).response.status,
+      ).toBe(409);
+    });
+
     it('비밀번호 로그인이 있으면 연동을 해제할 수 있다', async () => {
       await login();
       await complete({ purpose: 'link', profileKey: 'hanbit' });
 
-      expect((await client.DELETE('/api/v1/me/social/kakao')).response.status).toBe(200);
+      expect(
+        (
+          await client.DELETE('/api/v1/me/social/{provider}', {
+            params: { path: { provider: 'kakao' } },
+          })
+        ).response.status,
+      ).toBe(200);
       expect((await client.GET('/api/v1/me/social')).data?.kakao.isLinked).toBe(false);
     });
   });

@@ -765,9 +765,11 @@ model Partner {
   @@map("partners")
 }
 
-// 소셜 로그인 제공자 (초기에는 카카오, 네이버·구글은 5단계)
+// 소셜 로그인 제공자
 enum SocialProvider {
   KAKAO
+  NAVER
+  GOOGLE
 
   @@map("social_provider")
 }

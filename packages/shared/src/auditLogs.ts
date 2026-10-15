@@ -117,7 +117,10 @@ export const auditTargetType = (action: AuditAction, detail: unknown): AuditTarg
     case 'PROJECT_STATUS_CHANGED':
       return 'PROJECT';
     case 'REPORT_EXPORTED':
-      return field(detail, 'kind') === 'MONTHLY_HOURS_XLSX' ? 'COMPANY' : 'PROJECT';
+      return field(detail, 'kind') === 'MONTHLY_HOURS_XLSX' ||
+        field(detail, 'kind') === 'COMPANY_DATA_XLSX'
+        ? 'COMPANY'
+        : 'PROJECT';
     case 'MONTH_CLOSED':
     case 'MONTH_REOPENED':
       return 'COMPANY';
@@ -172,6 +175,8 @@ export const auditSummary = (action: AuditAction, detail: unknown): string | nul
     case 'REPORT_EXPORTED':
       if (field(detail, 'kind') === 'MONTHLY_HOURS_XLSX') {
         parts.push('월 공수표 엑셀', field(detail, 'month'));
+      } else if (field(detail, 'kind') === 'COMPANY_DATA_XLSX') {
+        parts.push('전체 데이터 엑셀');
       } else if (field(detail, 'kind') === 'PROJECT_SUMMARY_XLSX') {
         parts.push('프로젝트 요약 엑셀');
       } else {

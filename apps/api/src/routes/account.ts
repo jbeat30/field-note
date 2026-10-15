@@ -14,6 +14,7 @@ import {
   emailChangeSchema,
   emailResendResponseSchema as emailChangeResponseSchema,
   passwordChangeSchema,
+  passwordSetSchema,
   passwordResetConfirmSchema,
   passwordResetParamsSchema,
   passwordResetRequestSchema,
@@ -21,6 +22,7 @@ import {
   type CompanySettings,
   type EmailChange,
   type PasswordChange,
+  type PasswordSet,
   type PasswordResetConfirm,
   type LoginRequest,
   type SignupRequest,
@@ -96,7 +98,6 @@ const toAppError = (error: unknown): unknown => {
     case 'SOCIAL_NOT_LINKED':
       return new AppError('NOT_FOUND');
     case 'SOCIAL_ALREADY_LINKED':
-    case 'SOCIAL_EMAIL_REQUIRED':
       return new AppError('VALIDATION_ERROR', [
         { path: 'body', message: '소셜 계정을 사용할 수 없습니다' },
       ]);
@@ -104,6 +105,10 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('LAST_LOGIN_METHOD');
     case 'ACCOUNT_CLOSING':
       return new AppError('ACCOUNT_CLOSING');
+    case 'PASSWORD_ALREADY_SET':
+      return new AppError('VALIDATION_ERROR', [
+        { path: 'body', message: '이미 아이디·비밀번호 로그인이 설정되어 있습니다' },
+      ]);
   }
 };
 
@@ -595,7 +600,8 @@ export const registerAccountRoutes = (
     {
       method: 'post',
       path: '/me/email/change',
-      summary: '이메일 변경 요청 (새 주소로 인증 코드 발송, 인증해야 반영)',
+      summary:
+        '이메일 변경·등록 요청 (새 주소로 인증 코드 발송, 인증해야 반영, 비밀번호가 있는 계정은 현재 비밀번호 필요)',
       auth: 'required',
       request: { body: emailChangeSchema },
       response: { status: 200, schema: emailChangeResponseSchema },
@@ -608,7 +614,10 @@ export const registerAccountRoutes = (
 
           try {
             // 계정 탈취 시 이메일을 바꿔 복구 수단을 가로채지 못하도록 비밀번호를 먼저 재확인
-            await accountService.verifyCurrentPassword(auth!, input.currentPassword);
+            // 비밀번호가 없는 계정(소셜 로그인만 사용)은 확인할 수단이 없어 건너뜀
+            if (await accountService.hasPassword(auth!)) {
+              await accountService.verifyCurrentPassword(auth!, input.currentPassword ?? '');
+            }
 
             return await emailVerification.requestChange(
               auth!,
@@ -617,6 +626,30 @@ export const registerAccountRoutes = (
           } catch (error) {
             throw toVerificationError(toAppError(error));
           }
+        }
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/me/password/set',
+      summary: '소셜 로그인만 쓰는 계정의 아이디·비밀번호 로그인 설정 (이미 있으면 거부)',
+      auth: 'required',
+      request: { body: passwordSetSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: ['LOGIN_ID_TAKEN'],
+      rateLimit: { windowMs: 60_000, limit: 10 },
+    },
+    accountService
+      ? async ({ auth, body }) => {
+          try {
+            await accountService.setPassword(auth!, body as PasswordSet);
+          } catch (error) {
+            throw toAppError(error);
+          }
+
+          return { success: true };
         }
       : notImplemented,
   );

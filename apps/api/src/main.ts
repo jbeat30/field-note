@@ -34,11 +34,12 @@ import { createPrismaIdempotencyStore } from './http/idempotencyStore';
 import { createMaintenance, startMaintenanceSchedule } from './maintenance/maintenance';
 import { createMaterialService } from './material/materialService';
 import { createLedgerService } from './ledger/ledgerService';
+import { createCompanyDataService } from './companyData/companyDataService';
 import { createMemoService } from './memo/memoService';
 import { createPhotoService } from './photo/photoService';
 import { createPrismaInvitationStore } from './invitation/invitationStore';
 import { createLogger } from './logger';
-import { chooseSocialProvider } from './social/provider';
+import { chooseSocialProviders } from './social/provider';
 import { createPgBossQueue } from './queue/jobQueue';
 import { createPrismaSessionStore } from './session/sessionStore';
 import { createAuditService } from './audit/auditService';
@@ -90,6 +91,11 @@ const main = async () => {
   const memos = createMemoService(appPrisma);
   const materials = createMaterialService(appPrisma);
   const ledger = createLedgerService(appPrisma);
+  const companyData = createCompanyDataService({
+    auth: authPrisma,
+    app: appPrisma,
+    accountService,
+  });
   const documents = createDocumentService(appPrisma, storage);
   const credentials = createCredentialService({ app: appPrisma, storage });
   const audit = createAuditService(appPrisma);
@@ -121,15 +127,26 @@ const main = async () => {
     appOrigin: env.APP_ORIGIN,
   });
 
-  // 카카오 키가 있으면 카카오, 없고 개발 환경이면 가짜 제공자, 운영에서 키가 없으면 소셜 로그인은 꺼짐
-  const socialChoice = chooseSocialProvider({
+  // 제공자별로 키가 있으면 실제 제공자, 없고 개발 환경이면 가짜 제공자, 운영에서 키가 없으면 해당 로그인은 꺼짐
+  const socialChoices = chooseSocialProviders({
     nodeEnv: env.NODE_ENV,
     appOrigin: env.APP_ORIGIN,
-    kakao: { clientId: env.KAKAO_CLIENT_ID, clientSecret: env.KAKAO_CLIENT_SECRET },
+    keys: {
+      kakao: { clientId: env.KAKAO_CLIENT_ID, clientSecret: env.KAKAO_CLIENT_SECRET },
+      naver: { clientId: env.NAVER_CLIENT_ID, clientSecret: env.NAVER_CLIENT_SECRET },
+      google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
+    },
     fakeSecret: env.OAUTH_COOKIE_SECRET,
   });
 
-  logger.info({ socialProvider: socialChoice.kind }, '[api.main] 소셜 로그인 제공자');
+  logger.info(
+    {
+      socialProviders: Object.fromEntries(
+        Object.entries(socialChoices).map(([name, choice]) => [name, choice.kind]),
+      ),
+    },
+    '[api.main] 소셜 로그인 제공자',
+  );
 
   const closure = createClosureService({
     auth: authPrisma,
@@ -177,15 +194,18 @@ const main = async () => {
     memos,
     materials,
     ledger,
+    companyData,
     documents,
     search,
     reports,
     closure,
     social: {
-      choice: socialChoice,
+      choices: socialChoices,
       service: createSocialService({ auth: authPrisma }),
       cookieSecret: env.OAUTH_COOKIE_SECRET,
-      fakeSecret: socialChoice.kind === 'fake' ? env.OAUTH_COOKIE_SECRET : undefined,
+      fakeSecret: Object.values(socialChoices).some((choice) => choice.kind === 'fake')
+        ? env.OAUTH_COOKIE_SECRET
+        : undefined,
     },
     notifier,
     appOrigin: env.APP_ORIGIN,
