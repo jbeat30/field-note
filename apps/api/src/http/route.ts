@@ -25,7 +25,7 @@ export type RouteSpec = {
   redirect?: boolean;
   // 파일을 내려주는 라우트 (엑셀 등). 핸들러는 { filename, body }를 돌려주고 응답 스키마는 쓰지 않음
   file?: { contentType: string };
-  // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능)
+  // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능). 그 밖의 인증 필요 POST는 헤더가 있으면 같은 키의 재전송을 한 번만 처리
   idempotent?: boolean;
   rateLimit?: RateLimitOptions;
   // 이 라우트가 업무적으로 반환하는 오류 코드 (OpenAPI 문서에 응답으로 기록)
@@ -107,6 +107,9 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
 
     if (spec.idempotent) {
       middlewares.push(idempotency(deps.idempotencyStore));
+    } else if (spec.method === 'post' && spec.auth === 'required' && !spec.file && !spec.redirect) {
+      // 데이터를 만드는 요청은 회선이 불안해 다시 보내도 중복 저장되지 않게 한다 (웹 앱이 키를 항상 보냄)
+      middlewares.push(idempotency(deps.idempotencyStore, { optional: true }));
     }
 
     // 응답은 스키마로 파싱해 내보내 불필요한 필드(내부 ID, 다른 회사 정보)가 나가지 않게 함

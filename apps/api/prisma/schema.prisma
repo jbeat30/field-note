@@ -88,6 +88,7 @@ model Company {
   auditLogs                  AuditLog[]
   materialRecords            MaterialRecord[]
   ledgerEntries              LedgerEntry[]
+  idempotencyKeys            IdempotencyKey[]
   workLogEntries             WorkLogEntry[]
   workLogRevisions           WorkLogRevision[]
   employeeCredentials        EmployeeCredential[]
@@ -968,6 +969,23 @@ model Material {
   @@id([companyId, id])
   @@unique([companyId, nameKey, specKey])
   @@map("materials")
+}
+
+// 멱등 키 저장소: 같은 쓰기 요청의 재전송을 한 번만 처리하려고 키(해시)와 성공 응답을 24시간 보관. 처리 중 표시는 짧게 만료
+model IdempotencyKey {
+  companyId   String   @map("company_id") @db.Uuid
+  keyHash     String   @map("key_hash")
+  fingerprint String
+  state       String
+  status      Int?
+  body        Json?
+  expiresAt   DateTime @map("expires_at") @db.Timestamptz(3)
+  createdAt   DateTime @default(now()) @map("created_at") @db.Timestamptz(3)
+  company     Company  @relation(fields: [companyId], references: [id])
+
+  @@id([companyId, keyHash])
+  @@index([expiresAt])
+  @@map("idempotency_keys")
 }
 
 enum LedgerKind {

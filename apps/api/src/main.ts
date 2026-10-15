@@ -30,6 +30,8 @@ import { createFileService, registerFileWorker } from './file/fileService';
 import { createReportService } from './report/reportService';
 import { createSearchService } from './search/searchService';
 import { createDocumentService } from './document/documentService';
+import { createPrismaIdempotencyStore } from './http/idempotencyStore';
+import { createMaintenance, startMaintenanceSchedule } from './maintenance/maintenance';
 import { createMaterialService } from './material/materialService';
 import { createLedgerService } from './ledger/ledgerService';
 import { createMemoService } from './memo/memoService';
@@ -146,6 +148,8 @@ const main = async () => {
 
   const server = createApp({
     logger,
+    // 서버를 다시 시작하거나 여러 대로 띄워도 재전송을 한 번만 처리하도록 키는 DB에 둔다
+    idempotencyStore: createPrismaIdempotencyStore(appPrisma),
     sessionStore,
     invitationStore,
     accountService,
@@ -191,8 +195,15 @@ const main = async () => {
     logger.info({ port: env.PORT }, '[api.main] 서버 시작');
   });
 
+  // 만료 세션·방치된 업로드 신청·만료 멱등 키를 정기적으로 치움 (시작 직후 한 번, 이후 1시간마다)
+  const stopMaintenance = startMaintenanceSchedule(
+    createMaintenance({ auth: authPrisma, app: appPrisma, sessionStore, storage, logger }),
+    logger,
+  );
+
   // 종료 신호를 받으면 진행 중인 작업을 마무리하고 큐를 닫음
   const shutdown = () => {
+    stopMaintenance();
     server.close();
     void queue.stop().finally(() => process.exit(0));
   };
