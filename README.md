@@ -324,7 +324,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 ### 공수 집계
 
 - 프로젝트 카드의 "공수 집계"에서 직원별(작업한 날·공수·MM·소진율)·작업 구분별·기간별(주·월) 공수를 본다. 직원 카드의 "투입 이력"에서는 프로젝트별 투입 기간·일수·공수와 이번 달·올해 공수를 본다
-- **저장된 일지만** 집계하고 임시 저장 일지는 건수만 알린다. 서버는 분 단위만 돌려주고 MD·MM·소진율은 화면이 회사 설정으로 환산한다 (`GET /projects/{id}/work-summary`, `GET /employees/{id}/work-history`)
+- **저장된 일지만** 집계하고 임시 저장 일지는 건수만 알린다. 서버는 분 단위만 돌려주고 MD·MM·소진율은 화면이 회사 설정으로 환산한다 (`GET /projects/{id}/work-summary`, `GET /projects/{id}/work-summary/employees/{employeeId}`, `GET /employees/{id}/work-history`). 인원 탭에서 사람을 누르면 그 사람이 일한 날만 달력·목록으로 보인다
 
 ## 파일 업로드 (API)
 

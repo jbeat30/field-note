@@ -22,6 +22,7 @@ import {
   payRatesResponseSchema,
   staffingCalendarSchema,
   workSummarySchema,
+  employeeProjectDaysSchema,
   employeeWorkHistorySchema,
   assignmentsResponseSchema,
   projectPeriodHistorySchema,
@@ -1304,6 +1305,30 @@ describe('목업 서버 계약', () => {
 
     expect(history.projects.length).toBeGreaterThan(0);
     expect(history.totalMinutes).toBeGreaterThan(0);
+
+    // 사람별 일한 날: 그 사람이 일한 날의 시간 합이 집계와 같다
+    const days = employeeProjectDaysSchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary/employees/{employeeId}', {
+          params: { path: { id: a.id, employeeId }, query: {} },
+        })
+      ).data,
+    ).days;
+
+    expect(days).toHaveLength(summary.byEmployee[0]!.workedDays);
+    expect(days.reduce((total, day) => total + day.minutes, 0)).toBe(
+      summary.byEmployee[0]!.totalMinutes,
+    );
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary/employees/{employeeId}', {
+          params: {
+            path: { id: a.id, employeeId: '0198d000-0000-7000-8000-000000000999' },
+            query: {},
+          },
+        })
+      ).response.status,
+    ).toBe(404);
     expect(
       (
         await client.GET('/api/v1/employees/{id}/work-history', {

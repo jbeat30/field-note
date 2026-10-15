@@ -7,9 +7,13 @@ import {
   workLogsResponseSchema,
   projectParamsSchema,
   employeeParamsSchema,
+  employeeProjectDaysParamsSchema,
+  employeeProjectDaysQuerySchema,
+  employeeProjectDaysSchema,
   employeeWorkHistorySchema,
   workSummaryQuerySchema,
   workSummarySchema,
+  type EmployeeProjectDaysQuery,
   type WorkSummaryQuery,
   type WorkLogListQuery,
   type WorkLogSave,
@@ -85,6 +89,32 @@ export const registerWorkLogRoutes = (registry: RouteRegistry, workLogs?: WorkLo
           auth!.companyId,
           (params as { id: string }).id,
           query as WorkSummaryQuery,
+        );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/projects/{id}/work-summary/employees/{employeeId}',
+      summary: '한 사람이 이 프로젝트에서 일한 날 (날짜별 시간·한 일, 저장된 작업 내역만 반영)',
+      auth: 'required',
+      request: { params: employeeProjectDaysParamsSchema, query: employeeProjectDaysQuerySchema },
+      response: { status: 200, schema: employeeProjectDaysSchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params, query }) => {
+      const { id, employeeId } = params as { id: string; employeeId: string };
+
+      try {
+        return await workLogs!.employeeDays(
+          auth!.companyId,
+          id,
+          employeeId,
+          query as EmployeeProjectDaysQuery,
         );
       } catch (error) {
         throw toAppError(error);
