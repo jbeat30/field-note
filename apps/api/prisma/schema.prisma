@@ -854,24 +854,25 @@ enum PhotoCategory {
 // 작업 사진: 업로드 파일(files)에 구분·구역·촬영일시·설명을 붙인 기록. 파일 한 개당 사진 한 건
 // workDate는 어느 날 작업의 사진인지(작업일지와 프로젝트×날짜로 연결, 일지가 아직 없어도 됨). 지우면 deleted_at만 채우는 소프트 삭제
 model Photo {
-  companyId   String        @map("company_id") @db.Uuid
-  id          String        @default(dbgenerated("uuidv7()")) @db.Uuid
-  projectId   String        @map("project_id") @db.Uuid
-  fileId      String        @map("file_id") @db.Uuid
-  category    PhotoCategory @default(OTHER)
-  area        String?
-  takenAt     DateTime      @map("taken_at") @db.Timestamptz(3)
-  workDate    DateTime      @map("work_date") @db.Date
-  description String?
-  isCover     Boolean       @default(false) @map("is_cover")
-  uploadedBy  String        @map("uploaded_by") @db.Uuid
-  createdAt   DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt   DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  deletedAt   DateTime?     @map("deleted_at") @db.Timestamptz(3)
-  company     Company       @relation(fields: [companyId], references: [id])
-  project     Project       @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
-  file        StoredFile    @relation(fields: [companyId, fileId], references: [companyId, id], onDelete: Restrict)
-  uploader    User          @relation("PhotoUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
+  companyId        String        @map("company_id") @db.Uuid
+  id               String        @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId        String        @map("project_id") @db.Uuid
+  fileId           String        @map("file_id") @db.Uuid
+  category         PhotoCategory @default(OTHER)
+  area             String?
+  takenAt          DateTime      @map("taken_at") @db.Timestamptz(3)
+  workDate         DateTime      @map("work_date") @db.Date
+  description      String?
+  isCover          Boolean       @default(false) @map("is_cover")
+  includeInSummary Boolean       @default(false) @map("include_in_summary")
+  uploadedBy       String        @map("uploaded_by") @db.Uuid
+  createdAt        DateTime      @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt        DateTime      @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt        DateTime?     @map("deleted_at") @db.Timestamptz(3)
+  company          Company       @relation(fields: [companyId], references: [id])
+  project          Project       @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  file             StoredFile    @relation(fields: [companyId, fileId], references: [companyId, id], onDelete: Restrict)
+  uploader         User          @relation("PhotoUploadedBy", fields: [companyId, uploadedBy], references: [companyId, id], onDelete: Restrict)
 
   @@id([companyId, id])
   @@unique([companyId, fileId])
@@ -1028,6 +1029,7 @@ model Document {
   title                String
   isSensitive          Boolean               @default(false) @map("is_sensitive")
   isPinned             Boolean               @default(false) @map("is_pinned")
+  includeInSummary     Boolean               @default(false) @map("include_in_summary")
   createdBy            String                @map("created_by") @db.Uuid
   createdAt            DateTime              @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt            DateTime              @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)

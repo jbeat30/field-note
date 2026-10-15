@@ -38,6 +38,11 @@ export const PhotoGrid = ({ photos, onSelect }: PhotoGridProps) => (
             {PHOTO_CATEGORY_LABELS[photo.category]}
             {photo.area ? ` · ${photo.area}` : ''}
           </span>
+          {photo.includeInSummary && (
+            <span className="absolute right-1 top-1 rounded bg-foreground/75 px-1 text-xs text-primary-foreground">
+              요약
+            </span>
+          )}
           {photo.isCover && (
             <span className="absolute left-1 top-1 rounded bg-primary px-1 text-xs text-primary-foreground">
               대표

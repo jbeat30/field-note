@@ -230,7 +230,63 @@ export const projectCompletionSummarySchema = z.object({
 
 export type ProjectCompletionSummary = z.infer<typeof projectCompletionSummarySchema>;
 
-export const SUMMARY_PHOTO_LIMIT = 6;
+// 마감 요약의 사진·문서 선택 규칙 (09 문서 §3.8): 직접 고른 것이 우선이고, 하나도 고르지 않았으면 기본 규칙을 쓴다
+export const SUMMARY_PHOTO_MAX = 12;
+export const SUMMARY_PHOTO_DEFAULT_COUNT = 8;
+// 요약에 넣을 수 있는 문서 분류
+export const SUMMARY_DOCUMENT_CATEGORIES = ['SAFETY', 'CONTRACT'] as const;
+
+/**
+ * @description 마감 요약에 실을 사진을 고름. 직접 고른 사진이 있으면 그것을 최근 촬영순으로 SUMMARY_PHOTO_MAX장까지,
+ * 없으면 작업 후 사진 중 최근 SUMMARY_PHOTO_DEFAULT_COUNT장
+ * @param photos 검사가 끝난 사진 (촬영일시, 분류, 고름 표시)
+ * @returns 요약에 실을 사진 id (최근 촬영순)
+ */
+export const selectSummaryPhotos = (
+  photos: readonly {
+    id: string;
+    category: string;
+    takenAt: string;
+    includeInSummary: boolean;
+  }[],
+) => {
+  const newestFirst = (a: { takenAt: string; id: string }, b: { takenAt: string; id: string }) =>
+    b.takenAt.localeCompare(a.takenAt) || b.id.localeCompare(a.id);
+  const chosen = photos.filter((photo) => photo.includeInSummary);
+
+  return (
+    chosen.length > 0
+      ? [...chosen].sort(newestFirst).slice(0, SUMMARY_PHOTO_MAX)
+      : photos
+          .filter((photo) => photo.category === 'AFTER')
+          .sort(newestFirst)
+          .slice(0, SUMMARY_PHOTO_DEFAULT_COUNT)
+  ).map((photo) => photo.id);
+};
+
+/**
+ * @description 마감 요약에 실을 문서를 고름. 안전·검사, 계약·공문 분류의 민감 자료가 아닌 문서 중 직접 고른 것,
+ * 하나도 고르지 않았으면 그 분류의 민감 자료가 아닌 문서 모두
+ * @param documents 삭제되지 않은 문서 (분류, 민감 여부, 고름 표시)
+ * @returns 요약에 실을 문서 id (받은 순서 그대로)
+ */
+export const selectSummaryDocuments = (
+  documents: readonly {
+    id: string;
+    category: string;
+    isSensitive: boolean;
+    includeInSummary: boolean;
+  }[],
+) => {
+  const eligible = documents.filter(
+    (document) =>
+      !document.isSensitive &&
+      (SUMMARY_DOCUMENT_CATEGORIES as readonly string[]).includes(document.category),
+  );
+  const chosen = eligible.filter((document) => document.includeInSummary);
+
+  return (chosen.length > 0 ? chosen : eligible).map((document) => document.id);
+};
 
 /**
  * @description 요약 제목 옆에 붙이는 상태 이름

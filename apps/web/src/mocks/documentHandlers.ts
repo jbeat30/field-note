@@ -78,6 +78,7 @@ const addDocument = (
     category: Document['category'];
     isSensitive?: boolean;
     isPinned?: boolean;
+    includeInSummary?: boolean;
     versions: { name: string; date: string; reason?: string; fileId?: string }[];
   },
 ) => {
@@ -107,6 +108,7 @@ const addDocument = (
     title: input.title,
     isSensitive: resolveSensitive(input.category, input.isSensitive),
     isPinned: input.isPinned ?? false,
+    includeInSummary: input.includeInSummary ?? false,
     createdBy: MOCK_USER_ID,
     createdAt: at,
     updatedAt: at,
@@ -235,6 +237,7 @@ const toDocument = (document: MockDocument): Document => {
     title: document.title,
     isSensitive: document.isSensitive,
     isPinned: document.isPinned,
+    includeInSummary: document.includeInSummary,
     createdBy: document.createdBy,
     createdAt: document.createdAt,
     updatedAt: document.updatedAt,

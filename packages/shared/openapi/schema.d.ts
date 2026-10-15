@@ -12128,6 +12128,7 @@ export interface paths {
                                 workDate: string;
                                 description: string | null;
                                 isCover: boolean;
+                                includeInSummary: boolean;
                                 /** Format: uuid */
                                 uploadedBy: string;
                                 /** Format: date-time */
@@ -12258,6 +12259,7 @@ export interface paths {
                             workDate: string;
                             description: string | null;
                             isCover: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             uploadedBy: string;
                             /** Format: date-time */
@@ -12380,6 +12382,7 @@ export interface paths {
                             workDate: string;
                             description: string | null;
                             isCover: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             uploadedBy: string;
                             /** Format: date-time */
@@ -12564,6 +12567,7 @@ export interface paths {
                         workDate?: string;
                         description?: string | null;
                         isCover?: boolean;
+                        includeInSummary?: boolean;
                     };
                 };
             };
@@ -12590,6 +12594,7 @@ export interface paths {
                             workDate: string;
                             description: string | null;
                             isCover: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             uploadedBy: string;
                             /** Format: date-time */
@@ -14326,6 +14331,7 @@ export interface paths {
                                 title: string;
                                 isSensitive: boolean;
                                 isPinned: boolean;
+                                includeInSummary: boolean;
                                 /** Format: uuid */
                                 createdBy: string;
                                 /** Format: date-time */
@@ -14461,6 +14467,7 @@ export interface paths {
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */
@@ -14609,6 +14616,7 @@ export interface paths {
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */
@@ -14821,6 +14829,7 @@ export interface paths {
                         category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                         isSensitive?: boolean;
                         isPinned?: boolean;
+                        includeInSummary?: boolean;
                     };
                 };
             };
@@ -14841,6 +14850,7 @@ export interface paths {
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */
@@ -14997,6 +15007,7 @@ export interface paths {
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */

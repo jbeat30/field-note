@@ -9,6 +9,7 @@ import {
   photoListQuerySchema,
   photoParamsSchema,
   photoUpdateSchema,
+  SUMMARY_PHOTO_MAX,
   projectFileParamsSchema,
   todayInSeoul,
   type ErrorCode,
@@ -116,6 +117,7 @@ const toPhoto = (photo: MockPhoto): Photo => {
     workDate: photo.workDate,
     description: photo.description,
     isCover: photo.isCover,
+    includeInSummary: photo.includeInSummary,
     uploadedBy: photo.uploadedBy,
     createdAt: photo.createdAt,
     file: { status: file.status, rejectReason: file.rejectReason, size: file.size },
@@ -169,6 +171,7 @@ const seedProject = (account: MockAccount, projectId: string) => {
       workDate: todayInSeoul(new Date(takenAt)),
       description: null,
       isCover: index === 0,
+      includeInSummary: false,
       uploadedBy: MOCK_USER_ID,
       createdAt: takenAt,
     });
@@ -474,6 +477,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
         workDate: body.data.workDate ?? todayInSeoul(new Date(takenAt)),
         description: body.data.description ?? null,
         isCover: false,
+        includeInSummary: false,
         uploadedBy: MOCK_USER_ID,
         createdAt: new Date().toISOString(),
       };
@@ -555,6 +559,20 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (body.data.isCover) {
         livePhotos(account, photo.projectId).forEach((item) => (item.isCover = false));
+      }
+
+      if (
+        body.data.includeInSummary &&
+        !photo.includeInSummary &&
+        livePhotos(account, photo.projectId).filter((item) => item.includeInSummary).length >=
+          SUMMARY_PHOTO_MAX
+      ) {
+        return apiError('VALIDATION_ERROR', [
+          {
+            path: 'body.includeInSummary',
+            message: `요약에 넣을 사진은 프로젝트마다 ${SUMMARY_PHOTO_MAX}장까지입니다`,
+          },
+        ]);
       }
 
       Object.assign(photo, body.data);

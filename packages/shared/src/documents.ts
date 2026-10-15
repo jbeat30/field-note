@@ -95,6 +95,8 @@ export const documentUpdateSchema = z
     isSensitive: z.boolean(),
     // 자주 보는 자료는 프로젝트 첫 화면에 고정
     isPinned: z.boolean(),
+    // 마감 요약(준공 보고서)에 넣을 문서로 고름 (안전·검사, 계약·공문 분류만, 민감 자료는 표시해도 싣지 않음)
+    includeInSummary: z.boolean(),
   })
   .partial()
   .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
@@ -136,6 +138,7 @@ export const documentSchema = z.object({
   title: z.string(),
   isSensitive: z.boolean(),
   isPinned: z.boolean(),
+  includeInSummary: z.boolean(),
   createdBy: z.uuid(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),

@@ -62,5 +62,25 @@ export const Default: Story = {
     await expect(sheet.queryByText('도급 계약서')).not.toBeInTheDocument();
     await expect(sheet.queryByText(/\d원/)).not.toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '인쇄·PDF' })).toBeInTheDocument();
+
+    // 자재는 고객에게 내는 보고서라 품명·규격·쓴 양만 (반입·반출·잔량은 싣지 않는다)
+    const materials = within(sheet.getByRole('region', { name: '자재 요약' }));
+
+    for (const header of ['품명', '규격', '쓴 양']) {
+      await expect(materials.getByRole('columnheader', { name: header })).toBeInTheDocument();
+    }
+
+    for (const header of ['반입', '반출', '폐기', '잔량']) {
+      await expect(materials.queryByRole('columnheader', { name: header })).not.toBeInTheDocument();
+    }
+
+    await expect(sheet.queryByText(/마이너스/)).not.toBeInTheDocument();
+    // 사진·작업자료는 무엇을 싣는지 기준을 적는다
+    await expect(
+      sheet.getByText(/직접 고른 사진, 고르지 않았으면 작업 후 사진 최근 8장/),
+    ).toBeInTheDocument();
+    await expect(
+      sheet.getByText(/안전·검사, 계약·공문 분류 중 요약에 넣기로 고른 문서/),
+    ).toBeInTheDocument();
   },
 };

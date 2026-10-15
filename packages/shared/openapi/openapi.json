@@ -35454,6 +35454,9 @@
                     "isCover": {
                       "type": "boolean"
                     },
+                    "includeInSummary": {
+                      "type": "boolean"
+                    },
                     "uploadedBy": {
                       "type": "string",
                       "format": "uuid"
@@ -35515,6 +35518,7 @@
                     "workDate",
                     "description",
                     "isCover",
+                    "includeInSummary",
                     "uploadedBy",
                     "createdAt",
                     "file",
@@ -35868,6 +35872,9 @@
                           "isCover": {
                             "type": "boolean"
                           },
+                          "includeInSummary": {
+                            "type": "boolean"
+                          },
                           "uploadedBy": {
                             "type": "string",
                             "format": "uuid"
@@ -35929,6 +35936,7 @@
                           "workDate",
                           "description",
                           "isCover",
+                          "includeInSummary",
                           "uploadedBy",
                           "createdAt",
                           "file",
@@ -36235,6 +36243,9 @@
                     "isCover": {
                       "type": "boolean"
                     },
+                    "includeInSummary": {
+                      "type": "boolean"
+                    },
                     "uploadedBy": {
                       "type": "string",
                       "format": "uuid"
@@ -36296,6 +36307,7 @@
                     "workDate",
                     "description",
                     "isCover",
+                    "includeInSummary",
                     "uploadedBy",
                     "createdAt",
                     "file",
@@ -36577,6 +36589,9 @@
                   },
                   "isCover": {
                     "type": "boolean"
+                  },
+                  "includeInSummary": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -36636,6 +36651,9 @@
                       ]
                     },
                     "isCover": {
+                      "type": "boolean"
+                    },
+                    "includeInSummary": {
                       "type": "boolean"
                     },
                     "uploadedBy": {
@@ -36699,6 +36717,7 @@
                     "workDate",
                     "description",
                     "isCover",
+                    "includeInSummary",
                     "uploadedBy",
                     "createdAt",
                     "file",
@@ -41988,6 +42007,9 @@
                     "isPinned": {
                       "type": "boolean"
                     },
+                    "includeInSummary": {
+                      "type": "boolean"
+                    },
                     "createdBy": {
                       "type": "string",
                       "format": "uuid"
@@ -42162,6 +42184,7 @@
                     "title",
                     "isSensitive",
                     "isPinned",
+                    "includeInSummary",
                     "createdBy",
                     "createdAt",
                     "updatedAt",
@@ -42476,6 +42499,9 @@
                           "isPinned": {
                             "type": "boolean"
                           },
+                          "includeInSummary": {
+                            "type": "boolean"
+                          },
                           "createdBy": {
                             "type": "string",
                             "format": "uuid"
@@ -42573,6 +42599,7 @@
                           "title",
                           "isSensitive",
                           "isPinned",
+                          "includeInSummary",
                           "createdBy",
                           "createdAt",
                           "updatedAt",
@@ -42853,6 +42880,9 @@
                     "isPinned": {
                       "type": "boolean"
                     },
+                    "includeInSummary": {
+                      "type": "boolean"
+                    },
                     "createdBy": {
                       "type": "string",
                       "format": "uuid"
@@ -43027,6 +43057,7 @@
                     "title",
                     "isSensitive",
                     "isPinned",
+                    "includeInSummary",
                     "createdBy",
                     "createdAt",
                     "updatedAt",
@@ -43292,6 +43323,9 @@
                   },
                   "isPinned": {
                     "type": "boolean"
+                  },
+                  "includeInSummary": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -43331,6 +43365,9 @@
                       "type": "boolean"
                     },
                     "isPinned": {
+                      "type": "boolean"
+                    },
+                    "includeInSummary": {
                       "type": "boolean"
                     },
                     "createdBy": {
@@ -43507,6 +43544,7 @@
                     "title",
                     "isSensitive",
                     "isPinned",
+                    "includeInSummary",
                     "createdBy",
                     "createdAt",
                     "updatedAt",
@@ -44059,6 +44097,9 @@
                     "isPinned": {
                       "type": "boolean"
                     },
+                    "includeInSummary": {
+                      "type": "boolean"
+                    },
                     "createdBy": {
                       "type": "string",
                       "format": "uuid"
@@ -44233,6 +44274,7 @@
                     "title",
                     "isSensitive",
                     "isPinned",
+                    "includeInSummary",
                     "createdBy",
                     "createdAt",
                     "updatedAt",

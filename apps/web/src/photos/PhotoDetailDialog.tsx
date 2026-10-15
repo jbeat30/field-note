@@ -1,6 +1,7 @@
 import {
   PHOTO_CATEGORIES,
   PHOTO_CATEGORY_LABELS,
+  SUMMARY_PHOTO_MAX,
   type Photo,
   type PhotoCategory,
   type PhotoUpdate,
@@ -47,6 +48,7 @@ export const PhotoDetailDialog = ({
   const [category, setCategory] = useState<PhotoCategory>(photo.category);
   const [area, setArea] = useState(photo.area ?? '');
   const [description, setDescription] = useState(photo.description ?? '');
+  const [includeInSummary, setIncludeInSummary] = useState(photo.includeInSummary);
   const [error, setError] = useState<string | null>(null);
   const [isBusy, setIsBusy] = useState(false);
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -173,6 +175,21 @@ export const PhotoDetailDialog = ({
                 onChange={(event) => setDescription(event.target.value)}
               />
             </FormField>
+            <label className="flex min-h-touch items-start gap-3 text-sm">
+              <input
+                type="checkbox"
+                className="mt-0.5 size-5 shrink-0"
+                checked={includeInSummary}
+                onChange={(event) => setIncludeInSummary(event.target.checked)}
+              />
+              <span>
+                준공 요약에 넣기
+                <span className="block text-foreground/65">
+                  고객에게 내는 준공 요약에 이 사진을 싣습니다 (프로젝트마다 {SUMMARY_PHOTO_MAX}
+                  장까지, 하나도 고르지 않으면 작업 후 사진 최근 8장)
+                </span>
+              </span>
+            </label>
             {error && <Alert>{error}</Alert>}
             <div className="flex flex-wrap gap-2">
               <Button
@@ -184,6 +201,7 @@ export const PhotoDetailDialog = ({
                       category,
                       area: area.trim() || null,
                       description: description.trim() || null,
+                      includeInSummary,
                     }),
                   )
                 }

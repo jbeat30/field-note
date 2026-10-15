@@ -1,5 +1,6 @@
 import {
   FILE_DOWNLOAD_URL_TTL_SECONDS,
+  SUMMARY_PHOTO_MAX,
   todayInSeoul,
   type Photo,
   type PhotoCreate,
@@ -91,6 +92,7 @@ export const createPhotoService = (
     workDate: isoDate(row.workDate),
     description: row.description,
     isCover: row.isCover,
+    includeInSummary: row.includeInSummary,
     uploadedBy: row.uploadedBy,
     createdAt: row.createdAt.toISOString(),
     file: {
@@ -227,6 +229,19 @@ export const createPhotoService = (
           });
         }
 
+        if (input.includeInSummary && !current.includeInSummary) {
+          const chosen = await tx.photo.count({
+            where: { projectId: current.projectId, includeInSummary: true, deletedAt: null },
+          });
+
+          if (chosen >= SUMMARY_PHOTO_MAX) {
+            throw new PhotoError('INVALID', {
+              path: 'body.includeInSummary',
+              message: `요약에 넣을 사진은 프로젝트마다 ${SUMMARY_PHOTO_MAX}장까지입니다`,
+            });
+          }
+        }
+
         return tx.photo.update({
           where: { companyId_id: { companyId, id: photoId } },
           data: {
@@ -236,6 +251,7 @@ export const createPhotoService = (
             workDate: input.workDate ? new Date(`${input.workDate}T00:00:00Z`) : undefined,
             description: input.description,
             isCover: input.isCover,
+            includeInSummary: input.includeInSummary,
           },
           include,
         });

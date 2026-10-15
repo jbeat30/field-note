@@ -72,6 +72,8 @@ export const photoUpdateSchema = z
     description: descriptionSchema.nullable(),
     // true로 바꾸면 같은 프로젝트의 기존 대표 사진은 해제된다
     isCover: z.boolean(),
+    // 마감 요약(준공 보고서)에 넣을 사진으로 고름 (프로젝트마다 SUMMARY_PHOTO_MAX장까지)
+    includeInSummary: z.boolean(),
   })
   .partial()
   .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
@@ -100,6 +102,7 @@ export const photoSchema = z.object({
   workDate: dateSchema,
   description: z.string().nullable(),
   isCover: z.boolean(),
+  includeInSummary: z.boolean(),
   uploadedBy: z.uuid(),
   // 사진으로 등록한 시각 (업로드 시각은 파일 정보에 있음)
   createdAt: z.iso.datetime(),

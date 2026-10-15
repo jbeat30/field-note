@@ -17,6 +17,7 @@ const photo = (
   workDate: takenAt.slice(0, 10),
   description: null,
   isCover: false,
+  includeInSummary: false,
   uploadedBy: 'u',
   createdAt: takenAt,
   file: { status: 'READY', rejectReason: null, size: 1 },

@@ -222,6 +222,20 @@ export const UnsupportedFileIsRejected: Story = {
   },
 };
 
+// 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 넣을 수 있다
+export const SummaryCheckboxNeedsEligibleDocument: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await pickRowMenu(canvas, '외장 판금 시방서', '새 판 올리기·버전 기록');
+
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    // 도면·작업지시서 분류라 넣을 수 없다
+    await expect(await dialog.findByRole('checkbox', { name: /준공 요약에 넣기/ })).toBeDisabled();
+  },
+};
+
 export const DetailAddVersionAndDelete: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
