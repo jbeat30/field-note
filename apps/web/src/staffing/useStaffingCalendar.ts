@@ -3,7 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 키가 'assignments'로 시작하므로 투입을 바꾸면 캘린더도 다시 읽는다
+// 키가 'assignments'로 시작하므로 투입을 바꾸면 캘린더도 재조회
 export const useStaffingCalendar = (from: string, to: string) =>
   useQuery({
     queryKey: queryKeys.staffingCalendar(from, to),

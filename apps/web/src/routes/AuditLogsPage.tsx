@@ -129,8 +129,8 @@ const Row = ({ item }: { item: AuditLog }) => {
   );
 };
 
-// 설정 > 활동 기록: 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 최근순으로 본다
-// (서비스 기획서 §13.1, 09 문서 §5.2). 조회만 하고 수정·삭제는 없다
+// 설정 > 활동 기록: 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 최근순으로 조회
+// (서비스 기획서 §13.1, 09 문서 §5.2), 조회 전용이며 수정·삭제 없음
 export const AuditLogsPage = () => {
   const [kind, setKind] = useState<AuditKind | ''>('');
   const [projectId, setProjectId] = useState('');

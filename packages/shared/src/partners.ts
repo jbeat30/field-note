@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { normalizeOptionName } from './options';
 
-// 고객·협력업체·자재 공급처 명부 (서비스 기획서 §10.1). 금액·거래 내역은 다루지 않는다
+// 고객·협력업체·자재 공급처 명부 (서비스 기획서 §10.1), 금액·거래 내역은 제외
 export const PARTNER_KINDS = ['CLIENT', 'SUBCONTRACTOR', 'SUPPLIER'] as const;
 
 export const partnerKindSchema = z.enum(PARTNER_KINDS);
@@ -27,7 +27,7 @@ export const PARTNER_CONTACT_MAX_LENGTH = 30;
 export const PARTNER_PHONE_MAX_LENGTH = 30;
 export const PARTNER_MEMO_MAX_LENGTH = 1000;
 
-// 상호 중복 판정용 키: 같은 구분 안에서 공백·대소문자·표기 차이만 다른 이름은 같은 업체로 본다
+// 상호 중복 판정용 키: 같은 구분 안에서 공백·대소문자·표기 차이만 다른 이름은 같은 업체로 판정
 export const normalizePartnerName = normalizeOptionName;
 
 export const partnerNameSchema = z
@@ -92,7 +92,7 @@ export type PartnerListQuery = z.infer<typeof partnerListQuerySchema>;
 
 export const partnerParamsSchema = z.object({ id: z.uuid() });
 
-// 등록: 구분과 상호만 있으면 된다 (입력하다가 막히지 않게). 구분은 등록 뒤 바꿀 수 없다
+// 등록: 구분과 상호만 필요 (입력하다가 막히지 않도록), 구분은 등록 뒤 변경 불가
 export const partnerCreateSchema = z.object({
   kind: partnerKindSchema,
   name: partnerNameSchema,

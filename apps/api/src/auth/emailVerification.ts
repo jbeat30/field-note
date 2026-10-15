@@ -44,7 +44,7 @@ export type EmailVerificationService = {
   deliver: (account: Account) => Promise<void>;
   // 이메일 변경 요청: 새 주소로 코드를 보내고, 인증이 끝나야 계정 이메일이 바뀜 (비밀번호 재확인은 호출자가 먼저 수행)
   requestChange: (account: Account, newEmail: string) => Promise<{ resendAfterSeconds: number }>;
-  // 코드 확인: 성공하면 이메일 인증 완료와 계정 활성화. 이메일 변경이면 바뀌기 전 주소를 돌려줌 (알림 메일용)
+  // 코드 확인: 성공하면 이메일 인증 완료와 계정 활성화, 이메일 변경이면 바뀌기 전 주소를 돌려줌 (알림 메일용)
   verify: (account: Account, code: string) => Promise<{ previousEmail: string | null }>;
 };
 

@@ -47,7 +47,7 @@ export type WorkLogService = {
     query: WorkLogListQuery,
   ) => Promise<WorkLogSummary[]>;
   get: (companyId: string, projectId: string, workDate: string) => Promise<WorkLog>;
-  // 그날 작업 내역을 만들거나 고침. 이미 있으면 expectedVersion이 현재 버전과 같아야 하고, 저장된 작업 내역을 고치면 고치기 전 값이 수정 이력에 남음
+  // 그날 작업 내역 생성·수정, 이미 있으면 expectedVersion이 현재 버전과 같아야 하고 저장된 작업 내역 수정 시 수정 전 값은 수정 이력에 보존
   save: (
     companyId: string,
     userId: string,
@@ -57,9 +57,9 @@ export type WorkLogService = {
   ) => Promise<WorkLog>;
   // 수정 이력 (최근이 맨 앞)
   revisions: (companyId: string, projectId: string, workDate: string) => Promise<WorkLogRevision[]>;
-  // 프로젝트 공수 집계 (직원별·작업 구분별·기간별). 저장된 작업 내역만 반영
+  // 프로젝트 공수 집계 (직원별·작업 구분별·기간별), 저장된 작업 내역만 반영
   summary: (companyId: string, projectId: string, query: WorkSummaryQuery) => Promise<WorkSummary>;
-  // 한 사람이 이 프로젝트에서 일한 날 (날짜별 시간·한 일). 저장된 작업 내역만 반영
+  // 한 사람이 이 프로젝트에서 일한 날 (날짜별 시간·한 일), 저장된 작업 내역만 반영
   employeeDays: (
     companyId: string,
     projectId: string,
@@ -427,7 +427,7 @@ export const createWorkLogService = (
         throw invalid('status', '저장된 작업 내역은 임시 저장으로 되돌릴 수 없습니다');
       }
 
-      // 직원·작업 구분: 같은 회사의 직원, 작업 구분 목록의 항목만. 숨긴 작업 구분은 이 작업 내역이 이미 쓰고 있을 때만 유지
+      // 직원·작업 구분: 같은 회사의 직원과 작업 구분 목록의 항목만 허용, 숨긴 작업 구분은 이 작업 내역이 이미 사용 중일 때만 유지
       const employeeIds = [...new Set(input.entries.map((entry) => entry.employeeId))];
       const categoryIds = [...new Set(input.entries.map((entry) => entry.categoryId))];
       const employees = await tx.employee.findMany({ where: { id: { in: employeeIds } } });
@@ -449,7 +449,7 @@ export const createWorkLogService = (
         throw invalid('entries', '숨긴 작업 구분은 새로 고를 수 없습니다');
       }
 
-      // 투입 등록이 안 된 직원을 작업 내역에 넣으면 투입을 자동으로 추가할지 확인 (서비스 기획서 §9.3). 저장할 때만 확인하고 퇴사한 직원은 경고만
+      // 투입 등록이 안 된 직원을 작업 내역에 넣으면 투입을 자동으로 추가할지 확인 (서비스 기획서 §9.3), 저장할 때만 확인하고 퇴사한 직원은 경고만
       const autoAssigned: string[] = [];
 
       if (input.status === 'SAVED') {

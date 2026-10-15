@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 
-// 화면·임시 상태 전용 (서버에서 받은 데이터를 복사해 두지 않는다)
+// 화면·임시 상태 전용 (서버에서 받은 데이터 복사 보관 금지)
 type UiState = {
   isQuickAddOpen: boolean;
   setQuickAddOpen: (isOpen: boolean) => void;

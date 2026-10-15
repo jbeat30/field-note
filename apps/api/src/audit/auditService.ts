@@ -19,18 +19,18 @@ export class AuditError extends Error {
   }
 }
 
-// 라우트가 성공한 뒤 남기는 활동 기록 한 건 (회사·행위자는 세션에서 얻는다)
+// 라우트 성공 후 저장하는 활동 기록 한 건 (회사·행위자는 세션에서 획득)
 export type AuditEntry = {
   action: AuditAction;
   targetId: string;
   // 프로젝트에 속한 일이면 그 프로젝트 id (프로젝트별 거르기용)
   projectId?: string | null;
-  // 바꾸기 전·후는 detail.changes에 사람이 읽는 글로 담는다
+  // 바꾸기 전·후는 detail.changes에 사람이 읽는 글로 기록
   detail: Record<string, unknown>;
 };
 
 export type AuditService = {
-  // 감사 기록 조회 (최근순 커서 방식, 종류·행위·프로젝트·날짜 범위로 거름). 조회만 하고 수정·삭제는 없다
+  // 감사 기록 조회 (최근순 커서 방식, 종류·행위·프로젝트·날짜 범위 필터), 조회 전용이며 수정·삭제 없음
   list: (companyId: string, query: AuditLogListQuery) => Promise<AuditLogsResponse>;
   // 데이터를 바꾼 일을 남긴다 (추가만 가능)
   record: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;

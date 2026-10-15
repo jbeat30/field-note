@@ -1,13 +1,22 @@
-import { DEFAULT_COMPANY_SETTINGS, type CompanySettings } from '@field-note/shared';
+import {
+  DEFAULT_COMPANY_SETTINGS,
+  type CompanyRules,
+  type CompanySettings,
+} from '@field-note/shared';
 
 import type { PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+
+import { loadRules } from './companyRules';
 
 export type CompanySettingsService = {
   // 저장된 설정, 아직 없으면 기본값
   get: (companyId: string) => Promise<CompanySettings>;
   // 설정 저장 (없으면 만들고 있으면 갱신), 저장된 값을 돌려줌
   save: (companyId: string, settings: CompanySettings) => Promise<CompanySettings>;
+  // 경고 기준·보증 기본 기간 (저장한 적이 없으면 기본값)
+  getRules: (companyId: string) => Promise<CompanyRules>;
+  saveRules: (companyId: string, rules: CompanyRules) => Promise<CompanyRules>;
 };
 
 const toSettings = (row: {
@@ -43,4 +52,17 @@ export const createCompanySettingsService = (app: PrismaClient): CompanySettings
         }),
       ),
     ),
+
+  getRules: (companyId) => withCompany(app, companyId, (tx) => loadRules(tx)),
+
+  saveRules: (companyId, rules) =>
+    withCompany(app, companyId, async (tx) => {
+      await tx.companySettings.upsert({
+        where: { companyId },
+        update: rules,
+        create: { companyId, ...rules },
+      });
+
+      return loadRules(tx);
+    }),
 });

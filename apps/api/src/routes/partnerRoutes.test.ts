@@ -265,7 +265,7 @@ describe('수정·숨기기', () => {
       phone: null,
       memo: null,
     });
-    // 구분은 수정 대상이 아님(무시): 변경 값이 없는 요청이 된다
+    // 구분은 수정 대상이 아님(무시): 변경 값이 없는 요청으로 처리
     expect((await client.update(id, { kind: 'SUPPLIER' })).status).toBe(400);
     expect((await client.get(id)).body.kind).toBe('CLIENT');
     expect((await client.update(id, {})).status).toBe(400);
@@ -387,7 +387,7 @@ describe('삭제', () => {
     expect((await client.get(drop)).status).toBe(404);
     expect(namesOf(await client.list())).toEqual(['남길곳']);
     expect((await client.get(keep)).status).toBe(200);
-    // 삭제한 상호는 다시 등록할 수 있다
+    // 삭제한 상호는 재등록 가능
     expect((await client.create({ kind: 'SUPPLIER', name: '지울곳' })).status).toBe(201);
   });
 

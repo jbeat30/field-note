@@ -57,7 +57,7 @@ describe('대시보드·알림 설정 목업', () => {
 
     const { dashboard: data, settings } = await dashboard();
 
-    // 더미: 진행·예정·중단 프로젝트가 있고 A동 변경 작업 #2는 오래 협의 중이다
+    // 더미: 진행·예정·중단 프로젝트가 있고 A동 변경 작업 #2는 오래 협의 중
     expect(data.projectCounts.inProgress).toBeGreaterThan(0);
     expect(data.activeProjects.length).toBeGreaterThan(0);
     expect(data.alerts.map((item) => item.alert)).toContainEqual(

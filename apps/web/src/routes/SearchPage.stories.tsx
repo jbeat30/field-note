@@ -28,7 +28,7 @@ export const EmptyPrompt: Story = {
   },
 };
 
-// 글자를 치면 잠깐 뒤 프로젝트·직원·자료 등 종류별 결과가 나온다
+// 글자를 입력하면 잠시 뒤 프로젝트·직원·자료 등 종류별 결과 표시
 export const TypeToSearch: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

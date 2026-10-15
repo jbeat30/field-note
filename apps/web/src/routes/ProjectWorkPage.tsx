@@ -27,7 +27,7 @@ const helper = columnHelper<WorkLogSummary>();
 
 const hoursOf = (minutes: number) => `${roundTo(minutes / 60, 1)}시간`;
 
-// 열 머리를 누르면 정렬 (처음 보이는 순서는 최근 날짜 먼저). 날짜 링크가 이 프로젝트의 날짜 화면으로 가도록 프로젝트별로 만든다
+// 열 머리를 누르면 정렬 (처음 표시 순서는 최근 날짜 먼저), 날짜 링크가 이 프로젝트의 날짜 화면으로 가도록 프로젝트별로 생성
 const buildColumns = (projectId: string) =>
   helper.columns([
     helper.accessor('workDate', {
@@ -98,7 +98,7 @@ const shiftMonth = (month: string, delta: number) => {
     .slice(0, 10);
 };
 
-// 프로젝트의 작업 달력: 날짜를 눌러 그날 누가(회사 직원 중에서) 몇 시간 무슨 일을 했는지 적는다. 아래 표는 기록한 날 목록
+// 프로젝트의 작업 달력: 날짜를 눌러 그날 누가(회사 직원 중에서) 몇 시간 무슨 일을 했는지 입력, 아래 표는 기록한 날 목록
 export const ProjectWorkPage = () => {
   const { id = '' } = useParams();
   const navigate = useNavigate();

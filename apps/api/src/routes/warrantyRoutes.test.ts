@@ -12,6 +12,7 @@ import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createMaterialService } from '../material/materialService';
+import { createCompanySettingsService } from '../company/companySettingsService';
 import { createCompanyWithInvitation } from '../operator/operatorService';
 import { createPartnerService } from '../partner/partnerService';
 import { createProjectService } from '../project/projectService';
@@ -65,6 +66,7 @@ const app = () =>
     materials: createMaterialService(db.app, () => NOW),
     documents: createDocumentService(db.app, createMemoryStorage().storage, () => NOW),
     warranty: createWarrantyService(db.app, () => NOW),
+    companySettings: createCompanySettingsService(db.app),
     appOrigin: 'http://localhost:5173',
   });
 
@@ -119,6 +121,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     del,
     id: async (path: string, body: object) => (await send('post', path, body)).body.id as string,
     warranty: (projectId: string) => get(`/projects/${projectId}/warranty`),
+    setRules: (body: object) => send('put', '/company/rules', body),
     setWarranty: (projectId: string, body: object) =>
       send('put', `/projects/${projectId}/warranty`, body),
     addCertificate: (projectId: string, body: object) =>
@@ -226,6 +229,33 @@ describe('보증 설정', () => {
       startOn: '2026-09-20',
       endOn: '2027-09-20',
       daysLeft: 344,
+    });
+  });
+
+  it('회사가 정한 보증 기본 기간으로 미리 보여 주고 완료·보증 전환 때 만든다', async () => {
+    const { client, project, complete } = await setup();
+
+    await client.setRules({
+      burnWarnPercent: 80,
+      burnLimitPercent: 100,
+      aheadGapPercent: 20,
+      warrantyDefaultMonths: 24,
+    });
+    await complete(project, '2026-09-20');
+
+    expect(projectWarrantySchema.parse((await client.warranty(project)).body)).toMatchObject({
+      configured: false,
+      months: 24,
+      defaultMonths: 24,
+      endOn: '2028-09-20',
+    });
+
+    await client.projectStatus(project, { toStatus: 'WARRANTY', confirmSummary: true });
+
+    expect(projectWarrantySchema.parse((await client.warranty(project)).body)).toMatchObject({
+      configured: true,
+      months: 24,
+      endOn: '2028-09-20',
     });
   });
 
@@ -351,7 +381,7 @@ describe('보증과 상태 전환', () => {
 
     await client.setWarranty(project, { months: 0, startBasis: 'ACTUAL_END' });
 
-    // 보증 기간 0이면 보증 중으로는 바꿀 수 없다
+    // 보증 기간 0이면 보증 중으로 변경 불가
     const warranty = await client.projectStatus(project, {
       toStatus: 'WARRANTY',
       confirmSummary: true,

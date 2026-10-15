@@ -61,7 +61,7 @@ ALTER TABLE "materials" ADD CONSTRAINT "materials_company_id_fkey" FOREIGN KEY (
 ALTER TABLE "material_records" ADD CONSTRAINT "material_records_company_id_fkey" FOREIGN KEY ("company_id") REFERENCES "companies"("id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey
--- 기록은 같은 회사의 프로젝트·자재·작업 구분·업체·계정만 가리킬 수 있음 (복합 키). 작업 구분·업체는 비어 있으면 검사하지 않음
+-- 기록은 같은 회사의 프로젝트·자재·작업 구분·업체·계정만 가리킬 수 있음 (복합 키), 작업 구분·업체는 비어 있으면 검사하지 않음
 ALTER TABLE "material_records" ADD CONSTRAINT "material_records_company_id_project_id_fkey" FOREIGN KEY ("company_id", "project_id") REFERENCES "projects"("company_id", "id") ON DELETE RESTRICT ON UPDATE CASCADE;
 
 -- AddForeignKey

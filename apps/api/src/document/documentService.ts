@@ -31,14 +31,14 @@ export class DocumentError extends Error {
 }
 
 export type DocumentService = {
-  // 올린 파일로 문서를 만듦 (첫 버전). 같은 파일로 다시 부르면 만들어 둔 문서를 돌려줌 (재시도에 안전)
+  // 올린 파일로 문서를 만듦 (첫 버전), 같은 파일로 다시 부르면 만들어 둔 문서를 돌려줌 (재시도에 안전)
   create: (
     companyId: string,
     userId: string,
     projectId: string,
     input: DocumentCreate,
   ) => Promise<DocumentDetail>;
-  // 프로젝트의 문서 목록 (고정한 문서가 먼저, 그다음 최근 수정순). 각 문서는 최신본을 보여 줌
+  // 프로젝트의 문서 목록 (고정한 문서가 먼저, 그다음 최근 수정순), 각 문서는 최신본을 보여 줌
   list: (
     companyId: string,
     projectId: string,
@@ -55,7 +55,7 @@ export type DocumentService = {
   update: (companyId: string, documentId: string, input: DocumentUpdate) => Promise<DocumentDetail>;
   // 소프트 삭제 (파일·버전·열람 기록은 보존)
   remove: (companyId: string, documentId: string) => Promise<void>;
-  // 열람·내려받기 주소 발급. 민감 자료면 감사 기록을 남긴 뒤에만 발급
+  // 열람·내려받기 주소 발급, 민감 자료면 감사 기록을 남긴 뒤에만 발급
   access: (
     companyId: string,
     userId: string,

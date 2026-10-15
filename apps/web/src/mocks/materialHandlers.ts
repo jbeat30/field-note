@@ -40,7 +40,7 @@ type MockMaterial = Omit<Material, 'lastUsedOn' | 'lastRecordedAt'> & {
 };
 type MockRecord = MaterialRecord & { scope: string; deletedAt?: string };
 
-// 목업 저장소: 회사별 자재·기록 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 자재·기록 (새로고침하면 초기화), 실제 서버 동작을 모사
 const materials = new Map<string, MockMaterial>();
 const records = new Map<string, MockRecord>();
 const seeded = new Set<string>();

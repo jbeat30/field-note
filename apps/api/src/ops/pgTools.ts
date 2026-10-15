@@ -5,8 +5,8 @@ import { pipeline } from 'node:stream/promises';
 import { withDatabase } from '../db/connectionUrl';
 
 // PostgreSQL 명령줄 도구(pg_dump·pg_restore 등) 실행 방식
-// - docker: 로컬 개발. 호스트에 도구가 없어도 되도록 컨테이너 안에서 실행 (소켓 접속이라 비밀번호 불필요)
-// - local: 서버에 PostgreSQL 클라이언트 도구가 설치된 경우. 접속 주소로 직접 접속
+// - docker: 로컬 개발, 호스트에 도구가 없어도 되도록 컨테이너 안에서 실행 (소켓 접속이라 비밀번호 불필요)
+// - local: 서버에 PostgreSQL 클라이언트 도구가 설치된 경우, 접속 주소로 직접 접속
 export type PgMode = 'docker' | 'local';
 
 export type PgTools = {

@@ -22,7 +22,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 날짜별 작업 내역이 표로 나오고, 오늘 작업 입력 버튼이 맨 위에 있다
+// 날짜별 작업 내역이 표로 표시되고 오늘 작업 입력 버튼이 맨 위에 위치
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -80,7 +80,7 @@ export const CalendarShowsWorkers: Story = {
   },
 };
 
-// 달을 옮겨 보고, 프로젝트 기간 밖의 날은 눌러지지 않는다
+// 달을 옮겨 볼 수 있고 프로젝트 기간 밖의 날은 선택 불가
 export const MoveMonth: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -95,7 +95,7 @@ export const MoveMonth: Story = {
   },
 };
 
-// 작업 기록이 없는 프로젝트는 첫 기록을 남기도록 안내한다
+// 작업 기록이 없는 프로젝트는 첫 기록 작성을 안내
 export const Empty: Story = {
   parameters: { router: routerFor('미래오피스 천장 마감') },
   play: async ({ canvasElement }) => {

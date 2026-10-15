@@ -3,6 +3,8 @@ import {
   OPTION_PRESETS,
   normalizeOptionName,
   type AlertKind,
+  DEFAULT_COMPANY_RULES,
+  type CompanyRules,
   type CompanySettings,
   type Device,
   type EmployeeDetail,
@@ -14,6 +16,7 @@ import {
   type ProjectDetail,
   type ProjectPeriodChange,
   type ProjectStatusChange,
+  type SocialProviderKey,
   type WorkLogRevision,
 } from '@field-note/shared';
 
@@ -35,7 +38,7 @@ import {
   DEMO_WORK_LOGS,
 } from './demoSource';
 
-// 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
+// 목업 서버 상태, 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
   accounts: MockAccount[];
   currentLoginId: string | null;
@@ -144,6 +147,18 @@ export const setPassword = (account: MockAccount, password: string) => {
   persist();
 };
 
+// 소셜 로그인만 쓰던 계정에 아이디·비밀번호 로그인 설정 (진행 중인 로그인 상태는 새 아이디로 이어감)
+export const setLoginCredentials = (account: MockAccount, loginId: string, password: string) => {
+  if (state.currentLoginId === account.loginId) {
+    state.currentLoginId = loginId;
+  }
+
+  account.loginId = loginId;
+  account.password = password;
+  account.hasPassword = true;
+  persist();
+};
+
 export const setPendingEmail = (account: MockAccount, email: string) => {
   account.pendingEmail = email;
   persist();
@@ -160,11 +175,15 @@ export const applyPendingEmail = (account: MockAccount) => {
   persist();
 };
 
-export const findAccountByKakao = (profileKey: string) =>
-  state.accounts.find((account) => account.kakaoProfileKey === profileKey);
+export const findAccountBySocial = (provider: SocialProviderKey, profileKey: string) =>
+  state.accounts.find((account) => account.socialProfiles?.[provider] === profileKey);
 
-export const setKakaoProfile = (account: MockAccount, profileKey: string | undefined) => {
-  account.kakaoProfileKey = profileKey;
+export const setSocialProfile = (
+  account: MockAccount,
+  provider: SocialProviderKey,
+  profileKey: string | undefined,
+) => {
+  account.socialProfiles = { ...account.socialProfiles, [provider]: profileKey };
   persist();
 };
 
@@ -637,6 +656,14 @@ export const saveAlertSettings = (
 // 알림 숨기기: 같은 키는 한 번만 남김
 export const dismissAlerts = (account: MockAccount, keys: string[]) => {
   account.dismissedAlerts = [...new Set([...(account.dismissedAlerts ?? []), ...keys])];
+  persist();
+};
+
+export const getRules = (account: MockAccount): CompanyRules =>
+  account.rules ?? DEFAULT_COMPANY_RULES;
+
+export const updateRules = (account: MockAccount, rules: CompanyRules) => {
+  account.rules = rules;
   persist();
 };
 

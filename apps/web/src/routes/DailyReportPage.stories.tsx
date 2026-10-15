@@ -75,7 +75,7 @@ export const ChangeDate: Story = {
   },
 };
 
-// 인쇄 단추는 보고서가 불러와진 뒤에만 켜지고, 누르면 인쇄 창을 연다
+// 인쇄 단추는 보고서 로딩 후에만 활성화되고 누르면 인쇄 창 표시
 export const PrintButton: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

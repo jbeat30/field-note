@@ -6,7 +6,7 @@ ALTER TABLE "projects" ADD COLUMN "actual_end" DATE;
 UPDATE "projects" SET "actual_start" = "planned_start" WHERE "status" IN ('IN_PROGRESS', 'SUSPENDED', 'COMPLETED', 'WARRANTY', 'CLOSED');
 UPDATE "projects" SET "actual_end" = "planned_end" WHERE "status" IN ('COMPLETED', 'WARRANTY', 'CLOSED');
 
--- 상태와 실제일의 일관성: 시작한 적 있는 상태에는 실제 시작일이, 완료 이후 상태에는 실제 완료일이 있고, 그 밖에는 완료일이 없다
+-- 상태와 실제일의 일관성: 시작한 적 있는 상태는 실제 시작일 필수, 완료 이후 상태는 실제 완료일 필수, 그 밖의 상태는 완료일 없음
 ALTER TABLE "projects" ADD CONSTRAINT projects_actual_start_consistency
   CHECK ("status" NOT IN ('IN_PROGRESS', 'SUSPENDED', 'COMPLETED', 'WARRANTY', 'CLOSED') OR "actual_start" IS NOT NULL);
 ALTER TABLE "projects" ADD CONSTRAINT projects_actual_end_consistency

@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { employeeStatusSchema, type EmployeeStatus } from './employees';
 import { projectStatusSchema } from './projects';
 
-// 인력 배치 캘린더 (서비스 기획서 §9.7). 직원 × 날짜 표에 어느 프로젝트에 투입되는지 보여 주고,
-// 같은 날 두 프로젝트에 겹치면 경고하며 휴직·퇴사 표시와 비는 사람을 알려 준다
+// 인력 배치 캘린더 (서비스 기획서 §9.7), 직원 × 날짜 표에 어느 프로젝트에 투입되는지 보여 주고,
+// 같은 날 두 프로젝트에 겹치면 경고, 휴직·퇴사 표시와 비는 사람 안내
 export const STAFFING_MAX_DAYS = 42;
 
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
@@ -81,7 +81,7 @@ const staffingWorkDaySchema = z.object({
   minutes: z.number().int(),
 });
 
-// 취소한 투입과 취소된 프로젝트의 투입은 담지 않는다. 퇴사 직원은 기간 안에 투입이나 일한 기록이 있을 때만 담는다
+// 취소한 투입과 취소된 프로젝트의 투입은 제외, 퇴사 직원은 기간 안에 투입이나 일한 기록이 있을 때만 포함
 export const staffingCalendarSchema = z.object({
   from: dateSchema,
   to: dateSchema,
@@ -114,7 +114,7 @@ export type StaffingRow = { employee: StaffingEmployee; cells: StaffingCell[] };
 const unavailableOn = (employee: StaffingEmployee, date: string) => {
   if (employee.status === 'ON_LEAVE') return 'ON_LEAVE' as const;
 
-  // 퇴사일을 모르면 기간 전체를 근무 불가로 본다
+  // 퇴사일을 모르면 기간 전체를 근무 불가로 간주
   if (employee.status === 'LEFT' && (!employee.leftOn || date > employee.leftOn)) {
     return 'LEFT' as const;
   }
@@ -124,7 +124,7 @@ const unavailableOn = (employee: StaffingEmployee, date: string) => {
 
 /**
  * @description 캘린더 응답을 직원 × 날짜 표로 만든다. 같은 프로젝트의 투입이 겹쳐도 한 곳으로 센다
- * 휴직 직원은 기간 전체, 퇴사 직원은 퇴사일 다음 날부터 근무 불가로 표시하되 투입이 있으면 투입을 보여 준다
+ * 휴직 직원은 기간 전체, 퇴사 직원은 퇴사일 다음 날부터 근무 불가로 표시하되 투입이 있으면 투입 표시
  * @param calendar 캘린더 응답
  * @returns 직원별 날짜 칸 (직원 순서는 응답 그대로)
  */
@@ -234,7 +234,7 @@ export type StaffingTimelineRow = {
 
 /**
  * @description 캘린더 응답을 사람 행 × 날짜 타임라인으로 만든다. 같은 프로젝트에 이어진 날은 막대 하나(segment)로 묶고,
- * 같은 날 두 프로젝트 이상에서 일했으면 그 날을 겹침으로 표시한다
+ * 같은 날 두 프로젝트 이상에서 일했으면 그 날을 겹침으로 표시
  * @param calendar 캘린더 응답 (workDays는 저장된 작업 내역의 사람·날짜·프로젝트별 시간)
  * @returns 직원 행 (직원 순서는 응답 그대로)
  */

@@ -27,7 +27,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByRole('heading', { name: /가나다건설/ })).toBeInTheDocument();
-    // 카드에서는 담당자·연락처·메모가 보임 (전화 걸기 링크는 없음: 번호를 보고 직접 건다)
+    // 카드에서는 담당자·연락처·메모 표시 (전화 걸기 링크 없음: 번호를 보고 직접 전화)
     await expect(canvas.getByLabelText('담당자')).toHaveValue('윤소장');
     await expect(canvas.getByLabelText('연락처')).toHaveValue('02-0000-0101');
     await expect(canvas.getByLabelText('메모')).toHaveValue('원청. 현장 출입증 사전 신청 필요');
@@ -142,7 +142,7 @@ export const NotFound: Story = {
   },
 };
 
-// 쓰이지 않은 업체는 확인을 거쳐 삭제하고 명부 목록으로 돌아간다
+// 쓰이지 않은 업체는 확인을 거쳐 삭제하고 명부 목록으로 복귀
 export const DeleteUnusedPartner: Story = {
   parameters: { router: routerFor('든든도장') },
   play: async ({ canvasElement }) => {

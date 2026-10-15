@@ -4,7 +4,7 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '../../lib/cn';
 
-// 버튼: 크기 단계는 입력 칸(controlSize)과 같아 한 줄에 놓으면 높이가 맞는다. 모서리도 입력 칸과 같은 값
+// 버튼: 크기 단계는 입력 칸(controlSize)과 동일해 한 줄에 놓으면 높이 일치, 모서리도 입력 칸과 같은 값
 export const buttonVariants = cva(
   'inline-flex shrink-0 items-center justify-center gap-2 rounded-control font-semibold whitespace-nowrap transition-[background-color,border-color,box-shadow,transform] duration-(--duration-fast) ease-(--ease-smooth) select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
   {

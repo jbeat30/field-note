@@ -48,8 +48,8 @@ type StaffingTimelineProps = {
 
 const NAME_COLUMN = 'minmax(7.5rem, 9rem)';
 
-// 사람 행 × 날짜 열 타임라인: 같은 프로젝트에 이어서 일한 날은 막대 하나, 막대 안에 그날 시간.
-// 같은 날 두 프로젝트에서 일하면 막대가 위아래로 쌓이고 그 날이 빨간 테두리. 빈 칸을 누르면 프로젝트를 골라 그날 하루 기록으로 간다
+// 사람 행 × 날짜 열 타임라인: 같은 프로젝트에 이어서 일한 날은 막대 하나, 막대 안에 그날 시간
+// 같은 날 두 프로젝트에서 일하면 막대가 위아래로 쌓이고 그 날은 빨간 테두리, 빈 칸을 누르면 프로젝트를 골라 그날 하루 기록으로 이동
 export const StaffingTimeline = ({
   rows,
   dates,
@@ -213,7 +213,7 @@ const EmployeeRow = ({
           );
           const style = { gridColumn: index + 1, gridRow: `1 / span ${laneCount}` };
 
-          // 미래 날짜는 기록할 수 없어 누르지 않는다
+          // 미래 날짜는 기록할 수 없어 선택 불가
           if (isFuture) {
             return <div key={date} aria-hidden className={background} style={style} />;
           }
@@ -289,7 +289,7 @@ const EmployeeRow = ({
                         title={label}
                         data-conflict={day.conflict || undefined}
                         className={cn(
-                          // 제목 칸까지 포함해 막대의 그날 세로 전체가 눌린다
+                          // 제목 칸까지 포함해 막대의 그날 세로 전체가 클릭 영역
                           'pointer-events-auto flex items-end justify-center rounded pb-1.5 text-[11px] tabular-nums text-foreground/80 hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-primary',
                           day.conflict && 'font-bold text-danger ring-2 ring-danger ring-inset',
                         )}

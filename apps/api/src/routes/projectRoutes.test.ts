@@ -480,7 +480,7 @@ describe('목록·조회', () => {
     expect((await page('?sortBy=manager&sortDir=asc')).names[0]).toBe('마 프로젝트');
     expect((await page('?sortBy=manager&sortDir=desc')).names[0]).toBe('다 프로젝트');
 
-    // 필터와 쪽 나누기: 조건에 맞는 건수만 total에 잡힌다
+    // 필터와 쪽 나누기: 조건에 맞는 건수만 total에 반영
     const filtered = await page(`?clientId=${clientA}&managerId=${managerA}&pageSize=2`);
 
     expect(filtered.total).toBe(3);
@@ -541,6 +541,35 @@ describe('목록·조회', () => {
   });
 });
 
+describe('목록 경고', () => {
+  it('진행 중이면서 종료 예정일이 지난 프로젝트에 경고가 붙고 경고만 걸러 볼 수 있다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const late = (await client.create({ ...body, name: '지연 공사', plannedEnd: '2026-10-05' }))
+      .body.id as string;
+    const fine = (await client.create({ ...body, name: '정상 공사' })).body.id as string;
+    const planned = (await client.create({ ...body, name: '예정 공사', plannedEnd: '2026-10-05' }))
+      .body.id as string;
+
+    for (const id of [late, fine]) {
+      await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' });
+    }
+
+    const items = projectsResponseSchema.parse((await client.list()).body).items;
+    const warningsOf = (id: string) => items.find((item) => item.id === id)?.warnings;
+
+    expect(warningsOf(late)).toEqual(['OVERDUE']);
+    expect(warningsOf(fine)).toEqual([]);
+    // 아직 시작하지 않은 프로젝트는 경고 없음
+    expect(warningsOf(planned)).toEqual([]);
+
+    const warnedOnly = projectsResponseSchema.parse((await client.list('?hasWarning=true')).body);
+
+    expect(warnedOnly.items.map((item) => item.id)).toEqual([late]);
+    expect(warnedOnly.total).toBe(1);
+  });
+});
+
 describe('수정', () => {
   it('보낸 항목만 바꾸고 null로 비우며 코드·상태는 바꿀 수 없다', async () => {
     const instance = app();
@@ -559,7 +588,7 @@ describe('수정', () => {
       siteAddress: null,
       memo: null,
     });
-    // 코드·상태는 수정 대상이 아님: 바꿀 값이 없는 요청이 된다
+    // 코드·상태는 수정 대상이 아님: 바꿀 값이 없는 요청으로 처리
     expect((await client.update(id, { code: '2026-999' })).status).toBe(400);
     expect((await client.update(id, { status: 'CLOSED' })).status).toBe(400);
     expect((await client.update(id, {})).status).toBe(400);
@@ -857,7 +886,7 @@ describe('상태 전환', () => {
     await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' });
     await client.transition(id, { toStatus: 'COMPLETED', effectiveOn: '2026-10-03' });
 
-    // 요약 확인 없이 보증 중으로 바꿀 수 없다
+    // 요약 확인 없이 보증 중으로 변경 불가
     const unconfirmed = await client.transition(id, {
       toStatus: 'WARRANTY',
       effectiveOn: '2026-10-04',
@@ -892,7 +921,7 @@ describe('상태 전환', () => {
     });
 
     expect(closed.body).toMatchObject({ status: 'CLOSED', actualEnd: '2026-10-03' });
-    // 종료 상태에서는 취소·완료로 바꿀 수 없고, 재오픈은 사유가 있어야 한다
+    // 종료 상태에서는 취소·완료로 변경 불가, 재오픈은 사유 필수
     expect((await client.transition(id, { toStatus: 'CANCELLED', reason: '사유' })).status).toBe(
       400,
     );
@@ -956,13 +985,13 @@ describe('상태 전환', () => {
     expect(
       (await client.transition(completed, { toStatus: 'CANCELLED', reason: '사유' })).status,
     ).toBe(400);
-    // 시작하지 않고 취소하면 실제 시작일은 없다
+    // 시작하지 않고 취소하면 실제 시작일 없음
     expect((await client.get(planned)).body).toMatchObject({
       status: 'CANCELLED',
       actualStart: null,
       actualEnd: null,
     });
-    // 시작했다가 취소하면 실제 시작일은 남고 완료일은 없다
+    // 시작했다가 취소하면 실제 시작일은 유지, 완료일은 없음
     expect((await client.get(running)).body).toMatchObject({
       status: 'CANCELLED',
       actualStart: '2026-10-07',

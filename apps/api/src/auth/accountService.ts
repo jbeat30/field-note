@@ -22,12 +22,25 @@ export type SignupInput = {
 
 export type AuthenticatedAccount = { userId: string; companyId: string };
 
+export type SignupResult = AuthenticatedAccount & {
+  email: string;
+  // 복구·소유자 이전 링크로 다시 등록한 경우의 이전 이메일 (보안 알림 수신처)
+  previousEmail: string | null;
+};
+
 export type AccountService = {
-  // 초대 링크를 사용해 가입 (이메일 인증 전 상태). 한 트랜잭션이라 실패하면 링크도 소모되지 않음
-  signup: (input: SignupInput) => Promise<AuthenticatedAccount & { email: string }>;
+  // 초대 링크를 사용해 가입 (이메일 인증 전 상태), 한 트랜잭션이라 실패하면 링크도 소모되지 않음
+  signup: (input: SignupInput) => Promise<SignupResult>;
   login: (input: { loginId: string; password: string }) => Promise<AuthenticatedAccount>;
-  // 로그인한 상태에서 비밀번호를 다시 확인 (비밀번호·이메일 변경 전). 틀리면 로그인과 같은 실패 횟수·잠금 정책 적용
+  // 로그인한 상태에서 비밀번호를 다시 확인 (비밀번호·이메일 변경 전), 틀리면 로그인과 같은 실패 횟수·잠금 정책 적용
   verifyCurrentPassword: (account: AuthenticatedAccount, password: string) => Promise<void>;
+  // 아이디·비밀번호 로그인이 설정되어 있는지 (소셜 로그인만 쓰는 계정은 false)
+  hasPassword: (account: AuthenticatedAccount) => Promise<boolean>;
+  // 소셜 로그인만 쓰는 계정이 아이디·비밀번호 로그인을 처음 설정, 이미 있으면 거부
+  setPassword: (
+    account: AuthenticatedAccount,
+    input: { loginId: string; newPassword: string },
+  ) => Promise<void>;
   // 로그인한 관리자 정보 (회사 식별값은 응답에 없음)
   getMe: (account: AuthenticatedAccount) => Promise<MeResponse>;
 };
@@ -132,7 +145,10 @@ export const createAccountService = ({
             throw new AccountError('LOGIN_ID_TAKEN');
           }
 
-          if (await tx.user.findUnique({ where: { email: input.email } })) {
+          const emailOwner = await tx.user.findUnique({ where: { email: input.email } });
+
+          // 복구 때 같은 이메일 재사용 허용 (이전 값은 링크 사용 시점에 비워짐)
+          if (emailOwner && emailOwner.id !== invitation.userId) {
             throw new AccountError('EMAIL_TAKEN');
           }
 
@@ -141,8 +157,13 @@ export const createAccountService = ({
             where: { companyId_id: { companyId: invitation.companyId, id: invitation.userId } },
             data: { email: input.email, ageConfirmedAt: at },
           });
-          await tx.userCredential.create({
-            data: {
+          // 복구·소유자 이전은 비워 둔 기존 행 갱신, 새 가입은 행 생성
+          await tx.userCredential.upsert({
+            where: {
+              companyId_userId: { companyId: invitation.companyId, userId: invitation.userId },
+            },
+            update: { loginId: input.loginId, passwordHash },
+            create: {
               companyId: invitation.companyId,
               userId: invitation.userId,
               loginId: input.loginId,
@@ -151,7 +172,12 @@ export const createAccountService = ({
           });
           await recordConsents(tx, invitation, input.consents, at);
 
-          return { userId: invitation.userId, companyId: invitation.companyId, email: input.email };
+          return {
+            userId: invitation.userId,
+            companyId: invitation.companyId,
+            email: input.email,
+            previousEmail: invitation.previousEmail,
+          };
         });
       } catch (error) {
         throw mapUniqueViolation(error) ?? error;
@@ -207,6 +233,37 @@ export const createAccountService = ({
       }
 
       await assertPassword(credential, password, at, 'CURRENT_PASSWORD_INVALID');
+    },
+
+    hasPassword: async ({ userId, companyId }) => {
+      const credential = await auth.userCredential.findUnique({
+        where: { companyId_userId: { companyId, userId } },
+      });
+
+      return Boolean(credential?.passwordHash);
+    },
+
+    setPassword: async ({ userId, companyId }, { loginId, newPassword }) => {
+      const where = { companyId_userId: { companyId, userId } };
+      const passwordHash = await hashPassword(newPassword);
+
+      try {
+        await auth.$transaction(async (tx) => {
+          const credential = await tx.userCredential.findUnique({ where });
+
+          if (credential?.passwordHash) {
+            throw new AccountError('PASSWORD_ALREADY_SET');
+          }
+
+          await tx.userCredential.upsert({
+            where,
+            update: { loginId, passwordHash, failedLoginCount: 0, lockedUntil: null },
+            create: { companyId, userId, loginId, passwordHash },
+          });
+        });
+      } catch (error) {
+        throw mapUniqueViolation(error) ?? error;
+      }
     },
 
     getMe: ({ userId, companyId }) =>

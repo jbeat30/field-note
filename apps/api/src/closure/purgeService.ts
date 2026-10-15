@@ -79,6 +79,7 @@ export const purgeCompany = (
     deleted.project_warranty_changes = (await tx.projectWarrantyChange.deleteMany({ where })).count;
     deleted.project_warranties = (await tx.projectWarranty.deleteMany({ where })).count;
     // 지출·수입 기록은 프로젝트·추가 공사·문서·업체·분류를 참조하므로 그보다 먼저 지움
+    deleted.idempotency_keys = (await tx.idempotencyKey.deleteMany({ where })).count;
     deleted.ledger_entries = (await tx.ledgerEntry.deleteMany({ where })).count;
     deleted.change_work_documents = (await tx.changeWorkDocument.deleteMany({ where })).count;
     deleted.change_work_status_changes = (

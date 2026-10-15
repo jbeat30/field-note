@@ -167,7 +167,7 @@ describe('pivotMonthlyHours', () => {
     ]);
     expect(matrix.columns.map((item) => item.id)).toEqual(['p1', 'p2']);
     expect(matrix.rows[0]!.cells).toEqual({ p1: 960, p2: 480 });
-    // 일하지 않은 칸은 값이 없다
+    // 일하지 않은 칸은 값 없음
     expect(matrix.rows[1]!.cells).toEqual({ p1: 480 });
     expect(matrix.columnTotals).toEqual({ p1: 1440, p2: 480 });
     expect(matrix.total).toBe(1920);

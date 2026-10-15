@@ -3,8 +3,8 @@ import { z } from 'zod';
 import type { CompanySettings } from './account';
 
 // 직원 단가표와 프로젝트 인건비 추정 (회사가 정한 범위 확장, 개발 계획 §8 결정 005)
-// 이 서비스는 급여를 계산하지 않는다. 단가표 금액과 기록된 공수로 "최소 얼마가 드는지"만 추정하며
-// 4대보험·수당·퇴직금·세금은 포함하지 않는다
+// 이 서비스는 급여를 계산하지 않음, 단가표 금액과 기록된 공수로 "최소 얼마가 드는지"만 추정하며
+// 4대보험·수당·퇴직금·세금은 제외
 
 export const PAY_TYPES = ['DAILY', 'HOURLY', 'MONTHLY', 'ANNUAL'] as const;
 
@@ -89,7 +89,7 @@ type DatedRate = RateFor & { effectiveFrom: string; createdAt: string };
 
 /**
  * @description 그 날짜(근무일)에 적용되는 단가: 그 날짜까지 시작한 단가 중 가장 최근 시작일, 같은 시작일이면 나중에 입력한 것
- * 단가가 바뀌면 바뀐 날부터 새 단가가, 그 전 날짜는 이전 단가가 적용된다
+ * 단가가 바뀌면 바뀐 날부터 새 단가, 그 전 날짜는 이전 단가 적용
  * @param rates 직원의 단가 기록 (순서 무관)
  * @param date 근무일
  * @returns 적용 단가, 그 날짜 이전에 시작한 단가가 없으면 null
@@ -109,7 +109,7 @@ export const rateOn = <T extends DatedRate>(rates: readonly T[], date: string): 
 
 export const laborCostEmployeeSchema = z.object({
   employeeId: z.uuid(),
-  // 단가가 적용된 공수와 금액(원). 단가가 하나도 적용되지 않은 공수는 unpricedMinutes
+  // 단가가 적용된 공수와 금액(원), 단가가 하나도 적용되지 않은 공수는 unpricedMinutes
   minutes: z.number().int(),
   unpricedMinutes: z.number().int(),
   amount: z.number().int(),
@@ -121,14 +121,14 @@ export const laborCostSectionSchema = z.object({
   // 단가가 적용된 공수의 금액 합 (최소 추정)
   totalAmount: z.number().int(),
   totalMinutes: z.number().int(),
-  // 단가가 없어 합계에서 빠진 공수 (단가표를 채우면 합계가 늘어난다)
+  // 단가가 없어 합계에서 빠진 공수 (단가표를 채우면 합계 증가)
   unpricedMinutes: z.number().int(),
   employees: z.array(laborCostEmployeeSchema),
 });
 
 export type LaborCostSection = z.infer<typeof laborCostSectionSchema>;
 
-// 실제: 저장된 작업 내역의 공수 × 근무일 단가. 계획: 투입의 계획 공수 × 오늘(투입 기간 안으로 맞춤)의 단가
+// 실제: 저장된 작업 내역의 공수 × 근무일 단가, 계획: 투입의 계획 공수 × 오늘(투입 기간 안으로 보정)의 단가
 export const laborCostSchema = z.object({
   actual: laborCostSectionSchema,
   planned: laborCostSectionSchema,

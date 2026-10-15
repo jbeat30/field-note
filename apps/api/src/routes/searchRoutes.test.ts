@@ -152,7 +152,7 @@ const setup = async () => {
     return { ticket, key, done };
   };
 
-  // 사진으로 쓸 파일 한 장 (검사 통과 상태). 안 올리면 신청만 한 상태
+  // 사진으로 쓸 파일 한 장 (검사 통과 상태), 안 올리면 신청만 한 상태
   const bodies = new Map<string, Buffer>();
   // 저장소에 올리고 완료를 알림 (신청만 해 둔 파일을 이어서 올릴 때)
   const finish = async (fileId: string) => {
@@ -161,7 +161,7 @@ const setup = async () => {
     h.memory.upload(row.objectKey, bodies.get(fileId)!, 'application/pdf');
     await post(`/files/${fileId}/complete`);
   };
-  // 문서로 쓸 PDF 한 개 (검사 통과 상태). 안 올리면 신청만 한 상태
+  // 문서로 쓸 PDF 한 개 (검사 통과 상태), 안 올리면 신청만 한 상태
   const docFile = async (pid = projectId, uploaded = true, name = '시공도.pdf') => {
     const body = Buffer.from(`%PDF-1.7\n1 0 obj\n<<>>\nendobj\n% ${Math.random()}\n%%EOF`);
     const ticket = fileUploadTicketSchema.parse(
@@ -218,7 +218,7 @@ const searchFor = async (s: Awaited<ReturnType<typeof setup>>, query: string) =>
   return { res, data: res.status === 200 ? searchResponseSchema.parse(res.body) : null };
 };
 
-// 프로젝트·직원·메모·자료·작업 내역이 모두 '배관'을 담은 회사 한 곳을 만든다
+// 프로젝트·직원·메모·자료·작업 내역이 모두 '배관'을 포함한 회사 한 곳 생성
 const populate = async (s: Awaited<ReturnType<typeof setup>>) => {
   const memo = (
     await s.post('/memos', {

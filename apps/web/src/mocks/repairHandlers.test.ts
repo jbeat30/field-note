@@ -125,7 +125,7 @@ describe('보수 요청 목업', () => {
   it('보증 중에만 접수하고 번호가 올라가며 상태·사유 규칙을 서버와 같이 지킨다', async () => {
     const { completed } = await setup();
 
-    // 완료 상태에서는 접수할 수 없다
+    // 완료 상태에서는 접수 불가
     expect((await create(completed)).response.status).toBe(400);
     expect((await toWarranty(completed)).response.status).toBe(200);
 
@@ -191,7 +191,7 @@ describe('보수 요청 목업', () => {
     const { running } = await setup();
     const account = findAccount(demo.loginId)!;
 
-    // 작업 내역이 있는 A동을 보증 중으로 맞추고 저장된 작업 내역 한 건을 사후 작업으로 표시한다
+    // 작업 내역이 있는 A동을 보증 중으로 맞추고 저장된 작업 내역 한 건을 사후 작업으로 표시
     saveProjects(
       account,
       getProjects(account).map((project) =>
@@ -213,7 +213,7 @@ describe('보수 요청 목업', () => {
       });
 
     expect((await link({})).response.status).toBe(400);
-    // 사후 작업이 아닌 작업 내역은 연결할 수 없다
+    // 사후 작업이 아닌 작업 내역은 연결 불가
     expect((await link({ workLogId: other!.id })).response.status).toBe(400);
 
     const linked = repairRequestDetailSchema.parse((await link({ workLogId: log!.id })).data);

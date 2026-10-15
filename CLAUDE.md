@@ -4,7 +4,7 @@
 
 ## 규칙
 
-- 코드·주석은 jbeat-conventions 규칙을 따른다 (한국어 명사형, 마침표 없음)
+- 코드·주석은 jbeat-conventions 규칙을 따른다 (한국어 명사형, 마침표 없음). 서술형(`~한다`·`~이다`) 주석은 쓰지 않고 `pnpm check:comments --all`로 점검한다
 - 의존성은 정확한 버전으로 고정하고 정식 릴리스만 쓴다 (`^` 금지, Prisma는 7.10.0, TypeScript는 6.0.3)
 - 회사 ID는 세션에서만 얻는다. 요청 본문·주소·헤더로 받지 않는다
 - 커밋 메시지는 `타입: 한국어 설명` 형식으로 사람이 쓴 것처럼 작성하고, Claude Code 안내 문구·Co-Authored-By는 넣지 않는다
@@ -28,7 +28,7 @@
 2. **브랜치**: `feature/<버전>`에서 `<타입>-<작업명>` 브랜치를 만든다
 3. **구현**: `docs/01-development-plan.md`의 다음 작업(ID)을 구현한다. 규칙은 shared의 순수 함수로 두어 서버와 목업이 함께 쓴다. 새 엔드포인트는 `pnpm openapi:generate`, 새 회사 범위 테이블은 RLS·`PURGE_POLICY`·격리 테스트 목록까지 반영한다
 4. **검증**: `pnpm typecheck && pnpm lint && pnpm format:check && pnpm build && pnpm test && pnpm test:stories`를 모두 통과시키고, 화면이 있으면 실제 API·DB와 Chromium(Playwright)으로 직접 확인한다. 새 화면·컴포넌트에는 Storybook 스토리를 만든다
-5. **문서**: README, `docs/04-data-model.md`(스키마 변경 시), `docs/03-progress.md`(완료·다음 작업·메모)를 같은 PR에서 갱신한다. 문서만 바꾸는 PR을 따로 쌓지 않는다
+5. **문서**: 기능 동작 설명은 `docs/07-feature-reference.md`(README는 소개·시작 방법만 짧게 유지), `docs/04-data-model.md`(스키마 변경 시), `docs/03-progress.md`(완료·다음 작업·메모)를 같은 PR에서 갱신한다. 문서만 바꾸는 PR을 따로 쌓지 않는다
 6. **커밋·PR**: `타입: 한국어 설명 (작업 ID)` 커밋(첨부 문구 없음) → 푸시 → `gh pr create --base feature/<버전>` (본문은 개요·변경 사항·검증·참고, 개조식). PR 본문은 임시 파일로 만들어 `--body-file`로 넘긴다
 7. **보고**: 한국어로 구현 내용·검증 결과·남은 일을 짧게 보고하고, 사용자의 컨펌(PR 확인·승인) 전에는 다음 작업을 시작하지 않는다. 보고 끝에 "확인 후 알려 주세요"라고 요청한다.
 8. **합의가 필요한 일**: GitHub 저장소 보호 설정 변경, 운영 서버·카카오 앱 등록(운영 서버 작업 때로 미룸)은 사용자와 합의 후에만 한다

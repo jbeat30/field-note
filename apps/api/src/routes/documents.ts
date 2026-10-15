@@ -147,7 +147,7 @@ export const registerDocumentRoutes = (registry: RouteRegistry, documents?: Docu
       request: { params: documentParamsSchema },
       response: { status: 200, schema: successResponseSchema },
       errors: ['NOT_FOUND'],
-      // 활동 기록: 지우기 전에 어떤 문서였는지 읽어 둔다
+      // 활동 기록: 삭제 전 문서 정보 조회
       audit: {
         before: ({ auth, params }) =>
           documents!.get(auth!.companyId, (params as { id: string }).id),

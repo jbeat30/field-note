@@ -45,7 +45,7 @@ export const Default: Story = {
   },
 };
 
-// 준공 요약에 넣기를 켜고 저장하면 그 값이 함께 저장된다
+// 준공 요약에 넣기를 켜고 저장하면 그 값도 함께 저장
 export const IncludeInSummary: Story = {
   play: async ({ args }) => {
     const dialog = within(await screen.findByRole('dialog'));

@@ -10,7 +10,7 @@ import { splitServerErrors } from '../lib/serverErrors';
 import { OptionSelect } from './OptionSelect';
 import { useCreateEmployee } from './useEmployees';
 
-// 간편 등록: 이름과 직종만 넣으면 된다 (일용·협력 인력용). 나머지는 직원 카드에서 나중에 채운다
+// 간편 등록: 이름과 직종만 입력 (일용·협력 인력용), 나머지는 직원 카드에서 추후 입력
 export const EmployeeQuickAdd = ({
   className = 'rounded-xl bg-surface-subtle p-4',
   onAdded,

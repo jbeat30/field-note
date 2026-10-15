@@ -1,12 +1,12 @@
 import { createHash } from 'node:crypto';
 import { createReadStream } from 'node:fs';
 
-// 백업 보관 기간 기본값(일). 해지한 회사의 데이터도 백업에는 이 기간만큼 남으므로 처리방침의 보관 안내와 맞춰야 한다
+// 백업 보관 기간 기본값(일), 해지한 회사의 데이터도 백업에는 이 기간만큼 남으므로 처리방침의 보관 안내와 일치 필요
 export const DEFAULT_RETENTION_DAYS = 30;
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
-// 백업 폴더 이름 = 생성 시각 (예: 20261006T093000Z). 이 형식이 아닌 폴더는 건드리지 않는다
+// 백업 폴더 이름 = 생성 시각 (예: 20261006T093000Z), 이 형식이 아닌 폴더는 변경 제외
 export const BACKUP_ID_PATTERN = /^\d{8}T\d{6}Z$/;
 
 export type BackupManifest = {

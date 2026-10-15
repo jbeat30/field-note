@@ -89,7 +89,7 @@ ALTER TABLE "change_work_status_changes" ADD CONSTRAINT change_work_status_chang
 -- 같은 문서를 같은 변경 작업에 중복 연결할 수 없음 (연결을 푼 행은 제외)
 CREATE UNIQUE INDEX change_work_documents_active_unique ON "change_work_documents"("company_id", "change_work_id", "document_id") WHERE "unlinked_at" IS NULL;
 
--- 앱 계정은 자기 회사 행만. 변경 작업은 내용·상태 열만 고칠 수 있고 지울 수 없음, 상태 이력은 추가만, 증빙 연결은 해제 시각만 고침
+-- 앱 계정은 자기 회사 행만, 변경 작업은 내용·상태 열만 고칠 수 있고 지울 수 없음, 상태 이력은 추가만, 증빙 연결은 해제 시각만 고침
 ALTER TABLE "change_works" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "change_works" FORCE ROW LEVEL SECURITY;
 CREATE POLICY company_isolation ON "change_works" TO field_note_app

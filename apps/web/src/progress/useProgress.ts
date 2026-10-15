@@ -52,7 +52,7 @@ export const useRecordProgress = (projectId: string) => {
 
       return data;
     },
-    // 기록과 점검(현재 진행률·경고)이 함께 바뀐다
+    // 기록과 점검(현재 진행률·경고)이 함께 변경
     onSuccess: () => queryClient.invalidateQueries({ queryKey: ['progress'] }),
   });
 };

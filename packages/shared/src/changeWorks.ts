@@ -4,8 +4,8 @@ import type { RuleCheck } from './assignments';
 import { documentCategorySchema } from './documents';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
-// 변경·추가 작업 기록 (서비스 기획서 §10.5): 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청·합의를 남긴다.
-// 말로 합의하고 먼저 작업하는 일이 많아 "누가 언제 요청했는가"가 근거가 되며 금액은 기록하지 않는다
+// 변경·추가 작업 기록 (서비스 기획서 §10.5): 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청·합의 기록
+// 말로 합의하고 먼저 작업하는 일이 많아 "누가 언제 요청했는가"가 근거, 금액은 기록 제외
 export const CHANGE_WORK_STATUSES = ['NEGOTIATING', 'AGREED', 'WITHDRAWN'] as const;
 
 export const changeWorkStatusSchema = z.enum(CHANGE_WORK_STATUSES);
@@ -102,7 +102,7 @@ export const changeWorkLinkSchema = z.object({
 
 export type ChangeWorkLink = z.infer<typeof changeWorkLinkSchema>;
 
-// 증빙 올리기: 올린 파일로 문서함에 "계약·공문" 문서를 만들고 이 변경·추가 작업에 한 번에 연결한다
+// 증빙 올리기: 올린 파일로 문서함에 "계약·공문" 문서를 만들고 이 변경·추가 작업에 한 번에 연결
 export const changeWorkEvidenceCreateSchema = z.object({
   fileId: z.uuid(),
   title: z.string().trim().min(1, '증빙 이름을 입력해 주세요').max(100),

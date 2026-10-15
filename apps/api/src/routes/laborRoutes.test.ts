@@ -266,7 +266,7 @@ describe('직원 단가표', () => {
 
     const { items } = payRateSummariesResponseSchema.parse((await client.get('/pay-rates')).body);
 
-    // 단가가 없는 직원은 나오지 않는다
+    // 단가가 없는 직원은 제외
     expect(items.map((item) => item.employeeId)).toEqual([worker]);
     expect(items[0]).toMatchObject({
       current: { amount: 200_000 },

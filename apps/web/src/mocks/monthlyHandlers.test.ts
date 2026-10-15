@@ -143,7 +143,7 @@ describe('월 공수 목업', () => {
       'REOPENED',
       'CLOSED',
     ]);
-    // 확정하지 않은 달은 재오픈할 수 없다
+    // 확정하지 않은 달은 재오픈 불가
     expect(
       (
         await client.POST('/api/v1/monthly-hours/reopen', {

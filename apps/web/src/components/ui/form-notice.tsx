@@ -17,7 +17,7 @@ const reduce = (state: State, action: Action): State => {
 };
 
 // 입력 확인 안내 (예: "기록할 자재를 한 줄 이상 적어 주세요"): 5초 뒤 또는 누르면 사라짐
-// 서버 오류("저장하지 못했습니다")처럼 놓치면 안 되는 안내는 Alert 그대로 쓴다
+// 서버 오류("저장하지 못했습니다")처럼 놓치면 안 되는 안내는 Alert 그대로 사용
 export const FormNotice = ({ message, className }: FormNoticeProps) => {
   const [{ text, visible }, dispatch] = useReducer(reduce, { text: '', visible: false });
   const timerRef = useRef<ReturnType<typeof setTimeout> | null>(null);

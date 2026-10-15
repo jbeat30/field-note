@@ -60,7 +60,7 @@ export const FilterByCategory: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '작업 전' }));
 
     await waitFor(() => expect(photoButtons(canvas)).toHaveLength(2));
-    // 같은 칩을 다시 누르면 거르기를 푼다
+    // 같은 칩을 다시 누르면 필터 해제
     await userEvent.click(canvas.getByRole('button', { name: '작업 전' }));
     await waitFor(() => expect(photoButtons(canvas)).toHaveLength(5));
   },
@@ -93,7 +93,7 @@ export const BeforeAfterComparison: Story = {
   },
 };
 
-// 크게 보기에서 앞뒤로 넘기고(화면 순서), 지우기는 확인 창을 거친다
+// 크게 보기에서 앞뒤로 넘기고(화면 순서) 지우기는 확인 창 경유
 export const OpenDetailNavigateAndDelete: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
