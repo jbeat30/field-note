@@ -12,7 +12,7 @@ const DOT: Record<Tone, string> = {
   danger: 'bg-danger',
 };
 
-// 상태·경고를 작은 점 + 글자로 (빨간 상자 대신). 색만으로 뜻을 전하지 않도록 글자를 꼭 함께 쓴다
+// 상태·경고를 작은 점 + 글자로 표시 (빨간 상자 대체), 색만으로 뜻을 전하지 않도록 글자 필수 병행
 export const StatusDot = ({
   tone = 'neutral',
   className,

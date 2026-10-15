@@ -19,12 +19,12 @@ export class PartnerError extends Error {
 }
 
 export type PartnerService = {
-  // 목록 (연락처·메모 제외). 구분 순서(고객 → 협력업체 → 공급처), 같은 구분 안에서는 이름순
+  // 목록 (연락처·메모 제외), 구분 순서(고객 → 협력업체 → 공급처), 같은 구분 안에서는 이름순
   list: (companyId: string, query: PartnerListQuery) => Promise<PartnerSummary[]>;
   get: (companyId: string, id: string) => Promise<PartnerDetail>;
   create: (companyId: string, input: PartnerCreate) => Promise<PartnerDetail>;
   update: (companyId: string, id: string, input: PartnerUpdate) => Promise<PartnerDetail>;
-  // 삭제: 프로젝트·자재 기록이 쓰고 있는 업체는 IN_USE (숨기기를 쓴다)
+  // 삭제: 프로젝트·자재 기록이 사용 중인 업체는 IN_USE (숨기기로 대체)
   remove: (companyId: string, id: string) => Promise<void>;
 };
 

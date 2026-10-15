@@ -228,7 +228,7 @@ describe('알림 키·급함·숨기기', () => {
     expect(dashboardAlertKey({ ...wide, lastDate: '2026-10-08' }, TODAY)).not.toBe(
       dashboardAlertKey(wide, TODAY),
     );
-    // 오늘 기록 없음은 날마다 다시 보인다
+    // 오늘 기록 없음은 날마다 다시 표시
     const noLog: DashboardAlert = { kind: 'NO_LOG_TODAY', projectId: P1, projectName: 'A' };
 
     expect(dashboardAlertKey(noLog, TODAY)).not.toBe(dashboardAlertKey(noLog, '2026-10-12'));
@@ -278,7 +278,7 @@ describe('알림 키·급함·숨기기', () => {
     });
 
     expect(inner(hidden).map((alert) => alert.kind)).toEqual(['MONTH_UNCLOSED']);
-    // 지금 해당하지 않는 키는 숨긴 개수에 세지 않는다
+    // 현재 해당하지 않는 키는 숨긴 개수에서 제외
     expect(hidden.hiddenAlertCount).toBe(1);
   });
 });
@@ -361,7 +361,7 @@ describe('알림 문장·이동 주소', () => {
 
     expect(dashboardAlertPath(alerts[5]!, TODAY)).toBe(`/projects/${P1}/change-works`);
     expect(dashboardAlertMessage(alerts[1]!)).toContain('82%에 도달');
-    // 오늘 기록 없음은 그 프로젝트의 오늘 하루 기록으로 간다
+    // 오늘 기록 없음은 그 프로젝트의 오늘 하루 기록으로 이동
     expect(dashboardAlertPath(alerts[0]!, TODAY)).toBe(`/projects/${P1}/work/${TODAY}`);
   });
 });
@@ -472,7 +472,7 @@ describe('assembleDashboard: 4단계 알림', () => {
       ['한용접', 30],
     ]);
     expect(inner(dashboard).map((alert) => alert.kind)).toEqual([
-      // 이미 만료된 것이 급해서 먼저 나온다
+      // 이미 만료된 것이 급하므로 먼저 표시
       'CREDENTIAL_EXPIRING',
       'CERTIFICATE_EXPIRING',
       'CREDENTIAL_EXPIRING',

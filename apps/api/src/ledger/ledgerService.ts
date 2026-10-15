@@ -51,7 +51,7 @@ export type LedgerService = {
     query: LedgerSummaryQuery,
   ) => Promise<LedgerSummary>;
   update: (companyId: string, id: string, input: LedgerEntryUpdate) => Promise<LedgerEntry>;
-  // 소프트 삭제. 지운 기록의 요약(활동 기록용)을 돌려준다
+  // 소프트 삭제, 삭제한 기록의 요약(활동 기록용) 반환
   remove: (companyId: string, id: string) => Promise<RemovedLedgerEntry>;
 };
 
@@ -106,7 +106,7 @@ const decodeCursor = (cursor: string): { entryDate: Date; id: string } => {
   }
 };
 
-// 내역과 합계가 같은 조건을 쓰도록 한곳에서 만든다
+// 내역과 합계가 같은 조건을 쓰도록 한곳에서 생성
 const filterOf = (
   projectId: string,
   query: Pick<LedgerSummaryQuery, 'kind' | 'categoryId' | 'from' | 'to'> & { date?: string },
@@ -125,7 +125,7 @@ const filterOf = (
 
 /**
  * @description 지출·수입 기록 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 프로젝트에서 나간 돈과 가끔 생기는 수입만 적는다 (08 문서 §6).
- * 계약 금액·청구·입금 관리, 회계·세금·급여는 다루지 않는다
+ * 계약 금액·청구·입금 관리와 회계·세금·급여는 범위 밖
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (소프트 삭제 시각 기록용)
  * @returns 지출·수입 기록 서비스
@@ -275,7 +275,7 @@ export const createLedgerService = (
       withCompany(app, companyId, async (tx) => {
         const current = await findLive(tx, id);
         const kind = input.kind ?? current.kind;
-        // 구분이 바뀌는데 새 분류를 안 보내면 이전 구분의 분류는 쓸 수 없으므로 분류를 비운다
+        // 구분이 바뀌는데 새 분류가 없으면 이전 구분의 분류는 사용 불가이므로 분류 비움
         const categoryId =
           input.categoryId !== undefined
             ? input.categoryId

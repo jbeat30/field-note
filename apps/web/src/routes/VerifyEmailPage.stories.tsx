@@ -1,7 +1,7 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { signIn } from '../mocks/state';
+import { addAccount, signIn } from '../mocks/state';
 
 import { VerifyEmailPage } from './VerifyEmailPage';
 
@@ -26,6 +26,36 @@ export const Default: Story = {
     await expect(await canvas.findByText('newbie@example.com')).toBeInTheDocument();
     // 재발송은 대기 시간이 지나야 가능
     await expect(canvas.getByRole('button', { name: /코드 다시 받기/ })).toBeDisabled();
+  },
+};
+
+// 소셜 로그인으로 가입해 이메일이 아직 없는 계정은 먼저 이메일을 입력
+export const EmailEntryForSocialSignup: Story = {
+  loaders: [
+    () => {
+      addAccount({
+        loginId: 'naver-new',
+        password: '',
+        hasPassword: false,
+        socialProfiles: { naver: 'new-verified' },
+        displayName: '소셜 가입자',
+        email: '',
+        isEmailVerified: false,
+        companyName: '새회사',
+        settings: { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
+      });
+      signIn('naver-new');
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByRole('heading', { name: '이메일 등록' })).toBeInTheDocument();
+    await userEvent.type(canvas.getByLabelText('이메일'), 'new-owner@example.com');
+    await userEvent.click(canvas.getByRole('button', { name: '인증 코드 받기' }));
+
+    await expect(await canvas.findByText('new-owner@example.com')).toBeInTheDocument();
+    await expect(canvas.getByLabelText('인증 코드')).toBeInTheDocument();
   },
 };
 

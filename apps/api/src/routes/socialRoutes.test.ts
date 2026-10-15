@@ -3,14 +3,16 @@ import request from 'supertest';
 
 import { createApp } from '../app';
 import { createAccountService } from '../auth/accountService';
+import { createEmailVerificationService } from '../auth/emailVerification';
 import { createSocialService } from '../auth/socialService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createPrismaInvitationStore } from '../invitation/invitationStore';
 import { createCompanyWithInvitation } from '../operator/operatorService';
+import { createMemoryQueue } from '../queue/jobQueue';
 import { SESSION_COOKIE } from '../session/cookie';
 import { createPrismaSessionStore } from '../session/sessionStore';
-import { chooseSocialProvider, signFakeCode } from '../social/provider';
+import { chooseSocialProviders, signFakeCode } from '../social/provider';
 
 const SECRET = 'social-secret-social-secret-social-secret';
 const ORIGIN = 'http://localhost:5173';
@@ -44,17 +46,28 @@ afterAll(async () => {
 });
 
 const buildApp = (nodeEnv: 'development' | 'production' = 'development') => {
-  const choice = chooseSocialProvider({ nodeEnv, appOrigin: ORIGIN, fakeSecret: SECRET });
+  const choices = chooseSocialProviders({
+    nodeEnv,
+    appOrigin: ORIGIN,
+    keys: {},
+    fakeSecret: SECRET,
+  });
 
   return createApp({
     sessionStore: createPrismaSessionStore(db.auth),
     invitationStore: createPrismaInvitationStore(db.auth),
     accountService: createAccountService({ auth: db.auth, app: db.app }),
+    emailVerification: createEmailVerificationService({
+      auth: db.auth,
+      queue: createMemoryQueue().queue,
+      mailer: { send: async () => {} },
+      secret: SECRET,
+    }),
     social: {
-      choice,
+      choices,
       service: createSocialService({ auth: db.auth }),
       cookieSecret: SECRET,
-      fakeSecret: choice.kind === 'fake' ? SECRET : undefined,
+      fakeSecret: choices.kakao.kind === 'fake' ? SECRET : undefined,
     },
     appOrigin: ORIGIN,
   });
@@ -123,9 +136,15 @@ describe('제공자 설정', () => {
   it('개발 환경에서는 가짜 제공자로 켜지고, 가짜 로그인 화면이 열린다', async () => {
     const app = buildApp('development');
 
-    expect((await request(app).get('/api/v1/auth/social/providers')).body).toEqual({ kakao: true });
+    expect((await request(app).get('/api/v1/auth/social/providers')).body).toEqual({
+      kakao: true,
+      naver: true,
+      google: true,
+    });
 
-    const page = await request(app).get('/api/v1/dev/fake-kakao/authorize').query({ state: 'abc' });
+    const page = await request(app)
+      .get('/api/v1/dev/fake-social/kakao/authorize')
+      .query({ state: 'abc' });
 
     expect(page.status).toBe(200);
     expect(page.text).toContain('가짜 카카오 로그인');
@@ -137,8 +156,10 @@ describe('제공자 설정', () => {
 
     expect((await request(app).get('/api/v1/auth/social/providers')).body).toEqual({
       kakao: false,
+      naver: false,
+      google: false,
     });
-    expect((await request(app).get('/api/v1/dev/fake-kakao/authorize')).status).toBe(404);
+    expect((await request(app).get('/api/v1/dev/fake-social/kakao/authorize')).status).toBe(404);
 
     const start = await request(app)
       .post('/api/v1/auth/kakao/start')
@@ -150,7 +171,7 @@ describe('제공자 설정', () => {
 
   it('가짜 로그인 화면은 state를 이스케이프해 출력한다', async () => {
     const page = await request(buildApp())
-      .get('/api/v1/dev/fake-kakao/authorize')
+      .get('/api/v1/dev/fake-social/kakao/authorize')
       .query({ state: '"><script>x</script>' });
 
     expect(page.text).not.toContain('<script>x</script>');
@@ -315,6 +336,8 @@ describe('연동과 해제 (로그인 상태)', () => {
     ).toEqual({
       hasPassword: true,
       kakao: { isLinked: false },
+      naver: { isLinked: false },
+      google: { isLinked: false },
     });
 
     const linked = await linkKakao(browser, 'hanbit');
@@ -369,6 +392,8 @@ describe('연동과 해제 (로그인 상태)', () => {
     expect((await browser.get('/api/v1/me/social')).body).toEqual({
       hasPassword: false,
       kakao: { isLinked: true },
+      naver: { isLinked: false },
+      google: { isLinked: false },
     });
   });
 
@@ -419,7 +444,7 @@ describe('초대 링크로 카카오 가입', () => {
     expect(hasSession(res)).toBe(true);
     expect((await browser.get('/api/v1/me')).body).toMatchObject({
       companyName: '카카오가입',
-      email: 'kakao-new@example.com',
+      email: 'social-new@example.com',
       isEmailVerified: true,
     });
     expect((await request(app).get(`/api/v1/invitations/${invitation.token}`)).status).toBe(404);
@@ -432,7 +457,7 @@ describe('초대 링크로 카카오 가입', () => {
     );
   });
 
-  it('인증된 이메일이 없는 카카오 계정은 안내하고 링크는 그대로 둔다', async () => {
+  it('인증된 이메일이 없는 소셜 계정도 가입되어 이메일 등록 화면으로 이동하고, 이메일·비밀번호를 설정할 수 있다', async () => {
     const app = buildApp();
     const invitation = await createCompanyWithInvitation(db.operator, {
       companyName: '이메일없는가입',
@@ -446,9 +471,74 @@ describe('초대 링크로 카카오 가입', () => {
       'new-unverified',
     );
 
-    expect(res.headers.location).toBe(`${ORIGIN}/invite/${invitation.token}?social=email-required`);
-    expect(hasSession(res)).toBe(false);
-    expect((await request(app).get(`/api/v1/invitations/${invitation.token}`)).status).toBe(200);
+    expect(res.headers.location).toBe(`${ORIGIN}/verify-email`);
+    expect(hasSession(res)).toBe(true);
+    expect((await request(app).get(`/api/v1/invitations/${invitation.token}`)).status).toBe(404);
+
+    const me = (await browser.get('/api/v1/me')).body;
+
+    expect(me).toMatchObject({ email: null, isEmailVerified: false });
+
+    // 비밀번호가 없는 계정이라 이메일 등록에 현재 비밀번호를 요구하지 않음
+    const emailRequest = await write(browser, 'post', '/api/v1/me/email/change').send({
+      newEmail: 'registered@example.com',
+    });
+
+    expect(emailRequest.status).toBe(200);
+
+    // 아이디·비밀번호 설정 후에는 로그인할 수 있고 이메일 변경에 비밀번호가 필요
+    const set = await write(browser, 'post', '/api/v1/me/password/set').send({
+      loginId: 'social-set-1',
+      newPassword: PASSWORD,
+    });
+
+    expect(set.status).toBe(200);
+    expect(
+      (
+        await write(request.agent(app), 'post', '/api/v1/auth/login').send({
+          loginId: 'social-set-1',
+          password: PASSWORD,
+        })
+      ).status,
+    ).toBe(200);
+    const noPassword = await write(browser, 'post', '/api/v1/me/email/change').send({
+      newEmail: 'another@example.com',
+    });
+
+    expect(noPassword.status).toBe(400);
+    expect(errorResponseSchema.parse(noPassword.body).error.code).toBe('CURRENT_PASSWORD_INVALID');
+
+    // 이미 설정했으면 다시 설정할 수 없고, 다른 사람이 쓰는 아이디도 거부
+    const again = await write(browser, 'post', '/api/v1/me/password/set').send({
+      loginId: 'social-set-2',
+      newPassword: PASSWORD,
+    });
+
+    expect(again.status).toBe(400);
+  });
+
+  it('이미 쓰는 아이디로는 비밀번호 로그인을 설정할 수 없다', async () => {
+    const app = buildApp();
+    const invitation = await createCompanyWithInvitation(db.operator, {
+      companyName: '아이디중복',
+      adminName: '가입자',
+      operator: 'test',
+    });
+    const browser = request.agent(app);
+
+    await callback(
+      browser,
+      stateOf((await startSignup(browser, invitation.token)).body.url),
+      'new-unverified',
+    );
+    await loggedInBrowser(app);
+
+    const res = await write(browser, 'post', '/api/v1/me/password/set').send({
+      loginId: `route-social-${sequence}`,
+      newPassword: PASSWORD,
+    });
+
+    expect(res.status).toBe(409);
   });
 
   it('없는 초대 링크는 카카오 화면으로 보내기 전에 404로 알린다', async () => {
@@ -496,5 +586,94 @@ describe('초대 링크로 카카오 가입', () => {
     });
 
     expect(res.status).toBe(400);
+  });
+});
+
+describe('네이버·구글', () => {
+  const startOf = (browser: Browser, provider: string) =>
+    write(browser, 'post', `/api/v1/me/social/${provider}/start`).send();
+
+  it.each(['naver', 'google'] as const)(
+    '%s 계정을 연동하면 그 제공자로만 로그인되고 다른 제공자와 섞이지 않는다',
+    async (provider) => {
+      const app = buildApp();
+      const { browser, companyId } = await loggedInBrowser(app);
+
+      await db.owner.user.updateMany({
+        where: { companyId },
+        data: { emailVerifiedAt: new Date(), status: 'ACTIVE' },
+      });
+
+      const start = await startOf(browser, provider);
+
+      expect(start.status).toBe(200);
+      expect(start.body.url).toContain(`/api/v1/dev/fake-social/${provider}/authorize`);
+
+      const linked = await browser
+        .get(`/api/v1/auth/${provider}/callback`)
+        .query({ code: signFakeCode(SECRET, 'hanbit'), state: stateOf(start.body.url) });
+
+      expect(linked.headers.location).toBe(`${ORIGIN}/settings?social=linked`);
+
+      const methods = (await browser.get('/api/v1/me/social')).body;
+
+      expect(methods[provider].isLinked).toBe(true);
+      expect(methods.kakao.isLinked).toBe(false);
+
+      // 같은 번호 체계가 아니므로 카카오 로그인으로는 들어오지 못함
+      const kakao = request.agent(app);
+      const kakaoRes = await callback(kakao, await startLogin(kakao), 'hanbit');
+
+      expect(kakaoRes.headers.location).toBe(`${ORIGIN}/login?social=not-linked`);
+
+      const fresh = request.agent(app);
+      const startRes = await write(fresh, 'post', `/api/v1/auth/${provider}/start`).send({
+        purpose: 'login',
+      });
+      const res = await fresh
+        .get(`/api/v1/auth/${provider}/callback`)
+        .query({ code: signFakeCode(SECRET, 'hanbit'), state: stateOf(startRes.body.url) });
+
+      expect(res.headers.location).toBe(`${ORIGIN}/`);
+      expect(hasSession(res)).toBe(true);
+
+      expect((await write(browser, 'delete', `/api/v1/me/social/${provider}`).send()).status).toBe(
+        200,
+      );
+    },
+  );
+
+  it('다른 제공자로 시작한 진행 상태는 다른 제공자의 콜백으로 이어갈 수 없다', async () => {
+    const app = buildApp();
+    const browser = request.agent(app);
+    const start = await write(browser, 'post', '/api/v1/auth/naver/start').send({
+      purpose: 'login',
+    });
+    const res = await browser
+      .get('/api/v1/auth/google/callback')
+      .query({ code: signFakeCode(SECRET, 'hanbit'), state: stateOf(start.body.url) });
+
+    expect(res.headers.location).toBe(`${ORIGIN}/login?social=failed`);
+    expect(hasSession(res)).toBe(false);
+  });
+
+  it('모르는 제공자 이름은 거부한다', async () => {
+    const res = await write(request.agent(buildApp()), 'post', '/api/v1/auth/facebook/start').send({
+      purpose: 'login',
+    });
+
+    expect(res.status).toBe(400);
+  });
+
+  it('운영에서 키가 없는 네이버·구글은 시작할 수 없다', async () => {
+    const res = await write(
+      request.agent(buildApp('production')),
+      'post',
+      '/api/v1/auth/google/start',
+    ).send({
+      purpose: 'login',
+    });
+
+    expect(res.status).toBe(501);
   });
 });

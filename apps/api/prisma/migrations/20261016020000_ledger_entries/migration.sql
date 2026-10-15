@@ -1,4 +1,4 @@
--- 지출·수입 기록(08 문서 §6): 프로젝트에서 나간 돈과 가끔 생기는 수입만 적는다. 계약 금액·청구·입금 관리는 두지 않는다
+-- 지출·수입 기록(08 문서 §6): 프로젝트에서 나간 돈과 가끔 생기는 수입만 기록, 계약 금액·청구·입금 관리는 제외
 CREATE TYPE "ledger_kind" AS ENUM ('EXPENSE', 'INCOME');
 
 CREATE TABLE "ledger_entries" (

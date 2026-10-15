@@ -100,7 +100,7 @@ const toSummary = (
   updatedAt: row.updatedAt.toISOString(),
 });
 
-// 삭제되지 않은 자재 기록·저장된 작업 내역에 걸린 연결만 센다
+// 삭제되지 않은 자재 기록·저장된 작업 내역에 걸린 연결만 집계
 const LIVE_TARGET = {
   unlinkedAt: null,
   OR: [{ workLog: { status: 'SAVED' as const } }, { materialRecord: { deletedAt: null } }],

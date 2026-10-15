@@ -21,7 +21,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 쓰기 폼 없이 날짜별로 모아 보고, 날짜마다 그날 작업 기록으로 가는 링크가 있다
+// 쓰기 폼 없이 날짜별로 모아 보고 날짜마다 그날 작업 기록으로 가는 링크 제공
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

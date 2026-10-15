@@ -10,9 +10,9 @@ export type AccountErrorCode =
   | 'ACCOUNT_NOT_FOUND'
   | 'SOCIAL_NOT_LINKED'
   | 'SOCIAL_ALREADY_LINKED'
-  | 'SOCIAL_EMAIL_REQUIRED'
   | 'LAST_LOGIN_METHOD'
-  | 'ACCOUNT_CLOSING';
+  | 'ACCOUNT_CLOSING'
+  | 'PASSWORD_ALREADY_SET';
 
 // 업무 규칙 위반 (HTTP 응답으로의 변환은 라우트가 담당)
 export class AccountError extends Error {

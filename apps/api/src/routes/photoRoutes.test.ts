@@ -149,7 +149,7 @@ const setup = async () => {
     return { ticket, key, done };
   };
 
-  // 사진으로 쓸 파일 한 장 (검사 통과 상태). 안 올리면 신청만 한 상태
+  // 사진으로 쓸 파일 한 장 (검사 통과 상태), 안 올리면 신청만 한 상태
   const bodies = new Map<string, Buffer>();
   // 저장소에 올리고 완료를 알림 (신청만 해 둔 파일을 이어서 올릴 때)
   const finish = async (fileId: string) => {
@@ -512,7 +512,7 @@ describe('사진 수정·대표 사진·삭제', () => {
     expect(row.deletedAt).not.toBeNull();
     expect(row.isCover).toBe(false);
     expect((await s.get(`/files/${fileId}`)).status).toBe(200);
-    // 지운 사진의 파일은 다시 사진으로 등록할 수 없다
+    // 지운 사진의 파일은 사진으로 재등록 불가
     expect((await s.post(`/projects/${s.projectId}/photos`, { fileId })).status).toBe(400);
   });
 });

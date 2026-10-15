@@ -30,13 +30,16 @@ import { createFileService, registerFileWorker } from './file/fileService';
 import { createReportService } from './report/reportService';
 import { createSearchService } from './search/searchService';
 import { createDocumentService } from './document/documentService';
+import { createPrismaIdempotencyStore } from './http/idempotencyStore';
+import { createMaintenance, startMaintenanceSchedule } from './maintenance/maintenance';
 import { createMaterialService } from './material/materialService';
 import { createLedgerService } from './ledger/ledgerService';
+import { createCompanyDataService } from './companyData/companyDataService';
 import { createMemoService } from './memo/memoService';
 import { createPhotoService } from './photo/photoService';
 import { createPrismaInvitationStore } from './invitation/invitationStore';
 import { createLogger } from './logger';
-import { chooseSocialProvider } from './social/provider';
+import { chooseSocialProviders } from './social/provider';
 import { createPgBossQueue } from './queue/jobQueue';
 import { createPrismaSessionStore } from './session/sessionStore';
 import { createAuditService } from './audit/auditService';
@@ -68,9 +71,9 @@ const main = async () => {
   const repairs = createRepairService(appPrisma);
   const monthly = createMonthlyService(appPrisma);
 
-  // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
+  // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3), 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
-  // 객체 저장소 (로컬은 버킷이 없으면 만든다. 운영은 운영자가 버킷을 미리 준비)
+  // 객체 저장소 (로컬은 버킷이 없으면 생성, 운영은 운영자가 버킷을 사전 준비)
   const { storage, ensureBucket } = createS3Storage({
     endpoint: env.S3_ENDPOINT,
     region: env.S3_REGION,
@@ -88,6 +91,11 @@ const main = async () => {
   const memos = createMemoService(appPrisma);
   const materials = createMaterialService(appPrisma);
   const ledger = createLedgerService(appPrisma);
+  const companyData = createCompanyDataService({
+    auth: authPrisma,
+    app: appPrisma,
+    accountService,
+  });
   const documents = createDocumentService(appPrisma, storage);
   const credentials = createCredentialService({ app: appPrisma, storage });
   const audit = createAuditService(appPrisma);
@@ -119,15 +127,26 @@ const main = async () => {
     appOrigin: env.APP_ORIGIN,
   });
 
-  // 카카오 키가 있으면 카카오, 없고 개발 환경이면 가짜 제공자, 운영에서 키가 없으면 소셜 로그인은 꺼짐
-  const socialChoice = chooseSocialProvider({
+  // 제공자별로 키가 있으면 실제 제공자, 없고 개발 환경이면 가짜 제공자, 운영에서 키가 없으면 해당 로그인은 꺼짐
+  const socialChoices = chooseSocialProviders({
     nodeEnv: env.NODE_ENV,
     appOrigin: env.APP_ORIGIN,
-    kakao: { clientId: env.KAKAO_CLIENT_ID, clientSecret: env.KAKAO_CLIENT_SECRET },
+    keys: {
+      kakao: { clientId: env.KAKAO_CLIENT_ID, clientSecret: env.KAKAO_CLIENT_SECRET },
+      naver: { clientId: env.NAVER_CLIENT_ID, clientSecret: env.NAVER_CLIENT_SECRET },
+      google: { clientId: env.GOOGLE_CLIENT_ID, clientSecret: env.GOOGLE_CLIENT_SECRET },
+    },
     fakeSecret: env.OAUTH_COOKIE_SECRET,
   });
 
-  logger.info({ socialProvider: socialChoice.kind }, '[api.main] 소셜 로그인 제공자');
+  logger.info(
+    {
+      socialProviders: Object.fromEntries(
+        Object.entries(socialChoices).map(([name, choice]) => [name, choice.kind]),
+      ),
+    },
+    '[api.main] 소셜 로그인 제공자',
+  );
 
   const closure = createClosureService({
     auth: authPrisma,
@@ -146,6 +165,8 @@ const main = async () => {
 
   const server = createApp({
     logger,
+    // 서버 재시작·다중 인스턴스에서도 재전송을 한 번만 처리하도록 키를 DB에 저장
+    idempotencyStore: createPrismaIdempotencyStore(appPrisma),
     sessionStore,
     invitationStore,
     accountService,
@@ -173,15 +194,18 @@ const main = async () => {
     memos,
     materials,
     ledger,
+    companyData,
     documents,
     search,
     reports,
     closure,
     social: {
-      choice: socialChoice,
+      choices: socialChoices,
       service: createSocialService({ auth: authPrisma }),
       cookieSecret: env.OAUTH_COOKIE_SECRET,
-      fakeSecret: socialChoice.kind === 'fake' ? env.OAUTH_COOKIE_SECRET : undefined,
+      fakeSecret: Object.values(socialChoices).some((choice) => choice.kind === 'fake')
+        ? env.OAUTH_COOKIE_SECRET
+        : undefined,
     },
     notifier,
     appOrigin: env.APP_ORIGIN,
@@ -191,8 +215,15 @@ const main = async () => {
     logger.info({ port: env.PORT }, '[api.main] 서버 시작');
   });
 
+  // 만료 세션·방치된 업로드 신청·만료 멱등 키 정기 정리 (시작 직후 한 번, 이후 1시간마다)
+  const stopMaintenance = startMaintenanceSchedule(
+    createMaintenance({ auth: authPrisma, app: appPrisma, sessionStore, storage, logger }),
+    logger,
+  );
+
   // 종료 신호를 받으면 진행 중인 작업을 마무리하고 큐를 닫음
   const shutdown = () => {
+    stopMaintenance();
     server.close();
     void queue.stop().finally(() => process.exit(0));
   };

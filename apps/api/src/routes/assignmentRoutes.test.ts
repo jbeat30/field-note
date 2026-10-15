@@ -106,7 +106,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     updateEmployee: (id: string, body: object) => send('patch', `/employees/${id}`, body),
     createPartner: async (kind: string, name: string) =>
       (await send('post', '/partners', { kind, name })).body.id as string,
-    // 작업 구분은 처음 조회할 때 기본 목록이 만들어진다
+    // 작업 구분은 처음 조회할 때 기본 목록 생성
     options: () => get('/company/options'),
     calendar: (query: string) => get(`/staffing-calendar${query}`),
     list: (projectId: string, query = '') => get(`/projects/${projectId}/assignments${query}`),
@@ -431,7 +431,7 @@ describe('겹침', () => {
         to: '2026-11-20',
       }),
     ]);
-    // 먼저 투입한 쪽 목록에도 같은 경고가 붙는다
+    // 먼저 투입한 쪽 목록에도 같은 경고 표시
     expect(assignmentsOf(await client.list(project))[0]!.warnings).toEqual([
       expect.objectContaining({
         type: 'OVERLAP',
@@ -980,7 +980,7 @@ describe('인력 배치 캘린더', () => {
       [worker, 240],
       [worker2, 480],
     ]);
-    // 임시 저장, 취소된 프로젝트, 기간 밖은 담지 않는다
+    // 임시 저장, 취소된 프로젝트, 기간 밖은 제외
     await log(other, '2026-10-07', 'DRAFT', [[worker, 480]]);
     await log(cancelled, '2026-10-08', 'SAVED', [[worker, 480]]);
     await log(project, '2026-11-20', 'SAVED', [[worker, 480]]);

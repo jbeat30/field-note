@@ -20,7 +20,7 @@ const Editor = ({
   const [selected, setSelected] = useState<string[]>(saved.map((item) => item.typeId));
   const [message, setMessage] = useState('');
   const [error, setError] = useState('');
-  // 숨긴 종류여도 이미 지정한 것은 계속 보여 준다
+  // 숨긴 종류여도 이미 지정한 것은 계속 표시
   const savedIds = new Set(saved.map((item) => item.typeId));
   const choices = (options.data ?? []).filter(
     (item) => item.kind === 'CREDENTIAL_TYPE' && (item.isActive || savedIds.has(item.id)),

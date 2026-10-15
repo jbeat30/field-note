@@ -239,7 +239,7 @@ describe('진행률 기록', () => {
     await active.client.transition(active.project, { toStatus: 'IN_PROGRESS' });
     await active.client.transition(active.project, { toStatus: 'COMPLETED' });
     expect((await active.client.record(active.project, { percent: 100 })).status).toBe(400);
-    // 조회는 계속 된다
+    // 조회는 계속 가능
     expect((await active.client.records(active.project)).status).toBe(200);
   });
 
@@ -282,7 +282,7 @@ describe('진행 점검', () => {
       progressPercent: null,
       forecastMinutes: null,
     });
-    // 10/11까지 41일 경과(≈33.6%)인데 진행률 기록이 없으면 일정 경고는 내지 않는다
+    // 10/11까지 41일 경과(≈33.6%)인데 진행률 기록이 없으면 일정 경고 제외
     expect(health.warnings).toEqual([]);
   });
 
@@ -300,7 +300,7 @@ describe('진행 점검', () => {
   it('기획서 예시: 계획 80MD·투입 56MD·진행률 45%면 소진율 70%, 필요 공수 약 124MD, 소진 과다 경고', async () => {
     const { client, project, worker, category } = await setup();
 
-    // 56MD = 3MD(1,440분) 18일 + 2MD(960분) 1일, 작업 내역은 오늘(10/11)까지만 쓸 수 있어 9월 초부터 쓴다
+    // 56MD = 3MD(1,440분) 18일 + 2MD(960분) 1일, 작업 내역은 오늘(10/11)까지만 입력 가능하므로 9월 초부터 입력
     for (let day = 0; day < 19; day += 1) {
       const date = new Date(Date.UTC(2026, 8, 1 + day)).toISOString().slice(0, 10);
 

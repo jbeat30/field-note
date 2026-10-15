@@ -36,19 +36,19 @@ const pick = async (canvas: ReturnType<typeof within>, names: readonly string[] 
   await canvas.findByLabelText(`${names[0]} 일한 시간(시간)`);
 };
 
-// 작업 내역이 없는 날: 빈 채로 시작하고, 회사 직원 표에서 고른다. 이 현장 투입 인원이 먼저 보인다
+// 작업 내역이 없는 날: 빈 상태로 시작하고 회사 직원 표에서 선택, 이 현장 투입 인원 우선 표시
 export const NewDayStartsWithEmployeeTable: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const table = within(await canvas.findByRole('list', { name: '회사 직원' }));
 
     await expect(table.getByRole('checkbox', { name: '정판금 일함' })).not.toBeChecked();
-    // 투입 인원이 아닌 직원도 표에 있다
+    // 투입 인원이 아닌 직원도 표에 포함
     await expect(table.getByRole('checkbox', { name: '오전기 일함' })).toBeInTheDocument();
     await expect(canvas.getAllByText('먼저 일한 사람을 고르세요').length).toBeGreaterThan(0);
 
     await pick(canvas, ['정판금']);
-    // 고른 사람은 '하루(8시간)'로 채워진다
+    // 선택한 사람은 '하루(8시간)'로 채움
     await expect(canvas.getByLabelText('정판금 일한 시간(시간)')).toHaveValue(8);
     await expect(canvas.getByText('1명 · 8시간')).toBeInTheDocument();
   },
@@ -69,7 +69,7 @@ export const SaveWithBulkInput: Story = {
 
     await expect(await canvas.findByText(/저장됐습니다 · 버전 1/)).toBeInTheDocument();
     await expect(canvas.getByText(/지연 입력/, { selector: 'p' })).toBeInTheDocument();
-    // 결근 처리한 직원은 공수가 저장되지 않는다
+    // 결근 처리한 직원은 공수 저장 제외
     await waitFor(() => {
       const saved = getWorkLogs(findAccount('hanbit')!).find(
         (log) => log.workDate === '2026-09-08',
@@ -181,14 +181,14 @@ export const DraftLogShowsNotice: Story = {
   },
 };
 
-// 다른 기기에서 먼저 고친 경우: 충돌을 알리고 최신 내용을 불러오게 한다
+// 다른 기기에서 먼저 수정한 경우: 충돌을 알리고 최신 내용 로딩 유도
 export const ConflictOnStaleVersion: Story = {
   parameters: { router: routerFor('A동 외장 판금 공사', '2026-09-03') },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const content = await canvas.findByLabelText('작업 내용');
 
-    // 서버(목업) 쪽 버전을 올려 화면의 버전을 오래된 것으로 만든다
+    // 서버(목업) 쪽 버전을 올려 화면의 버전을 오래된 것으로 변경
     const account = findAccount('hanbit')!;
 
     saveWorkLogs(
@@ -226,7 +226,7 @@ export const AddEmployeeWithoutAssignmentAsksConfirm: Story = {
   },
 };
 
-// 잘못 고른 사람은 체크를 풀면 이 날 기록에서 아예 빠진다
+// 잘못 선택한 사람은 체크를 풀면 이 날 기록에서 완전히 제외
 export const RemoveAddedEmployee: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -269,7 +269,7 @@ export const OutsidePeriod: Story = {
   },
 };
 
-// 사람마다 일한 시간이 다를 수 있다: 한 사람만 늘리고 줄이고, 모두에게 한 번에도 정할 수 있다
+// 사람마다 일한 시간이 다를 수 있음: 한 사람만 늘리고 줄일 수 있고 모두에게 한 번에도 지정 가능
 export const DifferentHoursPerPerson: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -297,7 +297,7 @@ export const DifferentHoursPerPerson: Story = {
   },
 };
 
-// 사진은 이 화면에서 바로 올리고, 메모는 이 날짜로 남아 이 날 화면에만 보인다
+// 사진은 이 화면에서 바로 업로드, 메모는 이 날짜로 저장되어 이 날 화면에만 표시
 export const DayPhotosAndMemos: Story = {
   parameters: { router: routerFor('A동 외장 판금 공사', '2026-09-08') },
   play: async ({ canvasElement }) => {

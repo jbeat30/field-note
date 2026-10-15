@@ -10,7 +10,7 @@ type Mode = 'view' | 'download';
 type Target = { id: string; title: string; isSensitive: boolean };
 
 type OpenDocument = {
-  // 문서의 특정 버전을 열거나 내려받음. 민감 자료는 기록이 남는다는 확인을 먼저 받는다
+  // 문서의 특정 버전 열기·내려받기, 민감 자료는 기록이 남는다는 확인을 먼저 수행
   open: (document: Target, versionNo: number, mode: Mode) => void;
   // 확인 대화 상자 (화면 어딘가에 한 번 그려 줘야 함)
   dialog: ReactNode;

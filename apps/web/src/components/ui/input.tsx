@@ -3,12 +3,12 @@ import type { ComponentProps, ReactNode } from 'react';
 
 import { cn } from '../../lib/cn';
 
-// 입력 칸 공통 모양 (Input·Textarea·Select·날짜·콤보박스가 같이 씀). 크기는 controlSize로 따로 정함
+// 입력 칸 공통 모양 (Input·Textarea·Select·날짜·콤보박스가 같이 씀), 크기는 controlSize로 따로 정함
 export const controlClass =
   'w-full rounded-control border border-control-border bg-surface text-foreground shadow-xs transition-[border-color,box-shadow] duration-(--duration-fast) placeholder:text-foreground/55 hover:border-control-border-hover focus-visible:border-primary focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none disabled:cursor-not-allowed disabled:bg-muted disabled:text-foreground/65 aria-[invalid=true]:border-danger aria-[invalid=true]:focus-visible:ring-danger/15';
 
 // 크기 단계 (모바일 / 넓은 화면): sm 36/32 표·필터 줄, md 44/40 일반 폼, lg 52/48 현장 입력
-// 입력·셀렉트·콤보박스·날짜·버튼이 같은 단계를 써서 한 줄에 놓으면 높이가 맞는다
+// 입력·셀렉트·콤보박스·날짜·버튼이 같은 단계를 사용해 한 줄에 놓으면 높이 일치
 export const controlSize = cva('', {
   variants: {
     size: {

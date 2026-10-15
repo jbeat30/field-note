@@ -37,7 +37,7 @@ import { useProjectHistory, useTransitionProject } from './useProjects';
 // 진행 단계 순서 (중단은 진행 단계에서 잠시 멈춘 것, 취소는 별도)
 const STEPS: ProjectStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'WARRANTY', 'CLOSED'];
 
-// 전환 버튼 이름 (같은 '진행'이라도 처음 시작과 재개는 다르게 부른다)
+// 전환 버튼 이름 (같은 '진행'이라도 처음 시작과 재개는 구분하여 표기)
 const actionLabel = (from: ProjectStatus, to: ProjectStatus) => {
   if (to === 'IN_PROGRESS') return from === 'SUSPENDED' ? '작업 재개' : '작업 시작';
   if (to === 'SUSPENDED') return '작업 중단';
@@ -73,7 +73,7 @@ const formatChangedAt = (iso: string) =>
     minute: '2-digit',
   }).format(new Date(iso));
 
-// 한 번에 하나의 전환만 확인 단계를 연다
+// 한 번에 하나의 전환만 확인 단계 표시
 const TransitionForm = ({
   project,
   to,
@@ -89,7 +89,7 @@ const TransitionForm = ({
   const history = useProjectHistory(project.id);
   // 완료·재개처럼 확인할 것이 있는 전환은 확인 전에 알려 준다 (막지는 않음, §10.3)
   const notices = useTransitionNotices(project.id, to);
-  // 보증 기간·종료 예정일로 완료 → 종료/보증 시작 가능 여부와 조기 종료 사유 필요 여부를 판단한다
+  // 보증 기간·종료 예정일 기준으로 완료 → 종료/보증 시작 가능 여부와 조기 종료 사유 필요 여부 판단
   const warranty = useWarranty(project.id);
   const warrantyMonths = warranty.data?.months ?? 12;
   const warrantyEndOn = warranty.data?.configured ? warranty.data.endOn : null;
@@ -129,7 +129,7 @@ const TransitionForm = ({
     });
 
     if (!checked.ok) {
-      // 전환 자체가 안 되는 경우(보증 기간·임시 저장 작업 내역 등)는 입력칸이 아니라 전체 안내로 보여 준다
+      // 전환 자체가 불가한 경우(보증 기간·임시 저장 작업 내역 등)는 입력칸이 아니라 전체 안내로 표시
       if (checked.path === 'toStatus') {
         setRootError(checked.message);
       } else {

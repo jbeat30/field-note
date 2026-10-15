@@ -4,7 +4,7 @@ import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tansta
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 메모함(INBOX) 또는 프로젝트 메모 노트(PROJECT). 프로젝트 노트는 projectId가 필요
+// 메모함(INBOX) 또는 프로젝트 메모 노트(PROJECT), 프로젝트 노트는 projectId 필요
 export type MemoScope = { scope: 'INBOX' } | { scope: 'PROJECT'; projectId: string };
 
 export type MemoFilter = { tag?: MemoTag; memoDate?: string; isDone?: boolean };

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 통합 검색 (서비스 기획서 §14 "찾기"): 프로젝트·직원·메모·자료(문서)·작업 내역을 한 검색창에서 찾는다.
+// 통합 검색 (서비스 기획서 §14 "찾기"): 프로젝트·직원·메모·자료(문서)·작업 내역을 한 검색창에서 검색
 // 검색 범위는 로그인한 회사 하나뿐이며, 직원의 연락처·생년월일·메모처럼 목록에서 가리는 개인정보는 검색 대상이 아니다 (§7.3)
 export const SEARCH_HIT_TYPES = ['PROJECT', 'EMPLOYEE', 'MEMO', 'DOCUMENT', 'WORK_LOG'] as const;
 
@@ -98,7 +98,7 @@ export const makeSnippet = (text: string, query: string, radius = SNIPPET_RADIUS
 
 /**
  * @description LIKE 검색에서 와일드카드로 해석되는 글자(`%`, `_`)와 이스케이프 글자(`\`)를 일반 글자로 바꿈.
- * 사용자가 "100%"나 "A_B"를 찾을 때 모든 글자와 맞는 검색이 되지 않게 한다
+ * 사용자가 "100%"나 "A_B"를 검색할 때 모든 글자와 일치하는 검색이 되지 않도록 방지
  * @param text 사용자가 입력한 검색어
  * @returns 이스케이프한 검색어
  */

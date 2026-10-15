@@ -17,6 +17,7 @@
     "build": "pnpm -r build",
     "typecheck": "pnpm -r typecheck",
     "lint": "eslint .",
+    "check:comments": "node scripts/check-comments.mjs",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test": "pnpm --filter @field-note/api db:generate && jest",

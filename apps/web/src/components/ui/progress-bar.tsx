@@ -12,7 +12,7 @@ type ProgressBarProps = {
 
 const TONE = { primary: 'bg-primary', warning: 'bg-warning', danger: 'bg-danger' };
 
-// 진행률·소진율 막대. 값은 항상 글자로도 함께 보여 준다
+// 진행률·소진율 막대, 값은 항상 글자로도 병행 표시
 export const ProgressBar = ({
   value,
   tone = 'primary',

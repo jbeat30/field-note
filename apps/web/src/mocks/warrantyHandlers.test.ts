@@ -151,13 +151,13 @@ describe('보증 목업', () => {
       200,
     );
 
-    // 보증 중이 되면 기본값이 저장된다
+    // 보증 중이 되면 기본값 저장
     expect(await warranty(completed)).toMatchObject({
       configured: true,
       months: 12,
       endOn: '2027-03-12',
     });
-    // 종료 예정일 전의 종료는 사유가 필요하다
+    // 종료 예정일 전의 종료는 사유 필요
     expect((await status({ toStatus: 'CLOSED' })).response.status).toBe(400);
     expect((await status({ toStatus: 'CLOSED', reason: '고객 요청' })).response.status).toBe(200);
   });
@@ -181,7 +181,7 @@ describe('보증 목업', () => {
     const { running } = await setup();
     const account = findAccount(demo.loginId)!;
 
-    // 문서가 있는 A동을 완료 상태로 바꿔 놓는다
+    // 문서가 있는 A동을 완료 상태로 변경
     saveProjects(
       account,
       getProjects(account).map((project) =>

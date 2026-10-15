@@ -54,7 +54,7 @@ export type SessionStore = {
   deleteExpired: () => Promise<void>;
   // 로그인한 기기 목록 (만료된 세션 제외, 최근 사용 순)
   listDevices: (userId: string, currentToken: string) => Promise<SessionDevice[]>;
-  // 다른 기기 원격 로그아웃. 같은 사용자의 현재 기기가 아닌 세션만 지우고, 지웠으면 true
+  // 다른 기기 원격 로그아웃, 같은 사용자의 현재 기기가 아닌 세션만 삭제하고 삭제했으면 true 반환
   revokeDevice: (userId: string, deviceId: string, currentToken: string) => Promise<boolean>;
 };
 

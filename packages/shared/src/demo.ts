@@ -4,9 +4,9 @@ import type { PartnerKind } from './partners';
 import type { ProjectStatus } from './projects';
 import { LEGAL_DOCUMENT_CONTENTS, legalDocumentText } from './legal';
 
-// 로컬 개발 전용 더미 데이터: 목업 서버(웹)와 DB 시드(api)가 같은 값을 쓰도록 한 곳에 둔다
+// 로컬 개발 전용 더미 데이터: 목업 서버(웹)와 DB 시드(api)가 같은 값을 쓰도록 한 곳에 배치
 // 운영 번들에 섞이지 않도록 `@field-note/shared/demo`로만 가져온다 (index에서 내보내지 않음)
-// 실제 개인정보를 쓰지 않고 이메일은 example.com만 사용한다
+// 실제 개인정보는 사용하지 않고 이메일은 example.com만 사용
 
 export type DemoAccount = {
   companyId: string;
@@ -312,7 +312,7 @@ export type DemoAssignment = {
   employeeName: string;
   startDate: string;
   endDate: string;
-  // 계획 공수(분). 기본 기준시간 8시간이면 480분 = 1MD
+  // 계획 공수(분), 기본 기준시간 8시간이면 480분 = 1MD
   plannedMinutes?: number;
   cancelled?: boolean;
 };
@@ -338,14 +338,14 @@ export type DemoWorkLog = {
   notes?: string;
   isChange?: boolean;
   entries: readonly DemoWorkLogEntry[];
-  // 저장된 작업 내역을 고친 기록 (고치기 전 값, 오래된 것부터). 시드가 버전을 이에 맞춰 올림
+  // 저장된 작업 내역을 고친 기록 (고치기 전 값, 오래된 것부터), 시드가 버전을 이에 맞춰 올림
   revisions?: readonly { content: string; area?: string; entries: readonly DemoWorkLogEntry[] }[];
 };
 
 export type DemoProject = {
   id: string;
   companyId: string;
-  // 자동 번호와 같은 형식(`연도-순번`). 시드가 번호표도 이 값에 맞춘다
+  // 자동 번호와 같은 형식(`연도-순번`), 시드가 번호표도 이 값에 맞춤
   code: string;
   name: string;
   status: ProjectStatus;
@@ -374,7 +374,7 @@ export type DemoProject = {
 
 const projectId = (n: number) => `0198d000-0000-7000-8000-0000000003${String(n).padStart(2, '0')}`;
 
-// 가상의 프로젝트만 사용한다 (연락처는 실제로 쓰이지 않는 0000 대역). 상태는 P1-6 전환 기능 전이라 시드가 직접 정한다
+// 가상의 프로젝트만 사용 (연락처는 실제로 쓰이지 않는 0000 대역), 상태는 P1-6 전환 기능 이전이라 시드가 직접 지정
 export const DEMO_PROJECTS: readonly DemoProject[] = [
   {
     id: projectId(1),
@@ -514,7 +514,7 @@ export const DEMO_PROJECTS: readonly DemoProject[] = [
 const assignmentId = (n: number) =>
   `0198d000-0000-7000-8000-0000000004${String(n).padStart(2, '0')}`;
 
-// 겹침 경고를 볼 수 있게 한 직원(최설치)이 A동·B동에 겹쳐 투입된 사례를 포함한다
+// 겹침 경고 확인용으로 한 직원(최설치)이 A동·B동에 겹쳐 투입된 사례 포함
 export const DEMO_ASSIGNMENTS: readonly DemoAssignment[] = [
   {
     id: assignmentId(1),
@@ -608,7 +608,7 @@ export const DEMO_ASSIGNMENTS: readonly DemoAssignment[] = [
 
 const workLogId = (n: number) => `0198d000-0000-7000-8000-0000000005${String(n).padStart(2, '0')}`;
 
-// 같은 직원(최설치)이 같은 날 A동·B동에 저장되어 하루 합계 경고(2.0)를 볼 수 있는 사례, 임시 저장·수정 이력·변경 작업 사례를 포함한다
+// 같은 직원(최설치)이 같은 날 A동·B동에 저장되어 하루 합계 경고(2.0)를 확인할 수 있는 사례, 임시 저장·수정 이력·변경 작업 사례 포함
 // 날짜는 프로젝트 예정 기간 안의 과거 날짜 (오늘보다 이전이어야 입력할 수 있음)
 export const DEMO_WORK_LOGS: readonly DemoWorkLog[] = [
   {
@@ -782,8 +782,8 @@ export type DemoPayRate = {
 
 const payRateId = (n: number) => `0198d000-0000-7000-8000-0000000008${String(n).padStart(2, '0')}`;
 
-// 화면 확인용 가짜 단가 (실제 급여와 무관). 정판금은 중간에 단가가 올라 변경 이력을 볼 수 있고,
-// 일급·시급·월급·연봉제가 한 번씩 들어 있으며 나머지 직원은 단가 미등록 사례로 비워 둔다
+// 화면 확인용 가짜 단가 (실제 급여와 무관), 정판금은 중간에 단가가 올라 변경 이력을 볼 수 있고,
+// 일급·시급·월급·연봉제가 한 번씩 포함, 나머지 직원은 단가 미등록 사례로 비워 둠
 export const DEMO_PAY_RATES: readonly DemoPayRate[] = [
   {
     id: payRateId(1),
@@ -894,7 +894,7 @@ export type DemoWarranty = {
   endOn: string;
 };
 
-// C동 환기 설비(종료)의 보증 설정: 6개월 보증이 끝난 뒤 종료. 옛날상가 간판 교체(완료)는 보증을 아직 설정하지 않은 상태로 둔다
+// C동 환기 설비(종료)의 보증 설정: 6개월 보증이 끝난 뒤 종료, 옛날상가 간판 교체(완료)는 보증을 아직 설정하지 않은 상태로 유지
 export const DEMO_WARRANTIES: readonly DemoWarranty[] = [
   {
     companyId: HANBIT,

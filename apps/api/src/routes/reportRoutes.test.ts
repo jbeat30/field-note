@@ -160,7 +160,7 @@ const setup = async () => {
     return { ticket, key, done };
   };
 
-  // 사진으로 쓸 파일 한 장 (검사 통과 상태). 안 올리면 신청만 한 상태
+  // 사진으로 쓸 파일 한 장 (검사 통과 상태), 안 올리면 신청만 한 상태
   const bodies = new Map<string, Buffer>();
   // 저장소에 올리고 완료를 알림 (신청만 해 둔 파일을 이어서 올릴 때)
   const finish = async (fileId: string) => {

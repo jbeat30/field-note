@@ -10,7 +10,7 @@ import { Link } from 'react-router';
 import { Button } from '../components/ui/button';
 import { cn } from '../lib/cn';
 
-// 같은 종류가 이 개수를 넘으면 한 줄로 묶어 보여 준다
+// 같은 종류가 이 개수를 넘으면 한 줄로 묶어 표시
 export const ALERT_GROUP_THRESHOLD = 3;
 
 const GROUP_TITLES: Record<AlertKind, string> = {
@@ -110,7 +110,7 @@ type AlertListProps = {
   limit?: number;
 };
 
-// 알림 목록: 급한 알림은 붉은 점·글자, 나머지는 회색 점. 같은 종류가 많으면 한 줄로 묶고, 하나씩 "이동" "숨기기"
+// 알림 목록: 급한 알림은 붉은 점·글자, 나머지는 회색 점, 같은 종류가 많으면 한 줄로 묶고 하나씩 "이동" "숨기기"
 export const AlertList = ({
   alerts,
   today,

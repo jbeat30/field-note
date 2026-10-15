@@ -6,7 +6,7 @@ import { useOptions } from '../settings/useOptions';
 
 import { optionNameMap } from './OptionSelect';
 
-// 직원 카드 개요 탭: 직책·직종·구분·입사일(퇴사일)과 서류 현황 요약. 연락처·생년월일·메모는 기본정보 탭에서만 보인다
+// 직원 카드 개요 탭: 직책·직종·구분·입사일(퇴사일)과 서류 현황 요약, 연락처·생년월일·메모는 기본정보 탭에서만 표시
 export const EmployeeOverviewPanel = ({ employee }: { employee: EmployeeDetail }) => {
   const options = useOptions();
   const credentials = useCredentials(employee.id);

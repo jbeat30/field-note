@@ -1,6 +1,10 @@
 import {
+  CHANGE_WORK_STATUS_LABELS,
   DEFAULT_COMPANY_SETTINGS,
   FILE_DOWNLOAD_URL_TTL_SECONDS,
+  PROJECT_STATUS_LABELS,
+  reportWorkUnitLabel,
+  reportWorkValue,
   selectSummaryDocuments,
   selectSummaryPhotos,
   evaluateTransitionNotices,
@@ -10,6 +14,8 @@ import {
   type ProjectStatus,
   type TransitionNotices,
 } from '@field-note/shared';
+
+import ExcelJS from 'exceljs';
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
@@ -23,10 +29,16 @@ export class CompletionError extends Error {
 }
 
 export type CompletionService = {
-  // 이 전환에서 확인할 것 (임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업·종료 예정일 경과). 막지 않고 알려 줌
+  // 이 전환에서 확인할 것 (임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업·종료 예정일 경과), 막지 않고 알려 줌
   notices: (companyId: string, projectId: string, to: ProjectStatus) => Promise<TransitionNotices>;
-  // 프로젝트 요약(완료 리포트): 그때그때 최신 기록으로 만든다. 금액과 민감 문서는 싣지 않음
+  // 프로젝트 요약(완료 리포트): 그때그때 최신 기록으로 생성, 금액과 민감 문서 제외
   summary: (companyId: string, projectId: string) => Promise<ProjectCompletionSummary>;
+  // 요약 엑셀 내보내기 (요약과 같은 내용, 금액·민감 문서 제외), 내보낸 기록 저장
+  exportXlsx: (
+    companyId: string,
+    userId: string,
+    projectId: string,
+  ) => Promise<{ filename: string; body: Buffer }>;
 };
 
 const fromDate = (value: Date) => value.toISOString().slice(0, 10);
@@ -84,7 +96,7 @@ export const createCompletionService = (
     );
   };
 
-  return {
+  const service: CompletionService = {
     notices: (companyId, projectId, to) =>
       withCompany(app, companyId, async (tx) => {
         const project = await requireProject(tx, projectId);
@@ -313,5 +325,115 @@ export const createCompletionService = (
         },
       } satisfies ProjectCompletionSummary;
     },
+
+    exportXlsx: async (companyId, userId, projectId) => {
+      const summary = await service.summary(companyId, projectId);
+      const unit = reportWorkUnitLabel(summary.settings.workUnitMode);
+      const value = (minutes: number) => reportWorkValue(minutes, summary.settings);
+      const book = new ExcelJS.Workbook();
+      const sheet = (
+        name: string,
+        header: string[],
+        widths: number[],
+        rows: (string | number)[][],
+      ) => {
+        const target = book.addWorksheet(name);
+
+        target.addRow(header);
+        target.addRows(rows);
+        target.columns = widths.map((width) => ({ width }));
+        target.getRow(1).font = { bold: true };
+        target.getRow(1).fill = {
+          type: 'pattern',
+          pattern: 'solid',
+          fgColor: { argb: 'FFE2E8F0' },
+        };
+        target.views = [{ state: 'frozen', ySplit: 1 }];
+      };
+      const project = summary.project;
+
+      sheet(
+        '요약',
+        ['항목', '내용'],
+        [18, 48],
+        [
+          ['회사', summary.companyName],
+          ['프로젝트', `${project.code} ${project.name}`],
+          ['상태', PROJECT_STATUS_LABELS[project.status]],
+          ['현장', project.siteName],
+          ['현장 주소', project.siteAddress ?? ''],
+          ['고객', project.clientName],
+          ['담당자', project.managerName],
+          ['계약일', project.contractDate],
+          ['예정 기간', `${project.plannedStart} ~ ${project.plannedEnd}`],
+          ['실제 기간', `${project.actualStart ?? ''} ~ ${project.actualEnd ?? ''}`],
+          ['진행률(%)', summary.progressPercent ?? ''],
+          [`총 공수 (${unit})`, value(summary.work.totalMinutes)],
+          [
+            `계획 공수 (${unit})`,
+            summary.work.plannedMinutes === null ? '' : value(summary.work.plannedMinutes),
+          ],
+          ['일한 날 수', summary.work.workedDays],
+          ['저장된 작업 내역 수', summary.work.savedLogCount],
+          [`변경·추가 작업 공수 (${unit})`, value(summary.changeWorks.minutes)],
+          [`사후 작업 공수 (${unit})`, value(summary.afterService.minutes)],
+          ['요약 기준일', summary.generatedOn],
+        ],
+      );
+      sheet(
+        '인원별 공수',
+        ['이름', '일한 날 수', `공수 (${unit})`],
+        [16, 12, 14],
+        summary.work.byEmployee.map((row) => [row.name, row.workedDays, value(row.minutes)]),
+      );
+      sheet(
+        '작업 구분별 공수',
+        ['작업 구분', `공수 (${unit})`],
+        [20, 14],
+        summary.work.byCategory.map((row) => [row.categoryName, value(row.minutes)]),
+      );
+      sheet(
+        '쓴 자재',
+        ['품명', '규격', '쓴 양', '단위'],
+        [24, 18, 12, 8],
+        summary.materials
+          .filter((item) => item.used > 0)
+          .map((item) => [item.name, item.spec ?? '', item.used, item.unit]),
+      );
+      sheet(
+        '변경·추가 작업',
+        ['번호', '요청일', '요청자', '내용', '상태'],
+        [8, 12, 16, 48, 10],
+        summary.changeWorks.items.map((item) => [
+          item.seq,
+          item.requestedOn,
+          item.requester,
+          item.content,
+          CHANGE_WORK_STATUS_LABELS[item.status],
+        ]),
+      );
+
+      // 내보내기는 기록으로 남김 (누가 언제 무엇을 내보냈는지)
+      await withCompany(app, companyId, async (tx) => {
+        await tx.auditLog.create({
+          data: {
+            companyId,
+            action: 'REPORT_EXPORTED',
+            actorId: userId,
+            targetId: projectId,
+            projectId,
+            detail: { kind: 'PROJECT_SUMMARY_XLSX' },
+            createdAt: now(),
+          },
+        });
+      });
+
+      return {
+        filename: `프로젝트요약_${project.code}.xlsx`,
+        body: Buffer.from(await book.xlsx.writeBuffer()),
+      };
+    },
   };
+
+  return service;
 };

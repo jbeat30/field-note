@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// 공수 집계 (서비스 기획서 §9.6). 집계에는 저장된 작업 내역만 반영하고 임시 저장은 건수만 따로 알린다 (§9.4)
-// 값은 모두 분 단위이며 MD·MM·소진율은 보여 줄 때 회사 설정으로 환산한다
+// 공수 집계 (서비스 기획서 §9.6), 집계에는 저장된 작업 내역만 반영하고 임시 저장은 건수만 따로 알린다 (§9.4)
+// 값은 모두 분 단위이며 MD·MM·소진율은 표시할 때 회사 설정으로 환산
 
 const dateSchema = z.iso.date();
 
@@ -28,7 +28,7 @@ export type WorkSummaryQuery = z.infer<typeof workSummaryQuerySchema>;
 export const workSummarySchema = z.object({
   // 기간 필터를 건 경우 그 기간만, 아니면 전체
   totalMinutes: z.number().int(),
-  // 투입별 계획 공수의 합 (취소한 투입 제외, 계획이 없으면 null). 기간 필터와 무관한 전체 값
+  // 투입별 계획 공수의 합 (취소한 투입 제외, 계획이 없으면 null), 기간 필터와 무관한 전체 값
   plannedMinutes: z.number().int().nullable(),
   // 공수가 있는 날 수 (프로젝트 기준)
   workedDays: z.number().int(),
@@ -76,7 +76,7 @@ export const employeeWorkHistorySchema = z.object({
 
 export type EmployeeWorkHistory = z.infer<typeof employeeWorkHistorySchema>;
 
-// 한 사람이 한 프로젝트에서 일한 날 (인원 탭의 일한 날 창). 저장된 작업 내역만 반영
+// 한 사람이 한 프로젝트에서 일한 날 (인원 탭의 일한 날 창), 저장된 작업 내역만 반영
 export const employeeProjectDaysParamsSchema = z.object({ id: z.uuid(), employeeId: z.uuid() });
 
 export const employeeProjectDaysQuerySchema = z.object({

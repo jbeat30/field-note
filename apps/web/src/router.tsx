@@ -10,7 +10,7 @@ const page = <T extends string>(load: () => Promise<Record<T, React.ComponentTyp
   lazy: async () => ({ Component: (await load())[name] }),
 });
 
-// 라우트 단위 코드 분할(lazy): 무거운 화면은 필요할 때 불러온다
+// 라우트 단위 코드 분할(lazy): 무거운 화면은 필요할 때 로딩
 export const routes = [
   {
     // 로그인 전 화면
@@ -41,12 +41,12 @@ export const routes = [
         path: '/closure/requested',
         ...page(() => import('./routes/ClosureRequestedPage'), 'ClosureRequestedPage'),
       },
-      // 목업 모드에서만 존재하는 가짜 카카오 로그인 화면
+      // 목업 모드에서만 존재하는 가짜 소셜 로그인 화면
       ...(env.isMockApi
         ? [
             {
-              path: '/mock-kakao',
-              ...page(() => import('./routes/MockKakaoPage'), 'MockKakaoPage'),
+              path: '/mock-social',
+              ...page(() => import('./routes/MockSocialPage'), 'MockSocialPage'),
             },
           ]
         : []),

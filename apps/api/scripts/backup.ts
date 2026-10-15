@@ -17,7 +17,7 @@ import {
 import { createPgTools, type PgMode } from '../src/ops/pgTools';
 
 // 백업·복구 시험 CLI: `pnpm backup create | list | prune | drill [백업ID]`
-// 접속 정보는 .env의 소유 계정(DATABASE_MIGRATE_URL)을 쓴다. 운영 환경에서는 운영자 PC·점검 작업에서만 실행한다
+// 접속 정보는 .env의 소유 계정(DATABASE_MIGRATE_URL) 사용, 운영 환경에서는 운영자 PC·점검 작업에서만 실행
 const ownerUrl = process.env.DATABASE_MIGRATE_URL;
 const appUrl = process.env.DATABASE_URL;
 

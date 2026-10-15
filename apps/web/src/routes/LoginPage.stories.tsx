@@ -73,16 +73,20 @@ export const LongInput: Story = {
   },
 };
 
-export const WithKakaoButton: Story = {
+export const WithSocialButtons: Story = {
   play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
     await expect(
-      await within(canvasElement).findByRole('button', { name: '카카오로 로그인' }),
+      await canvas.findByRole('button', { name: '카카오로 로그인' }),
     ).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '네이버로 로그인' })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: '구글로 로그인' })).toBeInTheDocument();
   },
 };
 
-// 카카오에서 돌아온 결과 안내 (주소의 ?social= 값)
-export const KakaoNotLinked: Story = {
+// 소셜 로그인 화면에서 돌아온 결과 안내 (주소의 ?social= 값)
+export const SocialNotLinked: Story = {
   parameters: { router: { initialEntries: ['/login?social=not-linked'], path: '/login' } },
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent(
@@ -91,7 +95,7 @@ export const KakaoNotLinked: Story = {
   },
 };
 
-export const KakaoCancelled: Story = {
+export const SocialCancelled: Story = {
   parameters: { router: { initialEntries: ['/login?social=cancelled'], path: '/login' } },
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent('취소했습니다');
@@ -120,7 +124,7 @@ export const ClosingAccount: Story = {
   },
 };
 
-export const KakaoClosing: Story = {
+export const SocialClosing: Story = {
   parameters: { router: { initialEntries: ['/login?social=closing'], path: '/login' } },
   play: async ({ canvasElement }) => {
     await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent(

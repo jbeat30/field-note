@@ -4,7 +4,7 @@ import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 
 // 목록에 없을 때 그 자리에서 새로 추가 (현장에서 목록 관리 때문에 입력이 막히지 않게, 서비스 기획서 §11.2 취지)
-// 추가한 항목은 호출한 쪽이 곧바로 선택해 준다
+// 추가한 항목은 호출한 쪽이 즉시 선택
 export const InlineAdd = ({
   label,
   placeholder,

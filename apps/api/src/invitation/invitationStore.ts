@@ -5,8 +5,11 @@ type Clock = () => Date;
 
 export type InvitationInfo = {
   companyName: string;
+  // 가입하는 사람 이름 (소유자 이전은 새 소유자 이름)
   adminName: string;
   expiresAt: Date;
+  // 가입 링크 또는 가입을 마친 계정의 복구·소유자 이전 링크
+  purpose: 'SIGNUP' | 'RECOVERY' | 'TRANSFER';
 };
 
 export type ConsumedInvitation = {
@@ -25,7 +28,7 @@ export type CurrentLegalDocument = {
 type InvitationReader = Pick<PrismaClient, 'invitation' | 'legalDocument'>;
 
 /**
- * @description 유효한 초대의 조회 조건: 미사용·미만료·회사 활성·관리자 가입 전
+ * @description 유효한 초대의 조회 조건: 미사용·미만료·회사 활성, 가입 링크는 관리자 가입 전, 복구·소유자 이전 링크는 가입을 마친 계정
  * @param token 토큰 원문
  * @param now 현재 시각
  * @returns Prisma where 조건
@@ -35,7 +38,13 @@ export const validInvitationWhere = (token: string, now: Date) => ({
   usedAt: null,
   expiresAt: { gt: now },
   company: { status: 'ACTIVE' as const },
-  user: { status: 'INVITED' as const },
+  OR: [
+    { purpose: 'SIGNUP' as const, user: { status: 'INVITED' as const } },
+    {
+      purpose: { in: ['RECOVERY', 'TRANSFER'] as ('RECOVERY' | 'TRANSFER')[] },
+      user: { status: 'ACTIVE' as const },
+    },
+  ],
 });
 
 /**
@@ -108,8 +117,9 @@ export const createPrismaInvitationStore = (
       return invitation
         ? {
             companyName: invitation.company.name,
-            adminName: invitation.user.displayName,
+            adminName: invitation.newDisplayName ?? invitation.user.displayName,
             expiresAt: invitation.expiresAt,
+            purpose: invitation.purpose,
           }
         : null;
     },

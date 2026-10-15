@@ -1,13 +1,17 @@
 import {
+  SOCIAL_PROVIDER_LABELS,
   socialCallbackQuerySchema,
   socialMethodsResponseSchema,
+  socialProviderParamsSchema,
   socialProvidersResponseSchema,
   socialStartRequestSchema,
   socialStartResponseSchema,
   successResponseSchema,
+  type SocialProviderKey,
   type SocialResult,
   type SocialStartRequest,
 } from '@field-note/shared';
+import { generateCodeVerifier } from 'arctic';
 import { z } from 'zod';
 
 import { AccountError } from '../auth/accountError';
@@ -21,7 +25,7 @@ import { readSessionToken, setSessionCookie } from '../session/cookie';
 import { buildDeviceLabel } from '../session/deviceLabel';
 import { clientIp } from '../session/clientIp';
 import type { SessionStore } from '../session/sessionStore';
-import type { SocialService } from '../auth/socialService';
+import type { SocialProviderId, SocialService } from '../auth/socialService';
 import {
   clearOAuthCookie,
   openOAuthSession,
@@ -29,10 +33,10 @@ import {
   sealOAuthSession,
   setOAuthCookie,
 } from '../social/oauthCookie';
-import type { SocialProviderChoice } from '../social/provider';
+import type { SocialProviderChoices } from '../social/provider';
 
 type SocialRouteOptions = {
-  choice: SocialProviderChoice;
+  choices: SocialProviderChoices;
   socialService: SocialService;
   accountService: AccountService;
   sessionStore: SessionStore;
@@ -53,8 +57,6 @@ const toResult = (error: unknown): SocialResult => {
   switch (error.code) {
     case 'SOCIAL_ALREADY_LINKED':
       return 'already-linked';
-    case 'SOCIAL_EMAIL_REQUIRED':
-      return 'email-required';
     case 'EMAIL_TAKEN':
       return 'email-taken';
     case 'INVITATION_INVALID':
@@ -76,7 +78,11 @@ const notImplemented: RouteHandler = async () => {
 
 // 소셜 설정이 없을 때(문서 생성, 서비스 구성 전) 쓰는 자리 채움 값: 이 값으로는 어떤 핸들러도 실행되지 않음 (501로 등록)
 const UNUSED_OPTIONS = {
-  choice: { kind: 'none' },
+  choices: {
+    kakao: { kind: 'none' },
+    naver: { kind: 'none' },
+    google: { kind: 'none' },
+  },
   socialService: undefined,
   accountService: undefined,
   sessionStore: undefined,
@@ -89,31 +95,36 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
   const options = config ?? UNUSED_OPTIONS;
   const add: RouteRegistry['add'] = (spec, handler) =>
     registry.add(spec, config ? handler : notImplemented);
-  const { choice, socialService, accountService, sessionStore, invitationStore } = options;
+  const { choices, socialService, accountService, sessionStore, invitationStore } = options;
   const origin = new URL(options.appOrigin).origin;
   const redirectTo = (path: string, result?: SocialResult) =>
     `${origin}${path}${result ? `?social=${result}` : ''}`;
 
-  const isEnabled = choice.kind !== 'none';
+  const toProviderId = (provider: SocialProviderKey) => provider.toUpperCase() as SocialProviderId;
+  const providerOf = (params: unknown) => (params as { provider: SocialProviderKey }).provider;
 
   const begin = async (
+    provider: SocialProviderKey,
     response: Parameters<typeof setOAuthCookie>[0],
-    session: Parameters<typeof sealOAuthSession>[2],
+    session: Parameters<typeof sealOAuthSession>[2]['session'],
   ) => {
+    const choice = choices[provider];
+
     if (choice.kind === 'none') {
       // 제공자 설정이 없는 환경(예: 앱 등록 전 운영)에서는 시작할 수 없음
       throw new AppError('NOT_IMPLEMENTED');
     }
 
     const state = generateToken();
+    const codeVerifier = generateCodeVerifier();
 
     setOAuthCookie(
       response,
-      sealOAuthSession(options.cookieSecret, state, session),
+      sealOAuthSession(options.cookieSecret, state, { provider, codeVerifier, session }),
       options.isSecureCookie,
     );
 
-    return { url: choice.client.createAuthorizationUrl(state).toString() };
+    return { url: choice.client.createAuthorizationUrl(state, codeVerifier).toString() };
   };
 
   add(
@@ -124,33 +135,38 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
       auth: 'none',
       response: { status: 200, schema: socialProvidersResponseSchema },
     },
-    async () => ({ kakao: isEnabled }),
+    async () => ({
+      kakao: choices.kakao.kind !== 'none',
+      naver: choices.naver.kind !== 'none',
+      google: choices.google.kind !== 'none',
+    }),
   );
 
   add(
     {
       method: 'post',
-      path: '/auth/kakao/start',
-      summary: '카카오 로그인·가입 시작 (카카오 화면 주소 반환)',
+      path: '/auth/{provider}/start',
+      summary: '소셜 로그인·가입 시작 (제공자 화면 주소 반환)',
       auth: 'none',
-      request: { body: socialStartRequestSchema },
+      request: { params: socialProviderParamsSchema, body: socialStartRequestSchema },
       response: { status: 200, schema: socialStartResponseSchema },
       errors: ['NOT_FOUND', 'NOT_IMPLEMENTED'],
       rateLimit: { windowMs: 60_000, limit: 20 },
     },
-    async ({ body, response }) => {
+    async ({ params, body, response }) => {
+      const provider = providerOf(params);
       const input = body as SocialStartRequest;
 
       if (input.purpose === 'login') {
-        return begin(response, { purpose: 'login' });
+        return begin(provider, response, { purpose: 'login' });
       }
 
-      // 없는 링크는 카카오 화면으로 보내기 전에 알림 (만료·사용 완료·없는 링크는 구분하지 않음)
+      // 없는 링크는 제공자 화면으로 보내기 전에 알림 (만료·사용 완료·없는 링크는 구분하지 않음)
       if (invitationStore && !(await invitationStore.find(input.inviteToken))) {
         throw new AppError('NOT_FOUND');
       }
 
-      return begin(response, {
+      return begin(provider, response, {
         purpose: 'signup',
         inviteToken: input.inviteToken,
         consents: input.consents,
@@ -161,39 +177,49 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
   add(
     {
       method: 'post',
-      path: '/me/social/kakao/start',
-      summary: '로그인한 계정에 카카오 연동 시작',
+      path: '/me/social/{provider}/start',
+      summary: '로그인한 계정에 소셜 계정 연동 시작',
       auth: 'required',
+      request: { params: socialProviderParamsSchema },
       response: { status: 200, schema: socialStartResponseSchema },
       errors: ['NOT_IMPLEMENTED'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
-    async ({ auth, response }) =>
-      begin(response, { purpose: 'link', userId: auth!.userId, companyId: auth!.companyId }),
+    async ({ auth, params, response }) =>
+      begin(providerOf(params), response, {
+        purpose: 'link',
+        userId: auth!.userId,
+        companyId: auth!.companyId,
+      }),
   );
 
   add(
     {
       method: 'get',
-      path: '/auth/kakao/callback',
-      summary: '카카오에서 돌아오는 주소 (연동·로그인·가입을 마치고 웹 화면으로 이동)',
+      path: '/auth/{provider}/callback',
+      summary: '제공자에서 돌아오는 주소 (연동·로그인·가입을 마치고 웹 화면으로 이동)',
       auth: 'none',
-      request: { query: socialCallbackQuerySchema },
+      request: { params: socialProviderParamsSchema, query: socialCallbackQuerySchema },
       response: { status: 302, schema: z.null() },
       redirect: true,
       rateLimit: { windowMs: 60_000, limit: 30 },
     },
-    async ({ query, request, response }) => {
+    async ({ params, query, request, response }) => {
+      const provider = providerOf(params);
+      const choice = choices[provider];
+      const providerId = toProviderId(provider);
       const { code, state, error } = query as z.infer<typeof socialCallbackQuerySchema>;
-      const session = openOAuthSession(options.cookieSecret, readOAuthCookie(request), state);
+      const context = openOAuthSession(options.cookieSecret, readOAuthCookie(request), state);
 
       // 한 번 쓴 진행 상태는 결과와 관계없이 즉시 폐기
       clearOAuthCookie(response, options.isSecureCookie);
 
-      // 쿠키가 없거나 state가 다르면(다른 사람이 만든 주소로 들어온 경우 포함) 아무 처리도 하지 않음
-      if (!session || choice.kind === 'none') {
+      // 쿠키가 없거나 state가 다르거나 시작한 제공자와 다르면(다른 사람이 만든 주소로 들어온 경우 포함) 아무 처리도 하지 않음
+      if (!context || context.provider !== provider || choice.kind === 'none') {
         return redirectTo('/login', 'failed');
       }
+
+      const { session, codeVerifier } = context;
 
       const returnPath =
         session.purpose === 'link'
@@ -202,19 +228,19 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
             ? `/invite/${encodeURIComponent(session.inviteToken)}`
             : '/login';
 
-      if (error || !code) {
+      if (error || !code || !state) {
         return redirectTo(returnPath, 'cancelled');
       }
 
       try {
-        const profile = await choice.client.exchangeCode(code);
+        const profile = await choice.client.exchangeCode(code, state, codeVerifier);
 
         if (session.purpose === 'login') {
-          const account = await socialService.findAccount('KAKAO', profile.providerUserId);
+          const account = await socialService.findAccount(providerId, profile.providerUserId);
 
           if (!account) {
             // 해지 요청 중인 계정이면 연결이 없는 것과 구분해 취소 링크를 안내
-            const isClosing = await socialService.isClosing('KAKAO', profile.providerUserId);
+            const isClosing = await socialService.isClosing(providerId, profile.providerUserId);
 
             return redirectTo('/login', isClosing ? 'closing' : 'not-linked');
           }
@@ -240,7 +266,7 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
             return redirectTo('/settings', 'failed');
           }
 
-          await socialService.link(current, 'KAKAO', profile.providerUserId);
+          await socialService.link(current, providerId, profile.providerUserId);
 
           return redirectTo('/settings', 'linked');
         }
@@ -248,7 +274,7 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
         const account = await socialService.signup({
           inviteToken: session.inviteToken,
           consents: session.consents,
-          provider: 'KAKAO',
+          provider: providerId,
           providerUserId: profile.providerUserId,
           verifiedEmail: profile.verifiedEmail,
         });
@@ -259,12 +285,16 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
 
         setSessionCookie(response, created, options.isSecureCookie);
 
-        return redirectTo('/');
+        // 인증된 이메일을 받지 못했으면 이메일 등록·인증 화면으로 이동
+        return redirectTo(profile.verifiedEmail ? '/' : '/verify-email');
       } catch (failure) {
         const result = toResult(failure);
 
         if (result === 'failed') {
-          options.logger?.error({ err: failure }, '[routes.kakaoCallback] 소셜 로그인 처리 실패');
+          options.logger?.error(
+            { err: failure },
+            `[routes.socialCallback] ${SOCIAL_PROVIDER_LABELS[provider]} 로그인 처리 실패`,
+          );
         }
 
         return redirectTo(returnPath, result);
@@ -283,22 +313,30 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
     async ({ auth }) => {
       const methods = await socialService.methods(auth!);
 
-      return { hasPassword: methods.hasPassword, kakao: { isLinked: methods.isKakaoLinked } };
+      const isLinked = (id: SocialProviderId) => ({ isLinked: methods.linked.includes(id) });
+
+      return {
+        hasPassword: methods.hasPassword,
+        kakao: isLinked('KAKAO'),
+        naver: isLinked('NAVER'),
+        google: isLinked('GOOGLE'),
+      };
     },
   );
 
   add(
     {
       method: 'delete',
-      path: '/me/social/kakao',
-      summary: '카카오 연동 해제 (로그인 수단이 하나 이상 남아야 함)',
+      path: '/me/social/{provider}',
+      summary: '소셜 연동 해제 (로그인 수단이 하나 이상 남아야 함)',
       auth: 'required',
+      request: { params: socialProviderParamsSchema },
       response: { status: 200, schema: successResponseSchema },
       errors: ['LAST_LOGIN_METHOD'],
     },
-    async ({ auth }) => {
+    async ({ auth, params }) => {
       try {
-        await socialService.unlink(auth!, 'KAKAO');
+        await socialService.unlink(auth!, toProviderId(providerOf(params)));
       } catch (error) {
         throw error instanceof AccountError && error.code === 'LAST_LOGIN_METHOD'
           ? new AppError('LAST_LOGIN_METHOD')

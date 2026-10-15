@@ -3,6 +3,7 @@ import {
   projectCompletionSummarySchema,
   transitionNoticesSchema,
 } from '@field-note/shared';
+import ExcelJS from 'exceljs';
 import request from 'supertest';
 
 import { createApp } from '../app';
@@ -128,6 +129,15 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     notices: (projectId: string, to: string) =>
       get(`/projects/${projectId}/transition-notices?to=${to}`),
     summary: (projectId: string) => get(`/projects/${projectId}/summary`),
+    downloadSummary: (projectId: string) =>
+      get(`/projects/${projectId}/summary.xlsx`)
+        .buffer(true)
+        .parse((res, callback) => {
+          const chunks: Buffer[] = [];
+
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => callback(null, Buffer.concat(chunks)));
+        }),
     saveLog: (projectId: string, date: string, body: object) =>
       send('put', `/projects/${projectId}/work-logs/${date}`, body),
     updateDocument: (id: string, body: object) => send('patch', `/documents/${id}`, body),
@@ -249,7 +259,7 @@ describe('상태 전환 안내', () => {
 
     await record(duct, 'RECEIVED', 100);
     await record(duct, 'USED', 85);
-    // 잔량이 0이면 알리지 않는다
+    // 잔량이 0이면 안내 제외
     await record(bolt, 'RECEIVED', 10);
     await record(bolt, 'USED', 10);
     await client.send('post', `/projects/${project}/change-works`, {
@@ -394,6 +404,68 @@ describe('프로젝트 요약', () => {
     expect(afterService).toEqual({ minutes: 120, workLogCount: 1 });
   });
 
+  it('요약을 엑셀로 내려받으면 시트별로 같은 내용이 들어가고 내보낸 기록이 남는다', async () => {
+    const { client, project, worker, categories } = await setup();
+
+    await client.saveLog(project, '2026-10-05', {
+      status: 'SAVED',
+      content: '작업',
+      entries: [{ employeeId: worker, categoryId: categories[0]!.id, minutes: 480 }],
+    });
+
+    const res = await client.downloadSummary(project);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('spreadsheetml.sheet');
+    expect(
+      decodeURIComponent(String(res.headers['content-disposition']).split("UTF-8''")[1]!),
+    ).toMatch(/^프로젝트요약_\d{4}-\d{3}\.xlsx$/);
+
+    const book = new ExcelJS.Workbook();
+
+    await book.xlsx.load(res.body as never);
+
+    const rowsOf = (name: string) =>
+      book
+        .getWorksheet(name)!
+        .getSheetValues()
+        .slice(1)
+        .map((row) => (row as unknown[]).slice(1));
+
+    expect(book.worksheets.map((sheet) => sheet.name)).toEqual([
+      '요약',
+      '인원별 공수',
+      '작업 구분별 공수',
+      '쓴 자재',
+      '변경·추가 작업',
+    ]);
+    expect(rowsOf('인원별 공수')).toEqual([
+      ['이름', '일한 날 수', '공수 (MD)'],
+      ['김작업', 1, 1],
+    ]);
+    expect(rowsOf('요약')).toContainEqual(['총 공수 (MD)', 1]);
+
+    const { rows } = await db.ownerPool.query(
+      `SELECT detail, project_id FROM audit_logs WHERE action = 'REPORT_EXPORTED' AND detail->>'kind' = 'PROJECT_SUMMARY_XLSX'`,
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].project_id).toBe(project);
+  });
+
+  it('요약 엑셀은 로그인 없이는 401, 없는 프로젝트는 404다', async () => {
+    const { instance, client } = await setup();
+
+    expect(
+      (
+        await request(instance).get(
+          '/api/v1/projects/0198d000-0000-7000-8000-00000000dead/summary.xlsx',
+        )
+      ).status,
+    ).toBe(401);
+    expect((await client.downloadSummary('0198d000-0000-7000-8000-00000000dead')).status).toBe(404);
+  });
+
   it('자재 현황과 변경·추가 작업 목록, 최신 진행률이 들어간다', async () => {
     const { client, project } = await setup();
     const duct = await client.id('/materials', { name: '덕트', unit: '장' });
@@ -440,7 +512,7 @@ describe('프로젝트 요약', () => {
 
     await client.makeDocument(project, '도면', 'DRAWING');
     const contract = await client.makeDocument(project, '도급 계약서', 'CONTRACT');
-    // 계약은 기본이 민감, 다른 분류도 직접 민감으로 표시할 수 있다
+    // 계약은 기본이 민감, 다른 분류도 직접 민감 표시 가능
     await client.makeDocument(project, '안전 점검표', 'SAFETY', { isSensitive: true });
     const safe = await client.makeDocument(project, '준공 검사서', 'SAFETY');
     const summary = async () =>
@@ -455,12 +527,12 @@ describe('프로젝트 요약', () => {
     ]);
     expect(JSON.stringify(documents)).not.toContain('계약서');
 
-    // 민감 자료는 요약에 넣기로 표시해도 싣지 않는다
+    // 민감 자료는 요약에 넣기로 표시해도 제외
     expect((await client.updateDocument(contract, { includeInSummary: true })).status).toBe(200);
     documents = await summary();
     expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
 
-    // 고른 문서가 있으면 그것만 싣는다
+    // 고른 문서가 있으면 그 문서만 포함
     await client.updateDocument(safe, { includeInSummary: true });
     documents = await summary();
     expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
@@ -530,7 +602,7 @@ describe('프로젝트 요약', () => {
     expect(photos.items.every((item) => item.category === 'AFTER')).toBe(true);
     expect(photos.items[0]!.thumbnailUrl).toContain('/thumb?download');
 
-    // 직접 고른 사진이 있으면 종류와 상관없이 그것만 싣는다
+    // 직접 고른 사진이 있으면 종류와 상관없이 그 사진만 포함
     expect((await client.updatePhoto(ids[0]!, { includeInSummary: true })).status).toBe(200);
     expect((await client.updatePhoto(ids[5]!, { includeInSummary: true })).status).toBe(200);
     photos = await summary();

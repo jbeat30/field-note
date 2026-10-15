@@ -251,7 +251,7 @@ describe('직원 서류·자격', () => {
     expect(reversed.status).toBe(400);
     expect(errorPath(reversed.body)).toBe('body.expiresOn');
 
-    // 직종 목록 항목은 자격 종류가 아니다
+    // 직종 목록 항목은 자격 종류가 아님
     const jobType = (
       await send('post', '/company/options', { kind: 'JOB_TYPE', name: '자격 아님' })
     ).body.id as string;
@@ -566,7 +566,7 @@ describe('프로젝트 필요 자격과 투입 경고', () => {
       },
     ]);
 
-    // 갱신한 서류를 추가하면 경고가 사라진다
+    // 갱신한 서류를 추가하면 경고 해소
     const renewed = await send('post', `/employees/${worker}/credentials`, {
       typeId: weld,
       expiresOn: '2029-10-01',
@@ -584,7 +584,7 @@ describe('프로젝트 필요 자격과 투입 경고', () => {
       [managerId, 1],
     ]);
 
-    // 삭제한 서류는 갖춘 것으로 보지 않는다
+    // 삭제한 서류는 갖춘 것으로 판정하지 않음
     await del(`/employees/${worker}/credentials/${renewed.body.id}`);
 
     expect(await warningCounts()).toEqual([

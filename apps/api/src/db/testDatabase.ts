@@ -28,7 +28,7 @@ const CLONE_LOCK_ID = 7_310_001;
 
 /**
  * @description 공유 PostgreSQL 컨테이너에 마이그레이션이 끝난 템플릿 DB를 복제해 스위트 전용 DB를 만들고 계정별 클라이언트 반환
- * 컨테이너는 jest 전역 설정(`jest.global-setup.ts`)이 한 번만 띄운다
+ * 컨테이너는 jest 전역 설정(`jest.global-setup.ts`)에서 한 번만 기동
  * @returns 테스트 DB 핸들
  */
 export const startTestDatabase = async (): Promise<TestDatabase> => {

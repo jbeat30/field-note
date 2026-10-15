@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// 직원 카드 (서비스 기획서 §8). 직원은 서비스에 로그인하지 않고 관리자가 기록한다
-// 주민등록번호·계좌번호는 저장하지 않는다(급여는 단가표만, `laborCost.ts`). 생년월일·연락처는 카드(상세)에서만 내려 준다
+// 직원 카드 (서비스 기획서 §8), 직원은 서비스에 로그인하지 않고 관리자가 기록
+// 주민등록번호·계좌번호는 저장 제외(급여는 단가표만, `laborCost.ts`), 생년월일·연락처는 카드(상세)에서만 제공
 export const EMPLOYEE_STATUSES = ['ACTIVE', 'ON_LEAVE', 'LEFT'] as const;
 
 export const employeeStatusSchema = z.enum(EMPLOYEE_STATUSES);
@@ -56,7 +56,7 @@ export const employeeSummarySchema = z.object({
   name: z.string(),
   // 직책(표시용: 반장, 기공, 조공 등)
   title: z.string().nullable(),
-  // 선택 목록(직종·직원 구분) 항목의 id. 이름은 선택 목록에서 찾는다
+  // 선택 목록(직종·직원 구분) 항목의 id, 이름은 선택 목록에서 조회
   jobTypeId: z.uuid().nullable(),
   workerTypeId: z.uuid().nullable(),
   status: employeeStatusSchema,
@@ -92,13 +92,13 @@ export type EmployeeListQuery = z.infer<typeof employeeListQuerySchema>;
 
 export const employeeParamsSchema = z.object({ id: z.uuid() });
 
-// 간편 등록: 이름만 있으면 된다 (일용·협력 인력용). 나머지는 나중에 채운다
+// 간편 등록: 이름만 입력 (일용·협력 인력용), 나머지는 추후 입력
 export const employeeCreateSchema = z.object({
   name: employeeNameSchema,
   jobTypeId: z.uuid().nullish(),
   workerTypeId: z.uuid().nullish(),
   title: titleSchema.nullish(),
-  // 등록 때는 퇴사 상태로 만들 수 없다
+  // 등록 때는 퇴사 상태로 생성 불가
   status: z.enum(['ACTIVE', 'ON_LEAVE']).optional(),
   hiredOn: dateSchema.nullish(),
   birthDate: dateSchema.nullish(),
@@ -108,7 +108,7 @@ export const employeeCreateSchema = z.object({
 
 export type EmployeeCreate = z.infer<typeof employeeCreateSchema>;
 
-// 수정: 보낸 항목만 바꾸고, 비울 수 있는 항목은 null로 지운다
+// 수정: 보낸 항목만 변경, 비울 수 있는 항목은 null로 삭제
 export const employeeUpdateSchema = z
   .object({
     name: employeeNameSchema,

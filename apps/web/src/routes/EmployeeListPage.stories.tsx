@@ -44,7 +44,7 @@ export const Default: Story = {
   },
 };
 
-// 머리의 `간편 등록`을 누르면 창이 열리고, 이름만 넣어도 등록된다
+// 머리의 `간편 등록`을 누르면 창이 열리고 이름만 입력해도 등록
 const openQuickAdd = async (canvas: ReturnType<typeof within>) => {
   await userEvent.click(await canvas.findByRole('button', { name: '간편 등록' }));
 
@@ -77,7 +77,7 @@ export const QuickAddWithJobType: Story = {
     await userEvent.click(dialog.getByRole('button', { name: '등록' }));
 
     await expect(await dialog.findByText('새용접 등록했습니다')).toBeInTheDocument();
-    // 창을 닫아야 뒤의 목록을 읽을 수 있다
+    // 창을 닫아야 뒤의 목록 조회 가능
     await userEvent.keyboard('{Escape}');
 
     const row = (await canvas.findByRole('link', { name: '새용접' })).closest('tr')!;
@@ -97,7 +97,7 @@ export const QuickAddNeedsName: Story = {
   },
 };
 
-// 목록에 현재 단가 열이 있고, 단가가 없는 재직 직원은 "단가 없음"으로 표시한다
+// 목록에 현재 단가 열이 있고 단가가 없는 재직 직원은 "단가 없음" 표시
 export const ShowsCurrentRate: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -109,7 +109,7 @@ export const ShowsCurrentRate: Story = {
   },
 };
 
-// 단가표 탭: 직원별 현재 단가와 `단가 변경`, 바꾸면 표가 새 단가로 바뀐다
+// 단가표 탭: 직원별 현재 단가와 `단가 변경`, 변경하면 표가 새 단가로 갱신
 export const RateTable: Story = {
   parameters: { router: { initialEntries: ['/employees?tab=rates'], path: '/employees' } },
   play: async ({ canvasElement }) => {
