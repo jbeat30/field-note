@@ -56,6 +56,12 @@ export type ChangeWorkService = {
     documentId: string,
     confirmCompleted: boolean,
   ) => Promise<ChangeWorkDetail>;
+  // 증빙 올리기 전에 기록할 수 있는 상태인지 확인하고 문서를 만들 프로젝트를 알려 줌 (막혀 있으면 문서를 만들지 않도록)
+  evidenceTarget: (
+    companyId: string,
+    id: string,
+    confirmCompleted: boolean | undefined,
+  ) => Promise<{ projectId: string }>;
   // 변경·추가 작업으로 쓴 공수·자재 (작업 내역·자재 기록의 "변경 작업" 표시를 합산)
   usage: (companyId: string, projectId: string) => Promise<ChangeUsage>;
 };
@@ -95,7 +101,13 @@ const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<Chang
       statusChanges: { orderBy: [{ changedAt: 'desc' }, { id: 'desc' }] },
       documents: {
         where: LIVE_LINK,
-        include: { document: true },
+        include: {
+          document: {
+            include: {
+              versions: { include: { file: true }, orderBy: { versionNo: 'desc' }, take: 1 },
+            },
+          },
+        },
         orderBy: [{ linkedAt: 'desc' }, { id: 'desc' }],
       },
     },
@@ -120,6 +132,8 @@ const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<Chang
       title: link.document.title,
       category: link.document.category,
       isSensitive: link.document.isSensitive,
+      latestVersionNo: link.document.versions[0]!.versionNo,
+      contentType: link.document.versions[0]!.file.contentType,
       linkedAt: link.linkedAt.toISOString(),
     })),
   };
@@ -360,6 +374,15 @@ export const createChangeWorkService = (
         });
 
         return detailOf(tx, id);
+      }),
+
+    evidenceTarget: (companyId, id, confirmCompleted) =>
+      withCompany(app, companyId, async (tx) => {
+        const current = await findWithProject(tx, id);
+
+        assertProjectAllows(current.project.status, confirmCompleted, 'body.confirmCompleted');
+
+        return { projectId: current.projectId };
       }),
 
     unlinkDocument: (companyId, id, documentId, confirmCompleted) =>

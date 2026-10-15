@@ -1,6 +1,6 @@
 import {
   ALERT_KINDS,
-  INBOX_STALE_DAYS,
+  alertDismissSchema,
   alertSettingsUpdateSchema,
   assembleDashboard,
   monthOf,
@@ -19,7 +19,6 @@ import type { ZodType } from 'zod';
 import { listMockChangeWorks } from './changeWorkHandlers';
 import { listMockCredentialExpiries } from './credentialHandlers';
 import type { MockAccount } from './data';
-import { listMockMemos } from './memoHandlers';
 import { getMockClosedMonths } from './monthlyHandlers';
 import { listMockOpenRepairs } from './repairHandlers';
 import { listMockWarrantyDashboard } from './warrantyHandlers';
@@ -30,6 +29,7 @@ import {
   getProgressRecords,
   getProjects,
   getWorkLogs,
+  dismissAlerts,
   saveAlertSettings,
 } from './state';
 import { mockDelay } from './latency';
@@ -41,8 +41,6 @@ type Helpers = {
     schema: ZodType<T>,
   ) => Promise<{ data: T } | { response: Response }>;
 };
-
-const DAY_MS = 86_400_000;
 
 // 설정하지 않은 종류는 켜짐 (서버와 같은 기본값)
 const settingsOf = (account: MockAccount): AlertSettings => ({
@@ -74,12 +72,46 @@ const calendarOf = (account: MockAccount, from: string, to: string): StaffingCal
         ]
       : [];
   });
-  const assigned = new Set(assignments.map((item) => item.employeeId));
+  // 저장된 작업 내역에 그 사람이 들어간 날만 (임시 저장·취소된 프로젝트 제외, 서버와 같은 규칙)
+  const workDays = new Map<string, StaffingCalendar['workDays'][number]>();
+
+  for (const log of getWorkLogs(account)) {
+    const project = projects.find((item) => item.id === log.projectId);
+
+    if (log.status !== 'SAVED' || !project || project.status === 'CANCELLED') continue;
+
+    if (log.workDate < from || log.workDate > to) continue;
+
+    for (const entry of log.entries) {
+      const key = `${entry.employeeId}|${log.workDate}|${project.id}`;
+      const current = workDays.get(key);
+
+      if (current) {
+        current.minutes += entry.minutes;
+      } else if (entry.minutes > 0) {
+        workDays.set(key, {
+          employeeId: entry.employeeId,
+          workDate: log.workDate,
+          projectId: project.id,
+          projectCode: project.code,
+          projectName: project.name,
+          projectStatus: project.status,
+          minutes: entry.minutes,
+        });
+      }
+    }
+  }
+
+  const assigned = new Set([
+    ...assignments.map((item) => item.employeeId),
+    ...[...workDays.values()].map((item) => item.employeeId),
+  ]);
 
   return {
     from,
     to,
     assignments,
+    workDays: [...workDays.values()],
     employees: getEmployees(account)
       .filter((item) => item.status !== 'LEFT' || assigned.has(item.id))
       .map((item) => ({
@@ -110,10 +142,6 @@ const buildDashboard = (account: MockAccount) => {
     [...getProgressRecords(account, projectId)].sort(
       (a, b) => b.recordedOn.localeCompare(a.recordedOn) || b.createdAt.localeCompare(a.createdAt),
     )[0];
-  const staleBefore = now.getTime() - INBOX_STALE_DAYS * DAY_MS;
-  const staleInbox = listMockMemos(account).filter(
-    (memo) => memo.projectId === null && Date.parse(memo.createdAt) <= staleBefore,
-  );
   const warranty = listMockWarrantyDashboard(account);
   // 지난달에 저장한 작업 내역이 있는데 확정하지 않았으면 알림 (서버와 같은 규칙)
   const prevMonth = previousMonth(today);
@@ -122,7 +150,6 @@ const buildDashboard = (account: MockAccount) => {
     (log) =>
       log.status === 'SAVED' && log.workDate >= prevRange.from && log.workDate <= prevRange.to,
   );
-  const oldest = staleInbox.map((memo) => memo.createdAt).sort()[0];
 
   return {
     dashboard: assembleDashboard({
@@ -137,6 +164,7 @@ const buildDashboard = (account: MockAccount) => {
           id: project.id,
           code: project.code,
           name: project.name,
+          siteName: project.siteName,
           status: project.status,
           plannedStart: project.plannedStart,
           plannedEnd: project.plannedEnd,
@@ -161,19 +189,9 @@ const buildDashboard = (account: MockAccount) => {
       todayLogProjectIds: logs
         .filter((log) => log.workDate === today && log.status === 'SAVED')
         .map((log) => log.projectId),
-      staleInbox: {
-        count: staleInbox.length,
-        oldestDays: oldest
-          ? Math.max(
-              0,
-              Math.round(
-                (Date.parse(`${today}T00:00:00Z`) -
-                  Date.parse(`${todayInSeoul(new Date(oldest))}T00:00:00Z`)) /
-                  DAY_MS,
-              ),
-            )
-          : 0,
-      },
+      todayLoggedEmployeeIds: logs
+        .filter((log) => log.workDate === today && log.status === 'SAVED')
+        .flatMap((log) => log.entries.map((entry) => entry.employeeId)),
       draftLogCount: logs.filter((log) => log.status === 'DRAFT').length,
       calendar: calendarOf(account, week.from, week.to),
       negotiatingChanges: [...ids].flatMap((projectId) =>
@@ -197,6 +215,7 @@ const buildDashboard = (account: MockAccount) => {
       enabled: new Set<AlertKind>(
         settings.items.filter((item) => item.enabled).map((item) => item.kind),
       ),
+      dismissedKeys: new Set(account.dismissedAlerts ?? []),
     }),
     settings,
   };
@@ -215,6 +234,22 @@ export const createDashboardHandlers = ({ apiError, parseBody }: Helpers) => [
     if (!account) return apiError('UNAUTHORIZED');
 
     return HttpResponse.json(buildDashboard(account));
+  }),
+
+  http.post('/api/v1/alerts/dismiss', async ({ request }) => {
+    await mockDelay(200);
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, alertDismissSchema);
+
+    if ('response' in body) return body.response;
+
+    dismissAlerts(account, body.data.keys);
+
+    return HttpResponse.json({ success: true });
   }),
 
   http.get('/api/v1/company/alert-settings', async () => {

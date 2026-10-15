@@ -1,6 +1,10 @@
 import {
+  auditActionsOfKind,
+  auditChanges,
+  auditKindOf,
   auditSummary,
   auditTargetType,
+  type AuditAction,
   type AuditLog,
   type AuditLogListQuery,
   type AuditLogsResponse,
@@ -15,9 +19,21 @@ export class AuditError extends Error {
   }
 }
 
+// 라우트가 성공한 뒤 남기는 활동 기록 한 건 (회사·행위자는 세션에서 얻는다)
+export type AuditEntry = {
+  action: AuditAction;
+  targetId: string;
+  // 프로젝트에 속한 일이면 그 프로젝트 id (프로젝트별 거르기용)
+  projectId?: string | null;
+  // 바꾸기 전·후는 detail.changes에 사람이 읽는 글로 담는다
+  detail: Record<string, unknown>;
+};
+
 export type AuditService = {
-  // 감사 기록 조회 (최근순 커서 방식, 행위·날짜 범위로 거름). 조회만 하고 수정·삭제는 없다
+  // 감사 기록 조회 (최근순 커서 방식, 종류·행위·프로젝트·날짜 범위로 거름). 조회만 하고 수정·삭제는 없다
   list: (companyId: string, query: AuditLogListQuery) => Promise<AuditLogsResponse>;
+  // 데이터를 바꾼 일을 남긴다 (추가만 가능)
+  record: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;
 };
 
 type Row = Prisma.AuditLogGetPayload<object>;
@@ -49,19 +65,49 @@ const seoulStart = (date: string) => new Date(`${date}T00:00:00+09:00`);
 const nextDay = (date: string) => new Date(seoulStart(date).getTime() + 86_400_000);
 
 /**
- * @description 감사 기록 조회 서비스 (앱 계정으로 자기 회사 범위에서만 조회). 대상 이름은 조회할 때 찾아 붙이고
+ * @description 감사 기록 서비스 (앱 계정으로 자기 회사 범위에서만). 대상 이름은 조회할 때 찾아 붙이고
  * 대상이 지워졌으면 이름 없이 보여 준다 (기록은 대상과 외래 키로 묶이지 않음)
  * @param app 앱 계정 Prisma 클라이언트
+ * @param now 현재 시각 (시험에서 고정)
  * @returns 감사 기록 서비스
  */
-export const createAuditService = (app: PrismaClient): AuditService => ({
+export const createAuditService = (
+  app: PrismaClient,
+  now: () => Date = () => new Date(),
+): AuditService => ({
+  record: (companyId, actorId, entry) =>
+    withCompany(app, companyId, async (tx) => {
+      await tx.auditLog.create({
+        data: {
+          companyId,
+          action: entry.action,
+          actorId,
+          targetId: entry.targetId,
+          projectId: entry.projectId ?? null,
+          detail: entry.detail as Prisma.InputJsonValue,
+          createdAt: now(),
+        },
+      });
+    }),
+
   list: async (companyId, query) => {
     const cursor = query.cursor ? decodeCursor(query.cursor) : null;
+    // 종류와 행위를 함께 주면 둘 다 만족하는 것만 (종류에 속하지 않는 행위를 주면 결과 없음)
+    if (query.kind && query.action && auditKindOf(query.action) !== query.kind) {
+      return { items: [], nextCursor: null };
+    }
+
+    const kindActions = query.kind ? auditActionsOfKind(query.kind) : null;
 
     return withCompany(app, companyId, async (tx) => {
       const rows = await tx.auditLog.findMany({
         where: {
-          action: query.action,
+          ...(query.action
+            ? { action: query.action }
+            : kindActions
+              ? { action: { in: kindActions } }
+              : {}),
+          ...(query.projectId ? { projectId: query.projectId } : {}),
           createdAt: {
             ...(query.from ? { gte: seoulStart(query.from) } : {}),
             ...(query.to ? { lt: nextDay(query.to) } : {}),
@@ -91,6 +137,12 @@ export const createAuditService = (app: PrismaClient): AuditService => ({
             .map((row) => row.targetId),
         ),
       ];
+      const projectIds = [
+        ...new Set([
+          ...idsOf('PROJECT'),
+          ...page.flatMap((row) => (row.projectId ? [row.projectId] : [])),
+        ]),
+      ];
       const [actors, documents, employees, projects, company] = await Promise.all([
         tx.user.findMany({
           where: { id: { in: [...new Set(page.map((row) => row.actorId))] } },
@@ -105,11 +157,12 @@ export const createAuditService = (app: PrismaClient): AuditService => ({
           select: { id: true, name: true },
         }),
         tx.project.findMany({
-          where: { id: { in: idsOf('PROJECT') } },
+          where: { id: { in: projectIds } },
           select: { id: true, name: true },
         }),
         tx.company.findUnique({ where: { id: companyId }, select: { name: true } }),
       ]);
+      const projectNames = new Map(projects.map((item) => [item.id, item.name]));
       const names = new Map<string, string>([
         ...documents.map((item) => [item.id, item.title] as const),
         ...employees.map((item) => [item.id, item.name] as const),
@@ -118,17 +171,23 @@ export const createAuditService = (app: PrismaClient): AuditService => ({
       const actorNames = new Map(actors.map((item) => [item.id, item.displayName]));
       const items: AuditLog[] = page.map((row) => {
         const targetType = auditTargetType(row.action, row.detail);
+        // 프로젝트 대상이면 그 프로젝트가 곧 프로젝트
+        const projectId = row.projectId ?? (targetType === 'PROJECT' ? row.targetId : null);
 
         return {
           id: row.id,
           action: row.action,
+          kind: auditKindOf(row.action),
           actorId: row.actorId,
           actorName: actorNames.get(row.actorId) ?? '(알 수 없음)',
           targetType,
           targetId: row.targetId,
           targetName:
             targetType === 'COMPANY' ? (company?.name ?? null) : (names.get(row.targetId) ?? null),
+          projectId,
+          projectName: projectId ? (projectNames.get(projectId) ?? null) : null,
           summary: auditSummary(row.action, row.detail),
+          changes: auditChanges(row.detail),
           createdAt: row.createdAt.toISOString(),
         };
       });

@@ -54,8 +54,26 @@ describe('기록 조회 목업', () => {
 
     const { items, nextCursor } = await list();
 
-    expect(items.map((item) => item.action)).toEqual(['REPORT_EXPORTED', 'PAY_RATE_VIEWED']);
+    expect(items.map((item) => item.action)).toEqual([
+      'PHOTO_DELETED',
+      'REPORT_EXPORTED',
+      'EMPLOYEE_UPDATED',
+      'WORK_LOG_UPDATED',
+    ]);
+    expect(items[3]!.changes).toEqual([
+      { label: '작업 시간', before: '8시간', after: '10시간' },
+      { label: '작업 인원', before: '2명', after: '3명' },
+    ]);
     expect(nextCursor).toBeNull();
+
+    // 종류와 프로젝트로도 거른다
+    expect((await list({ kind: 'DELETE' })).items.map((item) => item.action)).toEqual([
+      'PHOTO_DELETED',
+    ]);
+    expect((await list({ kind: 'DELETE', action: 'WORK_LOG_UPDATED' })).items).toEqual([]);
+    expect((await list({ projectId: '0198d000-0000-7000-8000-000000000301' })).items).toHaveLength(
+      3,
+    );
   });
 
   it('월 공수 확정·재오픈·내보내기가 기록에 쌓이고 행위·날짜·커서로 거른다', async () => {

@@ -22,6 +22,8 @@ const KIND_HINTS: Record<OptionKind, string> = {
   TRADE: '프로젝트의 공사·작업 분류입니다',
   WORKER_TYPE: '목록과 필터에 쓰는 표시입니다 (공수 계산에는 쓰지 않습니다)',
   CREDENTIAL_TYPE: '직원 서류의 종류입니다 (자격증, 안전교육 이수증, 건강검진 등)',
+  EXPENSE_CATEGORY: '프로젝트에서 나간 돈을 나누는 분류입니다 (부자재, 장비, 식대 등)',
+  INCOME_CATEGORY: '프로젝트에서 들어온 돈을 나누는 분류입니다 (고철 판매, 현장 지원 등)',
 };
 
 // 행 안의 아이콘 동작 버튼 (이름은 aria-label, 눈에 보이는 이름은 title)

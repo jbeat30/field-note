@@ -1,10 +1,12 @@
 import {
   DEFAULT_COMPANY_SETTINGS,
   summarizeLaborCost,
+  summarizePayRates,
   todayInSeoul,
   type LaborCost,
   type PayRate,
   type PayRateCreate,
+  type PayRateSummary,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -21,7 +23,9 @@ export class LaborError extends Error {
 }
 
 export type LaborService = {
-  // 직원 단가 기록 (적용 시작일 최근순). 조회는 감사 기록으로 남는다
+  // 단가표: 단가가 있는 직원마다 현재·이전·적용 예정 단가
+  listCurrent: (companyId: string) => Promise<PayRateSummary[]>;
+  // 직원 단가 기록 (적용 시작일 최근순)
   listRates: (companyId: string, userId: string, employeeId: string) => Promise<PayRate[]>;
   // 단가 추가 (기존 단가는 고치지 않음). 감사 기록으로 남는다
   createRate: (
@@ -72,23 +76,27 @@ export const createLaborService = (
   app: PrismaClient,
   now: () => Date = () => new Date(),
 ): LaborService => ({
+  listCurrent: (companyId) =>
+    withCompany(app, companyId, async (tx) => {
+      const today = todayInSeoul(now());
+      const rows = await tx.employeePayRate.findMany({ orderBy: NEWEST_FIRST });
+      const byEmployee = new Map<string, PayRate[]>();
+
+      for (const row of rows) {
+        byEmployee.set(row.employeeId, [...(byEmployee.get(row.employeeId) ?? []), toRate(row)]);
+      }
+
+      return [...byEmployee.entries()].map(([employeeId, rates]) => ({
+        employeeId,
+        ...summarizePayRates(rates, today),
+      }));
+    }),
+
   listRates: (companyId, userId, employeeId) =>
     withCompany(app, companyId, async (tx) => {
       if (!(await tx.employee.findFirst({ where: { id: employeeId }, select: { id: true } }))) {
         throw new LaborError('NOT_FOUND');
       }
-
-      // 기록을 먼저 남긴 같은 트랜잭션 안에서만 단가를 돌려준다
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          action: 'PAY_RATE_VIEWED',
-          actorId: userId,
-          targetId: employeeId,
-          detail: {},
-          createdAt: now(),
-        },
-      });
 
       return (
         await tx.employeePayRate.findMany({ where: { employeeId }, orderBy: NEWEST_FIRST })
@@ -175,17 +183,6 @@ export const createLaborService = (
         });
         ratesByEmployee.set(row.employeeId, list);
       }
-
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          action: 'LABOR_COST_VIEWED',
-          actorId: userId,
-          targetId: projectId,
-          detail: {},
-          createdAt: now(),
-        },
-      });
 
       return {
         actual: summarizeLaborCost(

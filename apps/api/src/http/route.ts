@@ -3,6 +3,7 @@ import type { ZodType } from 'zod';
 
 import type { ErrorCode } from '@field-note/shared';
 
+import type { AuditEntry } from '../audit/auditService';
 import { idempotency, type IdempotencyStore } from './idempotency';
 import { createRateLimiter, type RateLimitOptions } from './rateLimit';
 import { requireAuth } from './requireAuth';
@@ -29,6 +30,13 @@ export type RouteSpec = {
   rateLimit?: RateLimitOptions;
   // 이 라우트가 업무적으로 반환하는 오류 코드 (OpenAPI 문서에 응답으로 기록)
   errors?: readonly ErrorCode[];
+  // 성공했을 때 활동 기록을 남기는 라우트 (데이터를 바꾸는 일). 인증 필요 라우트만 가능
+  audit?: {
+    // 바꾸기 전 상태를 읽어 둠 (바뀐 내용의 전·후를 남기려고). 실패하면 null로 본다
+    before?: (context: RouteContext) => Promise<unknown>;
+    // 남길 기록 (남기지 않으면 null). 처리 결과와 바꾸기 전 상태를 받는다
+    entry: (context: RouteContext, result: unknown, before: unknown) => AuditEntry | null;
+  };
 };
 
 export type RouteContext = {
@@ -53,6 +61,9 @@ export type RouteRegistry = {
 export type RouteDependencies = {
   resolveAuth: AuthResolver;
   idempotencyStore: IdempotencyStore;
+  // 활동 기록을 남기는 함수 (없으면 기록하지 않음). 기록이 실패해도 이미 끝난 처리는 되돌리지 않고 알린다
+  recordAudit?: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;
+  onAuditError?: (error: unknown) => void;
 };
 
 const toExpressPath = (openApiPath: string) => openApiPath.replace(/\{(\w+)\}/g, ':$1');
@@ -68,6 +79,12 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
   const routes: RouteSpec[] = [];
 
   const add = (spec: RouteSpec, handler: RouteHandler) => {
+    if (spec.audit && spec.auth !== 'required') {
+      throw new Error(
+        `[http.route] 활동 기록은 인증 필요 라우트에만 사용 ${spec.method} ${spec.path}`,
+      );
+    }
+
     if (spec.idempotent && spec.auth !== 'required') {
       throw new Error(
         `[http.route] 멱등 키는 인증 필요 라우트에만 사용 ${spec.method} ${spec.path}`,
@@ -95,14 +112,27 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
     // 응답은 스키마로 파싱해 내보내 불필요한 필드(내부 ID, 다른 회사 정보)가 나가지 않게 함
     const respond: RequestHandler = async (req, res) => {
       const input = res.locals.input;
-      const data = await handler({
+      const context: RouteContext = {
         params: input?.params,
         query: input?.query,
         body: input?.body,
         auth: res.locals.auth,
         request: req,
         response: res,
-      });
+      };
+      const before = spec.audit?.before ? await spec.audit.before(context).catch(() => null) : null;
+      const data = await handler(context);
+
+      // 성공한 뒤에 활동 기록을 남긴다 (기록 실패는 처리 결과를 바꾸지 않고 오류 로그로 알림)
+      if (spec.audit && deps.recordAudit && context.auth) {
+        try {
+          const entry = spec.audit.entry(context, data, before);
+
+          if (entry) await deps.recordAudit(context.auth.companyId, context.auth.userId, entry);
+        } catch (error) {
+          deps.onAuditError?.(error);
+        }
+      }
 
       if (spec.redirect) {
         res.redirect(302, String(data));

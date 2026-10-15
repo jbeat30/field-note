@@ -1,4 +1,6 @@
 import {
+  PROJECT_STATUS_LABELS,
+  type ProjectDetail,
   projectCreateSchema,
   projectDetailSchema,
   projectListQuerySchema,
@@ -15,6 +17,7 @@ import {
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
+import { diffChanges, PROJECT_CHANGE_FIELDS } from '../audit/changes';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 import { ProjectError, type ProjectService } from '../project/projectService';
 
@@ -100,6 +103,22 @@ export const registerProjectRoutes = (registry: RouteRegistry, projects?: Projec
       request: { params: projectParamsSchema, body: projectUpdateSchema },
       response: { status: 200, schema: projectDetailSchema },
       errors: ['NOT_FOUND'],
+      // 활동 기록: 바뀐 항목의 전·후 (명부·선택 목록의 id 항목은 바뀌었다는 것만)
+      audit: {
+        before: ({ auth, params }) => projects!.get(auth!.companyId, (params as { id: string }).id),
+        entry: ({ params, body }, _result, before) => {
+          const changes = diffChanges(
+            before as Record<string, unknown> | null,
+            body as Record<string, unknown>,
+            PROJECT_CHANGE_FIELDS,
+          );
+          const projectId = (params as { id: string }).id;
+
+          return changes.length > 0
+            ? { action: 'PROJECT_UPDATED', targetId: projectId, projectId, detail: { changes } }
+            : null;
+        },
+      },
     },
     async ({ auth, params, body }) => {
       try {
@@ -125,6 +144,38 @@ export const registerProjectRoutes = (registry: RouteRegistry, projects?: Projec
       request: { params: projectParamsSchema, body: projectTransitionSchema },
       response: { status: 200, schema: projectDetailSchema },
       errors: ['NOT_FOUND'],
+      // 활동 기록: 상태 전·후와 사유
+      audit: {
+        before: ({ auth, params }) => projects!.get(auth!.companyId, (params as { id: string }).id),
+        entry: ({ params, body }, _result, before) => {
+          const from = (before as ProjectDetail | null)?.status;
+          const request = body as ProjectTransition;
+          const projectId = (params as { id: string }).id;
+
+          if (!from) return null;
+
+          const changes = [
+            {
+              label: '상태',
+              before: PROJECT_STATUS_LABELS[from],
+              after: PROJECT_STATUS_LABELS[request.toStatus],
+            },
+            ...(request.reason ? [{ label: '사유', before: null, after: request.reason }] : []),
+          ];
+
+          return {
+            action: 'PROJECT_STATUS_CHANGED',
+            targetId: projectId,
+            projectId,
+            detail: {
+              fromLabel: PROJECT_STATUS_LABELS[from],
+              toLabel: PROJECT_STATUS_LABELS[request.toStatus],
+              effectiveOn: request.effectiveOn,
+              changes,
+            },
+          };
+        },
+      },
     },
     async ({ auth, params, body }) => {
       try {

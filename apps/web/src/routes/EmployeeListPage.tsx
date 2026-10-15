@@ -4,26 +4,31 @@ import {
   type EmployeeListQuery,
 } from '@field-note/shared';
 import { useMemo, useState } from 'react';
-import { Link, useNavigate } from 'react-router';
+import { Plus } from 'lucide-react';
+import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { columnHelper, DataTable } from '../components/ui/data-table';
 import { EmptyState } from '../components/ui/empty-state';
+import { Modal } from '../components/ui/modal';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { PageHeader } from '../components/ui/page-header';
 import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { EmployeeQuickAdd } from '../employees/EmployeeQuickAdd';
+import { EmployeePayTable, rateText } from '../employees/EmployeePayTable';
 import { OptionSelect, optionNameMap } from '../employees/OptionSelect';
 import { useEmployees } from '../employees/useEmployees';
+import { usePayRateSummaries } from '../labor/useLabor';
 import { useDebouncedValue } from '../lib/useDebouncedValue';
 import { useOptions } from '../settings/useOptions';
 
 type EmployeeItem = NonNullable<ReturnType<typeof useEmployees>['data']>[number];
 
 // 표에 넣을 줄: 직종·구분 이름을 미리 풀어 둔다
-type Row = EmployeeItem & { jobTypeName?: string; workerTypeName?: string };
+type Row = EmployeeItem & { jobTypeName?: string; workerTypeName?: string; rateLabel?: string };
 
 const helper = columnHelper<Row>();
 
@@ -70,6 +75,21 @@ const columns = helper.columns([
     meta: { className: 'hidden md:table-cell' },
     cell: ({ getValue }) => getValue() ?? '-',
   }),
+  helper.accessor('rateLabel', {
+    id: 'rate',
+    header: '현재 단가',
+    sortFn: 'text',
+    sortDescFirst: false,
+    sortUndefined: 'last',
+    cell: ({ row }) =>
+      row.original.rateLabel ? (
+        <span className="tabular-nums">{row.original.rateLabel}</span>
+      ) : row.original.status === 'LEFT' ? (
+        '-'
+      ) : (
+        <Badge tone="warning">단가 없음</Badge>
+      ),
+  }),
   helper.accessor((row) => EMPLOYEE_STATUS_LABELS[row.status], {
     id: 'status',
     header: '상태',
@@ -91,7 +111,7 @@ const columns = helper.columns([
   }),
 ]);
 
-// 직원 목록: 이름·직책·직종·구분·상태만 보여 준다 (생년월일·연락처는 직원 카드에서만 표시)
+// 직원 목록 (09 §7): `직원 목록 | 단가표` 탭. 목록은 이름·직책·직종·구분·현재 단가·상태만 보여 준다 (생년월일·연락처는 직원 카드에서만 표시)
 export const EmployeeListPage = () => {
   const options = useOptions();
   const [filter, setFilter] = useState<EmployeeListQuery>({});
@@ -100,21 +120,35 @@ export const EmployeeListPage = () => {
   const debouncedSearch = useDebouncedValue(searchText, 300);
   const employees = useEmployees({ ...filter, q: debouncedSearch });
   const navigate = useNavigate();
+  const [params, setParams] = useSearchParams();
+  const [adding, setAdding] = useState(false);
+  const summaries = usePayRateSummaries();
+  const tab = params.get('tab') === 'rates' ? 'rates' : 'list';
   const names = useMemo(() => optionNameMap(options.data ?? []), [options.data]);
   const update = (patch: Partial<EmployeeListQuery>) =>
     setFilter((current) => ({ ...current, ...patch }));
+  const rateById = useMemo(
+    () =>
+      new Map(
+        (summaries.data ?? []).flatMap((item) =>
+          item.current ? [[item.employeeId, rateText(item.current)] as const] : [],
+        ),
+      ),
+    [summaries.data],
+  );
   const rows = useMemo<Row[]>(
     () =>
       (employees.data ?? []).map((employee) => ({
         ...employee,
+        rateLabel: rateById.get(employee.id),
         jobTypeName: employee.jobTypeId ? names.get(employee.jobTypeId) : undefined,
         workerTypeName: employee.workerTypeId ? names.get(employee.workerTypeId) : undefined,
       })),
-    [employees.data, names],
+    [employees.data, names, rateById],
   );
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <PageHeader
         title="직원"
         actions={
@@ -125,30 +159,39 @@ export const EmployeeListPage = () => {
             <Button asChild variant="secondary">
               <Link to="/monthly-hours">월 공수표</Link>
             </Button>
+            <Button type="button" onClick={() => setAdding(true)}>
+              <Plus aria-hidden />
+              간편 등록
+            </Button>
           </>
         }
       />
 
-      {/* xl+ 2열: 간편 등록 / 직원 찾기 — items-stretch로 높이 통일 */}
-      <div className="grid gap-5 xl:grid-cols-2">
-        <EmployeeQuickAdd />
+      <Tabs
+        value={tab}
+        onValueChange={(next) =>
+          setParams(next === 'rates' ? { tab: 'rates' } : {}, { replace: true })
+        }
+      >
+        <TabsList aria-label="직원 화면">
+          <TabsTrigger value="list">직원 목록</TabsTrigger>
+          <TabsTrigger value="rates">단가표</TabsTrigger>
+        </TabsList>
 
-        <section
-          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-          aria-labelledby="employee-list-heading"
-        >
-          <h2 id="employee-list-heading" className="text-base font-bold">
-            직원 찾기
-          </h2>
-          <div className="grid gap-2 md:grid-cols-3">
+        <TabsContent value="list" className="flex flex-col gap-4">
+          <div className="flex flex-wrap items-center gap-2">
             <Input
               type="search"
               aria-label="이름 검색"
               placeholder="이름 검색"
+              size="sm"
+              className="w-full sm:w-56"
               value={searchText}
               onChange={(event) => setSearchText(event.target.value)}
             />
             <Select
+              size="sm"
+              className="w-36"
               aria-label="상태 필터"
               value={filter.status ?? ''}
               emptyLabel="전체 상태"
@@ -159,6 +202,8 @@ export const EmployeeListPage = () => {
               }))}
             />
             <OptionSelect
+              size="sm"
+              className="w-36"
               aria-label="직종 필터"
               kind="JOB_TYPE"
               options={options.data ?? []}
@@ -170,25 +215,37 @@ export const EmployeeListPage = () => {
 
           {employees.isPending && <p className="text-sm">직원 목록을 불러오는 중</p>}
           {employees.isError && <Alert>직원 목록을 불러오지 못했습니다</Alert>}
-        </section>
-      </div>
-
-      {employees.data && (
-        <DataTable
-          aria-label="직원 목록"
-          columns={columns}
-          data={rows}
-          getRowId={(row) => row.id}
-          onRowClick={(row) => void navigate(`/employees/${row.id}`)}
-          summary={`${employees.data.length}명`}
-          emptyState={
-            <EmptyState
-              title="조건에 맞는 직원이 없습니다"
-              description="필터를 바꾸거나 위에서 직원을 등록해 보세요"
+          {employees.data && (
+            <DataTable
+              aria-label="직원 목록"
+              columns={columns}
+              data={rows}
+              getRowId={(row) => row.id}
+              onRowClick={(row) => void navigate(`/employees/${row.id}`)}
+              summary={`${employees.data.length}명`}
+              emptyState={
+                <EmptyState
+                  title="조건에 맞는 직원이 없습니다"
+                  description="필터를 바꾸거나 위의 간편 등록으로 직원을 등록해 보세요"
+                />
+              }
             />
-          }
-        />
-      )}
+          )}
+        </TabsContent>
+
+        <TabsContent value="rates">
+          <EmployeePayTable />
+        </TabsContent>
+      </Tabs>
+
+      <Modal
+        open={adding}
+        onOpenChange={setAdding}
+        title="간편 등록"
+        description="이름과 직종만 넣으면 됩니다. 나머지는 직원 카드에서 채웁니다"
+      >
+        {adding && <EmployeeQuickAdd className="" />}
+      </Modal>
     </div>
   );
 };
