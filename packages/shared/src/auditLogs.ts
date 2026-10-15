@@ -24,6 +24,7 @@ export const AUDIT_ACTION_TITLES: Record<AuditAction, string> = {
   WORK_LOG_SAVED: '작업 내역 저장',
   WORK_LOG_UPDATED: '작업 내역 수정',
   MATERIAL_RECORD_DELETED: '자재 기록 삭제',
+  LEDGER_ENTRY_DELETED: '지출·수입 기록 삭제',
   PHOTO_DELETED: '사진 삭제',
   DOCUMENT_DELETED: '문서 삭제',
   PROJECT_UPDATED: '프로젝트 정보 수정',
@@ -55,6 +56,7 @@ const KIND_OF: Record<AuditAction, AuditKind> = {
   EMPLOYEE_UPDATED: 'UPDATE',
   PAY_RATE_CHANGED: 'UPDATE',
   MATERIAL_RECORD_DELETED: 'DELETE',
+  LEDGER_ENTRY_DELETED: 'DELETE',
   PHOTO_DELETED: 'DELETE',
   DOCUMENT_DELETED: 'DELETE',
   REPORT_EXPORTED: 'EXPORT',
@@ -109,6 +111,7 @@ export const auditTargetType = (action: AuditAction, detail: unknown): AuditTarg
     case 'WORK_LOG_SAVED':
     case 'WORK_LOG_UPDATED':
     case 'MATERIAL_RECORD_DELETED':
+    case 'LEDGER_ENTRY_DELETED':
     case 'PHOTO_DELETED':
     case 'PROJECT_UPDATED':
     case 'PROJECT_STATUS_CHANGED':
@@ -215,6 +218,16 @@ export const auditSummary = (action: AuditAction, detail: unknown): string | nul
       break;
     case 'MATERIAL_RECORD_DELETED':
       parts.push(field(detail, 'materialName'), field(detail, 'recordDate'), field(detail, 'kind'));
+      break;
+    case 'LEDGER_ENTRY_DELETED':
+      parts.push(
+        field(detail, 'kind'),
+        field(detail, 'entryDate'),
+        field(detail, 'amount')
+          ? `${Number(field(detail, 'amount')).toLocaleString('ko-KR')}원`
+          : undefined,
+        field(detail, 'content'),
+      );
       break;
     case 'PHOTO_DELETED':
       parts.push(field(detail, 'area'), field(detail, 'workDate'));

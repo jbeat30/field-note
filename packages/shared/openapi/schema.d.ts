@@ -1930,7 +1930,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                                kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                                 name: string;
                                 isActive: boolean;
                             }[];
@@ -1971,7 +1971,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                         name: string;
                     };
                 };
@@ -1987,7 +1987,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                             name: string;
                             isActive: boolean;
                         };
@@ -2059,7 +2059,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                         ids: string[];
                     };
                 };
@@ -2185,7 +2185,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                             name: string;
                             isActive: boolean;
                         };
@@ -8913,7 +8913,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    action?: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
+                    action?: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "LEDGER_ENTRY_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
                     kind?: "SAVE" | "UPDATE" | "DELETE" | "EXPORT" | "CONFIRM" | "VIEW";
                     projectId?: string;
                     from?: string;
@@ -8938,7 +8938,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
+                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "LEDGER_ENTRY_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
                                 /** @enum {string} */
                                 kind: "SAVE" | "UPDATE" | "DELETE" | "EXPORT" | "CONFIRM" | "VIEW";
                                 /** Format: uuid */
@@ -14419,6 +14419,593 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/ledger-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 프로젝트 지출·수입 내역 (날짜 최근순, 구분·분류·기간 필터, 커서 방식) */
+        get: {
+            parameters: {
+                query?: {
+                    kind?: "EXPENSE" | "INCOME";
+                    categoryId?: string;
+                    from?: string;
+                    to?: string;
+                    date?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                projectId: string;
+                                /** Format: date */
+                                entryDate: string;
+                                /** @enum {string} */
+                                kind: "EXPENSE" | "INCOME";
+                                /** Format: uuid */
+                                categoryId: string | null;
+                                amount: number;
+                                /** Format: uuid */
+                                partnerId: string | null;
+                                content: string | null;
+                                /** Format: uuid */
+                                documentId: string | null;
+                                /** Format: uuid */
+                                changeWorkId: string | null;
+                                /** Format: uuid */
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** 지출·수입 기록 한 건 (구분마다 분류 목록이 다름, 증빙 문서·추가 공사 연결은 선택) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        entryDate: string;
+                        /** @enum {string} */
+                        kind: "EXPENSE" | "INCOME";
+                        /** Format: uuid */
+                        categoryId?: string;
+                        amount: number;
+                        /** Format: uuid */
+                        partnerId?: string;
+                        content?: string;
+                        /** Format: uuid */
+                        documentId?: string;
+                        /** Format: uuid */
+                        changeWorkId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            projectId: string;
+                            /** Format: date */
+                            entryDate: string;
+                            /** @enum {string} */
+                            kind: "EXPENSE" | "INCOME";
+                            /** Format: uuid */
+                            categoryId: string | null;
+                            amount: number;
+                            /** Format: uuid */
+                            partnerId: string | null;
+                            content: string | null;
+                            /** Format: uuid */
+                            documentId: string | null;
+                            /** Format: uuid */
+                            changeWorkId: string | null;
+                            /** Format: uuid */
+                            createdBy: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/ledger-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 프로젝트 지출 합계·수입 합계·분류별 합계 (내역과 같은 필터) */
+        get: {
+            parameters: {
+                query?: {
+                    kind?: "EXPENSE" | "INCOME";
+                    categoryId?: string;
+                    from?: string;
+                    to?: string;
+                };
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            expenseTotal: number;
+                            incomeTotal: number;
+                            entryCount: number;
+                            byCategory: {
+                                /** @enum {string} */
+                                kind: "EXPENSE" | "INCOME";
+                                /** Format: uuid */
+                                categoryId: string | null;
+                                amount: number;
+                                count: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger-entries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 지출·수입 기록 삭제 (소프트 삭제) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** 지출·수입 기록 수정 (구분을 바꾸면 분류도 새로 골라야 하며 안 고르면 비움) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        entryDate?: string;
+                        /** @enum {string} */
+                        kind?: "EXPENSE" | "INCOME";
+                        /** Format: uuid */
+                        categoryId?: string | null;
+                        amount?: number;
+                        /** Format: uuid */
+                        partnerId?: string | null;
+                        content?: string | null;
+                        /** Format: uuid */
+                        documentId?: string | null;
+                        /** Format: uuid */
+                        changeWorkId?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            projectId: string;
+                            /** Format: date */
+                            entryDate: string;
+                            /** @enum {string} */
+                            kind: "EXPENSE" | "INCOME";
+                            /** Format: uuid */
+                            categoryId: string | null;
+                            amount: number;
+                            /** Format: uuid */
+                            partnerId: string | null;
+                            content: string | null;
+                            /** Format: uuid */
+                            documentId: string | null;
+                            /** Format: uuid */
+                            changeWorkId: string | null;
+                            /** Format: uuid */
+                            createdBy: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/documents": {
         parameters: {
             query?: never;
@@ -15383,7 +15970,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
+                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "LEDGER_ENTRY_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
                                 /** Format: uuid */
                                 actorId: string;
                                 actorName: string;

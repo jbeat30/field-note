@@ -87,11 +87,12 @@ model Company {
   documentVersions           DocumentVersion[]
   auditLogs                  AuditLog[]
   materialRecords            MaterialRecord[]
+  ledgerEntries              LedgerEntry[]
   workLogEntries             WorkLogEntry[]
   workLogRevisions           WorkLogRevision[]
   employeeCredentials        EmployeeCredential[]
   projectRequiredCredentials ProjectRequiredCredential[]
-  alertDismissals AlertDismissal[]
+  alertDismissals            AlertDismissal[]
 
   @@map("companies")
 }
@@ -156,6 +157,7 @@ model Project {
   photos               Photo[]
   memos                Memo[]
   materialRecords      MaterialRecord[]
+  ledgerEntries        LedgerEntry[]
   documents            Document[]
 
   @@id([companyId, id])
@@ -452,10 +454,11 @@ model User {
   uploadedPhotos          Photo[]                     @relation("PhotoUploadedBy")
   memos                   Memo[]                      @relation("MemoCreatedBy")
   materialRecords         MaterialRecord[]            @relation("MaterialRecordCreatedBy")
+  ledgerEntries           LedgerEntry[]               @relation("LedgerEntryCreatedBy")
   documents               Document[]                  @relation("DocumentCreatedBy")
   documentVersions        DocumentVersion[]           @relation("DocumentVersionUploadedBy")
   auditLogs               AuditLog[]                  @relation("AuditLogActor")
-  alertDismissals AlertDismissal[] @relation("AlertDismissedBy")
+  alertDismissals         AlertDismissal[]            @relation("AlertDismissedBy")
 
   @@id([companyId, id])
   // 한 회사에 계정은 하나
@@ -628,6 +631,8 @@ enum OptionKind {
   TRADE
   WORKER_TYPE
   CREDENTIAL_TYPE
+  EXPENSE_CATEGORY
+  INCOME_CATEGORY
 
   @@map("option_kind")
 }
@@ -650,6 +655,7 @@ model OptionItem {
   projectTrades         ProjectTrade[]              @relation("ProjectTradeOption")
   workLogEntries        WorkLogEntry[]              @relation("WorkLogEntryCategory")
   materialRecords       MaterialRecord[]            @relation("MaterialRecordCategory")
+  ledgerEntries         LedgerEntry[]               @relation("LedgerEntryCategory")
   credentials           EmployeeCredential[]        @relation("CredentialType")
   requiredByProjects    ProjectRequiredCredential[] @relation("RequiredCredentialType")
 
@@ -729,6 +735,7 @@ model Partner {
   company         Company          @relation(fields: [companyId], references: [id])
   projects        Project[]        @relation("ProjectClient")
   materialRecords MaterialRecord[] @relation("MaterialRecordPartner")
+  ledgerEntries   LedgerEntry[]    @relation("LedgerEntryPartner")
 
   @@id([companyId, id])
   @@unique([companyId, kind, nameKey])
@@ -963,6 +970,46 @@ model Material {
   @@map("materials")
 }
 
+enum LedgerKind {
+  EXPENSE
+  INCOME
+
+  @@map("ledger_kind")
+}
+
+// 지출·수입 기록 (08 문서 §6): 프로젝트에서 나간 돈과 가끔 생기는 수입. 금액은 원 단위 정수, 지우면 deleted_at만 채우는 소프트 삭제
+// 증빙은 문서함의 문서를 연결하고, 추가 공사 번호를 붙일 수 있음
+model LedgerEntry {
+  companyId    String      @map("company_id") @db.Uuid
+  id           String      @default(dbgenerated("uuidv7()")) @db.Uuid
+  projectId    String      @map("project_id") @db.Uuid
+  entryDate    DateTime    @map("entry_date") @db.Date
+  kind         LedgerKind
+  categoryId   String?     @map("category_id") @db.Uuid
+  amount       BigInt
+  partnerId    String?     @map("partner_id") @db.Uuid
+  content      String?
+  documentId   String?     @map("document_id") @db.Uuid
+  changeWorkId String?     @map("change_work_id") @db.Uuid
+  createdBy    String      @map("created_by") @db.Uuid
+  createdAt    DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt    DateTime    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  deletedAt    DateTime?   @map("deleted_at") @db.Timestamptz(3)
+  company      Company     @relation(fields: [companyId], references: [id])
+  project      Project     @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  category     OptionItem? @relation("LedgerEntryCategory", fields: [companyId, categoryId], references: [companyId, id], onDelete: Restrict)
+  partner      Partner?    @relation("LedgerEntryPartner", fields: [companyId, partnerId], references: [companyId, id], onDelete: Restrict)
+  document     Document?   @relation(fields: [companyId, documentId], references: [companyId, id], onDelete: Restrict)
+  changeWork   ChangeWork? @relation(fields: [companyId, changeWorkId], references: [companyId, id], onDelete: Restrict)
+  creator      User        @relation("LedgerEntryCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
+
+  @@id([companyId, id])
+  @@index([companyId, projectId, entryDate(sort: Desc), id(sort: Desc)])
+  @@index([companyId, documentId])
+  @@index([companyId, changeWorkId])
+  @@map("ledger_entries")
+}
+
 // 프로젝트별 자재 기록. 잔량 = 반입 - 사용 - 반출 - 폐기. 지우면 deleted_at만 채우는 소프트 삭제
 // 작업일지는 프로젝트 × record_date로 연결 (일지가 아직 없어도 기록 가능)
 model MaterialRecord {
@@ -1023,6 +1070,7 @@ enum AuditAction {
   WORK_LOG_SAVED
   WORK_LOG_UPDATED
   MATERIAL_RECORD_DELETED
+  LEDGER_ENTRY_DELETED
   PHOTO_DELETED
   DOCUMENT_DELETED
   PROJECT_UPDATED
@@ -1052,6 +1100,7 @@ model Document {
   creator              User                  @relation("DocumentCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
   versions             DocumentVersion[]
   changeWorkLinks      ChangeWorkDocument[]
+  ledgerEntries        LedgerEntry[]
   warrantyCertificates WarrantyCertificate[]
 
   @@id([companyId, id])
@@ -1133,6 +1182,7 @@ model ChangeWork {
   creator         User                     @relation("ChangeWorkCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
   statusChanges   ChangeWorkStatusChange[]
   documents       ChangeWorkDocument[]
+  ledgerEntries   LedgerEntry[]
 
   @@id([companyId, id])
   @@unique([companyId, projectId, seq])

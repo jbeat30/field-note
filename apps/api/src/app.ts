@@ -36,6 +36,8 @@ import { registerSearchRoutes } from './routes/search';
 import type { SearchService } from './search/searchService';
 import type { DocumentService } from './document/documentService';
 import { registerMaterialRoutes } from './routes/materials';
+import { registerLedgerRoutes } from './routes/ledger';
+import type { LedgerService } from './ledger/ledgerService';
 import type { MaterialService } from './material/materialService';
 import type { MemoService } from './memo/memoService';
 import type { PhotoService } from './photo/photoService';
@@ -115,6 +117,8 @@ export type AppOptions = {
   memos?: MemoService;
   // 없으면 자재 API는 501
   materials?: MaterialService;
+  // 없으면 지출·수입 API는 501
+  ledger?: LedgerService;
   // 없으면 작업자료 문서함 API는 501
   documents?: DocumentService;
   // 없으면 통합 검색 API는 501
@@ -192,6 +196,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerPhotoRoutes(registry, options.photos);
   registerMemoRoutes(registry, options.memos);
   registerMaterialRoutes(registry, options.materials);
+  registerLedgerRoutes(registry, options.ledger);
   registerDocumentRoutes(registry, options.documents);
   registerSearchRoutes(registry, options.search);
   registerReportRoutes(registry, options.reports);

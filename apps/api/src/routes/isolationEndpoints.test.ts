@@ -21,6 +21,7 @@ import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
 import { createMaterialService } from '../material/materialService';
+import { createLedgerService } from '../ledger/ledgerService';
 import { createMemoService } from '../memo/memoService';
 import { createDashboardService } from '../dashboard/dashboardService';
 import { createCompletionService } from '../completion/completionService';
@@ -107,6 +108,7 @@ const instance = () =>
     photos: createPhotoService(db.app, createMemoryStorage().storage, () => NOW),
     memos: createMemoService(db.app, () => NOW),
     materials: createMaterialService(db.app, () => NOW),
+    ledger: createLedgerService(db.app, () => NOW),
     search: createSearchService(db.app),
     reports: createReportService(db.app, createMemoryStorage().storage, () => NOW),
     documents: createDocumentService(db.app, createMemoryStorage().storage, () => NOW),
@@ -341,6 +343,11 @@ const buildCompany = async () => {
     kind: 'RECEIVED',
     quantity: 10,
   });
+  const ledgerEntryId = await c.id(`/projects/${projectId}/ledger-entries`, {
+    entryDate: '2026-10-05',
+    kind: 'EXPENSE',
+    amount: 12000,
+  });
 
   return {
     cookie,
@@ -357,6 +364,7 @@ const buildCompany = async () => {
     memoId,
     materialId,
     materialRecordId,
+    ledgerEntryId,
     docFileId,
     documentId,
     changeWorkId,
@@ -671,6 +679,16 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       { quantity: 99 },
     ],
     ['DELETE /material-records/{id}', 'delete', `/material-records/${a.materialRecordId}`],
+    [
+      'POST /projects/{projectId}/ledger-entries',
+      'post',
+      `/projects/${a.projectId}/ledger-entries`,
+      { entryDate: '2026-10-05', kind: 'EXPENSE', amount: 1000 },
+    ],
+    ['GET /projects/{projectId}/ledger-entries', 'get', `/projects/${a.projectId}/ledger-entries`],
+    ['GET /projects/{projectId}/ledger-summary', 'get', `/projects/${a.projectId}/ledger-summary`],
+    ['PATCH /ledger-entries/{id}', 'patch', `/ledger-entries/${a.ledgerEntryId}`, { amount: 99 }],
+    ['DELETE /ledger-entries/{id}', 'delete', `/ledger-entries/${a.ledgerEntryId}`],
   ] as const;
 
 // ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다 (로그인이 필요한 엔드포인트는 전부 이 목록·위의 공격 목록·본인 계정 전용 목록 중 하나에 있어야 함)
@@ -750,6 +768,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       memoId: '{id}',
       materialId: '{id}',
       materialRecordId: '{id}',
+      ledgerEntryId: '{id}',
       docFileId: '{id}',
       documentId: '{id}',
       changeWorkId: '{id}',
@@ -1181,6 +1200,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       'memos',
       'materials',
       'material_records',
+      'ledger_entries',
       'documents',
       'document_versions',
     ]) {

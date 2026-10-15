@@ -167,6 +167,7 @@ import {
 import { createCompletionHandlers } from './completionHandlers';
 import { createDashboardHandlers } from './dashboardHandlers';
 import { createDocumentHandlers } from './documentHandlers';
+import { createLedgerHandlers } from './ledgerHandlers';
 import { createMaterialHandlers, hasMockMaterialRecordForPartner } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
 import { createSearchHandlers } from './searchHandlers';
@@ -431,6 +432,7 @@ export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
   ...createMemoHandlers({ apiError, parseBody }),
   ...createMaterialHandlers({ apiError, parseBody }),
+  ...createLedgerHandlers({ apiError, parseBody }),
   ...createDocumentHandlers({ apiError, parseBody }),
   ...createChangeWorkHandlers({ apiError, parseBody }),
   ...createWarrantyHandlers({ apiError, parseBody }),
