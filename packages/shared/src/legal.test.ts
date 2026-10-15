@@ -72,6 +72,24 @@ describe('약관·처리방침 문서 원본', () => {
     expect(text).toContain('원문을 저장하지 않습니다');
   });
 
+  it('0.9.0에서 늘어난 수집·처리 항목을 처리방침과 이용약관에 담는다', () => {
+    const privacy = legalDocumentText(getLegalDocumentContent('PRIVACY_POLICY'));
+    const terms = legalDocumentText(getLegalDocumentContent('TERMS_OF_SERVICE'));
+
+    expect(privacy).toContain('직원별 단가(일급·시급·월급·연봉)');
+    expect(privacy).toContain('직원 서류(자격증 사본 등)와 프로젝트 문서(계약서·보증서 등)');
+    expect(privacy).toContain('카카오·네이버·구글');
+    expect(privacy).toContain('전체 데이터 내려받기');
+    expect(terms).toContain('소셜 로그인(카카오·네이버·구글)');
+    expect(terms).toContain('저장 용량 한도');
+    expect(terms).toContain('전체 데이터를 엑셀 파일로 내려받을');
+  });
+
+  it('이용약관과 처리방침은 함께 바뀐 새 버전이다', () => {
+    expect(getLegalDocumentContent('TERMS_OF_SERVICE').version).toBe('2026-10-16');
+    expect(getLegalDocumentContent('PRIVACY_POLICY').version).toBe('2026-10-16');
+  });
+
   it('시드가 쓰는 데모 문서는 이 원본의 버전·본문을 그대로 쓴다', () => {
     for (const document of DEMO_LEGAL_DOCUMENTS) {
       const content = getLegalDocumentContent(document.type);

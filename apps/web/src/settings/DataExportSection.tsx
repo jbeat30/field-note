@@ -7,7 +7,7 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { downloadCompanyDataXlsx } from '../reports/exportReport';
 
-// 회사 관리의 전체 데이터 내보내기 (서비스 기획서 §6.5, §7.3): 해지 전에 프로젝트·직원·공수·자재·지출 등을 엑셀 한 파일로 받는다
+// 회사 관리의 전체 데이터 내보내기 (서비스 기획서 §6.5, §7.3): 해지 전에 프로젝트·직원·공수·자재·지출 등을 엑셀 한 파일로 받음
 // 직원 개인정보와 단가가 들어 있어 비밀번호 로그인 계정은 비밀번호를 다시 확인하고, 파일 원본(사진·문서)은 제외
 export const DataExportSection = () => {
   const methods = useSocialMethods();
