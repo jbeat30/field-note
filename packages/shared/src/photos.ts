@@ -80,6 +80,7 @@ export type PhotoUpdate = z.infer<typeof photoUpdateSchema>;
 
 export const photoListQuerySchema = z.object({
   category: photoCategorySchema.optional(),
+  // 구역 부분 일치 (대소문자 무시)
   area: areaSchema.optional(),
   workDate: dateSchema.optional(),
   // 이전 응답의 nextCursor (촬영일시 최근순)

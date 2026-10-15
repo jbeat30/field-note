@@ -506,7 +506,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
         .filter(
           (photo) =>
             (!category || photo.category === category) &&
-            (!area || photo.area === area) &&
+            (!area || (photo.area ?? '').toLowerCase().includes(area.toLowerCase())) &&
             (!workDate || photo.workDate === workDate),
         )
         .sort(newestFirst);

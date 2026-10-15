@@ -186,7 +186,7 @@ export const createPhotoService = (
             projectId,
             deletedAt: null,
             category: query.category,
-            area: query.area,
+            area: query.area ? { contains: query.area, mode: 'insensitive' } : undefined,
             workDate: query.workDate ? new Date(`${query.workDate}T00:00:00Z`) : undefined,
             ...(cursor
               ? {
