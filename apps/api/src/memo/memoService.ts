@@ -22,9 +22,9 @@ export class MemoError extends Error {
 }
 
 export type MemoService = {
-  // 메모 저장. 프로젝트를 정하지 않으면 메모함에 들어감
+  // 메모 저장, 프로젝트를 정하지 않으면 메모함에 들어감
   create: (companyId: string, userId: string, input: MemoCreate) => Promise<Memo>;
-  // 메모함(scope=INBOX) 또는 프로젝트 메모 노트(scope=PROJECT). 날짜 최근순, 커서 방식, 지운 메모는 제외
+  // 메모함(scope=INBOX) 또는 프로젝트 메모 노트(scope=PROJECT), 날짜 최근순, 커서 방식, 지운 메모는 제외
   list: (companyId: string, query: MemoListQuery) => Promise<MemosResponse>;
   // 정리 안 된 메모함 건수와 끝내지 않은 할 일 건수
   summary: (companyId: string) => Promise<MemoSummary>;

@@ -50,7 +50,7 @@ type MockRepair = Omit<RepairRequest, 'linkCount'> & {
   links: MockLink[];
 };
 
-// 목업 저장소: 회사별 보수 요청 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 보수 요청 (새로고침하면 초기화), 실제 서버 동작을 모사
 const repairs = new Map<string, MockRepair>();
 const seeded = new Set<string>();
 
@@ -149,7 +149,7 @@ export const listMockOpenRepairs = (account: MockAccount) => {
   });
 };
 
-// 삭제된 자재 기록·임시 저장 작업 내역에 걸린 연결은 세지 않는다
+// 삭제된 자재 기록·임시 저장 작업 내역에 걸린 연결은 집계 제외
 const liveLinks = (account: MockAccount, repair: MockRepair): RepairLinkItem[] => {
   const logs = new Map(getWorkLogs(account).map((log) => [log.id, log]));
   const records = new Map(
@@ -271,7 +271,7 @@ export const createRepairHandlers = ({ apiError, parseBody }: Helpers) => {
     return checked.ok ? null : invalid(`body.${checked.path}`, checked.message);
   };
 
-  // 로그인과 보수 요청을 확인한다. 실패하면 응답, 성공하면 계정과 보수 요청
+  // 로그인과 보수 요청 확인, 실패하면 응답 반환, 성공하면 계정과 보수 요청 반환
   const find = (params: unknown) => {
     const account = getCurrentAccount();
 

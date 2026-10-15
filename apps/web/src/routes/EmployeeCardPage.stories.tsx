@@ -9,7 +9,7 @@ import { EmployeeCardPage } from './EmployeeCardPage';
 import { chooseOption } from '../lib/storyActions';
 
 const idOf = (name: string) => DEMO_EMPLOYEES.find((employee) => employee.name === name)!.id;
-// 직원 카드는 탭(개요·투입 이력·단가·서류·자격·기본정보)으로 나뉜다. 탭은 주소의 tab으로 고른다
+// 직원 카드는 탭(개요·투입 이력·단가·서류·자격·기본정보)으로 구분, 탭은 주소의 tab으로 선택
 const routerFor = (name: string, tab?: string) => ({
   initialEntries: [`/employees/${idOf(name)}${tab ? `?tab=${tab}` : ''}`],
   path: '/employees/:id',
@@ -242,7 +242,7 @@ export const SummaryAndOverview: Story = {
     await expect(
       within(await canvas.findByRole('region', { name: '개요' })).getByText('반장'),
     ).toBeInTheDocument();
-    // 탭을 옮길 수 있다
+    // 탭 이동 가능
     await userEvent.click(canvas.getByRole('tab', { name: '단가' }));
     await expect(await canvas.findByRole('region', { name: '단가' })).toBeInTheDocument();
   },
@@ -263,7 +263,7 @@ export const PayRates: Story = {
       expect.stringContaining('230,000'),
     ]);
 
-    // `단가 변경`은 창에서: 금액을 비우면 서버에 보내기 전에 막는다
+    // `단가 변경`은 창에서 수행: 금액을 비우면 서버 전송 전에 차단
     await userEvent.click(panel.getByRole('button', { name: '단가 변경' }));
 
     const dialog = within(await within(document.body).findByRole('dialog'));
@@ -281,7 +281,7 @@ export const PayRates: Story = {
       expect.stringContaining('250,000'),
       expect.stringContaining('230,000'),
     ]);
-    // 월급제는 일 환산이 함께 보인다
+    // 월급제는 일 환산 병기
     await expect(panel.getByText(/일 환산 약/)).toBeInTheDocument();
   },
 };
@@ -310,16 +310,16 @@ export const AddCredential: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
-    // 서류 등록은 창에서 한다
+    // 서류 등록은 창에서 수행
     await userEvent.click(await panel.findByRole('button', { name: '서류 등록' }));
 
     const form = within(await within(document.body).findByRole('form', { name: '서류 등록' }));
 
-    // 종류를 고르지 않으면 서버에 보내기 전에 막는다
+    // 종류를 고르지 않으면 서버 전송 전에 차단
     await userEvent.click(form.getByRole('button', { name: '서류 등록' }));
     await expect(await form.findByText('서류 종류를 선택해 주세요')).toBeInTheDocument();
 
-    // 만료일이 취득일보다 빠르면 막는다
+    // 만료일이 취득일보다 빠르면 차단
     await chooseOption(form.getByLabelText('서류 종류'), '전기기능사');
     fireEvent.change(form.getByLabelText('취득일 (선택)'), { target: { value: '2026-05-01' } });
     fireEvent.change(form.getByLabelText('만료일 (선택)'), { target: { value: '2026-04-30' } });
@@ -331,7 +331,7 @@ export const AddCredential: Story = {
 
     await waitFor(() => expect(panel.getAllByRole('listitem')).toHaveLength(3));
     await expect(panel.getByText(/전기기능사/, { selector: 'li span' })).toBeInTheDocument();
-    // 등록하면 창이 닫힌다
+    // 등록하면 창 닫힘
     await waitFor(() =>
       expect(
         within(document.body).queryByRole('form', { name: '서류 등록' }),
@@ -355,7 +355,7 @@ export const RenewCredential: Story = {
     });
     await userEvent.click(within(expired!).getByRole('button', { name: '저장' }));
 
-    // 갱신하면 상태가 유효로 바뀌고 만료가 빠른 순이라 판금 기능사(만료 없음) 앞에 그대로 있다
+    // 갱신하면 상태가 유효로 바뀌고 만료가 빠른 순이므로 판금 기능사(만료 없음) 앞에 그대로 위치
     await waitFor(() => expect(panel.getAllByRole('listitem')[0]).toHaveTextContent('2028-09-30'));
     await expect(panel.getAllByRole('listitem')[0]).toHaveTextContent('유효');
   },
@@ -368,7 +368,7 @@ export const RemoveCredential: Story = {
     const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
 
     await userEvent.click(await panel.findByRole('button', { name: '건강검진 삭제' }));
-    // 한 번 더 확인해야 삭제된다
+    // 한 번 더 확인해야 삭제
     await expect(panel.getAllByRole('listitem')).toHaveLength(2);
     await userEvent.click(panel.getByRole('button', { name: '삭제 확인' }));
 

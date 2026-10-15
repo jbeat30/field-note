@@ -27,14 +27,14 @@ export type LaborService = {
   listCurrent: (companyId: string) => Promise<PayRateSummary[]>;
   // 직원 단가 기록 (적용 시작일 최근순)
   listRates: (companyId: string, userId: string, employeeId: string) => Promise<PayRate[]>;
-  // 단가 추가 (기존 단가는 고치지 않음). 감사 기록으로 남는다
+  // 단가 추가 (기존 단가는 수정 없음), 변경 기록 저장
   createRate: (
     companyId: string,
     userId: string,
     employeeId: string,
     input: PayRateCreate,
   ) => Promise<PayRate>;
-  // 프로젝트 인건비 (최소 추정): 저장된 작업 내역의 공수 × 근무일 단가, 투입 계획 공수 × 단가. 조회는 감사 기록으로 남는다
+  // 프로젝트 인건비 (최소 추정): 저장된 작업 내역의 공수 × 근무일 단가, 투입 계획 공수 × 단가
   projectCost: (companyId: string, userId: string, projectId: string) => Promise<LaborCost>;
 };
 
@@ -56,7 +56,7 @@ const NEWEST_FIRST = [
   { id: 'desc' as const },
 ];
 
-// 너무 먼 과거·미래 날짜는 입력 실수로 본다
+// 너무 먼 과거·미래 날짜는 입력 실수로 간주
 const EARLIEST = '2000-01-01';
 const MAX_FUTURE_DAYS = 366;
 
@@ -194,7 +194,7 @@ export const createLaborService = (
           ratesByEmployee,
           units,
         ),
-        // 계획 공수는 기간 전체의 총량이라 오늘(투입 기간 안으로 맞춤)의 단가로 환산한다
+        // 계획 공수는 기간 전체의 총량이므로 오늘(투입 기간 안으로 보정) 단가로 환산
         planned: summarizeLaborCost(
           assignments.map((assignment) => ({
             employeeId: assignment.employeeId,

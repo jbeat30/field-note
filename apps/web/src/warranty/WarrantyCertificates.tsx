@@ -99,7 +99,7 @@ const CertificateRow = ({
   );
 };
 
-// 보증서(보증증권 등): 문서함에 올린 문서를 고르고 만료일을 붙여 관리한다
+// 보증서(보증증권 등): 문서함에 올린 문서를 선택하고 만료일을 붙여 관리
 export const WarrantyCertificates = ({
   projectId,
   warranty,
@@ -124,7 +124,7 @@ export const WarrantyCertificates = ({
     setErrors({});
     setRootError('');
 
-    // 비어 있는 입력은 서버 스키마의 일반 문구 대신 무엇을 해야 하는지 알려 준다
+    // 비어 있는 입력은 서버 스키마의 일반 문구 대신 해야 할 일을 안내
     if (!documentId || !expiresOn) {
       setErrors({
         ...(documentId ? {} : { documentId: '문서를 선택해 주세요' }),

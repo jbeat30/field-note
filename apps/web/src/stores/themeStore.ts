@@ -39,7 +39,7 @@ export const useThemeStore = create<ThemeState>((set) => ({
   },
 }));
 
-// 기기의 다크 모드 설정이 바뀌면 시스템 테마 선택 상태에서 바로 따라감. 해제 함수를 돌려줌
+// 기기의 다크 모드 설정이 바뀌면 시스템 테마 선택 상태에서 바로 반영, 해제 함수 반환
 export const watchSystemTheme = () => {
   const query = matchMedia('(prefers-color-scheme: dark)');
   const onChange = () => {

@@ -18,7 +18,7 @@ export const useOptions = () =>
     },
   });
 
-// 서버가 확인한 뒤에만 반영 (낙관적 업데이트 없음). 이름 중복 같은 검증 오류는 호출한 쪽이 화면에 보여 줌
+// 서버가 확인한 뒤에만 반영 (낙관적 업데이트 없음), 이름 중복 같은 검증 오류는 호출한 쪽이 화면에 보여 줌
 const useOptionMutation = <Variables, Result>(
   run: (variables: Variables) => Promise<{ data?: Result; error?: unknown }>,
 ) => {

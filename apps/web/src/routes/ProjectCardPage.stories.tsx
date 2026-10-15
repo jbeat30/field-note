@@ -20,7 +20,7 @@ const meta = {
   title: 'Pages/프로젝트 카드',
   component: ProjectCardPage,
   parameters: { router: routerFor('A동 외장 판금 공사') },
-  // 머리(이름·상태·메뉴)는 프로젝트 작업 공간 틀이 그리므로 틀 안에서 시험한다. 모든 구역을 한 화면에 그려 확인
+  // 머리(이름·상태·메뉴)는 프로젝트 작업 공간 틀이 렌더링하므로 틀 안에서 시험, 모든 구역을 한 화면에 그려 확인
   decorators: [
     (Story) => (
       <Routes>
@@ -312,7 +312,7 @@ export const CompleteShowsNotices: Story = {
     await expect(notices.getByText(/진행률이 40%입니다/)).toBeInTheDocument();
     await expect(notices.getByText(/협의 중인 변경·추가 작업이 1건/)).toBeInTheDocument();
 
-    // 안내가 있어도 완료할 수 있다
+    // 안내가 있어도 완료 가능
     await userEvent.click(form.getByRole('button', { name: '확인' }));
     await expect(await canvas.findByText("'완료' 상태로 바꿨습니다")).toBeInTheDocument();
   },
@@ -402,7 +402,7 @@ export const CloseFromCompletedNeedsNoWarranty: Story = {
   },
 };
 
-// 재오픈은 사유가 필요하고, 보증 종료 예정일이 지난 뒤의 종료는 사유 없이 할 수 있다
+// 재오픈은 사유 필요, 보증 종료 예정일이 지난 뒤의 종료는 사유 없이 가능
 export const ReopenThenCloseAfterWarrantyEnd: Story = {
   parameters: { router: routerFor('C동 환기 설비') },
   play: async ({ canvasElement }) => {
@@ -493,7 +493,7 @@ export const PeopleStats: Story = {
   },
 };
 
-// 사람 이름을 누르면 그 사람이 일한 날만 달력·목록으로 보이고, 날짜는 그날 하루 기록으로 이어진다
+// 사람 이름을 누르면 그 사람이 일한 날만 달력·목록으로 표시, 날짜는 그날 하루 기록으로 연결
 export const PeopleStatsWorkDays: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
@@ -664,7 +664,7 @@ export const ProgressPanel: Story = {
     await expect(await panel.findByText('진행률 이력 (2)')).toBeInTheDocument();
     await expect(panel.getByText('진행률').nextElementSibling).toHaveTextContent('40%');
 
-    // 진행률 바꾸기: 범위를 벗어난 값은 서버에 보내기 전에 막는다
+    // 진행률 바꾸기: 범위를 벗어난 값은 서버 전송 전에 차단
     await userEvent.click(panel.getByRole('button', { name: '진행률 바꾸기' }));
 
     const dialog = within(
@@ -678,7 +678,7 @@ export const ProgressPanel: Story = {
       await dialog.findByText('0부터 100 사이의 정수를 입력해 주세요'),
     ).toBeInTheDocument();
 
-    // 빠른 선택 단추로 고르면 기록되어 현재 진행률과 이력이 바뀐다
+    // 빠른 선택 단추로 선택하면 기록되어 현재 진행률과 이력 변경
     await userEvent.click(dialog.getByRole('button', { name: '60%' }));
     await userEvent.click(dialog.getByRole('button', { name: '진행률 기록' }));
     await waitFor(() =>
@@ -693,10 +693,10 @@ export const LaborCostPanel: Story = {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '인건비 (최소 추정)' }));
 
-    // 금액이 계산되고 포함하지 않는 항목을 알려 준다
+    // 금액 계산 후 포함하지 않는 항목 안내
     await expect(await panel.findByText('지금까지 인건비')).toBeInTheDocument();
     await expect(panel.getByText(/4대보험·수당·퇴직금·세금은 포함하지/)).toBeInTheDocument();
-    // 더미 단가가 없는 직원의 공수는 합계에서 빠지고 안내된다
+    // 더미 단가가 없는 직원의 공수는 합계에서 제외하고 안내
     await expect(await panel.findByText(/단가가 없어 합계에서 빠진 공수/)).toBeInTheDocument();
     await expect(panel.getAllByText(/\d원$/).length).toBeGreaterThan(0);
   },
@@ -707,7 +707,7 @@ export const RequiredCredentials: Story = {
     const canvas = within(canvasElement);
     const panel = within(await canvas.findByRole('region', { name: '필요 자격' }));
 
-    // 더미: A동은 안전교육 이수증이 필요. 저장하기 전에는 버튼이 꺼져 있다
+    // 더미: A동은 안전교육 이수증 필요, 저장 전에는 버튼 비활성
     const safety = await panel.findByRole('checkbox', { name: '안전교육 이수증' });
 
     await expect(safety).toBeChecked();

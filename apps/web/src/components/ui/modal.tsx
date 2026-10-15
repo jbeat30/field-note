@@ -25,7 +25,7 @@ const DIALOG =
 const DIALOG_MD =
   'md:top-1/2 md:left-1/2 md:mx-0 md:w-[calc(100%-2rem)] md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl md:shadow-card';
 
-// 대화창·시트 공통. 포커스 가두기·Esc 닫기·제목 연결은 Radix가 처리
+// 대화창·시트 공통, 포커스 가두기·Esc 닫기·제목 연결은 Radix가 처리
 export const Modal = ({
   open,
   onOpenChange,

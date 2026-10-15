@@ -13,7 +13,7 @@ type Props = {
   // 보여 줄 달의 1일 (YYYY-MM-01)
   month: string;
   today: string;
-  // 프로젝트 예정 기간 (이 밖의 날은 입력할 수 없다)
+  // 프로젝트 예정 기간 (이 밖의 날은 입력 불가)
   plannedStart: string;
   plannedEnd: string;
   logs: readonly WorkLogSummary[];
@@ -30,7 +30,7 @@ const buildDays = (month: string) => {
   return Array.from({ length: total }, (_, index) => addDays(start, index));
 };
 
-// 프로젝트의 달력: 날짜마다 그날 일한 사람과 시간을 보여 주고, 눌러서 그날의 투입 인원·시간을 입력한다
+// 프로젝트의 달력: 날짜마다 그날 일한 사람과 시간을 표시하고 눌러서 그날의 투입 인원·시간 입력
 export const ProjectWorkCalendar = ({
   projectId,
   month,

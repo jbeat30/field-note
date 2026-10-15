@@ -16,7 +16,7 @@ const meta = {
   component: MonthlyHoursPage,
   // 더미 작업 내역은 2026-09에 있다: 저장된 작업 내역 4건(A동 3·B동 1)과 임시 저장 1건(A동 9월 4일)
   parameters: { router: routerFor('2026-09') },
-  // 스토리를 다시 그릴 때마다 확정 상태가 처음으로 돌아가야 같은 순서로 확인할 수 있다
+  // 스토리를 다시 그릴 때마다 확정 상태가 처음으로 돌아가야 같은 순서로 확인 가능
   loaders: [
     () => {
       resetMockMonthly();
@@ -42,11 +42,11 @@ export const Default: Story = {
     await expect(table.getByRole('row', { name: /^정판금/ })).toHaveTextContent('2');
     await expect(table.getByRole('columnheader', { name: 'MM' })).toBeInTheDocument();
     await expect(table.getByRole('row', { name: /^합계/ })).toHaveTextContent('9');
-    // 행을 프로젝트로 바꿔 볼 수 있다
+    // 행을 프로젝트로 전환 가능
     await userEvent.click(canvas.getByRole('radio', { name: '프로젝트별' }));
     await expect(await table.findByRole('columnheader', { name: '프로젝트' })).toBeInTheDocument();
     await expect(table.getByRole('rowheader', { name: /A동 외장 판금 공사/ })).toBeInTheDocument();
-    // MM 환산 기준을 수치 옆에 적는다
+    // MM 환산 기준을 수치 옆에 표기
     await expect(canvas.getAllByText(/1MM = /).length).toBeGreaterThan(0);
     // 임시 저장 작업 내역은 목록으로 알린다 (집계에는 포함되지 않음)
     await expect(
@@ -68,7 +68,7 @@ export const EmptyMonth: Story = {
   },
 };
 
-// 임시 저장 작업 내역이 남아 있으면 확인해야 확정할 수 있다
+// 임시 저장 작업 내역이 남아 있으면 확인 후 확정 가능
 export const CloseNeedsDraftConfirm: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -88,7 +88,7 @@ export const CloseNeedsDraftConfirm: Story = {
     ).toBeInTheDocument();
     await expect(canvas.getByText('확정됨')).toBeInTheDocument();
     await expect(canvas.getByText('하루 기준시간')).toBeInTheDocument();
-    // 확정 이력이 남고 재오픈 폼이 열린다
+    // 확정 이력이 남고 재오픈 폼 표시
     await expect(canvas.getByRole('form', { name: '재오픈' })).toBeInTheDocument();
     await expect(await canvas.findByText(/임시 1건/)).toBeInTheDocument();
   },
@@ -107,7 +107,7 @@ export const ReopenNeedsReason: Story = {
 
     const form = within(await canvas.findByRole('form', { name: '재오픈' }, { timeout: 4000 }));
 
-    // 사유 없이는 재오픈할 수 없다
+    // 사유 없이는 재오픈 불가
     await userEvent.click(form.getByRole('button', { name: '2026-09 공수 재오픈' }));
     await expect(await form.findByText('재오픈 사유를 입력해 주세요')).toBeInTheDocument();
 
@@ -132,7 +132,7 @@ export const FutureMonthCannotClose: Story = {
   },
 };
 
-// 내보내기는 한 번 더 확인하고 기록으로 남는다는 것을 알린다
+// 내보내기는 한 번 더 확인하고 기록이 남는다는 안내 표시
 export const ExportAsksConfirmation: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

@@ -6,8 +6,8 @@ import { formatWork } from '../workSummary/formatWork';
 import { formatWon } from './formatMoney';
 import { useLaborCost } from './useLabor';
 
-// 프로젝트 인건비 (최소 추정): 저장된 작업 내역의 공수 × 근무일 단가. 급여 계산이 아니며
-// 4대보험·수당·퇴직금·세금은 포함하지 않고, 단가가 없는 직원의 공수는 합계에서 빠진다
+// 프로젝트 인건비 (최소 추정): 저장된 작업 내역의 공수 × 근무일 단가, 급여 계산이 아니며
+// 4대보험·수당·퇴직금·세금은 제외, 단가가 없는 직원의 공수는 합계에서 제외
 export const ProjectLaborCostPanel = ({ projectId }: { projectId: string }) => {
   const cost = useLaborCost(projectId);
   const settings = useCompanySettings();

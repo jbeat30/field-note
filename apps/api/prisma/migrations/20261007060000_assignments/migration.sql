@@ -67,7 +67,7 @@ ALTER TABLE "project_period_changes" ADD CONSTRAINT project_period_changes_perio
 ALTER TABLE "project_period_changes" ADD CONSTRAINT project_period_changes_changed CHECK ("from_start" <> "to_start" OR "from_end" <> "to_end");
 ALTER TABLE "project_period_changes" ADD CONSTRAINT project_period_changes_reason_length CHECK ("reason" IS NULL OR char_length("reason") BETWEEN 1 AND 500);
 
--- 앱 계정은 자기 회사 행만 조회·추가 (투입은 기간·계획 공수·취소 표시를 위해 수정 가능, 삭제 불가. 기간 변경 이력은 추가만)
+-- 앱 계정은 자기 회사 행만 조회·추가 (투입은 기간·계획 공수·취소 표시를 위해 수정 가능, 삭제 불가, 기간 변경 이력은 추가만)
 ALTER TABLE "project_assignments" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "project_assignments" FORCE ROW LEVEL SECURITY;
 CREATE POLICY company_isolation ON "project_assignments" TO field_note_app

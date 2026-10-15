@@ -6,39 +6,40 @@ import { acceptInvitation, recordConsents, type ConsentInput } from './invitatio
 
 type Clock = () => Date;
 
-export type SocialProviderId = 'KAKAO';
+export type SocialProviderId = 'KAKAO' | 'NAVER' | 'GOOGLE';
 
 export type LoginMethods = {
   // 아이디·비밀번호 로그인이 설정되어 있는지
   hasPassword: boolean;
-  isKakaoLinked: boolean;
+  // 연동된 소셜 제공자
+  linked: SocialProviderId[];
 };
 
 export type SocialService = {
-  // 제공자 사용자 번호로 계정을 찾음 (이메일로는 절대 찾지 않음, §6.1). 정지·해지 요청 중인 회사는 없는 것으로 취급
+  // 제공자 사용자 번호로 계정을 찾음 (이메일로는 절대 찾지 않음, §6.1), 정지·해지 요청 중인 회사는 없는 것으로 취급
   findAccount: (
     provider: SocialProviderId,
     providerUserId: string,
   ) => Promise<AuthenticatedAccount | null>;
   // 해지 요청 중인 회사의 소셜 계정인지 (로그인은 막되 취소 링크를 안내하기 위함)
   isClosing: (provider: SocialProviderId, providerUserId: string) => Promise<boolean>;
-  // 로그인한 계정에 소셜 계정 연동. 이미 다른 계정에 연동된 소셜 계정은 거부
+  // 로그인한 계정에 소셜 계정 연동, 이미 다른 계정에 연동된 소셜 계정은 거부
   link: (
     account: AuthenticatedAccount,
     provider: SocialProviderId,
     providerUserId: string,
   ) => Promise<void>;
-  // 연동 해제. 해제 후에도 로그인 수단이 하나 이상 남아야 함
+  // 연동 해제, 해제 후에도 로그인 수단이 하나 이상 남아야 함
   unlink: (account: AuthenticatedAccount, provider: SocialProviderId) => Promise<void>;
   methods: (account: AuthenticatedAccount) => Promise<LoginMethods>;
-  // 초대 링크로 소셜 가입: 제공자가 인증된 이메일을 줄 때만 가능, 이메일 인증이 끝난 활성 계정으로 만듦
+  // 초대 링크로 소셜 가입: 제공자가 인증된 이메일을 주면 이메일 인증이 끝난 활성 계정, 아니면 이메일 인증 전 계정으로 만듦
   signup: (input: {
     inviteToken: string;
     consents: ConsentInput[];
     provider: SocialProviderId;
     providerUserId: string;
     verifiedEmail: string | null;
-  }) => Promise<AuthenticatedAccount & { email: string }>;
+  }) => Promise<AuthenticatedAccount & { email: string | null }>;
 };
 
 type Deps = { auth: PrismaClient; now?: Clock };
@@ -112,22 +113,21 @@ export const createSocialService = ({ auth, now = () => new Date() }: Deps): Soc
   },
 
   methods: async ({ userId, companyId }) => {
-    const [credential, kakao] = await Promise.all([
+    const [credential, linked] = await Promise.all([
       auth.userCredential.findUnique({ where: { companyId_userId: { companyId, userId } } }),
-      auth.socialAccount.count({ where: { companyId, userId, provider: 'KAKAO' } }),
+      auth.socialAccount.findMany({ where: { companyId, userId }, select: { provider: true } }),
     ]);
 
-    return { hasPassword: Boolean(credential?.passwordHash), isKakaoLinked: kakao > 0 };
+    return {
+      hasPassword: Boolean(credential?.passwordHash),
+      linked: linked.map((row) => row.provider),
+    };
   },
 
   signup: async (input) => {
     const at = now();
 
-    // 인증된 이메일을 주지 않는 소셜 계정은 별도 인증 절차가 필요하므로 이 단계에서는 받지 않음 (링크도 소모하지 않음)
-    if (!input.verifiedEmail) {
-      throw new AccountError('SOCIAL_EMAIL_REQUIRED');
-    }
-
+    // 제공자가 인증된 이메일을 주지 않으면 이메일 없이 가입시키고, 가입 직후 이메일을 등록·인증하게 함
     const email = input.verifiedEmail;
 
     return auth.$transaction(async (tx) => {
@@ -146,14 +146,18 @@ export const createSocialService = ({ auth, now = () => new Date() }: Deps): Soc
         throw new AccountError('SOCIAL_ALREADY_LINKED');
       }
 
-      if (await tx.user.findUnique({ where: { email } })) {
+      const emailOwner = email ? await tx.user.findUnique({ where: { email } }) : null;
+
+      if (emailOwner && emailOwner.id !== invitation.userId) {
         throw new AccountError('EMAIL_TAKEN');
       }
 
-      // 제공자가 인증된 이메일을 보증하므로 이메일 인증을 마친 활성 계정으로 만듦
+      // 제공자가 인증된 이메일을 보증하면 이메일 인증을 마친 활성 계정, 아니면 이메일 인증 전 상태
       await tx.user.update({
         where: { companyId_id: { companyId: invitation.companyId, id: invitation.userId } },
-        data: { email, emailVerifiedAt: at, ageConfirmedAt: at, status: 'ACTIVE' },
+        data: email
+          ? { email, emailVerifiedAt: at, ageConfirmedAt: at, status: 'ACTIVE' }
+          : { ageConfirmedAt: at },
       });
       await tx.socialAccount.create({
         data: {

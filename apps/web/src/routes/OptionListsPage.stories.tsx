@@ -17,7 +17,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 종류별 영역 (종류 탭을 눌러 열고, 영역 안에서만 찾는다)
+// 종류별 영역 (종류 탭을 눌러 열고 영역 안에서만 검색)
 const section = async (canvasElement: HTMLElement, name: string) => {
   const tab = await within(canvasElement).findByRole('tab', { name });
 

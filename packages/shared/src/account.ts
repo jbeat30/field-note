@@ -41,6 +41,8 @@ export const invitationResponseSchema = z.object({
   companyName: z.string(),
   adminName: z.string(),
   expiresAt: z.iso.datetime(),
+  // 가입 링크 또는 가입을 마친 계정의 복구·소유자 이전 링크
+  purpose: z.enum(['SIGNUP', 'RECOVERY', 'TRANSFER']),
   documents: z.array(legalDocumentSummarySchema),
 });
 
@@ -108,16 +110,45 @@ export const passwordChangeSchema = z.object({
 
 export type PasswordChange = z.infer<typeof passwordChangeSchema>;
 
-// 이메일 변경: 비밀번호를 다시 확인하고 새 이메일의 인증 코드를 확인해야 반영 (§6.7)
+// 소셜 로그인만 쓰는 계정이 아이디·비밀번호 로그인을 처음 설정 (이미 소셜 로그인으로 본인이 확인된 상태라 현재 비밀번호는 없음)
+export const passwordSetSchema = z.object({
+  loginId: loginIdSchema,
+  newPassword: passwordSchema,
+});
+
+export type PasswordSet = z.infer<typeof passwordSetSchema>;
+
+// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 이메일의 인증 코드를 확인해야 반영 (§6.7)
+// 소셜 로그인만 쓰는 계정은 확인할 비밀번호가 없어 생략하고, 소셜 가입 직후 이메일 등록에도 같은 요청을 씀
 export const emailChangeSchema = z.object({
   newEmail: z.email().max(254),
-  currentPassword: z.string().min(1),
+  currentPassword: z.string().min(1).optional(),
 });
 
 export type EmailChange = z.infer<typeof emailChangeSchema>;
 
 // 소셜 로그인 (§6.1): 제공자는 서버 설정에 따라 켜지고, 시작 요청은 로그인 화면 주소를 돌려줌
-export const socialProvidersResponseSchema = z.object({ kakao: z.boolean() });
+export const SOCIAL_PROVIDER_KEYS = ['kakao', 'naver', 'google'] as const;
+
+export const socialProviderSchema = z.enum(SOCIAL_PROVIDER_KEYS);
+
+export type SocialProviderKey = z.infer<typeof socialProviderSchema>;
+
+export const SOCIAL_PROVIDER_LABELS: Record<SocialProviderKey, string> = {
+  kakao: '카카오',
+  naver: '네이버',
+  google: '구글',
+};
+
+export const socialProviderParamsSchema = z.object({ provider: socialProviderSchema });
+
+export const socialProvidersResponseSchema = z.object({
+  kakao: z.boolean(),
+  naver: z.boolean(),
+  google: z.boolean(),
+});
+
+export type SocialProvidersResponse = z.infer<typeof socialProvidersResponseSchema>;
 
 export const socialStartRequestSchema = z.discriminatedUnion('purpose', [
   z.object({ purpose: z.literal('login') }),
@@ -147,7 +178,6 @@ export const SOCIAL_RESULTS = [
   'failed',
   'not-linked',
   'already-linked',
-  'email-required',
   'email-taken',
   'invitation-invalid',
   'closing',
@@ -159,6 +189,8 @@ export const socialMethodsResponseSchema = z.object({
   // 아이디·비밀번호 로그인 설정 여부 (없으면 소셜 연동을 해제할 수 없음)
   hasPassword: z.boolean(),
   kakao: z.object({ isLinked: z.boolean() }),
+  naver: z.object({ isLinked: z.boolean() }),
+  google: z.object({ isLinked: z.boolean() }),
 });
 
 export type SocialMethodsResponse = z.infer<typeof socialMethodsResponseSchema>;
@@ -193,9 +225,9 @@ export const workUnitModeSchema = z.enum(['RATIO', 'HOURS']);
 export type WorkUnitMode = z.infer<typeof workUnitModeSchema>;
 
 export const companySettingsSchema = z.object({
-  // 하루 기준시간(분). 저장은 항상 분 단위이므로 바꿔도 과거 기록은 변하지 않음
+  // 하루 기준시간(분), 저장은 항상 분 단위이므로 바꿔도 과거 기록은 변하지 않음
   standardWorkMinutes: z.number().int().min(60).max(960),
-  // MM(맨먼스) 환산 기준 일수 (1MM = 이 일수의 MD). 소수 첫째 자리까지 (주 5일 21.7, 주 7일 30.4 등)
+  // MM(맨먼스) 환산 기준 일수 (1MM = 이 일수의 MD), 소수 첫째 자리까지 (주 5일 21.7, 주 7일 30.4 등)
   monthlyWorkDays: z
     .number()
     .min(1)
@@ -213,14 +245,14 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   workUnitMode: 'RATIO',
 };
 
-// 근무 형태별 월 기준일수 표준값 (연평균: 365일 × 주 근무일수 ÷ 7 ÷ 12). 현장은 공휴일에도 일하므로 공휴일 달력은 쓰지 않는다
+// 근무 형태별 월 기준일수 표준값 (연평균: 365일 × 주 근무일수 ÷ 7 ÷ 12), 현장은 공휴일에도 일하므로 공휴일 달력 미사용
 export const WORK_PATTERNS = [
   { key: 'SIX_DAYS', label: '주 6일', days: 26, hint: '현장 기본 (365×6÷7÷12 ≈ 26.1일)' },
   { key: 'FIVE_DAYS', label: '주 5일', days: 21.7, hint: '365×5÷7÷12 ≈ 21.7일' },
   { key: 'SEVEN_DAYS', label: '주 7일', days: 30.4, hint: '365÷12 ≈ 30.4일' },
 ] as const;
 
-// 로그인 기기 목록 (§6.4). 식별자는 원격 로그아웃 대상 지정용 불투명 값
+// 로그인 기기 목록 (§6.4), 식별자는 원격 로그아웃 대상 지정용 불투명 값
 export const deviceSchema = z.object({
   id: z.string(),
   label: z.string(),

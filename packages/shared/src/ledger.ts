@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
-// 지출·수입 기록 (08 문서 §6): 프로젝트에서 나간 돈(부자재·장비·식대 등)과 가끔 생기는 수입(고철 판매, 현장 지원 등)만 적는다.
-// 계약 금액·청구·입금 관리, 회계·세금·급여는 범위 밖이다
+// 지출·수입 기록 (08 문서 §6): 프로젝트에서 나간 돈(부자재·장비·식대 등)과 가끔 생기는 수입(고철 판매, 현장 지원 등)만 기록
+// 계약 금액·청구·입금 관리와 회계·세금·급여는 범위 밖
 export const LEDGER_KINDS = ['EXPENSE', 'INCOME'] as const;
 
 export const ledgerKindSchema = z.enum(LEDGER_KINDS);
@@ -80,7 +80,7 @@ export const ledgerEntrySchema = z.object({
 
 export type LedgerEntry = z.infer<typeof ledgerEntrySchema>;
 
-// 내역과 합계가 같은 조건으로 걸러지도록 필터는 한 모양을 쓴다
+// 내역과 합계가 같은 조건으로 걸러지도록 필터는 한 가지 모양 사용
 const filterFields = {
   kind: ledgerKindSchema.optional(),
   categoryId: z.uuid().optional(),

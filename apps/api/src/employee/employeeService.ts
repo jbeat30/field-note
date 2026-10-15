@@ -27,7 +27,7 @@ export class EmployeeError extends Error {
 }
 
 export type EmployeeService = {
-  // 목록 (생년월일·연락처 제외). 재직 → 휴직 → 퇴사 순, 같은 상태 안에서는 이름순
+  // 목록 (생년월일·연락처 제외), 재직 → 휴직 → 퇴사 순, 같은 상태 안에서는 이름순
   list: (companyId: string, query: EmployeeListQuery) => Promise<EmployeeSummary[]>;
   // 카드 (생년월일·연락처 포함)
   get: (companyId: string, id: string) => Promise<EmployeeDetail>;
@@ -63,7 +63,7 @@ const toDetail = (row: Row): EmployeeDetail => ({
 });
 
 // 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있다 (다른 회사 항목은 RLS로 보이지 않음)
-// 숨긴 항목은 새로 고를 수 없지만, 이미 그 항목을 쓰고 있는 직원은 그대로 둘 수 있다
+// 숨긴 항목은 새로 선택할 수 없지만 이미 사용 중인 직원은 그대로 유지 가능
 const assertOption = async (
   tx: Prisma.TransactionClient,
   kind: OptionKind,

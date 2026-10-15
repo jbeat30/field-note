@@ -76,7 +76,7 @@ ALTER TABLE "files" ADD CONSTRAINT files_employee_purpose CHECK (("purpose" = 'E
 ALTER TABLE "employee_credentials" ADD CONSTRAINT employee_credentials_dates_order CHECK ("issued_on" IS NULL OR "expires_on" IS NULL OR "issued_on" <= "expires_on");
 ALTER TABLE "employee_credentials" ADD CONSTRAINT employee_credentials_memo_length CHECK ("memo" IS NULL OR char_length("memo") BETWEEN 1 AND 500);
 
--- 앱 계정은 자기 회사 행만. 서류는 종류·날짜·파일·메모·삭제 시각만 고칠 수 있고 지울 수 없음 (필요 자격은 목록을 바꾸는 방식이라 삭제 가능)
+-- 앱 계정은 자기 회사 행만, 서류는 종류·날짜·파일·메모·삭제 시각만 고칠 수 있고 지울 수 없음 (필요 자격은 목록을 바꾸는 방식이라 삭제 가능)
 ALTER TABLE "employee_credentials" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "employee_credentials" FORCE ROW LEVEL SECURITY;
 CREATE POLICY company_isolation ON "employee_credentials" TO field_note_app

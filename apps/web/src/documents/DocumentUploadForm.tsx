@@ -32,13 +32,13 @@ export type DocumentFormValues = {
 };
 
 type DocumentUploadFormProps = {
-  // 새 문서면 이름·분류·민감 표시까지, 새 버전이면 파일·개정일·사유만 받는다
+  // 새 문서는 이름·분류·민감 표시까지, 새 버전은 파일·개정일·사유만 입력
   mode: 'create' | 'version';
-  // 올리기와 등록을 마칠 때까지 기다림. 진행률(0~1)을 알려 주고, 실패하면 던져서 알린다
+  // 올리기와 등록 완료까지 대기, 진행률(0~1) 전달, 실패 시 예외로 알림
   onSubmit: (values: DocumentFormValues, onProgress: (ratio: number) => void) => Promise<void>;
 };
 
-// 문서 올리기: 파일을 고르고 이름·분류를 정한다. 계약·공문은 민감 자료가 기본으로 켜지고 직접 바꿀 수 있다
+// 문서 올리기: 파일 선택 후 이름·분류 지정, 계약·공문은 민감 자료가 기본 켜짐이며 직접 변경 가능
 export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) => {
   const today = todayInSeoul(new Date());
   const inputRef = useRef<HTMLInputElement>(null);

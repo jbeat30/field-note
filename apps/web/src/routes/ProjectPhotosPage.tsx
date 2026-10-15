@@ -57,7 +57,7 @@ export const ProjectPhotosPage = () => {
     [photos.data],
   );
   const groups = useMemo(() => groupBeforeAfter(items), [items]);
-  // 앞뒤 넘기기는 화면에 보이는 순서(날짜 묶음 순)를 따른다
+  // 앞뒤 넘기기는 화면에 보이는 순서(날짜 묶음 순) 기준
   const ordered = useMemo(
     () => (view === 'ALL' ? groupPhotosByDate(items).flatMap(([, own]) => own) : items),
     [items, view],

@@ -91,7 +91,8 @@ export const ClosureSection = () => {
       {dialog}
       <Alert>
         해지하면 회사의 프로젝트·기록이 14일 뒤 모두 삭제되며 복구할 수 없습니다. 삭제 전에는 메일의
-        링크로 취소할 수 있습니다
+        링크로 취소할 수 있습니다. 해지를 요청하면 바로 로그아웃되므로 데이터는 먼저 회사 관리의
+        "데이터 내보내기"로 내려받아 두세요
       </Alert>
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {needsPassword && (

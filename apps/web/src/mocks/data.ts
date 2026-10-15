@@ -1,5 +1,6 @@
 import type {
   AlertKind,
+  CompanyRules,
   CompanySettings,
   Device,
   EmployeeDetail,
@@ -14,6 +15,7 @@ import type {
   WorkLogEntry,
   WorkLogRevision,
   WorkLogStatus,
+  SocialProviderKey,
 } from '@field-note/shared';
 
 import { DEMO_ACCOUNTS as SHARED_DEMO_ACCOUNTS, LEGAL_DOCUMENTS_FOR_MOCK } from './demoSource';
@@ -57,21 +59,23 @@ export type MockAccount = {
   isEmailVerified: boolean;
   companyName: string;
   settings: CompanySettings;
+  // 경고 기준·보증 기본 기간 (저장한 적이 없으면 기본값)
+  rules?: CompanyRules;
   // 이메일 변경을 요청하고 코드 인증을 기다리는 새 주소
   pendingEmail?: string;
-  // 연동한 가짜 카카오 계정 (MOCK_KAKAO_PROFILES의 key)
-  kakaoProfileKey?: string;
+  // 제공자별로 연동한 가짜 소셜 계정 (MOCK_SOCIAL_PROFILES의 key)
+  socialProfiles?: Partial<Record<SocialProviderKey, string>>;
   // false면 소셜 로그인만 쓰는 계정 (비밀번호 로그인 없음)
   hasPassword?: boolean;
   // 해지 요청 중이면 삭제 예정 시각 (ISO)
   closingPurgeAfter?: string;
-  // 선택 목록(직종·작업 구분·공종·직원 구분). 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
+  // 선택 목록(직종·작업 구분·공종·직원 구분), 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
   options?: OptionItem[];
-  // 직원 카드. 처음 조회할 때 더미 직원(DB 시드와 같은 원본)으로 채움
+  // 직원 카드, 처음 조회할 때 더미 직원(DB 시드와 같은 원본)으로 채움
   employees?: EmployeeDetail[];
-  // 고객·협력업체·자재 공급처 명부. 처음 조회할 때 더미 업체로 채움
+  // 고객·협력업체·자재 공급처 명부, 처음 조회할 때 더미 업체로 채움
   partners?: PartnerDetail[];
-  // 프로젝트. 처음 조회할 때 더미 프로젝트로 채움
+  // 프로젝트, 처음 조회할 때 더미 프로젝트로 채움
   projects?: ProjectDetail[];
   // 프로젝트별 상태 변경 이력 (프로젝트 id → 오래된 것부터)
   projectHistory?: Record<string, ProjectStatusChange[]>;
@@ -108,7 +112,7 @@ export { DEMO_INVITATION } from './demoSource';
 
 export const LEGAL_DOCUMENTS: readonly LegalDocumentSummary[] = LEGAL_DOCUMENTS_FOR_MOCK;
 
-// 기기 목록은 "최근에 쓴 기기"와 "오래 쓰지 않은 기기"가 함께 보이도록 지금 시각 기준으로 만든다
+// 기기 목록은 "최근에 쓴 기기"와 "오래 쓰지 않은 기기"가 함께 보이도록 현재 시각 기준으로 생성
 const hoursAgo = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
 
 export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [
@@ -145,14 +149,15 @@ export const MOCK_LOCKED_LOGIN_ID = 'locked';
 export const MOCK_TAKEN_LOGIN_ID = 'taken-id';
 export const MOCK_SESSION_STORAGE_KEY = 'field-note-mock-session';
 
-// 목업 모드의 카카오 로그인 화면(`/mock-kakao`)에서 고르는 시연용 카카오 계정 (서버의 가짜 제공자와 같은 구성)
-export const MOCK_KAKAO_PROFILES = [
+// 목업 모드의 소셜 로그인 화면(`/mock-social`)에서 고르는 시연용 계정 (서버의 가짜 제공자와 같은 구성)
+// 사용자 번호는 제공자마다 따로이고, 네이버는 인증된 이메일을 주지 않음
+export const MOCK_SOCIAL_PROFILES = [
   { key: 'hanbit', label: '한빛판금 관리자와 연동하는 계정', verifiedEmail: 'hanbit@example.com' },
   {
     key: 'new-verified',
-    label: '이메일이 인증된 새 카카오 계정',
-    verifiedEmail: 'kakao-new@example.com',
+    label: '이메일이 인증된 새 계정',
+    verifiedEmail: 'social-new@example.com',
   },
-  { key: 'new-unverified', label: '이메일이 인증되지 않은 새 카카오 계정', verifiedEmail: null },
-  { key: 'other', label: '다른 새 카카오 계정', verifiedEmail: 'kakao-other@example.com' },
+  { key: 'new-unverified', label: '이메일이 인증되지 않은 새 계정', verifiedEmail: null },
+  { key: 'other', label: '다른 새 계정', verifiedEmail: 'social-other@example.com' },
 ] as const;

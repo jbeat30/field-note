@@ -37,7 +37,7 @@ type Helpers = {
 export type MockFile = StoredFile & { companyId: string; uploaded: boolean };
 type MockPhoto = Omit<Photo, 'file' | 'thumbnailUrl'> & { companyId: string; deletedAt?: string };
 
-// 목업 저장소: 회사별 파일·사진 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 파일·사진 (새로고침하면 초기화), 실제 서버 동작을 모사
 const files = new Map<string, MockFile>();
 const photos = new Map<string, MockPhoto>();
 const seeded = new Set<string>();

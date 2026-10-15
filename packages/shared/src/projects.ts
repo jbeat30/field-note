@@ -1,6 +1,8 @@
 import { z } from 'zod';
 
-// 프로젝트 (서비스 기획서 §10.2, §10.3). 계약 금액은 다루지 않는다
+import { projectWarningTypeSchema } from './projectWarnings';
+
+// 프로젝트 (서비스 기획서 §10.2, §10.3), 계약 금액은 제외
 export const PROJECT_STATUSES = [
   'PLANNED',
   'IN_PROGRESS',
@@ -15,7 +17,7 @@ export const projectStatusSchema = z.enum(PROJECT_STATUSES);
 
 export type ProjectStatus = z.infer<typeof projectStatusSchema>;
 
-// 상태 이름은 회사가 바꿀 수 있게 될 수 있지만(§10.3) 지금은 기본 이름만 쓴다
+// 상태 이름은 회사가 바꿀 수 있게 확장될 수 있지만(§10.3) 현재는 기본 이름만 사용
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   PLANNED: '예정',
   IN_PROGRESS: '진행',
@@ -118,7 +120,7 @@ export const projectSummarySchema = z.object({
   name: z.string(),
   status: projectStatusSchema,
   siteName: z.string(),
-  // 명부·직원·선택 목록 항목의 id. 이름은 각 목록에서 찾는다
+  // 명부·직원·선택 목록 항목의 id, 이름은 각 목록에서 조회
   clientId: z.uuid(),
   managerId: z.uuid(),
   tradeIds: z.array(z.uuid()),
@@ -145,8 +147,15 @@ export const projectDetailSchema = projectSummarySchema.extend({
 
 export type ProjectDetail = z.infer<typeof projectDetailSchema>;
 
+// 목록의 한 줄: 요약에 경고(진행 중 프로젝트만 해당) 추가
+export const projectListItemSchema = projectSummarySchema.extend({
+  warnings: z.array(projectWarningTypeSchema),
+});
+
+export type ProjectListItem = z.infer<typeof projectListItemSchema>;
+
 export const projectsResponseSchema = z.object({
-  items: z.array(projectSummarySchema),
+  items: z.array(projectListItemSchema),
   // 조건에 맞는 전체 건수 (쪽 수 계산용)
   total: z.number().int().min(0),
   page: z.number().int().min(1),
@@ -192,6 +201,8 @@ export const projectListQuerySchema = z.object({
   q: z.string().trim().max(PROJECT_NAME_MAX_LENGTH).optional(),
   // 현장명 검색 (부분 일치)
   site: z.string().trim().max(PROJECT_SITE_NAME_MAX_LENGTH).optional(),
+  // 'true'면 경고가 있는 진행·중단 프로젝트만 (회사별 경고 기준을 따름)
+  hasWarning: z.enum(['true']).optional(),
   // 정렬 기준과 방향 (기준을 안 주면 최근 등록 내림차순, 방향을 안 주면 최근 등록은 내림·나머지는 오름)
   sortBy: projectSortKeySchema.optional(),
   sortDir: sortDirectionSchema.optional(),
@@ -212,7 +223,7 @@ const PERIOD_ERROR = {
   path: ['plannedEnd'],
 };
 
-// 등록: 서비스 기획서 §10.2에서 "등록 때 필수"인 항목만 요구하고 나머지는 나중에 채운다
+// 등록: 서비스 기획서 §10.2에서 "등록 때 필수"인 항목만 요구하고 나머지는 추후 입력
 export const projectCreateSchema = z
   .object({
     name: nameSchema,
@@ -237,7 +248,7 @@ export const projectCreateSchema = z
 
 export type ProjectCreate = z.infer<typeof projectCreateSchema>;
 
-// 수정: 보낸 항목만 바꾸고, 비울 수 있는 항목은 null로 지운다. 코드와 상태는 바꿀 수 없다 (상태는 P1-6의 전환 규칙으로만)
+// 수정: 보낸 항목만 변경, 비울 수 있는 항목은 null로 삭제, 코드와 상태는 변경 불가 (상태는 P1-6의 전환 규칙으로만)
 export const projectUpdateSchema = z
   .object({
     name: nameSchema,
@@ -272,7 +283,7 @@ export const projectUpdateSchema = z
 export type ProjectUpdate = z.infer<typeof projectUpdateSchema>;
 
 // 상태 전환 요청: 바꿀 상태와 그 일이 실제로 일어난 날(생략하면 오늘), 중단·취소·종료·재오픈은 사유 필수
-// 완료 → 보증 중은 프로젝트 요약을 확인했다는 표시(confirmSummary)가 필요
+// 완료 → 보증 중은 프로젝트 요약을 확인했다는 표시(confirmSummary) 필요
 export const projectTransitionSchema = z.object({
   toStatus: projectStatusSchema,
   effectiveOn: dateSchema.optional(),

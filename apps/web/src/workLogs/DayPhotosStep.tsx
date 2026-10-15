@@ -19,7 +19,7 @@ type DayPhotosStepProps = {
   date: string;
 };
 
-// 하루 기록의 작업 사진: 이 날 작업일로 바로 올리고(구분은 "작업 중"), 구분·구역은 사진을 눌러 사진마다 고친다
+// 하루 기록의 작업 사진: 이 날 작업일로 바로 업로드(구분은 "작업 중"), 구분·구역은 사진을 눌러 사진마다 수정
 export const DayPhotosStep = ({ projectId, date }: DayPhotosStepProps) => {
   const photos = usePhotoList(projectId, { workDate: date }, 12);
   const queue = getPhotoUploadQueue();

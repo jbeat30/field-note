@@ -1,6 +1,6 @@
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from './projects';
 
-// 프로젝트 상태 전환 규칙 (서비스 기획서 §10.3). 서버와 목업 서버가 같은 규칙을 쓴다
+// 프로젝트 상태 전환 규칙 (서비스 기획서 §10.3), 서버와 목업 서버가 같은 규칙 사용
 // 완료 → 보증 중 → 종료, 종료 재오픈 (보증 중으로 되돌림)
 // 완료 → 종료는 보증 기간이 0개월일 때만 (검사는 validateProjectTransition)
 export const PROJECT_TRANSITIONS: Record<ProjectStatus, readonly ProjectStatus[]> = {
@@ -17,7 +17,7 @@ export const PROJECT_REASON_MAX_LENGTH = 500;
 
 /**
  * @description 사유가 반드시 필요한 전환인지 (기록의 신뢰성: 왜 멈췄고 왜 취소했고 왜 조기 종료·재오픈했는지)
- * 보증 중 → 종료는 보증 종료 예정일 전에 종료할 때(조기 종료)만 사유가 필요하다. 날짜를 모르면 필요한 것으로 본다
+ * 보증 중 → 종료는 보증 종료 예정일 전에 종료할 때(조기 종료)만 사유 필요, 날짜를 모르면 필요한 것으로 간주
  * @param from 현재 상태
  * @param to 바꿀 상태
  * @param context 종료일과 보증 종료 예정일 (보증 중 → 종료의 조기 종료 판단용)
@@ -77,11 +77,11 @@ export type TransitionCheckInput = {
   lastEffectiveOn: string | null;
   // 서울 기준 오늘
   today: string;
-  // 프로젝트 요약을 확인했는지 (완료 → 보증 중에서만 필요)
+  // 프로젝트 요약 확인 여부 (완료 → 보증 중에서만 필요)
   confirmSummary: boolean;
   // 임시 저장된 작업 내역 건수 (종료에서는 0이어야 함)
   draftLogCount: number;
-  // 보증 기간(개월)과 종료 예정일. 설정이 없으면 기본 기간과 null
+  // 보증 기간(개월)과 종료 예정일, 설정이 없으면 기본 기간과 null
   warrantyMonths: number;
   warrantyEndOn: string | null;
   // 접수·처리 중인 보수 요청 건수 (보증 중 → 종료에서는 0이어야 함)

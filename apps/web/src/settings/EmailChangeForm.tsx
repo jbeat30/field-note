@@ -15,7 +15,7 @@ import { queryKeys } from '../query/queryKeys';
 
 const requestSchema = z.object({
   newEmail: z.email('올바른 이메일 주소를 입력해 주세요').max(254),
-  currentPassword: z.string().min(1, '현재 비밀번호를 입력해 주세요'),
+  currentPassword: z.string(),
 });
 
 type RequestForm = z.infer<typeof requestSchema>;
@@ -93,8 +93,8 @@ const CodeStep = ({
   );
 };
 
-// 이메일 변경: 비밀번호를 다시 확인하고 새 주소를 인증해야 반영 (§6.7)
-export const EmailChangeForm = () => {
+// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 주소를 인증해야 반영 (§6.7)
+export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: boolean }) => {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isChanged, setChanged] = useState(false);
   const {
@@ -111,9 +111,15 @@ export const EmailChangeForm = () => {
   const onSubmit = handleSubmit(async ({ newEmail, currentPassword }) => {
     setChanged(false);
 
+    if (needsPassword && !currentPassword) {
+      setError('currentPassword', { message: '현재 비밀번호를 입력해 주세요' });
+
+      return;
+    }
+
     const normalized = newEmail.trim().toLowerCase();
     const { data, error } = await apiClient.POST('/api/v1/me/email/change', {
-      body: { newEmail: normalized, currentPassword },
+      body: { newEmail: normalized, currentPassword: needsPassword ? currentPassword : undefined },
     });
 
     if (!data) {
@@ -156,13 +162,15 @@ export const EmailChangeForm = () => {
       <FormField label="새 이메일" error={errors.newEmail?.message}>
         <Input type="email" autoComplete="email" inputMode="email" {...register('newEmail')} />
       </FormField>
-      <FormField
-        label="현재 비밀번호"
-        hint="계정 보호를 위해 한 번 더 확인합니다"
-        error={errors.currentPassword?.message}
-      >
-        <Input type="password" autoComplete="current-password" {...register('currentPassword')} />
-      </FormField>
+      {needsPassword && (
+        <FormField
+          label="현재 비밀번호"
+          hint="계정 보호를 위해 한 번 더 확인합니다"
+          error={errors.currentPassword?.message}
+        >
+          <Input type="password" autoComplete="current-password" {...register('currentPassword')} />
+        </FormField>
+      )}
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '요청 중' : '인증 코드 받기'}
       </Button>

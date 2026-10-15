@@ -44,7 +44,7 @@ describe('evaluateTransitionNotices (§10.3)', () => {
       'REMAINING_MATERIALS',
       'NEGOTIATING_CHANGES',
     ]);
-    // 잔량이 0인 자재는 빼고 마이너스는 넣는다
+    // 잔량이 0인 자재는 제외하고 마이너스는 포함
     expect(checks[2]).toMatchObject({
       items: [
         expect.objectContaining({ name: '덕트' }),
@@ -76,7 +76,7 @@ describe('evaluateTransitionNotices (§10.3)', () => {
       { type: 'HOLD_REPAIRS', count: 1 },
     ]);
     expect(transitionNoticeMessage(checks[0]!)).toContain('종료할 수 없습니다');
-    // 완료 전환에서는 보수 요청을 묻지 않는다
+    // 완료 전환에서는 보수 요청 확인 제외
     expect(evaluateTransitionNotices({ ...base, openRepairCount: 2 })).toEqual([]);
   });
 
@@ -94,7 +94,7 @@ describe('evaluateTransitionNotices (§10.3)', () => {
     expect(evaluateTransitionNotices({ ...resume, today: '2027-01-02' })).toEqual([
       { type: 'PERIOD_OVER', plannedEnd: '2026-12-31' },
     ]);
-    // 처음 시작(예정 → 진행)은 점검하지 않는다
+    // 처음 시작(예정 → 진행)은 점검 제외
     expect(evaluateTransitionNotices({ ...resume, from: 'PLANNED', today: '2027-01-02' })).toEqual(
       [],
     );
@@ -179,7 +179,7 @@ describe('마감 요약의 사진·문서 선택 규칙', () => {
         docs.map((item) => (item.id === 'c1' ? { ...item, includeInSummary: true } : item)),
       ),
     ).toEqual(['c1']);
-    // 민감 자료는 고르거나 말거나 싣지 않는다
+    // 민감 자료는 선택 여부와 무관하게 제외
     expect(selectSummaryDocuments([doc('s2', 'SAFETY', true, true), doc('s1', 'SAFETY')])).toEqual([
       's1',
     ]);

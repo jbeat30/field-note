@@ -8,6 +8,7 @@ import {
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
+import { loadRules } from '../company/companyRules';
 import { withCompany } from '../db/withCompany';
 
 export class ProgressError extends Error {
@@ -115,6 +116,7 @@ export const createProgressService = (
         throw new ProgressError('NOT_FOUND');
       }
 
+      const rules = await loadRules(tx);
       const [latest, assignments, used] = await Promise.all([
         tx.projectProgressRecord.findFirst({ where: { projectId }, orderBy: LATEST_FIRST }),
         tx.projectAssignment.findMany({
@@ -139,6 +141,7 @@ export const createProgressService = (
         plannedStart: fromDate(project.plannedStart),
         plannedEnd: fromDate(project.plannedEnd),
         today: todayInSeoul(now()),
+        rules,
       });
     }),
 });
