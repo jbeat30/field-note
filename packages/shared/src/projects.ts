@@ -188,8 +188,10 @@ export const projectListQuerySchema = z.object({
   // 이 기간과 겹치는 프로젝트만 (시작·종료 예정일 기준)
   from: dateSchema.optional(),
   to: dateSchema.optional(),
-  // 프로젝트명·코드·현장 이름 검색 (부분 일치)
+  // 프로젝트명·코드 검색 (부분 일치)
   q: z.string().trim().max(PROJECT_NAME_MAX_LENGTH).optional(),
+  // 현장명 검색 (부분 일치)
+  site: z.string().trim().max(PROJECT_SITE_NAME_MAX_LENGTH).optional(),
   // 정렬 기준과 방향 (기준을 안 주면 최근 등록 내림차순, 방향을 안 주면 최근 등록은 내림·나머지는 오름)
   sortBy: projectSortKeySchema.optional(),
   sortDir: sortDirectionSchema.optional(),

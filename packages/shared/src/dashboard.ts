@@ -1,10 +1,9 @@
 import { z } from 'zod';
 
 import {
-  buildStaffingGrid,
-  findFreeEmployees,
-  findStaffingConflicts,
+  buildStaffingTimeline,
   shiftDate,
+  summarizeStaffingTimeline,
   type StaffingCalendar,
 } from './staffing';
 import {
@@ -24,7 +23,6 @@ const dateSchema = z.iso.date();
 
 export const ALERT_KINDS = [
   'NO_LOG_TODAY',
-  'INBOX_STALE',
   'BURN_REACHED',
   'BURN_AHEAD',
   'PROJECT_OVERDUE',
@@ -43,11 +41,10 @@ export type AlertKind = z.infer<typeof alertKindSchema>;
 
 export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   NO_LOG_TODAY: '오늘 투입된 프로젝트에 작업 내역이 없을 때',
-  INBOX_STALE: '메모함에 메모가 3일 넘게 쌓여 있을 때',
   BURN_REACHED: '공수 소진율이 80%·100%에 도달했을 때',
   BURN_AHEAD: '진행률보다 공수가 빨리 소진될 때',
   PROJECT_OVERDUE: '종료 예정일이 지났는데 끝나지 않았을 때',
-  DOUBLE_ASSIGNED: '이번 주에 같은 날 두 프로젝트에 겹쳐 투입됐을 때',
+  DOUBLE_ASSIGNED: '이번 주에 같은 날 두 프로젝트에서 일한 기록이 있을 때',
   CHANGE_STALE: '협의 중인 변경·추가 작업이 7일 넘게 남았을 때',
   WARRANTY_ENDING: '보증 종료가 60일 안으로 다가왔을 때',
   REPAIR_UNHANDLED: '접수한 보수 요청이 3일 넘게 처리되지 않을 때',
@@ -56,9 +53,7 @@ export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   MONTH_UNCLOSED: '지난달에 저장한 작업 내역이 있는데 월 공수를 확정하지 않았을 때',
 };
 
-// 메모함·협의 중 변경 작업을 오래 방치된 것으로 보는 기준 (§15.3)
-export const INBOX_STALE_DAYS = 3;
-
+// 협의 중 변경 작업을 오래 방치된 것으로 보는 기준 (§15.3)
 export const CHANGE_STALE_DAYS = 7;
 
 // 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준 (§15.3). 직원 서류는 CREDENTIAL_EXPIRING_DAYS
@@ -90,11 +85,6 @@ export type AlertSettingsUpdate = z.infer<typeof alertSettingsUpdateSchema>;
 export const dashboardAlertSchema = z.discriminatedUnion('kind', [
   z.object({ kind: z.literal('NO_LOG_TODAY'), projectId: z.uuid(), projectName: z.string() }),
   z.object({
-    kind: z.literal('INBOX_STALE'),
-    count: z.number().int(),
-    oldestDays: z.number().int(),
-  }),
-  z.object({
     kind: z.literal('BURN_REACHED'),
     projectId: z.uuid(),
     projectName: z.string(),
@@ -120,7 +110,10 @@ export const dashboardAlertSchema = z.discriminatedUnion('kind', [
     employeeId: z.uuid(),
     employeeName: z.string(),
     dateCount: z.number().int(),
+    // 겹친 날의 처음·끝 (이어진 첫 구간)과 그 날 일한 프로젝트 이름
     firstDate: dateSchema,
+    lastDate: dateSchema,
+    projectNames: z.array(z.string()),
   }),
   z.object({
     kind: z.literal('CHANGE_STALE'),
@@ -167,11 +160,98 @@ export const dashboardAlertSchema = z.discriminatedUnion('kind', [
 
 export type DashboardAlert = z.infer<typeof dashboardAlertSchema>;
 
+// 알림 숨기기: 화면에 보이는 알림 키를 보낸다 (한 번에 모두 숨기기도 같은 요청)
+export const ALERT_DISMISS_MAX = 200;
+
+export const alertDismissSchema = z.object({
+  keys: z.array(z.string().min(1).max(300)).min(1).max(ALERT_DISMISS_MAX),
+});
+
+export type AlertDismiss = z.infer<typeof alertDismissSchema>;
+
+// 화면에 보이는 알림 한 건: 숨기기에 쓰는 키(종류·대상·조건 값)와 오늘 처리해야 하는 급한 알림 여부
+export const dashboardAlertItemSchema = z.object({
+  key: z.string(),
+  urgent: z.boolean(),
+  alert: dashboardAlertSchema,
+});
+
+export type DashboardAlertItem = z.infer<typeof dashboardAlertItemSchema>;
+
+/**
+ * @description 알림을 숨길 때 쓰는 키: 종류·대상·조건 값. 같은 대상이어도 조건이 바뀌면(겹친 날이 달라짐, 새 만료일) 키가 달라져 다시 보인다
+ * @param alert 알림
+ * @param today 오늘(서울 기준, 오늘 기록 없음 알림은 날마다 다시 보이도록 키에 넣는다)
+ */
+export const dashboardAlertKey = (alert: DashboardAlert, today: string): string => {
+  const parts: (string | number)[] = [alert.kind];
+
+  switch (alert.kind) {
+    case 'NO_LOG_TODAY':
+      parts.push(alert.projectId, today);
+      break;
+    case 'BURN_REACHED':
+      parts.push(alert.projectId, alert.level);
+      break;
+    case 'BURN_AHEAD':
+      parts.push(alert.projectId);
+      break;
+    case 'PROJECT_OVERDUE':
+      parts.push(alert.projectId, alert.plannedEnd);
+      break;
+    case 'DOUBLE_ASSIGNED':
+      parts.push(alert.employeeId, alert.firstDate, alert.lastDate);
+      break;
+    case 'CHANGE_STALE':
+      parts.push(alert.changeWorkId);
+      break;
+    case 'WARRANTY_ENDING':
+      parts.push(alert.projectId, alert.endOn);
+      break;
+    case 'REPAIR_UNHANDLED':
+      parts.push(alert.repairId);
+      break;
+    case 'CERTIFICATE_EXPIRING':
+      parts.push(alert.projectId, alert.title, alert.expiresOn);
+      break;
+    case 'CREDENTIAL_EXPIRING':
+      parts.push(alert.employeeId, alert.typeName, alert.expiresOn);
+      break;
+    case 'MONTH_UNCLOSED':
+      parts.push(alert.month);
+      break;
+  }
+
+  return parts.join('|');
+};
+
+/**
+ * @description 오늘 처리해야 하는 급한 알림인지: 오늘 작업 내역이 없는 프로젝트, 이미 만료된 보증·보증서·직원 서류
+ * @param alert 알림
+ */
+export const isUrgentAlert = (alert: DashboardAlert): boolean => {
+  switch (alert.kind) {
+    case 'NO_LOG_TODAY':
+      return true;
+    case 'WARRANTY_ENDING':
+    case 'CERTIFICATE_EXPIRING':
+    case 'CREDENTIAL_EXPIRING':
+      return alert.daysLeft < 0;
+    default:
+      return false;
+  }
+};
+
 const dashboardProjectSchema = z.object({
   id: z.uuid(),
   code: z.string(),
   name: z.string(),
+  siteName: z.string(),
   status: projectStatusSchema,
+  plannedEnd: dateSchema,
+  // 오늘 저장된 작업 내역이 있는지, 이번 주(월~일) 저장된 공수(분)
+  hasLogToday: z.boolean(),
+  weekMinutes: z.number().int(),
   progressPercent: z.number().int().nullable(),
   // 공수 소진율(%): 계획이 없으면 null
   burnPercent: z.number().nullable(),
@@ -182,7 +262,17 @@ export type DashboardProject = z.infer<typeof dashboardProjectSchema>;
 
 export const dashboardSchema = z.object({
   today: dateSchema,
-  alerts: z.array(dashboardAlertSchema),
+  // 숨기지 않은 알림 (급한 것이 먼저)
+  alerts: z.array(dashboardAlertItemSchema),
+  // 사용자가 숨긴 알림 중 지금도 해당하는 것의 수
+  hiddenAlertCount: z.number().int(),
+  // 홈 수치 줄: 진행 중 프로젝트, 오늘 작업 내역에 들어간 사람과 오늘 나가는 사람, 이번 주 일한 시간(분)
+  stats: z.object({
+    inProgress: z.number().int(),
+    todayLoggedHeadcount: z.number().int(),
+    todayHeadcount: z.number().int(),
+    weekMinutes: z.number().int(),
+  }),
   // 오늘 투입: 진행 중 프로젝트에 오늘 나가는 사람과 작업 내역 입력 여부
   todayAssignments: z.object({
     headcount: z.number().int(),
@@ -211,12 +301,12 @@ export const dashboardSchema = z.object({
     conflicts: z.array(
       z.object({ employeeId: z.uuid(), name: z.string(), dateCount: z.number().int() }),
     ),
-    freeCount: z.number().int(),
-    freeNames: z.array(z.string()),
+    // 이번 주 저장된 작업 내역에 들어간 사람, 일한 기록이 없는 재직 직원 수
+    workingCount: z.number().int(),
+    idleCount: z.number().int(),
   }),
   todos: z.object({
     draftLogCount: z.number().int(),
-    staleInboxCount: z.number().int(),
     // 저장한 작업 내역이 있는데 확정하지 않은 지난달 (없으면 null)
     unclosedMonth: z.string().nullable(),
   }),
@@ -266,14 +356,13 @@ export const dashboardResponseSchema = z.object({
 
 export type DashboardResponse = z.infer<typeof dashboardResponseSchema>;
 
-export const FREE_NAMES_LIMIT = 5;
-
 export const DASHBOARD_PROJECT_LIMIT = 30;
 
 type RawProject = {
   id: string;
   code: string;
   name: string;
+  siteName: string;
   status: ProjectStatus;
   plannedStart: string;
   plannedEnd: string;
@@ -290,10 +379,9 @@ export type DashboardInput = {
   projects: readonly RawProject[];
   // 진행 중 프로젝트에 오늘 투입되는 재직 직원 (프로젝트·직원)
   todayAssignments: readonly { projectId: string; employeeId: string }[];
-  // 오늘 저장된 작업 내역이 있는 프로젝트
+  // 오늘 저장된 작업 내역이 있는 프로젝트와 거기 들어간 직원
   todayLogProjectIds: readonly string[];
-  // 메모함에서 3일 넘게 방치된 메모: 건수와 가장 오래된 것의 경과일
-  staleInbox: { count: number; oldestDays: number };
+  todayLoggedEmployeeIds: readonly string[];
   draftLogCount: number;
   // 이번 주(월~일) 인력 배치
   calendar: StaffingCalendar;
@@ -332,6 +420,8 @@ export type DashboardInput = {
   unclosedMonth: string | null;
   // 켜 둔 알림 종류
   enabled: ReadonlySet<AlertKind>;
+  // 사용자가 숨긴 알림 키
+  dismissedKeys: ReadonlySet<string>;
 };
 
 /**
@@ -373,6 +463,14 @@ export const weekRange = (today: string) => {
  */
 export const assembleDashboard = (input: DashboardInput): Dashboard => {
   const names = new Map(input.projects.map((project) => [project.id, project]));
+  const logged = new Set(input.todayLogProjectIds);
+  // 이번 주 저장된 작업 내역의 프로젝트별 공수 (인력 배치와 같은 기준)
+  const weekByProject = new Map<string, number>();
+
+  for (const day of input.calendar.workDays) {
+    weekByProject.set(day.projectId, (weekByProject.get(day.projectId) ?? 0) + day.minutes);
+  }
+
   const health = new Map(
     input.projects.map((project) => [
       project.id,
@@ -395,7 +493,11 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
       id: project.id,
       code: project.code,
       name: project.name,
+      siteName: project.siteName,
       status: project.status,
+      plannedEnd: project.plannedEnd,
+      hasLogToday: logged.has(project.id),
+      weekMinutes: weekByProject.get(project.id) ?? 0,
       progressPercent: project.progressPercent,
       burnPercent: item.burnPercent,
       warnings: item.warnings,
@@ -420,7 +522,6 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     }
   }
 
-  const logged = new Set(input.todayLogProjectIds);
   const todayProjects = [...perProject.entries()]
     .map(([projectId, employees]) => {
       const project = names.get(projectId)!;
@@ -435,10 +536,36 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     })
     .sort((a, b) => Number(a.hasLog) - Number(b.hasLog) || a.code.localeCompare(b.code));
 
-  // 이번 주 인력
-  const rows = buildStaffingGrid(input.calendar);
-  const conflicts = findStaffingConflicts(rows);
-  const free = findFreeEmployees(rows);
+  // 이번 주 인력 (인력 배치와 같은 기준: 저장된 작업 내역에 들어간 날)
+  const timeline = buildStaffingTimeline(input.calendar);
+  const staffing = summarizeStaffingTimeline(timeline);
+  const conflicts = timeline.flatMap((row) => {
+    if (row.conflictDates.length === 0) return [];
+
+    // 이어진 첫 겹침 구간
+    const run: string[] = [row.conflictDates[0]!];
+
+    for (const date of row.conflictDates.slice(1)) {
+      if (shiftDate(run[run.length - 1]!, 1) === date) run.push(date);
+      else break;
+    }
+
+    const names = row.lanes
+      .filter((lane) =>
+        lane.segments.some((segment) => segment.days.some((day) => run.includes(day.date))),
+      )
+      .map((lane) => lane.name);
+
+    return [
+      {
+        employee: row.employee,
+        dates: row.conflictDates,
+        firstDate: run[0]!,
+        lastDate: run[run.length - 1]!,
+        projectNames: names,
+      },
+    ];
+  });
 
   // 알림 (켜 둔 종류만)
   const alerts: DashboardAlert[] = [];
@@ -452,14 +579,6 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
         projectName: project.name,
       });
     }
-  }
-
-  if (on('INBOX_STALE') && input.staleInbox.count > 0) {
-    alerts.push({
-      kind: 'INBOX_STALE',
-      count: input.staleInbox.count,
-      oldestDays: input.staleInbox.oldestDays,
-    });
   }
 
   for (const project of projects) {
@@ -519,7 +638,9 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
         employeeId: conflict.employee.id,
         employeeName: conflict.employee.name,
         dateCount: conflict.dates.length,
-        firstDate: conflict.dates[0]!,
+        firstDate: conflict.firstDate,
+        lastDate: conflict.lastDate,
+        projectNames: conflict.projectNames,
       });
     }
   }
@@ -626,10 +747,31 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
   }
 
   const week = weekRange(input.today);
+  const items: DashboardAlertItem[] = alerts
+    .map((alert) => ({
+      key: dashboardAlertKey(alert, input.today),
+      urgent: isUrgentAlert(alert),
+      alert,
+    }))
+    // 급한 것이 먼저 (같은 급하기끼리는 만든 순서 그대로)
+    .sort((a, b) => Number(b.urgent) - Number(a.urgent));
+  const visible = items.filter((item) => !input.dismissedKeys.has(item.key));
+  const todayLogged = new Set(input.todayLoggedEmployeeIds);
 
   return {
     today: input.today,
-    alerts,
+    alerts: visible,
+    hiddenAlertCount: items.length - visible.length,
+    stats: {
+      inProgress: input.projects.filter((project) => project.status === 'IN_PROGRESS').length,
+      todayLoggedHeadcount: todayLogged.size,
+      todayHeadcount: new Set(
+        input.todayAssignments
+          .filter((item) => names.has(item.projectId))
+          .map((item) => item.employeeId),
+      ).size,
+      weekMinutes: input.calendar.workDays.reduce((sum, day) => sum + day.minutes, 0),
+    },
     todayAssignments: {
       headcount: new Set(
         input.todayAssignments
@@ -652,12 +794,11 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
         name: item.employee.name,
         dateCount: item.dates.length,
       })),
-      freeCount: free.length,
-      freeNames: free.slice(0, FREE_NAMES_LIMIT).map((employee) => employee.name),
+      workingCount: staffing.working,
+      idleCount: staffing.idle,
     },
     todos: {
       draftLogCount: input.draftLogCount,
-      staleInboxCount: input.staleInbox.count,
       unclosedMonth: input.unclosedMonth,
     },
     warranty: {
@@ -682,12 +823,12 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
  * @param alert 알림
  * @returns 안내 문장
  */
+const dayText = (date: string) => `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일`;
+
 export const dashboardAlertMessage = (alert: DashboardAlert): string => {
   switch (alert.kind) {
     case 'NO_LOG_TODAY':
       return `${alert.projectName}: 오늘 투입됐는데 작업 내역이 아직 없습니다`;
-    case 'INBOX_STALE':
-      return `${INBOX_STALE_DAYS}일 넘게 쌓인 메모가 ${alert.count}건 있습니다 (가장 오래된 것 ${alert.oldestDays}일째)`;
     case 'BURN_REACHED':
       return alert.level === 'LIMIT'
         ? `${alert.projectName}: 공수 소진율이 ${Math.round(alert.burnPercent)}%로 계획을 넘었습니다`
@@ -696,8 +837,14 @@ export const dashboardAlertMessage = (alert: DashboardAlert): string => {
       return `${alert.projectName}: 공수 소진율 ${Math.round(alert.burnPercent)}%가 진행률 ${alert.progressPercent}%보다 빠릅니다`;
     case 'PROJECT_OVERDUE':
       return `${alert.projectName}: 종료 예정일(${alert.plannedEnd})이 ${alert.daysLate}일 지났는데 끝나지 않았습니다`;
-    case 'DOUBLE_ASSIGNED':
-      return `${alert.employeeName}: 이번 주 ${alert.dateCount}일이 두 프로젝트에 겹쳐 투입됐습니다 (${alert.firstDate}부터)`;
+    case 'DOUBLE_ASSIGNED': {
+      const range =
+        alert.firstDate === alert.lastDate
+          ? dayText(alert.firstDate)
+          : `${dayText(alert.firstDate)}~${dayText(alert.lastDate)}`;
+
+      return `${alert.employeeName}이(가) ${range} ${alert.projectNames.join('와 ')}에 함께 들어가 있습니다`;
+    }
     case 'CHANGE_STALE':
       return `${alert.projectName}: 변경·추가 작업 #${alert.seq}이 ${alert.days}일째 협의 중입니다`;
     case 'WARRANTY_ENDING':
@@ -724,21 +871,21 @@ export const dashboardAlertMessage = (alert: DashboardAlert): string => {
 /**
  * @description 알림에서 이동할 화면 주소
  * @param alert 알림
+ * @param today 오늘(서울 기준, 오늘 기록 없음 알림이 그날 하루 기록으로 가도록)
  * @returns 앱 안의 경로
  */
-export const dashboardAlertPath = (alert: DashboardAlert): string => {
+export const dashboardAlertPath = (alert: DashboardAlert, today: string): string => {
   switch (alert.kind) {
     case 'NO_LOG_TODAY':
-      // 프로젝트의 작업 내역 목록(맨 위에 오늘 작업 입력)
-      return `/projects/${alert.projectId}`;
-    case 'INBOX_STALE':
-      return '/inbox';
+      // 그 프로젝트의 오늘 하루 기록
+      return `/projects/${alert.projectId}/work/${today}`;
     case 'BURN_REACHED':
     case 'BURN_AHEAD':
     case 'PROJECT_OVERDUE':
       return `/projects/${alert.projectId}/overview`;
     case 'DOUBLE_ASSIGNED':
-      return '/staffing';
+      // 그 주, 그 사람 행을 강조해서 인력 배치로
+      return `/staffing?from=${alert.firstDate}&employee=${alert.employeeId}`;
     case 'CHANGE_STALE':
       return `/projects/${alert.projectId}/change-works`;
     case 'WARRANTY_ENDING':
@@ -747,7 +894,7 @@ export const dashboardAlertPath = (alert: DashboardAlert): string => {
     case 'REPAIR_UNHANDLED':
       return `/projects/${alert.projectId}/repairs`;
     case 'CREDENTIAL_EXPIRING':
-      return `/employees/${alert.employeeId}`;
+      return `/employees/${alert.employeeId}?tab=credentials`;
     case 'MONTH_UNCLOSED':
       return `/monthly-hours?month=${alert.month}`;
   }

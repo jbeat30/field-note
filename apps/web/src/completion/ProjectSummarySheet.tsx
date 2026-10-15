@@ -29,6 +29,8 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
   const unit = reportWorkUnitLabel(settings.workUnitMode);
   const value = (minutes: number) => reportWorkValue(minutes, settings);
   const manDays = (minutes: number) => minutes / settings.standardWorkMinutes;
+  // 고객에게 내는 준공 요약이라 반입·반출·폐기·잔량은 싣지 않고 쓴 자재만 보인다
+  const usedMaterials = materials.filter((item) => item.used > 0);
   const burn =
     work.plannedMinutes && work.plannedMinutes > 0
       ? Math.round((work.totalMinutes / work.plannedMinutes) * 100)
@@ -130,34 +132,24 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
       </Section>
 
       <Section title="자재 요약">
-        {materials.length === 0 ? (
-          <p className="text-sm text-foreground/70">자재 기록이 없습니다</p>
+        {usedMaterials.length === 0 ? (
+          <p className="text-sm text-foreground/70">사용한 자재가 없습니다</p>
         ) : (
           <table className="w-full border-collapse">
             <thead>
               <tr>
-                <th className={th}>자재</th>
-                <th className={th}>반입</th>
-                <th className={th}>사용</th>
-                <th className={th}>반출</th>
-                <th className={th}>폐기</th>
-                <th className={th}>잔량</th>
+                <th className={th}>품명</th>
+                <th className={th}>규격</th>
+                <th className={th}>쓴 양</th>
               </tr>
             </thead>
             <tbody>
-              {materials.map((item) => (
+              {usedMaterials.map((item) => (
                 <tr key={item.materialId}>
+                  <td className={td}>{item.name}</td>
+                  <td className={td}>{item.spec ?? '-'}</td>
                   <td className={td}>
-                    {item.name}
-                    {item.spec ? ` (${item.spec})` : ''}
-                  </td>
-                  <td className={td}>{item.received}</td>
-                  <td className={td}>{item.used}</td>
-                  <td className={td}>{item.returned}</td>
-                  <td className={td}>{item.discarded}</td>
-                  <td className={td}>
-                    {item.remaining} {item.unit}
-                    {item.isNegative ? ' (마이너스)' : ''}
+                    {item.used} {item.unit}
                   </td>
                 </tr>
               ))}
@@ -198,9 +190,10 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
         ) : (
           <>
             <p className="text-sm">
-              전체 {photos.total}장 중 대표 {photos.items.length}장
+              전체 {photos.total}장 중 {photos.items.length}장 (직접 고른 사진, 고르지 않았으면 작업
+              후 사진 최근 8장)
             </p>
-            <ul className="grid grid-cols-3 gap-2">
+            <ul className="grid grid-cols-3 gap-2 md:grid-cols-4 xl:grid-cols-6">
               {photos.items.map((photo) => (
                 <li key={photo.id} className="break-inside-avoid text-xs">
                   {photo.thumbnailUrl ? (
@@ -224,6 +217,10 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
       </Section>
 
       <Section title="작업자료">
+        <p className="text-sm text-foreground/70">
+          안전·검사, 계약·공문 분류 중 요약에 넣기로 고른 문서입니다 (고르지 않았으면 해당 분류의
+          민감하지 않은 문서 전체)
+        </p>
         {documents.items.length === 0 ? (
           <p className="text-sm text-foreground/70">공개할 자료가 없습니다</p>
         ) : (

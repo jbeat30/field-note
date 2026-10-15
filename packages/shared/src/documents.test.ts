@@ -9,7 +9,7 @@ import {
 const fileId = '018f3b1e-0000-7000-8000-000000000001';
 
 describe('문서 규칙', () => {
-  it('계약·행정은 기본적으로 민감 자료이고 직접 정하면 그 값을 따른다', () => {
+  it('계약·공문은 기본적으로 민감 자료이고 직접 정하면 그 값을 따른다', () => {
     expect(resolveSensitive('CONTRACT')).toBe(true);
     expect(resolveSensitive('DRAWING')).toBe(false);
     expect(resolveSensitive('CONTRACT', false)).toBe(false);

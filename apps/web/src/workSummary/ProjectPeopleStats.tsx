@@ -2,12 +2,9 @@ import { roundTo } from '@field-note/shared';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { useWorkLogList } from '../workLogs/useWorkLogs';
-
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { EmptyState } from '../components/ui/empty-state';
-import { Modal } from '../components/ui/modal';
 import { Section } from '../components/ui/section';
 import { SegmentedControl } from '../components/ui/segmented-control';
 import { StatGroup } from '../components/ui/stat-group';
@@ -24,6 +21,7 @@ import { optionNameMap } from '../employees/OptionSelect';
 import { formatDay, seoulToday } from '../lib/dates';
 import { useOptions } from '../settings/useOptions';
 
+import { EmployeeWorkDaysDialog } from './EmployeeWorkDaysDialog';
 import { useWorkSummary } from './useWorkSummary';
 
 type Range = 'all' | 'thisMonth' | 'lastMonth';
@@ -55,7 +53,6 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
   const summary = useWorkSummary(projectId, { unit: 'week', ...rangeQuery(range) });
   const employees = useEmployees({});
   const options = useOptions();
-  const workLogs = useWorkLogList(projectId);
 
   if (summary.isError) return <Alert>투입 인원 통계를 불러오지 못했습니다</Alert>;
 
@@ -63,8 +60,6 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
   const categoryNames = optionNameMap(options.data ?? []);
   const rows = (summary.data?.byEmployee ?? []).filter((row) => row.totalMinutes > 0);
   const totalMinutes = summary.data?.totalMinutes ?? 0;
-  const detailRow = rows.find((r) => r.employeeId === detailId);
-  const detailEmployee = detailId ? byId.get(detailId) : null;
 
   return (
     <Section
@@ -140,7 +135,13 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                   return (
                     <TableRow key={row.employeeId}>
                       <TableCell>
-                        <span className="font-semibold">{employee?.name ?? '직원'}</span>
+                        <button
+                          type="button"
+                          className="font-semibold hover:text-primary hover:underline"
+                          onClick={() => setDetailId(row.employeeId)}
+                        >
+                          {employee?.name ?? '직원'}
+                        </button>
                         {employee?.title && (
                           <span className="ml-2 text-foreground/65">{employee.title}</span>
                         )}
@@ -165,7 +166,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                           className="ml-1 h-6 px-1.5 text-xs"
                           onClick={() => setDetailId(row.employeeId)}
                         >
-                          보기
+                          날짜 보기
                         </Button>
                       </TableCell>
                       <TableCell className="text-foreground/75">
@@ -198,55 +199,16 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
         </>
       )}
 
-      {/* 직원별 상세 다이얼로그 */}
-      {detailRow && (
-        <Modal
-          open
-          onOpenChange={(open) => !open && setDetailId(null)}
-          title={`${detailEmployee?.name ?? '직원'} · 일한 날 (${detailRow.workedDays}일)`}
-        >
-          <StatGroup
-            items={[
-              { label: '총 시간', value: hours(detailRow.totalMinutes), unit: '시간' },
-              {
-                label: '하루 평균',
-                value: hours(detailRow.totalMinutes / Math.max(detailRow.workedDays, 1)),
-                unit: '시간',
-              },
-            ]}
-          />
-          {/* 근무 날짜 목록: firstWorkDate ~ lastWorkDate 사이의 프로젝트 저장 작업 내역 날짜 */}
-          {workLogs.data && detailRow.firstWorkDate && detailRow.lastWorkDate ? (
-            <div className="flex flex-col gap-1.5">
-              <p className="text-sm font-semibold">근무 날짜</p>
-              <ul className="divide-y divide-line rounded-lg border border-line text-sm">
-                {workLogs.data
-                  .filter(
-                    (log) =>
-                      log.status === 'SAVED' &&
-                      log.workDate >= detailRow.firstWorkDate! &&
-                      log.workDate <= detailRow.lastWorkDate!,
-                  )
-                  .map((log) => (
-                    <li key={log.workDate}>
-                      <Link
-                        to={`/projects/${projectId}/work/${log.workDate}`}
-                        onClick={() => setDetailId(null)}
-                        className="flex items-center justify-between px-3 py-2 hover:bg-muted"
-                      >
-                        <span className="font-medium">{formatDay(log.workDate)}</span>
-                        <span className="tabular-nums text-foreground/65">
-                          {hours(log.totalMinutes)}시간
-                        </span>
-                      </Link>
-                    </li>
-                  ))}
-              </ul>
-            </div>
-          ) : (
-            <p className="text-sm text-foreground/65">근무 날짜 정보가 없습니다</p>
-          )}
-        </Modal>
+      {detailId && (
+        <EmployeeWorkDaysDialog
+          projectId={projectId}
+          employeeId={detailId}
+          employeeName={byId.get(detailId)?.name ?? '직원'}
+          range={rangeQuery(range)}
+          rangeLabel={RANGES.find((item) => item.value === range)!.label}
+          categoryNames={categoryNames}
+          onClose={() => setDetailId(null)}
+        />
       )}
     </Section>
   );

@@ -17,7 +17,7 @@ const meta = {
         latest: storyVersion(2, { reason: '배관 위치 변경', revisionDate: '2026-10-06' }),
       }),
       storyDocument(2, { title: '도급 계약서', category: 'CONTRACT', isSensitive: true }),
-      storyDocument(3, { title: '외장 시방서', category: 'SPEC' }),
+      storyDocument(3, { title: '외장 시방서', category: 'QUOTE' }),
     ],
   },
 } satisfies Meta<typeof DocumentList>;
@@ -33,16 +33,19 @@ export const Default: Story = {
     const table = within(canvas.getByRole('table', { name: '문서 목록' }));
 
     await expect(table.getAllByRole('row')).toHaveLength(4);
-    for (const category of ['도면', '시방·사양', '계약·행정']) {
+    for (const category of ['도면·작업지시서', '견적·정산', '계약·공문']) {
       await expect(table.getByText(category)).toBeInTheDocument();
     }
     await expect(table.getByText('10월 6일 (화)')).toBeInTheDocument();
-    await expect(table.getByText(/v2/)).toHaveTextContent('v2 /2');
+    // 최신 판과 판 수가 따로 보임
+    await expect(table.getByText('v2')).toBeInTheDocument();
+    await expect(table.getByRole('columnheader', { name: '판 수' })).toBeInTheDocument();
     await expect(canvas.getByText('민감')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '1층 시공도 열기' }));
     await expect(args.onOpen).toHaveBeenCalledWith(args.documents[0], 'view');
-    await userEvent.click(canvas.getByRole('button', { name: '도급 계약서 내려받기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '도급 계약서 더보기' }));
+    await userEvent.click(await within(document.body).findByRole('menuitem', { name: '내려받기' }));
     await expect(args.onOpen).toHaveBeenCalledWith(args.documents[1], 'download');
   },
 };
@@ -51,7 +54,10 @@ export const OpenDetail: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(canvas.getByRole('button', { name: '외장 시방서 버전·기록' }));
+    await userEvent.click(canvas.getByRole('button', { name: '외장 시방서 더보기' }));
+    await userEvent.click(
+      await within(document.body).findByRole('menuitem', { name: '새 판 올리기·버전 기록' }),
+    );
     await expect(args.onDetail).toHaveBeenCalledWith(args.documents[2]);
   },
 };

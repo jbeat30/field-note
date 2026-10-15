@@ -1,7 +1,8 @@
 import {
   DEFAULT_COMPANY_SETTINGS,
   FILE_DOWNLOAD_URL_TTL_SECONDS,
-  SUMMARY_PHOTO_LIMIT,
+  selectSummaryDocuments,
+  selectSummaryPhotos,
   evaluateTransitionNotices,
   summarizeMaterialBalance,
   todayInSeoul,
@@ -141,8 +142,6 @@ export const createCompletionService = (
             tx.photo.findMany({
               where: { projectId, deletedAt: null, file: { status: 'READY' } },
               include: { file: true },
-              orderBy: [{ isCover: 'desc' }, { takenAt: 'desc' }, { id: 'desc' }],
-              take: SUMMARY_PHOTO_LIMIT,
             }),
             tx.document.findMany({
               where: { projectId, deletedAt: null },
@@ -203,6 +202,21 @@ export const createCompletionService = (
         };
       };
       const sensitive = data.documents.filter((document) => document.isSensitive);
+      const photoIds = new Set(
+        selectSummaryPhotos(
+          data.photos.map((photo) => ({
+            id: photo.id,
+            category: photo.category,
+            takenAt: photo.takenAt.toISOString(),
+            includeInSummary: photo.includeInSummary,
+          })),
+        ),
+      );
+      // 고른 사진을 최근 촬영순으로
+      const summaryPhotos = data.photos
+        .filter((photo) => photoIds.has(photo.id))
+        .sort((a, b) => b.takenAt.getTime() - a.takenAt.getTime() || b.id.localeCompare(a.id));
+      const documentIds = new Set(selectSummaryDocuments(data.documents));
       const change = sumOf('isChange');
       const after = sumOf('isAfterService');
 
@@ -267,7 +281,7 @@ export const createCompletionService = (
         photos: {
           total: data.photoTotal,
           items: await Promise.all(
-            data.photos.map(async (photo) => ({
+            summaryPhotos.map(async (photo) => ({
               id: photo.id,
               category: photo.category,
               area: photo.area,
@@ -284,7 +298,7 @@ export const createCompletionService = (
         documents: {
           sensitiveExcluded: sensitive.length,
           items: data.documents
-            .filter((document) => !document.isSensitive && document.versions.length > 0)
+            .filter((document) => documentIds.has(document.id) && document.versions.length > 0)
             .map((document) => ({
               id: document.id,
               title: document.title,

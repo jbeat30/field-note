@@ -1,5 +1,7 @@
 import {
   buildStaffingGrid,
+  buildStaffingTimeline,
+  summarizeStaffingTimeline,
   countDays,
   findFreeEmployees,
   findStaffingConflicts,
@@ -79,6 +81,7 @@ describe('buildStaffingGrid', () => {
   const calendar: StaffingCalendar = {
     ...week,
     employees: [employee(E1, '김철수'), employee(E2, '이영희', 'ON_LEAVE')],
+    workDays: [],
     assignments: [
       assignment('0198d000-0000-7000-8000-0000000000b1', E1, P1, '2026-10-05', '2026-10-08'),
       assignment('0198d000-0000-7000-8000-0000000000b2', E1, P2, '2026-10-07', '2026-10-09'),
@@ -115,6 +118,7 @@ describe('buildStaffingGrid', () => {
     const rows = buildStaffingGrid({
       ...week,
       employees: [{ ...employee(E3, '박퇴사', 'LEFT'), leftOn: '2026-10-07' }],
+      workDays: [],
       assignments: [
         assignment('0198d000-0000-7000-8000-0000000000b3', E3, P1, '2026-10-05', '2026-10-09'),
       ],
@@ -135,6 +139,7 @@ describe('buildStaffingGrid', () => {
     const rows = buildStaffingGrid({
       ...week,
       employees: [employee(E1, '김철수')],
+      workDays: [],
       assignments: [
         assignment('0198d000-0000-7000-8000-0000000000b1', E1, P1, '2026-10-05', '2026-10-07'),
         assignment('0198d000-0000-7000-8000-0000000000b2', E1, P1, '2026-10-06', '2026-10-08'),
@@ -149,6 +154,7 @@ describe('findFreeEmployees / findStaffingConflicts', () => {
   const rows = buildStaffingGrid({
     ...week,
     employees: [employee(E1, '김철수'), employee(E2, '이영희'), employee(E4, '정휴직', 'ON_LEAVE')],
+    workDays: [],
     assignments: [
       assignment('0198d000-0000-7000-8000-0000000000b1', E1, P1, '2026-10-05', '2026-10-05'),
       assignment('0198d000-0000-7000-8000-0000000000b2', E1, P2, '2026-10-05', '2026-10-05'),
@@ -170,5 +176,90 @@ describe('shiftDate', () => {
   it('월 경계를 넘어 일 단위로 옮긴다', () => {
     expect(shiftDate('2026-10-30', 3)).toBe('2026-11-02');
     expect(shiftDate('2026-10-05', -7)).toBe('2026-09-28');
+  });
+});
+
+describe('buildStaffingTimeline', () => {
+  const day = (employeeId: string, workDate: string, projectId: string, minutes: number) => ({
+    employeeId,
+    workDate,
+    projectId,
+    projectCode: projectId === P1 ? '2026-001' : '2026-002',
+    projectName: projectId === P1 ? '한빛 1공장' : '새론 2공장',
+    projectStatus: 'IN_PROGRESS' as const,
+    minutes,
+  });
+  const calendar: StaffingCalendar = {
+    ...week,
+    employees: [employee(E1, '김철수'), employee(E2, '이영희'), employee(E3, '박휴직', 'ON_LEAVE')],
+    assignments: [],
+    workDays: [
+      // 10/5~10/7 한빛, 10/9 한빛 (10/8은 쉼 → 막대 둘), 10/7에 새론도 일해 겹침
+      day(E1, '2026-10-05', P1, 480),
+      day(E1, '2026-10-06', P1, 480),
+      day(E1, '2026-10-07', P1, 240),
+      day(E1, '2026-10-07', P2, 240),
+      day(E1, '2026-10-09', P1, 480),
+      day(E1, '2026-10-09', P1, 0),
+    ],
+  };
+
+  it('이어진 날은 막대 하나로 묶고 쉰 날 뒤는 새 막대, 프로젝트마다 한 줄이다', () => {
+    const [row] = buildStaffingTimeline(calendar);
+
+    expect(row!.group).toBe('WORKING');
+    expect(row!.lanes.map((lane) => lane.name)).toEqual(['한빛 1공장', '새론 2공장']);
+
+    const [first, second] = row!.lanes;
+
+    expect(first!.segments.map((segment) => [segment.startIndex, segment.days.length])).toEqual([
+      [0, 3],
+      [4, 1],
+    ]);
+    expect(first!.segments[0]!.days.map((item) => item.minutes)).toEqual([480, 480, 240]);
+    expect(second!.segments.map((segment) => [segment.startIndex, segment.days.length])).toEqual([
+      [2, 1],
+    ]);
+    expect(row).toMatchObject({ totalMinutes: 1920, workedDays: 4 });
+  });
+
+  it('같은 날 두 프로젝트에서 일했으면 두 막대 모두 그 날이 겹침이다', () => {
+    const [row] = buildStaffingTimeline(calendar);
+
+    expect(row!.conflictDates).toEqual(['2026-10-07']);
+    expect(row!.lanes[0]!.segments[0]!.days.map((item) => item.conflict)).toEqual([
+      false,
+      false,
+      true,
+    ]);
+    expect(row!.lanes[1]!.segments[0]!.days[0]!.conflict).toBe(true);
+  });
+
+  it('일한 기록이 없으면 재직은 비는 사람, 휴직·퇴사는 쉬는 사람으로 묶고 요약한다', () => {
+    const rows = buildStaffingTimeline(calendar);
+
+    expect(rows.map((row) => row.group)).toEqual(['WORKING', 'IDLE', 'AWAY']);
+    expect(summarizeStaffingTimeline(rows)).toEqual({
+      working: 1,
+      idle: 1,
+      away: 1,
+      conflicts: 1,
+    });
+  });
+
+  it('이어진 겹침 날은 한 건으로 센다', () => {
+    const rows = buildStaffingTimeline({
+      ...calendar,
+      workDays: [
+        day(E1, '2026-10-06', P1, 240),
+        day(E1, '2026-10-06', P2, 240),
+        day(E1, '2026-10-07', P1, 240),
+        day(E1, '2026-10-07', P2, 240),
+        day(E1, '2026-10-10', P1, 240),
+        day(E1, '2026-10-10', P2, 240),
+      ],
+    });
+
+    expect(summarizeStaffingTimeline(rows).conflicts).toBe(2);
   });
 });

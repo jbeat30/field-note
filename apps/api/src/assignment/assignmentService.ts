@@ -237,8 +237,66 @@ export const createAssignmentService = (app: PrismaClient): AssignmentService =>
         include: { project: { select: { code: true, name: true, status: true } } },
         orderBy: [{ startDate: 'asc' }, { createdAt: 'asc' }, { id: 'asc' }],
       });
-      const assigned = new Set(rows.map((row) => row.employeeId));
-      // 퇴사 직원은 기간 안에 투입이 있을 때만 보여 준다
+      // 인력 배치 타임라인: 저장된 작업 내역에 그 사람이 들어간 날만 (임시 저장·취소된 프로젝트 제외)
+      const entries = await tx.workLogEntry.findMany({
+        where: {
+          minutes: { gt: 0 },
+          workLog: {
+            status: 'SAVED',
+            workDate: { gte: from, lte: to },
+            project: { status: { not: 'CANCELLED' } },
+          },
+        },
+        select: {
+          employeeId: true,
+          minutes: true,
+          workLog: {
+            select: {
+              workDate: true,
+              project: { select: { id: true, code: true, name: true, status: true } },
+            },
+          },
+        },
+      });
+      const workDays = new Map<
+        string,
+        {
+          employeeId: string;
+          workDate: string;
+          projectId: string;
+          projectCode: string;
+          projectName: string;
+          projectStatus: (typeof entries)[number]['workLog']['project']['status'];
+          minutes: number;
+        }
+      >();
+
+      for (const entry of entries) {
+        const { project } = entry.workLog;
+        const workDate = fromDate(entry.workLog.workDate);
+        const key = `${entry.employeeId}|${workDate}|${project.id}`;
+        const current = workDays.get(key);
+
+        if (current) {
+          current.minutes += entry.minutes;
+        } else {
+          workDays.set(key, {
+            employeeId: entry.employeeId,
+            workDate,
+            projectId: project.id,
+            projectCode: project.code,
+            projectName: project.name,
+            projectStatus: project.status,
+            minutes: entry.minutes,
+          });
+        }
+      }
+
+      const assigned = new Set([
+        ...rows.map((row) => row.employeeId),
+        ...[...workDays.values()].map((item) => item.employeeId),
+      ]);
+      // 퇴사 직원은 기간 안에 투입이나 일한 기록이 있을 때만 보여 준다
       const employees = await tx.employee.findMany({
         where: { OR: [{ status: { not: 'LEFT' } }, { id: { in: [...assigned] } }] },
         select: { id: true, name: true, title: true, status: true, leftOn: true },
@@ -262,6 +320,12 @@ export const createAssignmentService = (app: PrismaClient): AssignmentService =>
           startDate: fromDate(row.startDate),
           endDate: fromDate(row.endDate),
         })),
+        workDays: [...workDays.values()].sort(
+          (a, b) =>
+            a.workDate.localeCompare(b.workDate) ||
+            a.projectCode.localeCompare(b.projectCode) ||
+            a.employeeId.localeCompare(b.employeeId),
+        ),
       };
     }),
 

@@ -1,26 +1,27 @@
 import {
   EMPLOYEE_MEMO_MAX_LENGTH,
-  EMPLOYEE_STATUS_LABELS,
   employeeUpdateSchema,
   type EmployeeDetail,
 } from '@field-note/shared';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
 import type { ReactNode } from 'react';
-import { Link, useParams } from 'react-router';
+import { Link, useParams, useSearchParams } from 'react-router';
 
 import { BackLink } from '../components/ui/back-link';
 import { Alert } from '../components/ui/alert';
-import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { PageHeader } from '../components/ui/page-header';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 import { EmployeeCredentialsPanel } from '../credentials/EmployeeCredentialsPanel';
 import { EmployeePayPanel } from '../labor/EmployeePayPanel';
+import { EmployeeOverviewPanel } from '../employees/EmployeeOverviewPanel';
+import { EmployeeSummaryStats } from '../employees/EmployeeSummaryStats';
 import { OptionSelect } from '../employees/OptionSelect';
 import { useEmployee, useUpdateEmployee } from '../employees/useEmployees';
 import { useOptions } from '../settings/useOptions';
@@ -65,10 +66,15 @@ const toForm = (employee: EmployeeDetail): CardForm => ({
 
 const orNull = (value: string) => value.trim() || null;
 
+const TABS = ['overview', 'history', 'pay', 'credentials', 'info'] as const;
+
 // 상태 처리 한 번에 하나만 확인 단계를 연다 (퇴사·휴직은 실수로 누르기 쉬운 버튼)
 type PendingStatus = 'LEFT' | 'ON_LEAVE' | null;
 
 const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
+  const [params, setParams] = useSearchParams();
+  const requested = params.get('tab');
+  const tab = TABS.find((item) => item === requested) ?? 'overview';
   const options = useOptions();
   const update = useUpdateEmployee(employee.id);
   const [saved, setSaved] = useState('');
@@ -161,106 +167,32 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
   };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <div className="flex flex-col gap-2">
         <BackLink to="/employees">직원 목록</BackLink>
-        <PageHeader
-          title={employee.name}
-          eyebrow={
-            <Badge tone={employee.status === 'ACTIVE' ? 'success' : 'neutral'}>
-              {EMPLOYEE_STATUS_LABELS[employee.status]}
-            </Badge>
-          }
-        />
+        <PageHeader title={employee.name} eyebrow={employee.title ?? undefined} />
       </div>
 
-      <div className="grid items-start gap-5 xl:grid-cols-2">
-        <div className="flex flex-col gap-5">
-          <Panel>
-            <EmployeeWorkHistoryPanel employeeId={employee.id} />
-          </Panel>
-          <Panel>
-            <EmployeeCredentialsPanel employeeId={employee.id} />
-          </Panel>
-          <Panel>
-            <EmployeePayPanel employeeId={employee.id} />
-          </Panel>
-        </div>
+      <EmployeeSummaryStats employee={employee} />
 
-        <div className="flex flex-col gap-5">
+      <Tabs
+        value={tab}
+        onValueChange={(next) =>
+          setParams(next === 'overview' ? {} : { tab: next }, { replace: true })
+        }
+      >
+        <TabsList aria-label="직원 카드">
+          <TabsTrigger value="overview">개요</TabsTrigger>
+          <TabsTrigger value="history">투입 이력</TabsTrigger>
+          <TabsTrigger value="pay">단가</TabsTrigger>
+          <TabsTrigger value="credentials">서류·자격</TabsTrigger>
+          <TabsTrigger value="info">기본정보</TabsTrigger>
+        </TabsList>
+
+        <TabsContent value="overview" className="grid items-start gap-5 xl:grid-cols-2">
           <Panel>
-            {saved && <Alert variant="info">{saved}</Alert>}
-            {errors.root && <Alert>{errors.root.message}</Alert>}
-
-            <h2 className="mb-4 text-lg font-bold">기본정보</h2>
-            <form className="grid gap-4 md:grid-cols-2" onSubmit={save} noValidate>
-              <FormField label="이름" error={errors.name?.message}>
-                <Input {...register('name')} />
-              </FormField>
-              <FormField
-                label="직책"
-                hint="표시용입니다 (예: 반장, 기공, 조공)"
-                error={errors.title?.message}
-              >
-                <Input {...register('title')} />
-              </FormField>
-              <FormField label="직종" error={errors.jobTypeId?.message}>
-                <OptionSelect
-                  kind="JOB_TYPE"
-                  options={options.data ?? []}
-                  keepId={employee.jobTypeId}
-                  value={jobTypeId}
-                  onValueChange={(value) => setValue('jobTypeId', value, { shouldDirty: true })}
-                />
-              </FormField>
-              <FormField
-                label="직원 구분"
-                hint="목록과 필터에 쓰는 표시입니다 (공수 계산에는 쓰지 않습니다)"
-                error={errors.workerTypeId?.message}
-              >
-                <OptionSelect
-                  kind="WORKER_TYPE"
-                  options={options.data ?? []}
-                  keepId={employee.workerTypeId}
-                  value={workerTypeId}
-                  onValueChange={(value) => setValue('workerTypeId', value, { shouldDirty: true })}
-                />
-              </FormField>
-              <FormField label="입사일" error={errors.hiredOn?.message}>
-                <DateInput {...register('hiredOn')} />
-              </FormField>
-              {employee.status === 'LEFT' && (
-                <FormField label="퇴사일" error={errors.leftOn?.message}>
-                  <DateInput {...register('leftOn')} />
-                </FormField>
-              )}
-              <FormField label="생년월일" error={errors.birthDate?.message}>
-                <DateInput {...register('birthDate')} />
-              </FormField>
-              <FormField label="연락처" error={errors.phone?.message}>
-                <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
-              </FormField>
-              <FormField
-                className="md:col-span-2"
-                label="메모"
-                hint={`관리자만 보는 메모입니다 (${EMPLOYEE_MEMO_MAX_LENGTH}자까지)`}
-                error={errors.memo?.message}
-              >
-                <Textarea {...register('memo')} />
-              </FormField>
-              <p className="text-sm text-foreground/70 md:col-span-2">
-                주민등록번호·계좌번호는 저장하지 않습니다. 급여는 단가만 기록합니다
-              </p>
-              <Button
-                type="submit"
-                className="md:col-span-2 md:justify-self-start md:px-10"
-                disabled={!isDirty || update.isPending}
-              >
-                {update.isPending ? '저장 중' : '저장'}
-              </Button>
-            </form>
+            <EmployeeOverviewPanel employee={employee} />
           </Panel>
-
           <Panel>
             <section className="flex flex-col gap-3" aria-labelledby="status-heading">
               <h2 id="status-heading" className="text-lg font-bold">
@@ -341,8 +273,102 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
               )}
             </section>
           </Panel>
-        </div>
-      </div>
+        </TabsContent>
+
+        <TabsContent value="history">
+          <Panel>
+            <EmployeeWorkHistoryPanel employeeId={employee.id} />
+          </Panel>
+        </TabsContent>
+
+        <TabsContent value="pay">
+          <Panel>
+            <EmployeePayPanel employeeId={employee.id} />
+          </Panel>
+        </TabsContent>
+
+        <TabsContent value="credentials">
+          <Panel>
+            <EmployeeCredentialsPanel employeeId={employee.id} />
+          </Panel>
+        </TabsContent>
+
+        {/* 고치던 내용이 탭을 옮겨도 남도록 닫아 두기만 하고 지우지 않음 */}
+        <TabsContent value="info" forceMount className="data-[state=inactive]:hidden">
+          <Panel>
+            {saved && <Alert variant="info">{saved}</Alert>}
+            {errors.root && <Alert>{errors.root.message}</Alert>}
+
+            <h2 className="mb-4 text-lg font-bold">기본정보</h2>
+            <form className="grid gap-4 md:grid-cols-2" onSubmit={save} noValidate>
+              <FormField label="이름" error={errors.name?.message}>
+                <Input {...register('name')} />
+              </FormField>
+              <FormField
+                label="직책"
+                hint="표시용입니다 (예: 반장, 기공, 조공)"
+                error={errors.title?.message}
+              >
+                <Input {...register('title')} />
+              </FormField>
+              <FormField label="직종" error={errors.jobTypeId?.message}>
+                <OptionSelect
+                  kind="JOB_TYPE"
+                  options={options.data ?? []}
+                  keepId={employee.jobTypeId}
+                  value={jobTypeId}
+                  onValueChange={(value) => setValue('jobTypeId', value, { shouldDirty: true })}
+                />
+              </FormField>
+              <FormField
+                label="직원 구분"
+                hint="목록과 필터에 쓰는 표시입니다 (공수 계산에는 쓰지 않습니다)"
+                error={errors.workerTypeId?.message}
+              >
+                <OptionSelect
+                  kind="WORKER_TYPE"
+                  options={options.data ?? []}
+                  keepId={employee.workerTypeId}
+                  value={workerTypeId}
+                  onValueChange={(value) => setValue('workerTypeId', value, { shouldDirty: true })}
+                />
+              </FormField>
+              <FormField label="입사일" error={errors.hiredOn?.message}>
+                <DateInput {...register('hiredOn')} />
+              </FormField>
+              {employee.status === 'LEFT' && (
+                <FormField label="퇴사일" error={errors.leftOn?.message}>
+                  <DateInput {...register('leftOn')} />
+                </FormField>
+              )}
+              <FormField label="생년월일" error={errors.birthDate?.message}>
+                <DateInput {...register('birthDate')} />
+              </FormField>
+              <FormField label="연락처" error={errors.phone?.message}>
+                <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
+              </FormField>
+              <FormField
+                className="md:col-span-2"
+                label="메모"
+                hint={`관리자만 보는 메모입니다 (${EMPLOYEE_MEMO_MAX_LENGTH}자까지)`}
+                error={errors.memo?.message}
+              >
+                <Textarea {...register('memo')} />
+              </FormField>
+              <p className="text-sm text-foreground/70 md:col-span-2">
+                주민등록번호·계좌번호는 저장하지 않습니다. 급여는 단가만 기록합니다
+              </p>
+              <Button
+                type="submit"
+                className="md:col-span-2 md:justify-self-start md:px-10"
+                disabled={!isDirty || update.isPending}
+              >
+                {update.isPending ? '저장 중' : '저장'}
+              </Button>
+            </form>
+          </Panel>
+        </TabsContent>
+      </Tabs>
     </div>
   );
 };

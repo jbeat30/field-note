@@ -12,20 +12,27 @@ import {
   type ChangeWorkDetail,
   type ChangeWorkStatus,
 } from '@field-note/shared';
-import { useState, type FormEvent } from 'react';
+import { FileText, Image as ImageIcon, Upload, X } from 'lucide-react';
+import { useRef, useState, type FormEvent } from 'react';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
+import { useConfirm } from '../components/ui/confirm-dialog';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
+import { Modal } from '../components/ui/modal';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
+import { DOCUMENT_ACCEPT, titleFromFileName } from '../documents/documentFile';
+import { DocumentUploadError, uploadDocumentFile } from '../documents/uploadDocument';
 import { useDocuments } from '../documents/useDocuments';
+import { useOpenDocument } from '../documents/useOpenDocument';
 import { formatDay } from '../lib/dates';
 import { splitServerErrors } from '../lib/serverErrors';
 
 import {
+  useAddChangeWorkEvidence,
   useChangeWorkDetail,
   useLinkChangeWorkDocument,
   useTransitionChangeWork,
@@ -231,83 +238,192 @@ const EditForm = ({
   );
 };
 
-// 증빙: 문서함의 문서(대화 캡처, 합의서 등)를 연결한다. 연결을 풀어도 기록은 남는다
+// 증빙: 대화 캡처·합의서·공문 같은 사진·PDF를 바로 올리거나, 문서함에 있는 문서를 연결한다. 연결을 풀어도 기록은 남는다
 const Evidence = ({
   detail,
   projectId,
   confirmCompleted,
+  editable,
 }: {
   detail: ChangeWorkDetail;
   projectId: string;
   confirmCompleted: boolean;
+  editable: boolean;
 }) => {
   const documents = useDocuments(projectId);
   const link = useLinkChangeWorkDocument(detail.id);
   const unlink = useUnlinkChangeWorkDocument(detail.id);
+  const addEvidence = useAddChangeWorkEvidence(detail.id);
+  const opener = useOpenDocument();
+  const { confirm, dialog: confirmDialog } = useConfirm();
+  const inputRef = useRef<HTMLInputElement>(null);
   const [documentId, setDocumentId] = useState('');
   const [error, setError] = useState('');
+  const [progress, setProgress] = useState<number | null>(null);
   const linkedIds = new Set(detail.documents.map((item) => item.documentId));
   const choices = (documents.data ?? []).filter((item) => !linkedIds.has(item.id));
   const fail = (value: unknown) => setError(splitServerErrors(value, []).root);
+  const isUploading = progress !== null;
+
+  const upload = async (file: File | undefined) => {
+    if (!file) return;
+
+    setError('');
+    setProgress(0);
+
+    try {
+      const fileId = await uploadDocumentFile(projectId, file, setProgress);
+
+      await addEvidence.mutateAsync({
+        fileId,
+        title: titleFromFileName(file.name).slice(0, 100),
+        ...(confirmCompleted ? { confirmCompleted: true } : {}),
+      });
+    } catch (caught) {
+      setError(
+        caught instanceof DocumentUploadError ? caught.message : splitServerErrors(caught, []).root,
+      );
+    } finally {
+      setProgress(null);
+
+      if (inputRef.current) inputRef.current.value = '';
+    }
+  };
 
   return (
     <div className="flex flex-col gap-2">
-      <h3 className="font-medium">증빙</h3>
-      {error && <Alert>{error}</Alert>}
+      {confirmDialog}
+      <div className="flex items-center justify-between gap-2">
+        <h3 className="font-medium">
+          증빙 {detail.documents.length > 0 && `(${detail.documents.length})`}
+        </h3>
+        {editable && (
+          <>
+            <Button
+              type="button"
+              size="sm"
+              disabled={isUploading}
+              onClick={() => inputRef.current?.click()}
+            >
+              <Upload aria-hidden />
+              {isUploading ? '올리는 중' : '증빙 올리기'}
+            </Button>
+            <input
+              ref={inputRef}
+              type="file"
+              accept={DOCUMENT_ACCEPT}
+              aria-label="증빙 파일"
+              className="sr-only"
+              tabIndex={-1}
+              onChange={(event) => void upload(event.target.files?.[0])}
+            />
+          </>
+        )}
+      </div>
+      {isUploading && (
+        <p className="text-sm" role="status">
+          올리는 중 {Math.round(progress * 100)}%
+        </p>
+      )}
+      {(error || opener.error) && <Alert>{error || opener.error}</Alert>}
       {detail.documents.length === 0 ? (
-        <p className="text-sm text-foreground/70">연결한 증빙이 없습니다</p>
+        <p className="text-sm text-foreground/70">
+          {editable ? '대화 캡처·합의서·공문 사진이나 PDF를 올려 두세요' : '연결한 증빙이 없습니다'}
+        </p>
       ) : (
-        <ul className="flex flex-col gap-1 text-sm">
+        <ul className="grid gap-2 sm:grid-cols-2">
           {detail.documents.map((item) => (
-            <li key={item.documentId} className="flex items-center justify-between gap-2">
-              <span>
-                {item.title} · {DOCUMENT_CATEGORY_LABELS[item.category]}
-                {item.isSensitive ? ' · 민감' : ''}
+            <li
+              key={item.documentId}
+              className="flex items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2"
+            >
+              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-muted text-foreground/65 [&_svg]:size-5">
+                {item.contentType.startsWith('image/') ? (
+                  <ImageIcon aria-hidden />
+                ) : (
+                  <FileText aria-hidden />
+                )}
               </span>
-              <Button
+              <button
                 type="button"
-                variant="secondary"
-                aria-label={`${item.title} 연결 해제`}
-                disabled={unlink.isPending}
-                onClick={() => {
-                  setError('');
-                  unlink.mutateAsync({ documentId: item.documentId, confirmCompleted }).catch(fail);
-                }}
+                aria-label={`${item.title} 열기`}
+                className="min-w-0 flex-1 text-left hover:text-primary"
+                onClick={() =>
+                  opener.open(
+                    { id: item.documentId, title: item.title, isSensitive: item.isSensitive },
+                    item.latestVersionNo,
+                    'view',
+                  )
+                }
               >
-                해제
-              </Button>
+                <span className="block truncate text-sm font-semibold">{item.title}</span>
+                <span className="block truncate text-xs text-foreground/65">
+                  {DOCUMENT_CATEGORY_LABELS[item.category]}
+                  {item.isSensitive ? ' · 민감' : ''} · {formatDay(item.linkedAt.slice(0, 10))}
+                </span>
+              </button>
+              {editable && (
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  aria-label={`${item.title} 연결 해제`}
+                  disabled={unlink.isPending}
+                  onClick={async () => {
+                    const ok = await confirm({
+                      title: '증빙 연결을 풀까요?',
+                      description: `"${item.title}"은 문서함에 그대로 남고 이 추가 공사와의 연결만 풀립니다`,
+                      confirmLabel: '연결 풀기',
+                      danger: true,
+                    });
+
+                    if (!ok) return;
+
+                    setError('');
+                    unlink
+                      .mutateAsync({ documentId: item.documentId, confirmCompleted })
+                      .catch(fail);
+                  }}
+                >
+                  <X aria-hidden />
+                </Button>
+              )}
             </li>
           ))}
         </ul>
       )}
-      <div className="flex items-end gap-2">
-        <div className="flex-1">
-          <FormField label="문서함에서 연결">
-            <Select
-              value={documentId}
-              onValueChange={setDocumentId}
-              placeholder="문서 선택"
-              options={choices.map((item) => ({ value: item.id, label: item.title }))}
-            />
-          </FormField>
+      {editable && (
+        <div className="flex items-end gap-2">
+          <div className="flex-1">
+            <FormField label="문서함에서 연결">
+              <Select
+                value={documentId}
+                onValueChange={setDocumentId}
+                placeholder="이미 올린 문서 선택"
+                options={choices.map((item) => ({ value: item.id, label: item.title }))}
+              />
+            </FormField>
+          </div>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={!documentId || link.isPending}
+            onClick={() => {
+              setError('');
+              link
+                .mutateAsync({
+                  documentId,
+                  ...(confirmCompleted ? { confirmCompleted: true } : {}),
+                })
+                .then(() => setDocumentId(''))
+                .catch(fail);
+            }}
+          >
+            연결
+          </Button>
         </div>
-        <Button
-          type="button"
-          disabled={!documentId || link.isPending}
-          onClick={() => {
-            setError('');
-            link
-              .mutateAsync({ documentId, ...(confirmCompleted ? { confirmCompleted: true } : {}) })
-              .then(() => setDocumentId(''))
-              .catch(fail);
-          }}
-        >
-          연결
-        </Button>
-      </div>
-      <p className="text-sm text-foreground/70">
-        대화 캡처나 합의서는 문서함에 올린 뒤 여기서 연결합니다
-      </p>
+      )}
+      {opener.dialog}
     </div>
   );
 };
@@ -392,11 +508,12 @@ const Body = ({
         />
       )}
 
-      {editable ? (
-        <Evidence detail={detail} projectId={projectId} confirmCompleted={confirmCompleted} />
-      ) : (
-        <p className="text-sm text-foreground/70">연결한 증빙 {detail.documents.length}건</p>
-      )}
+      <Evidence
+        detail={detail}
+        projectId={projectId}
+        confirmCompleted={confirmCompleted}
+        editable={editable}
+      />
 
       <div className="flex flex-col gap-1">
         <h3 className="font-medium">상태 이력</h3>
@@ -418,51 +535,35 @@ const Body = ({
   );
 };
 
-// 변경·추가 작업 한 건: 요약 한 줄과 펼쳐 보는 상세(상태 변경, 수정, 증빙, 이력)
-export const ChangeWorkItem = ({
+// 변경·추가 작업 상세 창: 상태 변경, 내용 수정, 증빙, 상태 이력
+export const ChangeWorkDetailDialog = ({
   work,
   projectId,
   editable,
   confirmCompleted,
+  onClose,
 }: {
   work: ChangeWork;
   projectId: string;
   editable: boolean;
   confirmCompleted: boolean;
+  onClose: () => void;
 }) => {
-  const [open, setOpen] = useState(false);
-  const detail = useChangeWorkDetail(work.id, open);
+  const detail = useChangeWorkDetail(work.id, true);
   const waited = daysInStatus(work.statusChangedOn, todayInSeoul(new Date()));
   const stale = work.status === 'NEGOTIATING' && waited >= STALE_DAYS;
 
   return (
-    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4">
-      <div className="flex flex-wrap items-center gap-2">
-        <span className="font-bold">#{work.seq}</span>
-        <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-semibold">
-          {CHANGE_WORK_STATUS_LABELS[work.status]}
-        </span>
-        {stale && <span className="text-sm font-medium text-danger">{waited}일째 협의 중</span>}
-        {work.documentCount > 0 && (
-          <span className="text-sm text-foreground/70">증빙 {work.documentCount}건</span>
-        )}
-      </div>
-      <p className="line-clamp-2">{work.content}</p>
-      <p className="text-sm text-foreground/70">
-        {formatDay(work.requestedOn)} · {work.requester}
-      </p>
-      <Button
-        type="button"
-        variant="secondary"
-        aria-expanded={open}
-        aria-label={`#${work.seq} ${open ? '접기' : '자세히 보기'}`}
-        onClick={() => setOpen((value) => !value)}
-      >
-        {open ? '접기' : '자세히'}
-      </Button>
-      {open && detail.isError && <Alert>상세를 불러오지 못했습니다</Alert>}
-      {open && !detail.data && !detail.isError && <p className="text-sm">불러오는 중</p>}
-      {open && detail.data && (
+    <Modal
+      open
+      onOpenChange={(open) => !open && onClose()}
+      size="lg"
+      title={`#${work.seq} ${CHANGE_WORK_STATUS_LABELS[work.status]}`}
+      description={stale ? `${waited}일째 협의 중입니다` : undefined}
+    >
+      {detail.isError && <Alert>상세를 불러오지 못했습니다</Alert>}
+      {!detail.data && !detail.isError && <p className="text-sm">불러오는 중</p>}
+      {detail.data && (
         <Body
           detail={detail.data}
           projectId={projectId}
@@ -470,6 +571,6 @@ export const ChangeWorkItem = ({
           confirmCompleted={confirmCompleted}
         />
       )}
-    </li>
+    </Modal>
   );
 };

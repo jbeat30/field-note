@@ -76,6 +76,30 @@ export const employeeWorkHistorySchema = z.object({
 
 export type EmployeeWorkHistory = z.infer<typeof employeeWorkHistorySchema>;
 
+// 한 사람이 한 프로젝트에서 일한 날 (인원 탭의 일한 날 창). 저장된 작업 내역만 반영
+export const employeeProjectDaysParamsSchema = z.object({ id: z.uuid(), employeeId: z.uuid() });
+
+export const employeeProjectDaysQuerySchema = z.object({
+  from: dateSchema.optional(),
+  to: dateSchema.optional(),
+});
+
+export type EmployeeProjectDaysQuery = z.infer<typeof employeeProjectDaysQuerySchema>;
+
+export const employeeProjectDaysSchema = z.object({
+  // 최근 날짜가 맨 앞
+  days: z.array(
+    z.object({
+      workDate: dateSchema,
+      minutes: z.number().int(),
+      // 그날 한 일(작업 구분)별 시간, 많은 순
+      categories: z.array(z.object({ categoryId: z.uuid(), totalMinutes: z.number().int() })),
+    }),
+  ),
+});
+
+export type EmployeeProjectDays = z.infer<typeof employeeProjectDaysSchema>;
+
 export type SummaryEntry = {
   workDate: string;
   employeeId: string;
@@ -127,7 +151,7 @@ const groupBy = <T>(items: readonly T[], keyOf: (item: T) => string) => {
  * @returns 분 단위 집계 (직원은 공수가 큰 순, 기간은 오래된 순)
  */
 // 작업 구분별 합계 (시간이 많은 순, 같으면 id 순)
-const byCategoryOf = (entries: readonly SummaryEntry[]) =>
+const byCategoryOf = (entries: readonly { categoryId: string; minutes: number }[]) =>
   [...groupBy(entries, (entry) => entry.categoryId)]
     .map(([categoryId, own]) => ({ categoryId, totalMinutes: sum(own) }))
     .sort((a, b) => b.totalMinutes - a.totalMinutes || a.categoryId.localeCompare(b.categoryId));
@@ -244,3 +268,17 @@ export const summarizeEmployeeWork = (input: {
     projects: rows,
   };
 };
+
+/**
+ * @description 한 사람이 한 프로젝트에서 일한 날 목록. 그 사람의 저장된 작업 내역 항목만 넘겨야 한다
+ * @param entries 그 사람의 저장된 항목 (날짜·작업 구분·분)
+ * @returns 날짜별 시간과 한 일 (최근 날짜가 맨 앞, 시간이 0인 날은 뺌)
+ */
+export const employeeProjectDays = (
+  entries: readonly { workDate: string; categoryId: string; minutes: number }[],
+): EmployeeProjectDays => ({
+  days: [...groupBy(entries, (entry) => entry.workDate)]
+    .map(([workDate, own]) => ({ workDate, minutes: sum(own), categories: byCategoryOf(own) }))
+    .filter((day) => day.minutes > 0)
+    .sort((a, b) => b.workDate.localeCompare(a.workDate)),
+});

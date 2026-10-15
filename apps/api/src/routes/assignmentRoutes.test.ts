@@ -106,6 +106,8 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     updateEmployee: (id: string, body: object) => send('patch', `/employees/${id}`, body),
     createPartner: async (kind: string, name: string) =>
       (await send('post', '/partners', { kind, name })).body.id as string,
+    // 작업 구분은 처음 조회할 때 기본 목록이 만들어진다
+    options: () => get('/company/options'),
     calendar: (query: string) => get(`/staffing-calendar${query}`),
     list: (projectId: string, query = '') => get(`/projects/${projectId}/assignments${query}`),
     assign: (projectId: string, body: object) =>
@@ -924,5 +926,79 @@ describe('인력 배치 캘린더', () => {
     );
 
     expect(later.employees.map((item) => item.id)).not.toContain(worker);
+  });
+
+  it('일한 날(workDays)은 저장된 작업 내역만 사람·날짜·프로젝트별 시간으로 담고 임시 저장·취소된 프로젝트·0분은 뺀다', async () => {
+    const instance = app();
+    const { client, project, worker, worker2, projectBody } = await setup(instance);
+    const other = (await client.createProject({ ...projectBody, name: 'B동 덕트' })).body
+      .id as string;
+    const cancelled = (await client.createProject({ ...projectBody, name: 'C동 취소' })).body
+      .id as string;
+
+    await client.transition(cancelled, { toStatus: 'CANCELLED', reason: '해지' });
+
+    const row = await db.owner.project.findFirstOrThrow({ where: { id: project } });
+    await client.options();
+    const category = await db.owner.optionItem.findFirstOrThrow({
+      where: { companyId: row.companyId, kind: 'WORK_CATEGORY' },
+    });
+    const log = async (
+      projectId: string,
+      date: string,
+      status: 'SAVED' | 'DRAFT',
+      entries: [string, number][],
+    ) => {
+      const created = await db.owner.workLog.create({
+        data: {
+          companyId: row.companyId,
+          projectId,
+          workDate: new Date(`${date}T00:00:00Z`),
+          status,
+          content: '작업',
+          savedAt: status === 'SAVED' ? new Date() : null,
+        },
+      });
+
+      for (const [employeeId, minutes] of entries) {
+        await db.owner.workLogEntry.create({
+          data: {
+            companyId: row.companyId,
+            workLogId: created.id,
+            employeeId,
+            categoryId: category.id,
+            minutes,
+          },
+        });
+      }
+    };
+
+    // 같은 날 두 프로젝트(겹침),
+    await log(project, '2026-10-05', 'SAVED', [[worker, 300]]);
+    await log(other, '2026-10-05', 'SAVED', [[worker, 180]]);
+    await log(project, '2026-10-06', 'SAVED', [
+      [worker, 240],
+      [worker2, 480],
+    ]);
+    // 임시 저장, 취소된 프로젝트, 기간 밖은 담지 않는다
+    await log(other, '2026-10-07', 'DRAFT', [[worker, 480]]);
+    await log(cancelled, '2026-10-08', 'SAVED', [[worker, 480]]);
+    await log(project, '2026-11-20', 'SAVED', [[worker, 480]]);
+
+    const calendar = staffingCalendarSchema.parse((await client.calendar(RANGE)).body);
+
+    expect(
+      calendar.workDays.map((item) => [
+        item.employeeId,
+        item.workDate,
+        item.projectName,
+        item.minutes,
+      ]),
+    ).toEqual([
+      [worker, '2026-10-05', 'A동 판금 공사', 300],
+      [worker, '2026-10-05', 'B동 덕트', 180],
+      [worker, '2026-10-06', 'A동 판금 공사', 240],
+      [worker2, '2026-10-06', 'A동 판금 공사', 480],
+    ]);
   });
 });

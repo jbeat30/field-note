@@ -79,6 +79,8 @@ export type MockAccount = {
   projectPeriodHistory?: Record<string, ProjectPeriodChange[]>;
   // 알림 종류별 켜짐 여부 (설정하지 않은 종류는 켜짐)
   alertSettings?: Partial<Record<AlertKind, boolean>>;
+  // 숨긴 알림 키 (알림은 저장하지 않고 계산하므로 키만 남김)
+  dismissedAlerts?: string[];
   // 프로젝트별 진행률 기록 (프로젝트 id → 오래된 것부터)
   progressRecords?: Record<string, ProgressRecord[]>;
   // 직원별 단가 기록 (직원 id → 입력 순서)
@@ -106,14 +108,31 @@ export { DEMO_INVITATION } from './demoSource';
 
 export const LEGAL_DOCUMENTS: readonly LegalDocumentSummary[] = LEGAL_DOCUMENTS_FOR_MOCK;
 
+// 기기 목록은 "최근에 쓴 기기"와 "오래 쓰지 않은 기기"가 함께 보이도록 지금 시각 기준으로 만든다
+const hoursAgo = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
+
 export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [
   {
     id: 'device-current',
     label: 'Chrome · macOS',
-    lastActiveAt: '2026-10-06T09:00:00.000Z',
+    lastActiveAt: hoursAgo(0),
+    ipAddress: '203.0.113.24',
+    lastIp: '203.0.113.24',
   },
-  { id: 'device-phone', label: 'Safari · iPhone', lastActiveAt: '2026-10-05T18:20:00.000Z' },
-  { id: 'device-old', label: 'Chrome · Android', lastActiveAt: '2026-09-28T07:45:00.000Z' },
+  {
+    id: 'device-phone',
+    label: 'Safari · iPhone',
+    lastActiveAt: hoursAgo(20),
+    ipAddress: '198.51.100.7',
+    lastIp: '198.51.100.9',
+  },
+  {
+    id: 'device-old',
+    label: 'Chrome · Android',
+    lastActiveAt: hoursAgo(24 * 12),
+    ipAddress: '192.0.2.88',
+    lastIp: '192.0.2.88',
+  },
 ];
 
 // 인증 코드와 시연용 특수 값 (README 목업 모드 표와 같아야 함)

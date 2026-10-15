@@ -15,6 +15,7 @@ import {
   TableRow,
 } from '../components/ui/table';
 import { formatDay } from '../lib/dates';
+import { LedgerPanel } from '../ledger/LedgerPanel';
 import { MaterialUsageForm } from '../materials/MaterialUsageForm';
 import {
   useDeleteMaterialRecord,
@@ -57,7 +58,10 @@ export const ProjectMaterialsPage = () => {
     <div className="flex flex-col gap-5">
       {confirmDialog}
 
-      {/* 상단: 자재 등록 폼 전체 폭 */}
+      {/* 첫 구역: 지출·수입 (합계 줄 + 내역 표) */}
+      <LedgerPanel projectId={id} />
+
+      {/* 자재 등록 폼 전체 폭 */}
       <div className="rounded-xl bg-surface-subtle p-4 md:p-5">
         <Section
           title="자재 등록"

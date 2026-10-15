@@ -30,6 +30,9 @@ const list = (...items: string[]): LegalBlock => ({ type: 'list', items });
 
 const VERSION = '2026-10-06';
 const EFFECTIVE_AT = '2026-10-06T00:00:00.000Z';
+// 처리방침만 바뀐 날 (로그인한 기기 목록에 접속 IP를 보이려고 IP를 저장하는 항목을 추가, 2026-10-15)
+const PRIVACY_VERSION = '2026-10-15';
+const PRIVACY_EFFECTIVE_AT = '2026-10-15T00:00:00.000Z';
 
 const termsOfService: LegalDocumentContent = {
   type: 'TERMS_OF_SERVICE',
@@ -136,15 +139,15 @@ const termsOfService: LegalDocumentContent = {
 
 const privacyPolicy: LegalDocumentContent = {
   type: 'PRIVACY_POLICY',
-  version: VERSION,
-  effectiveAt: EFFECTIVE_AT,
+  version: PRIVACY_VERSION,
+  effectiveAt: PRIVACY_EFFECTIVE_AT,
   ...LEGAL_DOCUMENT_META.PRIVACY_POLICY,
   isRequired: true,
   pendingItems: [
     '개인정보 보호책임자(운영자)의 성명과 연락 방법',
     '수탁·위탁 현황: 서버·데이터베이스·파일 저장소·이메일 발송·소셜 로그인 제공자(운영 환경 확정 후 기재)',
     '국외 이전 여부: 서버나 외부 서비스가 해외에 있으면 이전 국가·항목·방법을 기재',
-    '접속 기록(접속 IP·시각)의 보관 기간과 방법',
+    '법령에 따른 접속 기록(접속 IP·시각) 보관 의무가 있는 경우 그 보관 기간과 방법 (현재 로그인 세션의 IP는 위 기간 동안만 저장)',
     '이용자 요청 처리 기한 (법정 기한 확인)',
   ],
   sections: [
@@ -172,9 +175,9 @@ const privacyPolicy: LegalDocumentContent = {
             ],
             [
               '자동으로 생성되는 정보',
-              '로그인 세션, 접속한 기기 종류(브라우저·기기 이름), 마지막 사용 시각, 쿠키',
-              '로그인 유지, 보안, 기기 목록과 원격 로그아웃',
-              '로그아웃·만료·해지 시 삭제',
+              '로그인 세션, 접속한 기기 종류(브라우저·기기 이름), 로그인 때와 마지막으로 사용한 때의 접속 IP, 마지막 사용 시각, 쿠키',
+              '로그인 유지, 보안, 기기 목록(어느 기기·IP에서 로그인했는지 확인)과 원격 로그아웃',
+              '로그인 유지 기간(로그인 유지를 선택하지 않으면 브라우저를 닫을 때까지) 또는 로그아웃·해지 시 삭제',
             ],
             [
               '동의 기록',
@@ -245,7 +248,7 @@ const privacyPolicy: LegalDocumentContent = {
         list(
           '로그인 상태를 유지하기 위해 세션 쿠키를 사용합니다. 이 쿠키는 스크립트에서 읽을 수 없고, 로그아웃하거나 만료되면 삭제됩니다.',
           '광고나 이용 행태 추적을 위한 쿠키는 사용하지 않습니다.',
-          '보안과 기기 목록을 위해 접속한 기기의 종류(예: Chrome · macOS)와 마지막 사용 시각을 저장합니다.',
+          '보안과 기기 목록을 위해 접속한 기기의 종류(예: Chrome · macOS), 로그인 때와 마지막으로 사용한 때의 접속 IP, 마지막 사용 시각을 저장합니다. 설정의 로그인한 기기 목록에서 내가 로그인한 기기와 IP를 확인하고 로그아웃할 수 있으며, 로그아웃하거나 로그인 유지 기간이 지나면 삭제합니다.',
         ),
       ],
     },

@@ -37,7 +37,7 @@ export const Default: Story = {
     // 코드는 숫자 순서의 최근 등록순 (2025년 번호가 맨 뒤)
     await waitFor(() => expect(rows(canvas)[0]).toContain('2026-004'));
     await expect(rows(canvas).at(-1)).toContain('2025-012');
-    // 상태·현장·고객·담당자·기간·공종이 보이고, 현장 연락처·출입 메모는 목록에 없음
+    // 번호·현장명·상태·고객·담당자·기간·공종이 보이고, 현장 연락처·출입 메모는 목록에 없음
     // 고객·담당자 이름은 명부·직원 목록을 불러온 뒤에 채워진다
     await waitFor(() =>
       expect(rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))).toContain(
@@ -107,15 +107,36 @@ export const FilterByTradeAndManager: Story = {
   },
 };
 
-export const SearchByNameCodeSite: Story = {
+// 맨 위 검색칸은 프로젝트명·번호만 찾고 현장명은 찾지 않음
+export const SearchByNameCode: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '기계실');
+    await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '덕트');
 
     await expect(await canvas.findByText('1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
+
+    await userEvent.clear(canvas.getByLabelText('프로젝트 검색'));
+    await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '기계실');
+
+    await expect(await canvas.findByText('조건에 맞는 프로젝트가 없습니다')).toBeInTheDocument();
+  },
+};
+
+// 현장명은 자세히 찾기의 현장명 칸으로 찾음
+export const FilterBySite: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('A동 외장 판금 공사');
+    await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
+    await userEvent.type(canvas.getByLabelText('현장명'), '기계실');
+
+    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
+    await expect(canvas.getByRole('columnheader', { name: '현장명' })).toBeInTheDocument();
   },
 };
 
@@ -269,10 +290,10 @@ export const SearchIsDebounced: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '기계실', { delay: 30 });
+    await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '덕트 설치', { delay: 30 });
 
     await expect(await canvas.findByText('1건')).toBeInTheDocument();
-    await expect(searchedTerms).toEqual(['기계실']);
+    await expect(searchedTerms).toEqual(['덕트 설치']);
   },
 };
 

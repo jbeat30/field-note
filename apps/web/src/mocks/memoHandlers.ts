@@ -200,7 +200,7 @@ export const createMemoHandlers = ({ apiError, parseBody }: Helpers) => {
         );
       }
 
-      const { scope, projectId, tag, isDone, cursor, limit } = query.data;
+      const { scope, projectId, tag, memoDate, isDone, cursor, limit } = query.data;
 
       if (scope === 'PROJECT' && !hasProject(account, projectId!)) return apiError('NOT_FOUND');
 
@@ -209,6 +209,7 @@ export const createMemoHandlers = ({ apiError, parseBody }: Helpers) => {
           (memo) =>
             (scope === 'INBOX' ? memo.projectId === null : memo.projectId === projectId) &&
             (!tag || memo.tag === tag) &&
+            (!memoDate || memo.memoDate === memoDate) &&
             (isDone === undefined || memo.isDone === isDone),
         )
         .sort(newestFirst);

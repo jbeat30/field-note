@@ -19,9 +19,11 @@ import {
   workLogsResponseSchema,
   laborCostSchema,
   payRateSchema,
+  payRateSummariesResponseSchema,
   payRatesResponseSchema,
   staffingCalendarSchema,
   workSummarySchema,
+  employeeProjectDaysSchema,
   employeeWorkHistorySchema,
   assignmentsResponseSchema,
   projectPeriodHistorySchema,
@@ -1156,6 +1158,14 @@ describe('목업 서버 계약', () => {
       ['2026-01-01', 'DAILY', 230_000],
     ]);
 
+    // 단가표: 단가가 있는 직원마다 현재·이전 단가
+    const summary = payRateSummariesResponseSchema
+      .parse((await client.GET('/api/v1/pay-rates')).data)
+      .items.find((item) => item.employeeId === id)!;
+
+    expect(summary.current?.amount).toBe(250_000);
+    expect(summary.previous?.amount).toBe(230_000);
+
     const created = await client.POST('/api/v1/employees/{id}/pay-rates', {
       params: { path: { id } },
       body: { payType: 'MONTHLY', amount: 5_500_000, effectiveFrom: '2026-10-11' },
@@ -1209,6 +1219,33 @@ describe('목업 서버 계약', () => {
         })
       ).response.status,
     ).toBe(404);
+  });
+
+  it('인력 배치 일한 날: 저장된 작업 내역만 사람·날짜·프로젝트별로, 같은 날 두 프로젝트는 둘 다 담긴다', async () => {
+    await login();
+
+    const calendar = staffingCalendarSchema.parse(
+      (
+        await client.GET('/api/v1/staffing-calendar', {
+          params: { query: { from: '2026-08-31', to: '2026-09-06' } },
+        })
+      ).data,
+    );
+    const nameOf = (id: string) => calendar.employees.find((item) => item.id === id)?.name;
+    const days = calendar.workDays.map((item) => [
+      nameOf(item.employeeId),
+      item.workDate,
+      item.projectCode,
+      item.minutes,
+    ]);
+
+    // 더미: 9/1~9/3 A동(2026-001), 9/2에 최설치는 B동(2026-003)에도 들어감, 임시 저장(9/4)은 빠짐
+    expect(days).toContainEqual(['정판금', '2026-09-01', '2026-001', 480]);
+    expect(days).toContainEqual(['최설치', '2026-09-02', '2026-001', 480]);
+    expect(days).toContainEqual(['최설치', '2026-09-02', '2026-003', 480]);
+    expect(calendar.workDays.every((item) => item.workDate <= '2026-09-03')).toBe(true);
+    // 한용접은 9/1에 두 작업 구분(생산·가공 240 + 설치 240)이 한 칸으로 합산된다
+    expect(days).toContainEqual(['한용접', '2026-09-01', '2026-001', 480]);
   });
 
   it('인력 배치 캘린더: 기간과 겹치는 투입만 나오고 로그인과 기간을 검사한다', async () => {
@@ -1304,6 +1341,30 @@ describe('목업 서버 계약', () => {
 
     expect(history.projects.length).toBeGreaterThan(0);
     expect(history.totalMinutes).toBeGreaterThan(0);
+
+    // 사람별 일한 날: 그 사람이 일한 날의 시간 합이 집계와 같다
+    const days = employeeProjectDaysSchema.parse(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary/employees/{employeeId}', {
+          params: { path: { id: a.id, employeeId }, query: {} },
+        })
+      ).data,
+    ).days;
+
+    expect(days).toHaveLength(summary.byEmployee[0]!.workedDays);
+    expect(days.reduce((total, day) => total + day.minutes, 0)).toBe(
+      summary.byEmployee[0]!.totalMinutes,
+    );
+    expect(
+      (
+        await client.GET('/api/v1/projects/{id}/work-summary/employees/{employeeId}', {
+          params: {
+            path: { id: a.id, employeeId: '0198d000-0000-7000-8000-000000000999' },
+            query: {},
+          },
+        })
+      ).response.status,
+    ).toBe(404);
     expect(
       (
         await client.GET('/api/v1/employees/{id}/work-history', {

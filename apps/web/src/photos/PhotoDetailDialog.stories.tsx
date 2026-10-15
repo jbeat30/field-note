@@ -38,9 +38,29 @@ export const Default: Story = {
         category: 'AFTER',
         area: null,
         description: '철거 전 상태',
+        includeInSummary: false,
       }),
     );
     await expect(args.onClose).toHaveBeenCalled();
+  },
+};
+
+// 준공 요약에 넣기를 켜고 저장하면 그 값이 함께 저장된다
+export const IncludeInSummary: Story = {
+  play: async ({ args }) => {
+    const dialog = within(await screen.findByRole('dialog'));
+    const checkbox = dialog.getByRole('checkbox', { name: /준공 요약에 넣기/ });
+
+    await expect(checkbox).not.toBeChecked();
+    await userEvent.click(checkbox);
+    await userEvent.click(dialog.getByRole('button', { name: '저장' }));
+
+    await waitFor(() =>
+      expect(args.onSave).toHaveBeenCalledWith(
+        args.photo.id,
+        expect.objectContaining({ includeInSummary: true }),
+      ),
+    );
   },
 };
 

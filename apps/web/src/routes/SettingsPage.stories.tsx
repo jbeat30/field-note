@@ -29,7 +29,9 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByDisplayValue('8')).toBeInTheDocument();
-    await expect(canvas.getByLabelText(/월 기준일수/)).toHaveValue(22);
+    await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(22);
+    // 22일은 근무 형태 표준값이 아니라 직접 입력으로 보인다
+    await expect(canvas.getByRole('radio', { name: /직접 입력/ })).toBeChecked();
     await expect(canvas.getByRole('radio', { name: /비율/ })).toBeChecked();
     // 변경하기 전에는 저장할 수 없음
     await expect(canvas.getByRole('button', { name: '저장' })).toBeDisabled();
@@ -40,7 +42,7 @@ export const SaveSettings: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const hours = await canvas.findByLabelText(/하루 기준시간/);
+    const hours = await canvas.findByLabelText('하루 기준시간 (시간)');
 
     await userEvent.clear(hours);
     await userEvent.type(hours, '7.5');
@@ -52,20 +54,47 @@ export const SaveSettings: Story = {
   },
 };
 
+// 근무 형태를 고르면 표준값이 채워지고 소수 첫째 자리까지 저장된다
+export const PickWorkPattern: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByLabelText('월 기준일수 (일)');
+    await userEvent.click(canvas.getByRole('radio', { name: /주 5일 21.7일/ }));
+    await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(21.7);
+    await expect(canvas.getByText(/이 값이면 1MM = 21.7일/)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+
+    await expect(await canvas.findByText('저장했습니다')).toBeInTheDocument();
+    await expect(canvas.getByRole('radio', { name: /주 5일 21.7일/ })).toBeChecked();
+
+    await userEvent.click(canvas.getByRole('button', { name: '표준값(26일)으로' }));
+    await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(26);
+    await expect(canvas.getByRole('radio', { name: /주 6일 26일/ })).toBeChecked();
+  },
+};
+
 export const InvalidInput: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const hours = await canvas.findByLabelText(/하루 기준시간/);
+    const hours = await canvas.findByLabelText('하루 기준시간 (시간)');
 
     await userEvent.clear(hours);
     await userEvent.type(hours, '7.3');
-    await userEvent.clear(canvas.getByLabelText(/월 기준일수/));
-    await userEvent.type(canvas.getByLabelText(/월 기준일수/), '40');
+    await userEvent.clear(canvas.getByLabelText('월 기준일수 (일)'));
+    await userEvent.type(canvas.getByLabelText('월 기준일수 (일)'), '40');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('0.5시간 단위로 입력해 주세요')).toBeInTheDocument();
     await expect(canvas.getByText('31일 이하로 입력해 주세요')).toBeInTheDocument();
+
+    // 소수 둘째 자리는 받지 않는다
+    await userEvent.clear(canvas.getByLabelText('월 기준일수 (일)'));
+    await userEvent.type(canvas.getByLabelText('월 기준일수 (일)'), '21.75');
+    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+    await expect(await canvas.findByText('소수 첫째 자리까지 입력해 주세요')).toBeInTheDocument();
   },
 };
 
@@ -74,24 +103,78 @@ export const Devices: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByText('이 기기')).toBeInTheDocument();
+    // 이 기기를 맨 위에, IP와 마지막 사용을 함께 보인다. 로그인 때와 IP가 다르면 안내
+    const items = canvas
+      .getAllByRole('listitem')
+      .filter((item) => item.textContent?.includes('IP'));
+
+    await expect(items[0]).toHaveTextContent('Chrome · macOS');
+    await expect(items[0]).toHaveTextContent('이 기기');
+    await expect(items[0]).toHaveTextContent('IP 203.0.113.24');
+    await expect(items[1]).toHaveTextContent('IP 198.51.100.9 (로그인 198.51.100.7)');
     // 현재 기기에는 원격 로그아웃 버튼이 없음
     await expect(
       canvas.queryByRole('button', { name: 'Chrome · macOS 로그아웃' }),
     ).not.toBeInTheDocument();
     await expect(
-      canvas.getAllByRole('button', { name: /로그아웃$/ }).length,
-    ).toBeGreaterThanOrEqual(3);
+      canvas.getByRole('button', { name: 'Safari · iPhone 로그아웃' }),
+    ).toBeInTheDocument();
   },
 };
 
+// 로그아웃은 확인 창을 거친다
 export const RevokeDevice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await userEvent.click(await canvas.findByRole('button', { name: 'Safari · iPhone 로그아웃' }));
 
+    const confirm = within(await within(document.body).findByRole('alertdialog'));
+
+    await expect(confirm.getByText(/"Safari · iPhone"의 로그인이 끊기고/)).toBeInTheDocument();
+    await userEvent.click(confirm.getByRole('button', { name: '로그아웃' }));
+
     await waitFor(() => expect(canvas.queryByText('Safari · iPhone')).not.toBeInTheDocument());
     await expect(canvas.getByText('Chrome · Android')).toBeInTheDocument();
+  },
+};
+
+export const RevokeCancelled: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: 'Safari · iPhone 로그아웃' }));
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '취소',
+      }),
+    );
+
+    await expect(canvas.getByText('Safari · iPhone')).toBeInTheDocument();
+  },
+};
+
+// 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃한다
+export const StaleDevicesGroup: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const summary = await canvas.findByText('오래 쓰지 않음 1대');
+
+    await userEvent.click(summary);
+    await expect(canvas.getByText('Chrome · Android')).toBeVisible();
+    await userEvent.click(
+      canvas.getByRole('button', { name: '오래 쓰지 않은 기기 모두 로그아웃' }),
+    );
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '모두 로그아웃',
+      }),
+    );
+
+    await waitFor(() => expect(canvas.queryByText('오래 쓰지 않음 1대')).not.toBeInTheDocument());
+    // 최근에 쓴 기기와 이 기기는 그대로
+    await expect(canvas.getByText('Safari · iPhone')).toBeInTheDocument();
+    await expect(canvas.getByText('이 기기')).toBeInTheDocument();
   },
 };
 
@@ -112,7 +195,11 @@ const fillPasswordChange = async (
   next: string,
   confirm: string,
 ) => {
-  const section = within(await canvas.findByRole('region', { name: '비밀번호 변경' }));
+  await userEvent.click(await canvas.findByRole('button', { name: '비밀번호 변경하기' }));
+
+  const section = within(
+    await within(document.body).findByRole('dialog', { name: '비밀번호 변경' }),
+  );
 
   await userEvent.type(section.getByLabelText('현재 비밀번호'), current);
   await userEvent.type(section.getByLabelText('새 비밀번호', { selector: 'input' }), next);
@@ -166,7 +253,9 @@ const requestEmailChange = async (
   newEmail: string,
   password: string,
 ) => {
-  const section = within(await canvas.findByRole('region', { name: '이메일 변경' }));
+  await userEvent.click(await canvas.findByRole('button', { name: '이메일 변경하기' }));
+
+  const section = within(await within(document.body).findByRole('dialog', { name: '이메일 변경' }));
 
   await userEvent.type(section.getByLabelText('새 이메일'), newEmail);
   await userEvent.type(section.getByLabelText('현재 비밀번호'), password);
@@ -187,6 +276,8 @@ export const ChangeEmail: Story = {
     await userEvent.click(section.getByRole('button', { name: '이메일 변경 완료' }));
 
     await expect(await section.findByText(/이전 주소로 변경 알림/)).toBeInTheDocument();
+    // 창을 닫으면 보안 줄에 새 이메일이 보인다
+    await userEvent.keyboard('{Escape}');
     await expect(await canvas.findByText('new-hanbit@example.com')).toBeInTheDocument();
   },
 };
@@ -318,6 +409,11 @@ export const ClosureWrongPassword: Story = {
 
     await userEvent.type(section.getByLabelText('현재 비밀번호'), 'wrong-password-1');
     await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '해지 요청',
+      }),
+    );
 
     await expect(await section.findByText('현재 비밀번호가 올바르지 않습니다')).toBeInTheDocument();
   },
@@ -350,9 +446,40 @@ export const ClosureRequested: Story = {
 
     await userEvent.type(section.getByLabelText('현재 비밀번호'), 'Hanbit-demo-2026!');
     await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '해지 요청',
+      }),
+    );
 
     await waitFor(() => expect(findAccount('hanbit')?.closingPurgeAfter).toBeDefined());
     await expect(getCurrentAccount()).toBeUndefined();
+  },
+};
+
+// 확인 창에서 취소하면 해지를 요청하지 않는다
+export const ClosureConfirmCancelled: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=etc'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '계정 해지' }));
+
+    const section = closureSection(canvas);
+
+    await userEvent.type(section.getByLabelText('현재 비밀번호'), 'Hanbit-demo-2026!');
+    await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+
+    const dialog = within(await within(document.body).findByRole('alertdialog'));
+
+    await expect(dialog.getByText(/14일 뒤 회사의 모든 데이터가 삭제됩니다/)).toBeInTheDocument();
+    await userEvent.click(dialog.getByRole('button', { name: '취소' }));
+
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('alertdialog')).not.toBeInTheDocument(),
+    );
+    await expect(findAccount('hanbit')?.closingPurgeAfter).toBeUndefined();
+    await expect(getCurrentAccount()).toBeDefined();
   },
 };
 

@@ -4,39 +4,30 @@ import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
 // 작업자료 문서함 (서비스 기획서 §12.3). 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 모은다.
 // 파일은 덮어쓰지 않고 새 버전으로 추가하며(최신본이 기본, 이전본 보존), 민감 자료는 열람·다운로드를 감사 기록으로 남긴다 (§7.3, §13.1)
-export const DOCUMENT_CATEGORIES = [
-  'DRAWING',
-  'SPEC',
-  'WORK_ORDER',
-  'CONTRACT',
-  'SAFETY',
-  'OTHER',
-] as const;
+export const DOCUMENT_CATEGORIES = ['DRAWING', 'CONTRACT', 'SAFETY', 'QUOTE', 'OTHER'] as const;
 
 export const documentCategorySchema = z.enum(DOCUMENT_CATEGORIES);
 
 export type DocumentCategory = z.infer<typeof documentCategorySchema>;
 
 export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
-  DRAWING: '도면',
-  SPEC: '시방·사양',
-  WORK_ORDER: '작업지시',
-  CONTRACT: '계약·행정',
+  DRAWING: '도면·작업지시서',
+  CONTRACT: '계약·공문',
   SAFETY: '안전·검사',
+  QUOTE: '견적·정산',
   OTHER: '기타',
 };
 
 export const DOCUMENT_CATEGORY_HINTS: Record<DocumentCategory, string> = {
-  DRAWING: '시공도, 가공도, 평면도',
-  SPEC: '시방서, 자재 사양서',
-  WORK_ORDER: '작업지시서, 작업 순서, 현장 유의사항',
+  DRAWING: '시공도, 가공도, 시방서, 작업지시서',
   CONTRACT: '계약서, 변경 합의서, 공문',
   SAFETY: '안전 점검표, 검사·확인서, 준공 서류',
+  QUOTE: '견적서, 정산서, 거래명세서',
   OTHER: '',
 };
 
 /**
- * @description 분류별 민감 자료 기본값: 계약·행정은 기본적으로 민감 자료 (서비스 기획서 §12.3). 직접 정하면 그 값을 쓴다
+ * @description 분류별 민감 자료 기본값: 계약·공문은 기본적으로 민감 자료 (서비스 기획서 §12.3). 직접 정하면 그 값을 쓴다
  * @param category 문서 분류
  * @param explicit 사용자가 직접 정한 값 (없으면 분류 기본값)
  * @returns 민감 자료 여부
@@ -104,6 +95,8 @@ export const documentUpdateSchema = z
     isSensitive: z.boolean(),
     // 자주 보는 자료는 프로젝트 첫 화면에 고정
     isPinned: z.boolean(),
+    // 마감 요약(준공 보고서)에 넣을 문서로 고름 (안전·검사, 계약·공문 분류만, 민감 자료는 표시해도 싣지 않음)
+    includeInSummary: z.boolean(),
   })
   .partial()
   .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
@@ -145,6 +138,7 @@ export const documentSchema = z.object({
   title: z.string(),
   isSensitive: z.boolean(),
   isPinned: z.boolean(),
+  includeInSummary: z.boolean(),
   createdBy: z.uuid(),
   createdAt: z.iso.datetime(),
   updatedAt: z.iso.datetime(),
@@ -194,6 +188,16 @@ export const AUDIT_ACTIONS = [
   'EMPLOYEE_DOCUMENT_VIEWED',
   'MONTH_CLOSED',
   'MONTH_REOPENED',
+  // 활동 기록 (데이터를 바꾼 일)
+  'WORK_LOG_SAVED',
+  'WORK_LOG_UPDATED',
+  'MATERIAL_RECORD_DELETED',
+  'LEDGER_ENTRY_DELETED',
+  'PHOTO_DELETED',
+  'DOCUMENT_DELETED',
+  'PROJECT_UPDATED',
+  'PROJECT_STATUS_CHANGED',
+  'EMPLOYEE_UPDATED',
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
@@ -210,6 +214,15 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   EMPLOYEE_DOCUMENT_VIEWED: '직원 서류 열람',
   MONTH_CLOSED: '월 공수 확정',
   MONTH_REOPENED: '월 공수 재오픈',
+  WORK_LOG_SAVED: '작업 내역 저장',
+  WORK_LOG_UPDATED: '작업 내역 수정',
+  MATERIAL_RECORD_DELETED: '자재 기록 삭제',
+  LEDGER_ENTRY_DELETED: '지출·수입 기록 삭제',
+  PHOTO_DELETED: '사진 삭제',
+  DOCUMENT_DELETED: '문서 삭제',
+  PROJECT_UPDATED: '프로젝트 정보 수정',
+  PROJECT_STATUS_CHANGED: '프로젝트 상태 변경',
+  EMPLOYEE_UPDATED: '직원 정보 수정',
 };
 
 // 민감 자료 열람 기록 (수정·삭제할 수 없는 감사 기록, 서비스 기획서 §13.1)

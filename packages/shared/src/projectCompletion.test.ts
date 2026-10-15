@@ -1,4 +1,9 @@
-import { evaluateTransitionNotices, transitionNoticeMessage } from './projectCompletion';
+import {
+  evaluateTransitionNotices,
+  transitionNoticeMessage,
+  selectSummaryDocuments,
+  selectSummaryPhotos,
+} from './projectCompletion';
 
 const base = {
   from: 'IN_PROGRESS' as const,
@@ -120,5 +125,63 @@ describe('evaluateTransitionNotices (§10.3)', () => {
         ],
       }),
     ).toMatch(/덕트 15장.*등/);
+  });
+});
+
+describe('마감 요약의 사진·문서 선택 규칙', () => {
+  const photo = (id: string, category: string, takenAt: string, includeInSummary = false) => ({
+    id,
+    category,
+    takenAt,
+    includeInSummary,
+  });
+
+  it('사진: 고르지 않으면 작업 후 사진 최근 8장, 고른 것이 있으면 최근순으로 12장까지', () => {
+    const many = Array.from({ length: 10 }, (_, index) =>
+      photo(`a${index}`, 'AFTER', `2026-10-${String(index + 1).padStart(2, '0')}T00:00:00Z`),
+    );
+    const photos = [photo('b1', 'BEFORE', '2026-10-20T00:00:00Z'), ...many];
+
+    expect(selectSummaryPhotos(photos)).toEqual(['a9', 'a8', 'a7', 'a6', 'a5', 'a4', 'a3', 'a2']);
+
+    const chosen = photos.map((item) =>
+      item.id === 'b1' || item.id === 'a0' ? { ...item, includeInSummary: true } : item,
+    );
+
+    expect(selectSummaryPhotos(chosen)).toEqual(['b1', 'a0']);
+
+    const thirteen = Array.from({ length: 13 }, (_, index) =>
+      photo(`c${index}`, 'OTHER', `2026-10-${String(index + 1).padStart(2, '0')}T00:00:00Z`, true),
+    );
+
+    expect(selectSummaryPhotos(thirteen)).toHaveLength(12);
+    expect(selectSummaryPhotos([])).toEqual([]);
+  });
+
+  it('문서: 안전·검사, 계약·공문의 민감하지 않은 문서만, 고른 것이 있으면 그것만', () => {
+    const doc = (id: string, category: string, isSensitive = false, includeInSummary = false) => ({
+      id,
+      category,
+      isSensitive,
+      includeInSummary,
+    });
+    const docs = [
+      doc('d1', 'DRAWING'),
+      doc('s1', 'SAFETY'),
+      doc('s2', 'SAFETY', true),
+      doc('c1', 'CONTRACT'),
+      doc('q1', 'QUOTE', false, true),
+    ];
+
+    expect(selectSummaryDocuments(docs)).toEqual(['s1', 'c1']);
+    expect(
+      selectSummaryDocuments(
+        docs.map((item) => (item.id === 'c1' ? { ...item, includeInSummary: true } : item)),
+      ),
+    ).toEqual(['c1']);
+    // 민감 자료는 고르거나 말거나 싣지 않는다
+    expect(selectSummaryDocuments([doc('s2', 'SAFETY', true, true), doc('s1', 'SAFETY')])).toEqual([
+      's1',
+    ]);
   });
 });

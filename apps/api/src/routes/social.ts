@@ -19,6 +19,7 @@ import type { InvitationStore } from '../invitation/invitationStore';
 import type { Logger } from '../logger';
 import { readSessionToken, setSessionCookie } from '../session/cookie';
 import { buildDeviceLabel } from '../session/deviceLabel';
+import { clientIp } from '../session/clientIp';
 import type { SessionStore } from '../session/sessionStore';
 import type { SocialService } from '../auth/socialService';
 import {
@@ -220,6 +221,7 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
 
           const created = await sessionStore.create(account, {
             deviceLabel: buildDeviceLabel(request.get('user-agent')),
+            ipAddress: clientIp(request),
           });
 
           setSessionCookie(response, created, options.isSecureCookie);
@@ -252,6 +254,7 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
         });
         const created = await sessionStore.create(account, {
           deviceLabel: buildDeviceLabel(request.get('user-agent')),
+          ipAddress: clientIp(request),
         });
 
         setSessionCookie(response, created, options.isSecureCookie);

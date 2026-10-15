@@ -102,6 +102,15 @@ export const changeWorkLinkSchema = z.object({
 
 export type ChangeWorkLink = z.infer<typeof changeWorkLinkSchema>;
 
+// 증빙 올리기: 올린 파일로 문서함에 "계약·공문" 문서를 만들고 이 변경·추가 작업에 한 번에 연결한다
+export const changeWorkEvidenceCreateSchema = z.object({
+  fileId: z.uuid(),
+  title: z.string().trim().min(1, '증빙 이름을 입력해 주세요').max(100),
+  confirmCompleted: confirmSchema,
+});
+
+export type ChangeWorkEvidenceCreate = z.infer<typeof changeWorkEvidenceCreateSchema>;
+
 export const changeWorkUnlinkQuerySchema = z.object({
   confirmCompleted: z.enum(['true']).optional(),
 });
@@ -156,6 +165,9 @@ export const changeWorkDocumentSchema = z.object({
   title: z.string(),
   category: documentCategorySchema,
   isSensitive: z.boolean(),
+  // 열 때 쓰는 최신 판 번호와 파일 형식 (이미지인지 PDF인지 구분)
+  latestVersionNo: z.number().int(),
+  contentType: z.string(),
   linkedAt: z.iso.datetime(),
 });
 

@@ -31,6 +31,7 @@ export const storyPhoto = (
   workDate: `2026-10-0${(index % 7) + 1}`,
   description: null,
   isCover: false,
+  includeInSummary: false,
   uploadedBy: '0198d000-0000-7000-8000-000000000001',
   createdAt: '2026-10-08T00:00:00.000Z',
   file: { status: 'READY', rejectReason: null, size: 120_000 },

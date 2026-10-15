@@ -1,10 +1,16 @@
-import type { AuditAction } from '@field-note/shared';
+import type { AuditAction, AuditKind } from '@field-note/shared';
 import { useInfiniteQuery } from '@tanstack/react-query';
 
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-export type AuditFilter = { action?: AuditAction; from?: string; to?: string };
+export type AuditFilter = {
+  action?: AuditAction;
+  kind?: AuditKind;
+  projectId?: string;
+  from?: string;
+  to?: string;
+};
 
 const PAGE_SIZE = 30;
 
