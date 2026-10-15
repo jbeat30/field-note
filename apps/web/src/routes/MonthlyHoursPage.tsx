@@ -5,6 +5,7 @@ import {
   monthlyWorkValue,
   summarizeMonthlyHours,
   todayInSeoul,
+  WORK_PATTERNS,
 } from '@field-note/shared';
 import { useState, type FormEvent } from 'react';
 import { Link, useSearchParams } from 'react-router';
@@ -23,6 +24,7 @@ import { useConfirm } from '../components/ui/confirm-dialog';
 import { formatDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 import { splitServerErrors } from '../lib/serverErrors';
+import { MonthlyMatrixTable } from '../monthly/MonthlyMatrixTable';
 import { useCloseMonth, useMonthlyHours, useReopenMonth } from '../monthly/useMonthlyHours';
 import { ReportExportError, downloadMonthlyXlsx } from '../reports/exportReport';
 
@@ -218,8 +220,14 @@ export const MonthlyHoursPage = () => {
                   unit: `· ${value(summary.total).manMonths} MM`,
                 },
                 { label: '일한 사람', value: summary.byEmployee.length, unit: '명' },
+                { label: '프로젝트', value: summary.byProject.length, unit: '개' },
                 { label: '하루 기준시간', value: `${data.standardWorkMinutes / 60}`, unit: '시간' },
-                { label: 'MM 환산 기준', value: data.monthlyWorkDays, unit: '일' },
+                {
+                  label: 'MM 환산 기준',
+                  value: data.monthlyWorkDays,
+                  unit: '일',
+                  hint: `1MM = ${data.monthlyWorkDays}MD (${WORK_PATTERNS.find((item) => item.days === data.monthlyWorkDays)?.label ?? '직접 입력'}${WORK_PATTERNS.some((item) => item.days === data.monthlyWorkDays) ? ' 연평균' : ''})`,
+                },
               ]}
             />
             {data.isClosed && data.closedAt && (
@@ -277,77 +285,10 @@ export const MonthlyHoursPage = () => {
                 aria-labelledby="monthly-table-heading"
               >
                 <h2 id="monthly-table-heading" className="text-base font-semibold">
-                  프로젝트·직원별 공수
+                  직원 × 프로젝트 공수
                 </h2>
-                {data.rows.length === 0 ? (
-                  <p className="text-foreground/70 text-sm">이 달에 저장된 작업 내역이 없습니다</p>
-                ) : (
-                  <div className="overflow-x-auto">
-                    <table className="w-full min-w-[24rem] text-left text-sm">
-                      <thead>
-                        <tr className="border-b border-line">
-                          <th className="py-2 pr-3 text-xs font-semibold text-foreground/65">
-                            프로젝트
-                          </th>
-                          <th className="py-2 pr-3 text-xs font-semibold text-foreground/65">
-                            직원
-                          </th>
-                          <th className="py-2 pr-3 text-right text-xs font-semibold text-foreground/65">
-                            MD
-                          </th>
-                          <th className="py-2 text-right text-xs font-semibold text-foreground/65">
-                            MM
-                          </th>
-                        </tr>
-                      </thead>
-                      <tbody>
-                        {data.rows.map((row) => (
-                          <tr
-                            key={`${row.projectId}-${row.employeeId}`}
-                            className="border-b border-line"
-                          >
-                            <td className="py-2 pr-3 text-sm">
-                              <span className="text-foreground/65">{row.projectCode}</span>{' '}
-                              {row.projectName}
-                            </td>
-                            <td className="py-2 pr-3">{row.employeeName}</td>
-                            <td className="py-2 pr-3 text-right tabular-nums font-semibold">
-                              {value(row.minutes).manDays}
-                            </td>
-                            <td className="py-2 text-right tabular-nums text-foreground/70">
-                              {value(row.minutes).manMonths}
-                            </td>
-                          </tr>
-                        ))}
-                      </tbody>
-                    </table>
-                  </div>
-                )}
+                <MonthlyMatrixTable rows={data.rows} settings={settings!} />
               </section>
-
-              {summary.byEmployee.length > 0 && (
-                <section
-                  className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-4"
-                  aria-labelledby="monthly-employee-heading"
-                >
-                  <h2 id="monthly-employee-heading" className="text-base font-semibold">
-                    직원별 합계
-                  </h2>
-                  <ul className="flex flex-col divide-y divide-line text-sm">
-                    {summary.byEmployee.map((item) => (
-                      <li key={item.id} className="flex justify-between gap-2 py-2">
-                        <span>{item.name}</span>
-                        <span className="tabular-nums font-semibold">
-                          {value(item.minutes).manDays} MD
-                          <span className="ml-1 font-normal text-foreground/65">
-                            · {value(item.minutes).manMonths} MM
-                          </span>
-                        </span>
-                      </li>
-                    ))}
-                  </ul>
-                </section>
-              )}
             </div>
 
             {/* 오른쪽: 확정/재오픈 + 이력 */}

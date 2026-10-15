@@ -15,6 +15,7 @@ import { useProject } from '../projects/useProjects';
 import { useCompanySettings } from '../settings/useCompanySettings';
 import { useOptions } from '../settings/useOptions';
 import { DayMemosStep } from '../workLogs/DayMemosStep';
+import { DayLedgerStep } from '../workLogs/DayLedgerStep';
 import { DayPhotosStep } from '../workLogs/DayPhotosStep';
 import { WorkLogEditor } from '../workLogs/WorkLogEditor';
 import { useWorkLog, useWorkLogList } from '../workLogs/useWorkLogs';
@@ -123,6 +124,7 @@ export const ProjectWorkDayPage = () => {
               <DayMemosStep projectId={id} date={date} />
             </div>
           )}
+          {!problem && <DayLedgerStep projectId={id} date={date} today={today} />}
           {!problem && (
             <p className="text-sm text-foreground/70">
               이 날 쓴 자재는{' '}

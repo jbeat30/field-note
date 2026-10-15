@@ -31,7 +31,8 @@ export const DayPhotosStep = ({ projectId, date }: DayPhotosStepProps) => {
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const inputRef = useRef<HTMLInputElement>(null);
   const items = photos.data?.pages.flatMap((page) => page.items) ?? [];
-  const selected = items.find((photo) => photo.id === selectedId) ?? null;
+  const selectedIndex = items.findIndex((photo) => photo.id === selectedId);
+  const selected = items[selectedIndex] ?? null;
 
   const handleChange = async (event: React.ChangeEvent<HTMLInputElement>) => {
     const files = [...(event.target.files ?? [])];
@@ -108,10 +109,17 @@ export const DayPhotosStep = ({ projectId, date }: DayPhotosStepProps) => {
       )}
       {selected && (
         <PhotoDetailDialog
+          key={selected.id}
           photo={selected}
           onClose={() => setSelectedId(null)}
           onSave={async (photoId, body) => void (await update.mutateAsync({ id: photoId, body }))}
           onDelete={async (photoId) => remove.mutateAsync(photoId)}
+          onPrev={selectedIndex > 0 ? () => setSelectedId(items[selectedIndex - 1]!.id) : undefined}
+          onNext={
+            selectedIndex < items.length - 1
+              ? () => setSelectedId(items[selectedIndex + 1]!.id)
+              : undefined
+          }
         />
       )}
     </WorkStep>

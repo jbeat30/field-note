@@ -92,9 +92,9 @@ describe('문서 목업 서버 계약', () => {
       versionCount: 2,
       latest: { versionNo: 2, reason: '배관 위치 변경' },
     });
-    // 계약·행정은 기본 민감 자료
+    // 계약·공문은 기본 민감 자료
     expect(items.find((item) => item.title === '도급 계약서')!.isSensitive).toBe(true);
-    expect(await list(projectId, { category: 'SPEC' })).toHaveLength(1);
+    expect(await list(projectId, { category: 'DRAWING' })).toHaveLength(2);
     expect(await list(projectId, { q: '계약' })).toHaveLength(1);
   });
 

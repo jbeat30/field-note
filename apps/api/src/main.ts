@@ -31,6 +31,7 @@ import { createReportService } from './report/reportService';
 import { createSearchService } from './search/searchService';
 import { createDocumentService } from './document/documentService';
 import { createMaterialService } from './material/materialService';
+import { createLedgerService } from './ledger/ledgerService';
 import { createMemoService } from './memo/memoService';
 import { createPhotoService } from './photo/photoService';
 import { createPrismaInvitationStore } from './invitation/invitationStore';
@@ -86,6 +87,7 @@ const main = async () => {
   const photos = createPhotoService(appPrisma, storage);
   const memos = createMemoService(appPrisma);
   const materials = createMaterialService(appPrisma);
+  const ledger = createLedgerService(appPrisma);
   const documents = createDocumentService(appPrisma, storage);
   const credentials = createCredentialService({ app: appPrisma, storage });
   const audit = createAuditService(appPrisma);
@@ -170,6 +172,7 @@ const main = async () => {
     photos,
     memos,
     materials,
+    ledger,
     documents,
     search,
     reports,

@@ -4,6 +4,7 @@ import {
   monthRange,
   monthlyCloseSchema,
   monthlyReopenSchema,
+  pivotMonthlyHours,
   monthlyWorkValue,
   summarizeMonthlyHours,
   validateMonthClose,
@@ -133,5 +134,62 @@ describe('monthlyWorkValue·summarizeMonthlyHours', () => {
       ['2026-001 A동', 960],
       ['2026-002 B동', 240],
     ]);
+  });
+});
+
+describe('pivotMonthlyHours', () => {
+  const row = (
+    projectId: string,
+    code: string,
+    employeeId: string,
+    name: string,
+    minutes: number,
+  ) => ({
+    projectId,
+    projectCode: code,
+    projectName: `${code} 공사`,
+    employeeId,
+    employeeName: name,
+    minutes,
+  });
+  const rows = [
+    row('p1', '2026-001', 'e1', '정판금', 960),
+    row('p2', '2026-002', 'e1', '정판금', 480),
+    row('p1', '2026-001', 'e2', '최설치', 480),
+  ];
+
+  it('직원별: 행 직원·열 프로젝트, 합계가 큰 순으로 합산한다', () => {
+    const matrix = pivotMonthlyHours(rows, 'EMPLOYEE');
+
+    expect(matrix.rows.map((item) => [item.label, item.total])).toEqual([
+      ['정판금', 1440],
+      ['최설치', 480],
+    ]);
+    expect(matrix.columns.map((item) => item.id)).toEqual(['p1', 'p2']);
+    expect(matrix.rows[0]!.cells).toEqual({ p1: 960, p2: 480 });
+    // 일하지 않은 칸은 값이 없다
+    expect(matrix.rows[1]!.cells).toEqual({ p1: 480 });
+    expect(matrix.columnTotals).toEqual({ p1: 1440, p2: 480 });
+    expect(matrix.total).toBe(1920);
+  });
+
+  it('프로젝트별: 행 프로젝트·열 직원', () => {
+    const matrix = pivotMonthlyHours(rows, 'PROJECT');
+
+    expect(matrix.rows.map((item) => [item.id, item.total])).toEqual([
+      ['p1', 1440],
+      ['p2', 480],
+    ]);
+    expect(matrix.columns.map((item) => item.label)).toEqual(['정판금', '최설치']);
+    expect(matrix.columnTotals).toEqual({ e1: 1440, e2: 480 });
+  });
+
+  it('행이 없으면 빈 표', () => {
+    expect(pivotMonthlyHours([], 'EMPLOYEE')).toEqual({
+      columns: [],
+      rows: [],
+      columnTotals: {},
+      total: 0,
+    });
   });
 });

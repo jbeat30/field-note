@@ -3,6 +3,7 @@ import {
   ratePerMinute,
   rateOn,
   summarizeLaborCost,
+  summarizePayRates,
   type PayType,
 } from './laborCost';
 
@@ -183,5 +184,40 @@ describe('payRateCreateSchema', () => {
     expect(payRateCreateSchema.safeParse({ ...ok, effectiveFrom: '2026-13-01' }).success).toBe(
       false,
     );
+  });
+});
+
+describe('summarizePayRates', () => {
+  const rate = (id: string, effectiveFrom: string, amount: number) => ({
+    id,
+    payType: 'DAILY' as const,
+    amount,
+    effectiveFrom,
+    createdAt: `${effectiveFrom}T09:00:00.000Z`,
+  });
+
+  it('현재·이전·적용 예정 단가를 가려낸다', () => {
+    const summary = summarizePayRates(
+      [
+        rate('b', '2026-06-01', 200000),
+        rate('a', '2026-01-01', 180000),
+        rate('c', '2026-12-01', 230000),
+      ],
+      '2026-10-15',
+    );
+
+    expect(summary.current?.id).toBe('b');
+    expect(summary.previous?.id).toBe('a');
+    expect(summary.upcoming?.id).toBe('c');
+  });
+
+  it('단가가 하나뿐이면 이전이 없고, 아직 시작 전이면 현재가 없다', () => {
+    expect(summarizePayRates([rate('a', '2026-01-01', 1)], '2026-10-15').previous).toBeNull();
+
+    const notStarted = summarizePayRates([rate('a', '2027-01-01', 1)], '2026-10-15');
+
+    expect(notStarted.current).toBeNull();
+    expect(notStarted.previous).toBeNull();
+    expect(notStarted.upcoming?.id).toBe('a');
   });
 });

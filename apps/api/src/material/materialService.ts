@@ -59,10 +59,17 @@ export type MaterialService = {
     id: string,
     input: MaterialRecordUpdate,
   ) => Promise<MaterialRecord>;
-  // 소프트 삭제
-  removeRecord: (companyId: string, id: string) => Promise<void>;
+  // 소프트 삭제. 지운 기록의 요약(활동 기록용)을 돌려준다
+  removeRecord: (companyId: string, id: string) => Promise<RemovedMaterialRecord>;
   // 프로젝트별 자재 현황 (반입·사용·반출·폐기·잔량)
   balance: (companyId: string, projectId: string) => Promise<MaterialBalanceResponse>;
+};
+
+export type RemovedMaterialRecord = {
+  projectId: string;
+  materialName: string;
+  recordDate: string;
+  kind: string;
 };
 
 type RecordRow = Prisma.MaterialRecordGetPayload<object>;
@@ -425,15 +432,28 @@ export const createMaterialService = (
         );
       }),
 
-    removeRecord: async (companyId, id) => {
-      await withCompany(app, companyId, async (tx) => {
-        await findLiveRecord(tx, id);
+    removeRecord: async (companyId, id) =>
+      withCompany(app, companyId, async (tx) => {
+        const row = await findLiveRecord(tx, id);
+        const material = await tx.material.findFirst({
+          where: { id: row.materialId },
+          select: { name: true, spec: true },
+        });
+
         await tx.materialRecord.update({
           where: { companyId_id: { companyId, id } },
           data: { deletedAt: now() },
         });
-      });
-    },
+
+        return {
+          projectId: row.projectId,
+          materialName: material
+            ? `${material.name}${material.spec ? ` (${material.spec})` : ''}`
+            : '(알 수 없음)',
+          recordDate: isoDate(row.recordDate),
+          kind: row.kind,
+        };
+      }),
 
     balance: (companyId, projectId) =>
       withCompany(app, companyId, async (tx) => {

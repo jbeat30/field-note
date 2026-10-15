@@ -18,6 +18,7 @@ export const queryKeys = {
     ['assignments', 'staffing', { from, to }] as const,
   projectProgress: (projectId: string) => ['progress', 'list', { projectId }] as const,
   projectHealth: (projectId: string) => ['progress', 'health', { projectId }] as const,
+  payRateSummaries: () => ['labor', 'pay-rate-summaries', {}] as const,
   payRates: (employeeId: string) => ['labor', 'pay-rates', { employeeId }] as const,
   laborCost: (projectId: string) => ['labor', 'cost', { projectId }] as const,
   changeWorks: (projectId: string, status?: string) =>
@@ -63,6 +64,10 @@ export const queryKeys = {
   materialRecords: (projectId: string, filter: object = {}) =>
     ['materials', 'records', { projectId, ...filter }] as const,
   materialBalance: (projectId: string) => ['materials', 'balance', { projectId }] as const,
+  ledgerEntries: (projectId: string, filter: object = {}) =>
+    ['ledger', 'entries', { projectId, ...filter }] as const,
+  ledgerSummary: (projectId: string, filter: object = {}) =>
+    ['ledger', 'summary', { projectId, ...filter }] as const,
   documents: (projectId: string, filter: object = {}) =>
     ['documents', 'list', { projectId, ...filter }] as const,
   document: (id: string) => ['documents', 'detail', { id }] as const,

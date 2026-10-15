@@ -1,0 +1,4 @@
+-- 지출·수입 기록(08 문서 §6): 지출·수입 분류 목록 종류와 삭제 활동 기록 종류
+ALTER TYPE "option_kind" ADD VALUE IF NOT EXISTS 'EXPENSE_CATEGORY';
+ALTER TYPE "option_kind" ADD VALUE IF NOT EXISTS 'INCOME_CATEGORY';
+ALTER TYPE "audit_action" ADD VALUE IF NOT EXISTS 'LEDGER_ENTRY_DELETED';

@@ -35,6 +35,19 @@ const stubWindowOpen = () => {
   return popup;
 };
 
+// 행 오른쪽 더보기 메뉴에서 항목을 고른다
+const pickRowMenu = async (canvas: ReturnType<typeof within>, title: string, item: string) => {
+  await userEvent.click(await canvas.findByRole('button', { name: `${title} 더보기` }));
+  await userEvent.click(await within(document.body).findByRole('menuitem', { name: item }));
+};
+
+// 맨 위 `문서 올리기` 버튼으로 올리기 창을 연다
+const openUpload = async (canvas: ReturnType<typeof within>) => {
+  await userEvent.click(await canvas.findByRole('button', { name: '문서 올리기' }));
+
+  return within(await within(document.body).findByRole('dialog', { name: '문서 올리기' }));
+};
+
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -44,9 +57,13 @@ export const Default: Story = {
       .getAllByRole('heading', { level: 2 })
       .map((heading) => heading.textContent);
 
-    // 분류별로 묶임
-    await expect(headings).toEqual(['문서함', '문서 올리기']);
+    // 올리기 폼은 창으로 빼서 평소에는 보이지 않음
+    await expect(headings).toEqual(['문서함']);
+    await expect(canvas.queryByLabelText('문서 파일')).not.toBeInTheDocument();
     await expect(canvas.getByText('민감')).toBeInTheDocument();
+    // 분류 폴더 카드마다 문서 수가 보임
+    await expect(canvas.getByRole('button', { name: /^전체 3/ })).toBeInTheDocument();
+    await expect(canvas.getByRole('button', { name: /^계약·공문 1/ })).toBeInTheDocument();
   },
 };
 
@@ -55,11 +72,13 @@ export const FilterAndSearch: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('1층 시공도');
-    await chooseOption(canvas.getByLabelText('분류로 거르기'), '계약·행정');
+    await userEvent.click(canvas.getByRole('button', { name: /^계약·공문/ }));
     await waitFor(() => expect(canvas.queryByText('외장 판금 시방서')).not.toBeInTheDocument());
     await expect(await canvas.findByText('도급 계약서')).toBeInTheDocument();
 
-    await chooseOption(canvas.getByLabelText('분류로 거르기'), '모든 분류');
+    // 같은 카드를 다시 누르면 전체
+    await userEvent.click(canvas.getByRole('button', { name: /^계약·공문/ }));
+    await expect(await canvas.findByText('외장 판금 시방서')).toBeInTheDocument();
     await userEvent.type(canvas.getByLabelText('문서 이름 검색'), '시방');
     await waitFor(() => expect(canvas.queryByText('도급 계약서')).not.toBeInTheDocument());
     await expect(await canvas.findByText('외장 판금 시방서')).toBeInTheDocument();
@@ -118,7 +137,7 @@ export const SensitiveOpenIsLogged: Story = {
     );
     await waitFor(() => expect(popup.location.href).toContain('/mock-storage/document/'));
 
-    await userEvent.click(canvas.getByRole('button', { name: '도급 계약서 버전·기록' }));
+    await pickRowMenu(canvas, '도급 계약서', '새 판 올리기·버전 기록');
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
@@ -131,21 +150,57 @@ export const UploadNewDocument: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('1층 시공도');
+
+    const dialog = await openUpload(canvas);
+
     await userEvent.upload(
-      canvas.getByLabelText('문서 파일'),
+      dialog.getByLabelText('문서 파일'),
       new File(['%PDF-1.7'], '안전점검표.pdf', { type: 'application/pdf' }),
     );
-    await chooseOption(canvas.getByLabelText('분류'), '안전·검사');
-    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+    await chooseOption(dialog.getByLabelText('분류'), '안전·검사');
+    await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
+    // 올리면 창이 닫히고 목록에 보임
     await expect(
       await canvas.findByRole('button', { name: '안전점검표 열기' }),
     ).toBeInTheDocument();
     await expect(
       within(canvas.getByRole('table', { name: '문서 목록' })).getByText('안전·검사'),
     ).toBeInTheDocument();
-    // 올린 뒤 입력이 비워짐
-    await waitFor(() => expect(canvas.getByLabelText('문서 이름')).toHaveValue(''));
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+  },
+};
+
+// 같은 이름의 문서를 올리면 새 판으로 올릴지 묻고, 확인하면 그 문서의 판이 늘어난다
+export const SameNameOffersNewVersion: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('1층 시공도');
+
+    const dialog = await openUpload(canvas);
+
+    await userEvent.upload(
+      dialog.getByLabelText('문서 파일'),
+      new File(['%PDF-1.7'], '도급 계약서.pdf', { type: 'application/pdf' }),
+    );
+    await userEvent.click(dialog.getByRole('button', { name: '저장' }));
+
+    const confirmDialog = within(await within(document.body).findByRole('alertdialog'));
+
+    await expect(confirmDialog.getByText(/v2판으로 올릴까요/)).toBeInTheDocument();
+    await userEvent.click(confirmDialog.getByRole('button', { name: '새 판으로 올리기' }));
+
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    // 새 문서가 생기지 않고 같은 문서의 판 수가 2가 됨
+    const row = within(await canvas.findByRole('row', { name: /도급 계약서/ }));
+
+    await expect(row.getByText('v2')).toBeInTheDocument();
+    await expect(canvas.getAllByRole('row', { name: /도급 계약서/ })).toHaveLength(1);
   },
 };
 
@@ -154,13 +209,30 @@ export const UnsupportedFileIsRejected: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('1층 시공도');
+
+    const dialog = await openUpload(canvas);
+
     // accept를 거치지 않고 올려도(드래그 등) 형식을 걸러 냄
-    await userEvent.upload(canvas.getByLabelText('문서 파일'), new File(['MZ'], '설치.exe'), {
+    await userEvent.upload(dialog.getByLabelText('문서 파일'), new File(['MZ'], '설치.exe'), {
       applyAccept: false,
     });
-    await userEvent.click(canvas.getByRole('button', { name: '저장' }));
+    await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByRole('alert')).toHaveTextContent('올릴 수 없는 파일 형식');
+    await expect(await dialog.findByRole('alert')).toHaveTextContent('올릴 수 없는 파일 형식');
+  },
+};
+
+// 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 넣을 수 있다
+export const SummaryCheckboxNeedsEligibleDocument: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await pickRowMenu(canvas, '외장 판금 시방서', '새 판 올리기·버전 기록');
+
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    // 도면·작업지시서 분류라 넣을 수 없다
+    await expect(await dialog.findByRole('checkbox', { name: /준공 요약에 넣기/ })).toBeDisabled();
   },
 };
 
@@ -168,9 +240,7 @@ export const DetailAddVersionAndDelete: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await userEvent.click(
-      await canvas.findByRole('button', { name: '외장 판금 시방서 버전·기록' }),
-    );
+    await pickRowMenu(canvas, '외장 판금 시방서', '새 판 올리기·버전 기록');
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
@@ -219,7 +289,7 @@ export const OpensDetailFromSearchLink: Story = {
       expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
     );
     await expect(
-      within(canvasElement).getByRole('button', { name: '도급 계약서 버전·기록' }),
+      within(canvasElement).getByRole('button', { name: '도급 계약서 더보기' }),
     ).toBeInTheDocument();
   },
 };

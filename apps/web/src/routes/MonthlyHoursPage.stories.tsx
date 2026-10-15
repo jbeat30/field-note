@@ -34,9 +34,20 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByText('미확정')).toBeInTheDocument();
-    // 프로젝트·직원별 표와 직원별 합계
-    await expect(await canvas.findByRole('table')).toBeInTheDocument();
-    await expect(canvas.getByRole('heading', { name: '직원별 합계' })).toBeInTheDocument();
+    // 직원 × 프로젝트 표: 행 직원·열 프로젝트, 합계가 큰 사람이 먼저, 끝 열에 MD와 MM, 아래에 합계 행
+    const table = within(await canvas.findByRole('table', { name: '월 공수표' }));
+    const rows = table.getAllByRole('row');
+
+    await expect(rows[1]).toHaveTextContent('최설치');
+    await expect(table.getByRole('row', { name: /^정판금/ })).toHaveTextContent('2');
+    await expect(table.getByRole('columnheader', { name: 'MM' })).toBeInTheDocument();
+    await expect(table.getByRole('row', { name: /^합계/ })).toHaveTextContent('9');
+    // 행을 프로젝트로 바꿔 볼 수 있다
+    await userEvent.click(canvas.getByRole('radio', { name: '프로젝트별' }));
+    await expect(await table.findByRole('columnheader', { name: '프로젝트' })).toBeInTheDocument();
+    await expect(table.getByRole('rowheader', { name: /A동 외장 판금 공사/ })).toBeInTheDocument();
+    // MM 환산 기준을 수치 옆에 적는다
+    await expect(canvas.getAllByText(/1MM = /).length).toBeGreaterThan(0);
     // 임시 저장 작업 내역은 목록으로 알린다 (집계에는 포함되지 않음)
     await expect(
       canvas.getByRole('heading', { name: '임시 저장된 작업 내역 1건' }),
@@ -53,7 +64,7 @@ export const EmptyMonth: Story = {
     await expect(
       await canvas.findByText('이 달에 저장된 작업 내역이 없습니다'),
     ).toBeInTheDocument();
-    await expect(canvas.queryByRole('table')).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('table', { name: '월 공수표' })).not.toBeInTheDocument();
   },
 };
 

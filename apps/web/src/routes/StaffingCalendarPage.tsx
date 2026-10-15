@@ -1,185 +1,253 @@
 import {
   PROJECT_STATUS_LABELS,
-  buildStaffingGrid,
-  findFreeEmployees,
-  findStaffingConflicts,
+  buildStaffingTimeline,
+  countDays,
   listDates,
   periodStart,
   shiftDate,
+  summarizeStaffingTimeline,
   todayInSeoul,
 } from '@field-note/shared';
+import { useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router';
 
 import { BackLink } from '../components/ui/back-link';
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
-import { Badge } from '../components/ui/badge';
+import { Chip } from '../components/ui/chip';
 import { EmptyState } from '../components/ui/empty-state';
 import { PeriodNav } from '../components/ui/period-nav';
-import { StaffingGrid } from '../staffing/StaffingGrid';
+import { Select } from '../components/ui/select';
+import { SegmentedControl } from '../components/ui/segmented-control';
+import { useProjectChoices } from '../projects/useProjects';
+import { StaffingTimeline } from '../staffing/StaffingTimeline';
 import { useStaffingCalendar } from '../staffing/useStaffingCalendar';
 
-const WEEK_DAYS = 7;
+type View = 'week' | 'twoWeeks' | 'month';
+
+const VIEWS: { value: View; label: string }[] = [
+  { value: 'week', label: '1주' },
+  { value: 'twoWeeks', label: '2주' },
+  { value: 'month', label: '월' },
+];
+
+// 날짜 열 최소 너비: 길게 볼수록 좁게 (넘치면 표만 가로로 민다)
+const COLUMN_MIN_WIDTH: Record<View, string> = {
+  week: '4.5rem',
+  twoWeeks: '3rem',
+  month: '2.25rem',
+};
 
 const isDate = (value: string | null): value is string =>
   value !== null && /^\d{4}-\d{2}-\d{2}$/.test(value) && !Number.isNaN(Date.parse(value));
 
-// 인력 배치 캘린더 (§9.7): 한 주 단위로 직원 × 날짜 투입 현황, 같은 날 겹침, 이번 주 비는 사람
+const isView = (value: string | null): value is View =>
+  value === 'week' || value === 'twoWeeks' || value === 'month';
+
+const monthEnd = (date: string) => {
+  const [year, month] = date.split('-').map(Number) as [number, number];
+
+  return new Date(Date.UTC(year, month, 0)).toISOString().slice(0, 10);
+};
+
+const shiftMonth = (date: string, delta: number) => {
+  const [year, month] = date.split('-').map(Number) as [number, number];
+
+  return new Date(Date.UTC(year, month - 1 + delta, 1)).toISOString().slice(0, 10);
+};
+
+// 보기와 기준일로 기간을 정한다: 주는 월요일부터, 월은 1일부터
+const periodOf = (view: View, anchor: string) => {
+  if (view === 'month') {
+    const from = `${anchor.slice(0, 8)}01`;
+
+    return { from, to: monthEnd(from) };
+  }
+
+  const from = periodStart(anchor, 'week');
+
+  return { from, to: shiftDate(from, view === 'week' ? 6 : 13) };
+};
+
+const periodLabel = (view: View, from: string, to: string) =>
+  view === 'month' ? `${from.slice(0, 4)}년 ${Number(from.slice(5, 7))}월` : `${from} ~ ${to}`;
+
+// 프로젝트 이름이 번호보다 먼저 읽혀야 해서 범례를 따로 두지 않고 막대 안에 이름을 쓴다
+const READING_GUIDE =
+  '막대는 그 프로젝트에서 일한 날이고 안의 숫자는 그날 시간입니다. 같은 날 두 곳에서 일하면 막대가 위아래로 쌓이고 빨간 테두리로 표시됩니다. 막대를 누르면 그날 하루 기록, 빈 칸을 누르면 프로젝트를 골라 그날 기록으로 갑니다';
+
+// 인력 배치 (09 문서 §4): 사람 행 × 날짜 열 타임라인. 누가 어디에서 일했고, 누가 비었고, 어디가 겹치는지 한눈에 본다
 export const StaffingCalendarPage = () => {
   const [params, setParams] = useSearchParams();
+  const view: View = isView(params.get('view')) ? (params.get('view') as View) : 'week';
   const requested = params.get('from');
-  // 주소의 시작일은 그 주 월요일로 맞춘다 (없거나 잘못되면 이번 주)
-  const from = periodStart(isDate(requested) ? requested : todayInSeoul(new Date()), 'week');
-  const to = shiftDate(from, WEEK_DAYS - 1);
+  const today = todayInSeoul(new Date());
+  const { from, to } = periodOf(view, isDate(requested) ? requested : today);
   const calendar = useStaffingCalendar(from, to);
-  const move = (days: number) => setParams({ from: shiftDate(from, days) });
-  const rows = calendar.data ? buildStaffingGrid(calendar.data) : [];
-  const conflicts = findStaffingConflicts(rows);
-  const free = findFreeEmployees(rows);
-  // 프로젝트마다 표와 범례에서 같은 구분 색을 쓴다 (프로젝트 id 순서로 0~5번 색을 돌려 씀)
-  const projects = new Map(
-    (calendar.data?.assignments ?? []).map((item) => [item.projectId, item]),
+  const choices = useProjectChoices();
+  const [title, setTitle] = useState('');
+  const [onlyConflicts, setOnlyConflicts] = useState(false);
+  const highlightEmployeeId = params.get('employee');
+
+  const rows = useMemo(
+    () => (calendar.data ? buildStaffingTimeline(calendar.data) : []),
+    [calendar.data],
   );
-  const projectColors = new Map(
-    [...projects.keys()].sort().map((projectId, index) => [projectId, index % 6] as const),
+  const summary = summarizeStaffingTimeline(rows);
+  const titles = [
+    ...new Set(
+      rows.map((row) => row.employee.title).filter((value): value is string => Boolean(value)),
+    ),
+  ].sort((a, b) => a.localeCompare(b, 'ko'));
+  const shown = rows.filter(
+    (row) =>
+      (!title || row.employee.title === title) && (!onlyConflicts || row.conflictDates.length > 0),
   );
+  // 프로젝트마다 막대에서 같은 구분 색을 쓴다 (프로젝트 id 순서로 0~5번 색을 돌려 씀)
+  const projectColors = useMemo(() => {
+    const ids = [...new Set((calendar.data?.workDays ?? []).map((item) => item.projectId))].sort();
+
+    return new Map(ids.map((projectId, index) => [projectId, index % 6] as const));
+  }, [calendar.data]);
+  // 빈 칸에서 고를 수 있는 프로젝트: 아직 끝나지 않은 것
+  const projectOptions = (choices.data ?? [])
+    .filter((item) => ['PLANNED', 'IN_PROGRESS', 'SUSPENDED'].includes(item.status))
+    .map((item) => ({ id: item.id, name: item.name }));
+  const statusText = (projectId: string) => {
+    const item = calendar.data?.workDays.find((day) => day.projectId === projectId);
+
+    return item ? PROJECT_STATUS_LABELS[item.projectStatus] : '';
+  };
+
+  // 보기를 바꿀 때 기준일: 오늘이 지금 기간 안이면 오늘, 아니면 기간 가운데 (월로 바꿀 때 엉뚱한 달로 가지 않게)
+  const anchorFor = (start: string, end: string) =>
+    today >= start && today <= end
+      ? today
+      : shiftDate(start, Math.floor(countDays(start, end) / 2));
+
+  const move = (direction: 1 | -1) => {
+    const anchor =
+      view === 'month'
+        ? shiftMonth(from, direction)
+        : shiftDate(from, direction * (view === 'week' ? 7 : 14));
+
+    setParams({ view, from: anchor });
+  };
 
   return (
-    <div className="flex flex-col gap-6">
+    <div className="flex flex-col gap-5">
       <BackLink to="/employees">직원</BackLink>
-      <PageHeader title="인력 배치" description="직원별 투입 현황과 겹침을 한 주 단위로 봅니다" />
-
-      <PeriodNav
-        label={`${from} ~ ${to}`}
-        prevLabel="이전 주"
-        nextLabel="다음 주"
-        onPrev={() => move(-WEEK_DAYS)}
-        onNext={() => move(WEEK_DAYS)}
-        todayLabel="이번 주"
-        onToday={() => setParams({})}
-        pickValue={from}
-        onPick={(date) => setParams({ from: periodStart(date, 'week') })}
+      <PageHeader
+        title="인력 배치"
+        description="누가 어느 프로젝트에서 일했는지, 누가 비었고 어디가 겹치는지 봅니다"
       />
+
+      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+        <div className="min-w-0 flex-1">
+          <PeriodNav
+            label={periodLabel(view, from, to)}
+            prevLabel={view === 'month' ? '이전 달' : '이전 기간'}
+            nextLabel={view === 'month' ? '다음 달' : '다음 기간'}
+            onPrev={() => move(-1)}
+            onNext={() => move(1)}
+            todayLabel={view === 'month' ? '이번 달' : '오늘'}
+            onToday={() => setParams({ view })}
+            pickValue={from}
+            onPick={(date) => setParams({ view, from: date })}
+          />
+        </div>
+        <SegmentedControl
+          aria-label="보기 기간"
+          className="md:w-auto"
+          value={view}
+          onValueChange={(next) => setParams({ view: next, from: anchorFor(from, to) })}
+          options={VIEWS}
+        />
+      </div>
 
       {calendar.isError && <Alert role="alert">배치 현황을 불러오지 못했습니다</Alert>}
       {calendar.isPending && <p>불러오는 중</p>}
 
       {calendar.data && (
-        <div className="grid items-start gap-5 xl:grid-cols-[minmax(0,1fr)_20rem]">
-          <div className="flex min-w-0 flex-col gap-3">
-            <ul
-              aria-label="표 보는 법"
-              className="flex flex-wrap items-center gap-x-4 gap-y-2 text-sm text-foreground/70"
-            >
-              <li className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className="h-5 w-8 rounded-md border-l-4 bg-surface-subtle ring-1 ring-line"
-                  style={{ borderLeftColor: 'var(--proj-0)' }}
-                />
-                프로젝트 투입
-              </li>
-              <li className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className="h-5 w-8 rounded-md bg-danger-subtle ring-1 ring-danger/40"
-                />
-                한 날 두 곳 이상
-              </li>
-              <li className="flex items-center gap-2">
-                <span
-                  aria-hidden
-                  className="h-5 w-8 rounded-md bg-surface-nested ring-1 ring-line"
-                />
-                휴직·퇴사
-              </li>
-            </ul>
-            {rows.length === 0 ? (
-              <EmptyState
-                title="등록된 직원이 없습니다"
-                description="직원을 등록하면 배치 현황이 보입니다"
-              />
-            ) : (
-              <StaffingGrid
-                rows={rows}
-                dates={listDates(from, to)}
-                today={todayInSeoul(new Date())}
-                projectColors={projectColors}
+        <>
+          <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
+            <p aria-label="요약" className="text-sm">
+              <span className="font-semibold">일한 사람 {summary.working}명</span>
+              <span className="mx-2 text-foreground/40">·</span>
+              <span>일한 기록이 없는 사람 {summary.idle}명</span>
+              {summary.away > 0 && (
+                <>
+                  <span className="mx-2 text-foreground/40">·</span>
+                  <span>휴직·퇴사 {summary.away}명</span>
+                </>
+              )}
+              <span className="mx-2 text-foreground/40">·</span>
+              <span className={summary.conflicts > 0 ? 'font-semibold text-danger' : undefined}>
+                겹침 {summary.conflicts}건
+              </span>
+            </p>
+            {summary.conflicts > 0 && (
+              <Chip selected={onlyConflicts} onClick={() => setOnlyConflicts((value) => !value)}>
+                겹침 있는 사람만
+              </Chip>
+            )}
+            {titles.length > 0 && (
+              <Select
+                className="w-40 md:ml-auto"
+                aria-label="직종으로 거르기"
+                value={title}
+                emptyLabel="모든 직종"
+                onValueChange={setTitle}
+                options={titles.map((value) => ({ value, label: value }))}
               />
             )}
           </div>
 
-          <aside className="flex flex-col gap-4">
-            <section
-              aria-labelledby="staffing-conflicts"
-              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-            >
-              <h2 id="staffing-conflicts" className="text-lg font-bold">
-                같은 날 겹침
-              </h2>
-              {conflicts.length === 0 ? (
-                <p className="text-sm text-foreground/70">이 주에는 겹치는 배치가 없습니다</p>
-              ) : (
-                <ul className="flex flex-col gap-1">
-                  {conflicts.map((item) => (
-                    <li key={item.employee.id} className="text-sm text-danger">
-                      {item.employee.name}: {item.dates.map((date) => date.slice(5)).join(', ')}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </section>
+          {shown.length === 0 ? (
+            <EmptyState
+              title={rows.length === 0 ? '등록된 직원이 없습니다' : '조건에 맞는 직원이 없습니다'}
+              description={
+                rows.length === 0
+                  ? '직원을 등록하면 배치 현황이 보입니다'
+                  : '직종이나 겹침 조건을 바꿔 보세요'
+              }
+            />
+          ) : (
+            <StaffingTimeline
+              rows={shown}
+              dates={listDates(from, to)}
+              today={today}
+              projectColors={projectColors}
+              choices={projectOptions}
+              highlightEmployeeId={highlightEmployeeId}
+              columnMinWidth={COLUMN_MIN_WIDTH[view]}
+            />
+          )}
 
-            <section
-              aria-labelledby="staffing-free"
-              className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
+          <p className="text-sm text-foreground/65">{READING_GUIDE}</p>
+          {calendar.data.workDays.length > 0 && (
+            <ul
+              aria-label="표에 나온 프로젝트"
+              className="flex flex-wrap gap-x-4 gap-y-1.5 text-sm"
             >
-              <h2 id="staffing-free" className="text-lg font-bold">
-                이번 주 비는 사람
-              </h2>
-              <p className="text-sm text-foreground/70">일요일을 뺀 모든 날에 투입이 없는 직원</p>
-              {free.length === 0 ? (
-                <p className="text-sm">없습니다</p>
-              ) : (
-                <p className="flex flex-wrap gap-1.5">
-                  {free.map((item) => (
-                    <Badge key={item.id} tone="success">
-                      {item.name}
-                    </Badge>
-                  ))}
-                </p>
-              )}
-            </section>
+              {[...projectColors.entries()].map(([projectId, color]) => {
+                const item = calendar.data.workDays.find((day) => day.projectId === projectId)!;
 
-            {projects.size > 0 && (
-              <section
-                aria-labelledby="staffing-projects"
-                className="flex flex-col gap-2 rounded-xl bg-surface-subtle p-5"
-              >
-                <h2 id="staffing-projects" className="text-lg font-bold">
-                  표에 나온 프로젝트
-                </h2>
-                <ul className="flex flex-col gap-2 text-sm">
-                  {[...projects.values()].map((item) => (
-                    <li key={item.projectId} className="flex items-start gap-2">
-                      <span
-                        aria-hidden
-                        className="mt-1 h-4 w-1.5 shrink-0 rounded-full"
-                        style={{
-                          backgroundColor: `var(--proj-${projectColors.get(item.projectId) ?? 0})`,
-                        }}
-                      />
-                      <span>
-                        {item.projectCode.slice(-3)} · {item.projectCode} {item.projectName} (
-                        {PROJECT_STATUS_LABELS[item.projectStatus]})
-                      </span>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-          </aside>
-        </div>
+                return (
+                  <li key={projectId} className="flex items-center gap-1.5">
+                    <span
+                      aria-hidden
+                      className="h-3.5 w-1.5 rounded-full"
+                      style={{ backgroundColor: `var(--proj-${color})` }}
+                    />
+                    {item.projectName}
+                    <span className="text-foreground/70">({statusText(projectId)})</span>
+                  </li>
+                );
+              })}
+            </ul>
+          )}
+        </>
       )}
     </div>
   );

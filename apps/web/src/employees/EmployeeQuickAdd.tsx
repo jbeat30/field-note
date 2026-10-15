@@ -11,7 +11,13 @@ import { OptionSelect } from './OptionSelect';
 import { useCreateEmployee } from './useEmployees';
 
 // 간편 등록: 이름과 직종만 넣으면 된다 (일용·협력 인력용). 나머지는 직원 카드에서 나중에 채운다
-export const EmployeeQuickAdd = () => {
+export const EmployeeQuickAdd = ({
+  className = 'rounded-xl bg-surface-subtle p-4',
+  onAdded,
+}: {
+  className?: string;
+  onAdded?: () => void;
+}) => {
   const options = useOptions();
   const create = useCreateEmployee();
   const [name, setName] = useState('');
@@ -38,6 +44,7 @@ export const EmployeeQuickAdd = () => {
         onSuccess: (employee) => {
           setName('');
           setSaved(`${employee.name} 등록했습니다`);
+          onAdded?.();
         },
         onError: (error) => {
           const { byField, root } = splitServerErrors(error, ['jobTypeId', 'name']);
@@ -49,12 +56,8 @@ export const EmployeeQuickAdd = () => {
   };
 
   return (
-    <form
-      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
-      onSubmit={submit}
-      noValidate
-    >
-      <h2 className="text-base font-bold">간편 등록</h2>
+    <form className={`flex flex-col gap-3 ${className}`} onSubmit={submit} noValidate>
+      <h2 className="sr-only">간편 등록</h2>
       {message && <Alert>{message}</Alert>}
       {saved && <Alert variant="info">{saved}</Alert>}
       <div className="flex flex-col gap-2 sm:flex-row">

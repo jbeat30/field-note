@@ -8,6 +8,7 @@ import { RequiredCredentialsPanel } from '../credentials/RequiredCredentialsPane
 import { ProjectForm } from '../projects/ProjectForm';
 import { ProjectPeriodHistory } from '../projects/ProjectPeriodHistory';
 import { ProjectLaborCostPanel } from '../labor/ProjectLaborCostPanel';
+import { LedgerOverviewPanel } from '../ledger/LedgerOverviewPanel';
 import { usePartners } from '../partners/usePartners';
 import { ProjectProgressPanel } from '../progress/ProjectProgressPanel';
 import { useOptions } from '../settings/useOptions';
@@ -104,6 +105,9 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
           <div className="flex min-w-0 flex-col gap-5">
             <Panel>
               <ProjectProgressPanel projectId={data.id} status={data.status} />
+            </Panel>
+            <Panel>
+              <LedgerOverviewPanel projectId={data.id} />
             </Panel>
           </div>
           <aside className="flex min-w-0 flex-col gap-5 xl:sticky xl:top-6">

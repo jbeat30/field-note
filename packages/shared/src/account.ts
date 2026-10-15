@@ -195,8 +195,12 @@ export type WorkUnitMode = z.infer<typeof workUnitModeSchema>;
 export const companySettingsSchema = z.object({
   // 하루 기준시간(분). 저장은 항상 분 단위이므로 바꿔도 과거 기록은 변하지 않음
   standardWorkMinutes: z.number().int().min(60).max(960),
-  // MM 계산에 쓰는 월 기준일수
-  monthlyWorkDays: z.number().int().min(1).max(31),
+  // MM(맨먼스) 환산 기준 일수 (1MM = 이 일수의 MD). 소수 첫째 자리까지 (주 5일 21.7, 주 7일 30.4 등)
+  monthlyWorkDays: z
+    .number()
+    .min(1)
+    .max(31)
+    .refine((value) => Math.round(value * 10) / 10 === value, '소수 첫째 자리까지 입력해 주세요'),
   workUnitMode: workUnitModeSchema,
 });
 
@@ -209,12 +213,22 @@ export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   workUnitMode: 'RATIO',
 };
 
+// 근무 형태별 월 기준일수 표준값 (연평균: 365일 × 주 근무일수 ÷ 7 ÷ 12). 현장은 공휴일에도 일하므로 공휴일 달력은 쓰지 않는다
+export const WORK_PATTERNS = [
+  { key: 'SIX_DAYS', label: '주 6일', days: 26, hint: '현장 기본 (365×6÷7÷12 ≈ 26.1일)' },
+  { key: 'FIVE_DAYS', label: '주 5일', days: 21.7, hint: '365×5÷7÷12 ≈ 21.7일' },
+  { key: 'SEVEN_DAYS', label: '주 7일', days: 30.4, hint: '365÷12 ≈ 30.4일' },
+] as const;
+
 // 로그인 기기 목록 (§6.4). 식별자는 원격 로그아웃 대상 지정용 불투명 값
 export const deviceSchema = z.object({
   id: z.string(),
   label: z.string(),
   lastActiveAt: z.iso.datetime(),
   isCurrent: z.boolean(),
+  // 로그인 때 접속 IP와 마지막으로 쓴 때의 IP (모르면 null)
+  ipAddress: z.string().nullable(),
+  lastIp: z.string().nullable(),
 });
 
 export const devicesResponseSchema = z.object({ devices: z.array(deviceSchema) });

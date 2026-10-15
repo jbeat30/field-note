@@ -135,6 +135,17 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     usage: (projectId: string) => get(`/projects/${projectId}/change-usage`),
     saveLog: (projectId: string, date: string, body: object) =>
       send('put', `/projects/${projectId}/work-logs/${date}`, body),
+    uploadFile: async (projectId: string, title: string) =>
+      (
+        await send('post', `/projects/${projectId}/files`, {
+          name: `${title}.pdf`,
+          contentType: 'application/pdf',
+          purpose: 'DOCUMENT',
+          size: 1000,
+        })
+      ).body.file.id as string,
+    evidence: (id: string, body: object) => send('post', `/change-works/${id}/evidence`, body),
+    documents: (projectId: string) => get(`/projects/${projectId}/documents`),
     makeDocument: async (projectId: string, title: string) => {
       const fileId = (
         await send('post', `/projects/${projectId}/files`, {
@@ -547,6 +558,59 @@ describe('증빙 문서', () => {
     await db.ownerPool.query(`UPDATE documents SET deleted_at = now() WHERE id = $1`, [doc]);
 
     expect((await client.detail(id)).body).toMatchObject({ documentCount: 0, documents: [] });
+  });
+});
+
+describe('증빙 올리기', () => {
+  it('올린 파일로 계약·공문 문서를 만들고 한 번에 연결한다. 같은 파일로 다시 불러도 하나만 남는다', async () => {
+    const { client, project } = await setup();
+    const id = (await client.create(project, body)).body.id as string;
+    const fileId = await client.uploadFile(project, '카톡 캡처');
+    const res = await client.evidence(id, { fileId, title: '카톡 캡처' });
+
+    expect(res.status).toBe(201);
+    expect(changeWorkDetailSchema.parse(res.body)).toMatchObject({
+      documentCount: 1,
+      documents: [{ title: '카톡 캡처', category: 'CONTRACT', isSensitive: true }],
+    });
+
+    // 재시도: 새 문서도 중복 연결도 만들지 않고 같은 결과를 준다
+    const again = await client.evidence(id, { fileId, title: '카톡 캡처' });
+
+    expect(again.status).toBe(201);
+    expect(changeWorkDetailSchema.parse(again.body).documentCount).toBe(1);
+    expect((await client.documents(project)).body.items).toHaveLength(1);
+  });
+
+  it('기록할 수 없는 프로젝트 상태면 문서를 만들지 않고 막는다', async () => {
+    const { client, project } = await setup();
+    const id = (await client.create(project, body)).body.id as string;
+
+    await client.projectStatus(project, { toStatus: 'CANCELLED', reason: '해지' });
+
+    const fileId = await client.uploadFile(project, '취소 뒤 증빙');
+    const res = await client.evidence(id, { fileId, title: '취소 뒤 증빙' });
+
+    expect(res.status).toBe(400);
+    expect((await client.documents(project)).body.items).toHaveLength(0);
+  });
+
+  it('입력이 틀리거나 없는 변경 작업이면 거부한다', async () => {
+    const { client, project, projectBody } = await setup();
+    const id = (await client.create(project, body)).body.id as string;
+    const fileId = await client.uploadFile(project, '증빙');
+
+    expect((await client.evidence(id, { fileId, title: '  ' })).status).toBe(400);
+    expect((await client.evidence(id, { fileId: 'not-a-uuid', title: '증빙' })).status).toBe(400);
+    expect(
+      (await client.evidence('0198d000-0000-7000-8000-00000000dead', { fileId, title: '증빙' }))
+        .status,
+    ).toBe(404);
+    // 다른 프로젝트에 올린 파일은 증빙으로 쓸 수 없다
+    const other = await client.id('/projects', { ...projectBody, name: 'B동' });
+    const foreign = await client.uploadFile(other, '다른 프로젝트 파일');
+
+    expect((await client.evidence(id, { fileId: foreign, title: '증빙' })).status).toBe(400);
   });
 });
 

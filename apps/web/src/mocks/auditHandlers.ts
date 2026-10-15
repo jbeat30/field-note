@@ -1,5 +1,7 @@
 import {
+  auditKindOf,
   auditLogListQuerySchema,
+  type AuditChange,
   type AuditAction,
   type AuditLog,
   type AuditTargetType,
@@ -24,30 +26,77 @@ export const resetMockAudit = () => stores.clear();
 
 const scopeOf = (account: MockAccount) => account.companyId ?? account.loginId;
 
+const PROJECT_A = '0198d000-0000-7000-8000-000000000301';
+
+const mockLog = (
+  account: MockAccount,
+  entry: Omit<
+    AuditLog,
+    'id' | 'kind' | 'actorId' | 'actorName' | 'changes' | 'projectId' | 'projectName'
+  > & {
+    changes?: AuditChange[];
+    projectId?: string | null;
+    projectName?: string | null;
+  },
+): AuditLog => ({
+  id: crypto.randomUUID(),
+  kind: auditKindOf(entry.action),
+  actorId: MOCK_USER_ID,
+  actorName: account.displayName,
+  changes: entry.changes ?? [],
+  projectId: entry.projectId ?? null,
+  projectName: entry.projectName ?? null,
+  ...entry,
+});
+
 // 처음 열었을 때 보이는 더미 기록 (시드의 직원·문서 id는 쓰지 않고 이름만 보여 줌)
 const seedOf = (account: MockAccount): AuditLog[] => [
-  {
-    id: crypto.randomUUID(),
-    action: 'PAY_RATE_VIEWED',
-    actorId: MOCK_USER_ID,
-    actorName: account.displayName,
+  mockLog(account, {
+    action: 'WORK_LOG_UPDATED',
+    targetType: 'PROJECT',
+    targetId: PROJECT_A,
+    targetName: 'A동 외장 판금 공사',
+    projectId: PROJECT_A,
+    projectName: 'A동 외장 판금 공사',
+    summary: '2026-10-05 · 10시간 · 3명',
+    changes: [
+      { label: '작업 시간', before: '8시간', after: '10시간' },
+      { label: '작업 인원', before: '2명', after: '3명' },
+    ],
+    createdAt: '2026-10-05T01:20:00.000Z',
+  }),
+  mockLog(account, {
+    action: 'EMPLOYEE_UPDATED',
     targetType: 'EMPLOYEE',
     targetId: '0198d000-0000-7000-8000-000000000101',
     targetName: '정판금',
-    summary: null,
-    createdAt: '2026-10-05T01:20:00.000Z',
-  },
-  {
-    id: crypto.randomUUID(),
+    summary: '직책·연락처',
+    changes: [
+      { label: '직책', before: '기공', after: '반장' },
+      { label: '연락처', before: null, after: null },
+    ],
+    createdAt: '2026-10-05T05:40:00.000Z',
+  }),
+  mockLog(account, {
     action: 'REPORT_EXPORTED',
-    actorId: MOCK_USER_ID,
-    actorName: account.displayName,
     targetType: 'PROJECT',
-    targetId: '0198d000-0000-7000-8000-000000000301',
+    targetId: PROJECT_A,
     targetName: 'A동 외장 판금 공사',
+    projectId: PROJECT_A,
+    projectName: 'A동 외장 판금 공사',
     summary: '작업일보 엑셀 · 2026-10-01 ~ 2026-10-04',
     createdAt: '2026-10-06T08:00:00.000Z',
-  },
+  }),
+  mockLog(account, {
+    action: 'PHOTO_DELETED',
+    targetType: 'PROJECT',
+    targetId: PROJECT_A,
+    targetName: 'A동 외장 판금 공사',
+    projectId: PROJECT_A,
+    projectName: 'A동 외장 판금 공사',
+    summary: '3층 301호 · 2026-10-05',
+    createdAt: '2026-10-07T02:10:00.000Z',
+  }),
 ];
 
 const storeOf = (account: MockAccount) => {
@@ -77,13 +126,7 @@ export const addMockAudit = (
     summary: string | null;
   },
 ) => {
-  storeOf(account).push({
-    id: crypto.randomUUID(),
-    actorId: MOCK_USER_ID,
-    actorName: account.displayName,
-    createdAt: new Date().toISOString(),
-    ...entry,
-  });
+  storeOf(account).push(mockLog(account, { createdAt: new Date().toISOString(), ...entry }));
 };
 
 const DAY_MS = 86_400_000;
@@ -117,11 +160,13 @@ export const createAuditHandlers = ({ apiError }: Helpers) => [
       );
     }
 
-    const { action, from, to, cursor, limit } = query.data;
+    const { action, kind, projectId, from, to, cursor, limit } = query.data;
     const sorted = [...storeOf(account)]
       .filter(
         (item) =>
           (!action || item.action === action) &&
+          (!kind || item.kind === kind) &&
+          (!projectId || item.projectId === projectId) &&
           (!from || Date.parse(item.createdAt) >= seoulStart(from)) &&
           (!to || Date.parse(item.createdAt) < seoulStart(to) + DAY_MS),
       )

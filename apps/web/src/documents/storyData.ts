@@ -26,6 +26,7 @@ export const storyDocument = (index: number, patch: Partial<Document> = {}): Doc
   title: `문서 ${index}`,
   isSensitive: false,
   isPinned: false,
+  includeInSummary: false,
   createdBy: '0198d000-0000-7000-8000-000000000001',
   createdAt: '2026-10-02T03:00:00.000Z',
   updatedAt: '2026-10-02T03:00:00.000Z',

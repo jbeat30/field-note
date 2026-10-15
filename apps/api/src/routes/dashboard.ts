@@ -1,7 +1,10 @@
 import {
+  alertDismissSchema,
   alertSettingsSchema,
   alertSettingsUpdateSchema,
   dashboardResponseSchema,
+  successResponseSchema,
+  type AlertDismiss,
   type AlertSettingsUpdate,
 } from '@field-note/shared';
 
@@ -57,5 +60,24 @@ export const registerDashboardRoutes = (registry: RouteRegistry, dashboard?: Das
       errors: [],
     },
     async ({ auth, body }) => dashboard!.saveSettings(auth!.companyId, body as AlertSettingsUpdate),
+    // 알림 숨기기는 활동 기록이 아니다 (데이터를 바꾸는 일이 아니라 화면 정리)
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/alerts/dismiss',
+      summary:
+        '알림 숨기기 (알림 키를 남겨 조건이 바뀌기 전까지 보이지 않게 함, 모두 숨기기도 같은 요청)',
+      auth: 'required',
+      request: { body: alertDismissSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: [],
+    },
+    async ({ auth, body }) => {
+      await dashboard!.dismiss(auth!.companyId, auth!.userId, body as AlertDismiss);
+
+      return { success: true };
+    },
   );
 };
