@@ -17,6 +17,9 @@ import {
   validateWorkLogForSave,
   summarizeEmployeeWork,
   summarizeProjectWork,
+  employeeProjectDays,
+  employeeProjectDaysParamsSchema,
+  employeeProjectDaysQuerySchema,
   workLogListQuerySchema,
   canRecordProgress,
   payRateCreateSchema,
@@ -2334,6 +2337,69 @@ export const handlers = [
       }),
     );
   }),
+
+  http.get(
+    '/api/v1/projects/:id/work-summary/employees/:employeeId',
+    async ({ request, params }) => {
+      await simulateLatency();
+
+      const account = getCurrentAccount();
+
+      if (!account) return apiError('UNAUTHORIZED');
+
+      const parsed = employeeProjectDaysParamsSchema.safeParse(params);
+
+      if (!parsed.success) {
+        return apiError('VALIDATION_ERROR', [{ path: 'params', message: 'Invalid UUID' }]);
+      }
+
+      const { id, employeeId } = parsed.data;
+
+      if (
+        !getProjects(account).some((item) => item.id === id) ||
+        !getEmployees(account).some((item) => item.id === employeeId)
+      )
+        return apiError('NOT_FOUND');
+
+      const query = employeeProjectDaysQuerySchema.safeParse(
+        Object.fromEntries(new URL(request.url).searchParams),
+      );
+
+      if (!query.success) {
+        return apiError(
+          'VALIDATION_ERROR',
+          query.error.issues.map((issue) => ({
+            path: ['query', ...issue.path].join('.'),
+            message: issue.message,
+          })),
+        );
+      }
+
+      const { from, to } = query.data;
+
+      return HttpResponse.json(
+        employeeProjectDays(
+          getWorkLogs(account)
+            .filter(
+              (log) =>
+                log.projectId === id &&
+                log.status === 'SAVED' &&
+                (!from || log.workDate >= from) &&
+                (!to || log.workDate <= to),
+            )
+            .flatMap((log) =>
+              log.entries
+                .filter((entry) => entry.employeeId === employeeId)
+                .map((entry) => ({
+                  workDate: log.workDate,
+                  categoryId: entry.categoryId,
+                  minutes: entry.minutes,
+                })),
+            ),
+        ),
+      );
+    },
+  ),
 
   http.get('/api/v1/employees/:id/work-history', async ({ params }) => {
     await simulateLatency();

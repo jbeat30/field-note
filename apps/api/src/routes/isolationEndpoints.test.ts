@@ -556,6 +556,11 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /projects/{id}/health', 'get', `/projects/${a.projectId}/health`],
     ['GET /projects/{id}/work-logs', 'get', `/projects/${a.projectId}/work-logs`],
     ['GET /projects/{id}/work-summary', 'get', `/projects/${a.projectId}/work-summary`],
+    [
+      'GET /projects/{id}/work-summary/employees/{employeeId}',
+      'get',
+      `/projects/${a.projectId}/work-summary/employees/${a.worker}`,
+    ],
     ['GET /projects/{id}/work-logs/{workDate}', 'get', `/projects/${a.projectId}/work-logs/${DAY}`],
     [
       'PUT /projects/{id}/work-logs/{workDate}',
