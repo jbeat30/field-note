@@ -25,7 +25,7 @@ export const useWarranty = (projectId: string) =>
     },
   });
 
-// 저장·등록·삭제는 모두 바뀐 보증 전체를 돌려주므로 그 값을 바로 캐시에 반영한다
+// 저장·등록·삭제는 모두 변경된 보증 전체를 반환하므로 그 값을 바로 캐시에 반영
 const useApplyWarranty = (projectId: string) => {
   const queryClient = useQueryClient();
 

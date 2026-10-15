@@ -54,7 +54,7 @@ type Props = {
 
 type Day = EmployeeProjectDays['days'][number];
 
-// 한 사람이 이 프로젝트에서 일한 날: 달력(일한 날에 시간)과 날짜 목록(시간·한 일). 날짜를 누르면 그날 하루 기록으로
+// 한 사람이 이 프로젝트에서 일한 날: 달력(일한 날에 시간)과 날짜 목록(시간·한 일), 날짜를 누르면 그날 하루 기록으로
 export const EmployeeWorkDaysDialog = ({
   projectId,
   employeeId,
@@ -127,7 +127,7 @@ export const EmployeeWorkDaysDialog = ({
   );
 };
 
-// 월 달력: 일한 날만 색칠하고 시간을 보인다. 일한 날이 있는 달 사이만 넘길 수 있다
+// 월 달력: 일한 날만 색칠하고 시간 표시, 일한 날이 있는 달 사이만 이동 가능
 const WorkDaysCalendar = ({
   projectId,
   days,

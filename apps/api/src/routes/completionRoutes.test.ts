@@ -259,7 +259,7 @@ describe('상태 전환 안내', () => {
 
     await record(duct, 'RECEIVED', 100);
     await record(duct, 'USED', 85);
-    // 잔량이 0이면 알리지 않는다
+    // 잔량이 0이면 안내 제외
     await record(bolt, 'RECEIVED', 10);
     await record(bolt, 'USED', 10);
     await client.send('post', `/projects/${project}/change-works`, {
@@ -512,7 +512,7 @@ describe('프로젝트 요약', () => {
 
     await client.makeDocument(project, '도면', 'DRAWING');
     const contract = await client.makeDocument(project, '도급 계약서', 'CONTRACT');
-    // 계약은 기본이 민감, 다른 분류도 직접 민감으로 표시할 수 있다
+    // 계약은 기본이 민감, 다른 분류도 직접 민감 표시 가능
     await client.makeDocument(project, '안전 점검표', 'SAFETY', { isSensitive: true });
     const safe = await client.makeDocument(project, '준공 검사서', 'SAFETY');
     const summary = async () =>
@@ -527,12 +527,12 @@ describe('프로젝트 요약', () => {
     ]);
     expect(JSON.stringify(documents)).not.toContain('계약서');
 
-    // 민감 자료는 요약에 넣기로 표시해도 싣지 않는다
+    // 민감 자료는 요약에 넣기로 표시해도 제외
     expect((await client.updateDocument(contract, { includeInSummary: true })).status).toBe(200);
     documents = await summary();
     expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
 
-    // 고른 문서가 있으면 그것만 싣는다
+    // 고른 문서가 있으면 그 문서만 포함
     await client.updateDocument(safe, { includeInSummary: true });
     documents = await summary();
     expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
@@ -602,7 +602,7 @@ describe('프로젝트 요약', () => {
     expect(photos.items.every((item) => item.category === 'AFTER')).toBe(true);
     expect(photos.items[0]!.thumbnailUrl).toContain('/thumb?download');
 
-    // 직접 고른 사진이 있으면 종류와 상관없이 그것만 싣는다
+    // 직접 고른 사진이 있으면 종류와 상관없이 그 사진만 포함
     expect((await client.updatePhoto(ids[0]!, { includeInSummary: true })).status).toBe(200);
     expect((await client.updatePhoto(ids[5]!, { includeInSummary: true })).status).toBe(200);
     photos = await summary();

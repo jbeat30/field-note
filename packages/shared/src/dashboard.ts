@@ -18,8 +18,8 @@ import { projectStatusSchema, type ProjectStatus } from './projects';
 import { warrantyDaysLeft } from './warranty';
 import { periodStart } from './workSummary';
 
-// 홈 대시보드와 알림 (서비스 기획서 §15.2, §15.3). 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산한다
-// (초기: 화면 표시). 4단계에서 보증 종료 임박·미처리 보수·보증서·직원 서류 만료·월 공수 미확정이 더해졌다
+// 홈 대시보드와 알림 (서비스 기획서 §15.2, §15.3), 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산
+// (초기: 화면 표시), 4단계에서 보증 종료 임박·미처리 보수·보증서·직원 서류 만료·월 공수 미확정 추가
 const dateSchema = z.iso.date();
 
 export const ALERT_KINDS = [
@@ -57,7 +57,7 @@ export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
 // 협의 중 변경 작업을 오래 방치된 것으로 보는 기준 (§15.3)
 export const CHANGE_STALE_DAYS = 7;
 
-// 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준 (§15.3). 직원 서류는 CREDENTIAL_EXPIRING_DAYS
+// 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준 (§15.3), 직원 서류는 CREDENTIAL_EXPIRING_DAYS
 export const WARRANTY_ENDING_DAYS = 60;
 
 export const REPAIR_UNHANDLED_DAYS = 3;
@@ -351,7 +351,7 @@ export type Dashboard = z.infer<typeof dashboardSchema>;
 
 export const dashboardResponseSchema = z.object({
   dashboard: dashboardSchema,
-  // 알림 설정에서 켜 둔 종류만 alerts에 들어 있다
+  // 알림 설정에서 켜 둔 종류만 alerts에 포함
   settings: alertSettingsSchema,
 });
 
@@ -460,7 +460,7 @@ export const weekRange = (today: string) => {
 
 /**
  * @description 모아 온 기록으로 홈 대시보드를 만든다 (서버와 목업이 같은 규칙을 쓰도록 순수 함수로 둠)
- * 위젯은 지금 기록으로 만들 수 있는 것만 담고, 알림은 켜 둔 종류만 담는다
+ * 위젯은 현재 기록으로 만들 수 있는 것만 포함하고 알림은 켜 둔 종류만 포함
  * @param input 프로젝트·투입·작업 내역·메모함·배치·변경 작업 현황과 켜 둔 알림 종류
  * @returns 대시보드
  */

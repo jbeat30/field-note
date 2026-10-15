@@ -2,7 +2,7 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '../lib/cn';
 
-// 카카오 브랜드 색(노란 배경 + 어두운 글자). 터치 영역 최소 44px
+// 카카오 브랜드 색(노란 배경 + 어두운 글자), 터치 영역 최소 44px
 export const KakaoButton = ({ className, children, ...props }: ComponentProps<'button'>) => (
   <button
     type="button"

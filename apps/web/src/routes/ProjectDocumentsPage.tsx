@@ -27,9 +27,9 @@ export const ProjectDocumentsPage = () => {
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [q, setQ] = useState('');
   const [params, setParams] = useSearchParams();
-  // 검색 결과에서 들어오면(?doc=) 그 문서의 상세를 바로 연다
+  // 검색 결과에서 진입하면(?doc=) 그 문서의 상세를 바로 열기
   const [detailId, setDetailId] = useState<string | null>(params.get('doc'));
-  // 분류 카드의 문서 수를 위해 분류는 서버에 걸지 않고 화면에서 거른다
+  // 분류 카드의 문서 수 계산을 위해 분류는 서버 필터 없이 화면에서 필터링
   const documents = useDocuments(id, { q });
   const create = useCreateDocument(id);
   const addVersion = useAddDocumentVersion();
@@ -54,7 +54,7 @@ export const ProjectDocumentsPage = () => {
   }
 
   const upload = async (values: DocumentFormValues, onProgress: (ratio: number) => void) => {
-    // 같은 이름 문서가 이미 있으면 새 판으로 올릴지 묻는다
+    // 같은 이름 문서가 이미 있으면 새 판으로 올릴지 확인
     const same = all.find((item) => item.title.trim() === values.title.trim());
     const asVersion =
       same !== undefined &&

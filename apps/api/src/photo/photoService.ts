@@ -24,14 +24,14 @@ export class PhotoError extends Error {
 }
 
 export type PhotoService = {
-  // 올라온 파일을 사진으로 등록. 같은 파일을 다시 등록하면 기존 사진을 돌려줌 (재시도에 안전)
+  // 올라온 파일을 사진으로 등록, 같은 파일을 다시 등록하면 기존 사진을 돌려줌 (재시도에 안전)
   create: (
     companyId: string,
     userId: string,
     projectId: string,
     input: PhotoCreate,
   ) => Promise<Photo>;
-  // 사진첩 목록 (촬영일시 최근순, 커서 방식). 지운 사진은 제외
+  // 사진첩 목록 (촬영일시 최근순, 커서 방식), 지운 사진은 제외
   list: (companyId: string, projectId: string, query: PhotoListQuery) => Promise<PhotosResponse>;
   get: (companyId: string, photoId: string) => Promise<Photo>;
   update: (companyId: string, photoId: string, input: PhotoUpdate) => Promise<Photo>;

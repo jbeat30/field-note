@@ -29,10 +29,10 @@ export type SignupResult = AuthenticatedAccount & {
 };
 
 export type AccountService = {
-  // 초대 링크를 사용해 가입 (이메일 인증 전 상태). 한 트랜잭션이라 실패하면 링크도 소모되지 않음
+  // 초대 링크를 사용해 가입 (이메일 인증 전 상태), 한 트랜잭션이라 실패하면 링크도 소모되지 않음
   signup: (input: SignupInput) => Promise<SignupResult>;
   login: (input: { loginId: string; password: string }) => Promise<AuthenticatedAccount>;
-  // 로그인한 상태에서 비밀번호를 다시 확인 (비밀번호·이메일 변경 전). 틀리면 로그인과 같은 실패 횟수·잠금 정책 적용
+  // 로그인한 상태에서 비밀번호를 다시 확인 (비밀번호·이메일 변경 전), 틀리면 로그인과 같은 실패 횟수·잠금 정책 적용
   verifyCurrentPassword: (account: AuthenticatedAccount, password: string) => Promise<void>;
   // 로그인한 관리자 정보 (회사 식별값은 응답에 없음)
   getMe: (account: AuthenticatedAccount) => Promise<MeResponse>;

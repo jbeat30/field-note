@@ -338,7 +338,7 @@ describe('지출·수입 기록', () => {
         .items,
     ).toHaveLength(1);
 
-    // 같은 키에 다른 내용은 거부하고, 실패한 요청은 같은 키로 다시 시도할 수 있다
+    // 같은 키에 다른 내용은 거부, 실패한 요청은 같은 키로 재시도 가능
     expect((await send('retry-key-0001', 9000)).status).toBe(422);
     expect((await send('retry-key-0002', 0)).status).toBe(400);
     expect((await send('retry-key-0002', 7000)).status).toBe(201);

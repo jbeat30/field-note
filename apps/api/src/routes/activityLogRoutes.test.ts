@@ -157,7 +157,7 @@ describe('활동 기록', () => {
     const statuses = items.filter((item) => item.action === 'PROJECT_STATUS_CHANGED');
     const update = items.find((item) => item.action === 'PROJECT_UPDATED')!;
 
-    // 처음 만들 때의 진행 전환도 남아 있고, 가장 최근이 중단이다
+    // 처음 생성 시의 진행 전환도 남아 있고 가장 최근은 중단
     expect(statuses[0]).toMatchObject({
       kind: 'UPDATE',
       projectId: project,
@@ -168,7 +168,7 @@ describe('활동 기록', () => {
         { label: '사유', before: null, after: '우천 장기화' },
       ],
     });
-    // 같은 값으로 보낸 항목(현장명)은 빠지고 바뀐 항목만 전·후로 남는다
+    // 같은 값으로 보낸 항목(현장명)은 제외하고 바뀐 항목만 전·후로 기록
     expect(update.changes).toEqual([
       { label: '프로젝트명', before: 'A동 판금 공사', after: 'A동 외장 판금 공사' },
     ]);

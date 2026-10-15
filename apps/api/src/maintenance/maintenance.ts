@@ -17,7 +17,7 @@ export type MaintenanceResult = {
 };
 
 type Deps = {
-  // 회사 목록은 회사 범위 밖 전용 계정(세션·인증)으로만 읽는다
+  // 회사 목록은 회사 범위 밖 전용 계정(세션·인증)으로만 조회
   auth: PrismaClient;
   app: PrismaClient;
   sessionStore: SessionStore;
@@ -28,7 +28,7 @@ type Deps = {
 
 /**
  * @description 정기 유지 작업: 만료된 로그인 세션, 올리지 않고 방치된 파일 업로드 신청, 만료된 멱등 키를 치운다.
- * 한 번 돌 때 일부가 실패해도 나머지는 계속하고 오류는 로그로 남긴다. 여러 번·동시에 돌려도 결과가 같다
+ * 한 번 실행 중 일부가 실패해도 나머지는 계속 진행하고 오류는 로그 기록, 여러 번·동시 실행해도 결과 동일
  * @param deps 세션 저장소·DB·객체 저장소·로거
  * @returns 유지 작업 실행 함수
  */
@@ -64,7 +64,7 @@ export const createMaintenance = ({
           at.getTime() - (FILE_UPLOAD_URL_TTL_SECONDS + STALE_UPLOAD_GRACE_SECONDS) * 1000,
         );
         const cleaned = await withCompany(app, companyId, async (tx) => {
-          // 올리지 않고 방치된 신청은 "올라오지 않음"으로 닫아 용량에서 빼고 남은 객체가 있으면 지운다
+          // 올리지 않고 방치된 신청은 "올라오지 않음"으로 종료해 용량에서 제외, 남은 객체가 있으면 삭제
           const stale = await tx.storedFile.findMany({
             where: { status: 'PENDING', createdAt: { lt: staleBefore } },
             select: { id: true, objectKey: true },

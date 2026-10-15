@@ -12,7 +12,7 @@ import { validate } from './validate';
 
 export type HttpMethod = 'get' | 'post' | 'put' | 'patch' | 'delete';
 
-// 라우트 한 개의 계약 (실행과 OpenAPI 문서가 같은 정의를 쓴다)
+// 라우트 한 개의 계약 (실행과 OpenAPI 문서가 같은 정의 공유)
 export type RouteSpec = {
   method: HttpMethod;
   // OpenAPI 형식 경로 (예: /samples/{id}), 서버 경로 접두사 제외
@@ -23,18 +23,18 @@ export type RouteSpec = {
   response: { status: number; schema: ZodType };
   // true면 핸들러가 돌려준 주소로 이동시키는 라우트 (소셜 로그인 콜백처럼 브라우저 이동 응답), 응답 스키마는 쓰지 않음
   redirect?: boolean;
-  // 파일을 내려주는 라우트 (엑셀 등). 핸들러는 { filename, body }를 돌려주고 응답 스키마는 쓰지 않음
+  // 파일을 내려주는 라우트 (엑셀 등), 핸들러는 { filename, body }를 돌려주고 응답 스키마는 쓰지 않음
   file?: { contentType: string };
-  // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능). 그 밖의 인증 필요 POST는 헤더가 있으면 같은 키의 재전송을 한 번만 처리
+  // true면 Idempotency-Key 헤더 필수 (인증 필요 라우트만 가능), 그 밖의 인증 필요 POST는 헤더가 있으면 같은 키의 재전송을 한 번만 처리
   idempotent?: boolean;
   rateLimit?: RateLimitOptions;
   // 이 라우트가 업무적으로 반환하는 오류 코드 (OpenAPI 문서에 응답으로 기록)
   errors?: readonly ErrorCode[];
-  // 성공했을 때 활동 기록을 남기는 라우트 (데이터를 바꾸는 일). 인증 필요 라우트만 가능
+  // 성공했을 때 활동 기록을 남기는 라우트 (데이터를 바꾸는 일), 인증 필요 라우트만 가능
   audit?: {
-    // 바꾸기 전 상태를 읽어 둠 (바뀐 내용의 전·후를 남기려고). 실패하면 null로 본다
+    // 바꾸기 전 상태 조회 (바뀐 내용의 전·후 기록용), 실패하면 null 처리
     before?: (context: RouteContext) => Promise<unknown>;
-    // 남길 기록 (남기지 않으면 null). 처리 결과와 바꾸기 전 상태를 받는다
+    // 남길 기록 (남기지 않으면 null), 처리 결과와 바꾸기 전 상태를 입력으로 받음
     entry: (context: RouteContext, result: unknown, before: unknown) => AuditEntry | null;
   };
 };
@@ -61,7 +61,7 @@ export type RouteRegistry = {
 export type RouteDependencies = {
   resolveAuth: AuthResolver;
   idempotencyStore: IdempotencyStore;
-  // 활동 기록을 남기는 함수 (없으면 기록하지 않음). 기록이 실패해도 이미 끝난 처리는 되돌리지 않고 알린다
+  // 활동 기록 저장 함수 (없으면 기록 생략), 기록이 실패해도 이미 끝난 처리는 되돌리지 않고 알림
   recordAudit?: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;
   onAuditError?: (error: unknown) => void;
 };
@@ -70,7 +70,7 @@ const toExpressPath = (openApiPath: string) => openApiPath.replace(/\{(\w+)\}/g,
 
 /**
  * @description 라우트 등록소 생성. 모든 라우트는 add로만 등록하며 표준 순서
- * (속도 제한 → 검증 → 인증 → 멱등 키 → 핸들러)와 응답 스키마 파싱을 강제한다
+ * (속도 제한 → 검증 → 인증 → 멱등 키 → 핸들러)와 응답 스키마 파싱 강제
  * @param deps 인증 해석기와 멱등 키 저장소
  * @returns 라우터와 등록된 라우트 목록 (OpenAPI 생성·일치 테스트에서 사용)
  */

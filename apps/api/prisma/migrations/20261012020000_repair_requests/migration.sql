@@ -123,7 +123,7 @@ ALTER TABLE "repair_request_links" ADD CONSTRAINT repair_request_links_exactly_o
 CREATE UNIQUE INDEX repair_request_links_work_log_active_unique ON "repair_request_links"("company_id", "repair_request_id", "work_log_id") WHERE "unlinked_at" IS NULL AND "work_log_id" IS NOT NULL;
 CREATE UNIQUE INDEX repair_request_links_material_active_unique ON "repair_request_links"("company_id", "repair_request_id", "material_record_id") WHERE "unlinked_at" IS NULL AND "material_record_id" IS NOT NULL;
 
--- 앱 계정은 자기 회사 행만. 보수 요청은 요청 내용·상태 열만 고칠 수 있고 지울 수 없음, 상태 이력은 추가만, 연결은 해제 시각만 고침
+-- 앱 계정은 자기 회사 행만, 보수 요청은 요청 내용·상태 열만 고칠 수 있고 지울 수 없음, 상태 이력은 추가만, 연결은 해제 시각만 고침
 ALTER TABLE "repair_requests" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "repair_requests" FORCE ROW LEVEL SECURITY;
 CREATE POLICY company_isolation ON "repair_requests" TO field_note_app

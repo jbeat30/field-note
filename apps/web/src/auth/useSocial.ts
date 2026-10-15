@@ -19,7 +19,7 @@ export const useSocialProviders = () =>
     staleTime: 5 * 60_000,
   });
 
-// 카카오 로그인 화면으로 이동 (로그인·가입). 서버가 돌려준 주소로만 이동
+// 카카오 로그인 화면으로 이동 (로그인·가입), 서버가 돌려준 주소로만 이동
 export const useKakaoStart = () =>
   useMutation({
     mutationFn: async (body: SocialStartRequest) => {

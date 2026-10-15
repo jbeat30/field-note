@@ -129,7 +129,7 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
 
     if (!project) return apiError('NOT_FOUND');
 
-    // 서버와 같은 파일 이름 규칙. 내용은 자리 파일 (실제 엑셀 서식은 서버가 만든다)
+    // 서버와 같은 파일 이름 규칙, 내용은 자리 파일 (실제 엑셀 서식은 서버가 생성)
     return new HttpResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04]), {
       headers: {
         'Content-Type': REPORT_XLSX_CONTENT_TYPE,
@@ -198,7 +198,7 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
       (photo) => photo.file.status !== 'REJECTED',
     );
     const documents = listMockDocuments(account).filter((item) => item.projectId === project.id);
-    // 서버와 같은 공유 규칙으로 요약에 실을 사진·문서를 고른다
+    // 서버와 같은 공유 규칙으로 요약에 포함할 사진·문서 선택
     const summaryPhotoIds = new Set(selectSummaryPhotos(photos));
     const summaryDocumentIds = new Set(selectSummaryDocuments(documents));
     const summary: ProjectCompletionSummary = {

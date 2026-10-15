@@ -17,7 +17,7 @@ export type IdempotencyEntry =
 
 // 키는 회사마다 따로 보관한다 (다른 회사의 키와 겹쳐도 서로 보이지 않음)
 export type IdempotencyStore = {
-  // 처음 보는 키면 처리 중으로 선점하고 null, 이미 있으면(만료 전) 그 기록을 돌려줌. 동시에 같은 키가 와도 한 요청만 선점한다
+  // 처음 보는 키는 처리 중으로 선점하고 null 반환, 이미 있으면(만료 전) 그 기록 반환, 동시에 같은 키가 와도 한 요청만 선점
   claim: (
     companyId: string,
     key: string,
@@ -68,7 +68,7 @@ type IdempotencyOptions = {
 
 /**
  * @description 쓰기 요청의 재전송을 한 번만 처리 (현장 회선 불안으로 같은 요청이 다시 와도 중복 저장 방지)
- * 회사 ID는 인증 이후 res.locals.auth에서만 얻으므로 이 미들웨어는 requireAuth 뒤에 둔다
+ * 회사 ID는 인증 이후 res.locals.auth에서만 획득하므로 이 미들웨어는 requireAuth 뒤에 배치
  * @param store 키 저장소
  * @param options 헤더 없는 요청 허용 여부
  * @returns 멱등 키 미들웨어

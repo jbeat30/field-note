@@ -17,7 +17,7 @@ export class OptionError extends Error {
 }
 
 export type OptionService = {
-  // 전체 목록 (종류 순서 → 회사가 정한 순서). 비어 있는 종류는 프리셋으로 채운 뒤 돌려줌
+  // 전체 목록 (종류 순서 → 회사가 정한 순서), 비어 있는 종류는 프리셋으로 채운 뒤 돌려줌
   list: (companyId: string) => Promise<OptionItem[]>;
   create: (companyId: string, input: { kind: OptionKind; name: string }) => Promise<OptionItem>;
   update: (
@@ -43,8 +43,8 @@ const isUniqueViolation = (error: unknown) =>
   error instanceof Error &&
   /unique|P2002|duplicate/i.test(`${error.message} ${(error as { code?: string }).code ?? ''}`);
 
-// 종류별로 아직 항목이 하나도 없으면 프리셋을 채움. 항목은 삭제하지 않고 숨기기만 하므로 한 번 채우면 다시 비지 않는다
-// 동시 요청이 겹쳐도 (회사, 종류, 이름) 고유 제약과 skipDuplicates로 중복 없이 한 번만 들어간다
+// 종류별 항목이 하나도 없을 때 프리셋 채움, 항목은 삭제 없이 숨기기만 하므로 한 번 채우면 다시 비지 않음
+// 동시 요청이 겹쳐도 (회사, 종류, 이름) 고유 제약과 skipDuplicates로 중복 없이 한 번만 입력
 const ensurePresets = async (tx: Prisma.TransactionClient, companyId: string) => {
   const existing = await tx.optionItem.groupBy({ by: ['kind'], _count: { _all: true } });
   const seeded = new Set(existing.map((row) => row.kind));

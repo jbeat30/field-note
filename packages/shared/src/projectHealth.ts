@@ -58,7 +58,7 @@ export {
 } from './projectWarnings';
 
 export const projectHealthSchema = z.object({
-  // 계획 공수(분): 취소하지 않은 투입의 계획 공수 합. 계획이 하나도 없으면 null
+  // 계획 공수(분): 취소하지 않은 투입의 계획 공수 합, 계획이 하나도 없으면 null
   plannedMinutes: z.number().int().nullable(),
   // 투입 공수(분): 저장된 작업 내역의 공수 합
   usedMinutes: z.number().int(),
@@ -67,7 +67,7 @@ export const projectHealthSchema = z.object({
   // 현재 진행률: 기록이 없으면 null
   progressPercent: z.number().int().nullable(),
   progressRecordedOn: dateSchema.nullable(),
-  // 현재 속도로 끝낼 때 필요한 공수(분) = 투입 공수 ÷ 진행률. 진행률이 없거나 0이면 null
+  // 현재 속도로 끝낼 때 필요한 공수(분) = 투입 공수 ÷ 진행률, 진행률이 없거나 0이면 null
   forecastMinutes: z.number().int().nullable(),
   warnings: z.array(projectWarningTypeSchema),
 });
@@ -163,7 +163,7 @@ export const evaluateProjectHealth = (input: HealthInput): ProjectHealth => {
   };
 };
 
-// 회사별 경고 기준 (서비스 기획서 §10.4 "회사가 정한다"). 기본값은 기획서 결정값
+// 회사별 경고 기준 (서비스 기획서 §10.4 "회사가 정한다"), 기본값은 기획서 결정값
 export const companyRulesSchema = z
   .object({
     // 공수 소진율이 이 값(%) 이상이면 경고

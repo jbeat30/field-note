@@ -9,7 +9,7 @@ export type JobQueue = {
   // 큐를 만들고(없으면) 재시도 정책을 지정
   register: (name: string, options?: QueueOptions) => Promise<void>;
   send: (name: string, data: object) => Promise<void>;
-  // 처리기 등록. 처리기가 예외를 던지면 정책에 따라 재시도
+  // 처리기 등록, 처리기가 예외를 던지면 정책에 따라 재시도
   work: <T extends object>(name: string, handler: JobHandler<T>) => Promise<void>;
   stop: () => Promise<void>;
 };
@@ -24,7 +24,7 @@ const DEFAULT_OPTIONS = { retryLimit: 5, retryDelaySeconds: 30 };
 
 /**
  * @description PostgreSQL 기반 작업 큐 (Redis 없음, 기술 기획서 §7.4)
- * 큐 전용 DB 계정으로 접속하며 큐 테이블은 `pgboss` 스키마에만 만들어진다
+ * 큐 전용 DB 계정으로 접속, 큐 테이블은 `pgboss` 스키마에만 생성
  * @param connectionString 큐 전용 계정(DATABASE_QUEUE_URL) 접속 주소
  * @param logger 오류 기록용 로거
  * @returns 시작된 작업 큐

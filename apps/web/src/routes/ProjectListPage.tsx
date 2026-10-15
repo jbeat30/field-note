@@ -160,7 +160,7 @@ const columns = helper.columns([
   }),
 ]);
 
-// 프로젝트 목록: 번호·이름·현장명·상태·경고·고객·담당자·공종·기간만 보여 준다. 경고는 진행·중단 프로젝트에만 붙고 회사 설정의 경고 기준을 따른다 (현장 연락처·출입 메모는 카드에서만)
+// 프로젝트 목록: 번호·이름·현장명·상태·경고·고객·담당자·공종·기간만 표시, 경고는 진행·중단 프로젝트에만 부착되고 회사 설정의 경고 기준 적용 (현장 연락처·출입 메모는 카드에서만)
 export const ProjectListPage = () => {
   // 검색·필터는 서버 조회 조건, 정렬·쪽도 서버에 넘긴다 (한 쪽만 받음)
   const [filter, setFilter] = useState<ProjectListQuery>({});
@@ -186,7 +186,7 @@ export const ProjectListPage = () => {
   const partners = usePartners({});
   const employees = useEmployees({});
   const navigate = useNavigate();
-  // 조건이 바뀌면 첫 쪽부터 다시 본다
+  // 조건이 바뀌면 첫 쪽부터 재조회
   const goFirstPage = () => setPagination((current) => ({ ...current, pageIndex: 0 }));
   const update = (patch: Partial<ProjectListQuery>) => {
     setFilter((current) => ({ ...current, ...patch }));

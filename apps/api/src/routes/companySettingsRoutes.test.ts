@@ -107,7 +107,7 @@ describe('GET·PUT /api/v1/company/rules', () => {
 
     expect((await putRules(instance, cookie, next)).body).toEqual(next);
     expect(await rulesOf()).toEqual(next);
-    // 기준시간 같은 기존 설정은 바뀌지 않는다
+    // 기준시간 같은 기존 설정은 변경 없음
     expect(
       (await request(instance).get('/api/v1/company/settings').set('Cookie', cookie)).body,
     ).toMatchObject({ standardWorkMinutes: 480, monthlyWorkDays: 26 });
@@ -228,7 +228,7 @@ describe('GET·PUT /api/v1/company/settings', () => {
     const cases = [
       { standardWorkMinutes: 30, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480, monthlyWorkDays: 0, workUnitMode: 'RATIO' },
-      // 소수 둘째 자리와 31일 초과는 받지 않는다
+      // 소수 둘째 자리와 31일 초과는 거부
       { standardWorkMinutes: 480, monthlyWorkDays: 21.75, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480, monthlyWorkDays: 31.5, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480.5, monthlyWorkDays: 22, workUnitMode: 'RATIO' },

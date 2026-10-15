@@ -68,13 +68,13 @@ export type MockAccount = {
   hasPassword?: boolean;
   // 해지 요청 중이면 삭제 예정 시각 (ISO)
   closingPurgeAfter?: string;
-  // 선택 목록(직종·작업 구분·공종·직원 구분). 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
+  // 선택 목록(직종·작업 구분·공종·직원 구분), 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
   options?: OptionItem[];
-  // 직원 카드. 처음 조회할 때 더미 직원(DB 시드와 같은 원본)으로 채움
+  // 직원 카드, 처음 조회할 때 더미 직원(DB 시드와 같은 원본)으로 채움
   employees?: EmployeeDetail[];
-  // 고객·협력업체·자재 공급처 명부. 처음 조회할 때 더미 업체로 채움
+  // 고객·협력업체·자재 공급처 명부, 처음 조회할 때 더미 업체로 채움
   partners?: PartnerDetail[];
-  // 프로젝트. 처음 조회할 때 더미 프로젝트로 채움
+  // 프로젝트, 처음 조회할 때 더미 프로젝트로 채움
   projects?: ProjectDetail[];
   // 프로젝트별 상태 변경 이력 (프로젝트 id → 오래된 것부터)
   projectHistory?: Record<string, ProjectStatusChange[]>;
@@ -111,7 +111,7 @@ export { DEMO_INVITATION } from './demoSource';
 
 export const LEGAL_DOCUMENTS: readonly LegalDocumentSummary[] = LEGAL_DOCUMENTS_FOR_MOCK;
 
-// 기기 목록은 "최근에 쓴 기기"와 "오래 쓰지 않은 기기"가 함께 보이도록 지금 시각 기준으로 만든다
+// 기기 목록은 "최근에 쓴 기기"와 "오래 쓰지 않은 기기"가 함께 보이도록 현재 시각 기준으로 생성
 const hoursAgo = (hours: number) => new Date(Date.now() - hours * 3_600_000).toISOString();
 
 export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [

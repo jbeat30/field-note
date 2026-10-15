@@ -18,7 +18,7 @@ type ConfirmDialogProps = ConfirmOptions & {
   onCancel: () => void;
 };
 
-// 되돌리기 어려운 동작 전에 한 번 더 확인하는 대화창. 포커스 가두기·Esc 닫기는 Radix가 처리
+// 되돌리기 어려운 동작 전에 한 번 더 확인하는 대화창, 포커스 가두기·Esc 닫기는 Radix가 처리
 export const ConfirmDialog = ({
   open,
   onConfirm,

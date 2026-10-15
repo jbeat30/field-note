@@ -53,14 +53,14 @@ import { handlers } from './handlers';
 import { resetMockState } from './state';
 
 // 목업 응답이 서버 계약(공유 스키마)을 지키는지 검사: 목업과 실제 API가 어긋나면 화면만 통과하는 일을 막음
-// 핸들러 경로는 상대 경로라 Node에서는 기준 주소(location)가 필요
+// 핸들러 경로는 상대 경로이므로 Node에서는 기준 주소(location) 필요
 Object.defineProperty(globalThis, 'location', {
   value: new URL('http://localhost/'),
   configurable: true,
 });
 
 const server = setupServer(...handlers);
-// openapi-fetch는 생성 시점의 fetch를 붙잡으므로 msw가 fetch를 가로챈 뒤에 만든다
+// openapi-fetch는 생성 시점의 fetch를 보관하므로 msw가 fetch를 가로챈 뒤에 생성
 let client: ReturnType<typeof createApiClient>;
 const demo = DEMO_ACCOUNTS[0]!;
 
@@ -472,7 +472,7 @@ describe('목업 서버 계약', () => {
       jobTypeId: jobId,
     });
 
-    // 퇴사하면 퇴사일이 채워지고, 재입사하면 지워진다
+    // 퇴사하면 퇴사일 기록, 재입사하면 삭제
     const left = employeeDetailSchema.parse(
       (
         await client.PATCH('/api/v1/employees/{id}', {
@@ -636,7 +636,7 @@ describe('목업 서버 계약', () => {
       plannedEnd: '2026-12-31',
     };
 
-    // 최근 등록순(코드 숫자 순서), 목록에는 현장 연락처·출입 메모·계약일이 없다
+    // 최근 등록순(코드 숫자 순서), 목록에는 현장 연락처·출입 메모·계약일 제외
     expect(JSON.stringify(listed)).not.toMatch(/siteContact|accessMemo|contractDate/);
     expect(listed.items.length).toBeGreaterThan(0);
 
@@ -677,7 +677,7 @@ describe('목업 서버 계약', () => {
 
     expect(filtered.items.every((item) => item.status === 'PLANNED')).toBe(true);
 
-    // 수정: 보낸 항목만 바꾸고 null로 비우며, 코드·상태는 바꿀 수 없다
+    // 수정: 보낸 항목만 변경하고 null로 비움, 코드·상태는 변경 불가
     const patched = await client.PATCH('/api/v1/projects/{id}', {
       params: { path: { id: card.id } },
       body: { name: '고침', siteAddress: '주소', tradeIds: [] },
@@ -802,7 +802,7 @@ describe('목업 서버 계약', () => {
     ]);
     expect(history.find((item) => item.toStatus === 'SUSPENDED')?.reason).toBe('우천');
 
-    // 완료는 기본정보를 계속 수정할 수 있지만 취소하면 수정할 수 없다
+    // 완료는 기본정보 수정 가능, 취소하면 수정 불가
     expect(
       (await client.PATCH('/api/v1/projects/{id}', { ...path, body: { name: '완료 후 수정' } }))
         .response.status,
@@ -861,7 +861,7 @@ describe('목업 서버 계약', () => {
     const assign = (id: string, body: object) =>
       client.POST('/api/v1/projects/{id}/assignments', { ...path(id), body: body as never });
 
-    // 더미 투입(취소한 것 제외)이 목록에 있고 겹침 경고가 붙는다
+    // 더미 투입(취소한 것 제외)이 목록에 있고 겹침 경고 부착
     const seeded = assignmentsResponseSchema.parse(
       (await client.GET('/api/v1/projects/{id}/assignments', path(running.id))).data,
     ).items;
@@ -895,11 +895,11 @@ describe('목업 서버 계약', () => {
     );
 
     expect(created).toMatchObject({ plannedMinutes: 960, cancelledAt: null });
-    // 같은 프로젝트에 같은 직원이 겹치게 다시 투입할 수 없다
+    // 같은 프로젝트에 같은 직원을 겹치게 재투입 불가
     expect((await assign(planned.id, { employeeId: worker.id, ...full })).response.status).toBe(
       400,
     );
-    // 휴직 직원은 경고와 함께 투입된다
+    // 휴직 직원은 경고와 함께 투입
     expect(
       assignmentSchema.parse((await assign(planned.id, { employeeId: onLeave.id, ...full })).data)
         .warnings,
@@ -1105,7 +1105,7 @@ describe('목업 서버 계약', () => {
       autoAssignedEmployeeIds: [stranger.id],
     });
     expect(saved.savedAt).not.toBeNull();
-    // 저장된 작업 내역을 임시 저장으로 되돌릴 수 없고, 고치면 이력이 남는다
+    // 저장된 작업 내역은 임시 저장으로 되돌릴 수 없고 수정하면 이력 기록
     expect(
       (await put('2026-09-05', { status: 'DRAFT', content: '', entries: [], expectedVersion: 2 }))
         .response.status,
@@ -1261,7 +1261,7 @@ describe('목업 서버 계약', () => {
     expect(cost.actual.employees.reduce((sum, row) => sum + row.amount, 0)).toBe(
       cost.actual.totalAmount,
     );
-    // 더미 단가가 없는 직원의 공수는 따로 센다
+    // 더미 단가가 없는 직원의 공수는 별도 집계
     expect(cost.actual.unpricedMinutes).toBeGreaterThan(0);
     expect(
       (
@@ -1295,7 +1295,7 @@ describe('목업 서버 계약', () => {
     expect(days).toContainEqual(['최설치', '2026-09-02', '2026-001', 480]);
     expect(days).toContainEqual(['최설치', '2026-09-02', '2026-003', 480]);
     expect(calendar.workDays.every((item) => item.workDate <= '2026-09-03')).toBe(true);
-    // 한용접은 9/1에 두 작업 구분(생산·가공 240 + 설치 240)이 한 칸으로 합산된다
+    // 한용접은 9/1에 두 작업 구분(생산·가공 240 + 설치 240)이 한 칸으로 합산
     expect(days).toContainEqual(['한용접', '2026-09-01', '2026-001', 480]);
   });
 
@@ -1393,7 +1393,7 @@ describe('목업 서버 계약', () => {
     expect(history.projects.length).toBeGreaterThan(0);
     expect(history.totalMinutes).toBeGreaterThan(0);
 
-    // 사람별 일한 날: 그 사람이 일한 날의 시간 합이 집계와 같다
+    // 사람별 일한 날: 그 사람이 일한 날의 시간 합이 집계와 일치
     const days = employeeProjectDaysSchema.parse(
       (
         await client.GET('/api/v1/projects/{id}/work-summary/employees/{employeeId}', {

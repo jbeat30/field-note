@@ -3,8 +3,8 @@ import { z } from 'zod';
 import type { RuleCheck } from './assignments';
 import type { ProjectStatus } from './projects';
 
-// 작업 내역 (서비스 기획서 §9.2~§9.4). 프로젝트 × 날짜마다 작업 내역 한 건에 공통 내용을 쓰고,
-// 직원별·작업 구분별 공수(분)를 항목으로 붙인다. 공수는 항상 분 단위로 저장한다
+// 작업 내역 (서비스 기획서 §9.2~§9.4), 프로젝트 × 날짜마다 작업 내역 한 건에 공통 내용을 쓰고,
+// 직원별·작업 구분별 공수(분)를 항목으로 부착, 공수는 항상 분 단위로 저장
 export const WORK_LOG_STATUSES = ['DRAFT', 'SAVED'] as const;
 
 export const workLogStatusSchema = z.enum(WORK_LOG_STATUSES);
@@ -26,8 +26,8 @@ export const WORK_LOG_MAX_ENTRY_MINUTES = 1440;
 // 작업일과 처음 저장한 날의 차이가 이 일수를 넘으면 "지연 입력"으로 표시만 한다 (서비스 기획서 §9.4, 기준일은 제안값)
 export const LATE_INPUT_DAYS = 3;
 
-// 같은 직원의 하루 합계 공수가 하루 기준시간의 이 배수를 넘으면 경고한다
-// (예: 프로젝트 A 1.0 + B 1.0 = 2.0은 경고, 연장 1.5 한 번은 경고하지 않음. 회사별 기준은 3단계에서 설정으로 뺀다)
+// 같은 직원의 하루 합계 공수가 하루 기준시간의 이 배수를 넘으면 경고
+// (예: 프로젝트 A 1.0 + B 1.0 = 2.0은 경고, 연장 1.5 한 번은 경고 제외, 회사별 기준은 3단계에서 설정으로 분리)
 export const DAILY_OVER_MAN_DAYS = 1.5;
 
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
@@ -151,10 +151,10 @@ export const workLogSummarySchema = z.object({
   isAfterService: z.boolean(),
   isLate: z.boolean(),
   entryCount: z.number().int(),
-  // 공수 합(분). 집계에는 저장된 작업 내역만 쓰고 임시 저장은 별도 표시한다 (§9.4)
+  // 공수 합(분), 집계에는 저장된 작업 내역만 쓰고 임시 저장은 별도 표시한다 (§9.4)
   totalMinutes: z.number().int(),
   hasContent: z.boolean(),
-  // 그날 일한 사람별 시간(분). 달력에서 누가 일했는지 바로 보여 주는 데 쓴다
+  // 그날 일한 사람별 시간(분), 달력에서 누가 일했는지 바로 표시하는 데 사용
   workers: z.array(z.object({ employeeId: z.uuid(), minutes: z.int() })),
 });
 

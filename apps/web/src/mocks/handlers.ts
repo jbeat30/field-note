@@ -221,7 +221,7 @@ const toMe = (account: MockAccount): MeResponse => ({
   companyName: account.companyName,
 });
 
-// 쓰기 요청에 CSRF 헤더가 빠지면 서버처럼 거부해 웹 클라이언트 회귀를 잡는다
+// 쓰기 요청에 CSRF 헤더가 없으면 서버처럼 거부해 웹 클라이언트 회귀 검출
 const hasCsrfHeader = (request: Request) => request.headers.get(CSRF_HEADER) === 'web';
 
 // 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있고, 숨긴 항목은 새로 고를 수 없음 (서버와 같은 규칙)
@@ -1780,7 +1780,7 @@ export const handlers = [
       projects.map((item) => (item.id === current.id ? updated : item)),
     );
 
-    // 처음 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 만든다
+    // 처음 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 생성
     if (body.data.toStatus === 'WARRANTY') ensureMockDefaultWarranty(account, updated);
 
     addProjectStatusChange(account, current.id, {
@@ -3014,7 +3014,7 @@ export const handlers = [
     return HttpResponse.json({ resendAfterSeconds: 30 });
   }),
 
-  // 소셜 로그인 (카카오). 시작은 목업 카카오 화면(/mock-kakao) 주소를 돌려줌
+  // 소셜 로그인 (카카오), 시작은 목업 카카오 화면(/mock-kakao) 주소를 돌려줌
   http.get('/api/v1/auth/social/providers', async () => {
     await simulateLatency();
 

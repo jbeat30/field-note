@@ -130,8 +130,8 @@ describe('정기 유지 작업', () => {
     const { requestUpload, maintenanceAt } = await setup();
     const fileId = await requestUpload();
 
-    // 주소 유효 시간과 유예가 지나기 전에는 건드리지 않는다
-    // 신청 시각은 DB 시계(실제 시각)로 찍히므로 실제 시각 기준으로 흘려 본다
+    // 주소 유효 시간과 유예가 지나기 전에는 변경 없음
+    // 신청 시각은 DB 시계(실제 시각)로 기록되므로 실제 시각 기준으로 경과 시뮬레이션
     await maintenanceAt(new Date(Date.now() + 30 * 60 * 1000)).run();
     expect((await db.owner.storedFile.findFirstOrThrow({ where: { id: fileId } })).status).toBe(
       'PENDING',
@@ -170,7 +170,7 @@ describe('정기 유지 작업', () => {
     const { maintenanceAt } = await setup();
     const before = await db.owner.session.count();
 
-    // 로그인 유지 기간이 지난 뒤로 돌리면 방금 만든 세션도 만료로 본다
+    // 로그인 유지 기간 경과 시점으로 돌리면 방금 만든 세션도 만료로 판정
     await createPrismaSessionStore(db.auth, () => NOW).deleteExpired();
     expect(await db.owner.session.count()).toBe(before);
 

@@ -16,7 +16,7 @@ import { projectWorkPath } from '../lib/projectPaths';
 import { AlertList } from './AlertList';
 import { useDismissAlerts } from './useDashboard';
 
-// 홈에서 알림은 위에서 이만큼만 보여 주고 나머지는 알림 창에서 본다
+// 홈에서 알림은 위에서 이 개수만큼만 표시하고 나머지는 알림 창에서 확인
 export const HOME_ALERTS = 5;
 
 const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';

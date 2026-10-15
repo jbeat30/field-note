@@ -30,7 +30,7 @@ const toAppError = (error: unknown): unknown => {
 
 /**
  * @description 직원 단가표·프로젝트 인건비 라우트 (민감 정보). 회사 ID·조작자는 세션에서만 얻고,
- * 단가 기록의 수정·삭제 API는 없으며 조회·변경은 모두 감사 기록으로 남는다
+ * 단가 기록의 수정·삭제 API는 없고 변경은 모두 감사 기록 저장
  * @param registry 라우트 등록소
  * @param labor 단가·인건비 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

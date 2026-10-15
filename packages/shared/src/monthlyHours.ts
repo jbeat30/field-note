@@ -3,9 +3,9 @@ import { z } from 'zod';
 import { workUnitModeSchema } from './account';
 import { minutesToManDays, roundTo, toManMonths } from './workUnits';
 
-// 월 공수 확정과 월 공수표 (서비스 기획서 §13.2, §15.4): 공수 기록이 급여·정산의 근거로 쓰이므로 월 단위로 확정(잠금)한다.
-// 확정은 선택 기능이며, 확정하면 그달의 작업 내역를 고칠 수 없고 재오픈(사유 기록)으로만 정정한다.
-// 확정 시점의 하루 기준시간과 월 기준일수를 그 시점 값으로 고정한다
+// 월 공수 확정과 월 공수표 (서비스 기획서 §13.2, §15.4): 공수 기록이 급여·정산의 근거로 쓰이므로 월 단위로 확정(잠금)
+// 확정은 선택 기능이며 확정하면 그달의 작업 내역 수정 불가, 재오픈(사유 기록)으로만 정정
+// 확정 시점의 하루 기준시간과 월 기준일수를 그 시점 값으로 고정
 export const MONTH_REASON_MAX_LENGTH = 500;
 
 export const monthSchema = z
@@ -76,7 +76,7 @@ export const monthlyHoursSchema = z.object({
   standardWorkMinutes: z.number().int(),
   monthlyWorkDays: z.number(),
   workUnitMode: workUnitModeSchema,
-  // 그달의 임시 저장 작업 내역 (집계에는 저장된 작업 내역만 반영되므로 확정 전에 정리). 최대 50건까지 보여 주고 전체 건수를 따로 준다
+  // 그달의 임시 저장 작업 내역 (집계에는 저장된 작업 내역만 반영되므로 확정 전에 정리), 최대 50건까지 표시하고 전체 건수는 별도 제공
   draftLogCount: z.number().int(),
   drafts: z.array(monthlyDraftSchema),
   // 프로젝트 코드·직원 이름순
@@ -214,13 +214,13 @@ export const summarizeMonthlyHours = (rows: readonly MonthlyHoursRow[]) => {
 export type MonthlyMatrixAxis = 'EMPLOYEE' | 'PROJECT';
 
 export type MonthlyMatrix = {
-  // 열 (직원별이면 프로젝트, 프로젝트별이면 직원). 합계가 큰 것이 먼저
+  // 열 (직원별이면 프로젝트, 프로젝트별이면 직원), 합계가 큰 것이 먼저
   columns: { id: string; label: string }[];
-  // 행 (직원별이면 직원, 프로젝트별이면 프로젝트). 합계가 큰 것이 먼저
+  // 행 (직원별이면 직원, 프로젝트별이면 프로젝트), 합계가 큰 것이 먼저
   rows: {
     id: string;
     label: string;
-    // 열 id → 분 (그 칸에 공수가 없으면 키가 없다)
+    // 열 id → 분 (그 칸에 공수가 없으면 키 없음)
     cells: Record<string, number>;
     total: number;
   }[];
@@ -230,7 +230,7 @@ export type MonthlyMatrix = {
 
 /**
  * @description 월 공수표 행을 "행 × 열" 표로 바꾼다 (직원별: 행 직원·열 프로젝트, 프로젝트별: 행 프로젝트·열 직원).
- * 합계는 분을 먼저 더하므로 보여 줄 때 환산해도 오차가 쌓이지 않는다
+ * 합계는 분을 먼저 더하므로 표시 시 환산해도 오차가 누적되지 않음
  * @param rows 월 공수표 행
  * @param axis 행으로 삼을 것
  * @returns 표 (행·열은 합계가 큰 순, 같으면 이름순)

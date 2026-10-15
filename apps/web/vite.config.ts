@@ -24,7 +24,7 @@ export default defineConfig(({ mode }) => ({
     ...(mode === 'mock' ? [serveMockWorker()] : []),
     tailwindcss(),
     react(),
-    // 앱 껍데기만 캐시. 업무 데이터(/api)는 오프라인 읽기·쓰기를 지원하지 않으므로 캐시하지 않음
+    // 앱 껍데기만 캐시, 업무 데이터(/api)는 오프라인 읽기·쓰기를 지원하지 않으므로 캐시 제외
     VitePWA({
       registerType: 'autoUpdate',
       manifest: {
@@ -47,7 +47,7 @@ export default defineConfig(({ mode }) => ({
   ],
   server: {
     // 운영과 같은 도메인 구성을 맞추기 위해 /api를 api 서버로 전달
-    // 3000번 포트를 다른 프로그램이 쓰고 있을 때는 api를 다른 포트로 띄우고 `API_PROXY_TARGET=http://localhost:3001`로 맞춘다
+    // 3000번 포트를 다른 프로그램이 사용 중이면 api를 다른 포트로 실행하고 `API_PROXY_TARGET=http://localhost:3001`로 지정
     proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:3000' },
   },
 }));

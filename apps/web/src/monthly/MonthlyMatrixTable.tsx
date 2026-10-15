@@ -20,7 +20,7 @@ const th =
   'whitespace-nowrap border-b border-line px-3 py-2.5 text-xs font-semibold text-foreground/65';
 const td = 'border-b border-line px-3 py-2 tabular-nums';
 
-// 월 공수표 본문: 행 직원 × 열 프로젝트(또는 반대) 표. 칸은 MD, 끝 열·아래 합계 행은 MD와 MM을 나란히 보인다
+// 월 공수표 본문: 행 직원 × 열 프로젝트(또는 반대) 표, 칸은 MD, 끝 열·아래 합계 행은 MD와 MM 병기
 export const MonthlyMatrixTable = ({
   rows,
   settings,

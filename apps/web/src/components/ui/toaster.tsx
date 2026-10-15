@@ -9,7 +9,7 @@ const TONE = {
   danger: 'border-danger bg-danger-subtle text-danger',
 };
 
-// 앱 틀에 한 번만 둔다. 5초 뒤 자동으로 사라지고, 스크린 리더가 내용을 읽는다
+// 앱 틀에 한 번만 배치, 5초 뒤 자동으로 사라지고 스크린 리더가 내용 낭독
 export const Toaster = () => {
   const toasts = useToastStore((state) => state.toasts);
   const remove = useToastStore((state) => state.remove);

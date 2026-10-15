@@ -17,8 +17,8 @@ import { useProject } from '../projects/useProjects';
 import { ProjectPeopleStats } from '../workSummary/ProjectPeopleStats';
 import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel';
 
-// 프로젝트 작업 공간의 메뉴별 화면: 개요 · 투입 · 공수·비용 · 정보 (머리·메뉴는 ProjectLayout이 맡는다)
-// 한 화면이 너무 길어지지 않게 관리 영역을 메뉴로 나눈다. section='all'은 시험·화면 확인용으로 모든 구역을 한 화면에 그린다
+// 프로젝트 작업 공간의 메뉴별 화면: 개요 · 투입 · 공수·비용 · 정보 (머리·메뉴는 ProjectLayout이 담당)
+// 한 화면이 너무 길어지지 않게 관리 영역을 메뉴로 분리, section='all'은 시험·화면 확인용으로 모든 구역을 한 화면에 렌더링
 
 const InfoRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="grid grid-cols-[5.5rem_1fr] gap-2 text-sm">
@@ -162,7 +162,7 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
   );
 };
 
-// 메뉴별 화면 (라우터가 쓴다)
+// 메뉴별 화면 (라우터 사용)
 export const ProjectOverviewPage = () => <ProjectCardPage section="overview" />;
 export const ProjectAssignmentsPage = () => <ProjectCardPage section="assignments" />;
 export const ProjectLaborPage = () => <ProjectCardPage section="labor" />;

@@ -9,7 +9,7 @@ type Clock = () => Date;
 export type IssuedInvitation = {
   companyId: string;
   userId: string;
-  // 링크에 들어가는 원문 토큰. 저장소에는 해시만 있어 이 값은 지금 한 번만 알 수 있음
+  // 링크에 들어가는 원문 토큰, 저장소에는 해시만 있어 이 값은 발급 시점에 한 번만 확인 가능
   token: string;
   expiresAt: Date;
 };

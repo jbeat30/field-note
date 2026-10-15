@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
-// 작업자료 문서함 (서비스 기획서 §12.3). 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 모은다.
+// 작업자료 문서함 (서비스 기획서 §12.3), 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 수집
 // 파일은 덮어쓰지 않고 새 버전으로 추가하며(최신본이 기본, 이전본 보존), 민감 자료는 열람·다운로드를 감사 기록으로 남긴다 (§7.3, §13.1)
 export const DOCUMENT_CATEGORIES = ['DRAWING', 'CONTRACT', 'SAFETY', 'QUOTE', 'OTHER'] as const;
 
@@ -66,7 +66,7 @@ export const documentVersionParamsSchema = z.object({
   versionNo: z.coerce.number().int().min(1),
 });
 
-// 올린 파일(용도: 문서)로 문서를 만든다. 첫 버전이 되며 개정일을 비우면 오늘(서울 기준)
+// 올린 파일(용도: 문서)로 문서 생성, 첫 버전이 되며 개정일을 비우면 오늘(서울 기준)
 export const documentCreateSchema = z.object({
   fileId: z.uuid(),
   title: titleSchema,
@@ -79,7 +79,7 @@ export const documentCreateSchema = z.object({
 
 export type DocumentCreate = z.infer<typeof documentCreateSchema>;
 
-// 같은 문서의 새 버전: 최신본이 기본으로 보이고 이전본은 그대로 남는다
+// 같은 문서의 새 버전: 최신본을 기본 표시하고 이전본은 그대로 보존
 export const documentVersionCreateSchema = z.object({
   fileId: z.uuid(),
   revisionDate: dateSchema.optional(),

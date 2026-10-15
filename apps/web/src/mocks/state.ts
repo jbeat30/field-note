@@ -37,7 +37,7 @@ import {
   DEMO_WORK_LOGS,
 } from './demoSource';
 
-// 목업 서버 상태. 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
+// 목업 서버 상태, 새로고침해도 입력한 설정·가입·기기 변경이 유지되도록 sessionStorage에 저장 (탭을 닫으면 초기화)
 type MockState = {
   accounts: MockAccount[];
   currentLoginId: string | null;

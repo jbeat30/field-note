@@ -31,7 +31,7 @@ export const Default: Story = {
 
     await expect(await canvas.findByDisplayValue('8')).toBeInTheDocument();
     await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(22);
-    // 22일은 근무 형태 표준값이 아니라 직접 입력으로 보인다
+    // 22일은 근무 형태 표준값이 아니므로 직접 입력으로 표시
     await expect(canvas.getByRole('radio', { name: /직접 입력/ })).toBeChecked();
     await expect(canvas.getByRole('radio', { name: /비율/ })).toBeChecked();
     // 변경하기 전에는 저장할 수 없음
@@ -55,7 +55,7 @@ export const SaveSettings: Story = {
   },
 };
 
-// 근무 형태를 고르면 표준값이 채워지고 소수 첫째 자리까지 저장된다
+// 근무 형태를 고르면 표준값이 채워지고 소수 첫째 자리까지 저장
 export const PickWorkPattern: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
@@ -91,7 +91,7 @@ export const InvalidInput: Story = {
     await expect(await canvas.findByText('0.5시간 단위로 입력해 주세요')).toBeInTheDocument();
     await expect(canvas.getByText('31일 이하로 입력해 주세요')).toBeInTheDocument();
 
-    // 소수 둘째 자리는 받지 않는다
+    // 소수 둘째 자리는 거부
     await userEvent.clear(canvas.getByLabelText('월 기준일수 (일)'));
     await userEvent.type(canvas.getByLabelText('월 기준일수 (일)'), '21.75');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
@@ -104,7 +104,7 @@ export const Devices: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByText('이 기기')).toBeInTheDocument();
-    // 이 기기를 맨 위에, IP와 마지막 사용을 함께 보인다. 로그인 때와 IP가 다르면 안내
+    // 이 기기를 맨 위에 두고 IP와 마지막 사용을 함께 표시, 로그인 때와 IP가 다르면 안내
     const items = canvas
       .getAllByRole('listitem')
       .filter((item) => item.textContent?.includes('IP'));
@@ -123,7 +123,7 @@ export const Devices: Story = {
   },
 };
 
-// 로그아웃은 확인 창을 거친다
+// 로그아웃은 확인 창 경유
 export const RevokeDevice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -155,7 +155,7 @@ export const RevokeCancelled: Story = {
   },
 };
 
-// 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃한다
+// 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃
 export const StaleDevicesGroup: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -277,7 +277,7 @@ export const ChangeEmail: Story = {
     await userEvent.click(section.getByRole('button', { name: '이메일 변경 완료' }));
 
     await expect(await section.findByText(/이전 주소로 변경 알림/)).toBeInTheDocument();
-    // 창을 닫으면 보안 줄에 새 이메일이 보인다
+    // 창을 닫으면 보안 줄에 새 이메일 표시
     await userEvent.keyboard('{Escape}');
     await expect(await canvas.findByText('new-hanbit@example.com')).toBeInTheDocument();
   },
@@ -458,7 +458,7 @@ export const ClosureRequested: Story = {
   },
 };
 
-// 확인 창에서 취소하면 해지를 요청하지 않는다
+// 확인 창에서 취소하면 해지 요청 없음
 export const ClosureConfirmCancelled: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=etc'], path: '/settings' } },
   play: async ({ canvasElement }) => {
@@ -496,7 +496,7 @@ export const ClosureCanGoBack: Story = {
   },
 };
 
-// 경고·보증 기준: 기본값(80%·100%·20%p·12개월)을 보여 주고 바꿔 저장하면 다시 불러와도 유지된다
+// 경고·보증 기준: 기본값(80%·100%·20%p·12개월) 표시, 변경 후 저장하면 다시 불러와도 유지
 export const CompanyRules: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {
@@ -522,7 +522,7 @@ export const CompanyRules: Story = {
   },
 };
 
-// 한도가 경고 기준보다 크지 않으면 저장하기 전에 알려 준다
+// 한도가 경고 기준보다 크지 않으면 저장 전에 안내
 export const CompanyRulesInvalid: Story = {
   parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
   play: async ({ canvasElement }) => {

@@ -21,15 +21,15 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 const th = 'border border-border bg-muted px-2 py-1 text-left text-sm font-medium';
 const td = 'border border-border px-2 py-1 text-sm align-top';
 
-// 프로젝트 요약 한 장 (완료 리포트, 서비스 기획서 §10.7): 화면에서는 그대로 보고 인쇄·PDF로 저장한다.
-// 금액과 민감 문서는 싣지 않고 기간·공수·자재·변경 작업·사진·자료 같은 사실 기록만 모은다
+// 프로젝트 요약 한 장 (완료 리포트, 서비스 기획서 §10.7): 화면 확인 후 인쇄·PDF 저장
+// 금액과 민감 문서는 제외하고 기간·공수·자재·변경 작업·사진·자료 같은 사실 기록만 수집
 export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSummary }) => {
   const { project, work, materials, changeWorks, afterService, photos, documents, settings } =
     summary;
   const unit = reportWorkUnitLabel(settings.workUnitMode);
   const value = (minutes: number) => reportWorkValue(minutes, settings);
   const manDays = (minutes: number) => minutes / settings.standardWorkMinutes;
-  // 고객에게 내는 준공 요약이라 반입·반출·폐기·잔량은 싣지 않고 쓴 자재만 보인다
+  // 고객에게 내는 준공 요약이므로 반입·반출·폐기·잔량은 제외하고 쓴 자재만 표시
   const usedMaterials = materials.filter((item) => item.used > 0);
   const burn =
     work.plannedMinutes && work.plannedMinutes > 0

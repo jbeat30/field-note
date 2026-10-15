@@ -40,7 +40,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
     const sheet = within(await canvas.findByRole('article', { name: '프로젝트 요약' }));
 
-    // 기본정보·투입·자재·변경 작업·사후 작업·사진·자료 구역이 모두 있다
+    // 기본정보·투입·자재·변경 작업·사후 작업·사진·자료 구역 전체 존재
     for (const title of [
       '기본정보',
       '투입 요약',
@@ -57,13 +57,13 @@ export const Default: Story = {
     await expect(sheet.getByText('40%')).toBeInTheDocument();
     // 변경·추가 작업은 번호·상태·요청자와 함께
     await expect(sheet.getByText(/#1 · 합의됨/)).toBeInTheDocument();
-    // 민감 자료는 싣지 않고 건수만 알린다, 금액은 어디에도 없다
+    // 민감 자료는 제외하고 건수만 안내, 금액은 어디에도 없음
     await expect(sheet.getByText(/민감 자료 1건은 요약에 싣지 않았습니다/)).toBeInTheDocument();
     await expect(sheet.queryByText('도급 계약서')).not.toBeInTheDocument();
     await expect(sheet.queryByText(/\d원/)).not.toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '인쇄·PDF' })).toBeInTheDocument();
 
-    // 자재는 고객에게 내는 보고서라 품명·규격·쓴 양만 (반입·반출·잔량은 싣지 않는다)
+    // 자재는 고객에게 내는 보고서이므로 품명·규격·쓴 양만 표시 (반입·반출·잔량 제외)
     const materials = within(sheet.getByRole('region', { name: '자재 요약' }));
 
     for (const header of ['품명', '규격', '쓴 양']) {
@@ -75,7 +75,7 @@ export const Default: Story = {
     }
 
     await expect(sheet.queryByText(/마이너스/)).not.toBeInTheDocument();
-    // 사진·작업자료는 무엇을 싣는지 기준을 적는다
+    // 사진·작업자료는 포함 기준을 명시
     await expect(
       sheet.getByText(/직접 고른 사진, 고르지 않았으면 작업 후 사진 최근 8장/),
     ).toBeInTheDocument();
@@ -85,7 +85,7 @@ export const Default: Story = {
   },
 };
 
-// 엑셀 내려받기: 파일 이름을 알려 주고 내보낸 기록이 남는다는 안내가 함께 보인다
+// 엑셀 내려받기: 파일 이름을 안내하고 내보낸 기록이 남는다는 안내 병기
 export const ExportDownloads: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

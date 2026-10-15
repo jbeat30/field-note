@@ -18,7 +18,7 @@ type PeriodNavProps = {
   // "오늘/이번 주/이번 달" 버튼
   todayLabel: string;
   onToday: () => void;
-  // 달력에서 날짜를 고르면 그 날짜(YYYY-MM-DD)를 돌려준다. 없으면 달력 없이 표시만 한다
+  // 달력에서 날짜를 고르면 그 날짜(YYYY-MM-DD) 반환, 없으면 달력 없이 표시만 제공
   onPick?: (date: string) => void;
   pickValue?: string;
   pickMax?: string;

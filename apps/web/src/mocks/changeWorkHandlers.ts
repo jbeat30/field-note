@@ -45,7 +45,7 @@ type MockChangeWork = Omit<ChangeWork, 'documentCount'> & {
   links: MockLink[];
 };
 
-// 목업 저장소: 회사별 변경·추가 작업 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 변경·추가 작업 (새로고침하면 초기화), 실제 서버 동작을 모사
 const works = new Map<string, MockChangeWork>();
 const seeded = new Set<string>();
 
@@ -482,7 +482,7 @@ export const createChangeWorkHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (blocked) return blocked;
 
-      // 같은 프로젝트의 삭제되지 않은 문서만 연결할 수 있다
+      // 같은 프로젝트의 삭제되지 않은 문서만 연결 가능
       if (
         !listMockDocuments(account).some(
           (document) =>
@@ -524,7 +524,7 @@ export const createChangeWorkHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (!work) return apiError('NOT_FOUND');
 
-      // 기록할 수 없는 프로젝트 상태면 문서를 만들기 전에 막는다
+      // 기록할 수 없는 프로젝트 상태는 문서 생성 전에 차단
       const blocked = projectCheck(
         account,
         work.projectId,
@@ -538,7 +538,7 @@ export const createChangeWorkHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if ('error' in created) return invalid(created.error.path, created.error.message);
 
-      // 같은 파일로 다시 부르면 이미 연결된 증빙을 그대로 돌려준다
+      // 같은 파일로 다시 호출하면 이미 연결된 증빙 반환
       if (!work.links.some((link) => link.documentId === created.id && !link.unlinkedAt)) {
         work.links.push({
           documentId: created.id,

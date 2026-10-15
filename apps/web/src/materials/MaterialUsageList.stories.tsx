@@ -17,7 +17,7 @@ const meta = {
       storyRecord(1, { materialId: door.id, quantity: 2, area: '3층 301호' }),
       storyRecord(2, { materialId: cover.id, quantity: 12, memo: '외벽 북측' }),
       storyRecord(3, { materialId: silicone.id, recordDate: '2026-10-06', quantity: 3 }),
-      // 예전에 남긴 반입 기록은 구분 표시가 붙는다
+      // 예전에 남긴 반입 기록은 구분 표시 부착
       storyRecord(4, { materialId: silicone.id, recordDate: '2026-10-06', kind: 'RECEIVED' }),
     ],
     onDelete: fn(),
@@ -28,7 +28,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 날짜별로 묶이고(최근 먼저) 품명·규격·수량·단위·위치가 한 줄에 보인다
+// 날짜별 그룹(최근 먼저)과 품명·규격·수량·단위·위치 한 줄 표시
 export const Default: Story = {
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);

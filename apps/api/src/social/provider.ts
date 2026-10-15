@@ -117,7 +117,7 @@ export const signFakeCode = (secret: string, profileKey: string) =>
 
 /**
  * @description 개발 환경 전용 가짜 제공자. 실제 카카오 없이 연동·로그인·가입 흐름 전체를 테스트
- * 운영 환경에서는 만들어지지 않도록 호출하는 쪽(`chooseSocialProvider`)에서 막는다
+ * 운영 환경에서는 생성되지 않도록 호출하는 쪽(`chooseSocialProvider`)에서 차단
  * @param options 서버 주소와 코드 서명용 비밀 값
  * @returns 가짜 제공자
  */

@@ -4,7 +4,7 @@ import { useQuery } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 전환을 하려는 순간의 기록 현황이 중요하므로 캐시를 오래 쓰지 않는다
+// 전환 직전의 기록 현황이 중요하므로 캐시 장기 보관 제외
 export const useTransitionNotices = (projectId: string, to: ProjectStatus) =>
   useQuery({
     queryKey: queryKeys.transitionNotices(projectId, to),

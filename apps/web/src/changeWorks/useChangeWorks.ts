@@ -60,7 +60,7 @@ export const useChangeUsage = (projectId: string) =>
     },
   });
 
-// 변경·추가 작업의 목록·상세는 서로 영향을 주므로 하나가 바뀌면 모두 다시 읽는다
+// 변경·추가 작업의 목록·상세는 서로 영향을 주므로 하나가 바뀌면 전체 재조회
 const useInvalidateChangeWorks = () => {
   const queryClient = useQueryClient();
 

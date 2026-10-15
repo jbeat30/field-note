@@ -21,7 +21,7 @@ export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    // 설정하지 않은 알림은 모두 켜져 있다
+    // 설정하지 않은 알림은 모두 켜짐
     await expect(await canvas.findByRole('switch', { name: LABEL })).toBeChecked();
     await expect(canvas.getAllByRole('switch')).toHaveLength(11);
     await expect(
@@ -36,12 +36,12 @@ export const TurnOffOne: Story = {
 
     await userEvent.click(await canvas.findByRole('switch', { name: LABEL }));
     await waitFor(() => expect(canvas.getByRole('switch', { name: LABEL })).not.toBeChecked());
-    // 다른 알림은 그대로 켜져 있다
+    // 다른 알림은 그대로 켜짐
     await expect(
       canvas.getAllByRole('switch').filter((box) => box.getAttribute('data-state') === 'checked'),
     ).toHaveLength(10);
 
-    // 다시 켠다
+    // 다시 켬
     await userEvent.click(canvas.getByRole('switch', { name: LABEL }));
     await waitFor(() => expect(canvas.getByRole('switch', { name: LABEL })).toBeChecked());
   },

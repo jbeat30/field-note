@@ -3,7 +3,7 @@ import type { ComponentProps } from 'react';
 
 import { cn } from '../../lib/cn';
 
-// 상태 표시용 작은 알약 (색만으로 뜻을 전하지 않도록 항상 글자를 함께 쓴다)
+// 상태 표시용 작은 알약 (색만으로 뜻을 전하지 않도록 항상 글자 병행)
 export const badgeVariants = cva(
   'inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-semibold whitespace-nowrap',
   {

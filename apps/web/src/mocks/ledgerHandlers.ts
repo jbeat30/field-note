@@ -29,7 +29,7 @@ type Helpers = {
 
 type MockEntry = LedgerEntry & { scope: string; deletedAt?: string };
 
-// 목업 저장소: 회사별 지출·수입 기록 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 지출·수입 기록 (새로고침하면 초기화), 실제 서버 동작을 모사
 const entries = new Map<string, MockEntry>();
 const seeded = new Set<string>();
 
@@ -168,7 +168,7 @@ type Filter = {
   date?: string;
 };
 
-// 내역과 합계가 같은 조건을 쓰도록 한곳에서 거른다
+// 내역과 합계가 같은 조건을 쓰도록 한곳에서 필터링
 const filtered = (list: MockEntry[], filter: Filter) =>
   list.filter(
     (entry) =>

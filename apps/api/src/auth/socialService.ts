@@ -15,20 +15,20 @@ export type LoginMethods = {
 };
 
 export type SocialService = {
-  // 제공자 사용자 번호로 계정을 찾음 (이메일로는 절대 찾지 않음, §6.1). 정지·해지 요청 중인 회사는 없는 것으로 취급
+  // 제공자 사용자 번호로 계정을 찾음 (이메일로는 절대 찾지 않음, §6.1), 정지·해지 요청 중인 회사는 없는 것으로 취급
   findAccount: (
     provider: SocialProviderId,
     providerUserId: string,
   ) => Promise<AuthenticatedAccount | null>;
   // 해지 요청 중인 회사의 소셜 계정인지 (로그인은 막되 취소 링크를 안내하기 위함)
   isClosing: (provider: SocialProviderId, providerUserId: string) => Promise<boolean>;
-  // 로그인한 계정에 소셜 계정 연동. 이미 다른 계정에 연동된 소셜 계정은 거부
+  // 로그인한 계정에 소셜 계정 연동, 이미 다른 계정에 연동된 소셜 계정은 거부
   link: (
     account: AuthenticatedAccount,
     provider: SocialProviderId,
     providerUserId: string,
   ) => Promise<void>;
-  // 연동 해제. 해제 후에도 로그인 수단이 하나 이상 남아야 함
+  // 연동 해제, 해제 후에도 로그인 수단이 하나 이상 남아야 함
   unlink: (account: AuthenticatedAccount, provider: SocialProviderId) => Promise<void>;
   methods: (account: AuthenticatedAccount) => Promise<LoginMethods>;
   // 초대 링크로 소셜 가입: 제공자가 인증된 이메일을 줄 때만 가능, 이메일 인증이 끝난 활성 계정으로 만듦

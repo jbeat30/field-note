@@ -15,7 +15,7 @@ import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 // 객체 저장소 추상화: 업무 코드는 S3 SDK를 직접 알지 않고 이 인터페이스만 사용 (공급자 교체·테스트 용이, 기술 기획서 §10)
 export type ObjectStorage = {
-  // 브라우저가 직접 올릴 짧은 만료의 PUT 주소. 형식·크기를 서명에 포함해 신청과 다른 파일은 저장소가 거부
+  // 브라우저가 직접 올릴 짧은 만료의 PUT 주소, 형식·크기를 서명에 포함해 신청과 다른 파일은 저장소가 거부
   presignUpload: (
     key: string,
     options: { contentType: string; size: number; expiresInSeconds: number },
@@ -141,7 +141,7 @@ export const createS3Storage = (config: S3Config) => {
     },
   };
 
-  // 버킷이 없으면 만들고, 웹 주소에서 브라우저가 직접 올리고 볼 수 있게 CORS를 설정한다 (로컬 개발용. 운영은 운영자가 버킷과 CORS를 미리 준비)
+  // 버킷이 없으면 생성하고 웹 주소에서 브라우저가 직접 올리고 볼 수 있도록 CORS 설정 (로컬 개발용, 운영은 운영자가 버킷과 CORS를 사전 준비)
   const ensureBucket = async (webOrigin: string) => {
     try {
       await client.send(new HeadBucketCommand({ Bucket }));

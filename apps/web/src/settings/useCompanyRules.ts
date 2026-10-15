@@ -19,7 +19,7 @@ export const useCompanyRules = () =>
     },
   });
 
-// 저장하면 경고(프로젝트 현황·홈 알림)와 보증 기본 기간이 달라지므로 관련 조회를 새로 읽는다
+// 저장하면 경고(프로젝트 현황·홈 알림)와 보증 기본 기간이 달라지므로 관련 조회 재요청
 export const useSaveCompanyRules = () => {
   const queryClient = useQueryClient();
 

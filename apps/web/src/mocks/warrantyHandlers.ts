@@ -55,7 +55,7 @@ type Store = {
   certificates: MockCertificate[];
 };
 
-// 목업 저장소: 회사별 보증 설정·이력·보증서 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 보증 설정·이력·보증서 (새로고침하면 초기화), 실제 서버 동작을 모사
 const stores = new Map<string, Store>();
 
 export const resetMockWarranties = () => stores.clear();
@@ -246,7 +246,7 @@ export const createWarrantyHandlers = ({ apiError, parseBody }: Helpers) => {
   const invalid = (path: string, message: string) =>
     apiError('VALIDATION_ERROR', [{ path, message }]);
 
-  // 로그인과 프로젝트를 확인한다. 실패하면 응답, 성공하면 계정과 프로젝트
+  // 로그인과 프로젝트 확인, 실패하면 응답 반환, 성공하면 계정과 프로젝트 반환
   const context = (params: unknown) => {
     const account = getCurrentAccount();
 
@@ -361,7 +361,7 @@ export const createWarrantyHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (blocked) return blocked;
 
-      // 같은 프로젝트의 문서만 보증서로 등록할 수 있다
+      // 같은 프로젝트의 문서만 보증서로 등록 가능
       const document = listMockDocuments(account).find(
         (item) => item.id === body.data.documentId && item.projectId === project.id,
       );

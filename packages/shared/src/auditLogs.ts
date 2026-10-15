@@ -3,8 +3,8 @@ import { z } from 'zod';
 import { PAY_TYPE_LABELS } from './laborCost';
 import { auditActionSchema, type AuditAction } from './documents';
 
-// 활동 기록 (서비스 기획서 §13.1, 09 문서 §5.2): 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 한곳에서 본다.
-// 인건비·단가 조회는 남기지 않는다 (이 서비스는 볼 권한이 있는 관리자만 쓰므로 열람 기록이 의미 없음). 기록은 수정·삭제할 수 없고 이 화면은 조회만 한다
+// 활동 기록 (서비스 기획서 §13.1, 09 문서 §5.2): 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 한곳에서 조회
+// 인건비·단가 조회는 기록 제외 (이 서비스는 볼 권한이 있는 관리자만 사용하므로 열람 기록이 무의미), 기록은 수정·삭제 불가이며 이 화면은 조회 전용
 const dateSchema = z.iso.date();
 
 export const AUDIT_PAGE_DEFAULT_LIMIT = 50;
@@ -65,7 +65,7 @@ const KIND_OF: Record<AuditAction, AuditKind> = {
   DOCUMENT_VIEWED: 'VIEW',
   DOCUMENT_DOWNLOADED: 'VIEW',
   EMPLOYEE_DOCUMENT_VIEWED: 'VIEW',
-  // 더는 남기지 않지만 이미 남은 기록은 열람으로 분류한다
+  // 더는 남기지 않지만 이미 남은 기록은 열람으로 분류
   PAY_RATE_VIEWED: 'VIEW',
   LABOR_COST_VIEWED: 'VIEW',
 };
@@ -83,7 +83,7 @@ export const auditKindOf = (action: AuditAction): AuditKind => KIND_OF[action];
 export const auditActionsOfKind = (kind: AuditKind): AuditAction[] =>
   (Object.keys(KIND_OF) as AuditAction[]).filter((action) => KIND_OF[action] === kind);
 
-// 대상 종류: 대상 이름을 어디서 찾을지, 화면이 어디로 이동할지 정한다
+// 대상 종류: 대상 이름을 찾을 위치와 화면 이동 경로 결정
 export const AUDIT_TARGET_TYPES = ['DOCUMENT', 'EMPLOYEE', 'PROJECT', 'COMPANY'] as const;
 
 export const auditTargetTypeSchema = z.enum(AUDIT_TARGET_TYPES);
@@ -131,7 +131,7 @@ const field = (detail: unknown, key: string): string | undefined => {
   return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
 };
 
-// 바뀐 내용 한 줄: 항목 이름과 바꾸기 전·후 값 (값은 사람이 읽는 글로 저장한다)
+// 바뀐 내용 한 줄: 항목 이름과 바꾸기 전·후 값 (값은 사람이 읽는 글로 저장)
 export const auditChangeSchema = z.object({
   label: z.string(),
   before: z.string().nullable(),

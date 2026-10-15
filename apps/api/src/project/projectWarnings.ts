@@ -5,12 +5,12 @@ import type { Prisma } from '../db/client';
 
 const fromDate = (value: Date) => value.toISOString().slice(0, 10);
 
-// 경고를 내는 상태 (진행·중단). 그 밖의 상태는 경고가 없다
+// 경고 대상 상태 (진행·중단), 그 밖의 상태는 경고 없음
 const ACTIVE = ['IN_PROGRESS', 'SUSPENDED'] as const;
 
 /**
  * @description 프로젝트들의 경고를 한꺼번에 계산한다 (회사별 경고 기준을 따름). 진행·중단 프로젝트만 경고가 있을 수 있다
- * 프로젝트마다 따로 조회하지 않고 투입 계획 합계·저장된 작업 내역 합계·최근 진행률을 묶어서 읽는다
+ * 프로젝트별 개별 조회 대신 투입 계획 합계·저장된 작업 내역 합계·최근 진행률을 묶어서 조회
  * @param tx 회사 범위 트랜잭션
  * @param projects 대상 프로젝트
  * @param now 현재 시각

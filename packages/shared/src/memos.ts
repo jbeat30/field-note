@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 프로젝트 메모 노트와 메모함 (서비스 기획서 §10.9, §14). 정해진 양식에 들어가지 않는 내용(통화, 지시, 이슈, 할 일)을 날짜별로 쌓는다
+// 프로젝트 메모 노트와 메모함 (서비스 기획서 §10.9, §14), 정해진 양식에 들어가지 않는 내용(통화, 지시, 이슈, 할 일)을 날짜별로 누적
 export const MEMO_TAGS = ['NEGOTIATION', 'INSTRUCTION', 'ISSUE', 'TODO', 'OTHER'] as const;
 
 export const memoTagSchema = z.enum(MEMO_TAGS);
@@ -29,7 +29,7 @@ const contentSchema = z
 
 export const memoParamsSchema = z.object({ id: z.uuid() });
 
-// 프로젝트를 정하지 않으면 메모함에 들어간다. 날짜를 비우면 오늘(서울 기준), 태그를 비우면 기타
+// 프로젝트를 정하지 않으면 메모함에 저장, 날짜를 비우면 오늘(서울 기준), 태그를 비우면 기타
 export const memoCreateSchema = z.object({
   content: contentSchema,
   tag: memoTagSchema.default('OTHER'),
@@ -39,7 +39,7 @@ export const memoCreateSchema = z.object({
 
 export type MemoCreate = z.infer<typeof memoCreateSchema>;
 
-// 프로젝트에 연결(메모함에서 정리)하거나 null로 메모함에 되돌릴 수 있다. 완료 표시는 "할 일" 메모만 가능
+// 프로젝트에 연결(메모함에서 정리)하거나 null로 메모함에 복귀 가능, 완료 표시는 "할 일" 메모만 가능
 export const memoUpdateSchema = z
   .object({
     content: contentSchema,

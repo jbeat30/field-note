@@ -9,7 +9,7 @@ export type ConsentInput = { documentId: string; isAgreed: boolean };
 
 /**
  * @description 초대 링크를 사용 처리하고 동의 내용을 검증 (아이디 가입·소셜 가입이 함께 쓰는 공통 단계)
- * 같은 트랜잭션 안에서 호출해야 이후 단계가 실패하면 링크도 소모되지 않는다
+ * 같은 트랜잭션 안에서 호출 필요 (이후 단계가 실패하면 링크도 소모되지 않음)
  * @param tx 트랜잭션
  * @param input 초대 토큰 원문과 동의 목록
  * @param at 현재 시각

@@ -22,7 +22,7 @@ type CommonProps = {
   placeholder?: string;
   searchPlaceholder?: string;
   emptyText?: string;
-  // 목록 맨 아래 "새로 추가" 동작 (검색어를 넘겨 줌). 명부에 없는 고객을 바로 등록할 때 등
+  // 목록 맨 아래 "새로 추가" 동작 (검색어를 넘겨 줌), 명부에 없는 고객을 바로 등록할 때 등
   onCreate?: (search: string) => void;
   createLabel?: string;
   size?: ControlSize;
@@ -53,7 +53,7 @@ type MultiComboboxProps = CommonProps & {
 const matches = (_value: string, search: string, keywords?: string[]) =>
   (keywords ?? []).join(' ').toLowerCase().includes(search.trim().toLowerCase()) ? 1 : 0;
 
-// 검색해서 고르는 목록 (단일·여러 개 공통). 고르면 onPick, 열림 상태는 바깥에서 관리
+// 검색해서 고르는 목록 (단일·여러 개 공통), 고르면 onPick, 열림 상태는 바깥에서 관리
 const ComboboxList = ({
   options,
   isSelected,
@@ -209,7 +209,7 @@ const Content = ({ label, children }: { label: string; children: ReactNode }) =>
   </Popover.Portal>
 );
 
-// 검색해서 하나 고르는 칸: 직원·고객·프로젝트처럼 항목이 많을 때. 키보드(위아래·Enter·Esc)로도 고를 수 있다
+// 검색해서 하나 고르는 칸: 직원·고객·프로젝트처럼 항목이 많을 때 사용, 키보드(위아래·Enter·Esc) 선택 지원
 export const Combobox = ({
   options,
   value,
@@ -278,7 +278,7 @@ export const Combobox = ({
   );
 };
 
-// 검색해서 여러 개 고르는 칸 (팀에 여러 명 추가 등). 고른 항목은 목록을 연 채로 켜고 끔
+// 검색해서 여러 개 고르는 칸 (팀에 여러 명 추가 등), 고른 항목은 목록을 연 채로 켜고 끔
 export const MultiCombobox = ({
   options,
   value,

@@ -20,7 +20,7 @@ export const filenameFromDisposition = (disposition: string | null, fallback: st
   }
 };
 
-// 엑셀 내려받기 공통: 오류는 파일 대신 JSON으로 오므로 화면이 바뀌지 않게 직접 받아 처리한다
+// 엑셀 내려받기 공통: 오류는 파일 대신 JSON으로 수신되므로 화면이 바뀌지 않게 직접 받아 처리
 const downloadXlsx = async (url: string, fallbackName: string) => {
   let response: Response;
 

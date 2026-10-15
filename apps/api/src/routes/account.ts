@@ -43,7 +43,7 @@ import { readSessionToken, setSessionCookie } from '../session/cookie';
 import type { SessionStore } from '../session/sessionStore';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 
-// 계약 선행 라우트: 화면은 이 계약(OpenAPI)으로 목업과 함께 먼저 만들고, 실제 구현은 P0-2~P0-8에서 채운다
+// 계약 선행 라우트: 화면은 이 계약(OpenAPI)으로 목업과 함께 먼저 구현하고 실제 구현은 P0-2~P0-8에서 채움
 const notImplemented: RouteHandler = async () => {
   throw new AppError('NOT_IMPLEMENTED');
 };

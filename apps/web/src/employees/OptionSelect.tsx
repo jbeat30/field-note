@@ -3,8 +3,8 @@ import type { ComponentProps } from 'react';
 
 import { Select } from '../components/ui/select';
 
-// 선택 목록(직종·직원 구분)에서 고르는 입력. 숨긴 항목은 새로 고를 수 없지만,
-// 이미 그 항목을 쓰고 있다면(keepId) "(숨김)"으로 계속 보여 준다
+// 선택 목록(직종·직원 구분) 선택 입력, 숨긴 항목은 새로 선택할 수 없지만
+// 이미 그 항목을 사용 중이면(keepId) "(숨김)"으로 계속 표시
 export const OptionSelect = ({
   kind,
   options,

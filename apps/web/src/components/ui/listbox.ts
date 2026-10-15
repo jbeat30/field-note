@@ -4,7 +4,7 @@
 export const listboxContentClass =
   'z-40 overflow-hidden rounded-lg border border-line bg-surface shadow-pop';
 
-// 목록 한 줄. 키보드·마우스로 가리킨 줄은 data-highlighted(Radix) 또는 data-selected(cmdk)
+// 목록 한 줄, 키보드·마우스로 가리킨 줄은 data-highlighted(Radix) 또는 data-selected(cmdk)
 export const listboxItemClass =
   'relative flex min-h-10 cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-[15px] outline-none select-none data-[highlighted]:bg-muted data-[selected=true]:bg-muted md:min-h-9';
 

@@ -50,7 +50,7 @@ const fillTeam = async (canvas: ReturnType<typeof within>) => {
   await canvas.findByLabelText('정판금 일한 시간(시간)');
 };
 
-// 작업 내역을 쓰다가 닫은 뒤 다시 열면 입력이 그대로 복구되고 안내가 나온다
+// 작업 내역을 작성하다가 닫은 뒤 다시 열면 입력이 그대로 복구되고 안내 표시
 export const RestoresUnsavedInput: Story = {
   beforeEach: () => seedWorkLogDraft(NEW_DAY, null, '복구될 작업 내용'),
   play: async ({ canvasElement }) => {
@@ -82,7 +82,7 @@ export const DiscardRestoredInput: Story = {
   },
 };
 
-// 입력하면 잠깐 뒤 기기에 저장되고, 서버에 저장하면 지워진다
+// 입력하면 잠시 뒤 기기에 저장되고 서버에 저장하면 삭제
 export const AutoSavesWhileTypingAndClearsOnSave: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -124,7 +124,7 @@ export const NoDraftWhenBackToOriginal: Story = {
   },
 };
 
-// 그사이 서버의 작업 내역이 바뀌었으면(다른 기기) 자동으로 덮지 않고 불러올지 묻는다
+// 그사이 서버의 작업 내역이 바뀐 경우(다른 기기) 자동으로 덮지 않고 불러올지 확인
 export const StaleDraftAsksBeforeLoading: Story = {
   parameters: { router: routerFor(SAVED_DAY) },
   beforeEach: () => seedWorkLogDraft(SAVED_DAY, 99, '예전 기기에서 쓰던 내용'),

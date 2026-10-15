@@ -14,7 +14,7 @@ const routerFor = (name: string) => ({
   path: '/projects/:id/warranty',
 });
 
-// 문서함에 문서가 있는 A동 프로젝트를 완료 상태로 맞춰 보증서 등록을 확인한다
+// 문서함에 문서가 있는 A동 프로젝트를 완료 상태로 맞춰 보증서 등록 확인
 const completeProjectA = () => {
   signIn('hanbit');
 
@@ -41,7 +41,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 완료 뒤 보증을 아직 설정하지 않았으면 기본 12개월과 실제 완료일로 계산한 값을 보여 준다
+// 완료 후 보증을 아직 설정하지 않았으면 기본 12개월과 실제 완료일로 계산한 값 표시
 export const UnconfiguredDefaults: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -52,7 +52,7 @@ export const UnconfiguredDefaults: Story = {
   },
 };
 
-// 처음 저장은 사유 없이, 이후 변경은 사유가 있어야 하고 이력에 남는다
+// 처음 저장은 사유 없이, 이후 변경은 사유 필요, 이력에 기록
 export const SaveThenChangeNeedsReason: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -69,7 +69,7 @@ export const SaveThenChangeNeedsReason: Story = {
       await canvas.findByText(/24개월로 설정/, {}, { timeout: 4000 }),
     ).toBeInTheDocument();
 
-    // 이미 설정이 있어 사유 없이는 바꿀 수 없다
+    // 이미 설정이 있어 사유 없이는 변경 불가
     const again = within(await canvas.findByRole('form', { name: '보증 설정' }));
 
     await userEvent.clear(again.getByLabelText('보증 기간 (개월)'));
@@ -116,7 +116,7 @@ export const InspectionNeedsStartDate: Story = {
   },
 };
 
-// 완료 전에는 설정 폼·보증서를 숨기고 한 줄 안내와 기본값만 보인다
+// 완료 전에는 설정 폼·보증서를 숨기고 한 줄 안내와 기본값만 표시
 export const BeforeCompletion: Story = {
   parameters: { router: routerFor('A동 외장 판금 공사') },
   play: async ({ canvasElement }) => {
@@ -131,7 +131,7 @@ export const BeforeCompletion: Story = {
   },
 };
 
-// 종료된 프로젝트는 설정과 보증서를 바꿀 수 없고 이력은 조회된다
+// 종료된 프로젝트는 설정과 보증서 변경 불가, 이력은 조회 가능
 export const ClosedProjectReadOnly: Story = {
   parameters: { router: routerFor('C동 환기 설비') },
   play: async ({ canvasElement }) => {

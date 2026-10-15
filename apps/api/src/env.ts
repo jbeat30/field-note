@@ -78,7 +78,7 @@ const envSchema = baseSchema.superRefine((env, context) => {
     );
   }
 
-  // 로컬 `.env.example`로 만든 값 그대로 쓰는 경우를 막음 (비밀 값은 환경마다 새로 만든다)
+  // 로컬 `.env.example`에서 만든 값 그대로의 사용 차단 (비밀 값은 환경마다 새로 생성)
   for (const key of ['DATABASE_URL', 'DATABASE_MIGRATE_URL', 'S3_SECRET_KEY'] as const) {
     if (/field_note_secret|:field_note@|:field_note_app@/.test(env[key])) {
       problem(key, '로컬 기본 비밀번호를 운영에서 쓸 수 없음');

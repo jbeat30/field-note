@@ -51,7 +51,7 @@ type Store = {
   required: Map<string, string[]>;
 };
 
-// 목업 저장소: 회사별 직원 서류·필요 자격 (새로고침하면 초기화). 실제 서버가 하는 일을 흉내 낸다
+// 목업 저장소: 회사별 직원 서류·필요 자격 (새로고침하면 초기화), 실제 서버 동작을 모사
 const stores = new Map<string, Store>();
 
 export const resetMockCredentials = () => stores.clear();

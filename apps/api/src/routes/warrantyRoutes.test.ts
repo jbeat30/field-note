@@ -381,7 +381,7 @@ describe('보증과 상태 전환', () => {
 
     await client.setWarranty(project, { months: 0, startBasis: 'ACTUAL_END' });
 
-    // 보증 기간 0이면 보증 중으로는 바꿀 수 없다
+    // 보증 기간 0이면 보증 중으로 변경 불가
     const warranty = await client.projectStatus(project, {
       toStatus: 'WARRANTY',
       confirmSummary: true,

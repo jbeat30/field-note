@@ -19,7 +19,7 @@ type MemoListProps = {
   onLink?: (memo: Memo, projectId: string) => void;
   onDelete: (memo: Memo) => void;
   onEdit?: (memo: Memo, content: string, tag: MemoTag) => void;
-  // 프로젝트 메모면 날짜 머리에 연도까지 보이고 그날 작업 기록으로 가는 링크를 단다
+  // 프로젝트 메모는 날짜 머리에 연도까지 표시하고 그날 작업 기록으로 가는 링크 부착
   projectId?: string;
 };
 
@@ -165,7 +165,7 @@ const MemoItem = ({
   );
 };
 
-// 메모 목록: 날짜별로 묶어 최근 것부터, 한 줄에 태그·내용과 수정·삭제 아이콘. 할 일은 완료 체크, 메모함에서는 프로젝트 연결, 삭제는 확인 창
+// 메모 목록: 날짜별 그룹 최근순, 한 줄에 태그·내용과 수정·삭제 아이콘, 할 일은 완료 체크, 메모함에서는 프로젝트 연결, 삭제는 확인 창
 export const MemoList = ({ memos, projectId, ...handlers }: MemoListProps) => (
   <div className="flex flex-col gap-4">
     {groupByDate(memos).map(([date, items]) => (

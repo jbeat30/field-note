@@ -30,7 +30,7 @@ export type DashboardService = {
 
 const fromDate = (value: Date) => value.toISOString().slice(0, 10);
 
-// 예전에 저장된 알림 종류(메모함 알림 등 지금은 없는 것)는 무시한다
+// 예전에 저장된 알림 종류(메모함 알림 등 현재 없는 종류)는 무시
 const toSettings = (rows: { kind: string; enabled: boolean }[]): AlertSettings => {
   const saved = new Map(rows.map((row) => [row.kind, row.enabled]));
 
@@ -202,7 +202,7 @@ export const createDashboardService = (
           unclosedMonth: !prevClose?.isClosed && prevLogCount > 0 ? prevMonth : null,
         };
       });
-      // 같은 직원·종류의 서류는 만료 없는 것이 있거나 더 늦게 만료되는 갱신본이 있으면 가장 늦은 것만 본다
+      // 같은 직원·종류의 서류는 만료 없는 서류 또는 더 늦게 만료되는 갱신본이 있으면 가장 늦은 것만 집계
       const latestCredentials = new Map<
         string,
         { employeeId: string; employeeName: string; typeName: string; expiresOn: string | null }

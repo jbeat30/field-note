@@ -25,7 +25,7 @@ export class WarrantyError extends Error {
 }
 
 export type WarrantyService = {
-  // 보증 설정·보증서·변경 이력. 설정이 없으면 기본 기간과 실제 완료일로 계산한 값을 미리 보여 줌
+  // 보증 설정·보증서·변경 이력, 설정이 없으면 기본 기간과 실제 완료일로 계산한 값을 미리 표시
   get: (companyId: string, projectId: string) => Promise<ProjectWarranty>;
   // 보증 설정 저장 (완료·보증 중에서만, 이미 설정이 있거나 종료 예정일을 직접 바꾸면 사유 필수)
   update: (

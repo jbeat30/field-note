@@ -29,11 +29,11 @@ export class CompletionError extends Error {
 }
 
 export type CompletionService = {
-  // 이 전환에서 확인할 것 (임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업·종료 예정일 경과). 막지 않고 알려 줌
+  // 이 전환에서 확인할 것 (임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업·종료 예정일 경과), 막지 않고 알려 줌
   notices: (companyId: string, projectId: string, to: ProjectStatus) => Promise<TransitionNotices>;
-  // 프로젝트 요약(완료 리포트): 그때그때 최신 기록으로 만든다. 금액과 민감 문서는 싣지 않음
+  // 프로젝트 요약(완료 리포트): 그때그때 최신 기록으로 생성, 금액과 민감 문서 제외
   summary: (companyId: string, projectId: string) => Promise<ProjectCompletionSummary>;
-  // 요약을 엑셀로 내보냄 (요약과 같은 내용, 금액·민감 문서 제외). 내보낸 기록이 남는다
+  // 요약 엑셀 내보내기 (요약과 같은 내용, 금액·민감 문서 제외), 내보낸 기록 저장
   exportXlsx: (
     companyId: string,
     userId: string,

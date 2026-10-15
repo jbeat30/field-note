@@ -119,7 +119,7 @@ const SORT_ORDER: Record<
   plannedEnd: (direction) => ({ plannedEnd: direction }),
 };
 
-// 고객은 명부의 '고객' 구분만 고를 수 있다. 숨긴 업체는 새로 고를 수 없지만 이미 쓰고 있다면 유지할 수 있다
+// 고객은 명부의 '고객' 구분만 선택 가능, 숨긴 업체는 새로 선택할 수 없지만 이미 사용 중이면 유지 가능
 const assertClient = async (tx: Prisma.TransactionClient, id: string, currentId: string | null) => {
   const partner = await tx.partner.findFirst({ where: { id, kind: 'CLIENT' } });
 
@@ -149,7 +149,7 @@ const assertManager = async (
   }
 };
 
-// 공종은 선택 목록의 '공종' 항목만 고를 수 있고, 숨긴 항목은 이미 쓰고 있을 때만 유지할 수 있다
+// 공종은 선택 목록의 '공종' 항목만 선택 가능, 숨긴 항목은 이미 사용 중일 때만 유지 가능
 const assertTrades = async (
   tx: Prisma.TransactionClient,
   ids: string[],
@@ -217,7 +217,7 @@ export const createProjectService = (
           : {}),
         siteName: site ? { contains: site, mode: 'insensitive' } : undefined,
       };
-      // 경고가 있는 프로젝트만 보려면 조건에 맞는 진행·중단 프로젝트의 경고를 먼저 계산해 그 프로젝트로 좁힌다
+      // 경고가 있는 프로젝트만 조회하는 경우 조건에 맞는 진행·중단 프로젝트의 경고를 먼저 계산해 대상 프로젝트로 축소
       if (hasWarning) {
         const candidates = await tx.project.findMany({
           where: { ...where, status: { in: ['IN_PROGRESS', 'SUSPENDED'] } },

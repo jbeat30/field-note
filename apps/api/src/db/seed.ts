@@ -48,7 +48,7 @@ const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
 
 /**
  * @description 로컬 개발용 더미 데이터 입력 (여러 번 실행해도 같은 결과, 소유 계정 클라이언트 전용)
- * 회사·계정·약관 버전·동의 이력과, 가입 전 회사의 1회용 초대 링크(`demo-invite-0001`)를 만든다. 회사 설정(기준시간·월 기준일수·공수 방식)
+ * 회사·계정·약관 버전·동의 이력과 가입 전 회사의 1회용 초대 링크(`demo-invite-0001`) 생성, 회사 설정(기준시간·월 기준일수·공수 방식)
  * @param prisma 소유 계정(DATABASE_MIGRATE_URL) Prisma 클라이언트
  * @returns 입력한 개수
  */
@@ -335,7 +335,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     });
   }
 
-  // 변경·추가 작업 (프로젝트 코드로 연결, 기록자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  // 변경·추가 작업 (프로젝트 코드로 연결, 기록자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
   for (const item of DEMO_CHANGE_WORKS) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: item.companyId, code: item.projectCode },
@@ -379,7 +379,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
-  // 보증 설정 (프로젝트 코드로 연결, 입력자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  // 보증 설정 (프로젝트 코드로 연결, 입력자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
   for (const item of DEMO_WARRANTIES) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: item.companyId, code: item.projectCode },
@@ -419,7 +419,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
-  // 직원 서류·필요 자격 (자격 종류는 선택 목록 이름으로 연결, 서류는 직원에게 한 건도 없을 때만 처음 한 번 만든다)
+  // 직원 서류·필요 자격 (자격 종류는 선택 목록 이름으로 연결, 서류는 직원에게 한 건도 없을 때만 최초 한 번 생성)
   const credentialTypeId = async (companyId: string, name: string) =>
     (
       await prisma.optionItem.findFirstOrThrow({
@@ -475,7 +475,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
-  // 보수 요청 (프로젝트 코드로 연결, 기록자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  // 보수 요청 (프로젝트 코드로 연결, 기록자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
   for (const item of DEMO_REPAIRS) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: item.companyId, code: item.projectCode },
@@ -521,7 +521,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
-  // 직원 단가 (직원 이름으로 연결, 입력자는 그 회사의 데모 관리자, 처음 한 번만 만든다. 화면 확인용 가짜 금액)
+  // 직원 단가 (직원 이름으로 연결, 입력자는 해당 회사의 데모 관리자, 최초 한 번만 생성, 화면 확인용 가짜 금액)
   for (const rate of DEMO_PAY_RATES) {
     const employee = await prisma.employee.findFirstOrThrow({
       where: { companyId: rate.companyId, name: rate.employeeName },
@@ -545,7 +545,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
-  // 진행률 기록 (프로젝트 코드로 연결, 기록자는 그 회사의 데모 관리자, 처음 한 번만 만든다)
+  // 진행률 기록 (프로젝트 코드로 연결, 기록자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
   for (const record of DEMO_PROGRESS) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: record.companyId, code: record.projectCode },

@@ -70,9 +70,9 @@ const main = async () => {
   const repairs = createRepairService(appPrisma);
   const monthly = createMonthlyService(appPrisma);
 
-  // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3). 큐는 전용 계정으로 접속
+  // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3), 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
-  // 객체 저장소 (로컬은 버킷이 없으면 만든다. 운영은 운영자가 버킷을 미리 준비)
+  // 객체 저장소 (로컬은 버킷이 없으면 생성, 운영은 운영자가 버킷을 사전 준비)
   const { storage, ensureBucket } = createS3Storage({
     endpoint: env.S3_ENDPOINT,
     region: env.S3_REGION,
@@ -148,7 +148,7 @@ const main = async () => {
 
   const server = createApp({
     logger,
-    // 서버를 다시 시작하거나 여러 대로 띄워도 재전송을 한 번만 처리하도록 키는 DB에 둔다
+    // 서버 재시작·다중 인스턴스에서도 재전송을 한 번만 처리하도록 키를 DB에 저장
     idempotencyStore: createPrismaIdempotencyStore(appPrisma),
     sessionStore,
     invitationStore,
@@ -195,7 +195,7 @@ const main = async () => {
     logger.info({ port: env.PORT }, '[api.main] 서버 시작');
   });
 
-  // 만료 세션·방치된 업로드 신청·만료 멱등 키를 정기적으로 치움 (시작 직후 한 번, 이후 1시간마다)
+  // 만료 세션·방치된 업로드 신청·만료 멱등 키 정기 정리 (시작 직후 한 번, 이후 1시간마다)
   const stopMaintenance = startMaintenanceSchedule(
     createMaintenance({ auth: authPrisma, app: appPrisma, sessionStore, storage, logger }),
     logger,

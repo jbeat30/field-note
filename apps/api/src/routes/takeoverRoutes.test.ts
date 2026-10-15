@@ -125,7 +125,7 @@ describe('계정 복구·소유자 이전 링크 발급 (운영자)', () => {
     expect(action).toMatchObject({ note: '사업자등록증 대조·통화 확인', operator: 'op' });
     expect(issued.token).toBeTruthy();
 
-    // 토큰 원문은 저장하지 않는다
+    // 토큰 원문은 저장 제외
     expect(
       JSON.stringify(await db.owner.invitation.findMany({ where: { companyId: owner.companyId } })),
     ).not.toContain(issued.token);
