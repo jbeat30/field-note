@@ -6406,6 +6406,8 @@ export interface paths {
                                 /** @enum {string} */
                                 category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -6647,6 +6649,8 @@ export interface paths {
                                 /** @enum {string} */
                                 category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -6784,6 +6788,8 @@ export interface paths {
                                 /** @enum {string} */
                                 category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -6928,6 +6934,8 @@ export interface paths {
                                 /** @enum {string} */
                                 category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -7073,6 +7081,156 @@ export interface paths {
                                 /** @enum {string} */
                                 category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
+                                /** Format: date-time */
+                                linkedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/change-works/{id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 증빙 올리기 (올린 파일로 문서함에 계약·공문 문서를 만들고 이 변경·추가 작업에 한 번에 연결, 같은 파일로 다시 부르면 이미 만든 증빙을 돌려줌) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        fileId: string;
+                        title: string;
+                        confirmCompleted?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            projectId: string;
+                            seq: number;
+                            /** Format: date */
+                            requestedOn: string;
+                            requester: string;
+                            content: string;
+                            /** @enum {string} */
+                            status: "NEGOTIATING" | "AGREED" | "WITHDRAWN";
+                            /** Format: date */
+                            statusChangedOn: string;
+                            documentCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            history: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                fromStatus: "NEGOTIATING" | "AGREED" | "WITHDRAWN";
+                                /** @enum {string} */
+                                toStatus: "NEGOTIATING" | "AGREED" | "WITHDRAWN";
+                                /** Format: date */
+                                effectiveOn: string;
+                                note: string | null;
+                                /** Format: date-time */
+                                changedAt: string;
+                            }[];
+                            documents: {
+                                /** Format: uuid */
+                                documentId: string;
+                                title: string;
+                                /** @enum {string} */
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -7214,6 +7372,8 @@ export interface paths {
                                 /** @enum {string} */
                                 category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];

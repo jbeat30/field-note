@@ -175,7 +175,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   registerWorkLogRoutes(registry, options.workLogs);
   registerProgressRoutes(registry, options.progress);
   registerLaborRoutes(registry, options.labor);
-  registerChangeWorkRoutes(registry, options.changeWorks);
+  registerChangeWorkRoutes(registry, options.changeWorks, options.documents);
   registerWarrantyRoutes(registry, options.warranty);
   registerCredentialRoutes(registry, options.credentials);
   registerAuditRoutes(registry, options.audit);

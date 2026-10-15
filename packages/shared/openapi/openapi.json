@@ -18182,6 +18182,12 @@
                           "isSensitive": {
                             "type": "boolean"
                           },
+                          "latestVersionNo": {
+                            "type": "integer"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
                           "linkedAt": {
                             "type": "string",
                             "format": "date-time"
@@ -18192,6 +18198,8 @@
                           "title",
                           "category",
                           "isSensitive",
+                          "latestVersionNo",
+                          "contentType",
                           "linkedAt"
                         ]
                       }
@@ -18859,6 +18867,12 @@
                           "isSensitive": {
                             "type": "boolean"
                           },
+                          "latestVersionNo": {
+                            "type": "integer"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
                           "linkedAt": {
                             "type": "string",
                             "format": "date-time"
@@ -18869,6 +18883,8 @@
                           "title",
                           "category",
                           "isSensitive",
+                          "latestVersionNo",
+                          "contentType",
                           "linkedAt"
                         ]
                       }
@@ -19276,6 +19292,12 @@
                           "isSensitive": {
                             "type": "boolean"
                           },
+                          "latestVersionNo": {
+                            "type": "integer"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
                           "linkedAt": {
                             "type": "string",
                             "format": "date-time"
@@ -19286,6 +19308,8 @@
                           "title",
                           "category",
                           "isSensitive",
+                          "latestVersionNo",
+                          "contentType",
                           "linkedAt"
                         ]
                       }
@@ -19701,6 +19725,12 @@
                           "isSensitive": {
                             "type": "boolean"
                           },
+                          "latestVersionNo": {
+                            "type": "integer"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
                           "linkedAt": {
                             "type": "string",
                             "format": "date-time"
@@ -19711,6 +19741,8 @@
                           "title",
                           "category",
                           "isSensitive",
+                          "latestVersionNo",
+                          "contentType",
                           "linkedAt"
                         ]
                       }
@@ -20113,6 +20145,12 @@
                           "isSensitive": {
                             "type": "boolean"
                           },
+                          "latestVersionNo": {
+                            "type": "integer"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
                           "linkedAt": {
                             "type": "string",
                             "format": "date-time"
@@ -20123,6 +20161,434 @@
                           "title",
                           "category",
                           "isSensitive",
+                          "latestVersionNo",
+                          "contentType",
+                          "linkedAt"
+                        ]
+                      }
+                    }
+                  },
+                  "required": [
+                    "id",
+                    "projectId",
+                    "seq",
+                    "requestedOn",
+                    "requester",
+                    "content",
+                    "status",
+                    "statusChangedOn",
+                    "documentCount",
+                    "createdAt",
+                    "updatedAt",
+                    "history",
+                    "documents"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "NOT_FOUND",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/change-works/{id}/evidence": {
+      "post": {
+        "summary": "증빙 올리기 (올린 파일로 문서함에 계약·공문 문서를 만들고 이 변경·추가 작업에 한 번에 연결, 같은 파일로 다시 부르면 이미 만든 증빙을 돌려줌)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "parameters": [
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": true,
+            "name": "id",
+            "in": "path"
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "fileId": {
+                    "type": "string",
+                    "format": "uuid"
+                  },
+                  "title": {
+                    "type": "string",
+                    "minLength": 1,
+                    "maxLength": 100
+                  },
+                  "confirmCompleted": {
+                    "type": "boolean"
+                  }
+                },
+                "required": [
+                  "fileId",
+                  "title"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "projectId": {
+                      "type": "string",
+                      "format": "uuid"
+                    },
+                    "seq": {
+                      "type": "integer"
+                    },
+                    "requestedOn": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "requester": {
+                      "type": "string"
+                    },
+                    "content": {
+                      "type": "string"
+                    },
+                    "status": {
+                      "type": "string",
+                      "enum": [
+                        "NEGOTIATING",
+                        "AGREED",
+                        "WITHDRAWN"
+                      ]
+                    },
+                    "statusChangedOn": {
+                      "type": "string",
+                      "format": "date"
+                    },
+                    "documentCount": {
+                      "type": "integer"
+                    },
+                    "createdAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "updatedAt": {
+                      "type": "string",
+                      "format": "date-time"
+                    },
+                    "history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "id": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "fromStatus": {
+                            "type": "string",
+                            "enum": [
+                              "NEGOTIATING",
+                              "AGREED",
+                              "WITHDRAWN"
+                            ]
+                          },
+                          "toStatus": {
+                            "type": "string",
+                            "enum": [
+                              "NEGOTIATING",
+                              "AGREED",
+                              "WITHDRAWN"
+                            ]
+                          },
+                          "effectiveOn": {
+                            "type": "string",
+                            "format": "date"
+                          },
+                          "note": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "changedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "id",
+                          "fromStatus",
+                          "toStatus",
+                          "effectiveOn",
+                          "note",
+                          "changedAt"
+                        ]
+                      }
+                    },
+                    "documents": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "properties": {
+                          "documentId": {
+                            "type": "string",
+                            "format": "uuid"
+                          },
+                          "title": {
+                            "type": "string"
+                          },
+                          "category": {
+                            "type": "string",
+                            "enum": [
+                              "DRAWING",
+                              "CONTRACT",
+                              "SAFETY",
+                              "QUOTE",
+                              "OTHER"
+                            ]
+                          },
+                          "isSensitive": {
+                            "type": "boolean"
+                          },
+                          "latestVersionNo": {
+                            "type": "integer"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
+                          "linkedAt": {
+                            "type": "string",
+                            "format": "date-time"
+                          }
+                        },
+                        "required": [
+                          "documentId",
+                          "title",
+                          "category",
+                          "isSensitive",
+                          "latestVersionNo",
+                          "contentType",
                           "linkedAt"
                         ]
                       }
@@ -20523,6 +20989,12 @@
                           "isSensitive": {
                             "type": "boolean"
                           },
+                          "latestVersionNo": {
+                            "type": "integer"
+                          },
+                          "contentType": {
+                            "type": "string"
+                          },
                           "linkedAt": {
                             "type": "string",
                             "format": "date-time"
@@ -20533,6 +21005,8 @@
                           "title",
                           "category",
                           "isSensitive",
+                          "latestVersionNo",
+                          "contentType",
                           "linkedAt"
                         ]
                       }

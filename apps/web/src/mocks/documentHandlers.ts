@@ -163,6 +163,46 @@ const live = (account: MockAccount, projectId?: string) => {
   );
 };
 
+// 변경·추가 작업 증빙 올리기가 쓰는 문서 만들기: 올린 파일로 문서를 만든다 (같은 파일로 이미 만들었으면 그 문서)
+export const createMockEvidenceDocument = (
+  account: MockAccount,
+  projectId: string,
+  input: { fileId: string; title: string },
+): { id: string } | { error: { path: string; message: string } } => {
+  const existing = [...documents.values()].find((document) =>
+    document.versions.some((version) => version.fileId === input.fileId),
+  );
+
+  if (existing && !existing.deletedAt && existing.projectId === projectId)
+    return { id: existing.id };
+
+  const file = getMockFile(input.fileId);
+
+  if (
+    !file ||
+    file.companyId !== scopeOf(account) ||
+    file.projectId !== projectId ||
+    file.purpose !== 'DOCUMENT' ||
+    existing
+  ) {
+    return { error: { path: 'body.fileId', message: '이 프로젝트에 올린 문서 파일이 아닙니다' } };
+  }
+
+  if (file.status === 'REJECTED') {
+    return {
+      error: { path: 'body.fileId', message: '검사에서 거부된 파일은 문서로 등록할 수 없습니다' },
+    };
+  }
+
+  return {
+    id: addDocument(account, projectId, {
+      title: input.title,
+      category: 'CONTRACT',
+      versions: [{ name: file.name, date: todayInSeoul(new Date()), fileId: input.fileId }],
+    }),
+  };
+};
+
 // 검색 목업이 쓰는 문서 조회 (지운 문서 제외)
 export const listMockDocuments = (account: MockAccount) =>
   live(account).map((document) => toDocument(document));

@@ -443,6 +443,12 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       { documentId: a.documentId },
     ],
     [
+      'POST /change-works/{id}/evidence',
+      'post',
+      `/change-works/${a.changeWorkId}/evidence`,
+      { fileId: '0198d000-0000-7000-8000-00000000dead', title: '침투 증빙' },
+    ],
+    [
       'DELETE /change-works/{id}/documents/{documentId}',
       'delete',
       `/change-works/${a.changeWorkId}/documents/${a.documentId}`,
