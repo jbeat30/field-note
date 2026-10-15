@@ -3,6 +3,7 @@ import {
   changeWorkCreateSchema,
   changeWorkDetailSchema,
   changeWorkDocumentParamsSchema,
+  changeWorkEvidenceCreateSchema,
   changeWorkLinkSchema,
   changeWorkListQuerySchema,
   changeWorkParamsSchema,
@@ -12,6 +13,7 @@ import {
   changeWorksResponseSchema,
   projectParamsSchema,
   type ChangeWorkCreate,
+  type ChangeWorkEvidenceCreate,
   type ChangeWorkLink,
   type ChangeWorkListQuery,
   type ChangeWorkTransition,
@@ -20,6 +22,7 @@ import {
 } from '@field-note/shared';
 
 import { ChangeWorkError, type ChangeWorkService } from '../changeWork/changeWorkService';
+import { DocumentError, type DocumentService } from '../document/documentService';
 import { AppError } from '../http/AppError';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 
@@ -29,7 +32,7 @@ const notImplemented: RouteHandler = async () => {
 
 // 서비스의 업무 오류를 공통 오류 형식으로 변환
 const toAppError = (error: unknown): unknown => {
-  if (!(error instanceof ChangeWorkError)) {
+  if (!(error instanceof ChangeWorkError) && !(error instanceof DocumentError)) {
     return error;
   }
 
@@ -42,13 +45,15 @@ const toAppError = (error: unknown): unknown => {
  * @description 변경·추가 작업 라우트. 회사 ID·작성자는 세션에서만 얻는다. 삭제 API는 없고 상태(협의 중·합의됨·철회)와 이력으로 표현한다
  * @param registry 라우트 등록소
  * @param changeWorks 변경·추가 작업 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
+ * @param documents 문서함 서비스 (증빙 올리기에서 문서를 만든다)
  */
 export const registerChangeWorkRoutes = (
   registry: RouteRegistry,
   changeWorks?: ChangeWorkService,
+  documents?: DocumentService,
 ) => {
   const add: RouteRegistry['add'] = (spec, handler) =>
-    registry.add(spec, changeWorks ? handler : notImplemented);
+    registry.add(spec, changeWorks && documents ? handler : notImplemented);
 
   add(
     {
@@ -202,6 +207,56 @@ export const registerChangeWorkRoutes = (
           (params as { id: string }).id,
           body as ChangeWorkLink,
         );
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'post',
+      path: '/change-works/{id}/evidence',
+      summary:
+        '증빙 올리기 (올린 파일로 문서함에 계약·공문 문서를 만들고 이 변경·추가 작업에 한 번에 연결, 같은 파일로 다시 부르면 이미 만든 증빙을 돌려줌)',
+      auth: 'required',
+      request: { params: changeWorkParamsSchema, body: changeWorkEvidenceCreateSchema },
+      response: { status: 201, schema: changeWorkDetailSchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params, body }) => {
+      const { id } = params as { id: string };
+      const input = body as ChangeWorkEvidenceCreate;
+
+      try {
+        // 기록할 수 없는 상태(취소·완료 미확인 등)면 문서를 만들기 전에 막는다
+        const { projectId } = await changeWorks!.evidenceTarget(
+          auth!.companyId,
+          id,
+          input.confirmCompleted,
+        );
+        const document = await documents!.create(auth!.companyId, auth!.userId, projectId, {
+          fileId: input.fileId,
+          title: input.title,
+          category: 'CONTRACT',
+        });
+
+        try {
+          return await changeWorks!.linkDocument(auth!.companyId, auth!.userId, id, {
+            documentId: document.id,
+            confirmCompleted: input.confirmCompleted,
+          });
+        } catch (error) {
+          // 같은 파일로 다시 부른 경우: 이미 연결돼 있으면 그대로 돌려줌
+          if (
+            error instanceof ChangeWorkError &&
+            error.detail?.message === '이미 연결된 문서입니다'
+          ) {
+            return await changeWorks!.get(auth!.companyId, id);
+          }
+
+          throw error;
+        }
       } catch (error) {
         throw toAppError(error);
       }

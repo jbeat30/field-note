@@ -139,6 +139,7 @@ export const createMemoService = (
             deletedAt: null,
             projectId: query.scope === 'INBOX' ? null : query.projectId,
             tag: query.tag,
+            memoDate: query.memoDate ? asDate(query.memoDate) : undefined,
             doneAt: query.isDone === undefined ? undefined : query.isDone ? { not: null } : null,
             ...(cursor
               ? {

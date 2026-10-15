@@ -1,5 +1,10 @@
 import { minutesToManDays, roundTo, sumManDays, toManMonths } from './workUnits';
-import { periodStart, summarizeEmployeeWork, summarizeProjectWork } from './workSummary';
+import {
+  employeeProjectDays,
+  periodStart,
+  summarizeEmployeeWork,
+  summarizeProjectWork,
+} from './workSummary';
 
 const E1 = '0198d000-0000-7000-8000-000000000001';
 const E2 = '0198d000-0000-7000-8000-000000000002';
@@ -159,5 +164,32 @@ describe('summarizeEmployeeWork', () => {
       lastWorkDate: '2026-10-01',
     });
     expect(history.projects[1]).toMatchObject({ assignedFrom: null, workedDays: 2 });
+  });
+});
+
+describe('employeeProjectDays', () => {
+  it('일한 날만 최근 순으로, 날마다 시간과 한 일을 모은다', () => {
+    const result = employeeProjectDays([
+      { workDate: '2026-09-01', categoryId: C1, minutes: 480 },
+      { workDate: '2026-10-10', categoryId: C1, minutes: 120 },
+      { workDate: '2026-10-10', categoryId: C2, minutes: 360 },
+      { workDate: '2026-09-20', categoryId: C2, minutes: 0 },
+    ]);
+
+    expect(result.days).toEqual([
+      {
+        workDate: '2026-10-10',
+        minutes: 480,
+        categories: [
+          { categoryId: C2, totalMinutes: 360 },
+          { categoryId: C1, totalMinutes: 120 },
+        ],
+      },
+      { workDate: '2026-09-01', minutes: 480, categories: [{ categoryId: C1, totalMinutes: 480 }] },
+    ]);
+  });
+
+  it('기록이 없으면 빈 목록', () => {
+    expect(employeeProjectDays([]).days).toEqual([]);
   });
 });

@@ -1,4 +1,6 @@
 import {
+  PHOTO_CATEGORY_LABELS,
+  type Photo,
   photoCreateSchema,
   photoListQuerySchema,
   photoParamsSchema,
@@ -138,6 +140,27 @@ export const registerPhotoRoutes = (registry: RouteRegistry, photos?: PhotoServi
       request: { params: photoParamsSchema },
       response: { status: 200, schema: successResponseSchema },
       errors: ['NOT_FOUND'],
+      // 활동 기록: 지우기 전에 어떤 사진이었는지 읽어 둔다
+      audit: {
+        before: ({ auth, params }) => photos!.get(auth!.companyId, (params as { id: string }).id),
+        entry: ({ params }, _result, before) => {
+          const photo = before as Photo | null;
+
+          return photo
+            ? {
+                action: 'PHOTO_DELETED',
+                targetId: photo.projectId,
+                projectId: photo.projectId,
+                detail: {
+                  area: photo.area ?? undefined,
+                  workDate: photo.workDate,
+                  category: PHOTO_CATEGORY_LABELS[photo.category],
+                  photoId: (params as { id: string }).id,
+                },
+              }
+            : null;
+        },
+      },
     },
     async ({ auth, params }) => {
       try {

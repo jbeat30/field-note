@@ -1,9 +1,11 @@
 import {
-  AUDIT_ACTIONS,
+  AUDIT_KINDS,
+  AUDIT_KIND_LABELS,
   AUDIT_ACTION_TITLES,
-  auditActionSchema,
+  type AuditKind,
   type AuditLog,
 } from '@field-note/shared';
+import { ChevronDown } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -11,10 +13,15 @@ import { PageHeader } from '../components/ui/page-header';
 import { BackLink } from '../components/ui/back-link';
 import { useAuditLogs, type AuditFilter } from '../audit/useAuditLogs';
 import { Alert } from '../components/ui/alert';
+import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
+import { Chip } from '../components/ui/chip';
+import { EmptyState } from '../components/ui/empty-state';
 import { FormField } from '../components/ui/form-field';
 import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
+import { cn } from '../lib/cn';
+import { useProjectChoices } from '../projects/useProjects';
 
 // 기록 시각을 서울 기준으로 보여 줌
 const timeText = (iso: string) =>
@@ -34,43 +41,105 @@ const targetPath = (item: AuditLog) =>
     ? `/employees/${item.targetId}`
     : item.targetType === 'PROJECT'
       ? `/projects/${item.targetId}`
-      : null;
+      : item.projectId
+        ? `/projects/${item.projectId}/documents?doc=${item.targetId}`
+        : null;
+
+const KIND_TONE: Record<AuditKind, 'primary' | 'warning' | 'danger' | 'success' | 'neutral'> = {
+  SAVE: 'success',
+  UPDATE: 'primary',
+  DELETE: 'danger',
+  EXPORT: 'neutral',
+  CONFIRM: 'warning',
+  VIEW: 'neutral',
+};
 
 const Row = ({ item }: { item: AuditLog }) => {
+  const [isOpen, setIsOpen] = useState(false);
   const path = targetPath(item);
+  const hasChanges = item.changes.length > 0;
 
   return (
-    <li className="grid gap-1 rounded-xl bg-surface-subtle px-5 py-4 text-sm md:grid-cols-[14rem_1fr_16rem] md:items-center md:gap-4">
-      <span className="font-medium">{AUDIT_ACTION_TITLES[item.action]}</span>
-      <span>
-        {item.targetName ? (
-          path ? (
-            <Link className="text-primary underline" to={path}>
-              {item.targetName}
-            </Link>
+    <li className="flex flex-col gap-2 rounded-xl bg-surface-subtle px-5 py-4 text-sm">
+      <div className="grid gap-1 md:grid-cols-[14rem_1fr_16rem] md:items-center md:gap-4">
+        <span className="flex items-center gap-2 font-medium">
+          <Badge tone={KIND_TONE[item.kind]}>{AUDIT_KIND_LABELS[item.kind]}</Badge>
+          {AUDIT_ACTION_TITLES[item.action]}
+        </span>
+        <span>
+          {item.targetName ? (
+            path ? (
+              <Link className="text-primary underline" to={path}>
+                {item.targetName}
+              </Link>
+            ) : (
+              item.targetName
+            )
           ) : (
-            item.targetName
-          )
-        ) : (
-          <span className="text-foreground/70">(삭제되었거나 찾을 수 없는 대상)</span>
-        )}
-        {item.summary ? ` · ${item.summary}` : ''}
-      </span>
-      <span className="text-foreground/70">
-        {timeText(item.createdAt)} · {item.actorName}
-      </span>
+            <span className="text-foreground/70">(삭제되었거나 찾을 수 없는 대상)</span>
+          )}
+          {item.summary ? ` · ${item.summary}` : ''}
+          {item.projectName && item.targetType !== 'PROJECT' && (
+            <span className="ml-2 text-foreground/65">({item.projectName})</span>
+          )}
+        </span>
+        <span className="text-foreground/70">
+          {timeText(item.createdAt)} · {item.actorName}
+        </span>
+      </div>
+      {hasChanges && (
+        <>
+          <button
+            type="button"
+            aria-expanded={isOpen}
+            onClick={() => setIsOpen((value) => !value)}
+            className="flex w-fit items-center gap-1 text-sm font-medium text-primary hover:underline"
+          >
+            바뀐 내용 {item.changes.length}건
+            <ChevronDown
+              aria-hidden
+              className={cn('size-4 transition-transform', isOpen && 'rotate-180')}
+            />
+          </button>
+          {isOpen && (
+            <dl className="grid gap-x-4 gap-y-1.5 rounded-lg bg-surface p-3 sm:grid-cols-[8rem_1fr]">
+              {item.changes.map((change) => (
+                <div key={change.label} className="contents">
+                  <dt className="font-medium">{change.label}</dt>
+                  <dd className="text-foreground/80">
+                    {change.before === null && change.after === null ? (
+                      '바뀜 (값은 기록하지 않음)'
+                    ) : (
+                      <>
+                        <span className="text-foreground/75">{change.before ?? '(없음)'}</span>
+                        {' → '}
+                        <span className="font-medium text-foreground">
+                          {change.after ?? '(없음)'}
+                        </span>
+                      </>
+                    )}
+                  </dd>
+                </div>
+              ))}
+            </dl>
+          )}
+        </>
+      )}
     </li>
   );
 };
 
-// 설정 > 기록 조회: 감사 기록을 최근순으로 본다 (서비스 기획서 §13.1). 조회만 하고 수정·삭제는 없다
+// 설정 > 활동 기록: 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 최근순으로 본다
+// (서비스 기획서 §13.1, 09 문서 §5.2). 조회만 하고 수정·삭제는 없다
 export const AuditLogsPage = () => {
-  const [action, setAction] = useState('');
+  const [kind, setKind] = useState<AuditKind | ''>('');
+  const [projectId, setProjectId] = useState('');
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');
-  const parsedAction = auditActionSchema.safeParse(action);
+  const projects = useProjectChoices();
   const filter: AuditFilter = {
-    ...(parsedAction.success ? { action: parsedAction.data } : {}),
+    ...(kind ? { kind } : {}),
+    ...(projectId ? { projectId } : {}),
     ...(from ? { from } : {}),
     ...(to ? { to } : {}),
   };
@@ -84,9 +153,24 @@ export const AuditLogsPage = () => {
       <div className="flex flex-col gap-2">
         <BackLink to="/settings?tab=company">설정으로</BackLink>
         <PageHeader
-          title="기록 조회"
-          description="누가 언제 무엇을 열람·내보내기·확정했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
+          title="활동 기록"
+          description="누가 언제 무엇을 저장·수정·삭제·내보내기·확정·열람했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
         />
+      </div>
+
+      <div role="group" aria-label="종류로 거르기" className="flex flex-wrap gap-2">
+        <Chip selected={kind === ''} onClick={() => setKind('')}>
+          전체
+        </Chip>
+        {AUDIT_KINDS.map((value) => (
+          <Chip
+            key={value}
+            selected={kind === value}
+            onClick={() => setKind(kind === value ? '' : value)}
+          >
+            {AUDIT_KIND_LABELS[value]}
+          </Chip>
+        ))}
       </div>
 
       <form
@@ -94,15 +178,12 @@ export const AuditLogsPage = () => {
         aria-label="기록 거르기"
         onSubmit={(e) => e.preventDefault()}
       >
-        <FormField label="종류">
+        <FormField label="프로젝트">
           <Select
-            value={action}
-            emptyLabel="전체"
-            onValueChange={setAction}
-            options={AUDIT_ACTIONS.map((kind) => ({
-              value: kind,
-              label: AUDIT_ACTION_TITLES[kind],
-            }))}
+            value={projectId}
+            emptyLabel="모든 프로젝트"
+            onValueChange={setProjectId}
+            options={(projects.data ?? []).map((item) => ({ value: item.id, label: item.name }))}
           />
         </FormField>
         <FormField label="시작 날짜">
@@ -117,7 +198,7 @@ export const AuditLogsPage = () => {
       {logs.isPending ? (
         <p className="text-sm">기록을 불러오는 중</p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-foreground/70">조건에 맞는 기록이 없습니다</p>
+        <EmptyState title="조건에 맞는 기록이 없습니다" />
       ) : (
         <ul className="flex flex-col gap-2" aria-label="기록 목록">
           {items.map((item) => (

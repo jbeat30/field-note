@@ -36,7 +36,9 @@ export const SaveToInbox: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '메모함에 저장' }));
 
     // 입력 칸에도 같은 글이 있으므로 목록의 메모(문단)로 찾음
-    await expect(await canvas.findByText('새로 적은 메모', { selector: 'p' })).toBeInTheDocument();
+    await expect(
+      await canvas.findByText('새로 적은 메모', { selector: 'li span' }),
+    ).toBeInTheDocument();
     await waitFor(() => expect(canvas.getByLabelText('메모')).toHaveValue(''));
   },
 };

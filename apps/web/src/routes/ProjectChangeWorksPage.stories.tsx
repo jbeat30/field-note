@@ -25,8 +25,16 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-const itemOf = (canvas: ReturnType<typeof within>, seq: number) =>
-  canvas.getByText(`#${seq}`).closest('li') as HTMLElement;
+// 표의 번호 칸으로 그 줄을 찾는다
+const rowOf = (canvas: ReturnType<typeof within>, seq: number) =>
+  canvas.getByRole('cell', { name: `#${seq}`, hidden: true }).closest('tr') as HTMLElement;
+
+// 표에서 번호를 눌러 상세 창을 연다
+const openDetail = async (canvas: ReturnType<typeof within>, seq: number) => {
+  await userEvent.click(await canvas.findByRole('button', { name: `#${seq} 자세히 보기` }));
+
+  return within(await within(document.body).findByRole('dialog'));
+};
 
 export const Default: Story = {
   play: async ({ canvasElement }) => {
@@ -34,14 +42,18 @@ export const Default: Story = {
 
     await expect(await canvas.findByText(/옥상 배수구 주변 방수 판금/)).toBeInTheDocument();
     // 번호 큰 것이 먼저, 협의 중으로 오래 남은 건은 경과일을 알려 준다
-    const items = canvas.getAllByRole('listitem').filter((item) => item.textContent?.includes('#'));
+    const table = within(canvas.getByRole('table', { name: '추가 공사 목록' }));
+    const rows = table.getAllByRole('row').slice(1);
 
-    await expect(items[0]).toHaveTextContent('#2');
-    await expect(items[0]).toHaveTextContent('협의 중');
-    await expect(items[0]).toHaveTextContent(/\d+일째 협의 중/);
-    await expect(items[1]).toHaveTextContent('#1');
-    await expect(items[1]).toHaveTextContent('합의됨');
-    // 변경·추가 작업으로 쓴 공수·자재 합계 구역
+    await expect(rows[0]).toHaveTextContent('#2');
+    await expect(rows[0]).toHaveTextContent('협의 중');
+    await expect(rows[0]).toHaveTextContent(/\d+일째 협의 중/);
+    await expect(rows[1]).toHaveTextContent('#1');
+    await expect(rows[1]).toHaveTextContent('합의됨');
+    // 기록 폼은 평소에는 보이지 않고, 변경·추가 작업으로 쓴 공수·자재 합계 구역이 있다
+    await expect(
+      canvas.queryByRole('form', { name: '변경·추가 작업 기록' }),
+    ).not.toBeInTheDocument();
     await expect(
       await canvas.findByRole('heading', { name: '변경·추가 작업으로 쓴 공수·자재' }),
     ).toBeInTheDocument();
@@ -51,7 +63,13 @@ export const Default: Story = {
 export const CreateWithValidation: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    const form = within(await canvas.findByRole('form', { name: '변경·추가 작업 기록' }));
+
+    await canvas.findByText(/옥상 배수구 주변 방수 판금/);
+    await userEvent.click(canvas.getByRole('button', { name: '추가 공사 기록' }));
+
+    const form = within(
+      await within(document.body).findByRole('form', { name: '변경·추가 작업 기록' }),
+    );
 
     // 요청자·내용이 비어 있으면 서버에 보내기 전에 막는다
     await userEvent.click(form.getByRole('button', { name: '저장' }));
@@ -62,9 +80,12 @@ export const CreateWithValidation: Story = {
     await userEvent.type(form.getByLabelText('요청 내용'), '2층 복도 천장 점검구 추가');
     await userEvent.click(form.getByRole('button', { name: '저장' }));
 
+    // 저장하면 창이 닫히고 표에 새 번호가 생긴다
     await expect(await canvas.findByText('#3 기록했습니다 (협의 중)')).toBeInTheDocument();
-    await waitFor(() => expect(canvas.getByText('#3')).toBeInTheDocument());
-    await expect(form.getByLabelText('요청자')).toHaveValue('');
+    await waitFor(() => expect(canvas.getByRole('cell', { name: '#3' })).toBeInTheDocument());
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
+    );
   },
 };
 
@@ -73,17 +94,12 @@ export const WithdrawNeedsReason: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText(/옥상 배수구 주변 방수 판금/);
-    await userEvent.click(canvas.getByRole('button', { name: '#2 자세히 보기' }));
 
-    const status = within(
-      await canvas
-        .findByRole('button', { name: '철회' })
-        .then((button) => button.closest('li') as HTMLElement),
-    );
+    const dialog = await openDetail(canvas, 2);
 
-    await userEvent.click(status.getByRole('button', { name: '철회' }));
+    await userEvent.click(await dialog.findByRole('button', { name: '철회' }));
 
-    const form = within(await canvas.findByRole('form', { name: '철회 확인' }));
+    const form = within(await dialog.findByRole('form', { name: '철회 확인' }));
 
     // 사유 없이는 철회할 수 없다
     await userEvent.click(form.getByRole('button', { name: '확인' }));
@@ -92,9 +108,9 @@ export const WithdrawNeedsReason: Story = {
     await userEvent.type(form.getByLabelText('사유 (필수)'), '고객이 요청을 취소함');
     await userEvent.click(form.getByRole('button', { name: '확인' }));
 
-    await expect(await canvas.findByText("'철회' 상태로 바꿨습니다")).toBeInTheDocument();
+    await expect(await dialog.findByText("'철회' 상태로 바꿨습니다")).toBeInTheDocument();
     // 이력에 남는다
-    await expect(await canvas.findByText(/고객이 요청을 취소함/)).toBeInTheDocument();
+    await expect(await dialog.findByText(/고객이 요청을 취소함/)).toBeInTheDocument();
   },
 };
 
@@ -103,36 +119,64 @@ export const AgreedIsLocked: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText(/외벽 코너 판금 두께 변경/);
-    await userEvent.click(canvas.getByRole('button', { name: '#1 자세히 보기' }));
 
-    const item = within(itemOf(canvas, 1));
+    const dialog = await openDetail(canvas, 1);
 
     // 합의된 기록은 내용을 고칠 수 없고 상태만 바꿀 수 있으며 이력이 남아 있다
-    await expect(await item.findByText(/현장에서 구두 합의/)).toBeInTheDocument();
-    await expect(item.queryByRole('button', { name: '내용 수정' })).not.toBeInTheDocument();
-    await expect(item.getByRole('button', { name: '다시 협의 중으로' })).toBeInTheDocument();
+    await expect(await dialog.findByText(/현장에서 구두 합의/)).toBeInTheDocument();
+    await expect(dialog.queryByRole('button', { name: '내용 수정' })).not.toBeInTheDocument();
+    await expect(dialog.getByRole('button', { name: '다시 협의 중으로' })).toBeInTheDocument();
   },
 };
 
+// 문서함에 있는 문서를 연결하고, 풀 때는 확인 창을 거친다
 export const LinkEvidence: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await canvas.findByText(/옥상 배수구 주변 방수 판금/);
-    await userEvent.click(canvas.getByRole('button', { name: '#2 자세히 보기' }));
 
-    const item = within(itemOf(canvas, 2));
-
-    await expect(await item.findByText('연결한 증빙이 없습니다')).toBeInTheDocument();
-    await chooseOption(item.getByLabelText('문서함에서 연결'), '1층 시공도');
-    await userEvent.click(item.getByRole('button', { name: '연결' }));
+    const dialog = await openDetail(canvas, 2);
 
     await expect(
-      await item.findByRole('button', { name: '1층 시공도 연결 해제' }),
+      await dialog.findByText('대화 캡처·합의서·공문 사진이나 PDF를 올려 두세요'),
     ).toBeInTheDocument();
-    await expect(canvas.getAllByText('증빙 1건').length).toBeGreaterThan(0);
+    await chooseOption(dialog.getByLabelText('문서함에서 연결'), '1층 시공도');
+    await userEvent.click(dialog.getByRole('button', { name: '연결' }));
 
-    await userEvent.click(item.getByRole('button', { name: '1층 시공도 연결 해제' }));
-    await expect(await item.findByText('연결한 증빙이 없습니다')).toBeInTheDocument();
+    await expect(
+      await dialog.findByRole('button', { name: '1층 시공도 연결 해제' }),
+    ).toBeInTheDocument();
+    // 표의 증빙 수도 바뀐다 (마지막 칸)
+    await waitFor(() => expect(rowOf(canvas, 2)).toHaveTextContent(/1$/));
+
+    await userEvent.click(dialog.getByRole('button', { name: '1층 시공도 연결 해제' }));
+    await userEvent.click(await within(document.body).findByRole('button', { name: '연결 풀기' }));
+    await expect(
+      await dialog.findByText('대화 캡처·합의서·공문 사진이나 PDF를 올려 두세요'),
+    ).toBeInTheDocument();
+  },
+};
+
+// 증빙 올리기: 파일을 고르면 문서함에 계약·공문 문서로 만들어 이 추가 공사에 바로 연결된다
+export const UploadEvidence: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText(/옥상 배수구 주변 방수 판금/);
+
+    const dialog = await openDetail(canvas, 2);
+
+    await userEvent.upload(
+      await dialog.findByLabelText('증빙 파일'),
+      new File(['%PDF-1.7'], '고객 합의 공문.pdf', { type: 'application/pdf' }),
+    );
+
+    const item = await dialog.findByRole('button', { name: '고객 합의 공문 열기' });
+
+    await expect(item).toBeInTheDocument();
+    // 계약·공문 분류의 민감 자료로 만들어진다
+    await expect(item).toHaveTextContent('계약·공문 · 민감');
+    await waitFor(() => expect(rowOf(canvas, 2)).toHaveTextContent(/[1-9]$/));
   },
 };

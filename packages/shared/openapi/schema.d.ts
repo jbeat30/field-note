@@ -919,6 +919,8 @@ export interface paths {
                                 /** Format: date-time */
                                 lastActiveAt: string;
                                 isCurrent: boolean;
+                                ipAddress: string | null;
+                                lastIp: string | null;
                             }[];
                         };
                     };
@@ -1928,7 +1930,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                                kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                                 name: string;
                                 isActive: boolean;
                             }[];
@@ -1969,7 +1971,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                         name: string;
                     };
                 };
@@ -1985,7 +1987,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                             name: string;
                             isActive: boolean;
                         };
@@ -2057,7 +2059,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                         ids: string[];
                     };
                 };
@@ -2183,7 +2185,7 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE";
+                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
                             name: string;
                             isActive: boolean;
                         };
@@ -3169,6 +3171,7 @@ export interface paths {
                     from?: string;
                     to?: string;
                     q?: string;
+                    site?: string;
                     sortBy?: "recent" | "name" | "status" | "client" | "manager" | "plannedStart" | "plannedEnd";
                     sortDir?: "asc" | "desc";
                     page?: number;
@@ -4055,6 +4058,19 @@ export interface paths {
                                 /** Format: date */
                                 endDate: string;
                             }[];
+                            workDays: {
+                                /** Format: uuid */
+                                employeeId: string;
+                                /** Format: date */
+                                workDate: string;
+                                /** Format: uuid */
+                                projectId: string;
+                                projectCode: string;
+                                projectName: string;
+                                /** @enum {string} */
+                                projectStatus: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                minutes: number;
+                            }[];
                         };
                     };
                 };
@@ -4853,6 +4869,116 @@ export interface paths {
                                 /** Format: date */
                                 periodStart: string;
                                 totalMinutes: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{id}/work-summary/employees/{employeeId}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 한 사람이 이 프로젝트에서 일한 날 (날짜별 시간·한 일, 저장된 작업 내역만 반영) */
+        get: {
+            parameters: {
+                query?: {
+                    from?: string;
+                    to?: string;
+                };
+                header?: never;
+                path: {
+                    id: string;
+                    employeeId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            days: {
+                                /** Format: date */
+                                workDate: string;
+                                minutes: number;
+                                categories: {
+                                    /** Format: uuid */
+                                    categoryId: string;
+                                    totalMinutes: number;
+                                }[];
                             }[];
                         };
                     };
@@ -5791,6 +5917,99 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/api/v1/pay-rates": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 단가표: 단가가 있는 직원마다 현재·이전·적용 예정 단가 (직원 목록·단가표 탭) */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                employeeId: string;
+                                current: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    payType: "DAILY" | "HOURLY" | "MONTHLY" | "ANNUAL";
+                                    amount: number;
+                                    /** Format: date */
+                                    effectiveFrom: string;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                } | null;
+                                previous: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    payType: "DAILY" | "HOURLY" | "MONTHLY" | "ANNUAL";
+                                    amount: number;
+                                    /** Format: date */
+                                    effectiveFrom: string;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                } | null;
+                                upcoming: {
+                                    /** Format: uuid */
+                                    id: string;
+                                    /** @enum {string} */
+                                    payType: "DAILY" | "HOURLY" | "MONTHLY" | "ANNUAL";
+                                    amount: number;
+                                    /** Format: date */
+                                    effectiveFrom: string;
+                                    /** Format: date-time */
+                                    createdAt: string;
+                                } | null;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/api/v1/employees/{id}/pay-rates": {
         parameters: {
             query?: never;
@@ -5798,7 +6017,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 직원 단가 기록 (적용 시작일 최근순, 조회는 감사 기록으로 남음) */
+        /** 직원 단가 기록 (적용 시작일 최근순) */
         get: {
             parameters: {
                 query?: never;
@@ -5891,7 +6110,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** 직원 단가 추가 (기존 단가는 고치지 않고 적용 시작일부터 새 단가, 감사 기록으로 남음) */
+        /** 직원 단가 추가 (기존 단가는 고치지 않고 적용 시작일부터 새 단가, 단가 변경 기록으로 남음) */
         post: {
             parameters: {
                 query?: never;
@@ -6004,7 +6223,7 @@ export interface paths {
             path?: never;
             cookie?: never;
         };
-        /** 프로젝트 인건비 최소 추정 (실제 공수 × 근무일 단가, 계획 공수 기준 예상, 조회는 감사 기록으로 남음) */
+        /** 프로젝트 인건비 최소 추정 (실제 공수 × 근무일 단가, 계획 공수 기준 예상) */
         get: {
             parameters: {
                 query?: never;
@@ -6293,8 +6512,10 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -6534,8 +6755,10 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -6671,8 +6894,10 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -6815,8 +7040,10 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -6960,8 +7187,158 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
+                                /** Format: date-time */
+                                linkedAt: string;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/change-works/{id}/evidence": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 증빙 올리기 (올린 파일로 문서함에 계약·공문 문서를 만들고 이 변경·추가 작업에 한 번에 연결, 같은 파일로 다시 부르면 이미 만든 증빙을 돌려줌) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: uuid */
+                        fileId: string;
+                        title: string;
+                        confirmCompleted?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            projectId: string;
+                            seq: number;
+                            /** Format: date */
+                            requestedOn: string;
+                            requester: string;
+                            content: string;
+                            /** @enum {string} */
+                            status: "NEGOTIATING" | "AGREED" | "WITHDRAWN";
+                            /** Format: date */
+                            statusChangedOn: string;
+                            documentCount: number;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                            history: {
+                                /** Format: uuid */
+                                id: string;
+                                /** @enum {string} */
+                                fromStatus: "NEGOTIATING" | "AGREED" | "WITHDRAWN";
+                                /** @enum {string} */
+                                toStatus: "NEGOTIATING" | "AGREED" | "WITHDRAWN";
+                                /** Format: date */
+                                effectiveOn: string;
+                                note: string | null;
+                                /** Format: date-time */
+                                changedAt: string;
+                            }[];
+                            documents: {
+                                /** Format: uuid */
+                                documentId: string;
+                                title: string;
+                                /** @enum {string} */
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -7101,8 +7478,10 @@ export interface paths {
                                 documentId: string;
                                 title: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 isSensitive: boolean;
+                                latestVersionNo: number;
+                                contentType: string;
                                 /** Format: date-time */
                                 linkedAt: string;
                             }[];
@@ -8627,7 +9006,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    action?: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED";
+                    action?: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "LEDGER_ENTRY_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
+                    kind?: "SAVE" | "UPDATE" | "DELETE" | "EXPORT" | "CONFIRM" | "VIEW";
+                    projectId?: string;
                     from?: string;
                     to?: string;
                     cursor?: string;
@@ -8650,7 +9031,9 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED";
+                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "LEDGER_ENTRY_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
+                                /** @enum {string} */
+                                kind: "SAVE" | "UPDATE" | "DELETE" | "EXPORT" | "CONFIRM" | "VIEW";
                                 /** Format: uuid */
                                 actorId: string;
                                 actorName: string;
@@ -8659,7 +9042,15 @@ export interface paths {
                                 /** Format: uuid */
                                 targetId: string;
                                 targetName: string | null;
+                                /** Format: uuid */
+                                projectId: string | null;
+                                projectName: string | null;
                                 summary: string | null;
+                                changes: {
+                                    label: string;
+                                    before: string | null;
+                                    after: string | null;
+                                }[];
                                 /** Format: date-time */
                                 createdAt: string;
                             }[];
@@ -10682,7 +11073,7 @@ export interface paths {
                                     id: string;
                                     title: string;
                                     /** @enum {string} */
-                                    category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                    category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                     versionCount: number;
                                     /** Format: date */
                                     latestRevisionDate: string;
@@ -10785,106 +11176,115 @@ export interface paths {
                             dashboard: {
                                 /** Format: date */
                                 today: string;
-                                alerts: ({
-                                    /** @enum {string} */
-                                    kind: "NO_LOG_TODAY";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "INBOX_STALE";
-                                    count: number;
-                                    oldestDays: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "BURN_REACHED";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** @enum {string} */
-                                    level: "WARN" | "LIMIT";
-                                    burnPercent: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "BURN_AHEAD";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    burnPercent: number;
-                                    progressPercent: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "PROJECT_OVERDUE";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: date */
-                                    plannedEnd: string;
-                                    daysLate: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "DOUBLE_ASSIGNED";
-                                    /** Format: uuid */
-                                    employeeId: string;
-                                    employeeName: string;
-                                    dateCount: number;
-                                    /** Format: date */
-                                    firstDate: string;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "CHANGE_STALE";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: uuid */
-                                    changeWorkId: string;
-                                    seq: number;
-                                    days: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "WARRANTY_ENDING";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: date */
-                                    endOn: string;
-                                    daysLeft: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "REPAIR_UNHANDLED";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    /** Format: uuid */
-                                    repairId: string;
-                                    seq: number;
-                                    days: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "CERTIFICATE_EXPIRING";
-                                    /** Format: uuid */
-                                    projectId: string;
-                                    projectName: string;
-                                    title: string;
-                                    /** Format: date */
-                                    expiresOn: string;
-                                    daysLeft: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "CREDENTIAL_EXPIRING";
-                                    /** Format: uuid */
-                                    employeeId: string;
-                                    employeeName: string;
-                                    typeName: string;
-                                    /** Format: date */
-                                    expiresOn: string;
-                                    daysLeft: number;
-                                } | {
-                                    /** @enum {string} */
-                                    kind: "MONTH_UNCLOSED";
-                                    month: string;
-                                })[];
+                                alerts: {
+                                    key: string;
+                                    urgent: boolean;
+                                    alert: {
+                                        /** @enum {string} */
+                                        kind: "NO_LOG_TODAY";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "BURN_REACHED";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** @enum {string} */
+                                        level: "WARN" | "LIMIT";
+                                        burnPercent: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "BURN_AHEAD";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        burnPercent: number;
+                                        progressPercent: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "PROJECT_OVERDUE";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: date */
+                                        plannedEnd: string;
+                                        daysLate: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "DOUBLE_ASSIGNED";
+                                        /** Format: uuid */
+                                        employeeId: string;
+                                        employeeName: string;
+                                        dateCount: number;
+                                        /** Format: date */
+                                        firstDate: string;
+                                        /** Format: date */
+                                        lastDate: string;
+                                        projectNames: string[];
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "CHANGE_STALE";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: uuid */
+                                        changeWorkId: string;
+                                        seq: number;
+                                        days: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "WARRANTY_ENDING";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: date */
+                                        endOn: string;
+                                        daysLeft: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "REPAIR_UNHANDLED";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        /** Format: uuid */
+                                        repairId: string;
+                                        seq: number;
+                                        days: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "CERTIFICATE_EXPIRING";
+                                        /** Format: uuid */
+                                        projectId: string;
+                                        projectName: string;
+                                        title: string;
+                                        /** Format: date */
+                                        expiresOn: string;
+                                        daysLeft: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "CREDENTIAL_EXPIRING";
+                                        /** Format: uuid */
+                                        employeeId: string;
+                                        employeeName: string;
+                                        typeName: string;
+                                        /** Format: date */
+                                        expiresOn: string;
+                                        daysLeft: number;
+                                    } | {
+                                        /** @enum {string} */
+                                        kind: "MONTH_UNCLOSED";
+                                        month: string;
+                                    };
+                                }[];
+                                hiddenAlertCount: number;
+                                stats: {
+                                    inProgress: number;
+                                    todayLoggedHeadcount: number;
+                                    todayHeadcount: number;
+                                    weekMinutes: number;
+                                };
                                 todayAssignments: {
                                     headcount: number;
                                     projects: {
@@ -10906,8 +11306,13 @@ export interface paths {
                                     id: string;
                                     code: string;
                                     name: string;
+                                    siteName: string;
                                     /** @enum {string} */
                                     status: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                    /** Format: date */
+                                    plannedEnd: string;
+                                    hasLogToday: boolean;
+                                    weekMinutes: number;
                                     progressPercent: number | null;
                                     burnPercent: number | null;
                                     warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
@@ -10917,8 +11322,13 @@ export interface paths {
                                     id: string;
                                     code: string;
                                     name: string;
+                                    siteName: string;
                                     /** @enum {string} */
                                     status: "PLANNED" | "IN_PROGRESS" | "SUSPENDED" | "COMPLETED" | "WARRANTY" | "CLOSED" | "CANCELLED";
+                                    /** Format: date */
+                                    plannedEnd: string;
+                                    hasLogToday: boolean;
+                                    weekMinutes: number;
                                     progressPercent: number | null;
                                     burnPercent: number | null;
                                     warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
@@ -10934,12 +11344,11 @@ export interface paths {
                                         name: string;
                                         dateCount: number;
                                     }[];
-                                    freeCount: number;
-                                    freeNames: string[];
+                                    workingCount: number;
+                                    idleCount: number;
                                 };
                                 todos: {
                                     draftLogCount: number;
-                                    staleInboxCount: number;
                                     unclosedMonth: string | null;
                                 };
                                 warranty: {
@@ -10978,7 +11387,7 @@ export interface paths {
                             settings: {
                                 items: {
                                     /** @enum {string} */
-                                    kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                                    kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                     enabled: boolean;
                                 }[];
                             };
@@ -11040,7 +11449,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                                kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                 enabled: boolean;
                             }[];
                         };
@@ -11080,7 +11489,7 @@ export interface paths {
                     "application/json": {
                         items: {
                             /** @enum {string} */
-                            kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                            kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                             enabled: boolean;
                         }[];
                     };
@@ -11096,7 +11505,7 @@ export interface paths {
                         "application/json": {
                             items: {
                                 /** @enum {string} */
-                                kind: "NO_LOG_TODAY" | "INBOX_STALE" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
+                                kind: "NO_LOG_TODAY" | "BURN_REACHED" | "BURN_AHEAD" | "PROJECT_OVERDUE" | "DOUBLE_ASSIGNED" | "CHANGE_STALE" | "WARRANTY_ENDING" | "REPAIR_UNHANDLED" | "CERTIFICATE_EXPIRING" | "CREDENTIAL_EXPIRING" | "MONTH_UNCLOSED";
                                 enabled: boolean;
                             }[];
                         };
@@ -11143,6 +11552,89 @@ export interface paths {
             };
         };
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/alerts/dismiss": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** 알림 숨기기 (알림 키를 남겨 조건이 바뀌기 전까지 보이지 않게 함, 모두 숨기기도 같은 요청) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        keys: string[];
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -11857,6 +12349,7 @@ export interface paths {
                                 workDate: string;
                                 description: string | null;
                                 isCover: boolean;
+                                includeInSummary: boolean;
                                 /** Format: uuid */
                                 uploadedBy: string;
                                 /** Format: date-time */
@@ -11987,6 +12480,7 @@ export interface paths {
                             workDate: string;
                             description: string | null;
                             isCover: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             uploadedBy: string;
                             /** Format: date-time */
@@ -12109,6 +12603,7 @@ export interface paths {
                             workDate: string;
                             description: string | null;
                             isCover: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             uploadedBy: string;
                             /** Format: date-time */
@@ -12293,6 +12788,7 @@ export interface paths {
                         workDate?: string;
                         description?: string | null;
                         isCover?: boolean;
+                        includeInSummary?: boolean;
                     };
                 };
             };
@@ -12319,6 +12815,7 @@ export interface paths {
                             workDate: string;
                             description: string | null;
                             isCover: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             uploadedBy: string;
                             /** Format: date-time */
@@ -12410,6 +12907,7 @@ export interface paths {
                     scope: "INBOX" | "PROJECT";
                     projectId?: string;
                     tag?: "NEGOTIATION" | "INSTRUCTION" | "ISSUE" | "TODO" | "OTHER";
+                    memoDate?: string;
                     isDone?: "true" | "false";
                     cursor?: string;
                     limit?: number;
@@ -14014,6 +14512,593 @@ export interface paths {
         };
         trace?: never;
     };
+    "/api/v1/projects/{projectId}/ledger-entries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 프로젝트 지출·수입 내역 (날짜 최근순, 구분·분류·기간 필터, 커서 방식) */
+        get: {
+            parameters: {
+                query?: {
+                    kind?: "EXPENSE" | "INCOME";
+                    categoryId?: string;
+                    from?: string;
+                    to?: string;
+                    date?: string;
+                    cursor?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            items: {
+                                /** Format: uuid */
+                                id: string;
+                                /** Format: uuid */
+                                projectId: string;
+                                /** Format: date */
+                                entryDate: string;
+                                /** @enum {string} */
+                                kind: "EXPENSE" | "INCOME";
+                                /** Format: uuid */
+                                categoryId: string | null;
+                                amount: number;
+                                /** Format: uuid */
+                                partnerId: string | null;
+                                content: string | null;
+                                /** Format: uuid */
+                                documentId: string | null;
+                                /** Format: uuid */
+                                changeWorkId: string | null;
+                                /** Format: uuid */
+                                createdBy: string;
+                                /** Format: date-time */
+                                createdAt: string;
+                                /** Format: date-time */
+                                updatedAt: string;
+                            }[];
+                            nextCursor: string | null;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** 지출·수입 기록 한 건 (구분마다 분류 목록이 다름, 증빙 문서·추가 공사 연결은 선택) */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        entryDate: string;
+                        /** @enum {string} */
+                        kind: "EXPENSE" | "INCOME";
+                        /** Format: uuid */
+                        categoryId?: string;
+                        amount: number;
+                        /** Format: uuid */
+                        partnerId?: string;
+                        content?: string;
+                        /** Format: uuid */
+                        documentId?: string;
+                        /** Format: uuid */
+                        changeWorkId?: string;
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            projectId: string;
+                            /** Format: date */
+                            entryDate: string;
+                            /** @enum {string} */
+                            kind: "EXPENSE" | "INCOME";
+                            /** Format: uuid */
+                            categoryId: string | null;
+                            amount: number;
+                            /** Format: uuid */
+                            partnerId: string | null;
+                            content: string | null;
+                            /** Format: uuid */
+                            documentId: string | null;
+                            /** Format: uuid */
+                            changeWorkId: string | null;
+                            /** Format: uuid */
+                            createdBy: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/projects/{projectId}/ledger-summary": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** 프로젝트 지출 합계·수입 합계·분류별 합계 (내역과 같은 필터) */
+        get: {
+            parameters: {
+                query?: {
+                    kind?: "EXPENSE" | "INCOME";
+                    categoryId?: string;
+                    from?: string;
+                    to?: string;
+                };
+                header?: never;
+                path: {
+                    projectId: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            expenseTotal: number;
+                            incomeTotal: number;
+                            entryCount: number;
+                            byCategory: {
+                                /** @enum {string} */
+                                kind: "EXPENSE" | "INCOME";
+                                /** Format: uuid */
+                                categoryId: string | null;
+                                amount: number;
+                                count: number;
+                            }[];
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/api/v1/ledger-entries/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /** 지출·수입 기록 삭제 (소프트 삭제) */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** @enum {boolean} */
+                            success: true;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /** 지출·수입 기록 수정 (구분을 바꾸면 분류도 새로 골라야 하며 안 고르면 비움) */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody: {
+                content: {
+                    "application/json": {
+                        /** Format: date */
+                        entryDate?: string;
+                        /** @enum {string} */
+                        kind?: "EXPENSE" | "INCOME";
+                        /** Format: uuid */
+                        categoryId?: string | null;
+                        amount?: number;
+                        /** Format: uuid */
+                        partnerId?: string | null;
+                        content?: string | null;
+                        /** Format: uuid */
+                        documentId?: string | null;
+                        /** Format: uuid */
+                        changeWorkId?: string | null;
+                    };
+                };
+            };
+            responses: {
+                /** @description 성공 */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            /** Format: uuid */
+                            id: string;
+                            /** Format: uuid */
+                            projectId: string;
+                            /** Format: date */
+                            entryDate: string;
+                            /** @enum {string} */
+                            kind: "EXPENSE" | "INCOME";
+                            /** Format: uuid */
+                            categoryId: string | null;
+                            amount: number;
+                            /** Format: uuid */
+                            partnerId: string | null;
+                            content: string | null;
+                            /** Format: uuid */
+                            documentId: string | null;
+                            /** Format: uuid */
+                            changeWorkId: string | null;
+                            /** Format: uuid */
+                            createdBy: string;
+                            /** Format: date-time */
+                            createdAt: string;
+                            /** Format: date-time */
+                            updatedAt: string;
+                        };
+                    };
+                };
+                /** @description 입력 오류 */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description 로그인 필요 */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+                /** @description NOT_FOUND */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": {
+                            error: {
+                                /** @enum {string} */
+                                code: "VALIDATION_ERROR" | "UNAUTHORIZED" | "CSRF_REJECTED" | "INVALID_CREDENTIALS" | "CURRENT_PASSWORD_INVALID" | "LAST_LOGIN_METHOD" | "ACCOUNT_CLOSING" | "ACCOUNT_LOCKED" | "LOGIN_ID_TAKEN" | "EMAIL_CODE_INVALID" | "NOT_IMPLEMENTED" | "NOT_FOUND" | "CONFLICT" | "STORAGE_QUOTA_EXCEEDED" | "IDEMPOTENCY_KEY_REQUIRED" | "IDEMPOTENCY_KEY_REUSED" | "IDEMPOTENCY_IN_PROGRESS" | "TOO_MANY_REQUESTS" | "INTERNAL_ERROR";
+                                message: string;
+                                details?: {
+                                    path: string;
+                                    message: string;
+                                }[];
+                            };
+                        };
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
     "/api/v1/projects/{projectId}/documents": {
         parameters: {
             query?: never;
@@ -14025,7 +15110,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    category?: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                    category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                     q?: string;
                     pinned?: "true" | "false";
                 };
@@ -14050,10 +15135,11 @@ export interface paths {
                                 /** Format: uuid */
                                 projectId: string;
                                 /** @enum {string} */
-                                category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                                 title: string;
                                 isSensitive: boolean;
                                 isPinned: boolean;
+                                includeInSummary: boolean;
                                 /** Format: uuid */
                                 createdBy: string;
                                 /** Format: date-time */
@@ -14144,7 +15230,7 @@ export interface paths {
             };
         };
         put?: never;
-        /** 올린 파일로 문서 만들기 (첫 버전, 계약·행정은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서) */
+        /** 올린 파일로 문서 만들기 (첫 버전, 계약·공문은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서) */
         post: {
             parameters: {
                 query?: never;
@@ -14164,7 +15250,7 @@ export interface paths {
                          * @default OTHER
                          * @enum {string}
                          */
-                        category?: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                        category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                         isSensitive?: boolean;
                         /** Format: date */
                         revisionDate?: string;
@@ -14185,10 +15271,11 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */
@@ -14333,10 +15420,11 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */
@@ -14546,9 +15634,10 @@ export interface paths {
                     "application/json": {
                         title?: string;
                         /** @enum {string} */
-                        category?: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                        category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                         isSensitive?: boolean;
                         isPinned?: boolean;
+                        includeInSummary?: boolean;
                     };
                 };
             };
@@ -14565,10 +15654,11 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */
@@ -14721,10 +15811,11 @@ export interface paths {
                             /** Format: uuid */
                             projectId: string;
                             /** @enum {string} */
-                            category: "DRAWING" | "SPEC" | "WORK_ORDER" | "CONTRACT" | "SAFETY" | "OTHER";
+                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
+                            includeInSummary: boolean;
                             /** Format: uuid */
                             createdBy: string;
                             /** Format: date-time */
@@ -14972,7 +16063,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED";
+                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "LEDGER_ENTRY_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
                                 /** Format: uuid */
                                 actorId: string;
                                 actorName: string;

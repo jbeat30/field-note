@@ -2,6 +2,7 @@ import {
   laborCostSchema,
   optionsResponseSchema,
   payRateSchema,
+  payRateSummariesResponseSchema,
   payRatesResponseSchema,
 } from '@field-note/shared';
 import request from 'supertest';
@@ -244,6 +245,37 @@ describe('직원 단가표', () => {
     expect(payRatesResponseSchema.parse((await client.rates(worker)).body).items).toEqual([]);
   });
 
+  it('단가표는 단가가 있는 직원마다 현재·이전·적용 예정 단가를 준다', async () => {
+    const { client, worker, worker2 } = await setup();
+
+    await client.addRate(worker, {
+      payType: 'DAILY',
+      amount: 180_000,
+      effectiveFrom: '2026-01-01',
+    });
+    await client.addRate(worker, {
+      payType: 'DAILY',
+      amount: 200_000,
+      effectiveFrom: '2026-06-01',
+    });
+    await client.addRate(worker, {
+      payType: 'DAILY',
+      amount: 230_000,
+      effectiveFrom: '2026-12-01',
+    });
+
+    const { items } = payRateSummariesResponseSchema.parse((await client.get('/pay-rates')).body);
+
+    // 단가가 없는 직원은 나오지 않는다
+    expect(items.map((item) => item.employeeId)).toEqual([worker]);
+    expect(items[0]).toMatchObject({
+      current: { amount: 200_000 },
+      previous: { amount: 180_000 },
+      upcoming: { amount: 230_000 },
+    });
+    expect(items.some((item) => item.employeeId === worker2)).toBe(false);
+  });
+
   it('없는 직원은 404다', async () => {
     const { client } = await setup();
     const missing = '0198d000-0000-7000-8000-00000000dead';
@@ -255,7 +287,7 @@ describe('직원 단가표', () => {
     ).toBe(404);
   });
 
-  it('조회와 변경은 감사 기록으로 남고 변경 기록에는 금액을 복사하지 않는다', async () => {
+  it('단가 변경만 감사 기록으로 남고(금액은 복사하지 않음) 단가·인건비 조회는 남기지 않는다', async () => {
     const { client, worker, project } = await setup();
 
     await client.addRate(worker, {
@@ -277,11 +309,8 @@ describe('직원 단가표', () => {
       [worker, project],
     );
 
-    expect(rows.map((row) => [row.action, row.target_id])).toEqual([
-      ['PAY_RATE_CHANGED', worker],
-      ['PAY_RATE_VIEWED', worker],
-      ['LABOR_COST_VIEWED', project],
-    ]);
+    // 볼 권한이 있는 관리자만 쓰는 서비스라 조회 기록은 의미가 없어 남기지 않는다 (09 문서 결정 ④)
+    expect(rows.map((row) => [row.action, row.target_id])).toEqual([['PAY_RATE_CHANGED', worker]]);
     expect(JSON.stringify(rows[0]!.detail)).not.toContain('777000');
     expect(rows[0]!.detail).toEqual({ payType: 'DAILY', effectiveFrom: '2026-10-01' });
   });

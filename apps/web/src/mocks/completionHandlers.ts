@@ -1,5 +1,6 @@
 import {
-  SUMMARY_PHOTO_LIMIT,
+  selectSummaryDocuments,
+  selectSummaryPhotos,
   evaluateTransitionNotices,
   projectParamsSchema,
   summarizeMaterialBalance,
@@ -176,6 +177,9 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
       (photo) => photo.file.status !== 'REJECTED',
     );
     const documents = listMockDocuments(account).filter((item) => item.projectId === project.id);
+    // 서버와 같은 공유 규칙으로 요약에 실을 사진·문서를 고른다
+    const summaryPhotoIds = new Set(selectSummaryPhotos(photos));
+    const summaryDocumentIds = new Set(selectSummaryDocuments(documents));
     const summary: ProjectCompletionSummary = {
       generatedOn: todayInSeoul(new Date()),
       companyName: account.companyName,
@@ -234,14 +238,9 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
       afterService: after,
       photos: {
         total: photos.length,
-        items: [...photos]
-          .sort(
-            (a, b) =>
-              Number(b.isCover) - Number(a.isCover) ||
-              b.takenAt.localeCompare(a.takenAt) ||
-              b.id.localeCompare(a.id),
-          )
-          .slice(0, SUMMARY_PHOTO_LIMIT)
+        items: photos
+          .filter((photo) => summaryPhotoIds.has(photo.id))
+          .sort((a, b) => b.takenAt.localeCompare(a.takenAt) || b.id.localeCompare(a.id))
           .map((photo) => ({
             id: photo.id,
             category: photo.category,
@@ -254,7 +253,7 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
       documents: {
         sensitiveExcluded: documents.filter((item) => item.isSensitive).length,
         items: documents
-          .filter((item) => !item.isSensitive)
+          .filter((item) => summaryDocumentIds.has(item.id))
           .map((item) => ({
             id: item.id,
             title: item.title,

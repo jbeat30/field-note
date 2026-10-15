@@ -1,5 +1,6 @@
 import type {
   ChangeWorkCreate,
+  ChangeWorkEvidenceCreate,
   ChangeWorkLink,
   ChangeWorkStatus,
   ChangeWorkTransition,
@@ -174,5 +175,31 @@ export const useUnlinkChangeWorkDocument = (id: string) => {
       return data;
     },
     onSuccess: invalidate,
+  });
+};
+
+// 증빙 올리기: 올린 파일로 문서함에 계약·공문 문서를 만들고 이 변경·추가 작업에 연결 (문서 목록도 바뀌므로 함께 다시 읽음)
+export const useAddChangeWorkEvidence = (id: string) => {
+  const invalidate = useInvalidateChangeWorks();
+  const queryClient = useQueryClient();
+
+  return useMutation({
+    mutationFn: async (body: ChangeWorkEvidenceCreate) => {
+      const { data, error } = await apiClient.POST('/api/v1/change-works/{id}/evidence', {
+        params: { path: { id } },
+        body,
+      });
+
+      if (!data) {
+        throw error ?? new Error('[web.useAddChangeWorkEvidence] 증빙 올리기 실패');
+      }
+
+      return data;
+    },
+    onSuccess: () => {
+      void queryClient.invalidateQueries({ queryKey: ['documents'] });
+
+      return invalidate();
+    },
   });
 };

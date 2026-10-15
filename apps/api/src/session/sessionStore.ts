@@ -19,6 +19,8 @@ export type CreateSessionOptions = {
   isRemembered?: boolean;
   // 기기 목록에 보이는 이름 (접속 정보에서 만든 요약, 없으면 "알 수 없는 기기")
   deviceLabel?: string;
+  // 로그인한 접속 IP (기기 목록에 보임)
+  ipAddress?: string;
 };
 
 // 기기 목록의 한 항목. id는 토큰·해시와 무관한 공개용 식별자
@@ -27,6 +29,9 @@ export type SessionDevice = {
   label: string;
   lastActiveAt: Date;
   isCurrent: boolean;
+  // 로그인 때 IP와 마지막으로 쓴 때의 IP (없으면 null)
+  ipAddress: string | null;
+  lastIp: string | null;
 };
 
 // 사용 시각 갱신 최소 간격: 요청마다 쓰기를 하지 않기 위함 (기기 목록의 "마지막 사용"은 분 단위면 충분)
@@ -39,7 +44,8 @@ const sessionLifetimeMs = (options?: CreateSessionOptions) =>
 
 export type SessionStore = {
   create: (input: AuthContext, options?: CreateSessionOptions) => Promise<CreatedSession>;
-  find: (token: string) => Promise<AuthContext | null>;
+  // ip를 주면 마지막 사용 시각을 갱신할 때 마지막 IP도 함께 갱신
+  find: (token: string, ip?: string) => Promise<AuthContext | null>;
   delete: (token: string) => Promise<void>;
   // 비밀번호 재설정·전 기기 로그아웃용
   deleteByUser: (userId: string) => Promise<void>;
@@ -75,13 +81,15 @@ export const createPrismaSessionStore = (
         companyId,
         expiresAt,
         deviceLabel: options?.deviceLabel ?? DEFAULT_DEVICE_LABEL,
+        ipAddress: options?.ipAddress ?? null,
+        lastIp: options?.ipAddress ?? null,
         lastActiveAt: now(),
       },
     });
 
     return { token, expiresAt, isPersistent: options?.isRemembered !== false };
   },
-  find: async (token) => {
+  find: async (token, ip) => {
     const at = now();
     const session = await prisma.session.findFirst({
       where: { tokenHash: hashToken(token), expiresAt: { gt: at } },
@@ -94,7 +102,10 @@ export const createPrismaSessionStore = (
     // 최근에 갱신했으면 건너뛰어 요청마다 쓰기가 생기지 않게 함 (갱신 실패는 인증 결과에 영향 없음)
     if (at.getTime() - session.lastActiveAt.getTime() >= LAST_ACTIVE_TOUCH_INTERVAL_MS) {
       await prisma.session
-        .update({ where: { tokenHash: session.tokenHash }, data: { lastActiveAt: at } })
+        .update({
+          where: { tokenHash: session.tokenHash },
+          data: { lastActiveAt: at, ...(ip ? { lastIp: ip } : {}) },
+        })
         .catch(() => undefined);
     }
 
@@ -126,6 +137,8 @@ export const createPrismaSessionStore = (
       label: session.deviceLabel,
       lastActiveAt: session.lastActiveAt,
       isCurrent: session.tokenHash === currentHash,
+      ipAddress: session.ipAddress,
+      lastIp: session.lastIp,
     }));
   },
   revokeDevice: async (userId, deviceId, currentToken) => {
@@ -146,7 +159,14 @@ export const createPrismaSessionStore = (
 export const createMemorySessionStore = (now: Clock = () => new Date()): SessionStore => {
   const sessions = new Map<
     string,
-    AuthContext & { expiresAt: Date; publicId: string; deviceLabel: string; lastActiveAt: Date }
+    AuthContext & {
+      expiresAt: Date;
+      publicId: string;
+      deviceLabel: string;
+      lastActiveAt: Date;
+      ipAddress: string | null;
+      lastIp: string | null;
+    }
   >();
 
   return {
@@ -159,12 +179,14 @@ export const createMemorySessionStore = (now: Clock = () => new Date()): Session
         expiresAt,
         publicId: generateToken(),
         deviceLabel: options?.deviceLabel ?? DEFAULT_DEVICE_LABEL,
+        ipAddress: options?.ipAddress ?? null,
+        lastIp: options?.ipAddress ?? null,
         lastActiveAt: now(),
       });
 
       return { token, expiresAt, isPersistent: options?.isRemembered !== false };
     },
-    find: async (token) => {
+    find: async (token, ip) => {
       const session = sessions.get(hashToken(token));
 
       if (!session || session.expiresAt <= now()) {
@@ -173,6 +195,7 @@ export const createMemorySessionStore = (now: Clock = () => new Date()): Session
 
       if (now().getTime() - session.lastActiveAt.getTime() >= LAST_ACTIVE_TOUCH_INTERVAL_MS) {
         session.lastActiveAt = now();
+        if (ip) session.lastIp = ip;
       }
 
       return { userId: session.userId, companyId: session.companyId };
@@ -210,6 +233,8 @@ export const createMemorySessionStore = (now: Clock = () => new Date()): Session
           label: session.deviceLabel,
           lastActiveAt: session.lastActiveAt,
           isCurrent: key === hashToken(currentToken),
+          ipAddress: session.ipAddress,
+          lastIp: session.lastIp,
         })),
     revokeDevice: async (userId, deviceId, currentToken) => {
       const target = [...sessions.entries()].find(

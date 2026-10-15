@@ -22,9 +22,12 @@ const FIELDS = ['requestedOn', 'requester', 'content', 'confirmCompleted'] as co
 export const ChangeWorkForm = ({
   projectId,
   confirmCompleted,
+  onSaved,
 }: {
   projectId: string;
   confirmCompleted: boolean;
+  // 저장하면 안내 문구를 넘겨 호출 (창 안에서 쓸 때 창을 닫고 화면에 알린다). 없으면 폼 위에 보임
+  onSaved?: (message: string) => void;
 }) => {
   const create = useCreateChangeWork(projectId);
   const today = todayInSeoul(new Date());
@@ -66,7 +69,10 @@ export const ChangeWorkForm = ({
         setRequester('');
         setContent('');
         setRequestedOn(today);
-        setSaved(`#${created.seq} 기록했습니다 (협의 중)`);
+        const message = `#${created.seq} 기록했습니다 (협의 중)`;
+
+        if (onSaved) onSaved(message);
+        else setSaved(message);
       })
       .catch((error: unknown) => {
         const { byField, root } = splitServerErrors(error, FIELDS);

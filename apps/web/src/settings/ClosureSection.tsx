@@ -9,6 +9,7 @@ import { apiClient } from '../api/client';
 import { useSocialMethods } from '../auth/useSocial';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
+import { useConfirm } from '../components/ui/confirm-dialog';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
@@ -24,6 +25,7 @@ export const ClosureSection = () => {
   const queryClient = useQueryClient();
   const methods = useSocialMethods();
   const [isOpen, setOpen] = useState(false);
+  const { confirm, dialog } = useConfirm();
   const {
     register,
     handleSubmit,
@@ -39,6 +41,17 @@ export const ClosureSection = () => {
       setError('currentPassword', { message: '현재 비밀번호를 입력해 주세요' });
       return;
     }
+
+    // 되돌리기 어려운 요청이라 비밀번호를 확인한 뒤 한 번 더 묻는다 (14일 안에는 메일 링크로 취소할 수 있음)
+    const ok = await confirm({
+      title: '계정을 해지할까요?',
+      description:
+        '해지를 요청하면 지금 모든 기기에서 로그아웃되고, 14일 뒤 회사의 모든 데이터가 삭제됩니다. 그 안에는 메일로 받은 링크로 취소할 수 있습니다',
+      confirmLabel: '해지 요청',
+      danger: true,
+    });
+
+    if (!ok) return;
 
     const { data, error } = await apiClient.POST('/api/v1/me/closure', {
       body: needsPassword ? { currentPassword } : {},
@@ -75,6 +88,7 @@ export const ClosureSection = () => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
+      {dialog}
       <Alert>
         해지하면 회사의 프로젝트·기록이 14일 뒤 모두 삭제되며 복구할 수 없습니다. 삭제 전에는 메일의
         링크로 취소할 수 있습니다

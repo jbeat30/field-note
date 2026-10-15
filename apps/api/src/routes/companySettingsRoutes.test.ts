@@ -87,6 +87,11 @@ describe('GET·PUT /api/v1/company/settings', () => {
       workUnitMode: 'RATIO',
     });
 
+    // 월 기준일수는 소수 첫째 자리까지 저장된다 (주 5일 21.7일)
+    const decimal = { standardWorkMinutes: 480, monthlyWorkDays: 21.7, workUnitMode: 'RATIO' };
+
+    expect((await put(instance, cookie, decimal)).body).toEqual(decimal);
+
     const next = { standardWorkMinutes: 450, monthlyWorkDays: 24, workUnitMode: 'HOURS' };
     const saved = await put(instance, cookie, next);
 
@@ -147,6 +152,9 @@ describe('GET·PUT /api/v1/company/settings', () => {
     const cases = [
       { standardWorkMinutes: 30, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480, monthlyWorkDays: 0, workUnitMode: 'RATIO' },
+      // 소수 둘째 자리와 31일 초과는 받지 않는다
+      { standardWorkMinutes: 480, monthlyWorkDays: 21.75, workUnitMode: 'RATIO' },
+      { standardWorkMinutes: 480, monthlyWorkDays: 31.5, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480.5, monthlyWorkDays: 22, workUnitMode: 'RATIO' },
       { standardWorkMinutes: 480, monthlyWorkDays: 22, workUnitMode: 'DAYS' },
       { standardWorkMinutes: 480, monthlyWorkDays: 22 },

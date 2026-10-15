@@ -1,4 +1,5 @@
 import {
+  MATERIAL_RECORD_KIND_LABELS,
   materialBalanceResponseSchema,
   materialCreateSchema,
   materialListQuerySchema,
@@ -26,6 +27,7 @@ import {
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
+import type { RemovedMaterialRecord } from '../material/materialService';
 import type { RouteHandler, RouteRegistry } from '../http/route';
 import { MaterialError, type MaterialService } from '../material/materialService';
 
@@ -246,10 +248,37 @@ export const registerMaterialRoutes = (registry: RouteRegistry, materials?: Mate
       request: { params: materialRecordParamsSchema },
       response: { status: 200, schema: successResponseSchema },
       errors: ['NOT_FOUND'],
+      // 활동 기록: 지운 기록의 프로젝트·자재·날짜 (핸들러가 response.locals에 담아 둠)
+      audit: {
+        entry: ({ params, response }) => {
+          const removed = response.locals.removedMaterialRecord as
+            RemovedMaterialRecord | undefined;
+
+          return removed
+            ? {
+                action: 'MATERIAL_RECORD_DELETED',
+                targetId: removed.projectId,
+                projectId: removed.projectId,
+                detail: {
+                  materialName: removed.materialName,
+                  recordDate: removed.recordDate,
+                  kind:
+                    MATERIAL_RECORD_KIND_LABELS[
+                      removed.kind as keyof typeof MATERIAL_RECORD_KIND_LABELS
+                    ] ?? removed.kind,
+                  recordId: (params as { id: string }).id,
+                },
+              }
+            : null;
+        },
+      },
     },
-    async ({ auth, params }) => {
+    async ({ auth, params, response }) => {
       try {
-        await materials!.removeRecord(auth!.companyId, (params as { id: string }).id);
+        response.locals.removedMaterialRecord = await materials!.removeRecord(
+          auth!.companyId,
+          (params as { id: string }).id,
+        );
 
         return { success: true };
       } catch (error) {
