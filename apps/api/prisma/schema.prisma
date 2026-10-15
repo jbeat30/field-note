@@ -1018,6 +1018,14 @@ enum AuditAction {
   EMPLOYEE_DOCUMENT_VIEWED
   MONTH_CLOSED
   MONTH_REOPENED
+  WORK_LOG_SAVED
+  WORK_LOG_UPDATED
+  MATERIAL_RECORD_DELETED
+  PHOTO_DELETED
+  DOCUMENT_DELETED
+  PROJECT_UPDATED
+  PROJECT_STATUS_CHANGED
+  EMPLOYEE_UPDATED
 
   @@map("audit_action")
 }
@@ -1080,12 +1088,15 @@ model AuditLog {
   // 대상 문서 id (문서를 지워도 기록은 남도록 외래 키 없이 값만 보관)
   targetId  String      @map("target_id") @db.Uuid
   detail    Json
+  // 프로젝트에 속한 일이면 그 프로젝트 id (프로젝트별 거르기용, 외래 키 없음)
+  projectId String?     @map("project_id") @db.Uuid
   createdAt DateTime    @default(now()) @map("created_at") @db.Timestamptz(3)
   company   Company     @relation(fields: [companyId], references: [id])
   actor     User        @relation("AuditLogActor", fields: [companyId, actorId], references: [companyId, id], onDelete: Restrict)
 
   @@id([companyId, id])
   @@index([companyId, action, targetId, createdAt(sort: Desc)])
+  @@index([companyId, projectId, createdAt(sort: Desc)])
   @@map("audit_logs")
 }
 

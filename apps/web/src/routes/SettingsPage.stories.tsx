@@ -409,6 +409,11 @@ export const ClosureWrongPassword: Story = {
 
     await userEvent.type(section.getByLabelText('현재 비밀번호'), 'wrong-password-1');
     await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '해지 요청',
+      }),
+    );
 
     await expect(await section.findByText('현재 비밀번호가 올바르지 않습니다')).toBeInTheDocument();
   },
@@ -441,9 +446,40 @@ export const ClosureRequested: Story = {
 
     await userEvent.type(section.getByLabelText('현재 비밀번호'), 'Hanbit-demo-2026!');
     await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '해지 요청',
+      }),
+    );
 
     await waitFor(() => expect(findAccount('hanbit')?.closingPurgeAfter).toBeDefined());
     await expect(getCurrentAccount()).toBeUndefined();
+  },
+};
+
+// 확인 창에서 취소하면 해지를 요청하지 않는다
+export const ClosureConfirmCancelled: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=etc'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '계정 해지' }));
+
+    const section = closureSection(canvas);
+
+    await userEvent.type(section.getByLabelText('현재 비밀번호'), 'Hanbit-demo-2026!');
+    await userEvent.click(section.getByRole('button', { name: '해지 요청' }));
+
+    const dialog = within(await within(document.body).findByRole('alertdialog'));
+
+    await expect(dialog.getByText(/14일 뒤 회사의 모든 데이터가 삭제됩니다/)).toBeInTheDocument();
+    await userEvent.click(dialog.getByRole('button', { name: '취소' }));
+
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('alertdialog')).not.toBeInTheDocument(),
+    );
+    await expect(findAccount('hanbit')?.closingPurgeAfter).toBeUndefined();
+    await expect(getCurrentAccount()).toBeDefined();
   },
 };
 

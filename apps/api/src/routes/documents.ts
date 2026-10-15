@@ -1,4 +1,5 @@
 import {
+  type DocumentDetail,
   documentAccessLogsResponseSchema,
   documentAccessQuerySchema,
   documentAccessUrlSchema,
@@ -146,6 +147,23 @@ export const registerDocumentRoutes = (registry: RouteRegistry, documents?: Docu
       request: { params: documentParamsSchema },
       response: { status: 200, schema: successResponseSchema },
       errors: ['NOT_FOUND'],
+      // 활동 기록: 지우기 전에 어떤 문서였는지 읽어 둔다
+      audit: {
+        before: ({ auth, params }) =>
+          documents!.get(auth!.companyId, (params as { id: string }).id),
+        entry: ({ params }, _result, before) => {
+          const document = before as DocumentDetail | null;
+
+          return document
+            ? {
+                action: 'DOCUMENT_DELETED',
+                targetId: (params as { id: string }).id,
+                projectId: document.projectId,
+                detail: { title: document.title },
+              }
+            : null;
+        },
+      },
     },
     async ({ auth, params }) => {
       try {

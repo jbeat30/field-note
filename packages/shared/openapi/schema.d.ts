@@ -8913,7 +8913,9 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    action?: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED";
+                    action?: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
+                    kind?: "SAVE" | "UPDATE" | "DELETE" | "EXPORT" | "CONFIRM" | "VIEW";
+                    projectId?: string;
                     from?: string;
                     to?: string;
                     cursor?: string;
@@ -8936,7 +8938,9 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED";
+                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
+                                /** @enum {string} */
+                                kind: "SAVE" | "UPDATE" | "DELETE" | "EXPORT" | "CONFIRM" | "VIEW";
                                 /** Format: uuid */
                                 actorId: string;
                                 actorName: string;
@@ -8945,7 +8949,15 @@ export interface paths {
                                 /** Format: uuid */
                                 targetId: string;
                                 targetName: string | null;
+                                /** Format: uuid */
+                                projectId: string | null;
+                                projectName: string | null;
                                 summary: string | null;
+                                changes: {
+                                    label: string;
+                                    before: string | null;
+                                    after: string | null;
+                                }[];
                                 /** Format: date-time */
                                 createdAt: string;
                             }[];
@@ -15270,7 +15282,7 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED";
+                                action: "DOCUMENT_VIEWED" | "DOCUMENT_DOWNLOADED" | "REPORT_EXPORTED" | "PAY_RATE_VIEWED" | "PAY_RATE_CHANGED" | "LABOR_COST_VIEWED" | "EMPLOYEE_DOCUMENT_VIEWED" | "MONTH_CLOSED" | "MONTH_REOPENED" | "WORK_LOG_SAVED" | "WORK_LOG_UPDATED" | "MATERIAL_RECORD_DELETED" | "PHOTO_DELETED" | "DOCUMENT_DELETED" | "PROJECT_UPDATED" | "PROJECT_STATUS_CHANGED" | "EMPLOYEE_UPDATED";
                                 /** Format: uuid */
                                 actorId: string;
                                 actorName: string;

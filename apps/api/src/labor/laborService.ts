@@ -78,18 +78,6 @@ export const createLaborService = (
         throw new LaborError('NOT_FOUND');
       }
 
-      // 기록을 먼저 남긴 같은 트랜잭션 안에서만 단가를 돌려준다
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          action: 'PAY_RATE_VIEWED',
-          actorId: userId,
-          targetId: employeeId,
-          detail: {},
-          createdAt: now(),
-        },
-      });
-
       return (
         await tx.employeePayRate.findMany({ where: { employeeId }, orderBy: NEWEST_FIRST })
       ).map(toRate);
@@ -175,17 +163,6 @@ export const createLaborService = (
         });
         ratesByEmployee.set(row.employeeId, list);
       }
-
-      await tx.auditLog.create({
-        data: {
-          companyId,
-          action: 'LABOR_COST_VIEWED',
-          actorId: userId,
-          targetId: projectId,
-          detail: {},
-          createdAt: now(),
-        },
-      });
 
       return {
         actual: summarizeLaborCost(

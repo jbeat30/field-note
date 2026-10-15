@@ -188,6 +188,15 @@ export const AUDIT_ACTIONS = [
   'EMPLOYEE_DOCUMENT_VIEWED',
   'MONTH_CLOSED',
   'MONTH_REOPENED',
+  // 활동 기록 (데이터를 바꾼 일)
+  'WORK_LOG_SAVED',
+  'WORK_LOG_UPDATED',
+  'MATERIAL_RECORD_DELETED',
+  'PHOTO_DELETED',
+  'DOCUMENT_DELETED',
+  'PROJECT_UPDATED',
+  'PROJECT_STATUS_CHANGED',
+  'EMPLOYEE_UPDATED',
 ] as const;
 
 export const auditActionSchema = z.enum(AUDIT_ACTIONS);
@@ -204,6 +213,14 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   EMPLOYEE_DOCUMENT_VIEWED: '직원 서류 열람',
   MONTH_CLOSED: '월 공수 확정',
   MONTH_REOPENED: '월 공수 재오픈',
+  WORK_LOG_SAVED: '작업 내역 저장',
+  WORK_LOG_UPDATED: '작업 내역 수정',
+  MATERIAL_RECORD_DELETED: '자재 기록 삭제',
+  PHOTO_DELETED: '사진 삭제',
+  DOCUMENT_DELETED: '문서 삭제',
+  PROJECT_UPDATED: '프로젝트 정보 수정',
+  PROJECT_STATUS_CHANGED: '프로젝트 상태 변경',
+  EMPLOYEE_UPDATED: '직원 정보 수정',
 };
 
 // 민감 자료 열람 기록 (수정·삭제할 수 없는 감사 기록, 서비스 기획서 §13.1)

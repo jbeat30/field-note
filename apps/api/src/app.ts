@@ -151,6 +151,11 @@ export const createRegistry = (options: AppOptions = {}) => {
   const registry = createRouteRegistry({
     resolveAuth: options.resolveAuth ?? createSessionResolver(sessionStore),
     idempotencyStore: options.idempotencyStore ?? createMemoryIdempotencyStore(),
+    recordAudit: options.audit
+      ? (companyId, actorId, entry) => options.audit!.record(companyId, actorId, entry)
+      : undefined,
+    onAuditError: (error) =>
+      options.logger?.error({ error }, '[api.audit] 활동 기록을 남기지 못했습니다'),
   });
 
   registerHealthRoutes(registry);

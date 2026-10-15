@@ -25679,11 +25679,44 @@
                 "LABOR_COST_VIEWED",
                 "EMPLOYEE_DOCUMENT_VIEWED",
                 "MONTH_CLOSED",
-                "MONTH_REOPENED"
+                "MONTH_REOPENED",
+                "WORK_LOG_SAVED",
+                "WORK_LOG_UPDATED",
+                "MATERIAL_RECORD_DELETED",
+                "PHOTO_DELETED",
+                "DOCUMENT_DELETED",
+                "PROJECT_UPDATED",
+                "PROJECT_STATUS_CHANGED",
+                "EMPLOYEE_UPDATED"
               ]
             },
             "required": false,
             "name": "action",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
+                "SAVE",
+                "UPDATE",
+                "DELETE",
+                "EXPORT",
+                "CONFIRM",
+                "VIEW"
+              ]
+            },
+            "required": false,
+            "name": "kind",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "format": "uuid"
+            },
+            "required": false,
+            "name": "projectId",
             "in": "query"
           },
           {
@@ -25754,7 +25787,26 @@
                               "LABOR_COST_VIEWED",
                               "EMPLOYEE_DOCUMENT_VIEWED",
                               "MONTH_CLOSED",
-                              "MONTH_REOPENED"
+                              "MONTH_REOPENED",
+                              "WORK_LOG_SAVED",
+                              "WORK_LOG_UPDATED",
+                              "MATERIAL_RECORD_DELETED",
+                              "PHOTO_DELETED",
+                              "DOCUMENT_DELETED",
+                              "PROJECT_UPDATED",
+                              "PROJECT_STATUS_CHANGED",
+                              "EMPLOYEE_UPDATED"
+                            ]
+                          },
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "SAVE",
+                              "UPDATE",
+                              "DELETE",
+                              "EXPORT",
+                              "CONFIRM",
+                              "VIEW"
                             ]
                           },
                           "actorId": {
@@ -25783,11 +25835,52 @@
                               "null"
                             ]
                           },
+                          "projectId": {
+                            "type": [
+                              "string",
+                              "null"
+                            ],
+                            "format": "uuid"
+                          },
+                          "projectName": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
                           "summary": {
                             "type": [
                               "string",
                               "null"
                             ]
+                          },
+                          "changes": {
+                            "type": "array",
+                            "items": {
+                              "type": "object",
+                              "properties": {
+                                "label": {
+                                  "type": "string"
+                                },
+                                "before": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                },
+                                "after": {
+                                  "type": [
+                                    "string",
+                                    "null"
+                                  ]
+                                }
+                              },
+                              "required": [
+                                "label",
+                                "before",
+                                "after"
+                              ]
+                            }
                           },
                           "createdAt": {
                             "type": "string",
@@ -25797,12 +25890,16 @@
                         "required": [
                           "id",
                           "action",
+                          "kind",
                           "actorId",
                           "actorName",
                           "targetType",
                           "targetId",
                           "targetName",
+                          "projectId",
+                          "projectName",
                           "summary",
+                          "changes",
                           "createdAt"
                         ]
                       }
@@ -44888,7 +44985,15 @@
                               "LABOR_COST_VIEWED",
                               "EMPLOYEE_DOCUMENT_VIEWED",
                               "MONTH_CLOSED",
-                              "MONTH_REOPENED"
+                              "MONTH_REOPENED",
+                              "WORK_LOG_SAVED",
+                              "WORK_LOG_UPDATED",
+                              "MATERIAL_RECORD_DELETED",
+                              "PHOTO_DELETED",
+                              "DOCUMENT_DELETED",
+                              "PROJECT_UPDATED",
+                              "PROJECT_STATUS_CHANGED",
+                              "EMPLOYEE_UPDATED"
                             ]
                           },
                           "actorId": {

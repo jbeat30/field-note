@@ -157,14 +157,14 @@ export const SettingsPage = () => {
                 aria-labelledby="records-heading"
               >
                 <h2 id="records-heading" className="text-lg font-bold">
-                  기록 조회
+                  활동 기록
                 </h2>
                 <p className="text-sm text-foreground/70">
-                  민감 자료·직원 서류 열람, 내보내기, 단가·인건비 조회, 월 공수 확정·재오픈 기록을
-                  봅니다 (조회만 가능하고 수정·삭제할 수 없습니다)
+                  저장·수정·삭제한 일, 내보내기, 월 공수 확정·재오픈, 민감 자료·직원 서류 열람
+                  기록을 봅니다 (조회만 가능하고 수정·삭제할 수 없습니다)
                 </p>
                 <Button variant="secondary" asChild>
-                  <Link to="/settings/records">기록 조회 열기</Link>
+                  <Link to="/settings/records">활동 기록 열기</Link>
                 </Button>
               </section>
             </div>

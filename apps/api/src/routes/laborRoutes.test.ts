@@ -255,7 +255,7 @@ describe('직원 단가표', () => {
     ).toBe(404);
   });
 
-  it('조회와 변경은 감사 기록으로 남고 변경 기록에는 금액을 복사하지 않는다', async () => {
+  it('단가 변경만 감사 기록으로 남고(금액은 복사하지 않음) 단가·인건비 조회는 남기지 않는다', async () => {
     const { client, worker, project } = await setup();
 
     await client.addRate(worker, {
@@ -277,11 +277,8 @@ describe('직원 단가표', () => {
       [worker, project],
     );
 
-    expect(rows.map((row) => [row.action, row.target_id])).toEqual([
-      ['PAY_RATE_CHANGED', worker],
-      ['PAY_RATE_VIEWED', worker],
-      ['LABOR_COST_VIEWED', project],
-    ]);
+    // 볼 권한이 있는 관리자만 쓰는 서비스라 조회 기록은 의미가 없어 남기지 않는다 (09 문서 결정 ④)
+    expect(rows.map((row) => [row.action, row.target_id])).toEqual([['PAY_RATE_CHANGED', worker]]);
     expect(JSON.stringify(rows[0]!.detail)).not.toContain('777000');
     expect(rows[0]!.detail).toEqual({ payType: 'DAILY', effectiveFrom: '2026-10-01' });
   });
