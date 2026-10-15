@@ -1,4 +1,4 @@
-import type { WorkSummaryQuery } from '@field-note/shared';
+import type { EmployeeProjectDaysQuery, WorkSummaryQuery } from '@field-note/shared';
 import { useQuery } from '@tanstack/react-query';
 
 import { apiClient } from '../api/client';
@@ -32,6 +32,27 @@ export const useEmployeeWorkHistory = (employeeId: string) =>
 
       if (!data) {
         throw new Error('[web.useEmployeeWorkHistory] 투입 이력 조회 실패');
+      }
+
+      return data;
+    },
+  });
+
+export const useEmployeeProjectDays = (
+  projectId: string,
+  employeeId: string,
+  query: EmployeeProjectDaysQuery,
+) =>
+  useQuery({
+    queryKey: queryKeys.employeeProjectDays(projectId, employeeId, query),
+    queryFn: async () => {
+      const { data } = await apiClient.GET(
+        '/api/v1/projects/{id}/work-summary/employees/{employeeId}',
+        { params: { path: { id: projectId, employeeId }, query } },
+      );
+
+      if (!data) {
+        throw new Error('[web.useEmployeeProjectDays] 일한 날 조회 실패');
       }
 
       return data;
