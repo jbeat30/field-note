@@ -1,5 +1,6 @@
 import type {
   AlertKind,
+  CompanyRules,
   CompanySettings,
   Device,
   EmployeeDetail,
@@ -57,6 +58,8 @@ export type MockAccount = {
   isEmailVerified: boolean;
   companyName: string;
   settings: CompanySettings;
+  // 경고 기준·보증 기본 기간 (저장한 적이 없으면 기본값)
+  rules?: CompanyRules;
   // 이메일 변경을 요청하고 코드 인증을 기다리는 새 주소
   pendingEmail?: string;
   // 연동한 가짜 카카오 계정 (MOCK_KAKAO_PROFILES의 key)

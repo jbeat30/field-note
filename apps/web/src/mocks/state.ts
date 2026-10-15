@@ -3,6 +3,8 @@ import {
   OPTION_PRESETS,
   normalizeOptionName,
   type AlertKind,
+  DEFAULT_COMPANY_RULES,
+  type CompanyRules,
   type CompanySettings,
   type Device,
   type EmployeeDetail,
@@ -637,6 +639,14 @@ export const saveAlertSettings = (
 // 알림 숨기기: 같은 키는 한 번만 남김
 export const dismissAlerts = (account: MockAccount, keys: string[]) => {
   account.dismissedAlerts = [...new Set([...(account.dismissedAlerts ?? []), ...keys])];
+  persist();
+};
+
+export const getRules = (account: MockAccount): CompanyRules =>
+  account.rules ?? DEFAULT_COMPANY_RULES;
+
+export const updateRules = (account: MockAccount, rules: CompanyRules) => {
+  account.rules = rules;
   persist();
 };
 

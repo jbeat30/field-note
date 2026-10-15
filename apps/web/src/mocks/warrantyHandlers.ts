@@ -1,5 +1,4 @@
 import {
-  DEFAULT_WARRANTY_MONTHS,
   computeWarrantyEnd,
   projectParamsSchema,
   resolveWarrantyUpdate,
@@ -22,7 +21,7 @@ import type { ZodType } from 'zod';
 import type { MockAccount } from './data';
 import { DEMO_WARRANTIES } from './demoSource';
 import { listMockDocuments } from './documentHandlers';
-import { getCurrentAccount, getProjects } from './state';
+import { getCurrentAccount, getProjects, getRules } from './state';
 import { mockDelay } from './latency';
 
 type Helpers = {
@@ -115,7 +114,7 @@ export const getMockWarrantyForTransition = (account: MockAccount, projectId: st
 
   return {
     exists: record !== undefined,
-    months: record?.months ?? DEFAULT_WARRANTY_MONTHS,
+    months: record?.months ?? getRules(account).warrantyDefaultMonths,
     endOn: record?.endOn ?? null,
   };
 };
@@ -130,10 +129,11 @@ export const ensureMockDefaultWarranty = (account: MockAccount, project: Project
 
   if (store.records.has(project.id) || !project.actualEnd) return;
 
-  const endOn = computeWarrantyEnd(project.actualEnd, DEFAULT_WARRANTY_MONTHS);
+  const defaultMonths = getRules(account).warrantyDefaultMonths;
+  const endOn = computeWarrantyEnd(project.actualEnd, defaultMonths);
 
   store.records.set(project.id, {
-    months: DEFAULT_WARRANTY_MONTHS,
+    months: defaultMonths,
     startBasis: 'ACTUAL_END',
     startOn: project.actualEnd,
     endOn,
@@ -142,7 +142,7 @@ export const ensureMockDefaultWarranty = (account: MockAccount, project: Project
     {
       id: crypto.randomUUID(),
       fromMonths: null,
-      toMonths: DEFAULT_WARRANTY_MONTHS,
+      toMonths: defaultMonths,
       fromEndOn: null,
       toEndOn: endOn,
       startBasis: 'ACTUAL_END',
@@ -198,7 +198,7 @@ const toWarranty = (account: MockAccount, project: ProjectDetail): ProjectWarran
   const today = todayInSeoul(new Date());
   const documents = new Map(listMockDocuments(account).map((document) => [document.id, document]));
   const startOn = record?.startOn ?? project.actualEnd;
-  const months = record?.months ?? DEFAULT_WARRANTY_MONTHS;
+  const months = record?.months ?? getRules(account).warrantyDefaultMonths;
   const endOn =
     record?.endOn ?? (project.actualEnd ? computeWarrantyEnd(project.actualEnd, months) : null);
 
@@ -208,7 +208,7 @@ const toWarranty = (account: MockAccount, project: ProjectDetail): ProjectWarran
     startBasis: record?.startBasis ?? 'ACTUAL_END',
     startOn,
     endOn,
-    defaultMonths: DEFAULT_WARRANTY_MONTHS,
+    defaultMonths: getRules(account).warrantyDefaultMonths,
     daysLeft: endOn ? warrantyDaysLeft(endOn, today) : null,
     certificates: store.certificates
       .filter((item) => item.projectId === project.id && !item.removedAt)

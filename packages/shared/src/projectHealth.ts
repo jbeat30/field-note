@@ -2,9 +2,10 @@ import { z } from 'zod';
 
 import { countDays } from './staffing';
 import { projectStatusSchema, type ProjectStatus } from './projects';
+import { projectWarningTypeSchema, type ProjectWarningType } from './projectWarnings';
 
 // 일정과 진행 (서비스 기획서 §10.4): 진행률 기록, 공수 소진율, 경고
-// 경고 기준은 기획서 결정값(공수 소진율 80% / 100%)을 쓰며 회사별 설정은 이후에 붙인다
+// 경고 기준의 기본값은 기획서 결정값(공수 소진율 80% / 100%)이고 회사가 설정에서 바꾼다 (`companyRulesSchema`)
 export const BURN_WARN_PERCENT = 80;
 
 export const BURN_LIMIT_PERCENT = 100;
@@ -49,25 +50,12 @@ export const progressRecordsResponseSchema = z.object({ items: z.array(progressR
 
 export type ProgressRecordsResponse = z.infer<typeof progressRecordsResponseSchema>;
 
-export const PROJECT_WARNING_TYPES = [
-  'BURN_WARN',
-  'BURN_LIMIT',
-  'BURN_AHEAD',
-  'OVERDUE',
-  'BEHIND_SCHEDULE',
-] as const;
-
-export const projectWarningTypeSchema = z.enum(PROJECT_WARNING_TYPES);
-
-export type ProjectWarningType = z.infer<typeof projectWarningTypeSchema>;
-
-export const PROJECT_WARNING_LABELS: Record<ProjectWarningType, string> = {
-  BURN_WARN: '공수 소진율 80% 도달',
-  BURN_LIMIT: '공수 소진율 100% 도달',
-  BURN_AHEAD: '진행률보다 공수가 빨리 소진되는 중',
-  OVERDUE: '종료 예정일이 지났는데 끝나지 않음',
-  BEHIND_SCHEDULE: '진행률이 일정보다 뒤처짐',
-};
+export {
+  PROJECT_WARNING_LABELS,
+  PROJECT_WARNING_TYPES,
+  projectWarningTypeSchema,
+  type ProjectWarningType,
+} from './projectWarnings';
 
 export const projectHealthSchema = z.object({
   // 계획 공수(분): 취소하지 않은 투입의 계획 공수 합. 계획이 하나도 없으면 null
@@ -95,6 +83,8 @@ type HealthInput = {
   plannedStart: string;
   plannedEnd: string;
   today: string;
+  // 회사별 경고 기준 (없으면 기본값)
+  rules?: Pick<CompanyRules, 'burnWarnPercent' | 'burnLimitPercent' | 'aheadGapPercent'>;
 };
 
 // 진행률 입력은 예정·진행·중단에서만 (§10.3)
@@ -121,6 +111,7 @@ const roundOne = (value: number) => Math.round(value * 10) / 10;
  */
 export const evaluateProjectHealth = (input: HealthInput): ProjectHealth => {
   const { plannedMinutes, usedMinutes, progressPercent } = input;
+  const rules = input.rules ?? DEFAULT_COMPANY_RULES;
   const burnPercent =
     plannedMinutes !== null && plannedMinutes > 0
       ? roundOne((usedMinutes / plannedMinutes) * 100)
@@ -132,16 +123,16 @@ export const evaluateProjectHealth = (input: HealthInput): ProjectHealth => {
   const warnings: ProjectWarningType[] = [];
 
   if (ACTIVE_STATUSES.includes(input.status)) {
-    if (burnPercent !== null && burnPercent >= BURN_LIMIT_PERCENT) {
+    if (burnPercent !== null && burnPercent >= rules.burnLimitPercent) {
       warnings.push('BURN_LIMIT');
-    } else if (burnPercent !== null && burnPercent >= BURN_WARN_PERCENT) {
+    } else if (burnPercent !== null && burnPercent >= rules.burnWarnPercent) {
       warnings.push('BURN_WARN');
     }
 
     if (
       burnPercent !== null &&
       progressPercent !== null &&
-      burnPercent - progressPercent >= AHEAD_GAP_PERCENT
+      burnPercent - progressPercent >= rules.aheadGapPercent
     ) {
       warnings.push('BURN_AHEAD');
     }
@@ -155,7 +146,7 @@ export const evaluateProjectHealth = (input: HealthInput): ProjectHealth => {
         input.today < input.plannedStart ? 0 : countDays(input.plannedStart, input.today);
       const elapsedPercent = (Math.min(elapsed, total) / total) * 100;
 
-      if (elapsedPercent - progressPercent >= AHEAD_GAP_PERCENT) {
+      if (elapsedPercent - progressPercent >= rules.aheadGapPercent) {
         warnings.push('BEHIND_SCHEDULE');
       }
     }
@@ -170,4 +161,30 @@ export const evaluateProjectHealth = (input: HealthInput): ProjectHealth => {
     forecastMinutes,
     warnings,
   };
+};
+
+// 회사별 경고 기준 (서비스 기획서 §10.4 "회사가 정한다"). 기본값은 기획서 결정값
+export const companyRulesSchema = z
+  .object({
+    // 공수 소진율이 이 값(%) 이상이면 경고
+    burnWarnPercent: z.number().int().min(50).max(150),
+    // 공수 소진율이 이 값(%) 이상이면 한도 도달
+    burnLimitPercent: z.number().int().min(60).max(200),
+    // 소진율이 진행률보다(또는 진행률이 일정 경과율보다) 이만큼(%p) 앞서·뒤처지면 경고
+    aheadGapPercent: z.number().int().min(5).max(60),
+    // 보증 기간을 따로 정하지 않았을 때 쓰는 기본 개월 수 (0은 보증 없음)
+    warrantyDefaultMonths: z.number().int().min(0).max(120),
+  })
+  .refine((value) => value.burnLimitPercent > value.burnWarnPercent, {
+    message: '한도 기준은 경고 기준보다 커야 합니다',
+    path: ['burnLimitPercent'],
+  });
+
+export type CompanyRules = z.infer<typeof companyRulesSchema>;
+
+export const DEFAULT_COMPANY_RULES: CompanyRules = {
+  burnWarnPercent: BURN_WARN_PERCENT,
+  burnLimitPercent: BURN_LIMIT_PERCENT,
+  aheadGapPercent: AHEAD_GAP_PERCENT,
+  warrantyDefaultMonths: 12,
 };

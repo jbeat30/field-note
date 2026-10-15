@@ -1,6 +1,7 @@
 import {
   PROJECT_STATUSES,
   PROJECT_STATUS_LABELS,
+  PROJECT_WARNING_LABELS,
   type ProjectListQuery,
   type ProjectSortKey,
   type ProjectStatus,
@@ -114,6 +115,23 @@ const columns = helper.columns([
       </Badge>
     ),
   }),
+  helper.accessor((row) => row.warnings.length, {
+    id: 'warnings',
+    header: '경고',
+    enableSorting: false,
+    cell: ({ row }) =>
+      row.original.warnings.length === 0 ? (
+        <span className="text-foreground/55">-</span>
+      ) : (
+        <span className="flex flex-wrap gap-1">
+          {row.original.warnings.map((warning) => (
+            <Badge key={warning} tone="danger" title={PROJECT_WARNING_LABELS[warning]}>
+              {PROJECT_WARNING_LABELS[warning]}
+            </Badge>
+          ))}
+        </span>
+      ),
+  }),
   helper.accessor('clientName', {
     id: 'client',
     header: '고객',
@@ -142,7 +160,7 @@ const columns = helper.columns([
   }),
 ]);
 
-// 프로젝트 목록: 번호·이름·현장명·상태·고객·담당자·공종·기간만 보여 준다 (현장 연락처·출입 메모는 카드에서만)
+// 프로젝트 목록: 번호·이름·현장명·상태·경고·고객·담당자·공종·기간만 보여 준다. 경고는 진행·중단 프로젝트에만 붙고 회사 설정의 경고 기준을 따른다 (현장 연락처·출입 메모는 카드에서만)
 export const ProjectListPage = () => {
   // 검색·필터는 서버 조회 조건, 정렬·쪽도 서버에 넘긴다 (한 쪽만 받음)
   const [filter, setFilter] = useState<ProjectListQuery>({});
@@ -237,6 +255,16 @@ export const ProjectListPage = () => {
               </Chip>
             </li>
           ))}
+          <li>
+            <Chip
+              selected={filter.hasWarning === 'true'}
+              onClick={() =>
+                update({ hasWarning: filter.hasWarning === 'true' ? undefined : 'true' })
+              }
+            >
+              경고 있음
+            </Chip>
+          </li>
         </ul>
         <button
           type="button"

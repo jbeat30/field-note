@@ -320,3 +320,26 @@ export const StatusButtonsAndAdvancedToggle: Story = {
     await expect(canvas.getByLabelText('고객 필터')).toBeInTheDocument();
   },
 };
+
+// `경고 있음`을 누르면 경고가 있는 진행·중단 프로젝트만 남고 줄마다 경고가 보인다
+export const FilterByWarning: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('A동 외장 판금 공사');
+
+    await userEvent.click(canvas.getByRole('button', { name: '경고 있음' }));
+
+    await waitFor(
+      () => {
+        const rows = canvas.getAllByRole('row').slice(1);
+
+        expect(rows.length).toBeGreaterThan(0);
+        for (const row of rows) {
+          expect(row.textContent).toMatch(/경고 기준|한도|소진|지났는데|뒤처짐/);
+        }
+      },
+      { timeout: 5000 },
+    );
+  },
+};

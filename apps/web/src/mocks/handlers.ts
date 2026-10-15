@@ -5,6 +5,7 @@ import {
   closureCancelSchema,
   closureRequestSchema,
   closureTokenParamsSchema,
+  companyRulesSchema,
   companySettingsSchema,
   socialStartRequestSchema,
   EMPLOYEE_MAX_PER_COMPANY,
@@ -152,7 +153,9 @@ import {
   removeDevice,
   signIn,
   signOut,
+  updateRules,
   updateSettings,
+  getRules,
   MOCK_MAX_FAILED_LOGINS,
 } from './state';
 import { createChangeWorkHandlers } from './changeWorkHandlers';
@@ -429,6 +432,32 @@ const toMockWorkLog = (
   };
 };
 
+// 목록·점검 응답이 함께 쓰는 프로젝트 경고 (서버의 loadProjectWarnings와 같은 규칙: 진행·중단 프로젝트만, 회사별 기준을 따름)
+const projectWarningsOf = (account: MockAccount, project: ProjectDetail) => {
+  if (project.status !== 'IN_PROGRESS' && project.status !== 'SUSPENDED') return [];
+
+  const planned = getAssignments(account)
+    .filter((item) => item.projectId === project.id && !item.cancelledAt)
+    .flatMap((item) => (item.plannedMinutes === null ? [] : [item.plannedMinutes]));
+  const used = getWorkLogs(account)
+    .filter((log) => log.projectId === project.id && log.status === 'SAVED')
+    .flatMap((log) => log.entries)
+    .reduce((sum, entry) => sum + entry.minutes, 0);
+  const latest = sortedProgress(getProgressRecords(account, project.id))[0];
+
+  return evaluateProjectHealth({
+    status: project.status,
+    plannedMinutes: planned.length > 0 ? planned.reduce((sum, value) => sum + value, 0) : null,
+    usedMinutes: used,
+    progressPercent: latest?.percent ?? null,
+    progressRecordedOn: latest?.recordedOn ?? null,
+    plannedStart: project.plannedStart,
+    plannedEnd: project.plannedEnd,
+    today: todayInSeoul(new Date()),
+    rules: getRules(account),
+  }).warnings;
+};
+
 export const handlers = [
   ...createPhotoHandlers({ apiError, parseBody }),
   ...createMemoHandlers({ apiError, parseBody }),
@@ -601,6 +630,32 @@ export const handlers = [
     const account = getCurrentAccount();
 
     return account ? HttpResponse.json(account.settings) : apiError('UNAUTHORIZED');
+  }),
+
+  http.get('/api/v1/company/rules', async () => {
+    await simulateLatency();
+
+    const account = getCurrentAccount();
+
+    return account ? HttpResponse.json(getRules(account)) : apiError('UNAUTHORIZED');
+  }),
+
+  http.put('/api/v1/company/rules', async ({ request }) => {
+    await simulateLatency();
+
+    if (!hasCsrfHeader(request)) return apiError('CSRF_REJECTED');
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const body = await parseBody(request, companyRulesSchema);
+
+    if ('response' in body) return body.response;
+
+    updateRules(account, body.data);
+
+    return HttpResponse.json(getRules(account));
   }),
 
   http.put('/api/v1/company/settings', async ({ request }) => {
@@ -1344,6 +1399,7 @@ export const handlers = [
       to,
       q,
       site,
+      hasWarning,
       sortBy = 'recent',
       sortDir,
       page = 1,
@@ -1396,7 +1452,8 @@ export const handlers = [
           (!needle ||
             item.name.toLowerCase().includes(needle) ||
             item.code.toLowerCase().includes(needle)) &&
-          (!siteNeedle || item.siteName.toLowerCase().includes(siteNeedle)),
+          (!siteNeedle || item.siteName.toLowerCase().includes(siteNeedle)) &&
+          (!hasWarning || projectWarningsOf(account, item).length > 0),
       )
       .sort(compare);
     const items = matched.slice((page - 1) * pageSize, page * pageSize).map((item) => ({
@@ -1410,6 +1467,7 @@ export const handlers = [
       tradeIds: item.tradeIds,
       plannedStart: item.plannedStart,
       plannedEnd: item.plannedEnd,
+      warnings: projectWarningsOf(account, item),
     }));
 
     return HttpResponse.json({ items, total: matched.length, page, pageSize });
@@ -2218,6 +2276,7 @@ export const handlers = [
         plannedStart: project.plannedStart,
         plannedEnd: project.plannedEnd,
         today: todayInSeoul(new Date()),
+        rules: getRules(account),
       }),
     );
   }),

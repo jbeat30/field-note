@@ -10,6 +10,7 @@ import {
   PROJECT_WARNING_TYPES,
   evaluateProjectHealth,
   projectWarningTypeSchema,
+  type CompanyRules,
   type ProjectWarningType,
 } from './projectHealth';
 import { CREDENTIAL_EXPIRING_DAYS, credentialDaysLeft } from './credentials';
@@ -375,6 +376,8 @@ type RawProject = {
 
 export type DashboardInput = {
   today: string;
+  // 회사별 경고 기준 (없으면 기본값)
+  rules?: CompanyRules;
   // 예정·진행·중단 프로젝트
   projects: readonly RawProject[];
   // 진행 중 프로젝트에 오늘 투입되는 재직 직원 (프로젝트·직원)
@@ -483,6 +486,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
         plannedStart: project.plannedStart,
         plannedEnd: project.plannedEnd,
         today: input.today,
+        rules: input.rules,
       }),
     ]),
   );

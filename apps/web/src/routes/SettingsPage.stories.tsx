@@ -5,6 +5,7 @@ import {
   addAccount,
   findAccount,
   getCurrentAccount,
+  getRules,
   setKakaoProfile,
   signIn,
 } from '../mocks/state';
@@ -492,5 +493,49 @@ export const ClosureCanGoBack: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '돌아가기' }));
 
     await expect(await canvas.findByRole('button', { name: '계정 해지' })).toBeInTheDocument();
+  },
+};
+
+// 경고·보증 기준: 기본값(80%·100%·20%p·12개월)을 보여 주고 바꿔 저장하면 다시 불러와도 유지된다
+export const CompanyRules: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const warn = await canvas.findByLabelText('공수 소진율 경고');
+
+    await waitFor(() => expect(warn).toHaveValue(80));
+    await expect(canvas.getByLabelText('공수 소진율 한도')).toHaveValue(100);
+    await expect(canvas.getByLabelText('보증 기본 기간')).toHaveValue(12);
+
+    await userEvent.clear(warn);
+    await userEvent.type(warn, '70');
+    await userEvent.clear(canvas.getByLabelText('보증 기본 기간'));
+    await userEvent.type(canvas.getByLabelText('보증 기본 기간'), '24');
+    await userEvent.click(canvas.getByRole('button', { name: '기준 저장' }));
+
+    await waitFor(() =>
+      expect(getRules(findAccount('hanbit')!)).toMatchObject({
+        burnWarnPercent: 70,
+        warrantyDefaultMonths: 24,
+      }),
+    );
+  },
+};
+
+// 한도가 경고 기준보다 크지 않으면 저장하기 전에 알려 준다
+export const CompanyRulesInvalid: Story = {
+  parameters: { router: { initialEntries: ['/settings?tab=company'], path: '/settings' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const limit = await canvas.findByLabelText('공수 소진율 한도');
+
+    await waitFor(() => expect(limit).toHaveValue(100));
+    await userEvent.clear(limit);
+    await userEvent.type(limit, '70');
+    await userEvent.click(canvas.getByRole('button', { name: '기준 저장' }));
+
+    await expect(
+      await canvas.findByText('한도 기준은 경고 기준보다 커야 합니다'),
+    ).toBeInTheDocument();
   },
 };

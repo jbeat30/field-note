@@ -1,5 +1,7 @@
 import {
+  DEFAULT_COMPANY_RULES,
   canRecordProgress,
+  companyRulesSchema,
   evaluateProjectHealth,
   progressRecordCreateSchema,
 } from './projectHealth';
@@ -35,6 +37,48 @@ describe('evaluateProjectHealth', () => {
     expect(
       evaluateProjectHealth({ ...base, usedMinutes: 63 * 480, progressPercent: 70 }).warnings,
     ).toEqual([]);
+  });
+
+  it('회사가 정한 경고 기준을 따른다 (경고 70%·한도 90%·간격 10%p)', () => {
+    const rules = { burnWarnPercent: 70, burnLimitPercent: 90, aheadGapPercent: 10 };
+
+    // 기본 기준(80%)으로는 경고가 아닌 소진율 75%가 회사 기준(70%)으로는 경고
+    expect(
+      evaluateProjectHealth({ ...base, usedMinutes: 60 * 480, progressPercent: 70 }).warnings,
+    ).toEqual([]);
+    expect(
+      evaluateProjectHealth({ ...base, usedMinutes: 60 * 480, progressPercent: 70, rules })
+        .warnings,
+    ).toEqual(['BURN_WARN']);
+    expect(
+      evaluateProjectHealth({ ...base, usedMinutes: 72 * 480, progressPercent: 95, rules })
+        .warnings,
+    ).toEqual(['BURN_LIMIT']);
+    // 소진율이 진행률보다 15%p 앞서면 기본 간격(20%p)으로는 경고가 아니지만 회사 간격(10%p)으로는 경고
+    expect(
+      evaluateProjectHealth({ ...base, usedMinutes: 52 * 480, progressPercent: 50 }).warnings,
+    ).toEqual([]);
+    expect(
+      evaluateProjectHealth({ ...base, usedMinutes: 52 * 480, progressPercent: 50, rules })
+        .warnings,
+    ).toContain('BURN_AHEAD');
+  });
+
+  it('경고 기준 입력은 범위를 지키고 한도는 경고보다 커야 한다', () => {
+    expect(companyRulesSchema.safeParse(DEFAULT_COMPANY_RULES).success).toBe(true);
+    expect(
+      companyRulesSchema.safeParse({ ...DEFAULT_COMPANY_RULES, burnLimitPercent: 80 }).success,
+    ).toBe(false);
+    expect(
+      companyRulesSchema.safeParse({ ...DEFAULT_COMPANY_RULES, burnWarnPercent: 49 }).success,
+    ).toBe(false);
+    expect(
+      companyRulesSchema.safeParse({ ...DEFAULT_COMPANY_RULES, warrantyDefaultMonths: 0 }).success,
+    ).toBe(true);
+    expect(
+      companyRulesSchema.safeParse({ ...DEFAULT_COMPANY_RULES, warrantyDefaultMonths: 121 })
+        .success,
+    ).toBe(false);
   });
 
   it('계획 공수가 없으면 소진율·소진 관련 경고가 없다', () => {

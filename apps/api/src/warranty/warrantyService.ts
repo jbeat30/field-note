@@ -1,5 +1,4 @@
 import {
-  DEFAULT_WARRANTY_MONTHS,
   computeWarrantyEnd,
   resolveWarrantyUpdate,
   todayInSeoul,
@@ -12,6 +11,7 @@ import {
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
+import { loadRules } from '../company/companyRules';
 import { withCompany } from '../db/withCompany';
 
 export class WarrantyError extends Error {
@@ -70,10 +70,11 @@ export const loadWarrantyForTransition = async (
   projectId: string,
 ) => {
   const record = await tx.projectWarranty.findFirst({ where: { projectId } });
+  const { warrantyDefaultMonths } = await loadRules(tx);
 
   return {
     exists: record !== null,
-    months: record?.months ?? DEFAULT_WARRANTY_MONTHS,
+    months: record?.months ?? warrantyDefaultMonths,
     endOn: record ? fromDate(record.endOn) : null,
   };
 };
@@ -93,13 +94,14 @@ export const createDefaultWarranty = async (
   projectId: string,
   actualEnd: string,
 ) => {
-  const endOn = computeWarrantyEnd(actualEnd, DEFAULT_WARRANTY_MONTHS);
+  const { warrantyDefaultMonths } = await loadRules(tx);
+  const endOn = computeWarrantyEnd(actualEnd, warrantyDefaultMonths);
 
   await tx.projectWarranty.create({
     data: {
       companyId,
       projectId,
-      months: DEFAULT_WARRANTY_MONTHS,
+      months: warrantyDefaultMonths,
       startBasis: 'ACTUAL_END',
       startOn: toDate(actualEnd),
       endOn: toDate(endOn),
@@ -111,7 +113,7 @@ export const createDefaultWarranty = async (
       companyId,
       projectId,
       fromMonths: null,
-      toMonths: DEFAULT_WARRANTY_MONTHS,
+      toMonths: warrantyDefaultMonths,
       fromEndOn: null,
       toEndOn: toDate(endOn),
       startBasis: 'ACTUAL_END',
@@ -171,7 +173,8 @@ export const createWarrantyService = (
     const actualEnd = project.actualEnd ? fromDate(project.actualEnd) : null;
     // 설정이 없으면 기본 기간과 실제 완료일로 계산한 값을 보여 줌
     const startOn = record ? fromDate(record.startOn) : actualEnd;
-    const months = record?.months ?? DEFAULT_WARRANTY_MONTHS;
+    const { warrantyDefaultMonths } = await loadRules(tx);
+    const months = record?.months ?? warrantyDefaultMonths;
     const endOn = record
       ? fromDate(record.endOn)
       : actualEnd
@@ -184,7 +187,7 @@ export const createWarrantyService = (
       startBasis: record?.startBasis ?? 'ACTUAL_END',
       startOn,
       endOn,
-      defaultMonths: DEFAULT_WARRANTY_MONTHS,
+      defaultMonths: warrantyDefaultMonths,
       daysLeft: endOn ? warrantyDaysLeft(endOn, today) : null,
       certificates: certificates.map((row) => ({
         id: row.id,

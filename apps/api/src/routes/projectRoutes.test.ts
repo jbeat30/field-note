@@ -541,6 +541,35 @@ describe('목록·조회', () => {
   });
 });
 
+describe('목록 경고', () => {
+  it('진행 중이면서 종료 예정일이 지난 프로젝트에 경고가 붙고 경고만 걸러 볼 수 있다', async () => {
+    const instance = app();
+    const { client, body } = await setup(instance);
+    const late = (await client.create({ ...body, name: '지연 공사', plannedEnd: '2026-10-05' }))
+      .body.id as string;
+    const fine = (await client.create({ ...body, name: '정상 공사' })).body.id as string;
+    const planned = (await client.create({ ...body, name: '예정 공사', plannedEnd: '2026-10-05' }))
+      .body.id as string;
+
+    for (const id of [late, fine]) {
+      await client.transition(id, { toStatus: 'IN_PROGRESS', effectiveOn: '2026-10-01' });
+    }
+
+    const items = projectsResponseSchema.parse((await client.list()).body).items;
+    const warningsOf = (id: string) => items.find((item) => item.id === id)?.warnings;
+
+    expect(warningsOf(late)).toEqual(['OVERDUE']);
+    expect(warningsOf(fine)).toEqual([]);
+    // 아직 시작하지 않은 프로젝트는 경고가 없다
+    expect(warningsOf(planned)).toEqual([]);
+
+    const warnedOnly = projectsResponseSchema.parse((await client.list('?hasWarning=true')).body);
+
+    expect(warnedOnly.items.map((item) => item.id)).toEqual([late]);
+    expect(warnedOnly.total).toBe(1);
+  });
+});
+
 describe('수정', () => {
   it('보낸 항목만 바꾸고 null로 비우며 코드·상태는 바꿀 수 없다', async () => {
     const instance = app();

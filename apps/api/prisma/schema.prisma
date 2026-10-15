@@ -612,15 +612,20 @@ enum WorkUnitMode {
 
 // 회사 설정 (회사당 한 행, 행이 없으면 기본값으로 동작). 저장은 항상 분 단위라 기준을 바꿔도 과거 기록은 변하지 않음
 model CompanySettings {
-  companyId           String       @id @map("company_id") @db.Uuid
+  companyId             String       @id @map("company_id") @db.Uuid
   // 하루 기준시간(분). 공수 1.0에 해당
-  standardWorkMinutes Int          @default(480) @map("standard_work_minutes")
+  standardWorkMinutes   Int          @default(480) @map("standard_work_minutes")
   // MM(맨먼스) 계산에 쓰는 월 기준일수
-  monthlyWorkDays     Float        @default(26) @map("monthly_work_days")
-  workUnitMode        WorkUnitMode @default(RATIO) @map("work_unit_mode")
-  createdAt           DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
-  updatedAt           DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
-  company             Company      @relation(fields: [companyId], references: [id])
+  monthlyWorkDays       Float        @default(26) @map("monthly_work_days")
+  workUnitMode          WorkUnitMode @default(RATIO) @map("work_unit_mode")
+  // 경고 기준(서비스 기획서 §10.4)과 보증 기본 기간(§10.6)
+  burnWarnPercent       Int          @default(80) @map("burn_warn_percent")
+  burnLimitPercent      Int          @default(100) @map("burn_limit_percent")
+  aheadGapPercent       Int          @default(20) @map("ahead_gap_percent")
+  warrantyDefaultMonths Int          @default(12) @map("warranty_default_months")
+  createdAt             DateTime     @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt             DateTime     @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company               Company      @relation(fields: [companyId], references: [id])
 
   @@map("company_settings")
 }

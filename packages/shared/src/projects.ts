@@ -1,5 +1,7 @@
 import { z } from 'zod';
 
+import { projectWarningTypeSchema } from './projectWarnings';
+
 // 프로젝트 (서비스 기획서 §10.2, §10.3). 계약 금액은 다루지 않는다
 export const PROJECT_STATUSES = [
   'PLANNED',
@@ -145,8 +147,15 @@ export const projectDetailSchema = projectSummarySchema.extend({
 
 export type ProjectDetail = z.infer<typeof projectDetailSchema>;
 
+// 목록의 한 줄: 요약에 경고(진행 중 프로젝트만 해당)를 더한다
+export const projectListItemSchema = projectSummarySchema.extend({
+  warnings: z.array(projectWarningTypeSchema),
+});
+
+export type ProjectListItem = z.infer<typeof projectListItemSchema>;
+
 export const projectsResponseSchema = z.object({
-  items: z.array(projectSummarySchema),
+  items: z.array(projectListItemSchema),
   // 조건에 맞는 전체 건수 (쪽 수 계산용)
   total: z.number().int().min(0),
   page: z.number().int().min(1),
@@ -192,6 +201,8 @@ export const projectListQuerySchema = z.object({
   q: z.string().trim().max(PROJECT_NAME_MAX_LENGTH).optional(),
   // 현장명 검색 (부분 일치)
   site: z.string().trim().max(PROJECT_SITE_NAME_MAX_LENGTH).optional(),
+  // 'true'면 경고가 있는 진행·중단 프로젝트만 (회사별 경고 기준을 따름)
+  hasWarning: z.enum(['true']).optional(),
   // 정렬 기준과 방향 (기준을 안 주면 최근 등록 내림차순, 방향을 안 주면 최근 등록은 내림·나머지는 오름)
   sortBy: projectSortKeySchema.optional(),
   sortDir: sortDirectionSchema.optional(),

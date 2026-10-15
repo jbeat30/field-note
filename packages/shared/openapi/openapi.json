@@ -2226,6 +2226,349 @@
         }
       }
     },
+    "/api/v1/company/rules": {
+      "get": {
+        "summary": "회사 경고 기준·보증 기본 기간 조회 (저장한 적이 없으면 기본값)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "burnWarnPercent": {
+                      "type": "integer",
+                      "minimum": 50,
+                      "maximum": 150
+                    },
+                    "burnLimitPercent": {
+                      "type": "integer",
+                      "minimum": 60,
+                      "maximum": 200
+                    },
+                    "aheadGapPercent": {
+                      "type": "integer",
+                      "minimum": 5,
+                      "maximum": 60
+                    },
+                    "warrantyDefaultMonths": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 120
+                    }
+                  },
+                  "required": [
+                    "burnWarnPercent",
+                    "burnLimitPercent",
+                    "aheadGapPercent",
+                    "warrantyDefaultMonths"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      },
+      "put": {
+        "summary": "회사 경고 기준·보증 기본 기간 변경 (공수 소진율 경고·한도, 진행률 간격, 보증 기본 개월 수)",
+        "security": [
+          {
+            "sessionCookie": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "type": "object",
+                "properties": {
+                  "burnWarnPercent": {
+                    "type": "integer",
+                    "minimum": 50,
+                    "maximum": 150
+                  },
+                  "burnLimitPercent": {
+                    "type": "integer",
+                    "minimum": 60,
+                    "maximum": 200
+                  },
+                  "aheadGapPercent": {
+                    "type": "integer",
+                    "minimum": 5,
+                    "maximum": 60
+                  },
+                  "warrantyDefaultMonths": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 120
+                  }
+                },
+                "required": [
+                  "burnWarnPercent",
+                  "burnLimitPercent",
+                  "aheadGapPercent",
+                  "warrantyDefaultMonths"
+                ]
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "burnWarnPercent": {
+                      "type": "integer",
+                      "minimum": 50,
+                      "maximum": 150
+                    },
+                    "burnLimitPercent": {
+                      "type": "integer",
+                      "minimum": 60,
+                      "maximum": 200
+                    },
+                    "aheadGapPercent": {
+                      "type": "integer",
+                      "minimum": 5,
+                      "maximum": 60
+                    },
+                    "warrantyDefaultMonths": {
+                      "type": "integer",
+                      "minimum": 0,
+                      "maximum": 120
+                    }
+                  },
+                  "required": [
+                    "burnWarnPercent",
+                    "burnLimitPercent",
+                    "aheadGapPercent",
+                    "warrantyDefaultMonths"
+                  ]
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "입력 오류",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "401": {
+            "description": "로그인 필요",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "LOGIN_ID_TAKEN",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/me/devices": {
       "get": {
         "summary": "로그인 기기 목록",
@@ -8548,6 +8891,17 @@
             "schema": {
               "type": "string",
               "enum": [
+                "true"
+              ]
+            },
+            "required": false,
+            "name": "hasWarning",
+            "in": "query"
+          },
+          {
+            "schema": {
+              "type": "string",
+              "enum": [
                 "recent",
                 "name",
                 "status",
@@ -8653,6 +9007,19 @@
                           "plannedEnd": {
                             "type": "string",
                             "format": "date"
+                          },
+                          "warnings": {
+                            "type": "array",
+                            "items": {
+                              "type": "string",
+                              "enum": [
+                                "BURN_WARN",
+                                "BURN_LIMIT",
+                                "BURN_AHEAD",
+                                "OVERDUE",
+                                "BEHIND_SCHEDULE"
+                              ]
+                            }
                           }
                         },
                         "required": [
@@ -8665,7 +9032,8 @@
                           "managerId",
                           "tradeIds",
                           "plannedStart",
-                          "plannedEnd"
+                          "plannedEnd",
+                          "warnings"
                         ]
                       }
                     },

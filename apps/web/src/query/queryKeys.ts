@@ -5,6 +5,7 @@ export const queryKeys = {
   me: () => ['me', 'current', {}] as const,
   invitation: (token: string) => ['invitation', 'detail', { token }] as const,
   companySettings: () => ['company-settings', 'current', {}] as const,
+  companyRules: () => ['company-settings', 'rules', {}] as const,
   socialProviders: () => ['social-providers', 'all', {}] as const,
   socialMethods: () => ['social-methods', 'current', {}] as const,
   devices: () => ['devices', 'all', {}] as const,

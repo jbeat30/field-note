@@ -20,6 +20,7 @@ const cleanFilter = (filter: ProjectListQuery): ProjectListQuery => ({
   to: filter.to || undefined,
   q: filter.q?.trim() || undefined,
   site: filter.site?.trim() || undefined,
+  hasWarning: filter.hasWarning || undefined,
   sortBy: filter.sortBy || undefined,
   sortDir: filter.sortDir || undefined,
   page: filter.page || undefined,

@@ -737,6 +737,8 @@ const OWN_ACCOUNT_ONLY = [
   'DELETE /me/social/kakao',
   'GET /company/settings',
   'PUT /company/settings',
+  'GET /company/rules',
+  'PUT /company/rules',
   'GET /company/alert-settings',
   'PUT /company/alert-settings',
   // 알림 숨기기: 다른 회사의 ID를 받지 않고 자기 회사의 알림 키만 남긴다 (dashboardRoutes: 회사마다 따로)

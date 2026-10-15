@@ -15,6 +15,7 @@ import {
 
 import type { AssignmentService } from '../assignment/assignmentService';
 import type { PrismaClient } from '../db/client';
+import { loadRules } from '../company/companyRules';
 import { withCompany } from '../db/withCompany';
 
 export type DashboardService = {
@@ -184,6 +185,7 @@ export const createDashboardService = (
         ]);
 
         return {
+          rules: await loadRules(tx),
           projects,
           plans,
           logs,
@@ -253,6 +255,7 @@ export const createDashboardService = (
       return {
         dashboard: assembleDashboard({
           today,
+          rules: data.rules,
           projects: data.projects.map((project) => ({
             id: project.id,
             code: project.code,

@@ -19,6 +19,7 @@ import {
   workLogsResponseSchema,
   laborCostSchema,
   payRateSchema,
+  companyRulesSchema,
   payRateSummariesResponseSchema,
   payRatesResponseSchema,
   staffingCalendarSchema,
@@ -1188,6 +1189,56 @@ describe('목업 서버 계약', () => {
 
     expect(invalid.response.status).toBe(400);
     expect((await rates('0198d000-0000-7000-8000-00000000dead')).response.status).toBe(404);
+  });
+
+  it('프로젝트 목록 경고: 진행 중 프로젝트에만 붙고 hasWarning으로 걸러 본다', async () => {
+    await login();
+
+    const all = projectsResponseSchema.parse((await client.GET('/api/v1/projects')).data);
+
+    expect(all.items.every((item) => Array.isArray(item.warnings))).toBe(true);
+    expect(
+      all.items
+        .filter((item) => item.status === 'COMPLETED')
+        .every((item) => item.warnings.length === 0),
+    ).toBe(true);
+
+    const warned = projectsResponseSchema.parse(
+      (await client.GET('/api/v1/projects', { params: { query: { hasWarning: 'true' } } })).data,
+    );
+
+    expect(warned.total).toBe(all.items.filter((item) => item.warnings.length > 0).length);
+    expect(warned.items.every((item) => item.warnings.length > 0)).toBe(true);
+  });
+
+  it('회사 경고 기준: 기본값을 보여 주고 바꿔 저장하며 잘못된 값은 거부한다', async () => {
+    expect((await client.GET('/api/v1/company/rules')).response.status).toBe(401);
+
+    await login();
+
+    const rules = async () =>
+      companyRulesSchema.parse((await client.GET('/api/v1/company/rules')).data);
+
+    expect(await rules()).toEqual({
+      burnWarnPercent: 80,
+      burnLimitPercent: 100,
+      aheadGapPercent: 20,
+      warrantyDefaultMonths: 12,
+    });
+
+    const next = {
+      burnWarnPercent: 70,
+      burnLimitPercent: 95,
+      aheadGapPercent: 15,
+      warrantyDefaultMonths: 24,
+    };
+
+    expect((await client.PUT('/api/v1/company/rules', { body: next })).response.status).toBe(200);
+    expect(await rules()).toEqual(next);
+    expect(
+      (await client.PUT('/api/v1/company/rules', { body: { ...next, burnLimitPercent: 60 } }))
+        .response.status,
+    ).toBe(400);
   });
 
   it('프로젝트 인건비: 단가가 있는 공수만 금액에 넣고 없는 공수는 따로 센다', async () => {

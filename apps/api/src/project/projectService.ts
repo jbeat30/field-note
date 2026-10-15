@@ -8,6 +8,7 @@ import {
   validateProjectTransition,
   type ProjectCreate,
   type ProjectDetail,
+  type ProjectListItem,
   type ProjectListQuery,
   type ProjectPeriodChange,
   type ProjectSortKey,
@@ -22,6 +23,8 @@ import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
 import { loadRepairCounts } from '../repair/repairService';
 import { createDefaultWarranty, loadWarrantyForTransition } from '../warranty/warrantyService';
+
+import { loadProjectWarnings } from './projectWarnings';
 
 type Clock = () => Date;
 
@@ -40,7 +43,7 @@ export type ProjectService = {
   list: (
     companyId: string,
     query: ProjectListQuery,
-  ) => Promise<{ items: ProjectSummary[]; total: number; page: number; pageSize: number }>;
+  ) => Promise<{ items: ProjectListItem[]; total: number; page: number; pageSize: number }>;
   get: (companyId: string, id: string) => Promise<ProjectDetail>;
   // 등록: 코드를 자동으로 붙이고 상태는 '예정'
   create: (companyId: string, input: ProjectCreate) => Promise<ProjectDetail>;
@@ -188,6 +191,7 @@ export const createProjectService = (
       to,
       q,
       site,
+      hasWarning,
       sortBy = 'recent',
       sortDir,
       page = 1,
@@ -213,6 +217,19 @@ export const createProjectService = (
           : {}),
         siteName: site ? { contains: site, mode: 'insensitive' } : undefined,
       };
+      // 경고가 있는 프로젝트만 보려면 조건에 맞는 진행·중단 프로젝트의 경고를 먼저 계산해 그 프로젝트로 좁힌다
+      if (hasWarning) {
+        const candidates = await tx.project.findMany({
+          where: { ...where, status: { in: ['IN_PROGRESS', 'SUSPENDED'] } },
+          select: { id: true, status: true, plannedStart: true, plannedEnd: true },
+        });
+        const warned = await loadProjectWarnings(tx, candidates, now());
+
+        where.id = {
+          in: candidates.filter((item) => (warned.get(item.id) ?? []).length > 0).map((i) => i.id),
+        };
+      }
+
       const direction = sortDir ?? (sortBy === 'recent' ? 'desc' : 'asc');
       // 같은 값끼리는 최근 등록순(등록 순서 = 코드 번호 순서, id는 시간순 uuid)으로 이어 붙여 쪽을 넘겨도 순서가 흔들리지 않게 함
       const orderBy: Prisma.ProjectOrderByWithRelationInput[] = [
@@ -230,7 +247,14 @@ export const createProjectService = (
         include: INCLUDE_TRADES,
       });
 
-      return { items: rows.map(toSummary), total, page, pageSize };
+      const warnings = await loadProjectWarnings(tx, rows, now());
+
+      return {
+        items: rows.map((row) => ({ ...toSummary(row), warnings: warnings.get(row.id) ?? [] })),
+        total,
+        page,
+        pageSize,
+      };
     }),
 
   get: (companyId, id) =>

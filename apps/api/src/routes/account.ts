@@ -1,5 +1,6 @@
 import {
   LEGAL_DOCUMENT_META,
+  companyRulesSchema,
   companySettingsSchema,
   deviceParamsSchema,
   devicesResponseSchema,
@@ -16,6 +17,7 @@ import {
   passwordResetConfirmSchema,
   passwordResetParamsSchema,
   passwordResetRequestSchema,
+  type CompanyRules,
   type CompanySettings,
   type EmailChange,
   type PasswordChange,
@@ -385,6 +387,34 @@ export const registerAccountRoutes = (
     },
     companySettings
       ? async ({ auth, body }) => companySettings.save(auth!.companyId, body as CompanySettings)
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'get',
+      path: '/company/rules',
+      summary: '회사 경고 기준·보증 기본 기간 조회 (저장한 적이 없으면 기본값)',
+      auth: 'required',
+      response: { status: 200, schema: companyRulesSchema },
+    },
+    companySettings
+      ? async ({ auth }) => companySettings.getRules(auth!.companyId)
+      : notImplemented,
+  );
+
+  add(
+    {
+      method: 'put',
+      path: '/company/rules',
+      summary:
+        '회사 경고 기준·보증 기본 기간 변경 (공수 소진율 경고·한도, 진행률 간격, 보증 기본 개월 수)',
+      auth: 'required',
+      request: { body: companyRulesSchema },
+      response: { status: 200, schema: companyRulesSchema },
+    },
+    companySettings
+      ? async ({ auth, body }) => companySettings.saveRules(auth!.companyId, body as CompanyRules)
       : notImplemented,
   );
 
