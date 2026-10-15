@@ -3,6 +3,7 @@ import {
   projectCompletionSummarySchema,
   transitionNoticesSchema,
 } from '@field-note/shared';
+import ExcelJS from 'exceljs';
 import request from 'supertest';
 
 import { createApp } from '../app';
@@ -128,6 +129,15 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
     notices: (projectId: string, to: string) =>
       get(`/projects/${projectId}/transition-notices?to=${to}`),
     summary: (projectId: string) => get(`/projects/${projectId}/summary`),
+    downloadSummary: (projectId: string) =>
+      get(`/projects/${projectId}/summary.xlsx`)
+        .buffer(true)
+        .parse((res, callback) => {
+          const chunks: Buffer[] = [];
+
+          res.on('data', (chunk: Buffer) => chunks.push(chunk));
+          res.on('end', () => callback(null, Buffer.concat(chunks)));
+        }),
     saveLog: (projectId: string, date: string, body: object) =>
       send('put', `/projects/${projectId}/work-logs/${date}`, body),
     updateDocument: (id: string, body: object) => send('patch', `/documents/${id}`, body),
@@ -392,6 +402,68 @@ describe('프로젝트 요약', () => {
     expect(work.byCategory.map((row) => row.minutes)).toEqual([960, 360]);
     expect(changeWorks).toMatchObject({ minutes: 480, workLogCount: 1 });
     expect(afterService).toEqual({ minutes: 120, workLogCount: 1 });
+  });
+
+  it('요약을 엑셀로 내려받으면 시트별로 같은 내용이 들어가고 내보낸 기록이 남는다', async () => {
+    const { client, project, worker, categories } = await setup();
+
+    await client.saveLog(project, '2026-10-05', {
+      status: 'SAVED',
+      content: '작업',
+      entries: [{ employeeId: worker, categoryId: categories[0]!.id, minutes: 480 }],
+    });
+
+    const res = await client.downloadSummary(project);
+
+    expect(res.status).toBe(200);
+    expect(res.headers['content-type']).toContain('spreadsheetml.sheet');
+    expect(
+      decodeURIComponent(String(res.headers['content-disposition']).split("UTF-8''")[1]!),
+    ).toMatch(/^프로젝트요약_\d{4}-\d{3}\.xlsx$/);
+
+    const book = new ExcelJS.Workbook();
+
+    await book.xlsx.load(res.body as never);
+
+    const rowsOf = (name: string) =>
+      book
+        .getWorksheet(name)!
+        .getSheetValues()
+        .slice(1)
+        .map((row) => (row as unknown[]).slice(1));
+
+    expect(book.worksheets.map((sheet) => sheet.name)).toEqual([
+      '요약',
+      '인원별 공수',
+      '작업 구분별 공수',
+      '쓴 자재',
+      '변경·추가 작업',
+    ]);
+    expect(rowsOf('인원별 공수')).toEqual([
+      ['이름', '일한 날 수', '공수 (MD)'],
+      ['김작업', 1, 1],
+    ]);
+    expect(rowsOf('요약')).toContainEqual(['총 공수 (MD)', 1]);
+
+    const { rows } = await db.ownerPool.query(
+      `SELECT detail, project_id FROM audit_logs WHERE action = 'REPORT_EXPORTED' AND detail->>'kind' = 'PROJECT_SUMMARY_XLSX'`,
+    );
+
+    expect(rows).toHaveLength(1);
+    expect(rows[0].project_id).toBe(project);
+  });
+
+  it('요약 엑셀은 로그인 없이는 401, 없는 프로젝트는 404다', async () => {
+    const { instance, client } = await setup();
+
+    expect(
+      (
+        await request(instance).get(
+          '/api/v1/projects/0198d000-0000-7000-8000-00000000dead/summary.xlsx',
+        )
+      ).status,
+    ).toBe(401);
+    expect((await client.downloadSummary('0198d000-0000-7000-8000-00000000dead')).status).toBe(404);
   });
 
   it('자재 현황과 변경·추가 작업 목록, 최신 진행률이 들어간다', async () => {

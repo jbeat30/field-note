@@ -622,6 +622,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'get',
       `/projects/${a.projectId}/daily-reports.xlsx?from=${DAY}&to=${DAY}`,
     ],
+    ['GET /projects/{id}/summary.xlsx', 'get', `/projects/${a.projectId}/summary.xlsx`],
     ['GET /search', 'get', `/search?q=A&projectId=${a.projectId}`],
     ['GET /documents/{id}', 'get', `/documents/${a.documentId}`],
     ['PATCH /documents/{id}', 'patch', `/documents/${a.documentId}`, { title: '침투' }],

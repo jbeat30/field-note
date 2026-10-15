@@ -172,6 +172,8 @@ export const auditSummary = (action: AuditAction, detail: unknown): string | nul
     case 'REPORT_EXPORTED':
       if (field(detail, 'kind') === 'MONTHLY_HOURS_XLSX') {
         parts.push('월 공수표 엑셀', field(detail, 'month'));
+      } else if (field(detail, 'kind') === 'PROJECT_SUMMARY_XLSX') {
+        parts.push('프로젝트 요약 엑셀');
       } else {
         parts.push(
           '작업일보 엑셀',

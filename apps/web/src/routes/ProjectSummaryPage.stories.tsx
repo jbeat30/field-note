@@ -1,5 +1,5 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, within } from 'storybook/test';
+import { expect, fn, userEvent, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
@@ -81,6 +81,25 @@ export const Default: Story = {
     ).toBeInTheDocument();
     await expect(
       sheet.getByText(/안전·검사, 계약·공문 분류 중 요약에 넣기로 고른 문서/),
+    ).toBeInTheDocument();
+  },
+};
+
+// 엑셀 내려받기: 파일 이름을 알려 주고 내보낸 기록이 남는다는 안내가 함께 보인다
+export const ExportDownloads: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    // 실제 파일 저장 창을 열지 않도록 주소 만들기를 가로챔
+    URL.createObjectURL = fn(() => 'blob:mock');
+    URL.revokeObjectURL = fn();
+    HTMLAnchorElement.prototype.click = fn();
+
+    await canvas.findByRole('article', { name: '프로젝트 요약' });
+    await userEvent.click(canvas.getByRole('button', { name: '엑셀 내려받기' }));
+
+    await expect(
+      await canvas.findByText(/프로젝트요약_2026-001\.xlsx 파일을 내려받았습니다/),
     ).toBeInTheDocument();
   },
 };

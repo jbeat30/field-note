@@ -1,4 +1,5 @@
 import {
+  REPORT_XLSX_CONTENT_TYPE,
   selectSummaryDocuments,
   selectSummaryPhotos,
   evaluateTransitionNotices,
@@ -114,6 +115,26 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
         plannedEnd: project.plannedEnd,
         today: todayInSeoul(new Date()),
       }),
+    });
+  }),
+
+  http.get('/api/v1/projects/:id/summary.xlsx', async ({ params }) => {
+    await mockDelay(300);
+
+    const account = getCurrentAccount();
+
+    if (!account) return apiError('UNAUTHORIZED');
+
+    const project = getProjects(account).find((item) => item.id === params.id);
+
+    if (!project) return apiError('NOT_FOUND');
+
+    // 서버와 같은 파일 이름 규칙. 내용은 자리 파일 (실제 엑셀 서식은 서버가 만든다)
+    return new HttpResponse(new Uint8Array([0x50, 0x4b, 0x03, 0x04]), {
+      headers: {
+        'Content-Type': REPORT_XLSX_CONTENT_TYPE,
+        'Content-Disposition': `attachment; filename*=UTF-8''${encodeURIComponent(`프로젝트요약_${project.code}.xlsx`)}`,
+      },
     });
   }),
 

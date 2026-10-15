@@ -67,6 +67,15 @@ export const downloadReportXlsx = (projectId: string, from: string, to: string) 
   );
 
 /**
+ * @description 프로젝트 요약을 엑셀로 내려받음 (요약과 같은 내용). 내보내기는 서버에 기록으로 남는다
+ * @param projectId 프로젝트 ID
+ * @returns 내려받은 파일 이름
+ * @throws 서버 오류일 때 사유와 함께
+ */
+export const downloadSummaryXlsx = (projectId: string) =>
+  downloadXlsx(`/api/v1/projects/${projectId}/summary.xlsx`, '프로젝트요약.xlsx');
+
+/**
  * @description 월 공수표를 엑셀로 내려받음 (급여·정산 담당에게 전달하는 용도). 내보내기는 서버에 기록으로 남는다
  * @param month YYYY-MM
  * @returns 내려받은 파일 이름
