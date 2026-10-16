@@ -40,4 +40,39 @@ test('진행률 기록부터 완료·보증·보수 요청까지 프로젝트 �
       '완료',
     );
   });
+
+  await test.step('보증을 설정하면 보증 기간이 정해진다', async () => {
+    await page.goto(`/projects/${projectId}/warranty`);
+
+    const form = page.getByRole('form', { name: '보증 설정' });
+
+    await form.getByLabel('보증 기간 (개월)').fill('12');
+    await form.getByRole('button', { name: '보증 설정 저장' }).click();
+    await expect(page.getByText('보증 설정을 저장했습니다')).toBeVisible();
+  });
+
+  await test.step('보증 시작으로 바꾸면 보증 중 상태가 된다', async () => {
+    await page.goto(`/projects/${projectId}/overview`);
+    await page.getByRole('button', { name: '보증 시작' }).click();
+
+    const form = page.getByRole('form', { name: '보증 시작 확인' });
+
+    await form.getByLabel('보증 시작일').fill(seoulDate(0));
+    await form.getByLabel('프로젝트 요약을 확인했습니다').check();
+    await form.getByRole('button', { name: '확인', exact: true }).click();
+    await expect(page.getByText('현재 상태').locator('xpath=following-sibling::dd[1]')).toHaveText(
+      '보증 중',
+    );
+  });
+
+  await test.step('보수 요청을 접수하면 목록에 나타난다', async () => {
+    await page.goto(`/projects/${projectId}/repairs`);
+
+    const form = page.getByRole('form', { name: '보수 요청 접수' });
+
+    await form.getByLabel('요청자').fill('E2E 관리사무소');
+    await form.getByLabel('요청 내용').fill('E2E 외장 패널 틈새 누수');
+    await form.getByRole('button', { name: '접수하기' }).click();
+    await expect(page.getByText('E2E 외장 패널 틈새 누수')).toBeVisible();
+  });
 });
