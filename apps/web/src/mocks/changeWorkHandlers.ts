@@ -57,7 +57,7 @@ export const resetMockChangeWorks = () => {
 // 회사 구분 값 (회사가 없는 가입 직후 계정은 계정 단위로 나눔)
 const scopeOf = (account: MockAccount) => account.companyId ?? account.loginId;
 
-// 더미 변경·추가 작업은 DB 시드와 같은 원본을 쓴다 (프로젝트 코드로 연결)
+// 더미 변경·추가 작업은 DB 시드와 같은 원본을 씀 (프로젝트 코드로 연결)
 const seed = (account: MockAccount) => {
   if (seeded.has(scopeOf(account))) return;
 
@@ -162,7 +162,7 @@ export const createChangeWorkHandlers = ({ apiError, parseBody }: Helpers) => {
       issues.map((issue) => ({ path: ['query', ...issue.path].join('.'), message: issue.message })),
     );
 
-  // 프로젝트 상태에 따라 막히는지 (§10.3)
+  // 프로젝트 상태에 따라 막히는지
   const projectCheck = (
     account: MockAccount,
     projectId: string,

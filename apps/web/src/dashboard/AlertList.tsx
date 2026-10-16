@@ -31,7 +31,7 @@ type Entry =
   | { type: 'single'; item: DashboardAlertItem }
   | { type: 'group'; kind: AlertKind; items: DashboardAlertItem[] };
 
-// 같은 종류가 많으면 묶는다 (급한 것이 먼저라는 순서는 첫 항목 위치로 유지)
+// 같은 종류가 많으면 묶음 (급한 것이 먼저라는 순서는 첫 항목 위치로 유지)
 const toEntries = (alerts: readonly DashboardAlertItem[]): Entry[] => {
   const counts = new Map<AlertKind, number>();
 

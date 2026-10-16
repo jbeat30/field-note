@@ -42,7 +42,7 @@ export const Default: Story = {
   },
 };
 
-// 열 머리를 누르면 정렬된다 (일한 시간 합계 많은 순으로 보려면 두 번)
+// 열 머리를 누르면 정렬됨 (일한 시간 합계 많은 순으로 보려면 두 번)
 export const SortByHours: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -58,7 +58,7 @@ export const SortByHours: Story = {
   },
 };
 
-// 달력에서 날짜 칸에 그날 일한 인원·시간이 보이고, 눌러서 그날 작업 화면으로 간다 (기록이 있는 9월로 시작)
+// 달력에서 날짜 칸에 그날 일한 인원·시간이 보이고, 눌러서 그날 작업 화면으로 감 (기록이 있는 9월로 시작)
 export const CalendarShowsWorkers: Story = {
   parameters: {
     router: {

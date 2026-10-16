@@ -30,7 +30,7 @@ type ColumnMeta = {
 
 // 정렬(머리 글자를 누르면 오름→내림→원래 순서)과 쪽 나누기를 지원하는 목록 표, 라이브러리: TanStack Table
 // 두 가지 방식 지원, features는 모듈 값으로 고정해 렌더마다 재생성 방지
-//  - 서버 방식(`server`를 넘김): 정렬·쪽 나누기를 서버가 하므로 표는 상태만 들고, 바뀌면 부모가 서버에 다시 조회한다 (프로젝트처럼 많아질 수 있는 목록)
+//  - 서버 방식(`server`를 넘김): 정렬·쪽 나누기를 서버가 하므로 표는 상태만 들고, 바뀌면 부모가 서버에 다시 조회함 (프로젝트처럼 많아질 수 있는 목록)
 //  - 화면 방식(`server` 없음): 받아 둔 전체 줄을 표가 직접 정렬·쪽 나눔 (직원처럼 회사당 상한이 정해진 목록)
 export const dataTableFeatures = tableFeatures({
   columnMeta: metaHelper<ColumnMeta>(),

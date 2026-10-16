@@ -132,7 +132,7 @@ const assertClient = async (tx: Prisma.TransactionClient, id: string, currentId:
   }
 };
 
-// 담당자는 같은 회사의 직원이며 퇴사한 직원은 새로 맡길 수 없다 (이미 맡고 있다면 유지)
+// 담당자는 같은 회사의 직원이며 퇴사한 직원은 새로 맡길 수 없음 (이미 맡고 있다면 유지)
 const assertManager = async (
   tx: Prisma.TransactionClient,
   id: string,
@@ -328,7 +328,7 @@ export const createProjectService = (
         throw new ProjectError('NOT_FOUND');
       }
 
-      // 상태별 수정 제한 (서비스 기획서 §10.3): 종료·취소는 수정 불가, 보증 중은 담당자·메모만
+      // 상태별 수정 제한: 종료·취소는 수정 불가, 보증 중은 담당자·메모만
       const allowed = allowedProjectFields(current.status);
 
       if (allowed !== 'all') {
@@ -375,7 +375,7 @@ export const createProjectService = (
       const periodReason = input.periodChangeReason?.trim() || null;
 
       if (periodChanged) {
-        // 시작한 뒤에 기간을 바꿀 때는 왜 바꾸는지 남겨야 함 (연장·단축 기록, 서비스 기획서 §10.2)
+        // 시작한 뒤에 기간을 바꿀 때는 왜 바꾸는지 남겨야 함 (연장·단축 기록)
         if (periodChangeNeedsReason(current.status) && !periodReason) {
           throw invalid(
             'body.periodChangeReason',
@@ -383,7 +383,7 @@ export const createProjectService = (
           );
         }
 
-        // 취소하지 않은 투입이 새 기간 밖으로 나가면 거부 (프로젝트 기간 밖의 투입은 있을 수 없음, §9.4)
+        // 취소하지 않은 투입이 새 기간 밖으로 나가면 거부 (프로젝트 기간 밖의 투입은 있을 수 없음)
         const outside = await tx.projectAssignment.count({
           where: {
             projectId: id,
@@ -524,7 +524,7 @@ export const createProjectService = (
         },
       });
 
-      // 처음 보증 중이 될 때 보증 설정이 없으면 기본값(실제 완료일 기준)으로 종료 예정일을 계산해 둔다 (§10.3)
+      // 처음 보증 중이 될 때 보증 설정이 없으면 기본값(실제 완료일 기준)으로 종료 예정일을 계산해 둠
       if (input.toStatus === 'WARRANTY' && !warranty.exists && current.actualEnd) {
         await createDefaultWarranty(tx, companyId, userId, id, fromDate(current.actualEnd));
       }

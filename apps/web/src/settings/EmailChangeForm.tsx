@@ -1,4 +1,8 @@
-import { emailVerifyRequestSchema, type EmailVerifyRequest } from '@field-note/shared';
+import {
+  emailVerifyRequestSchema,
+  type EmailVerifyRequest,
+  VALIDATION_MESSAGES,
+} from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -14,7 +18,7 @@ import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 
 const requestSchema = z.object({
-  newEmail: z.email('올바른 이메일 주소를 입력해 주세요').max(254),
+  newEmail: z.email(VALIDATION_MESSAGES.required('올바른 이메일 주소')).max(254),
   currentPassword: z.string(),
 });
 
@@ -93,7 +97,7 @@ const CodeStep = ({
   );
 };
 
-// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 주소를 인증해야 반영 (§6.7)
+// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 주소를 인증해야 반영
 export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: boolean }) => {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isChanged, setChanged] = useState(false);
@@ -112,7 +116,7 @@ export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: bool
     setChanged(false);
 
     if (needsPassword && !currentPassword) {
-      setError('currentPassword', { message: '현재 비밀번호를 입력해 주세요' });
+      setError('currentPassword', { message: VALIDATION_MESSAGES.required('현재 비밀번호') });
 
       return;
     }
@@ -128,7 +132,7 @@ export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: bool
       if (code === 'CURRENT_PASSWORD_INVALID') {
         setError('currentPassword', { message: getErrorMessage(error) });
       } else if (code === 'VALIDATION_ERROR') {
-        setError('newEmail', { message: '이미 사용 중이거나 현재와 같은 이메일입니다' });
+        setError('newEmail', { message: VALIDATION_MESSAGES.EMAIL_TAKEN_OR_SAME });
       } else {
         setError('root', { message: getErrorMessage(error) });
       }

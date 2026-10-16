@@ -10,7 +10,7 @@ type Clock = () => Date;
 
 export const CLOSURE_NOTICE_QUEUE = 'closure-notice.send';
 
-// 해지 요청 후 삭제까지의 유예 기간 (서비스 기획서 §6.5)
+// 해지 요청 후 삭제까지의 유예 기간
 export const CLOSURE_GRACE_MS = 14 * 24 * 60 * 60 * 1000;
 
 export class ClosureError extends Error {

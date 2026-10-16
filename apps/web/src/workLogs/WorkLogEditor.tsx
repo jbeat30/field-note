@@ -176,7 +176,7 @@ type SaveResult = {
 };
 
 /**
- * @description 작업 내역 일괄 입력 폼: 투입 직원 목록에서 작업 구분·공수를 한 번에 정하고 공통 내용을 한 번 입력한다 (서비스 기획서 §9.3)
+ * @description 작업 내역 일괄 입력 폼: 투입 직원 목록에서 작업 구분·공수를 한 번에 정하고 공통 내용을 한 번 입력함
  * @param props 프로젝트·날짜·기존 작업 내역과 선택 목록
  */
 export const WorkLogEditor = ({
@@ -193,7 +193,7 @@ export const WorkLogEditor = ({
 }: Props) => {
   const queryClient = useQueryClient();
   const save = useSaveWorkLog(project.id);
-  // 작업 입력은 항상 "시간"으로 받는다 (공수 환산은 집계 화면에서만), 회사의 공수 입력 방식 설정과 무관하게 입력은 시간
+  // 작업 입력은 항상 "시간"으로 받음 (공수 환산은 집계 화면에서만), 회사의 공수 입력 방식 설정과 무관하게 입력은 시간
   const settings = { ...companySettings, workUnitMode: 'HOURS' as const };
   const employeeById = new Map(employees.map((employee) => [employee.id, employee]));
   const names = new Map(employees.map((employee) => [employee.id, employee.name]));

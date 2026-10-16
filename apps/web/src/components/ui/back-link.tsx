@@ -4,7 +4,7 @@ import { Link } from 'react-router';
 
 import { cn } from '../../lib/cn';
 
-// 상위 화면으로 돌아가는 링크: 제목 위에 두고 화면마다 같은 모양·위치로 쓴다 (터치 영역 44px)
+// 상위 화면으로 돌아가는 링크: 제목 위에 두고 화면마다 같은 모양·위치로 씀 (터치 영역 44px)
 export const BackLink = ({ className, children, ...props }: ComponentProps<typeof Link>) => (
   <Link
     className={cn(

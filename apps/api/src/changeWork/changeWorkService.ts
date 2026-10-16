@@ -139,7 +139,7 @@ const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<Chang
   };
 };
 
-// 프로젝트 상태에 따라 기록·수정이 막히는지 (§10.3)
+// 프로젝트 상태에 따라 기록·수정이 막히는지
 const assertProjectAllows = (
   status: Row['project']['status'],
   confirmed: boolean | undefined,
@@ -350,7 +350,7 @@ export const createChangeWorkService = (
           'body.confirmCompleted',
         );
 
-        // 같은 프로젝트의 삭제되지 않은 문서만 증빙으로 연결할 수 있다 (다른 회사·다른 프로젝트 문서는 없는 것으로 취급)
+        // 같은 프로젝트의 삭제되지 않은 문서만 증빙으로 연결할 수 있음 (다른 회사·다른 프로젝트 문서는 없는 것으로 취급)
         const document = await tx.document.findFirst({
           where: { id: input.documentId, projectId: current.projectId, deletedAt: null },
           select: { id: true },

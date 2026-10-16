@@ -21,7 +21,7 @@ export const detectFileType = async (body: Buffer): Promise<DetectedType | null>
 };
 
 /**
- * @description 이미지 썸네일 생성 (WebP, 회전 정보 반영). 위치 정보 등 메타데이터는 썸네일에 넣지 않는다 (기술 기획서 §10)
+ * @description 이미지 썸네일 생성 (WebP, 회전 정보 반영), 위치 정보 등 메타데이터는 썸네일에 넣지 않음
  * @param body 이미지 원본
  * @returns 썸네일 이미지 (이미지로 열 수 없으면 null)
  */

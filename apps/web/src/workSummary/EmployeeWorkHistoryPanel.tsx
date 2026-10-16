@@ -7,7 +7,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 import { formatWork } from './formatWork';
 import { useEmployeeWorkHistory } from './useWorkSummary';
 
-// 직원 카드의 투입 이력: 프로젝트별 투입 기간·일수·총 공수와 이번 달·올해 공수 (서비스 기획서 §8.5), 저장된 작업 내역만 반영
+// 직원 카드의 투입 이력: 프로젝트별 투입 기간·일수·총 공수와 이번 달·올해 공수, 저장된 작업 내역만 반영
 export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string }) => {
   const history = useEmployeeWorkHistory(employeeId);
   const settings = useCompanySettings();

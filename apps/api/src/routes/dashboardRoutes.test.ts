@@ -375,7 +375,7 @@ describe('GET /dashboard', () => {
       lastDate: '2026-10-07',
       projectNames: ['A동', 'B동'],
     });
-    // 이번 주 일한 시간과 일한 사람이 수치 줄에 모인다 (5일 중 하루 8시간, 둘째·셋째 날 하루 8시간 = 32시간)
+    // 이번 주 일한 시간과 일한 사람이 수치 줄에 모임 (5일 중 하루 8시간, 둘째·셋째 날 하루 8시간 = 32시간)
     expect(result.dashboard.stats.weekMinutes).toBe(480 + 480 + 480);
     expect(result.dashboard.week).toMatchObject({ workingCount: 1, idleCount: 2 });
     expect(result.dashboard.activeProjects.find((item) => item.id === a)).toMatchObject({

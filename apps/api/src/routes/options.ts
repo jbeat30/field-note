@@ -9,6 +9,7 @@ import {
   type OptionCreate,
   type OptionReorder,
   type OptionUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { OptionError, type OptionService } from '../company/optionService';
@@ -30,21 +31,21 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'DUPLICATE':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '이미 같은 이름이 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.OPTION_NAME_DUPLICATE },
       ]);
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '항목은 종류마다 100개까지 만들 수 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.OPTION_LIMIT_REACHED },
       ]);
     case 'ORDER_MISMATCH':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.ids', message: '목록이 바뀌었습니다. 새로 고친 뒤 다시 시도해 주세요' },
+        { path: 'body.ids', message: VALIDATION_MESSAGES.OPTION_LIST_CHANGED },
       ]);
   }
 };
 
 /**
- * @description 선택 목록 관리 라우트 (직종·작업 구분·공종·직원 구분). 회사 ID는 세션에서만 얻는다
+ * @description 선택 목록 관리 라우트 (직종·작업 구분·공종·직원 구분), 회사 ID는 세션에서만 획득
  * @param registry 라우트 등록소
  * @param options 선택 목록 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

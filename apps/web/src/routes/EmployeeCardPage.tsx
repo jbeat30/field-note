@@ -27,7 +27,7 @@ import { useEmployee, useUpdateEmployee } from '../employees/useEmployees';
 import { useOptions } from '../settings/useOptions';
 import { EmployeeWorkHistoryPanel } from '../workSummary/EmployeeWorkHistoryPanel';
 
-// 입력칸은 모두 문자열로 다루고, 비어 있으면 null로 보낸다 (항목 지우기)
+// 입력칸은 모두 문자열로 다루고, 비어 있으면 null로 보냄 (항목 지우기)
 type CardForm = {
   name: string;
   title: string;
@@ -68,7 +68,7 @@ const orNull = (value: string) => value.trim() || null;
 
 const TABS = ['overview', 'history', 'pay', 'credentials', 'info'] as const;
 
-// 상태 처리 한 번에 하나만 확인 단계를 연다 (퇴사·휴직은 실수로 누르기 쉬운 버튼)
+// 상태 처리 한 번에 하나만 확인 단계를 염 (퇴사·휴직은 실수로 누르기 쉬운 버튼)
 type PendingStatus = 'LEFT' | 'ON_LEAVE' | null;
 
 const CardBody = ({ employee }: { employee: EmployeeDetail }) => {

@@ -37,7 +37,7 @@ export type MonthlyService = {
   close: (companyId: string, userId: string, input: MonthlyClose) => Promise<MonthlyHours>;
   // 재오픈 (사유 필수, 이력에 남음)
   reopen: (companyId: string, userId: string, input: MonthlyReopen) => Promise<MonthlyHours>;
-  // 월 공수표 엑셀 내보내기, 급여·정산 담당 전달용이며 내보내기는 감사 기록 저장 (서비스 기획서 §7.3)
+  // 월 공수표 엑셀 내보내기, 급여·정산 담당 전달용이며 내보내기는 감사 기록 저장
   exportXlsx: (companyId: string, userId: string, month: string) => Promise<MonthlyFile>;
 };
 
@@ -51,7 +51,7 @@ const lockMonth = async (tx: Prisma.TransactionClient, companyId: string, month:
 };
 
 /**
- * @description 이 날짜의 작업 내역를 고칠 수 있는지 확인한다 (확정된 달은 재오픈해야 함). 확정 처리와 같은 잠금을 쓴다
+ * @description 이 날짜의 작업 내역을 고칠 수 있는지 확인 (확정된 달은 재오픈 필요), 확정 처리와 같은 잠금 사용
  * @param tx 회사 범위 트랜잭션
  * @param companyId 회사
  * @param workDate 작업 일자
@@ -125,7 +125,7 @@ export const createMonthlyService = (
     month: string,
   ): Promise<MonthlyHoursRow[]> => {
     const { from, to } = monthRange(month);
-    // 집계에는 저장된 작업 내역만 쓴다 (임시 저장은 제외, §9.4)
+    // 집계에는 저장된 작업 내역만 씀 (임시 저장은 제외)
     const entries = await tx.workLogEntry.findMany({
       where: { workLog: { status: 'SAVED', workDate: { gte: toDate(from), lte: toDate(to) } } },
       select: { employeeId: true, minutes: true, workLog: { select: { projectId: true } } },
@@ -273,7 +273,7 @@ export const createMonthlyService = (
             createdAt: at,
           },
         });
-        // 확정은 감사 기록으로도 남겨 기록 조회 화면에서 한꺼번에 본다 (대상은 회사)
+        // 확정은 감사 기록으로도 남겨 기록 조회 화면에서 한꺼번에 봄 (대상은 회사)
         await tx.auditLog.create({
           data: {
             companyId,

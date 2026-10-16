@@ -5,6 +5,7 @@ import {
   closureTokenParamsSchema,
   successResponseSchema,
   type ClosureRequest,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { AccountError } from '../auth/accountError';
@@ -29,11 +30,11 @@ const toAppError = (error: unknown): unknown => {
         return new AppError('NOT_FOUND');
       case 'PASSWORD_REQUIRED':
         return new AppError('VALIDATION_ERROR', [
-          { path: 'body.currentPassword', message: '현재 비밀번호를 입력해 주세요' },
+          { path: 'body.currentPassword', message: VALIDATION_MESSAGES.required('현재 비밀번호') },
         ]);
       case 'NOT_ACTIVE':
         return new AppError('VALIDATION_ERROR', [
-          { path: 'body', message: '이미 해지 요청 중인 계정입니다' },
+          { path: 'body', message: VALIDATION_MESSAGES.ACCOUNT_ALREADY_CLOSING },
         ]);
     }
   }

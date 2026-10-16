@@ -1,4 +1,4 @@
-import { passwordSchema } from '@field-note/shared';
+import { passwordSchema, VALIDATION_MESSAGES } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { useForm } from 'react-hook-form';
@@ -13,13 +13,13 @@ import { getErrorCode, getErrorMessage } from '../lib/apiError';
 
 const formSchema = z
   .object({
-    currentPassword: z.string().min(1, '현재 비밀번호를 입력해 주세요'),
+    currentPassword: z.string().min(1, VALIDATION_MESSAGES.required('현재 비밀번호')),
     newPassword: passwordSchema,
     newPasswordConfirm: z.string(),
   })
   .refine((values) => values.newPassword === values.newPasswordConfirm, {
     path: ['newPasswordConfirm'],
-    message: '비밀번호가 일치하지 않습니다',
+    message: VALIDATION_MESSAGES.PASSWORD_MISMATCH,
   });
 
 type Form = z.infer<typeof formSchema>;

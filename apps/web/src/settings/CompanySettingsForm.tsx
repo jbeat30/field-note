@@ -1,4 +1,9 @@
-import { DEFAULT_COMPANY_SETTINGS, WORK_PATTERNS, type WorkUnitMode } from '@field-note/shared';
+import {
+  DEFAULT_COMPANY_SETTINGS,
+  WORK_PATTERNS,
+  type WorkUnitMode,
+  VALIDATION_MESSAGES,
+} from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useState } from 'react';
 import { Controller, useForm, useWatch } from 'react-hook-form';
@@ -17,14 +22,14 @@ import { useCompanySettings, useSaveCompanySettings } from './useCompanySettings
 const formSchema = z.object({
   standardWorkHours: z
     .number('숫자를 입력해 주세요')
-    .min(1, '1시간 이상 입력해 주세요')
-    .max(16, '16시간 이하로 입력해 주세요')
-    .refine((hours) => Number.isInteger(hours * 2), '0.5시간 단위로 입력해 주세요'),
+    .min(1, VALIDATION_MESSAGES.WORK_HOURS_MIN)
+    .max(16, VALIDATION_MESSAGES.WORK_HOURS_MAX)
+    .refine((hours) => Number.isInteger(hours * 2), VALIDATION_MESSAGES.WORK_HOURS_STEP_HALF),
   monthlyWorkDays: z
     .number('숫자를 입력해 주세요')
-    .min(1, '1일 이상 입력해 주세요')
-    .max(31, '31일 이하로 입력해 주세요')
-    .refine((days) => Math.round(days * 10) / 10 === days, '소수 첫째 자리까지 입력해 주세요'),
+    .min(1, VALIDATION_MESSAGES.MONTH_DAYS_MIN)
+    .max(31, VALIDATION_MESSAGES.MONTH_DAYS_MAX)
+    .refine((days) => Math.round(days * 10) / 10 === days, VALIDATION_MESSAGES.DECIMAL_ONE_PLACE),
   workUnitMode: z.enum(['RATIO', 'HOURS']),
 });
 

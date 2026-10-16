@@ -25,7 +25,7 @@ const dateText = (date: string) => {
   return `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일 ${weekday}요일`;
 };
 
-// 로그인 후 첫 화면 (09 문서 §5.5): 인사·오늘 날짜와 프로젝트 등록, 검색, 수치 줄, 진행 중 프로젝트·확인할 일, 이번 주 인력,
+// 로그인 후 첫 화면: 인사·오늘 날짜와 프로젝트 등록, 검색, 수치 줄, 진행 중 프로젝트·확인할 일, 이번 주 인력
 // 보증·만료 임박, 이어서 작성할 초안
 export const HomePage = () => {
   const me = useMe();

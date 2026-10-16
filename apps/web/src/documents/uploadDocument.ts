@@ -3,6 +3,7 @@ import { getErrorDetailMessage } from '../lib/apiError';
 
 import { documentContentType } from './documentFile';
 
+import { VALIDATION_MESSAGES } from '@field-note/shared';
 export class DocumentUploadError extends Error {}
 
 // 저장소로 직접 업로드, 진행률 전달을 위해 fetch 대신 XMLHttpRequest 사용
@@ -27,14 +28,14 @@ export const putWithProgress = (
     request.onload = () =>
       request.status >= 200 && request.status < 300
         ? resolve()
-        : reject(new DocumentUploadError('저장소에 올리지 못했습니다. 다시 시도해 주세요'));
+        : reject(new DocumentUploadError(VALIDATION_MESSAGES.UPLOAD_STORAGE_FAILED_RETRY));
     request.onerror = () =>
-      reject(new DocumentUploadError('연결이 끊겼습니다. 연결을 확인하고 다시 시도해 주세요'));
+      reject(new DocumentUploadError(VALIDATION_MESSAGES.NETWORK_OFFLINE_RETRY));
     request.send(file);
   });
 
 /**
- * @description 문서 파일 한 개를 올림: 신청 → 저장소 업로드 → 완료 알림. 올라간 파일의 ID를 돌려주며 문서 등록은 호출한 쪽이 한다
+ * @description 문서 파일 한 개 업로드: 신청 → 저장소 업로드 → 완료 알림, 올라간 파일의 ID 반환, 문서 등록은 호출한 쪽 담당
  * 문서는 사진보다 적고 한 번에 한 개라 대기열 없이 진행률 표시, 실패 시 사유와 함께 재시도 유도
  * @param projectId 프로젝트 ID
  * @param file 사용자가 고른 파일
@@ -50,9 +51,7 @@ export const uploadDocumentFile = async (
   const contentType = documentContentType(file.name);
 
   if (!contentType) {
-    throw new DocumentUploadError(
-      '올릴 수 없는 파일 형식입니다 (이미지, PDF, Word·Excel·PowerPoint만 가능)',
-    );
+    throw new DocumentUploadError(VALIDATION_MESSAGES.UPLOAD_TYPE_DOCUMENT);
   }
 
   const { data: ticket, error } = await apiClient.POST('/api/v1/projects/{projectId}/files', {

@@ -289,7 +289,7 @@ export const CompleteProject: Story = {
     );
 
     await expect(await canvas.findByText("'완료' 상태로 바꿨습니다")).toBeInTheDocument();
-    // 완료하면 보증 시작·종료 처리로 이어갈 수 있다 (기본정보는 계속 수정 가능)
+    // 완료하면 보증 시작·종료 처리로 이어갈 수 있음 (기본정보는 계속 수정 가능)
     await expect(await canvas.findByRole('button', { name: '보증 시작' })).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '종료 처리' })).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: '작업 중단' })).not.toBeInTheDocument();
@@ -297,7 +297,7 @@ export const CompleteProject: Story = {
   },
 };
 
-// 완료 전에 확인할 것을 알려 주되 막지는 않는다 (§10.3)
+// 완료 전에 확인할 것을 알려 주되 막지는 않음
 export const CompleteShowsNotices: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
@@ -308,7 +308,7 @@ export const CompleteShowsNotices: Story = {
     const notices = within(await form.findByRole('list', { name: '확인할 것' }));
 
     // 더미: 임시 저장 작업 내역 1건, 진행률 40%, 협의 중 변경 작업 1건
-    await expect(notices.getByText(/임시 저장된 작업 내역가 1건/)).toBeInTheDocument();
+    await expect(notices.getByText(/임시 저장된 작업 내역이 1건/)).toBeInTheDocument();
     await expect(notices.getByText(/진행률이 40%입니다/)).toBeInTheDocument();
     await expect(notices.getByText(/협의 중인 변경·추가 작업이 1건/)).toBeInTheDocument();
 
@@ -362,7 +362,7 @@ export const SuspendedProjectHistory: Story = {
   },
 };
 
-// 완료 → 보증 중은 프로젝트 요약을 확인해야 한다 (§10.3)
+// 완료 → 보증 중은 프로젝트 요약을 확인해야 함
 export const StartWarrantyNeedsSummaryConfirm: Story = {
   parameters: { router: routerFor('옛날상가 간판 교체') },
   play: async ({ canvasElement }) => {
@@ -385,7 +385,7 @@ export const StartWarrantyNeedsSummaryConfirm: Story = {
   },
 };
 
-// 보증 기간이 남아 있으면 완료에서 바로 종료할 수 없다 (보증 기간 0개월일 때만)
+// 보증 기간이 남아 있으면 완료에서 바로 종료할 수 없음 (보증 기간 0개월일 때만)
 export const CloseFromCompletedNeedsNoWarranty: Story = {
   parameters: { router: routerFor('옛날상가 간판 교체') },
   play: async ({ canvasElement }) => {

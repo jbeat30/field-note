@@ -4,6 +4,7 @@ import {
   passwordSchema,
   type InvitationResponse,
   type LegalDocumentSummary,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
@@ -24,7 +25,7 @@ import { Input } from '../components/ui/input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 
-// 가입 1단계: 약관 동의와 만 14세 확인 (필수와 선택 구분, §5.7)
+// 가입 1단계: 약관 동의와 만 14세 확인 (필수와 선택 구분)
 type ConsentStepProps = {
   invitation: InvitationResponse;
   onNext: (consents: { documentId: string; isAgreed: boolean }[]) => void;
@@ -120,11 +121,11 @@ const accountFormSchema = z
     loginId: loginIdSchema,
     password: passwordSchema,
     passwordConfirm: z.string(),
-    email: z.email('올바른 이메일 주소를 입력해 주세요').max(254),
+    email: z.email(VALIDATION_MESSAGES.required('올바른 이메일 주소')).max(254),
   })
   .refine((values) => values.password === values.passwordConfirm, {
     path: ['passwordConfirm'],
-    message: '비밀번호가 일치하지 않습니다',
+    message: VALIDATION_MESSAGES.PASSWORD_MISMATCH,
   });
 
 type AccountForm = z.infer<typeof accountFormSchema>;

@@ -5,7 +5,7 @@ import { useDraftStore } from '../stores/draftStore';
 import { parseDraft, serializeDraft } from './formDraft';
 
 /**
- * @description 초안 저장소(IndexedDB)를 읽어 오는 일이 끝났는지. 끝나기 전에 폼을 그리면 저장된 초안을 놓치므로 화면이 이 값을 기다린다
+ * @description 초안 저장소(IndexedDB) 읽기 완료 여부, 끝나기 전에 폼을 그리면 저장된 초안을 놓치므로 화면이 이 값을 대기
  * @returns 읽기가 끝났으면 true
  */
 export const useDraftHydrated = () =>
@@ -34,7 +34,7 @@ type Options<T> = {
 };
 
 /**
- * @description 폼 입력을 기기에 자동 임시 저장하고 다시 열면 복구. 쓰는 동안 잠깐 멈추면(기본 0.6초) 저장하고, 화면을 숨기거나 닫을 때는 바로 저장한다.
+ * @description 폼 입력의 기기 자동 임시 저장과 재오픈 시 복구, 입력이 잠깐(기본 0.6초) 멈추면 저장, 화면을 숨기거나 닫을 때는 즉시 저장
  * 서버에 저장하면 `clear`로 초안 삭제
  * @param options 저장 키, 서버 버전, 비교 기준
  * @returns 저장된 초안 상태·값, 저장·삭제 함수
