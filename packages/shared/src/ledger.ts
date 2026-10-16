@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 지출·수입 기록 (08 문서 §6): 프로젝트에서 나간 돈(부자재·장비·식대 등)과 가끔 생기는 수입(고철 판매, 현장 지원 등)만 기록
 // 계약 금액·청구·입금 관리와 회계·세금·급여는 범위 밖
 export const LEDGER_KINDS = ['EXPENSE', 'INCOME'] as const;
@@ -23,9 +24,9 @@ export const LEDGER_PAGE_MAX_LIMIT = 100;
 
 export const ledgerAmountSchema = z
   .number('금액을 입력해 주세요')
-  .int('금액은 원 단위 정수로 입력해 주세요')
-  .min(1, '금액은 0보다 커야 합니다')
-  .max(LEDGER_AMOUNT_MAX, '금액이 너무 큽니다');
+  .int(VALIDATION_MESSAGES.AMOUNT_INTEGER_INPUT)
+  .min(1, VALIDATION_MESSAGES.AMOUNT_NOT_POSITIVE)
+  .max(LEDGER_AMOUNT_MAX, VALIDATION_MESSAGES.AMOUNT_TOO_LARGE);
 
 const entryFields = {
   entryDate: dateSchema,
@@ -58,7 +59,7 @@ export const ledgerEntryUpdateSchema = z
     changeWorkId: z.uuid().nullable(),
   })
   .partial()
-  .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
+  .refine((value) => Object.keys(value).length > 0, VALIDATION_MESSAGES.NO_VALUES_TO_UPDATE);
 
 export type LedgerEntryUpdate = z.infer<typeof ledgerEntryUpdateSchema>;
 
@@ -91,7 +92,7 @@ const filterFields = {
 export const ledgerSummaryQuerySchema = z
   .object(filterFields)
   .refine((value) => !value.from || !value.to || value.from <= value.to, {
-    message: '시작일은 끝일보다 늦을 수 없습니다',
+    message: VALIDATION_MESSAGES.LEDGER_START_AFTER_END,
     path: ['to'],
   });
 
@@ -111,7 +112,7 @@ export const ledgerEntryListQuerySchema = z
       .default(LEDGER_PAGE_DEFAULT_LIMIT),
   })
   .refine((value) => !value.from || !value.to || value.from <= value.to, {
-    message: '시작일은 끝일보다 늦을 수 없습니다',
+    message: VALIDATION_MESSAGES.LEDGER_START_AFTER_END,
     path: ['to'],
   });
 

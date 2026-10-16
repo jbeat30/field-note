@@ -4,6 +4,7 @@ import {
   credentialCreateSchema,
   credentialUpdateSchema,
   type EmployeeCredential,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { useState, type FormEvent } from 'react';
 
@@ -268,7 +269,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
     setRootError('');
 
     if (!typeId) {
-      setErrors({ typeId: '서류 종류를 선택해 주세요' });
+      setErrors({ typeId: VALIDATION_MESSAGES.selectRequired('서류 종류') });
       return;
     }
 

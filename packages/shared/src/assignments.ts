@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { credentialGapReasonSchema } from './credentials';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 투입 (서비스 기획서 §9.1, §9.4), 직원을 프로젝트 예정 기간 안의 일정 기간에 배정
 export const ASSIGNMENT_MAX_PLANNED_MINUTES = 6_000_000;
 
@@ -63,15 +64,15 @@ export const assignmentParamsSchema = z.object({ id: z.uuid(), assignmentId: z.u
 
 const plannedSchema = z
   .number()
-  .int('계획 공수는 분 단위 정수여야 합니다')
-  .min(1, '계획 공수는 0보다 커야 합니다')
-  .max(ASSIGNMENT_MAX_PLANNED_MINUTES, '계획 공수가 너무 큽니다');
+  .int(VALIDATION_MESSAGES.PLANNED_EFFORT_NOT_INTEGER)
+  .min(1, VALIDATION_MESSAGES.PLANNED_EFFORT_NOT_POSITIVE)
+  .max(ASSIGNMENT_MAX_PLANNED_MINUTES, VALIDATION_MESSAGES.PLANNED_EFFORT_TOO_LARGE);
 
 const confirmSchema = z.boolean().optional();
 
 export const assignmentCreateSchema = z
   .object({
-    employeeId: z.uuid('직원을 선택해 주세요'),
+    employeeId: z.uuid(VALIDATION_MESSAGES.selectRequired('직원')),
     startDate: dateSchema,
     endDate: dateSchema,
     plannedMinutes: plannedSchema.nullish(),
@@ -79,7 +80,7 @@ export const assignmentCreateSchema = z
     confirmSuspended: confirmSchema,
   })
   .refine((value) => value.startDate <= value.endDate, {
-    message: '종료일은 시작일보다 빠를 수 없습니다',
+    message: VALIDATION_MESSAGES.END_BEFORE_START,
     path: ['endDate'],
   });
 
@@ -99,10 +100,10 @@ export const assignmentUpdateSchema = z
       value.startDate !== undefined ||
       value.endDate !== undefined ||
       value.plannedMinutes !== undefined,
-    { message: '변경할 값이 없습니다' },
+    { message: VALIDATION_MESSAGES.NO_CHANGES },
   )
   .refine((value) => !value.startDate || !value.endDate || value.startDate <= value.endDate, {
-    message: '종료일은 시작일보다 빠를 수 없습니다',
+    message: VALIDATION_MESSAGES.END_BEFORE_START,
     path: ['endDate'],
   });
 
@@ -154,14 +155,14 @@ export const assignmentStatusCheck = (
       : {
           ok: false,
           path: 'confirmSuspended',
-          message: '중단 중인 프로젝트입니다. 투입하려면 확인이 필요합니다',
+          message: VALIDATION_MESSAGES.ASSIGNMENT_PAUSED_CONFIRM,
         };
   }
 
   return {
     ok: false,
     path: 'projectId',
-    message: `'${statusLabel(status)}' 상태의 프로젝트에는 투입을 바꿀 수 없습니다`,
+    message: VALIDATION_MESSAGES.ASSIGNMENT_BLOCKED_BY_STATUS(statusLabel(status)),
   };
 };
 
@@ -190,14 +191,14 @@ export const checkAssignmentPeriod = (
   project: { plannedStart: string; plannedEnd: string },
 ): RuleCheck => {
   if (startDate > endDate) {
-    return { ok: false, path: 'endDate', message: '종료일은 시작일보다 빠를 수 없습니다' };
+    return { ok: false, path: 'endDate', message: VALIDATION_MESSAGES.END_BEFORE_START };
   }
 
   if (startDate < project.plannedStart) {
     return {
       ok: false,
       path: 'startDate',
-      message: `시작일은 프로젝트 시작 예정일(${project.plannedStart}) 이후여야 합니다`,
+      message: VALIDATION_MESSAGES.ASSIGNMENT_START_BEFORE_PROJECT(project.plannedStart),
     };
   }
 
@@ -205,7 +206,7 @@ export const checkAssignmentPeriod = (
     return {
       ok: false,
       path: 'endDate',
-      message: `종료일은 프로젝트 종료 예정일(${project.plannedEnd}) 이전이어야 합니다`,
+      message: VALIDATION_MESSAGES.ASSIGNMENT_END_AFTER_PROJECT(project.plannedEnd),
     };
   }
 

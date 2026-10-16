@@ -1,15 +1,19 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 계정·설정 화면과 API가 공유하는 계약 (서비스 기획서 §5.7, §6, §9.5)
 // 회사 식별값은 내부용이므로 어떤 응답에도 담지 않음 (§5.1)
 
 // 아이디: 소문자·숫자·밑줄·하이픈 4~20자 (서비스 전체에서 유일, 대소문자 구분 없음)
 export const loginIdSchema = z
   .string()
-  .regex(/^[a-z0-9_-]{4,20}$/, '소문자·숫자·밑줄·하이픈 4~20자');
+  .regex(/^[a-z0-9_-]{4,20}$/, VALIDATION_MESSAGES.LOGIN_ID_FORMAT);
 
 // 비밀번호 정책은 §18.1 결정 전까지 최소 기준만 둠 (10~72자, bcrypt·argon2 입력 한도 고려)
-export const passwordSchema = z.string().min(10, '10자 이상').max(72, '72자 이하');
+export const passwordSchema = z
+  .string()
+  .min(10, VALIDATION_MESSAGES.PASSWORD_TOO_SHORT)
+  .max(72, VALIDATION_MESSAGES.PASSWORD_TOO_LONG);
 
 export const legalDocumentTypeSchema = z.enum(['TERMS_OF_SERVICE', 'PRIVACY_POLICY', 'MARKETING']);
 
@@ -54,7 +58,7 @@ export const signupRequestSchema = z.object({
   loginId: loginIdSchema,
   password: passwordSchema,
   email: z.email().max(254),
-  isAgeConfirmed: z.literal(true, '만 14세 이상만 가입할 수 있습니다'),
+  isAgeConfirmed: z.literal(true, VALIDATION_MESSAGES.UNDER_AGE),
   consents: z.array(z.object({ documentId: z.uuid(), isAgreed: z.boolean() })),
 });
 
@@ -70,7 +74,7 @@ export const signupResponseSchema = z.object({
 export type SignupResponse = z.infer<typeof signupResponseSchema>;
 
 export const emailVerifyRequestSchema = z.object({
-  code: z.string().regex(/^\d{6}$/, '6자리 숫자를 입력해 주세요'),
+  code: z.string().regex(/^\d{6}$/, VALIDATION_MESSAGES.required('6자리 숫자')),
 });
 
 export type EmailVerifyRequest = z.infer<typeof emailVerifyRequestSchema>;
@@ -156,7 +160,7 @@ export const socialStartRequestSchema = z.discriminatedUnion('purpose', [
   z.object({
     purpose: z.literal('signup'),
     inviteToken: z.string().min(8).max(128),
-    isAgeConfirmed: z.literal(true, '만 14세 이상만 가입할 수 있습니다'),
+    isAgeConfirmed: z.literal(true, VALIDATION_MESSAGES.UNDER_AGE),
     consents: z.array(z.object({ documentId: z.uuid(), isAgreed: z.boolean() })),
   }),
 ]);
@@ -232,7 +236,10 @@ export const companySettingsSchema = z.object({
     .number()
     .min(1)
     .max(31)
-    .refine((value) => Math.round(value * 10) / 10 === value, '소수 첫째 자리까지 입력해 주세요'),
+    .refine(
+      (value) => Math.round(value * 10) / 10 === value,
+      VALIDATION_MESSAGES.DECIMAL_ONE_PLACE,
+    ),
   workUnitMode: workUnitModeSchema,
 });
 

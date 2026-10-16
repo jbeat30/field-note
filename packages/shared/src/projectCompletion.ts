@@ -120,7 +120,7 @@ export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[]
 export const transitionNoticeMessage = (check: TransitionNotice): string => {
   switch (check.type) {
     case 'DRAFT_LOGS':
-      return `임시 저장된 작업 내역가 ${check.count}건 있습니다. 집계에는 저장된 작업 내역만 반영되니 전환 전에 저장하거나 정리해 주세요`;
+      return `임시 저장된 작업 내역이 ${check.count}건 있습니다. 집계에는 저장된 작업 내역만 반영되니 전환 전에 저장하거나 정리해 주세요`;
     case 'PROGRESS_BELOW_100':
       return check.percent === null
         ? '진행률 기록이 없습니다. 완료하기 전에 진행률을 기록해 주세요'

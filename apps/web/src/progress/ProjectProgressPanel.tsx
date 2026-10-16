@@ -5,6 +5,7 @@ import {
   roundTo,
   todayInSeoul,
   type ProjectStatus,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { ChevronRight } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -50,7 +51,7 @@ const ProgressDialog = ({
     const value = Number(percent);
 
     if (percent.trim() === '' || !Number.isInteger(value) || value < 0 || value > 100) {
-      setError('0부터 100 사이의 정수를 입력해 주세요');
+      setError(VALIDATION_MESSAGES.required('0부터 100 사이의 정수'));
       return;
     }
 

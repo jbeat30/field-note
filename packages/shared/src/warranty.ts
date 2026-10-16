@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { RuleCheck } from './assignments';
 import type { ProjectStatus } from './projects';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 보증 기간과 보증서 (서비스 기획서 §10.6): 완료 후 일정 기간 무상으로 보수하는 약속을 프로젝트별로 관리
 // 종료 예정일은 시작일 + 보증 기간으로 계산, 수정 시 사유와 이력 기록
 export const DEFAULT_WARRANTY_MONTHS = 12;
@@ -30,7 +31,7 @@ const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 const reasonSchema = z
   .string()
   .trim()
-  .max(WARRANTY_REASON_MAX_LENGTH, `사유는 ${WARRANTY_REASON_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(WARRANTY_REASON_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('사유', WARRANTY_REASON_MAX_LENGTH));
 
 /**
  * @description 날짜에 개월 수를 더함, 해당 달에 그 날이 없으면 말일로 맞춤 (1월 31일 + 1개월 = 2월 28일)
@@ -79,17 +80,17 @@ export const warrantyProjectCheck = (status: ProjectStatus): RuleCheck => {
     path: 'projectId',
     message:
       status === 'CLOSED'
-        ? '종료된 프로젝트입니다. 재오픈한 뒤 보증을 바꿀 수 있습니다'
-        : '프로젝트를 완료한 뒤에 보증을 설정할 수 있습니다',
+        ? VALIDATION_MESSAGES.WARRANTY_PROJECT_CLOSED
+        : VALIDATION_MESSAGES.WARRANTY_AFTER_COMPLETE,
   };
 };
 
 export const warrantyUpdateSchema = z.object({
   months: z
     .number()
-    .int('보증 기간은 정수로 입력해 주세요')
-    .min(0, '보증 기간은 0 이상이어야 합니다')
-    .max(WARRANTY_MONTHS_MAX, `보증 기간은 ${WARRANTY_MONTHS_MAX}개월까지 입력할 수 있습니다`),
+    .int(VALIDATION_MESSAGES.WARRANTY_MONTHS_INTEGER)
+    .min(0, VALIDATION_MESSAGES.WARRANTY_MONTHS_MIN)
+    .max(WARRANTY_MONTHS_MAX, VALIDATION_MESSAGES.WARRANTY_MONTHS_LIMIT(WARRANTY_MONTHS_MAX)),
   startBasis: warrantyStartBasisSchema,
   // 실제 완료일 기준이면 쓰지 않음 (프로젝트의 실제 완료일이 시작일)
   startOn: dateSchema.nullish(),
@@ -133,8 +134,8 @@ export const resolveWarrantyUpdate = ({
       path: 'startOn',
       message:
         input.startBasis === 'ACTUAL_END'
-          ? '실제 완료일이 없어 시작일을 정할 수 없습니다'
-          : `${WARRANTY_START_BASIS_LABELS[input.startBasis]}을 입력해 주세요`,
+          ? VALIDATION_MESSAGES.WARRANTY_NO_ACTUAL_END
+          : VALIDATION_MESSAGES.required(WARRANTY_START_BASIS_LABELS[input.startBasis]),
     };
   }
 
@@ -143,7 +144,7 @@ export const resolveWarrantyUpdate = ({
     input.months === 0 ? startOn : (input.endOn ?? computeWarrantyEnd(startOn, input.months));
 
   if (endOn < startOn) {
-    return { ok: false, path: 'endOn', message: '종료 예정일은 시작일보다 빠를 수 없습니다' };
+    return { ok: false, path: 'endOn', message: VALIDATION_MESSAGES.WARRANTY_END_BEFORE_START };
   }
 
   if ((hasRecord || overridden) && !reason) {
@@ -151,8 +152,8 @@ export const resolveWarrantyUpdate = ({
       ok: false,
       path: 'reason',
       message: overridden
-        ? '종료 예정일을 직접 바꾸는 사유를 입력해 주세요'
-        : '변경 사유를 입력해 주세요',
+        ? VALIDATION_MESSAGES.required('종료 예정일을 직접 바꾸는 사유')
+        : VALIDATION_MESSAGES.required('변경 사유'),
     };
   }
 
@@ -168,7 +169,7 @@ export const warrantyCertificateCreateSchema = z.object({
     .trim()
     .max(
       WARRANTY_ISSUER_MAX_LENGTH,
-      `발급처는 ${WARRANTY_ISSUER_MAX_LENGTH}자까지 입력할 수 있습니다`,
+      VALIDATION_MESSAGES.tooLong('발급처', WARRANTY_ISSUER_MAX_LENGTH),
     )
     .nullish(),
 });
@@ -179,7 +180,7 @@ export const warrantyCertificateUpdateSchema = warrantyCertificateCreateSchema
   .omit({ documentId: true })
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
-    message: '변경할 값이 없습니다',
+    message: VALIDATION_MESSAGES.NO_CHANGES,
   });
 
 export type WarrantyCertificateUpdate = z.infer<typeof warrantyCertificateUpdateSchema>;

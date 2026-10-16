@@ -11,6 +11,7 @@ import {
   type EmployeeFileUploadRequest,
   type FileUploadRequest,
   type FileUrlQuery,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { FileError, type FileService } from '../file/fileService';
@@ -34,11 +35,11 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('STORAGE_QUOTA_EXCEEDED');
     case 'NOT_UPLOADED':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'file', message: '파일이 아직 올라오지 않았습니다. 업로드를 마친 뒤 알려 주세요' },
+        { path: 'file', message: VALIDATION_MESSAGES.FILE_UPLOAD_NOT_COMPLETE },
       ]);
     case 'NOT_READY':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'file', message: '검사가 끝난 파일만 열 수 있습니다' },
+        { path: 'file', message: VALIDATION_MESSAGES.FILE_NOT_READY_TO_OPEN },
       ]);
   }
 };

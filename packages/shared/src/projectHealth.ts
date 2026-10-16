@@ -4,6 +4,7 @@ import { countDays } from './staffing';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 import { projectWarningTypeSchema, type ProjectWarningType } from './projectWarnings';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 일정과 진행 (서비스 기획서 §10.4): 진행률 기록, 공수 소진율, 경고
 // 경고 기준의 기본값은 기획서 결정값(공수 소진율 80% / 100%)이고 회사가 설정에서 바꿈 (`companyRulesSchema`)
 export const BURN_WARN_PERCENT = 80;
@@ -20,16 +21,16 @@ const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 export const progressRecordCreateSchema = z.object({
   percent: z
     .number()
-    .int('진행률은 정수여야 합니다')
-    .min(0, '진행률은 0 이상이어야 합니다')
-    .max(100, '진행률은 100 이하여야 합니다'),
+    .int(VALIDATION_MESSAGES.PROGRESS_NOT_INTEGER)
+    .min(0, VALIDATION_MESSAGES.PROGRESS_MIN)
+    .max(100, VALIDATION_MESSAGES.PROGRESS_MAX),
   // 비우면 서울 기준 오늘
   recordedOn: dateSchema.optional(),
   note: z
     .string()
     .trim()
-    .min(1, '메모를 비우려면 보내지 마세요')
-    .max(PROGRESS_NOTE_MAX_LENGTH, `메모는 ${PROGRESS_NOTE_MAX_LENGTH}자까지 쓸 수 있습니다`)
+    .min(1, VALIDATION_MESSAGES.OMIT_TO_CLEAR_NOTE)
+    .max(PROGRESS_NOTE_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('메모', PROGRESS_NOTE_MAX_LENGTH))
     .optional(),
 });
 
@@ -176,7 +177,7 @@ export const companyRulesSchema = z
     warrantyDefaultMonths: z.number().int().min(0).max(120),
   })
   .refine((value) => value.burnLimitPercent > value.burnWarnPercent, {
-    message: '한도 기준은 경고 기준보다 커야 합니다',
+    message: VALIDATION_MESSAGES.HEALTH_LIMIT_NOT_ABOVE_WARNING,
     path: ['burnLimitPercent'],
   });
 

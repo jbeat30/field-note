@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 직원 카드 (서비스 기획서 §8), 직원은 서비스에 로그인하지 않고 관리자가 기록
 // 주민등록번호·계좌번호는 저장 제외(급여는 단가표만, `laborCost.ts`), 생년월일·연락처는 카드(상세)에서만 제공
 export const EMPLOYEE_STATUSES = ['ACTIVE', 'ON_LEAVE', 'LEFT'] as const;
@@ -25,30 +26,30 @@ export const EMPLOYEE_MIN_DATE = '1900-01-01';
 export const employeeNameSchema = z
   .string()
   .trim()
-  .min(1, '이름을 입력해 주세요')
-  .max(EMPLOYEE_NAME_MAX_LENGTH, `이름은 ${EMPLOYEE_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .min(1, VALIDATION_MESSAGES.required('이름'))
+  .max(EMPLOYEE_NAME_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('이름', EMPLOYEE_NAME_MAX_LENGTH));
 
 const dateSchema = z.iso
   .date('날짜 형식이 올바르지 않습니다')
-  .refine((value) => value >= EMPLOYEE_MIN_DATE, '날짜가 너무 오래되었습니다');
+  .refine((value) => value >= EMPLOYEE_MIN_DATE, VALIDATION_MESSAGES.DATE_TOO_OLD);
 
 const titleSchema = z
   .string()
   .trim()
   .min(1)
-  .max(EMPLOYEE_TITLE_MAX_LENGTH, `직책은 ${EMPLOYEE_TITLE_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(EMPLOYEE_TITLE_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('직책', EMPLOYEE_TITLE_MAX_LENGTH));
 
 // 숫자·하이픈·괄호·공백·+ 만 허용 (자유 입력 대신 형식을 좁혀 이상한 값이 저장되지 않게 함)
 const phoneSchema = z
   .string()
   .trim()
   .min(1)
-  .max(EMPLOYEE_PHONE_MAX_LENGTH, `연락처는 ${EMPLOYEE_PHONE_MAX_LENGTH}자까지 입력할 수 있습니다`)
-  .regex(/^[0-9+\-() ]+$/, '연락처는 숫자와 - ( ) + 만 입력할 수 있습니다');
+  .max(EMPLOYEE_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('연락처', EMPLOYEE_PHONE_MAX_LENGTH))
+  .regex(/^[0-9+\-() ]+$/, VALIDATION_MESSAGES.PHONE_FORMAT);
 
 const memoSchema = z
   .string()
-  .max(EMPLOYEE_MEMO_MAX_LENGTH, `메모는 ${EMPLOYEE_MEMO_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(EMPLOYEE_MEMO_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('메모', EMPLOYEE_MEMO_MAX_LENGTH));
 
 // 목록·카드 공통 항목 (생년월일·연락처 제외)
 export const employeeSummarySchema = z.object({
@@ -124,7 +125,7 @@ export const employeeUpdateSchema = z
   })
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
-    message: '변경할 값이 없습니다',
+    message: VALIDATION_MESSAGES.NO_CHANGES,
   });
 
 export type EmployeeUpdate = z.infer<typeof employeeUpdateSchema>;

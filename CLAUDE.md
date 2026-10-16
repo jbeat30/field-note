@@ -5,6 +5,7 @@
 ## 규칙
 
 - 코드·주석은 jbeat-conventions 규칙을 따른다 (한국어 명사형, 마침표 없음). 서술형(`~한다`·`~이다`) 주석은 쓰지 않고 `pnpm check:comments --all`로 점검한다
+- 사용자에게 보이는 오류 문구는 `packages/shared/src/errorMessages.ts`의 상수로만 쓴다 (인라인 한글 문구는 ESLint가 막는다)
 - 의존성은 정확한 버전으로 고정하고 정식 릴리스만 쓴다 (`^` 금지, Prisma는 7.10.0, TypeScript는 6.0.3)
 - 회사 ID는 세션에서만 얻는다. 요청 본문·주소·헤더로 받지 않는다
 - 커밋 메시지는 `타입: 한국어 설명` 형식으로 사람이 쓴 것처럼 작성하고, Claude Code 안내 문구·Co-Authored-By는 넣지 않는다

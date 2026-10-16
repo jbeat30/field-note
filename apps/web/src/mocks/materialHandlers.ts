@@ -17,6 +17,7 @@ import {
   type Material,
   type MaterialRecord,
   type MaterialRecordCreate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -283,7 +284,7 @@ export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (!material || !material.isActive) {
         return apiError('VALIDATION_ERROR', [
-          { path: `${prefix}.materialId`, message: '선택할 수 없는 자재입니다' },
+          { path: `${prefix}.materialId`, message: VALIDATION_MESSAGES.MATERIAL_NOT_SELECTABLE },
         ]);
       }
     }
@@ -295,7 +296,7 @@ export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
       )
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: `${prefix}.categoryId`, message: '선택할 수 없는 작업 구분입니다' },
+        { path: `${prefix}.categoryId`, message: VALIDATION_MESSAGES.WORK_TYPE_NOT_SELECTABLE },
       ]);
     }
 
@@ -304,7 +305,7 @@ export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
       !getPartners(account).some((partner) => partner.id === input.partnerId)
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: `${prefix}.partnerId`, message: '선택할 수 없는 업체입니다' },
+        { path: `${prefix}.partnerId`, message: VALIDATION_MESSAGES.PARTNER_NOT_SELECTABLE },
       ]);
     }
 
@@ -360,7 +361,7 @@ export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (own.length >= MATERIAL_MAX_PER_COMPANY) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body', message: '자재는 회사마다 2000개까지 등록할 수 있습니다' },
+          { path: 'body', message: VALIDATION_MESSAGES.MATERIAL_LIMIT_REACHED },
         ]);
       }
 
@@ -369,7 +370,7 @@ export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (own.some((material) => material.nameKey === nameKey && material.specKey === specKey)) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.name', message: '같은 이름과 규격의 자재가 이미 있습니다' },
+          { path: 'body.name', message: VALIDATION_MESSAGES.MATERIAL_DUPLICATE },
         ]);
       }
 
@@ -407,7 +408,7 @@ export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
         )
       ) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.name', message: '같은 이름과 규격의 자재가 이미 있습니다' },
+          { path: 'body.name', message: VALIDATION_MESSAGES.MATERIAL_DUPLICATE },
         ]);
       }
 
@@ -417,7 +418,7 @@ export const createMaterialHandlers = ({ apiError, parseBody }: Helpers) => {
         [...records.values()].some((record) => record.materialId === material.id)
       ) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.unit', message: '기록이 있는 자재는 단위를 바꿀 수 없습니다' },
+          { path: 'body.unit', message: VALIDATION_MESSAGES.MATERIAL_UNIT_LOCKED },
         ]);
       }
 

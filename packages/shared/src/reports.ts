@@ -5,6 +5,7 @@ import { materialRecordKindSchema } from './materials';
 import { photoCategorySchema } from './photos';
 import { workLogStatusSchema } from './workLogs';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 작업일보 (서비스 기획서 §15.4): 한 프로젝트의 하루 작업 내용·인원·공수·자재·사진을 모아 인쇄·PDF·엑셀로 내보냄 (고객 제출용)
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
@@ -105,13 +106,13 @@ export const reportExportQuerySchema = z
       context.addIssue({
         code: 'custom',
         path: ['to'],
-        message: '끝 날짜는 시작 날짜보다 빠를 수 없습니다',
+        message: VALIDATION_MESSAGES.RANGE_END_BEFORE_START,
       });
     } else if (days > REPORT_MAX_DAYS) {
       context.addIssue({
         code: 'custom',
         path: ['to'],
-        message: `한 번에 ${REPORT_MAX_DAYS}일까지 내보낼 수 있습니다`,
+        message: VALIDATION_MESSAGES.REPORT_RANGE_LIMIT(REPORT_MAX_DAYS),
       });
     }
   });

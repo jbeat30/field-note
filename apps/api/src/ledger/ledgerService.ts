@@ -9,6 +9,7 @@ import {
   type LedgerSummary,
   type LedgerSummaryQuery,
   type OptionKind,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -101,7 +102,7 @@ const decodeCursor = (cursor: string): { entryDate: Date; id: string } => {
   } catch {
     throw new LedgerError('INVALID', {
       path: 'query.cursor',
-      message: '목록 위치가 올바르지 않습니다',
+      message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID,
     });
   }
 };
@@ -160,14 +161,14 @@ export const createLedgerService = (
     ) {
       throw new LedgerError('INVALID', {
         path: 'body.categoryId',
-        message: '선택할 수 없는 분류입니다',
+        message: VALIDATION_MESSAGES.CATEGORY_NOT_SELECTABLE,
       });
     }
 
     if (ref.partnerId && !(await tx.partner.findFirst({ where: { id: ref.partnerId } }))) {
       throw new LedgerError('INVALID', {
         path: 'body.partnerId',
-        message: '선택할 수 없는 업체입니다',
+        message: VALIDATION_MESSAGES.PARTNER_NOT_SELECTABLE,
       });
     }
 
@@ -179,7 +180,7 @@ export const createLedgerService = (
     ) {
       throw new LedgerError('INVALID', {
         path: 'body.documentId',
-        message: '이 프로젝트의 문서만 증빙으로 연결할 수 있습니다',
+        message: VALIDATION_MESSAGES.LEDGER_DOCUMENT_OTHER_PROJECT,
       });
     }
 
@@ -189,7 +190,7 @@ export const createLedgerService = (
     ) {
       throw new LedgerError('INVALID', {
         path: 'body.changeWorkId',
-        message: '이 프로젝트의 추가 공사만 연결할 수 있습니다',
+        message: VALIDATION_MESSAGES.LEDGER_CHANGE_WORK_OTHER_PROJECT,
       });
     }
   };

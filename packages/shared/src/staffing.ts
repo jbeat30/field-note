@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { employeeStatusSchema, type EmployeeStatus } from './employees';
 import { projectStatusSchema } from './projects';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 인력 배치 캘린더 (서비스 기획서 §9.7), 직원 × 날짜 표에 어느 프로젝트에 투입되는지 보여 주고,
 // 같은 날 두 프로젝트에 겹치면 경고, 휴직·퇴사 표시와 비는 사람 안내
 export const STAFFING_MAX_DAYS = 42;
@@ -40,11 +41,11 @@ export const listDates = (from: string, to: string) => {
 export const staffingCalendarQuerySchema = z
   .object({ from: dateSchema, to: dateSchema })
   .refine((value) => value.from <= value.to, {
-    message: '종료일은 시작일보다 빠를 수 없습니다',
+    message: VALIDATION_MESSAGES.END_BEFORE_START,
     path: ['to'],
   })
   .refine((value) => countDays(value.from, value.to) <= STAFFING_MAX_DAYS, {
-    message: `한 번에 ${STAFFING_MAX_DAYS}일까지 볼 수 있습니다`,
+    message: VALIDATION_MESSAGES.STAFFING_RANGE_LIMIT(STAFFING_MAX_DAYS),
     path: ['to'],
   });
 

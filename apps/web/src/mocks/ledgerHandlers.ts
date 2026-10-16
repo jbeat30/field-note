@@ -11,6 +11,7 @@ import {
   type LedgerEntry,
   type LedgerKind,
   type OptionKind,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -202,13 +203,13 @@ export const createLedgerHandlers = ({ apiError, parseBody }: Helpers) => {
       )
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.categoryId', message: '선택할 수 없는 분류입니다' },
+        { path: 'body.categoryId', message: VALIDATION_MESSAGES.CATEGORY_NOT_SELECTABLE },
       ]);
     }
 
     if (ref.partnerId && !getPartners(account).some((partner) => partner.id === ref.partnerId)) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.partnerId', message: '선택할 수 없는 업체입니다' },
+        { path: 'body.partnerId', message: VALIDATION_MESSAGES.PARTNER_NOT_SELECTABLE },
       ]);
     }
 

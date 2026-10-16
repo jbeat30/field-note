@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import type { CompanySettings } from './account';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 직원 단가표와 프로젝트 인건비 추정 (회사가 정한 범위 확장, 개발 계획 §8 결정 005)
 // 이 서비스는 급여를 계산하지 않음, 단가표 금액과 기록된 공수로 "최소 얼마가 드는지"만 추정하며
 // 4대보험·수당·퇴직금·세금은 제외
@@ -35,9 +36,9 @@ export const payRateCreateSchema = z.object({
   payType: payTypeSchema,
   amount: z
     .number()
-    .int('금액은 원 단위 정수여야 합니다')
-    .min(1, '금액은 0보다 커야 합니다')
-    .max(PAY_AMOUNT_MAX, '금액이 너무 큽니다'),
+    .int(VALIDATION_MESSAGES.AMOUNT_NOT_INTEGER)
+    .min(1, VALIDATION_MESSAGES.AMOUNT_NOT_POSITIVE)
+    .max(PAY_AMOUNT_MAX, VALIDATION_MESSAGES.AMOUNT_TOO_LARGE),
   // 이 날짜 근무분부터 적용 (과거 날짜도 가능: 늦게 알게 된 인상 반영)
   effectiveFrom: dateSchema,
 });

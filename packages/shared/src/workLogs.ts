@@ -3,6 +3,7 @@ import { z } from 'zod';
 import type { RuleCheck } from './assignments';
 import type { ProjectStatus } from './projects';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 작업 내역 (서비스 기획서 §9.2~§9.4), 프로젝트 × 날짜마다 작업 내역 한 건에 공통 내용을 쓰고,
 // 직원별·작업 구분별 공수(분)를 항목으로 부착, 공수는 항상 분 단위로 저장
 export const WORK_LOG_STATUSES = ['DRAFT', 'SAVED'] as const;
@@ -39,21 +40,21 @@ export const workLogEntrySchema = z.object({
   // 공수(분)
   minutes: z
     .number()
-    .int('공수는 분 단위 정수여야 합니다')
-    .min(1, '공수는 0보다 커야 합니다')
-    .max(WORK_LOG_MAX_ENTRY_MINUTES, '공수는 하루 24시간을 넘을 수 없습니다'),
+    .int(VALIDATION_MESSAGES.EFFORT_NOT_INTEGER)
+    .min(1, VALIDATION_MESSAGES.EFFORT_NOT_POSITIVE)
+    .max(WORK_LOG_MAX_ENTRY_MINUTES, VALIDATION_MESSAGES.EFFORT_OVER_DAY),
 });
 
 export type WorkLogEntry = z.infer<typeof workLogEntrySchema>;
 
 const entriesSchema = z
   .array(workLogEntrySchema)
-  .max(WORK_LOG_MAX_ENTRIES, `공수 항목은 ${WORK_LOG_MAX_ENTRIES}개까지 입력할 수 있습니다`)
+  .max(WORK_LOG_MAX_ENTRIES, VALIDATION_MESSAGES.WORK_LOG_ENTRY_LIMIT(WORK_LOG_MAX_ENTRIES))
   .refine(
     (entries) =>
       new Set(entries.map((entry) => `${entry.employeeId}:${entry.categoryId}`)).size ===
       entries.length,
-    '같은 직원·작업 구분 조합은 한 번만 입력할 수 있습니다',
+    VALIDATION_MESSAGES.WORK_LOG_DUPLICATE_PAIR,
   );
 
 // 저장 요청: 임시 저장은 비어 있어도 되고, 저장은 작업 내용과 공수 한 건 이상 필요 (validateWorkLogForSave)
@@ -63,14 +64,14 @@ export const workLogSaveSchema = z.object({
     .string()
     .max(
       WORK_LOG_CONTENT_MAX_LENGTH,
-      `작업 내용은 ${WORK_LOG_CONTENT_MAX_LENGTH}자까지 입력할 수 있습니다`,
+      VALIDATION_MESSAGES.tooLong('작업 내용', WORK_LOG_CONTENT_MAX_LENGTH),
     ),
   area: z
     .string()
     .trim()
     .max(
       WORK_LOG_AREA_MAX_LENGTH,
-      `작업 구역은 ${WORK_LOG_AREA_MAX_LENGTH}자까지 입력할 수 있습니다`,
+      VALIDATION_MESSAGES.tooLong('작업 구역', WORK_LOG_AREA_MAX_LENGTH),
     )
     .nullish(),
   // 날씨·특이사항
@@ -78,7 +79,7 @@ export const workLogSaveSchema = z.object({
     .string()
     .max(
       WORK_LOG_NOTES_MAX_LENGTH,
-      `특이사항은 ${WORK_LOG_NOTES_MAX_LENGTH}자까지 입력할 수 있습니다`,
+      VALIDATION_MESSAGES.tooLong('특이사항', WORK_LOG_NOTES_MAX_LENGTH),
     )
     .nullish(),
   // 변경·추가 작업, 사후 작업 표시 (서비스 기획서 §9.2)
@@ -219,7 +220,7 @@ export const workLogStatusCheck = (
         : {
             ok: false,
             path: 'confirmStatus',
-            message: '중단 중인 프로젝트입니다. 작업 내역을 쓰려면 확인이 필요합니다',
+            message: VALIDATION_MESSAGES.WORK_LOG_PAUSED_CONFIRM,
           };
     case 'COMPLETED':
       return flags.confirmStatus
@@ -227,7 +228,7 @@ export const workLogStatusCheck = (
         : {
             ok: false,
             path: 'confirmStatus',
-            message: '완료된 프로젝트입니다. 소급해서 작업 내역을 쓰려면 확인이 필요합니다',
+            message: VALIDATION_MESSAGES.WORK_LOG_COMPLETED_CONFIRM,
           };
     case 'WARRANTY':
       return flags.isAfterService
@@ -235,19 +236,19 @@ export const workLogStatusCheck = (
         : {
             ok: false,
             path: 'isAfterService',
-            message: '보증 중에는 사후 작업으로 표시한 작업 내역만 쓸 수 있습니다',
+            message: VALIDATION_MESSAGES.WORK_LOG_WARRANTY_AFTER_SERVICE_ONLY,
           };
     case 'PLANNED':
       return {
         ok: false,
         path: 'workDate',
-        message: '아직 시작하지 않은 프로젝트입니다. 먼저 작업을 시작해 주세요',
+        message: VALIDATION_MESSAGES.WORK_LOG_NOT_STARTED,
       };
     default:
       return {
         ok: false,
         path: 'workDate',
-        message: '종료·취소된 프로젝트에는 작업 내역을 쓸 수 없습니다',
+        message: VALIDATION_MESSAGES.WORK_LOG_PROJECT_CLOSED,
       };
   }
 };
@@ -265,14 +266,17 @@ export const checkWorkDate = (
   today: string,
 ): RuleCheck => {
   if (workDate > today) {
-    return { ok: false, path: 'workDate', message: '오늘 이후 날짜의 작업 내역은 쓸 수 없습니다' };
+    return { ok: false, path: 'workDate', message: VALIDATION_MESSAGES.WORK_LOG_FUTURE_DATE };
   }
 
   if (workDate < project.plannedStart || workDate > project.plannedEnd) {
     return {
       ok: false,
       path: 'workDate',
-      message: `프로젝트 기간(${project.plannedStart} ~ ${project.plannedEnd}) 밖의 날짜입니다. 기간을 먼저 연장해 주세요`,
+      message: VALIDATION_MESSAGES.WORK_LOG_OUTSIDE_PERIOD(
+        project.plannedStart,
+        project.plannedEnd,
+      ),
     };
   }
 
@@ -324,7 +328,7 @@ export const validateWorkLogForSave = (input: {
     return {
       ok: false,
       path: 'content',
-      message: '저장하려면 작업 내용을 입력해 주세요 (나중에 마무리하려면 임시 저장을 쓰세요)',
+      message: VALIDATION_MESSAGES.WORK_LOG_SAVE_CONTENT_REQUIRED,
     };
   }
 
@@ -332,8 +336,7 @@ export const validateWorkLogForSave = (input: {
     return {
       ok: false,
       path: 'entries',
-      message:
-        '저장하려면 공수를 한 건 이상 입력해 주세요 (나중에 마무리하려면 임시 저장을 쓰세요)',
+      message: VALIDATION_MESSAGES.WORK_LOG_SAVE_EFFORT_REQUIRED,
     };
   }
 

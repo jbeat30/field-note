@@ -1,6 +1,7 @@
 import type { UploadMeta, UploadQueue } from './uploadQueue';
 import { compressImage, ImageConvertError } from './imageResize';
 
+import { VALIDATION_MESSAGES } from '@field-note/shared';
 export type EnqueueSettings = Pick<UploadMeta, 'category' | 'area' | 'description' | 'workDate'>;
 
 export type EnqueueFailure = { name: string; message: string };
@@ -37,8 +38,8 @@ export const enqueueFiles = async (
         name: file.name,
         message:
           error instanceof ImageConvertError
-            ? '이 사진 형식은 열 수 없습니다. 카메라 설정에서 JPEG 형식으로 찍어 주세요'
-            : '사진을 준비하지 못했습니다',
+            ? VALIDATION_MESSAGES.PHOTO_FORMAT_UNSUPPORTED
+            : VALIDATION_MESSAGES.PHOTO_PREPARE_FAILED,
       });
     }
   }

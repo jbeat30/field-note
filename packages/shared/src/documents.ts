@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 작업자료 문서함 (서비스 기획서 §12.3), 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 수집
 // 파일은 덮어쓰지 않고 새 버전으로 추가하며(최신본이 기본, 이전본 보존), 민감 자료는 열람·다운로드를 감사 기록으로 남김 (§7.3, §13.1)
 export const DOCUMENT_CATEGORIES = ['DRAWING', 'CONTRACT', 'SAFETY', 'QUOTE', 'OTHER'] as const;
@@ -44,10 +45,10 @@ const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 const titleSchema = z
   .string()
   .trim()
-  .min(1, '문서 이름을 입력해 주세요')
+  .min(1, VALIDATION_MESSAGES.required('문서 이름'))
   .max(
     DOCUMENT_TITLE_MAX_LENGTH,
-    `문서 이름은 ${DOCUMENT_TITLE_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('문서 이름', DOCUMENT_TITLE_MAX_LENGTH),
   );
 
 const reasonSchema = z
@@ -56,7 +57,7 @@ const reasonSchema = z
   .min(1)
   .max(
     DOCUMENT_REASON_MAX_LENGTH,
-    `개정 사유는 ${DOCUMENT_REASON_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('개정 사유', DOCUMENT_REASON_MAX_LENGTH),
   );
 
 export const documentParamsSchema = z.object({ id: z.uuid() });
@@ -99,7 +100,7 @@ export const documentUpdateSchema = z
     includeInSummary: z.boolean(),
   })
   .partial()
-  .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
+  .refine((value) => Object.keys(value).length > 0, VALIDATION_MESSAGES.NO_VALUES_TO_UPDATE);
 
 export type DocumentUpdate = z.infer<typeof documentUpdateSchema>;
 

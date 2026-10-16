@@ -1,5 +1,6 @@
 import type { PhotoCategory } from '@field-note/shared';
 
+import { VALIDATION_MESSAGES } from '@field-note/shared';
 // 사진 업로드 대기열: 선택 즉시 목록에 보이고, 백그라운드에서 한 장씩 순서대로 올리며,
 // 실패하면 다시 시도하고, 앱을 닫아도 IndexedDB에 남아 다시 열면 이어서 올림 (기술 기획서 §6)
 //
@@ -162,12 +163,12 @@ export const createUploadQueue = (deps: UploadQueueDeps): UploadQueue => {
         const blob = await deps.store.getBlob(item.id);
 
         if (!blob) {
-          throw new StepError('PERMANENT', '저장해 둔 사진을 찾을 수 없습니다');
+          throw new StepError('PERMANENT', VALIDATION_MESSAGES.UPLOAD_PHOTO_MISSING);
         }
 
         // 업로드 주소가 이미 만료됐으면 보내지 않고 새로 신청
         if (!item.ticket || new Date(item.ticket.expiresAt) <= deps.now()) {
-          throw new StepError('RESTART', '업로드 주소가 만료되었습니다');
+          throw new StepError('RESTART', VALIDATION_MESSAGES.UPLOAD_URL_EXPIRED);
         }
 
         await deps.api.put(item.ticket, blob);

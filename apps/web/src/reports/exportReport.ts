@@ -1,5 +1,6 @@
 import { getErrorDetailMessage } from '../lib/apiError';
 
+import { VALIDATION_MESSAGES } from '@field-note/shared';
 export class ReportExportError extends Error {}
 
 /**
@@ -27,7 +28,7 @@ const downloadXlsx = async (url: string, fallbackName: string) => {
   try {
     response = await fetch(url, { credentials: 'same-origin' });
   } catch {
-    throw new ReportExportError('연결이 끊겼습니다. 연결을 확인하고 다시 시도해 주세요');
+    throw new ReportExportError(VALIDATION_MESSAGES.NETWORK_OFFLINE_RETRY);
   }
 
   if (!response.ok) {
@@ -83,7 +84,7 @@ export const downloadCompanyDataXlsx = async (currentPassword?: string) => {
       body: JSON.stringify(currentPassword ? { currentPassword } : {}),
     });
   } catch {
-    throw new ReportExportError('연결이 끊겼습니다. 연결을 확인하고 다시 시도해 주세요');
+    throw new ReportExportError(VALIDATION_MESSAGES.NETWORK_OFFLINE_RETRY);
   }
 
   if (!response.ok) {

@@ -4,6 +4,7 @@ import {
   storageUsageSchema,
   successResponseSchema,
   type CompanyExportRequest,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { AccountError } from '../auth/accountError';
@@ -19,7 +20,7 @@ const notImplemented: RouteHandler = async () => {
 const toAppError = (error: unknown): unknown => {
   if (error instanceof CompanyDataError) {
     return new AppError('VALIDATION_ERROR', [
-      { path: 'body.currentPassword', message: '비밀번호를 입력해 주세요' },
+      { path: 'body.currentPassword', message: VALIDATION_MESSAGES.required('비밀번호') },
     ]);
   }
 

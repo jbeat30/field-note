@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 회사가 직접 관리하는 선택 목록 (서비스 기획서 §8.2 직원 구분, §8.3 직종, §9.2 작업 구분, §10.2 공종)
 // 입력하다가 막히지 않도록 처음에는 프리셋을 채우고 이후 회사가 이름·순서·사용 여부를 변경
 export const OPTION_KINDS = [
@@ -41,8 +42,8 @@ export const normalizeOptionName = (name: string) =>
 export const optionNameSchema = z
   .string()
   .trim()
-  .min(1, '이름을 입력해 주세요')
-  .max(OPTION_NAME_MAX_LENGTH, `이름은 ${OPTION_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .min(1, VALIDATION_MESSAGES.required('이름'))
+  .max(OPTION_NAME_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('이름', OPTION_NAME_MAX_LENGTH));
 
 export const optionItemSchema = z.object({
   id: z.uuid(),
@@ -68,7 +69,7 @@ export const optionParamsSchema = z.object({ id: z.uuid() });
 export const optionUpdateSchema = z
   .object({ name: optionNameSchema.optional(), isActive: z.boolean().optional() })
   .refine((value) => value.name !== undefined || value.isActive !== undefined, {
-    message: '변경할 값이 없습니다',
+    message: VALIDATION_MESSAGES.NO_CHANGES,
   });
 
 export type OptionUpdate = z.infer<typeof optionUpdateSchema>;

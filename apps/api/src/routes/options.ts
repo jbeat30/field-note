@@ -9,6 +9,7 @@ import {
   type OptionCreate,
   type OptionReorder,
   type OptionUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { OptionError, type OptionService } from '../company/optionService';
@@ -30,15 +31,15 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'DUPLICATE':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '이미 같은 이름이 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.OPTION_NAME_DUPLICATE },
       ]);
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '항목은 종류마다 100개까지 만들 수 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.OPTION_LIMIT_REACHED },
       ]);
     case 'ORDER_MISMATCH':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.ids', message: '목록이 바뀌었습니다. 새로 고친 뒤 다시 시도해 주세요' },
+        { path: 'body.ids', message: VALIDATION_MESSAGES.OPTION_LIST_CHANGED },
       ]);
   }
 };

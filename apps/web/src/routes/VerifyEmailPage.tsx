@@ -1,4 +1,8 @@
-import { emailVerifyRequestSchema, type EmailVerifyRequest } from '@field-note/shared';
+import {
+  emailVerifyRequestSchema,
+  type EmailVerifyRequest,
+  VALIDATION_MESSAGES,
+} from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
@@ -17,7 +21,9 @@ import { queryKeys } from '../query/queryKeys';
 
 const RESEND_WAIT_SECONDS = 30;
 
-const entrySchema = z.object({ newEmail: z.email('올바른 이메일 주소를 입력해 주세요').max(254) });
+const entrySchema = z.object({
+  newEmail: z.email(VALIDATION_MESSAGES.required('올바른 이메일 주소')).max(254),
+});
 
 type EntryForm = z.infer<typeof entrySchema>;
 
@@ -41,7 +47,7 @@ const EmailEntryForm = ({ onSent }: { onSent: (email: string) => void }) => {
 
     if (!data) {
       if (getErrorCode(error) === 'VALIDATION_ERROR') {
-        setError('newEmail', { message: '이미 사용 중인 이메일입니다' });
+        setError('newEmail', { message: VALIDATION_MESSAGES.EMAIL_TAKEN });
       } else {
         setError('root', { message: getErrorMessage(error) });
       }

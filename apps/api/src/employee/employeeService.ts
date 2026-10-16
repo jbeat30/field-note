@@ -9,6 +9,7 @@ import {
   type EmployeeSummary,
   type EmployeeUpdate,
   type OptionKind,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -79,11 +80,14 @@ const assertOption = async (
   const option = await tx.optionItem.findFirst({ where: { id, kind } });
 
   if (!option) {
-    throw new EmployeeError('INVALID', { path, message: `선택할 수 없는 ${label}입니다` });
+    throw new EmployeeError('INVALID', {
+      path,
+      message: VALIDATION_MESSAGES.OPTION_NOT_SELECTABLE(label),
+    });
   }
 
   if (!option.isActive) {
-    throw new EmployeeError('INVALID', { path, message: `숨긴 ${label}은 새로 고를 수 없습니다` });
+    throw new EmployeeError('INVALID', { path, message: VALIDATION_MESSAGES.OPTION_HIDDEN(label) });
   }
 };
 
@@ -151,7 +155,7 @@ export const createEmployeeService = (
       if (input.birthDate && input.birthDate > today) {
         throw new EmployeeError('INVALID', {
           path: 'body.birthDate',
-          message: '생년월일은 오늘 이전이어야 합니다',
+          message: VALIDATION_MESSAGES.BIRTH_DATE_FUTURE,
         });
       }
 
@@ -212,7 +216,7 @@ export const createEmployeeService = (
       if (input.birthDate && input.birthDate > today) {
         throw new EmployeeError('INVALID', {
           path: 'body.birthDate',
-          message: '생년월일은 오늘 이전이어야 합니다',
+          message: VALIDATION_MESSAGES.BIRTH_DATE_FUTURE,
         });
       }
 
@@ -221,7 +225,7 @@ export const createEmployeeService = (
       if (hiredOn && resolved.leftOn && resolved.leftOn < hiredOn) {
         throw new EmployeeError('INVALID', {
           path: 'body.leftOn',
-          message: '퇴사일은 입사일보다 빠를 수 없습니다',
+          message: VALIDATION_MESSAGES.RESIGN_BEFORE_HIRE,
         });
       }
 
