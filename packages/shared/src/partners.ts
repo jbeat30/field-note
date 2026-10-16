@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { normalizeOptionName } from './options';
 
-// 고객·협력업체·자재 공급처 명부 (서비스 기획서 §10.1), 금액·거래 내역은 제외
+// 고객·협력업체·자재 공급처 명부, 금액·거래 내역은 제외
 export const PARTNER_KINDS = ['CLIENT', 'SUBCONTRACTOR', 'SUPPLIER'] as const;
 
 export const partnerKindSchema = z.enum(PARTNER_KINDS);

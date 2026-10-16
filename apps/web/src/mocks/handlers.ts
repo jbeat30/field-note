@@ -366,7 +366,7 @@ const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
     }
   }
 
-  // 프로젝트 필요 자격이 없거나 만료된 직원 (서비스 기획서 §8.4)
+  // 프로젝트 필요 자격이 없거나 만료된 직원
   warnings.push(
     ...mockCredentialWarnings(account, row.projectId, row.employeeId, {
       from: row.startDate,

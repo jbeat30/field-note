@@ -62,7 +62,7 @@ export class InvitationReissueError extends Error {
 
 /**
  * @description 가입 전인 회사의 초대 링크 재발급 (기존 미사용 링크는 즉시 만료)
- * 이미 가입을 마친 계정은 재발급하지 않음 (계정 복구는 별도 절차, §6.3)
+ * 이미 가입을 마친 계정은 재발급하지 않음 (계정 복구는 별도 절차)
  * @param prisma 운영자 계정 Prisma 클라이언트
  * @param input 대상 회사 ID, 유효 일수
  * @returns 새로 발급된 초대
@@ -112,7 +112,7 @@ export class TakeoverIssueError extends Error {
 export const DEFAULT_TAKEOVER_DAYS = 3;
 
 /**
- * @description 가입을 마친 계정의 복구(이메일 사용 불가) 또는 소유자 이전 링크 발급 (운영자 계정 전용, 서비스 기획서 §6.3·§6.6)
+ * @description 가입을 마친 계정의 복구(이메일 사용 불가) 또는 소유자 이전 링크 발급 (운영자 계정 전용)
  * 링크를 쓰기 전까지 기존 로그인은 유지되고, 사용 시점에 기존 로그인 수단이 모두 해제됨
  * 본인 확인 방법은 운영자 작업 기록에 필수로 남김 (개인정보 제외)
  * @param prisma 운영자 계정(DATABASE_OPERATOR_URL) Prisma 클라이언트

@@ -40,7 +40,7 @@ import {
   useUpdateChangeWork,
 } from './useChangeWorks';
 
-// 협의 중으로 이만큼 지나면 오래 방치된 것으로 표시 (§15.3 "7일 경과")
+// 협의 중으로 이만큼 지나면 오래 방치된 것으로 표시 ("7일 경과")
 const STALE_DAYS = 7;
 
 const TRANSITION_LABELS: Record<ChangeWorkStatus, string> = {

@@ -61,7 +61,7 @@ const Block = ({ block }: { block: LegalBlock }) => {
   );
 };
 
-// 약관·개인정보 처리방침 전문 (로그인·가입 화면과 설정 하단에서 항상 볼 수 있음, §5.7)
+// 약관·개인정보 처리방침 전문 (로그인·가입 화면과 설정 하단에서 항상 볼 수 있음)
 export const LegalPage = () => {
   const { slug = '' } = useParams();
   const type = SLUG_TO_TYPE[slug];

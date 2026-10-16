@@ -176,7 +176,7 @@ type SaveResult = {
 };
 
 /**
- * @description 작업 내역 일괄 입력 폼: 투입 직원 목록에서 작업 구분·공수를 한 번에 정하고 공통 내용을 한 번 입력함 (서비스 기획서 §9.3)
+ * @description 작업 내역 일괄 입력 폼: 투입 직원 목록에서 작업 구분·공수를 한 번에 정하고 공통 내용을 한 번 입력함
  * @param props 프로젝트·날짜·기존 작업 내역과 선택 목록
  */
 export const WorkLogEditor = ({

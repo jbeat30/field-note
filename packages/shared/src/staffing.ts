@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { employeeStatusSchema, type EmployeeStatus } from './employees';
 import { projectStatusSchema } from './projects';
 
-// 인력 배치 캘린더 (서비스 기획서 §9.7), 직원 × 날짜 표에 어느 프로젝트에 투입되는지 보여 주고,
+// 인력 배치 캘린더, 직원 × 날짜 표에 어느 프로젝트에 투입되는지 보여 주고
 // 같은 날 두 프로젝트에 겹치면 경고, 휴직·퇴사 표시와 비는 사람 안내
 export const STAFFING_MAX_DAYS = 42;
 
@@ -168,7 +168,7 @@ export const buildStaffingGrid = (calendar: StaffingCalendar): StaffingRow[] => 
 const isSunday = (date: string) => new Date(`${date}T00:00:00Z`).getUTCDay() === 0;
 
 /**
- * @description 기간 동안 비는 사람: 일요일을 뺀 모든 날이 투입도 휴직·퇴사도 아닌 직원 ("이번 주 비는 사람", §9.7)
+ * @description 기간 동안 비는 사람: 일요일을 뺀 모든 날이 투입도 휴직·퇴사도 아닌 직원 ("이번 주 비는 사람")
  * @param rows 직원 × 날짜 표
  * @returns 비는 직원 목록 (표 순서)
  */
@@ -202,7 +202,7 @@ export const findStaffingConflicts = (rows: StaffingRow[]) =>
 export const shiftDate = (date: string, days: number) =>
   new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 
-// ── 사람 행 × 날짜 열 타임라인 (09 문서 §4) ──
+// ── 사람 행 × 날짜 열 타임라인 ──
 // 투입 계획은 두지 않고, 저장된 작업 내역에 그 사람이 들어간 날만 막대로 보임 (같은 프로젝트에 이어진 날은 막대 하나)
 
 export type StaffingTimelineDay = { date: string; minutes: number; conflict: boolean };

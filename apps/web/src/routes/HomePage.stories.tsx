@@ -98,7 +98,7 @@ export const EmptySearchDoesNothing: Story = {
   },
 };
 
-// 대시보드 위젯: 진행 중 프로젝트, 확인할 일, 이번 주 인력, 보증 종료 임박, 만료 임박 (09 §5.5)
+// 대시보드 위젯: 진행 중 프로젝트, 확인할 일, 이번 주 인력, 보증 종료 임박, 만료 임박 (09)
 export const DashboardWidgets: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

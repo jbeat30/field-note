@@ -15,7 +15,7 @@ export type CreatedSession = {
 };
 
 export type CreateSessionOptions = {
-  // 기본 true (로그인 유지, §6.4)
+  // 기본 true (로그인 유지)
   isRemembered?: boolean;
   // 기기 목록에 보이는 이름 (접속 정보에서 만든 요약, 없으면 "알 수 없는 기기")
   deviceLabel?: string;

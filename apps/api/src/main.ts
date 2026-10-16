@@ -71,7 +71,7 @@ const main = async () => {
   const repairs = createRepairService(appPrisma);
   const monthly = createMonthlyService(appPrisma);
 
-  // 작업 큐와 처리기는 같은 프로세스에서 동작 (기술 기획서 §3), 큐는 전용 계정으로 접속
+  // 작업 큐와 처리기는 같은 프로세스에서 동작, 큐는 전용 계정으로 접속
   const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
   // 객체 저장소 (로컬은 버킷이 없으면 생성, 운영은 운영자가 버킷을 사전 준비)
   const { storage, ensureBucket } = createS3Storage({

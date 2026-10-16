@@ -7,7 +7,7 @@ const formatChangedAt = (iso: string) =>
     new Date(iso),
   );
 
-// 예정 기간 변경 이력: 언제 어떻게 연장·단축했는지와 사유 (서비스 기획서 §10.2)
+// 예정 기간 변경 이력: 언제 어떻게 연장·단축했는지와 사유
 export const ProjectPeriodHistory = ({ projectId }: { projectId: string }) => {
   const history = usePeriodHistory(projectId);
 

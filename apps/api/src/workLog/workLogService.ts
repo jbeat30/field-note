@@ -110,7 +110,7 @@ const toSummary = (row: LogRow): WorkLogSummary => ({
   ].map(([employeeId, minutes]) => ({ employeeId, minutes })),
 });
 
-// 경고: 하루 합계 공수 초과(저장된 다른 프로젝트 작업 내역 포함), 휴직·퇴사 직원 (막지는 않음, 서비스 기획서 §9.4)
+// 경고: 하루 합계 공수 초과(저장된 다른 프로젝트 작업 내역 포함), 휴직·퇴사 직원 (막지는 않음)
 const warningsFor = async (
   tx: Prisma.TransactionClient,
   row: LogRow,
@@ -399,7 +399,7 @@ export const createWorkLogService = (
         throw invalid(dateCheck.path, dateCheck.message);
       }
 
-      // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없음 (§13.2)
+      // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없음
       try {
         await assertMonthOpen(tx, companyId, workDate);
       } catch (error) {
@@ -449,7 +449,7 @@ export const createWorkLogService = (
         throw invalid('entries', '숨긴 작업 구분은 새로 고를 수 없습니다');
       }
 
-      // 투입 등록이 안 된 직원을 작업 내역에 넣으면 투입을 자동으로 추가할지 확인 (서비스 기획서 §9.3), 저장할 때만 확인하고 퇴사한 직원은 경고만
+      // 투입 등록이 안 된 직원을 작업 내역에 넣으면 투입을 자동으로 추가할지 확인, 저장할 때만 확인하고 퇴사한 직원은 경고만
       const autoAssigned: string[] = [];
 
       if (input.status === 'SAVED') {

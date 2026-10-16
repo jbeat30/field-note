@@ -1,7 +1,7 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-// 주석 규칙 점검: 명사형 종결, 마침표 금지 (jbeat-conventions comment-conventions)
+// 주석 규칙 점검: 명사형 종결, 마침표 금지, 출처(절·문서) 번호 안내 금지 (jbeat-conventions comment-conventions)
 // 사용: pnpm check:comments [--all]  (기본은 변경한 파일만, --all은 저장소 전체)
 const all = process.argv.includes('--all');
 const names = execSync(all ? 'git ls-files' : 'git diff --name-only HEAD', { encoding: 'utf8' })
@@ -46,7 +46,10 @@ for (const file of names) {
       (VERB_ENDING.test(bare) && !NOUN_ENDING_EXCEPTIONS.test(bare)) || MID_VERB.test(text);
     const hasPeriod = /[가-힣)]\.$/.test(text) || /[가-힣)]\. [가-힣(]/.test(text);
 
-    if (hasVerb || hasPeriod) findings.push(`${file}:${index + 1}: ${body}`);
+    // 출처 번호 안내는 주석에 두지 않음 (주석은 코드 설명만)
+    const hasDocRef = /§|기획서|(?:^|\s)\d{2} 문서/.test(text);
+
+    if (hasVerb || hasPeriod || hasDocRef) findings.push(`${file}:${index + 1}: ${body}`);
   });
 }
 

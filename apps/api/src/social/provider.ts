@@ -11,7 +11,7 @@ import { z } from 'zod';
 // 소셜 제공자가 돌려주는 사용자 정보 (식별은 providerUserId로만, 이메일은 참고용)
 export type SocialProfile = {
   providerUserId: string;
-  // 제공자가 인증된 이메일이라고 보증한 경우에만 값이 있음 (§6.7 소셜 가입은 인증된 이메일을 줄 때만 인정)
+  // 제공자가 인증된 이메일이라고 보증한 경우에만 값이 있음 (소셜 가입은 인증된 이메일을 줄 때만 인정)
   verifiedEmail: string | null;
 };
 

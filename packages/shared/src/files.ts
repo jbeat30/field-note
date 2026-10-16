@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 파일 업로드 공통 규칙 (서비스 기획서 §12.1, 기술 기획서 §10), 서버와 웹 목업이 같은 규칙 사용
+// 파일 업로드 공통 규칙, 서버와 웹 목업이 같은 규칙 사용
 export const FILE_PURPOSES = ['PHOTO', 'DOCUMENT', 'EMPLOYEE_DOCUMENT'] as const;
 
 export const filePurposeSchema = z.enum(FILE_PURPOSES);
@@ -124,7 +124,7 @@ export const isAllowedFileType = (purpose: FilePurpose, mime: string, name: stri
   );
 
 /**
- * @description 객체 저장소 경로 (경로에 회사가 들어가며 저장소는 공개하지 않음, 기술 기획서 §10)
+ * @description 객체 저장소 경로 (경로에 회사가 들어가며 저장소는 공개하지 않음)
  * @param companyId 회사 ID
  * @param projectId 프로젝트 ID
  * @param fileId 파일 ID
