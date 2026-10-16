@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { projectWarningTypeSchema } from './projectWarnings';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 프로젝트 (서비스 기획서 §10.2, §10.3), 계약 금액은 제외
+// 프로젝트, 계약 금액은 제외
 export const PROJECT_STATUSES = [
   'PLANNED',
   'IN_PROGRESS',
@@ -18,7 +18,7 @@ export const projectStatusSchema = z.enum(PROJECT_STATUSES);
 
 export type ProjectStatus = z.infer<typeof projectStatusSchema>;
 
-// 상태 이름은 회사가 바꿀 수 있게 확장될 수 있지만(§10.3) 현재는 기본 이름만 사용
+// 상태 이름은 회사가 바꿀 수 있게 확장될 수 있지만 현재는 기본 이름만 사용
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   PLANNED: '예정',
   IN_PROGRESS: '진행',
@@ -224,7 +224,7 @@ const PERIOD_ERROR = {
   path: ['plannedEnd'],
 };
 
-// 등록: 서비스 기획서 §10.2에서 "등록 때 필수"인 항목만 요구하고 나머지는 추후 입력
+// 등록:에서 "등록 때 필수"인 항목만 요구하고 나머지는 추후 입력
 export const projectCreateSchema = z
   .object({
     name: nameSchema,

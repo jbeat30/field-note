@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 프로젝트 메모 노트와 메모함 (서비스 기획서 §10.9, §14), 정해진 양식에 들어가지 않는 내용(통화, 지시, 이슈, 할 일)을 날짜별로 누적
+// 프로젝트 메모 노트와 메모함, 정해진 양식에 들어가지 않는 내용(통화, 지시, 이슈, 할 일)을 날짜별로 누적
 export const MEMO_TAGS = ['NEGOTIATION', 'INSTRUCTION', 'ISSUE', 'TODO', 'OTHER'] as const;
 
 export const memoTagSchema = z.enum(MEMO_TAGS);

@@ -112,7 +112,7 @@ const ProgressDialog = ({
 };
 
 /**
- * @description 프로젝트 진행 현황 (서비스 기획서 §10.4): 진행률·공수 소진율·투입 공수를 한 줄로 표시, 진행률은 한 번에 변경
+ * @description 프로젝트 진행 현황: 진행률·공수 소진율·투입 공수를 한 줄로 표시, 진행률은 한 번에 변경
  * 경고(일정보다 뒤처짐 등)는 점 + 글자로 표시, 진행률 이력은 접어 둠
  */
 export const ProjectProgressPanel = ({

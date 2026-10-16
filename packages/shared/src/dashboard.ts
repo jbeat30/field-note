@@ -19,7 +19,7 @@ import { warrantyDaysLeft } from './warranty';
 import { periodStart } from './workSummary';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 홈 대시보드와 알림 (서비스 기획서 §15.2, §15.3), 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산
+// 홈 대시보드와 알림, 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산
 // (초기: 화면 표시), 4단계에서 보증 종료 임박·미처리 보수·보증서·직원 서류 만료·월 공수 미확정 추가
 const dateSchema = z.iso.date();
 
@@ -55,10 +55,10 @@ export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   MONTH_UNCLOSED: '지난달에 저장한 작업 내역이 있는데 월 공수를 확정하지 않았을 때',
 };
 
-// 협의 중 변경 작업을 오래 방치된 것으로 보는 기준 (§15.3)
+// 협의 중 변경 작업을 오래 방치된 것으로 보는 기준
 export const CHANGE_STALE_DAYS = 7;
 
-// 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준 (§15.3), 직원 서류는 CREDENTIAL_EXPIRING_DAYS
+// 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준, 직원 서류는 CREDENTIAL_EXPIRING_DAYS
 export const WARRANTY_ENDING_DAYS = 60;
 
 export const REPAIR_UNHANDLED_DAYS = 3;

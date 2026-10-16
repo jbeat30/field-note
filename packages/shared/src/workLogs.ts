@@ -4,7 +4,7 @@ import type { RuleCheck } from './assignments';
 import type { ProjectStatus } from './projects';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 작업 내역 (서비스 기획서 §9.2~§9.4), 프로젝트 × 날짜마다 작업 내역 한 건에 공통 내용을 쓰고,
+// 작업 내역, 프로젝트 × 날짜마다 작업 내역 한 건에 공통 내용을 쓰고
 // 직원별·작업 구분별 공수(분)를 항목으로 부착, 공수는 항상 분 단위로 저장
 export const WORK_LOG_STATUSES = ['DRAFT', 'SAVED'] as const;
 
@@ -24,7 +24,7 @@ export const WORK_LOG_MAX_ENTRIES = 100;
 // 한 항목의 공수 상한: 하루 24시간
 export const WORK_LOG_MAX_ENTRY_MINUTES = 1440;
 
-// 작업일과 처음 저장한 날의 차이가 이 일수를 넘으면 "지연 입력"으로 표시만 함 (서비스 기획서 §9.4, 기준일은 제안값)
+// 작업일과 처음 저장한 날의 차이가 이 일수를 넘으면 "지연 입력"으로 표시만 함 (기준일은 제안값)
 export const LATE_INPUT_DAYS = 3;
 
 // 같은 직원의 하루 합계 공수가 하루 기준시간의 이 배수를 넘으면 경고
@@ -82,7 +82,7 @@ export const workLogSaveSchema = z.object({
       VALIDATION_MESSAGES.tooLong('특이사항', WORK_LOG_NOTES_MAX_LENGTH),
     )
     .nullish(),
-  // 변경·추가 작업, 사후 작업 표시 (서비스 기획서 §9.2)
+  // 변경·추가 작업, 사후 작업 표시
   isChange: z.boolean().default(false),
   isAfterService: z.boolean().default(false),
   entries: entriesSchema,
@@ -90,7 +90,7 @@ export const workLogSaveSchema = z.object({
   expectedVersion: z.number().int().min(1).nullish(),
   // 중단·완료 프로젝트에 입력하는 것을 관리자가 확인했다는 표시
   confirmStatus: z.boolean().optional(),
-  // 투입 등록이 안 된 직원을 작업 내역에 넣을 때 투입을 자동으로 추가할지 (서비스 기획서 §9.3)
+  // 투입 등록이 안 된 직원을 작업 내역에 넣을 때 투입을 자동으로 추가할지
   addMissingAssignments: z.boolean().optional(),
 });
 
@@ -152,7 +152,7 @@ export const workLogSummarySchema = z.object({
   isAfterService: z.boolean(),
   isLate: z.boolean(),
   entryCount: z.number().int(),
-  // 공수 합(분), 집계에는 저장된 작업 내역만 쓰고 임시 저장은 별도 표시함 (§9.4)
+  // 공수 합(분), 집계에는 저장된 작업 내역만 쓰고 임시 저장은 별도 표시함
   totalMinutes: z.number().int(),
   hasContent: z.boolean(),
   // 그날 일한 사람별 시간(분), 달력에서 누가 일했는지 바로 표시하는 데 사용
@@ -173,7 +173,7 @@ export type WorkLogListQuery = z.infer<typeof workLogListQuerySchema>;
 
 export const workLogParamsSchema = z.object({ id: z.uuid(), workDate: dateSchema });
 
-// 수정 이력: 저장된 작업 내역을 고칠 때마다 고치기 전 값을 남김 (서비스 기획서 §9.1, §9.4)
+// 수정 이력: 저장된 작업 내역을 고칠 때마다 고치기 전 값을 남김
 export const workLogSnapshotSchema = z.object({
   status: workLogStatusSchema,
   content: z.string(),
@@ -201,7 +201,7 @@ export type WorkLogRevision = z.infer<typeof workLogRevisionSchema>;
 export const workLogRevisionsSchema = z.object({ items: z.array(workLogRevisionSchema) });
 
 /**
- * @description 프로젝트 상태에서 작업 내역을 입력할 수 있는지 (서비스 기획서 §10.3 "작업 내역 입력" 행)
+ * @description 프로젝트 상태에서 작업 내역을 입력할 수 있는지 ("작업 내역 입력" 행)
  * 진행은 가능, 중단·완료(소급)는 관리자 확인, 보증 중은 사후 작업 표시가 있을 때만, 예정·종료·취소는 불가
  * @param status 프로젝트 상태
  * @param flags 관리자 확인 여부와 사후 작업 표시 여부
@@ -254,7 +254,7 @@ export const workLogStatusCheck = (
 };
 
 /**
- * @description 작업 일자 검사: 프로젝트 예정 기간 안이어야 하고 오늘 이후는 입력할 수 없음 (서비스 기획서 §9.4)
+ * @description 작업 일자 검사: 프로젝트 예정 기간 안이어야 하고 오늘 이후는 입력할 수 없음
  * @param workDate 작업 일자
  * @param project 프로젝트 예정 기간
  * @param today 서울 기준 오늘

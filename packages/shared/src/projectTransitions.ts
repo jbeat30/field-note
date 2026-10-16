@@ -1,7 +1,7 @@
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from './projects';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 프로젝트 상태 전환 규칙 (서비스 기획서 §10.3), 서버와 목업 서버가 같은 규칙 사용
+// 프로젝트 상태 전환 규칙, 서버와 목업 서버가 같은 규칙 사용
 // 완료 → 보증 중 → 종료, 종료 재오픈 (보증 중으로 되돌림)
 // 완료 → 종료는 보증 기간이 0개월일 때만 (검사는 validateProjectTransition)
 export const PROJECT_TRANSITIONS: Record<ProjectStatus, readonly ProjectStatus[]> = {
@@ -41,7 +41,7 @@ export const transitionNeedsReason = (
 };
 
 /**
- * @description 완료 → 보증 중에서 프로젝트 요약을 확인해야 하는지 (§10.3 전환 조건)
+ * @description 완료 → 보증 중에서 프로젝트 요약을 확인해야 하는지 (전환 조건)
  * @param from 현재 상태
  * @param to 바꿀 상태
  * @returns 요약 확인 필수 여부
@@ -201,7 +201,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
   return { ok: true };
 };
 
-// 상태별 기본정보 수정 제한 (§10.3 "상태별 허용 작업" 표의 '기본정보 수정' 행)
+// 상태별 기본정보 수정 제한 ("상태별 허용 작업" 표의 '기본정보 수정' 행)
 export const EDITABLE_ON_WARRANTY = ['managerId', 'memo'] as const;
 
 export const isProjectEditable = (status: ProjectStatus) =>

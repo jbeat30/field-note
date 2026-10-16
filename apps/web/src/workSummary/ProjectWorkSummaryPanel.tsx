@@ -25,7 +25,7 @@ const Bar = ({ value, max }: { value: number; max: number }) => (
   </div>
 );
 
-// 프로젝트 공수 집계: 직원별·작업 구분별·기간별 (서비스 기획서 §9.6), 저장된 작업 내역만 반영
+// 프로젝트 공수 집계: 직원별·작업 구분별·기간별, 저장된 작업 내역만 반영
 export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) => {
   const [from, setFrom] = useState('');
   const [to, setTo] = useState('');

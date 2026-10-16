@@ -4,7 +4,7 @@ import type { RuleCheck } from './assignments';
 import type { ProjectStatus } from './projects';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 보증 기간과 보증서 (서비스 기획서 §10.6): 완료 후 일정 기간 무상으로 보수하는 약속을 프로젝트별로 관리
+// 보증 기간과 보증서: 완료 후 일정 기간 무상으로 보수하는 약속을 프로젝트별로 관리
 // 종료 예정일은 시작일 + 보증 기간으로 계산, 수정 시 사유와 이력 기록
 export const DEFAULT_WARRANTY_MONTHS = 12;
 

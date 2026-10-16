@@ -9,7 +9,7 @@ import { changeWorkStatusSchema } from './changeWorks';
 
 const dateSchema = z.iso.date();
 
-// 상태 전환 안내 (서비스 기획서 §10.3): 완료·재개처럼 확인할 것이 있는 전환에서 차단 없이 안내
+// 상태 전환 안내: 완료·재개처럼 확인할 것이 있는 전환에서 차단 없이 안내
 export const transitionNoticesQuerySchema = z.object({ to: projectStatusSchema });
 
 export type TransitionNoticesQuery = z.infer<typeof transitionNoticesQuerySchema>;
@@ -69,14 +69,14 @@ type CheckInput = {
 
 /**
  * @description 이 전환에서 확인할 것을 모음, 진행 → 완료는 임시 저장 작업 내역(종료 전환에서도)·진행률 100%·남은 자재·협의 중 변경 작업,
- * 중단 → 진행은 종료 예정일 경과 안내 (§10.3), 차단 조건이 아닌 안내
+ * 중단 → 진행은 종료 예정일 경과 안내, 차단 조건이 아닌 안내
  * @param input 현재·변경할 상태와 프로젝트 현황
  * @returns 확인할 항목 (없으면 빈 목록)
  */
 export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[] => {
   const checks: TransitionNotice[] = [];
 
-  // 종료는 임시 저장 작업 내역이 남아 있으면 막힘 (§10.3), 안내를 먼저 보여 줌
+  // 종료는 임시 저장 작업 내역이 남아 있으면 막힘, 안내를 먼저 보여 줌
   if ((input.to === 'COMPLETED' || input.to === 'CLOSED') && input.draftLogCount > 0) {
     checks.push({ type: 'DRAFT_LOGS', count: input.draftLogCount });
   }
@@ -141,7 +141,7 @@ export const transitionNoticeMessage = (check: TransitionNotice): string => {
   }
 };
 
-// 프로젝트 요약 (완료 리포트, §10.7): 완료 뒤에도 최신 기록을 반영해 그때그때 생성, 금액·민감 자료는 제외
+// 프로젝트 요약 (완료 리포트): 완료 뒤에도 최신 기록을 반영해 그때그때 생성, 금액·민감 자료는 제외
 export const projectCompletionSummarySchema = z.object({
   generatedOn: dateSchema,
   companyName: z.string(),
@@ -230,7 +230,7 @@ export const projectCompletionSummarySchema = z.object({
 
 export type ProjectCompletionSummary = z.infer<typeof projectCompletionSummarySchema>;
 
-// 마감 요약의 사진·문서 선택 규칙 (09 문서 §3.8): 직접 고른 것이 우선, 하나도 고르지 않았으면 기본 규칙 사용
+// 마감 요약의 사진·문서 선택 규칙: 직접 고른 것이 우선, 하나도 고르지 않았으면 기본 규칙 사용
 export const SUMMARY_PHOTO_MAX = 12;
 export const SUMMARY_PHOTO_DEFAULT_COUNT = 8;
 // 요약에 넣을 수 있는 문서 분류

@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 프로젝트 경고 종류 (서비스 기획서 §10.4), 목록·현황·홈 알림이 함께 사용하므로 가벼운 별도 모듈로 분리
+// 프로젝트 경고 종류, 목록·현황·홈 알림이 함께 사용하므로 가벼운 별도 모듈로 분리
 export const PROJECT_WARNING_TYPES = [
   'BURN_WARN',
   'BURN_LIMIT',

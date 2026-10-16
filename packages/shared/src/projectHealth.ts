@@ -5,8 +5,8 @@ import { projectStatusSchema, type ProjectStatus } from './projects';
 import { projectWarningTypeSchema, type ProjectWarningType } from './projectWarnings';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 일정과 진행 (서비스 기획서 §10.4): 진행률 기록, 공수 소진율, 경고
-// 경고 기준의 기본값은 기획서 결정값(공수 소진율 80% / 100%)이고 회사가 설정에서 바꿈 (`companyRulesSchema`)
+// 일정과 진행: 진행률 기록, 공수 소진율, 경고
+// 경고 기준의 기본값은 정해 둔 값(공수 소진율 80% / 100%)이고 회사가 설정에서 바꿈 (`companyRulesSchema`)
 export const BURN_WARN_PERCENT = 80;
 
 export const BURN_LIMIT_PERCENT = 100;
@@ -88,14 +88,14 @@ type HealthInput = {
   rules?: Pick<CompanyRules, 'burnWarnPercent' | 'burnLimitPercent' | 'aheadGapPercent'>;
 };
 
-// 진행률 입력은 예정·진행·중단에서만 (§10.3)
+// 진행률 입력은 예정·진행·중단에서만
 const PROGRESS_STATUSES: ProjectStatus[] = ['PLANNED', 'IN_PROGRESS', 'SUSPENDED'];
 
 // 경고는 아직 끝나지 않은 진행 중 프로젝트에만
 const ACTIVE_STATUSES: ProjectStatus[] = ['IN_PROGRESS', 'SUSPENDED'];
 
 /**
- * @description 이 프로젝트 상태에서 진행률을 입력할 수 있는지 (§10.3 "진행률 입력" 행)
+ * @description 이 프로젝트 상태에서 진행률을 입력할 수 있는지 ("진행률 입력" 행)
  * @param status 프로젝트 상태
  * @returns 입력 가능 여부
  */
@@ -106,7 +106,7 @@ const roundOne = (value: number) => Math.round(value * 10) / 10;
 
 /**
  * @description 공수 소진율·예상 필요 공수·경고 계산
- * 예시(§10.4): 계획 80MD, 투입 56MD(소진율 70%), 진행률 45% → 예상 필요 공수 124MD, 소진율이 진행률보다 25%p 앞서 경고
+ * 예시: 계획 80MD, 투입 56MD(소진율 70%), 진행률 45% → 예상 필요 공수 124MD, 소진율이 진행률보다 25%p 앞서 경고
  * @param input 상태·공수·진행률·예정 기간·오늘(서울 기준)
  * @returns 프로젝트 진행 점검 결과
  */
@@ -164,7 +164,7 @@ export const evaluateProjectHealth = (input: HealthInput): ProjectHealth => {
   };
 };
 
-// 회사별 경고 기준 (서비스 기획서 §10.4 "회사가 정한다"), 기본값은 기획서 결정값
+// 회사별 경고 기준 ("회사가 정한다"), 기본값은 정해 둔 값
 export const companyRulesSchema = z
   .object({
     // 공수 소진율이 이 값(%) 이상이면 경고

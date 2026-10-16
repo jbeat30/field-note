@@ -170,7 +170,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
     (plannedStartValue !== project?.plannedStart || plannedEndValue !== project?.plannedEnd);
   const reasonRequired =
     periodChanged && project !== undefined && periodChangeNeedsReason(project.status);
-  // 상태별 수정 제한 (서비스 기획서 §10.3): 종료·취소는 수정 불가, 보증 중은 담당자·메모만
+  // 상태별 수정 제한: 종료·취소는 수정 불가, 보증 중은 담당자·메모만
   const allowed = project ? allowedProjectFields(project.status) : 'all';
   const isLocked = (field: string) => allowed !== 'all' && !allowed.includes(field);
   const isReadOnly = allowed !== 'all' && allowed.length === 0;

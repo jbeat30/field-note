@@ -1,6 +1,6 @@
 import { defineConfig } from '@playwright/test';
 
-// 화면 전체 흐름 시험 (기술 기획서 §13): 실제 서버·DB·저장소와 Chromium(모바일 크기)으로 핵심 흐름 확인
+// 화면 전체 흐름 시험: 실제 서버·DB·저장소와 Chromium(모바일 크기)으로 핵심 흐름 확인
 // 시험 전에 인프라와 DB가 준비되어 있어야 한다: pnpm infra:up && pnpm db:setup && pnpm db:seed (루트 README 참고)
 // 사용자의 다른 앱이 3000번 포트를 쓰는 경우가 잦아 시험용 API는 3001번 사용
 const API_PORT = Number(process.env.E2E_API_PORT ?? 3001);

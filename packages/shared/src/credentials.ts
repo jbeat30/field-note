@@ -3,12 +3,12 @@ import { z } from 'zod';
 import { fileStatusSchema } from './files';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 직원 서류·자격 (서비스 기획서 §8.4): 자격증, 안전교육 이수증, 건강검진 서류 등을 직원 카드에 올리고 만료일 관리
+// 직원 서류·자격: 자격증, 안전교육 이수증, 건강검진 서류 등을 직원 카드에 올리고 만료일 관리
 // 종류는 회사가 관리하는 선택 목록(자격 종류)
 
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
-// 만료 임박으로 보는 기간 (서비스 기획서 §15.3: 자격·서류 만료 30일 전)
+// 만료 임박으로 보는 기간 (자격·서류 만료 30일 전)
 export const CREDENTIAL_EXPIRING_DAYS = 30;
 
 export const CREDENTIAL_MEMO_MAX_LENGTH = 500;
@@ -135,7 +135,7 @@ export const credentialUpdateSchema = z
 
 export type CredentialUpdate = z.infer<typeof credentialUpdateSchema>;
 
-// 프로젝트의 필요 자격 (서비스 기획서 §10.1): 투입 배정 때 자격이 없거나 만료된 직원을 경고하는 기준
+// 프로젝트의 필요 자격: 투입 배정 때 자격이 없거나 만료된 직원을 경고하는 기준
 export const requiredCredentialsSchema = z.object({
   typeIds: z.array(z.uuid()).max(REQUIRED_CREDENTIAL_MAX),
 });
@@ -171,7 +171,7 @@ type HeldCredential = { typeId: string; expiresOn: string | null };
 
 /**
  * @description 필요 자격 대비 직원의 부족한 점을 찾음, 투입 기간 끝까지 유효한 서류가 있으면 통과이고,
- * 서류가 없으면 자격 없음, 기간이 시작되기 전에 모두 만료면 자격 만료, 기간 중에 만료되면 투입 중 만료 (§8.4)
+ * 서류가 없으면 자격 없음, 기간이 시작되기 전에 모두 만료면 자격 만료, 기간 중에 만료되면 투입 중 만료
  * @param requiredTypeIds 프로젝트의 필요 자격 종류
  * @param held 직원의 (지우지 않은) 서류
  * @param period 투입 기간 (시작일·종료일)

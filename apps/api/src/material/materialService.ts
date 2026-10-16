@@ -141,7 +141,7 @@ const isUniqueViolation = (error: unknown) =>
   /unique|P2002|duplicate/i.test(`${error.message} ${(error as { code?: string }).code ?? ''}`);
 
 /**
- * @description 사용 자재 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 자재 목록 관리와 프로젝트별 반입·사용·반출·폐기 기록, 잔량 집계를 맡음 (서비스 기획서 §11)
+ * @description 사용 자재 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 자재 목록 관리와 프로젝트별 반입·사용·반출·폐기 기록, 잔량 집계를 맡음
  * 단가·구매·재고는 범위 밖
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (소프트 삭제 시각 기록용)

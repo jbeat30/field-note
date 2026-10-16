@@ -8,7 +8,7 @@ import { useProjectSummary } from '../completion/useCompletion';
 import { useProject } from '../projects/useProjects';
 import { downloadSummaryXlsx } from '../reports/exportReport';
 
-// 프로젝트 요약 (완료 리포트, 서비스 기획서 §10.7): 현재 기록으로 한 장을 생성해 표시하고 인쇄·PDF 저장 또는 엑셀 내려받기
+// 프로젝트 요약 (완료 리포트): 현재 기록으로 한 장을 생성해 표시하고 인쇄·PDF 저장 또는 엑셀 내려받기
 export const ProjectSummaryPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);

@@ -139,7 +139,7 @@ const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<Chang
   };
 };
 
-// 프로젝트 상태에 따라 기록·수정이 막히는지 (§10.3)
+// 프로젝트 상태에 따라 기록·수정이 막히는지
 const assertProjectAllows = (
   status: Row['project']['status'],
   confirmed: boolean | undefined,

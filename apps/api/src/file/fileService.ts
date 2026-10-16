@@ -85,7 +85,7 @@ export type FileServiceDeps = {
 
 /**
  * @description 파일 업로드 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 브라우저가 저장소에 직접 올리고,
- * 서버는 올라온 뒤 내용 검사(file-type)·크기 확인·썸네일(sharp)을 작업으로 처리함 (기술 기획서 §10)
+ * 서버는 올라온 뒤 내용 검사(file-type)·크기 확인·썸네일(sharp)을 작업으로 처리함
  * @param deps 앱 계정 Prisma 클라이언트, 객체 저장소, 작업 큐, 현재 시각
  * @returns 파일 서비스
  */

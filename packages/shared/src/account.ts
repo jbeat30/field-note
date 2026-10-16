@@ -1,15 +1,15 @@
 import { z } from 'zod';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 계정·설정 화면과 API가 공유하는 계약 (서비스 기획서 §5.7, §6, §9.5)
-// 회사 식별값은 내부용이므로 어떤 응답에도 담지 않음 (§5.1)
+// 계정·설정 화면과 API가 공유하는 계약
+// 회사 식별값은 내부용이므로 어떤 응답에도 담지 않음
 
 // 아이디: 소문자·숫자·밑줄·하이픈 4~20자 (서비스 전체에서 유일, 대소문자 구분 없음)
 export const loginIdSchema = z
   .string()
   .regex(/^[a-z0-9_-]{4,20}$/, VALIDATION_MESSAGES.LOGIN_ID_FORMAT);
 
-// 비밀번호 정책은 §18.1 결정 전까지 최소 기준만 둠 (10~72자, bcrypt·argon2 입력 한도 고려)
+// 비밀번호 정책은 결정 전까지 최소 기준만 둠 (10~72자, bcrypt·argon2 입력 한도 고려)
 export const passwordSchema = z
   .string()
   .min(10, VALIDATION_MESSAGES.PASSWORD_TOO_SHORT)
@@ -64,7 +64,7 @@ export const signupRequestSchema = z.object({
 
 export type SignupRequest = z.infer<typeof signupRequestSchema>;
 
-// 가입 직후에는 이메일 인증 대기 상태, 인증이 끝나야 가입 완료 (§6.7)
+// 가입 직후에는 이메일 인증 대기 상태, 인증이 끝나야 가입 완료
 export const signupResponseSchema = z.object({
   email: z.email(),
   // 인증 코드 재발송까지 대기해야 하는 초
@@ -86,7 +86,7 @@ export const emailResendResponseSchema = z.object({
 export const loginRequestSchema = z.object({
   loginId: z.string().min(1),
   password: z.string().min(1),
-  // 현장 휴대폰용 자동 로그인 (§6.4)
+  // 현장 휴대폰용 자동 로그인
   isRemembered: z.boolean().default(true),
 });
 
@@ -122,7 +122,7 @@ export const passwordSetSchema = z.object({
 
 export type PasswordSet = z.infer<typeof passwordSetSchema>;
 
-// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 이메일의 인증 코드를 확인해야 반영 (§6.7)
+// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 이메일의 인증 코드를 확인해야 반영
 // 소셜 로그인만 쓰는 계정은 확인할 비밀번호가 없어 생략하고, 소셜 가입 직후 이메일 등록에도 같은 요청을 씀
 export const emailChangeSchema = z.object({
   newEmail: z.email().max(254),
@@ -131,7 +131,7 @@ export const emailChangeSchema = z.object({
 
 export type EmailChange = z.infer<typeof emailChangeSchema>;
 
-// 소셜 로그인 (§6.1): 제공자는 서버 설정에 따라 켜지고, 시작 요청은 로그인 화면 주소를 돌려줌
+// 소셜 로그인: 제공자는 서버 설정에 따라 켜지고, 시작 요청은 로그인 화면 주소를 돌려줌
 export const SOCIAL_PROVIDER_KEYS = ['kakao', 'naver', 'google'] as const;
 
 export const socialProviderSchema = z.enum(SOCIAL_PROVIDER_KEYS);
@@ -199,7 +199,7 @@ export const socialMethodsResponseSchema = z.object({
 
 export type SocialMethodsResponse = z.infer<typeof socialMethodsResponseSchema>;
 
-// 계정 해지 (§6.5): 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제, 메일로 받은 링크로 취소
+// 계정 해지: 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제, 메일로 받은 링크로 취소
 // 비밀번호 로그인이 있는 계정은 현재 비밀번호를 다시 확인 (소셜 로그인만 쓰는 계정은 확인할 비밀번호가 없음)
 export const closureRequestSchema = z.object({ currentPassword: z.string().min(1).optional() });
 
@@ -223,7 +223,7 @@ export const meResponseSchema = z.object({
 
 export type MeResponse = z.infer<typeof meResponseSchema>;
 
-// 공수 입력 방식: 비율(1.0=하루) 또는 시간 (§9.5)
+// 공수 입력 방식: 비율(1.0=하루) 또는 시간
 export const workUnitModeSchema = z.enum(['RATIO', 'HOURS']);
 
 export type WorkUnitMode = z.infer<typeof workUnitModeSchema>;
@@ -245,7 +245,7 @@ export const companySettingsSchema = z.object({
 
 export type CompanySettings = z.infer<typeof companySettingsSchema>;
 
-// 기본값: 하루 8시간, 월 26일(주 6일 현장 연평균 365×6÷7÷12≈26.1일), 비율 방식 (결정 ①)
+// 기본값: 하루 8시간, 월 26일(주 6일 현장 연평균 365×6÷7÷12≈26.1일), 비율 방식
 export const DEFAULT_COMPANY_SETTINGS: CompanySettings = {
   standardWorkMinutes: 480,
   monthlyWorkDays: 26,
@@ -259,7 +259,7 @@ export const WORK_PATTERNS = [
   { key: 'SEVEN_DAYS', label: '주 7일', days: 30.4, hint: '365÷12 ≈ 30.4일' },
 ] as const;
 
-// 로그인 기기 목록 (§6.4), 식별자는 원격 로그아웃 대상 지정용 불투명 값
+// 로그인 기기 목록, 식별자는 원격 로그아웃 대상 지정용 불투명 값
 export const deviceSchema = z.object({
   id: z.string(),
   label: z.string(),

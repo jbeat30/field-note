@@ -97,7 +97,7 @@ const CodeStep = ({
   );
 };
 
-// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 주소를 인증해야 반영 (§6.7)
+// 이메일 변경: 비밀번호가 있는 계정은 비밀번호를 다시 확인하고, 새 주소를 인증해야 반영
 export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: boolean }) => {
   const [pendingEmail, setPendingEmail] = useState<string | null>(null);
   const [isChanged, setChanged] = useState(false);

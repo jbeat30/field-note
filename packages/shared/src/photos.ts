@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 작업 사진 (서비스 기획서 §12.2), 파일 자체는 파일 업로드(files)에 있고 사진은 구분·구역·촬영일시·설명을 덧붙인 기록
+// 작업 사진, 파일 자체는 파일 업로드(files)에 있고 사진은 구분·구역·촬영일시·설명을 덧붙인 기록
 export const PHOTO_CATEGORIES = [
   'BEFORE',
   'DURING',

@@ -1,7 +1,7 @@
 import { z } from 'zod';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
-// 직원 카드 (서비스 기획서 §8), 직원은 서비스에 로그인하지 않고 관리자가 기록
+// 직원 카드, 직원은 서비스에 로그인하지 않고 관리자가 기록
 // 주민등록번호·계좌번호는 저장 제외(급여는 단가표만, `laborCost.ts`), 생년월일·연락처는 카드(상세)에서만 제공
 export const EMPLOYEE_STATUSES = ['ACTIVE', 'ON_LEAVE', 'LEFT'] as const;
 
