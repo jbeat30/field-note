@@ -185,7 +185,7 @@ export const sortDirectionSchema = z.enum(SORT_DIRECTIONS);
 
 export type SortDirection = z.infer<typeof sortDirectionSchema>;
 
-// 목록은 한 번에 한 쪽만 돌려준다 (데이터가 많아져도 응답 크기가 일정하도록)
+// 목록은 한 번에 한 쪽만 돌려줌 (데이터가 많아져도 응답 크기가 일정하도록)
 export const PROJECT_PAGE_SIZE_DEFAULT = 20;
 export const PROJECT_PAGE_SIZE_MAX = 100;
 

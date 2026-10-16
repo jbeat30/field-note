@@ -87,7 +87,7 @@ const TransitionForm = ({
 }) => {
   const transition = useTransitionProject(project.id);
   const history = useProjectHistory(project.id);
-  // 완료·재개처럼 확인할 것이 있는 전환은 확인 전에 알려 준다 (막지는 않음, §10.3)
+  // 완료·재개처럼 확인할 것이 있는 전환은 확인 전에 알려 줌 (막지는 않음, §10.3)
   const notices = useTransitionNotices(project.id, to);
   // 보증 기간·종료 예정일 기준으로 완료 → 종료/보증 시작 가능 여부와 조기 종료 사유 필요 여부 판단
   const warranty = useWarranty(project.id);

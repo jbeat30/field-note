@@ -58,7 +58,7 @@ export const resetMockCredentials = () => stores.clear();
 
 const scopeOf = (account: MockAccount) => account.companyId ?? account.loginId;
 
-// 더미 서류·필요 자격은 DB 시드와 같은 원본을 쓴다 (자격 종류는 선택 목록 이름, 프로젝트는 코드로 연결)
+// 더미 서류·필요 자격은 DB 시드와 같은 원본을 씀 (자격 종류는 선택 목록 이름, 프로젝트는 코드로 연결)
 const storeOf = (account: MockAccount): Store => {
   const existing = stores.get(scopeOf(account));
 

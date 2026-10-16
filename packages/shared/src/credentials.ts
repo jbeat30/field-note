@@ -169,8 +169,8 @@ export type CredentialGap = {
 type HeldCredential = { typeId: string; expiresOn: string | null };
 
 /**
- * @description 필요 자격 대비 직원의 부족한 점을 찾는다. 투입 기간 끝까지 유효한 서류가 있으면 통과이고,
- * 서류가 없으면 자격 없음, 기간이 시작되기 전에 모두 만료면 자격 만료, 기간 중에 만료되면 투입 중 만료이다 (§8.4)
+ * @description 필요 자격 대비 직원의 부족한 점을 찾음, 투입 기간 끝까지 유효한 서류가 있으면 통과이고,
+ * 서류가 없으면 자격 없음, 기간이 시작되기 전에 모두 만료면 자격 만료, 기간 중에 만료되면 투입 중 만료 (§8.4)
  * @param requiredTypeIds 프로젝트의 필요 자격 종류
  * @param held 직원의 (지우지 않은) 서류
  * @param period 투입 기간 (시작일·종료일)
@@ -208,7 +208,7 @@ export const findCredentialGaps = (
 };
 
 /**
- * @description 서류 목록을 만료가 빠른 순으로 정렬한다 (만료일이 없는 서류는 맨 뒤, 같으면 등록이 늦은 것이 뒤)
+ * @description 서류 목록을 만료가 빠른 순으로 정렬함 (만료일이 없는 서류는 맨 뒤, 같으면 등록이 늦은 것이 뒤)
  * @param items 서류 목록
  * @returns 정렬한 새 목록
  */

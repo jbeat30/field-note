@@ -64,7 +64,7 @@ export const repairCreateSchema = z.object({
 
 export type RepairCreate = z.infer<typeof repairCreateSchema>;
 
-// 완료된 건은 고칠 수 없다 (다시 처리 중으로 되돌린 뒤 수정)
+// 완료된 건은 고칠 수 없음 (다시 처리 중으로 되돌린 뒤 수정)
 export const repairUpdateSchema = repairCreateSchema
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
@@ -183,7 +183,7 @@ export const repairRequestDetailSchema = repairRequestSchema.extend({
 export type RepairRequestDetail = z.infer<typeof repairRequestDetailSchema>;
 
 /**
- * @description 미처리 보수 요청인지: 접수·처리 중이면 보증 종료를 막는다 (보류는 종료 전 안내만, 서비스 기획서 §10.3)
+ * @description 미처리 보수 요청인지: 접수·처리 중이면 보증 종료를 막음 (보류는 종료 전 안내만, 서비스 기획서 §10.3)
  * @param status 보수 요청 상태
  * @returns 미처리 여부
  */

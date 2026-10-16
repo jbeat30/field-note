@@ -88,7 +88,7 @@ export const DateInput = ({
             size={size}
             className={cn(size === 'sm' ? 'pr-9' : 'pr-11', className)}
             {...props}
-            // 입력 칸을 눌러도 달력이 열린다 (직접 입력도 계속 가능)
+            // 입력 칸을 눌러도 달력이 열림 (직접 입력도 계속 가능)
             onClick={(event) => {
               props.onClick?.(event);
               openCalendar();

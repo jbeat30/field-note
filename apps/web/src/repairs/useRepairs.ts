@@ -59,7 +59,7 @@ export const useAfterServiceUsage = (projectId: string) =>
     },
   });
 
-// 보수 요청의 목록·상세는 서로 영향을 주므로 하나가 바뀌면 모두 다시 읽는다 (상태 안내에 쓰는 종료 점검도 함께)
+// 보수 요청의 목록·상세는 서로 영향을 주므로 하나가 바뀌면 모두 다시 읽음 (상태 안내에 쓰는 종료 점검도 함께)
 const useInvalidateRepairs = () => {
   const queryClient = useQueryClient();
 

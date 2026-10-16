@@ -6,7 +6,7 @@ import { PageHeader } from '../components/ui/page-header';
 import { Switch } from '../components/ui/switch';
 import { useAlertSettings, useSaveAlertSettings } from '../dashboard/useDashboard';
 
-// 알림을 성격별로 묶어서 보여 준다 (모든 알림 종류가 한 묶음에 들어가야 함)
+// 알림을 성격별로 묶어서 보여 줌 (모든 알림 종류가 한 묶음에 들어가야 함)
 const GROUPS: { title: string; description: string; kinds: AlertKind[] }[] = [
   {
     title: '작업 내역',

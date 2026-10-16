@@ -132,7 +132,7 @@ const assertClient = async (tx: Prisma.TransactionClient, id: string, currentId:
   }
 };
 
-// 담당자는 같은 회사의 직원이며 퇴사한 직원은 새로 맡길 수 없다 (이미 맡고 있다면 유지)
+// 담당자는 같은 회사의 직원이며 퇴사한 직원은 새로 맡길 수 없음 (이미 맡고 있다면 유지)
 const assertManager = async (
   tx: Prisma.TransactionClient,
   id: string,
@@ -524,7 +524,7 @@ export const createProjectService = (
         },
       });
 
-      // 처음 보증 중이 될 때 보증 설정이 없으면 기본값(실제 완료일 기준)으로 종료 예정일을 계산해 둔다 (§10.3)
+      // 처음 보증 중이 될 때 보증 설정이 없으면 기본값(실제 완료일 기준)으로 종료 예정일을 계산해 둠 (§10.3)
       if (input.toStatus === 'WARRANTY' && !warranty.exists && current.actualEnd) {
         await createDefaultWarranty(tx, companyId, userId, id, fromDate(current.actualEnd));
       }

@@ -66,7 +66,7 @@ const Row = ({ label, hint, children }: { label: string; hint?: string; children
   </div>
 );
 
-// 디자인 시스템 모음: 화면을 만들기 전에 모든 요소의 모양을 한 곳에서 보고 다듬는다 (밝게·어둡게는 툴바에서 전환)
+// 디자인 시스템 모음: 화면을 만들기 전에 모든 요소의 모양을 한 곳에서 보고 다듬음 (밝게·어둡게는 툴바에서 전환)
 const Showcase = () => {
   const [employee, setEmployee] = useState('b');
   const [team, setTeam] = useState<string[]>(['a', 'b']);

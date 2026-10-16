@@ -19,7 +19,7 @@ import { useAddDocumentVersion, useCreateDocument, useDocuments } from '../docum
 import { useOpenDocument } from '../documents/useOpenDocument';
 import { useProject } from '../projects/useProjects';
 
-// 프로젝트 문서함: 도면·작업지시서·계약서·안전 서류를 분류 폴더별로 모으고, 개정되면 새 판으로 올린다 (서비스 기획서 §12.3, 09 문서 §3.6)
+// 프로젝트 문서함: 도면·작업지시서·계약서·안전 서류를 분류 폴더별로 모으고, 개정되면 새 판으로 올림 (서비스 기획서 §12.3, 09 문서 §3.6)
 export const ProjectDocumentsPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);

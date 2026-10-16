@@ -165,7 +165,7 @@ const live = (account: MockAccount, projectId?: string) => {
   );
 };
 
-// 변경·추가 작업 증빙 올리기가 쓰는 문서 만들기: 올린 파일로 문서를 만든다 (같은 파일로 이미 만들었으면 그 문서)
+// 변경·추가 작업 증빙 올리기가 쓰는 문서 만들기: 올린 파일로 문서를 만듦 (같은 파일로 이미 만들었으면 그 문서)
 export const createMockEvidenceDocument = (
   account: MockAccount,
   projectId: string,

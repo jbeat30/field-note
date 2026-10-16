@@ -30,7 +30,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 보증 라우트. 회사 ID·변경자는 세션에서만 얻는다. 설정은 이력으로 남고 보증서는 지워도 기록이 남는다
+ * @description 보증 라우트, 회사 ID·변경자는 세션에서만 획득, 설정 이력 보존, 보증서를 지워도 기록 유지
  * @param registry 라우트 등록소
  * @param warranty 보증 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

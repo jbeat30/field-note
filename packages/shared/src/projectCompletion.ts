@@ -68,7 +68,7 @@ type CheckInput = {
 };
 
 /**
- * @description 이 전환에서 확인할 것을 모은다. 진행 → 완료는 임시 저장 작업 내역(종료 전환에서도)·진행률 100%·남은 자재·협의 중 변경 작업,
+ * @description 이 전환에서 확인할 것을 모음, 진행 → 완료는 임시 저장 작업 내역(종료 전환에서도)·진행률 100%·남은 자재·협의 중 변경 작업,
  * 중단 → 진행은 종료 예정일 경과 안내 (§10.3), 차단 조건이 아닌 안내
  * @param input 현재·변경할 상태와 프로젝트 현황
  * @returns 확인할 항목 (없으면 빈 목록)
@@ -76,7 +76,7 @@ type CheckInput = {
 export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[] => {
   const checks: TransitionNotice[] = [];
 
-  // 종료는 임시 저장 작업 내역이 남아 있으면 막힌다 (§10.3), 안내를 먼저 보여 줌
+  // 종료는 임시 저장 작업 내역이 남아 있으면 막힘 (§10.3), 안내를 먼저 보여 줌
   if ((input.to === 'COMPLETED' || input.to === 'CLOSED') && input.draftLogCount > 0) {
     checks.push({ type: 'DRAFT_LOGS', count: input.draftLogCount });
   }
@@ -113,7 +113,7 @@ export const evaluateTransitionNotices = (input: CheckInput): TransitionNotice[]
 };
 
 /**
- * @description 전환 점검 항목을 화면에 보여 줄 문장으로 바꾼다
+ * @description 전환 점검 항목을 화면에 보여 줄 문장으로 변환
  * @param check 점검 항목
  * @returns 안내 문장
  */
@@ -237,7 +237,7 @@ export const SUMMARY_PHOTO_DEFAULT_COUNT = 8;
 export const SUMMARY_DOCUMENT_CATEGORIES = ['SAFETY', 'CONTRACT'] as const;
 
 /**
- * @description 마감 요약에 실을 사진을 고름. 직접 고른 사진이 있으면 그것을 최근 촬영순으로 SUMMARY_PHOTO_MAX장까지,
+ * @description 마감 요약에 실을 사진을 고름, 직접 고른 사진이 있으면 그것을 최근 촬영순으로 SUMMARY_PHOTO_MAX장까지,
  * 없으면 작업 후 사진 중 최근 SUMMARY_PHOTO_DEFAULT_COUNT장
  * @param photos 검사가 끝난 사진 (촬영일시, 분류, 고름 표시)
  * @returns 요약에 실을 사진 id (최근 촬영순)
@@ -265,7 +265,7 @@ export const selectSummaryPhotos = (
 };
 
 /**
- * @description 마감 요약에 실을 문서를 고름. 안전·검사, 계약·공문 분류의 민감 자료가 아닌 문서 중 직접 고른 것,
+ * @description 마감 요약에 실을 문서를 고름, 안전·검사, 계약·공문 분류의 민감 자료가 아닌 문서 중 직접 고른 것,
  * 하나도 고르지 않았으면 그 분류의 민감 자료가 아닌 문서 모두
  * @param documents 삭제되지 않은 문서 (분류, 민감 여부, 고름 표시)
  * @returns 요약에 실을 문서 id (받은 순서 그대로)

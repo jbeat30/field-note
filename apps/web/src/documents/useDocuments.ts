@@ -170,7 +170,7 @@ export const useDeleteDocument = () => {
 };
 
 /**
- * @description 열람·내려받기 주소를 받음 (민감 자료면 이 호출이 열람 기록으로 남는다)
+ * @description 열람·내려받기 주소 요청 (민감 자료면 이 호출이 열람 기록으로 보존)
  * @param id 문서 ID
  * @param versionNo 버전 번호
  * @param mode 열람 또는 내려받기

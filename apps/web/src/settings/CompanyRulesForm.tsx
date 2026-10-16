@@ -54,7 +54,7 @@ export const CompanyRulesForm = () => {
   const [fields, setFields] = useState<Fields | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof CompanyRules, string>>>({});
   const [message, setMessage] = useState('');
-  // 서버 값이 도착하면 입력칸을 채운다 (고치는 중에는 덮어쓰지 않음)
+  // 서버 값이 도착하면 입력칸을 채움 (고치는 중에는 덮어쓰지 않음)
   const current = fields ?? (rules.data ? toFields(rules.data) : null);
 
   if (rules.isError) {

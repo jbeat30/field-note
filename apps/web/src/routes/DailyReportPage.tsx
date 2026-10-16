@@ -14,7 +14,7 @@ import { downloadReportXlsx } from '../reports/exportReport';
 import { ReportSheet } from '../reports/ReportSheet';
 import { useDailyReport } from '../reports/useDailyReport';
 
-// 작업일보 출력: 하루치를 화면에서 확인하고 인쇄·PDF로 저장하거나, 기간을 정해 엑셀로 내려받는다 (서비스 기획서 §15.4)
+// 작업일보 출력: 하루치를 화면에서 확인하고 인쇄·PDF로 저장하거나, 기간을 정해 엑셀로 내려받음 (서비스 기획서 §15.4)
 export const DailyReportPage = () => {
   const { id = '' } = useParams();
   const [params, setParams] = useSearchParams();

@@ -24,7 +24,7 @@ type Story = StoryObj<typeof meta>;
 const photoButtons = (canvas: ReturnType<typeof within>) =>
   canvas.getAllByRole('button', { name: /사진 열기/ });
 
-// 올리기 폼 없이 작업 날짜별 묶음으로 모아 본다 (더미 5장: 10월 7일 1장, 6일 2장, 5일 2장)
+// 올리기 폼 없이 작업 날짜별 묶음으로 모아 봄 (더미 5장: 10월 7일 1장, 6일 2장, 5일 2장)
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

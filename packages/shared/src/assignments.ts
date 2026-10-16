@@ -85,7 +85,7 @@ export const assignmentCreateSchema = z
 
 export type AssignmentCreate = z.infer<typeof assignmentCreateSchema>;
 
-// 수정: 직원은 바꿀 수 없다 (직원을 바꾸려면 취소하고 새로 투입)
+// 수정: 직원은 바꿀 수 없음 (직원을 바꾸려면 취소하고 새로 투입)
 export const assignmentUpdateSchema = z
   .object({
     startDate: dateSchema,

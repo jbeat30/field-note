@@ -10,7 +10,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 빈 값은 필터에서 뺀다 (주소에 `status=`처럼 빈 값이 실리지 않게)
+// 빈 값은 필터에서 뺌 (주소에 `status=`처럼 빈 값이 실리지 않게)
 const cleanFilter = (filter: ProjectListQuery): ProjectListQuery => ({
   status: filter.status || undefined,
   clientId: filter.clientId || undefined,
@@ -27,13 +27,13 @@ const cleanFilter = (filter: ProjectListQuery): ProjectListQuery => ({
   pageSize: filter.pageSize || undefined,
 });
 
-// 프로젝트 목록 한 쪽: 조건·정렬·쪽을 서버에 넘겨 그 쪽만 받는다 ({ items, total, page, pageSize })
+// 프로젝트 목록 한 쪽: 조건·정렬·쪽을 서버에 넘겨 그 쪽만 받음 ({ items, total, page, pageSize })
 export const useProjects = (filter: ProjectListQuery) => {
   const query = cleanFilter(filter);
 
   return useQuery({
     queryKey: queryKeys.projects(query),
-    // 조건이 바뀌어 새 조회가 시작되면 이전 요청은 취소된다 (signal)
+    // 조건이 바뀌어 새 조회가 시작되면 이전 요청은 취소됨 (signal)
     queryFn: async ({ signal }) => {
       const { data } = await apiClient.GET('/api/v1/projects', { params: { query }, signal });
 

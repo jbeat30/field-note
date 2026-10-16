@@ -63,7 +63,7 @@ export const createPgBossQueue = async (
 };
 
 /**
- * @description 메모리 작업 큐 (DB 없는 단위 테스트용). 보낸 작업을 기록하고 처리기가 있으면 바로 실행
+ * @description 메모리 작업 큐 (DB 없는 단위 테스트용), 보낸 작업을 기록하고 처리기가 있으면 바로 실행
  * @returns 작업 큐와 보낸 작업 목록
  */
 export const createMemoryQueue = () => {

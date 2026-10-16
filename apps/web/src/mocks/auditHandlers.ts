@@ -112,7 +112,7 @@ const storeOf = (account: MockAccount) => {
 };
 
 /**
- * @description 다른 목업이 감사 기록을 남길 때 쓴다 (서버가 같은 트랜잭션에서 기록을 남기는 것을 흉내)
+ * @description 다른 목업이 감사 기록을 남길 때 씀 (서버가 같은 트랜잭션에서 기록을 남기는 것을 흉내)
  * @param account 현재 계정
  * @param entry 행위와 대상
  */

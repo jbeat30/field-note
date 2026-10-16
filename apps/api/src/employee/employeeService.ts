@@ -62,7 +62,7 @@ const toDetail = (row: Row): EmployeeDetail => ({
   updatedAt: row.updatedAt.toISOString(),
 });
 
-// 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있다 (다른 회사 항목은 RLS로 보이지 않음)
+// 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있음 (다른 회사 항목은 RLS로 보이지 않음)
 // 숨긴 항목은 새로 선택할 수 없지만 이미 사용 중인 직원은 그대로 유지 가능
 const assertOption = async (
   tx: Prisma.TransactionClient,

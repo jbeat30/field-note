@@ -83,7 +83,7 @@ export const materialParamsSchema = z.object({ id: z.uuid() });
 
 export const materialRecordParamsSchema = z.object({ id: z.uuid() });
 
-// 즉석 추가: 이름과 단위만으로 만들 수 있다 (분류는 소모품으로 시작)
+// 즉석 추가: 이름과 단위만으로 만들 수 있음 (분류는 소모품으로 시작)
 export const materialCreateSchema = z.object({
   name: nameSchema,
   spec: specSchema.optional(),
@@ -304,7 +304,7 @@ export type MaterialBalanceResponse = z.infer<typeof materialBalanceResponseSche
 type Totals = { received: number; used: number; returned: number; discarded: number };
 
 /**
- * @description 기록 구분별 합계에서 잔량과 마이너스 경고를 계산 (서버와 목업이 함께 쓴다)
+ * @description 기록 구분별 합계에서 잔량과 마이너스 경고 계산 (서버와 목업이 함께 사용)
  * @param totals 구분별 수량 합계
  * @returns 잔량과 마이너스 여부
  */

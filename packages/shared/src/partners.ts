@@ -63,7 +63,7 @@ export const partnerSummarySchema = z.object({
   kind: partnerKindSchema,
   name: z.string(),
   contactName: z.string().nullable(),
-  // 쓰지 않는 업체는 삭제하지 않고 숨긴다 (프로젝트·자재 기록에 쓰인 상호가 사라지지 않게 함)
+  // 쓰지 않는 업체는 삭제하지 않고 숨김 (프로젝트·자재 기록에 쓰인 상호가 사라지지 않게 함)
   isActive: z.boolean(),
 });
 

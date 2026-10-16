@@ -103,7 +103,7 @@ export const StaffingCalendarPage = () => {
     (row) =>
       (!title || row.employee.title === title) && (!onlyConflicts || row.conflictDates.length > 0),
   );
-  // 프로젝트마다 막대에서 같은 구분 색을 쓴다 (프로젝트 id 순서로 0~5번 색을 돌려 씀)
+  // 프로젝트마다 막대에서 같은 구분 색을 씀 (프로젝트 id 순서로 0~5번 색을 돌려 씀)
   const projectColors = useMemo(() => {
     const ids = [...new Set((calendar.data?.workDays ?? []).map((item) => item.projectId))].sort();
 

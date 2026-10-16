@@ -207,7 +207,7 @@ const newestFirst = (a: MockPhoto, b: MockPhoto) =>
   b.takenAt.localeCompare(a.takenAt) || b.id.localeCompare(a.id);
 
 /**
- * @description 파일 업로드·사진 API 목업 핸들러. 업로드 주소는 같은 출처의 `/mock-storage/...`로 발급하고 이 핸들러가 받는다 (실제 흐름: 신청 → PUT → 완료 알림 → 사진 등록)
+ * @description 파일 업로드·사진 API 목업 핸들러, 업로드 주소는 같은 출처의 `/mock-storage/...`로 발급하고 이 핸들러가 받음 (실제 흐름: 신청 → PUT → 완료 알림 → 사진 등록)
  * @param helpers 공통 오류 응답과 본문 검증 함수 (handlers.ts와 같은 규칙)
  * @returns msw 핸들러 목록
  */
@@ -399,7 +399,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
       );
       const file = parsed.success ? files.get(parsed.data.id) : undefined;
 
-      // 직원 서류 파일은 서류 API로만 연다 (서버와 같은 규칙)
+      // 직원 서류 파일은 서류 API로만 염 (서버와 같은 규칙)
       if (
         !file ||
         file.companyId !== scopeOf(account) ||

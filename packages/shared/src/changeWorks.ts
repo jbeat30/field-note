@@ -57,7 +57,7 @@ export const changeWorkCreateSchema = z.object({
 
 export type ChangeWorkCreate = z.infer<typeof changeWorkCreateSchema>;
 
-// 협의 중일 때만 고칠 수 있다 (합의·철회된 기록은 그대로 보존)
+// 협의 중일 때만 고칠 수 있음 (합의·철회된 기록은 그대로 보존)
 export const changeWorkUpdateSchema = z
   .object({
     requestedOn: dateSchema,

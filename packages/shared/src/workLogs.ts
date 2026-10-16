@@ -23,7 +23,7 @@ export const WORK_LOG_MAX_ENTRIES = 100;
 // 한 항목의 공수 상한: 하루 24시간
 export const WORK_LOG_MAX_ENTRY_MINUTES = 1440;
 
-// 작업일과 처음 저장한 날의 차이가 이 일수를 넘으면 "지연 입력"으로 표시만 한다 (서비스 기획서 §9.4, 기준일은 제안값)
+// 작업일과 처음 저장한 날의 차이가 이 일수를 넘으면 "지연 입력"으로 표시만 함 (서비스 기획서 §9.4, 기준일은 제안값)
 export const LATE_INPUT_DAYS = 3;
 
 // 같은 직원의 하루 합계 공수가 하루 기준시간의 이 배수를 넘으면 경고
@@ -56,7 +56,7 @@ const entriesSchema = z
     '같은 직원·작업 구분 조합은 한 번만 입력할 수 있습니다',
   );
 
-// 저장 요청: 임시 저장은 비어 있어도 되고, 저장은 작업 내용과 공수 한 건 이상이 필요하다 (validateWorkLogForSave)
+// 저장 요청: 임시 저장은 비어 있어도 되고, 저장은 작업 내용과 공수 한 건 이상 필요 (validateWorkLogForSave)
 export const workLogSaveSchema = z.object({
   status: workLogStatusSchema,
   content: z
@@ -151,7 +151,7 @@ export const workLogSummarySchema = z.object({
   isAfterService: z.boolean(),
   isLate: z.boolean(),
   entryCount: z.number().int(),
-  // 공수 합(분), 집계에는 저장된 작업 내역만 쓰고 임시 저장은 별도 표시한다 (§9.4)
+  // 공수 합(분), 집계에는 저장된 작업 내역만 쓰고 임시 저장은 별도 표시함 (§9.4)
   totalMinutes: z.number().int(),
   hasContent: z.boolean(),
   // 그날 일한 사람별 시간(분), 달력에서 누가 일했는지 바로 표시하는 데 사용
@@ -172,7 +172,7 @@ export type WorkLogListQuery = z.infer<typeof workLogListQuerySchema>;
 
 export const workLogParamsSchema = z.object({ id: z.uuid(), workDate: dateSchema });
 
-// 수정 이력: 저장된 작업 내역을 고칠 때마다 고치기 전 값을 남긴다 (서비스 기획서 §9.1, §9.4)
+// 수정 이력: 저장된 작업 내역을 고칠 때마다 고치기 전 값을 남김 (서비스 기획서 §9.1, §9.4)
 export const workLogSnapshotSchema = z.object({
   status: workLogStatusSchema,
   content: z.string(),
@@ -253,7 +253,7 @@ export const workLogStatusCheck = (
 };
 
 /**
- * @description 작업 일자 검사: 프로젝트 예정 기간 안이어야 하고 오늘 이후는 입력할 수 없다 (서비스 기획서 §9.4)
+ * @description 작업 일자 검사: 프로젝트 예정 기간 안이어야 하고 오늘 이후는 입력할 수 없음 (서비스 기획서 §9.4)
  * @param workDate 작업 일자
  * @param project 프로젝트 예정 기간
  * @param today 서울 기준 오늘
@@ -307,7 +307,7 @@ export const dailyOverMinutes = (standardMinutes: number) =>
   Math.round(standardMinutes * DAILY_OVER_MAN_DAYS);
 
 /**
- * @description 저장할 때의 필수 항목: 임시 저장은 비어 있어도 되고, 저장은 작업 내용과 공수 한 건 이상이 필요하다
+ * @description 저장할 때의 필수 항목: 임시 저장은 비어 있어도 허용, 저장은 작업 내용과 공수 한 건 이상 필요
  * @param input 상태·작업 내용·공수 항목
  * @returns 통과 여부와 거부 사유
  */

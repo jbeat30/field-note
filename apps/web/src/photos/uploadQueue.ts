@@ -1,7 +1,7 @@
 import type { PhotoCategory } from '@field-note/shared';
 
 // 사진 업로드 대기열: 선택 즉시 목록에 보이고, 백그라운드에서 한 장씩 순서대로 올리며,
-// 실패하면 다시 시도하고, 앱을 닫아도 IndexedDB에 남아 다시 열면 이어서 올린다 (기술 기획서 §6)
+// 실패하면 다시 시도하고, 앱을 닫아도 IndexedDB에 남아 다시 열면 이어서 올림 (기술 기획서 §6)
 //
 // 한 장의 진행 단계: REQUEST(업로드 신청) → PUT(저장소에 올리기) → COMPLETE(완료 알림) → REGISTER(사진으로 등록)
 // 각 단계는 재전송해도 안전(서버가 중복 차단)하므로 어느 단계에서 끊겨도 그 단계부터 재개
@@ -117,7 +117,7 @@ const nextStep = (step: UploadStep): UploadStep | null =>
   UPLOAD_STEPS[UPLOAD_STEPS.indexOf(step) + 1] ?? null;
 
 /**
- * @description 업로드 대기열 생성. 한 번에 한 장씩 순서대로 처리하고 단계마다 저장해 둔다
+ * @description 업로드 대기열 생성, 한 번에 한 장씩 순서대로 처리하고 단계마다 저장
  * @param deps 서버 호출, 저장소, 시간 등 외부 의존성 (테스트에서 교체)
  * @returns 업로드 대기열
  */
