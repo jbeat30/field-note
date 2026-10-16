@@ -200,7 +200,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 | RustFS     | 사진·자료 저장소 (S3 호환)            | API `localhost:9000`, 관리 화면 `localhost:9001`        |
 | Mailpit    | 보낸 메일을 받아 보여주는 가짜 메일함 | 메일 수신 `localhost:1025`, 확인 화면 `localhost:8025`  |
 
-- 메일은 실제로 발송되지 않는다. 인증 메일 등은 `localhost:8025`에서 확인한다
+- 메일은 실제로 발송되지 않는다. 인증 메일 등은 `localhost:8025`에서 확인한다 (포트가 막히면 `.env`에 `MAILPIT_UI_PORT=18025`처럼 적어 바꾼다)
 - MinIO 공식 이미지가 더 이상 배포되지 않아 호환 제품인 RustFS를 쓴다
 
 ## DB와 회사 격리
