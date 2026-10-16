@@ -15,7 +15,7 @@ type DocumentCategoryCardsProps = {
   onChange: (value: DocumentCategory | '') => void;
 };
 
-// 분류를 폴더 카드로: 무엇을 올리는 곳인지 예시 한 줄과 문서 수를 보이고, 누르면 그 분류만 본다 (다시 누르면 전체)
+// 분류를 폴더 카드로: 무엇을 올리는 곳인지 예시 한 줄과 문서 수를 보이고, 누르면 그 분류만 봄 (다시 누르면 전체)
 export const DocumentCategoryCards = ({
   counts,
   total,

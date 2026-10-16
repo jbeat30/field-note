@@ -19,7 +19,7 @@ const toEntry = (row: Prisma.IdempotencyKeyGetPayload<object>): IdempotencyEntry
     : { state: 'processing', fingerprint: row.fingerprint, expiresAt: row.expiresAt.getTime() };
 
 /**
- * @description DB 멱등 키 저장소 (앱 계정으로 자기 회사 범위에서만 처리). 서버를 여러 대 띄우거나 다시 시작해도 키가 유지된다
+ * @description DB 멱등 키 저장소 (앱 계정으로 자기 회사 범위에서만 처리), 서버를 여러 대 띄우거나 다시 시작해도 키 유지
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (테스트에서 교체)
  * @returns 멱등 키 저장소
@@ -35,7 +35,7 @@ export const createPrismaIdempotencyStore = (
       // 만료된 기록은 없는 것으로 보고 치움 (같은 키를 다시 쓸 수 있게)
       await tx.idempotencyKey.deleteMany({ where: { keyHash, expiresAt: { lte: now() } } });
 
-      // 동시에 같은 키가 와도 한 요청만 들어간다 (기본 키 충돌은 무시)
+      // 동시에 같은 키가 와도 한 요청만 들어감 (기본 키 충돌은 무시)
       const created = await tx.idempotencyKey.createMany({
         data: {
           companyId,

@@ -47,7 +47,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 고객·협력업체·자재 공급처 명부 라우트. 회사 ID는 세션에서만 얻는다 (쓰이지 않은 업체만 삭제, 쓰고 있으면 숨김)
+ * @description 고객·협력업체·자재 공급처 명부 라우트, 회사 ID는 세션에서만 얻음 (쓰이지 않은 업체만 삭제, 쓰고 있으면 숨김)
  * @param registry 라우트 등록소
  * @param partners 명부 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

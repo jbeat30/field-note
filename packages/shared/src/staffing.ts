@@ -123,7 +123,7 @@ const unavailableOn = (employee: StaffingEmployee, date: string) => {
 };
 
 /**
- * @description 캘린더 응답을 직원 × 날짜 표로 만든다. 같은 프로젝트의 투입이 겹쳐도 한 곳으로 센다
+ * @description 캘린더 응답을 직원 × 날짜 표로 변환, 같은 프로젝트의 투입이 겹쳐도 한 곳으로 집계
  * 휴직 직원은 기간 전체, 퇴사 직원은 퇴사일 다음 날부터 근무 불가로 표시하되 투입이 있으면 투입 표시
  * @param calendar 캘린더 응답
  * @returns 직원별 날짜 칸 (직원 순서는 응답 그대로)
@@ -182,7 +182,7 @@ export const findFreeEmployees = (rows: StaffingRow[]) =>
     .map((row) => row.employee);
 
 /**
- * @description 겹침이 있는 날을 직원별로 모은다
+ * @description 겹침이 있는 날을 직원별로 수집
  * @param rows 직원 × 날짜 표
  * @returns 겹치는 날이 있는 직원과 그 날짜
  */
@@ -194,7 +194,7 @@ export const findStaffingConflicts = (rows: StaffingRow[]) =>
   });
 
 /**
- * @description 날짜를 일 단위로 옮긴다 (주 이동에 사용)
+ * @description 날짜를 일 단위로 옮김 (주 이동에 사용)
  * @param date 기준일
  * @param days 옮길 일수 (음수면 과거)
  * @returns 옮긴 날짜
@@ -203,7 +203,7 @@ export const shiftDate = (date: string, days: number) =>
   new Date(Date.parse(`${date}T00:00:00Z`) + days * DAY_MS).toISOString().slice(0, 10);
 
 // ── 사람 행 × 날짜 열 타임라인 (09 문서 §4) ──
-// 투입 계획은 두지 않고, 저장된 작업 내역에 그 사람이 들어간 날만 막대로 보인다 (같은 프로젝트에 이어진 날은 막대 하나)
+// 투입 계획은 두지 않고, 저장된 작업 내역에 그 사람이 들어간 날만 막대로 보임 (같은 프로젝트에 이어진 날은 막대 하나)
 
 export type StaffingTimelineDay = { date: string; minutes: number; conflict: boolean };
 
@@ -233,7 +233,7 @@ export type StaffingTimelineRow = {
 };
 
 /**
- * @description 캘린더 응답을 사람 행 × 날짜 타임라인으로 만든다. 같은 프로젝트에 이어진 날은 막대 하나(segment)로 묶고,
+ * @description 캘린더 응답을 사람 행 × 날짜 타임라인으로 만듦, 같은 프로젝트에 이어진 날은 막대 하나(segment)로 묶고,
  * 같은 날 두 프로젝트 이상에서 일했으면 그 날을 겹침으로 표시
  * @param calendar 캘린더 응답 (workDays는 저장된 작업 내역의 사람·날짜·프로젝트별 시간)
  * @returns 직원 행 (직원 순서는 응답 그대로)

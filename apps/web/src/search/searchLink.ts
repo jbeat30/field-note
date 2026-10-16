@@ -3,7 +3,7 @@ import type { SearchHit } from '@field-note/shared';
 import { projectWorkPath } from '../lib/projectPaths';
 
 /**
- * @description 검색 결과를 눌렀을 때 이동할 화면 주소. 프로젝트 없는 메모(메모함)는 메모함으로, 문서는 문서함에서 상세를 바로 열고, 작업 내역은 그 날짜의 작업 화면으로 간다
+ * @description 검색 결과를 눌렀을 때 이동할 화면 주소, 프로젝트 없는 메모(메모함)는 메모함, 문서는 문서함 상세, 작업 내역은 그 날짜의 작업 화면
  * @param hit 검색 결과 한 건
  * @returns 화면 주소
  */

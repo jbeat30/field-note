@@ -399,7 +399,7 @@ export const createWorkLogService = (
         throw invalid(dateCheck.path, dateCheck.message);
       }
 
-      // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없다 (§13.2)
+      // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없음 (§13.2)
       try {
         await assertMonthOpen(tx, companyId, workDate);
       } catch (error) {

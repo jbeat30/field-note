@@ -31,7 +31,7 @@ export const fitWithin = (width: number, height: number, maxSide = PHOTO_MAX_SID
 };
 
 /**
- * @description 사진을 JPEG로 변환·압축 (HEIC 등 브라우저가 열 수 있는 형식을 서버가 받는 JPEG로 바꿈, 회전 정보는 화면에 맞춰 반영).
+ * @description 사진을 JPEG로 변환·압축 (HEIC 등 브라우저가 열 수 있는 형식을 서버가 받는 JPEG로 바꿈, 회전 정보는 화면에 맞춰 반영)
  * 위치 정보(EXIF)는 변환 과정에서 제거
  * @param file 사용자가 고른 사진
  * @returns 압축한 JPEG와 크기

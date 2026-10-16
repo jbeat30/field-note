@@ -185,7 +185,7 @@ import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
 import { mockDelay } from './latency';
 
-// 실제 API와 같은 상태 코드·오류 형식을 쓴다 (공유 패키지의 같은 표 사용)
+// 실제 API와 같은 상태 코드·오류 형식을 씀 (공유 패키지의 같은 표 사용)
 const STATUS = ERROR_STATUS;
 
 const apiError = (code: ErrorCode, details?: { path: string; message: string }[]) =>
@@ -2813,7 +2813,7 @@ export const handlers = [
 
     if (!dateCheck.ok) return invalid(dateCheck.path, dateCheck.message);
 
-    // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없다 (서버와 같은 규칙)
+    // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없음 (서버와 같은 규칙)
     const lockCheck = mockMonthLockCheck(account, workDate);
 
     if (!lockCheck.ok) return invalid(lockCheck.path, lockCheck.message);

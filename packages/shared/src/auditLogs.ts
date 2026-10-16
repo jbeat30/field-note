@@ -91,7 +91,7 @@ export const auditTargetTypeSchema = z.enum(AUDIT_TARGET_TYPES);
 export type AuditTargetType = z.infer<typeof auditTargetTypeSchema>;
 
 /**
- * @description 감사 기록 행위의 대상 종류. 내보내기는 작업일보(프로젝트)와 월 공수표(회사)가 있어 상세로 가른다
+ * @description 감사 기록 행위의 대상 종류, 내보내기는 작업일보(프로젝트)와 월 공수표(회사)가 있어 상세로 구분
  * @param action 행위
  * @param detail 기록 상세
  * @returns 대상 종류
@@ -156,7 +156,7 @@ export const auditChanges = (detail: unknown): AuditChange[] => {
 };
 
 /**
- * @description 기록 상세를 한 줄 설명으로 바꾼다 (모르는 값은 빼고, 상세가 비어 있으면 null)
+ * @description 기록 상세를 한 줄 설명으로 바꿈 (모르는 값은 빼고, 상세가 비어 있으면 null)
  * @param action 행위
  * @param detail 기록 상세(JSON)
  * @returns 설명 (없으면 null)

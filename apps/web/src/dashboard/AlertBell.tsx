@@ -14,7 +14,7 @@ import { useDashboard, useDismissAlerts } from './useDashboard';
 // 개수 표시는 9개까지, 그 위는 9+
 const countLabel = (count: number) => (count > 9 ? '9+' : String(count));
 
-// 메뉴의 알림 버튼: 안 숨긴 알림 개수를 달고, 누르면 알림 목록 창이 열린다 (급한 알림이 있으면 붉은 개수)
+// 메뉴의 알림 버튼: 안 숨긴 알림 개수를 달고, 누르면 알림 목록 창이 열림 (급한 알림이 있으면 붉은 개수)
 export const AlertBell = ({ className }: { className?: string }) => {
   const dashboard = useDashboard();
   const dismiss = useDismissAlerts();

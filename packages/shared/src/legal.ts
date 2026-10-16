@@ -2,8 +2,8 @@ import { LEGAL_DOCUMENT_META, type LegalDocumentType } from './account';
 
 // 약관·처리방침 본문 (서비스 기획서 §5.5~§5.13, §6)
 // 화면에 표시되는 내용과 동의 이력의 본문 해시가 같은 원본에서 나오도록 코드로 관리
-// 본문을 바꾸면 반드시 version을 올린다 (같은 version에서 내용이 달라지면 운영자 등록이 거부됨)
-// 아래 문서는 초안이며, 서비스 공개 전에 전문가 검토를 거쳐 확정한다 (§18.2)
+// 본문을 바꾸면 반드시 version을 올림 (같은 version에서 내용이 달라지면 운영자 등록이 거부됨)
+// 아래 문서는 초안이며, 서비스 공개 전에 전문가 검토를 거쳐 확정함 (§18.2)
 
 export type LegalBlock =
   | { type: 'paragraph'; text: string }

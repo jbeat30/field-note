@@ -608,7 +608,7 @@ describe('프로젝트 요약', () => {
     photos = await summary();
     expect(photos.items.map((item) => item.id).sort()).toEqual([ids[0]!, ids[5]!].sort());
 
-    // 최대 12장까지만 고를 수 있다 (이미 2장을 골랐으니 10장까지 더 가능)
+    // 최대 12장까지만 고를 수 있음 (이미 2장을 골랐으니 10장까지 더 가능)
     for (const id of ids.filter((item) => item !== ids[0] && item !== ids[5])) {
       expect((await client.updatePhoto(id, { includeInSummary: true })).status).toBe(200);
     }

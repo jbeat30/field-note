@@ -32,7 +32,7 @@ const VIEWS: { value: View; label: string }[] = [
   { value: 'COMPARE', label: '전후 비교' },
 ];
 
-// 프로젝트 사진첩: 하루 기록에서 올린 사진을 작업 날짜별로 모아 보고, 구분·구역으로 거르고, 작업 전·후를 비교한다 (09 문서 §3.5)
+// 프로젝트 사진첩: 하루 기록에서 올린 사진을 작업 날짜별로 모아 보고, 구분·구역으로 거르고, 작업 전·후를 비교함 (09 문서 §3.5)
 export const ProjectPhotosPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);

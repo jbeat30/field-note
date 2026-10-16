@@ -4,7 +4,7 @@ import { StepError, type UploadApi, type UploadTicket } from './uploadQueue';
 import { apiClient } from '../api/client';
 
 /**
- * @description HTTP 상태를 대기열의 오류 종류로 구분: 서버·연결 문제는 다시 시도하고, 요청 자체가 잘못됐거나 권한이 없으면 멈춘다
+ * @description HTTP 상태를 대기열의 오류 종류로 구분: 서버·연결 문제는 재시도, 요청 자체가 잘못됐거나 권한이 없으면 중단
  * @param status HTTP 상태
  * @returns 오류 종류
  */

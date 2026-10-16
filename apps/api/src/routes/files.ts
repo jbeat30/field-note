@@ -44,7 +44,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 파일 업로드 라우트. 회사 ID는 세션에서만 얻는다 (브라우저가 저장소에 직접 올리는 방식:
+ * @description 파일 업로드 라우트, 회사 ID는 세션에서만 얻음 (브라우저가 저장소에 직접 올리는 방식:
  * 신청 → 발급된 주소로 PUT → 완료 알림 → 서버 검사 → 사용 가능)
  * @param registry 라우트 등록소
  * @param files 파일 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)

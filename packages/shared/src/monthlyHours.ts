@@ -109,7 +109,7 @@ export const monthRange = (month: string) => {
 export const monthOf = (date: string) => date.slice(0, 7);
 
 /**
- * @description 월 공수 확정 검사: 이번 달까지만, 이미 확정한 달은 다시 확정할 수 없고, 임시 저장 작업 내역이 남아 있으면 확인이 필요하다
+ * @description 월 공수 확정 검사: 이번 달까지만 가능, 이미 확정한 달은 재확정 불가, 임시 저장 작업 내역이 남아 있으면 확인 필요
  * @param input 월, 오늘(서울 기준), 확정 여부, 임시 저장 작업 내역 건수, 확인 여부
  * @returns 통과 여부와 어느 입력이 왜 안 되는지
  */
@@ -140,7 +140,7 @@ export const validateMonthClose = (input: {
 };
 
 /**
- * @description 이 날짜의 작업 내역를 고칠 수 있는지: 확정된 달은 재오픈해야 한다 (§9.4, §13.2)
+ * @description 이 날짜의 작업 내역를 고칠 수 있는지: 확정된 달은 재오픈해야 함 (§9.4, §13.2)
  * @param workDate 작업 일자
  * @param closedMonths 확정된 달 목록
  * @returns 통과 여부와 거부 사유
@@ -229,7 +229,7 @@ export type MonthlyMatrix = {
 };
 
 /**
- * @description 월 공수표 행을 "행 × 열" 표로 바꾼다 (직원별: 행 직원·열 프로젝트, 프로젝트별: 행 프로젝트·열 직원).
+ * @description 월 공수표 행을 "행 × 열" 표로 바꿈 (직원별: 행 직원·열 프로젝트, 프로젝트별: 행 프로젝트·열 직원)
  * 합계는 분을 먼저 더하므로 표시 시 환산해도 오차가 누적되지 않음
  * @param rows 월 공수표 행
  * @param axis 행으로 삼을 것

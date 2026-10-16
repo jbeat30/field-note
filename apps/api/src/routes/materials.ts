@@ -58,7 +58,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 사용 자재 라우트. 회사 ID는 세션에서만 얻는다 (자재 목록 관리, 프로젝트별 기록, 잔량)
+ * @description 사용 자재 라우트, 회사 ID는 세션에서만 얻음 (자재 목록 관리, 프로젝트별 기록, 잔량)
  * @param registry 라우트 등록소
  * @param materials 자재 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

@@ -5,7 +5,7 @@ import type { PrismaClient } from './client';
 let sequence = 0;
 
 /**
- * @description 테스트용 프로젝트 한 건 (소유 계정으로 직접 입력). 프로젝트가 가리키는 고객·담당 직원도 같은 회사에 함께 만든다
+ * @description 테스트용 프로젝트 한 건 (소유 계정으로 직접 입력), 프로젝트가 가리키는 고객·담당 직원도 같은 회사에 함께 생성
  * @param owner 소유 계정 Prisma 클라이언트
  * @param companyId 회사 ID
  * @param name 프로젝트명

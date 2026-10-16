@@ -60,7 +60,7 @@ type EntryRow = Prisma.LedgerEntryGetPayload<object>;
 const asDate = (value: string) => new Date(`${value}T00:00:00Z`);
 const isoDate = (value: Date) => value.toISOString().slice(0, 10);
 
-// 구분마다 쓰는 분류 목록이 다르다 (지출은 지출 분류, 수입은 수입 분류)
+// 구분마다 쓰는 분류 목록이 다름 (지출은 지출 분류, 수입은 수입 분류)
 const CATEGORY_KIND: Record<LedgerKind, OptionKind> = {
   EXPENSE: 'EXPENSE_CATEGORY',
   INCOME: 'INCOME_CATEGORY',
@@ -124,7 +124,7 @@ const filterOf = (
 });
 
 /**
- * @description 지출·수입 기록 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 프로젝트에서 나간 돈과 가끔 생기는 수입만 적는다 (08 문서 §6).
+ * @description 지출·수입 기록 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 프로젝트에서 나간 돈과 가끔 생기는 수입만 적음 (08 문서 §6)
  * 계약 금액·청구·입금 관리와 회계·세금·급여는 범위 밖
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (소프트 삭제 시각 기록용)
@@ -283,7 +283,7 @@ export const createLedgerService = (
               ? null
               : undefined;
 
-        // 바뀌지 않은 연결은 다시 검사하지 않는다 (예전에 연결한 문서가 지워졌어도 다른 곳을 고칠 수 있게)
+        // 바뀌지 않은 연결은 다시 검사하지 않음 (예전에 연결한 문서가 지워졌어도 다른 곳을 고칠 수 있게)
         await checkReferences(tx, current.projectId, {
           kind,
           categoryId,

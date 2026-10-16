@@ -112,7 +112,7 @@ export const roundTo = (value: number, digits: number) => {
 };
 
 /**
- * @description 자재 잔량: 반입 - 사용 - 반출 - 폐기. 음수가 되면 입력 오류를 알 수 있게 그대로 반환
+ * @description 자재 잔량: 반입 - 사용 - 반출 - 폐기, 음수가 되면 입력 오류를 알 수 있게 그대로 반환
  * @param quantities 자재 수량
  * @returns 잔량 (소수 오차는 6자리에서 정리)
  */

@@ -32,7 +32,7 @@ export type AuditEntry = {
 export type AuditService = {
   // 감사 기록 조회 (최근순 커서 방식, 종류·행위·프로젝트·날짜 범위 필터), 조회 전용이며 수정·삭제 없음
   list: (companyId: string, query: AuditLogListQuery) => Promise<AuditLogsResponse>;
-  // 데이터를 바꾼 일을 남긴다 (추가만 가능)
+  // 데이터를 바꾼 일을 남김 (추가만 가능)
   record: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;
 };
 
@@ -65,8 +65,8 @@ const seoulStart = (date: string) => new Date(`${date}T00:00:00+09:00`);
 const nextDay = (date: string) => new Date(seoulStart(date).getTime() + 86_400_000);
 
 /**
- * @description 감사 기록 서비스 (앱 계정으로 자기 회사 범위에서만). 대상 이름은 조회할 때 찾아 붙이고
- * 대상이 지워졌으면 이름 없이 보여 준다 (기록은 대상과 외래 키로 묶이지 않음)
+ * @description 감사 기록 서비스 (앱 계정으로 자기 회사 범위에서만), 대상 이름은 조회할 때 찾아 붙이고
+ * 대상이 지워졌으면 이름 없이 보여 줌 (기록은 대상과 외래 키로 묶이지 않음)
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (시험에서 고정)
  * @returns 감사 기록 서비스

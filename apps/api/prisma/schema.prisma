@@ -191,7 +191,7 @@ model ProjectStatusChange {
 }
 
 // 진행률 기록: 담당자가 수시로 입력하는 진행 정도(%)이며 가장 최근 기록이 현재 진행률 (서비스 기획서 §10.4)
-// 추가만 가능하고 고치거나 지우지 않는다 (잘못 입력했으면 새로 기록)
+// 추가만 가능하고 고치거나 지우지 않음 (잘못 입력했으면 새로 기록)
 model ProjectProgressRecord {
   companyId  String   @map("company_id") @db.Uuid
   id         String   @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -222,7 +222,7 @@ enum PayType {
 }
 
 // 직원 단가표 (민감 정보), 단가를 바꾸면 기존 행을 고치지 않고 적용 시작일과 함께 새 행을 추가하므로
-// 근무일에 적용되는 단가는 그 날짜 이전에 시작한 가장 최근 행이다 (같은 시작일이면 나중에 입력한 행), 추가만 가능
+// 근무일에 적용되는 단가는 그 날짜 이전에 시작한 가장 최근 행 (같은 시작일이면 나중에 입력한 행), 추가만 가능
 model EmployeePayRate {
   companyId     String   @map("company_id") @db.Uuid
   id            String   @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -836,11 +836,11 @@ enum FileRejectReason {
   @@map("file_reject_reason")
 }
 
-// 업로드 파일의 메타데이터 (실제 내용은 객체 저장소), 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남긴다 (서비스 기획서 §12.1)
+// 업로드 파일의 메타데이터 (실제 내용은 객체 저장소), 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남김 (서비스 기획서 §12.1)
 model StoredFile {
   companyId       String               @map("company_id") @db.Uuid
   id              String               @default(dbgenerated("uuidv7()")) @db.Uuid
-  // 직원 서류 파일은 프로젝트가 아니라 직원에 붙는다 (둘 중 하나만 채움)
+  // 직원 서류 파일은 프로젝트가 아니라 직원에 붙음 (둘 중 하나만 채움)
   projectId       String?              @map("project_id") @db.Uuid
   employeeId      String?              @map("employee_id") @db.Uuid
   purpose         FilePurpose

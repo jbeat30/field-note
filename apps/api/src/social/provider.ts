@@ -60,7 +60,7 @@ export type OAuthAppConfig = {
 };
 
 /**
- * @description 카카오 제공자 (arctic). 앱 등록 후 받은 키로만 동작
+ * @description 카카오 제공자 (arctic), 앱 등록 후 받은 키로만 동작
  * @param config 앱 키와 리다이렉트 주소
  * @returns 카카오 제공자
  */
@@ -104,7 +104,7 @@ export const mapNaverUser = (raw: unknown): SocialProfile => ({
 const naverTokenSchema = z.object({ access_token: z.string().min(1) });
 
 /**
- * @description 네이버 제공자. 토큰 요청에 state가 필요해서 arctic 대신 직접 호출
+ * @description 네이버 제공자, 토큰 요청에 state가 필요해서 arctic 대신 직접 호출
  * @param config 앱 키와 리다이렉트 주소
  * @returns 네이버 제공자
  */
@@ -232,7 +232,7 @@ export const signFakeCode = (secret: string, profileKey: string) =>
   `${profileKey}.${sign(secret, profileKey)}`;
 
 /**
- * @description 개발 환경 전용 가짜 제공자. 실제 소셜 서비스 없이 연동·로그인·가입 흐름 전체를 테스트
+ * @description 개발 환경 전용 가짜 제공자, 실제 소셜 서비스 없이 연동·로그인·가입 흐름 전체를 테스트
  * 운영 환경에서는 생성되지 않도록 호출하는 쪽(`chooseSocialProvider`)에서 차단
  * @param options 서버 주소와 코드 서명용 비밀 값
  * @returns 가짜 제공자

@@ -6,7 +6,7 @@ export type EnqueueSettings = Pick<UploadMeta, 'category' | 'area' | 'descriptio
 export type EnqueueFailure = { name: string; message: string };
 
 /**
- * @description 고른 사진을 JPEG로 압축해 업로드 대기열에 넣음. 사진마다 촬영일시는 파일의 마지막 수정 시각(카메라로 찍은 파일은 촬영 시각)을 쓴다.
+ * @description 고른 사진을 JPEG로 압축해 업로드 대기열에 추가, 사진마다 촬영일시는 파일의 마지막 수정 시각(카메라로 찍은 파일은 촬영 시각) 사용
  * 압축에 실패한 사진(브라우저가 열 수 없는 형식 등)은 건너뛰고 사유를 모아 반환
  * @param queue 업로드 대기열
  * @param projectId 프로젝트 ID

@@ -79,7 +79,7 @@ const decodeCursor = (cursor: string): { memoDate: Date; id: string } => {
 };
 
 /**
- * @description 프로젝트 메모 노트·메모함 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 프로젝트 없이 먼저 저장하고 나중에 연결할 수 있다 (서비스 기획서 §10.9, §14)
+ * @description 프로젝트 메모 노트·메모함 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 프로젝트 없이 먼저 저장하고 나중에 연결할 수 있음 (서비스 기획서 §10.9, §14)
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각
  * @returns 메모 서비스

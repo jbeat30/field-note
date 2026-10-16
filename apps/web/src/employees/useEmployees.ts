@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 빈 값은 필터에서 뺀다 (주소에 `status=`처럼 빈 값이 실리지 않게)
+// 빈 값은 필터에서 뺌 (주소에 `status=`처럼 빈 값이 실리지 않게)
 const cleanFilter = (filter: EmployeeListQuery): EmployeeListQuery => ({
   status: filter.status || undefined,
   jobTypeId: filter.jobTypeId || undefined,

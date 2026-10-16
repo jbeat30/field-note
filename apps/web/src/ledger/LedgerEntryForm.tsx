@@ -25,7 +25,7 @@ import { useOptions } from '../settings/useOptions';
 
 import { useCreateLedgerEntry, useUpdateLedgerEntry } from './useLedger';
 
-// 구분마다 쓰는 분류 목록이 다르다 (서버와 같은 규칙)
+// 구분마다 쓰는 분류 목록이 다름 (서버와 같은 규칙)
 export const LEDGER_CATEGORY_KIND: Record<LedgerKind, OptionKind> = {
   EXPENSE: 'EXPENSE_CATEGORY',
   INCOME: 'INCOME_CATEGORY',

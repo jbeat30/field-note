@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { apiClient } from '../api/client';
 import { queryKeys } from '../query/queryKeys';
 
-// 빈 값은 필터에서 뺀다 (주소에 `kind=`처럼 빈 값이 실리지 않게)
+// 빈 값은 필터에서 뺌 (주소에 `kind=`처럼 빈 값이 실리지 않게)
 const cleanFilter = (filter: PartnerListQuery): PartnerListQuery => ({
   kind: filter.kind || undefined,
   q: filter.q?.trim() || undefined,
@@ -91,7 +91,7 @@ export const useUpdatePartner = (id: string) => {
   });
 };
 
-// 삭제: 프로젝트·자재 기록에서 쓰고 있으면 서버가 거부한다 (그때는 숨기기)
+// 삭제: 프로젝트·자재 기록에서 쓰고 있으면 서버가 거부함 (그때는 숨기기)
 export const useDeletePartner = (id: string) => {
   const queryClient = useQueryClient();
 

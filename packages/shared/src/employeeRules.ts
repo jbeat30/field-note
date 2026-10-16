@@ -1,7 +1,7 @@
 import type { EmployeeStatus } from './employees';
 
 // 직원 상태와 퇴사일 규칙 (서비스 기획서 §8.6), 서버와 목업 서버가 같은 규칙 사용
-// - 퇴사 상태에는 퇴사일이 있고, 재직·휴직 상태에는 퇴사일이 없다 (DB도 같은 규칙을 검사)
+// - 퇴사 상태에는 퇴사일이 있고, 재직·휴직 상태에는 퇴사일이 없음 (DB도 같은 규칙을 검사)
 // - 퇴사로 바꾸면서 날짜를 주지 않으면 오늘(서울 기준)로 채움
 // - 재입사는 같은 카드를 재직·휴직으로 전환하는 것이며 퇴사일은 삭제
 
@@ -9,7 +9,7 @@ export type StatusResolution =
   { ok: true; status: EmployeeStatus; leftOn: string | null } | { ok: false; message: string };
 
 /**
- * @description 서울 기준 오늘 날짜 (회사는 국내 현장이라 날짜 경계를 서울 시간으로 본다)
+ * @description 서울 기준 오늘 날짜 (회사는 국내 현장이라 날짜 경계를 서울 시간으로 판단)
  * @param now 현재 시각
  * @returns YYYY-MM-DD
  */

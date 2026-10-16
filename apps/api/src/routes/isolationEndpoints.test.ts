@@ -47,7 +47,7 @@ import { createPrismaSessionStore } from '../session/sessionStore';
 import { withCompany } from '../db/withCompany';
 import { createWorkLogService } from '../workLog/workLogService';
 
-// 1단계(직원·프로젝트·투입·작업 내역) 모든 엔드포인트의 회사 격리를 HTTP 수준에서 확인한다 (기술 기획서 §5.1)
+// 1단계(직원·프로젝트·투입·작업 내역) 모든 엔드포인트의 회사 격리를 HTTP 수준에서 확인함 (기술 기획서 §5.1)
 // 회사 A의 데이터를 만들고 회사 B의 세션으로 A의 ID를 쓰는 모든 경로를 호출해 차단 여부 확인
 let db: TestDatabase;
 let documentIds: string[];
@@ -692,7 +692,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['DELETE /ledger-entries/{id}', 'delete', `/ledger-entries/${a.ledgerEntryId}`],
   ] as const;
 
-// ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 본다 (로그인이 필요한 엔드포인트는 전부 이 목록·위의 공격 목록·본인 계정 전용 목록 중 하나에 있어야 함)
+// ID 없이 목록·등록을 하는 엔드포인트는 아래 별도 시험에서 봄 (로그인이 필요한 엔드포인트는 전부 이 목록·위의 공격 목록·본인 계정 전용 목록 중 하나에 있어야 함)
 const COLLECTIONS = [
   'GET /company/options',
   'POST /company/options',
@@ -745,7 +745,7 @@ const OWN_ACCOUNT_ONLY = [
   'PUT /company/rules',
   'GET /company/alert-settings',
   'PUT /company/alert-settings',
-  // 알림 숨기기: 다른 회사의 ID를 받지 않고 자기 회사의 알림 키만 남긴다 (dashboardRoutes: 회사마다 따로)
+  // 알림 숨기기: 다른 회사의 ID를 받지 않고 자기 회사의 알림 키만 남김 (dashboardRoutes: 회사마다 따로)
   'POST /alerts/dismiss',
 ];
 
@@ -754,7 +754,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     const spec = JSON.parse(
       readFileSync(join(__dirname, '../../../../packages/shared/openapi/openapi.json'), 'utf8'),
     ) as { paths: Record<string, Record<string, { security?: unknown[] }>> };
-    // 접두사로 대상을 고르지 않고 로그인이 필요한 모든 엔드포인트를 본다 (새 기능이 어느 경로에 생겨도 빠지지 않게)
+    // 접두사로 대상을 고르지 않고 로그인이 필요한 모든 엔드포인트를 봄 (새 기능이 어느 경로에 생겨도 빠지지 않게)
     const authenticated = Object.entries(spec.paths).flatMap(([path, methods]) =>
       Object.entries(methods)
         .filter(([, operation]) => (operation.security?.length ?? 0) > 0)
@@ -794,7 +794,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     expect(authenticated.length).toBeGreaterThan(60);
     expect(missing).toEqual([]);
 
-    // 목록이 낡지 않게: 시험·예외 목록의 모든 항목은 실제 엔드포인트여야 한다 (지운 엔드포인트가 남아 있으면 실패)
+    // 목록이 낡지 않게: 시험·예외 목록의 모든 항목은 실제 엔드포인트여야 함 (지운 엔드포인트가 남아 있으면 실패)
     const known = new Set(authenticated);
 
     expect([...tested, ...exempt].filter((entry) => !known.has(entry))).toEqual([]);
@@ -810,7 +810,7 @@ describe('회사 격리: 전 엔드포인트', () => {
     for (const [name, method, path, body] of attacks(a)) {
       const res = await bClient.call(method, path, body);
 
-      // 없는 것처럼 보여야 한다 (존재 여부도 알려 주지 않음)
+      // 없는 것처럼 보여야 함 (존재 여부도 알려 주지 않음)
       expect({ name, status: res.status }).toEqual({ name, status: 404 });
     }
 
@@ -1182,7 +1182,7 @@ describe('회사 격리: 전 엔드포인트', () => {
 
     expect(Object.entries(seen).filter(([, count]) => count.other > 0)).toEqual([]);
 
-    // 1단계 데이터가 실제로 있는 테이블에서는 자기 회사 행은 보인다 (검사가 빈 테이블만 보고 통과하지 않게 함)
+    // 1단계 데이터가 실제로 있는 테이블에서는 자기 회사 행은 보임 (검사가 빈 테이블만 보고 통과하지 않게 함)
     for (const table of [
       'partners',
       'employees',

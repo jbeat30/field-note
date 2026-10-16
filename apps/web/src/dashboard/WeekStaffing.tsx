@@ -7,7 +7,7 @@ import { useProjectChoices } from '../projects/useProjects';
 import { StaffingTimeline } from '../staffing/StaffingTimeline';
 import { useStaffingCalendar } from '../staffing/useStaffingCalendar';
 
-// 홈의 이번 주 인력: 인력 배치 타임라인을 1주로 줄여 그대로 보여 준다 (누가 일했고 누가 비었고 어디가 겹치는지)
+// 홈의 이번 주 인력: 인력 배치 타임라인을 1주로 줄여 그대로 보여 줌 (누가 일했고 누가 비었고 어디가 겹치는지)
 export const WeekStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
   const { week, today } = dashboard;
   const calendar = useStaffingCalendar(week.from, week.to);
