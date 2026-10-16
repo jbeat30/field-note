@@ -6,6 +6,7 @@ import {
   roundTo,
   type CompanySettings,
   type WorkLogEntry,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 // 작업 내역 입력 폼의 한 줄: 직원 × 작업 구분 × 공수, 입력 칸은 회사의 공수 입력 방식(비율 MD·시간)으로 처리하고 저장은 분 단위
@@ -111,7 +112,7 @@ export const linesToEntries = (
     const who = names.get(line.employeeId) ?? '직원';
 
     if (!line.categoryId) {
-      return { ok: false, message: `${who}님의 작업 구분을 선택해 주세요` };
+      return { ok: false, message: VALIDATION_MESSAGES.WORK_LOG_WORK_TYPE_REQUIRED(who) };
     }
 
     const minutes = valueToMinutes(line.value, settings);
@@ -119,12 +120,12 @@ export const linesToEntries = (
     if (minutes === null) {
       return {
         ok: false,
-        message: `${who}님의 공수(${unitLabel(settings)})를 0보다 큰 숫자로 입력해 주세요`,
+        message: VALIDATION_MESSAGES.WORK_LOG_EFFORT_REQUIRED(who, unitLabel(settings)),
       };
     }
 
     if (minutes > 1440) {
-      return { ok: false, message: `${who}님의 공수가 하루 24시간을 넘습니다` };
+      return { ok: false, message: VALIDATION_MESSAGES.WORK_LOG_EFFORT_OVER_DAY(who) };
     }
 
     const key = `${line.employeeId}:${line.categoryId}`;
@@ -132,7 +133,7 @@ export const linesToEntries = (
     if (seen.has(key)) {
       return {
         ok: false,
-        message: `${who}님에게 같은 작업 구분이 두 번 있습니다. 하나로 합쳐 주세요`,
+        message: VALIDATION_MESSAGES.WORK_LOG_DUPLICATE_WORK_TYPE(who),
       };
     }
 

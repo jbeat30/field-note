@@ -51,7 +51,7 @@ const GRID =
   'md:grid md:grid-cols-[minmax(0,1.6fr)_minmax(0,1.4fr)_5.5rem_5rem_minmax(0,1fr)_4.5rem] md:gap-2';
 
 /**
- * @description 사용한 자재 기록: 목록에서 고르지 않고 품명·규격(치수·두께·재질·색)·수량·단위를 그 자리에서 쓴다
+ * @description 사용한 자재 기록: 목록에서 고르지 않고 품명·규격(치수·두께·재질·색)·수량·단위를 그 자리에서 입력
  * 현장마다 다르게 만드는 맞춤 자재를 그대로 기록하기 위함, 새 품명·규격은 저장 시 회사 자재로 자동 등록
  * @param props 프로젝트·기본 날짜·고를 수 있는 날짜 범위
  */
@@ -155,7 +155,7 @@ export const MaterialUsageForm = ({
       let list = known;
       const ids: string[] = [];
 
-      // 새 품명·규격은 회사 자재로 먼저 만든다 (이미 다른 곳에서 만들었으면 다시 읽어 찾음)
+      // 새 품명·규격은 회사 자재로 먼저 만듦 (이미 다른 곳에서 만들었으면 다시 읽어 찾음)
       for (const row of filled) {
         let match = findMaterialMatch(list, row.name, row.spec);
 

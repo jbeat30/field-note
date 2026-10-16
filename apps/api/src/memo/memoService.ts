@@ -6,6 +6,7 @@ import {
   type MemosResponse,
   type MemoSummary,
   type MemoUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -73,13 +74,13 @@ const decodeCursor = (cursor: string): { memoDate: Date; id: string } => {
   } catch {
     throw new MemoError('INVALID', {
       path: 'query.cursor',
-      message: '목록 위치가 올바르지 않습니다',
+      message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID,
     });
   }
 };
 
 /**
- * @description 프로젝트 메모 노트·메모함 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 프로젝트 없이 먼저 저장하고 나중에 연결할 수 있다 (서비스 기획서 §10.9, §14)
+ * @description 프로젝트 메모 노트·메모함 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 프로젝트 없이 먼저 저장하고 나중에 연결할 수 있음
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각
  * @returns 메모 서비스
@@ -90,7 +91,7 @@ export const createMemoService = (
 ): MemoService => {
   const requireProject = async (tx: Prisma.TransactionClient, projectId: string, path: string) => {
     if (!(await tx.project.findFirst({ where: { id: projectId } }))) {
-      throw new MemoError('INVALID', { path, message: '선택할 수 없는 프로젝트입니다' });
+      throw new MemoError('INVALID', { path, message: VALIDATION_MESSAGES.PROJECT_NOT_SELECTABLE });
     }
   };
 
@@ -187,7 +188,7 @@ export const createMemoService = (
           if (input.isDone && tag !== 'TODO') {
             throw new MemoError('INVALID', {
               path: 'body.isDone',
-              message: '완료 표시는 "할 일" 메모에만 할 수 있습니다',
+              message: VALIDATION_MESSAGES.MEMO_DONE_TODO_ONLY,
             });
           }
 

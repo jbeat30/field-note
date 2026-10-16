@@ -14,6 +14,7 @@ import {
   type MaterialRecordsResponse,
   type MaterialRecordUpdate,
   type MaterialUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -130,7 +131,7 @@ const decodeCursor = (cursor: string): { recordDate: Date; id: string } => {
   } catch {
     throw new MaterialError('INVALID', {
       path: 'query.cursor',
-      message: '목록 위치가 올바르지 않습니다',
+      message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID,
     });
   }
 };
@@ -140,7 +141,7 @@ const isUniqueViolation = (error: unknown) =>
   /unique|P2002|duplicate/i.test(`${error.message} ${(error as { code?: string }).code ?? ''}`);
 
 /**
- * @description 사용 자재 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 자재 목록 관리와 프로젝트별 반입·사용·반출·폐기 기록, 잔량 집계를 맡는다 (서비스 기획서 §11)
+ * @description 사용 자재 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 자재 목록 관리와 프로젝트별 반입·사용·반출·폐기 기록, 잔량 집계를 맡음
  * 단가·구매·재고는 범위 밖
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (소프트 삭제 시각 기록용)
@@ -178,7 +179,7 @@ export const createMaterialService = (
       if (!material || !material.isActive) {
         throw new MaterialError('INVALID', {
           path: `${prefix}.materialId`,
-          message: '선택할 수 없는 자재입니다',
+          message: VALIDATION_MESSAGES.MATERIAL_NOT_SELECTABLE,
         });
       }
     }
@@ -191,7 +192,7 @@ export const createMaterialService = (
       if (!option) {
         throw new MaterialError('INVALID', {
           path: `${prefix}.categoryId`,
-          message: '선택할 수 없는 작업 구분입니다',
+          message: VALIDATION_MESSAGES.WORK_TYPE_NOT_SELECTABLE,
         });
       }
     }
@@ -199,7 +200,7 @@ export const createMaterialService = (
     if (input.partnerId && !(await tx.partner.findFirst({ where: { id: input.partnerId } }))) {
       throw new MaterialError('INVALID', {
         path: `${prefix}.partnerId`,
-        message: '선택할 수 없는 업체입니다',
+        message: VALIDATION_MESSAGES.PARTNER_NOT_SELECTABLE,
       });
     }
   };
@@ -331,7 +332,7 @@ export const createMaterialService = (
         ) {
           throw new MaterialError('INVALID', {
             path: 'body.unit',
-            message: '기록이 있는 자재는 단위를 바꿀 수 없습니다',
+            message: VALIDATION_MESSAGES.MATERIAL_UNIT_LOCKED,
           });
         }
 

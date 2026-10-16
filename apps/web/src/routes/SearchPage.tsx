@@ -8,7 +8,7 @@ import { useProject } from '../projects/useProjects';
 import { SearchResults } from '../search/SearchResults';
 import { useDebouncedValue, useSearch } from '../search/useSearch';
 
-// 통합 검색: 프로젝트·직원·메모·자료·작업 내역을 한 검색창에서 검색 (서비스 기획서 §14), `?project=`가 있으면 그 프로젝트 안에서만 검색
+// 통합 검색: 프로젝트·직원·메모·자료·작업 내역을 한 검색창에서 검색, `?project=`가 있으면 그 프로젝트 안에서만 검색
 export const SearchPage = () => {
   const [params, setParams] = useSearchParams();
   const projectId = params.get('project') ?? undefined;

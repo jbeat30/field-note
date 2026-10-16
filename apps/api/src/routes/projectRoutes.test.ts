@@ -413,7 +413,7 @@ describe('목록·조회', () => {
   it('쪽으로 나눠 돌려주고 총 건수·정렬 방향·고객·담당자 정렬을 지원한다', async () => {
     const instance = app();
     const { client, body } = await setup(instance);
-    // 고객·담당자 이름은 영문으로 둔다 (한글 정렬은 DB의 정렬 규칙에 따라 달라질 수 있음)
+    // 고객·담당자 이름은 영문으로 둠 (한글 정렬은 DB의 정렬 규칙에 따라 달라질 수 있음)
     const clientA = await client.createPartner('CLIENT', 'A고객');
     const clientZ = await client.createPartner('CLIENT', 'Z고객');
     const managerA = await client.createEmployee('A담당');

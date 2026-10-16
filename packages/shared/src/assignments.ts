@@ -3,12 +3,13 @@ import { z } from 'zod';
 import { credentialGapReasonSchema } from './credentials';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
-// 투입 (서비스 기획서 §9.1, §9.4), 직원을 프로젝트 예정 기간 안의 일정 기간에 배정
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 투입, 직원을 프로젝트 예정 기간 안의 일정 기간에 배정
 export const ASSIGNMENT_MAX_PLANNED_MINUTES = 6_000_000;
 
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
-// 같은 날 다른 프로젝트에 겹쳐 배정되면 경고(막지는 않음, §9.4), 휴직·퇴사 직원도 경고
+// 같은 날 다른 프로젝트에 겹쳐 배정되면 경고(막지는 않음), 휴직·퇴사 직원도 경고
 export const assignmentWarningSchema = z.discriminatedUnion('type', [
   z.object({
     type: z.literal('OVERLAP'),
@@ -19,7 +20,7 @@ export const assignmentWarningSchema = z.discriminatedUnion('type', [
     from: z.iso.date(),
     to: z.iso.date(),
   }),
-  // 프로젝트 필요 자격 대비 직원의 서류가 없거나 만료됨 (§8.4)
+  // 프로젝트 필요 자격 대비 직원의 서류가 없거나 만료됨
   z.object({
     type: z.literal('CREDENTIAL'),
     typeId: z.uuid(),
@@ -63,15 +64,15 @@ export const assignmentParamsSchema = z.object({ id: z.uuid(), assignmentId: z.u
 
 const plannedSchema = z
   .number()
-  .int('계획 공수는 분 단위 정수여야 합니다')
-  .min(1, '계획 공수는 0보다 커야 합니다')
-  .max(ASSIGNMENT_MAX_PLANNED_MINUTES, '계획 공수가 너무 큽니다');
+  .int(VALIDATION_MESSAGES.PLANNED_EFFORT_NOT_INTEGER)
+  .min(1, VALIDATION_MESSAGES.PLANNED_EFFORT_NOT_POSITIVE)
+  .max(ASSIGNMENT_MAX_PLANNED_MINUTES, VALIDATION_MESSAGES.PLANNED_EFFORT_TOO_LARGE);
 
 const confirmSchema = z.boolean().optional();
 
 export const assignmentCreateSchema = z
   .object({
-    employeeId: z.uuid('직원을 선택해 주세요'),
+    employeeId: z.uuid(VALIDATION_MESSAGES.selectRequired('직원')),
     startDate: dateSchema,
     endDate: dateSchema,
     plannedMinutes: plannedSchema.nullish(),
@@ -79,13 +80,13 @@ export const assignmentCreateSchema = z
     confirmSuspended: confirmSchema,
   })
   .refine((value) => value.startDate <= value.endDate, {
-    message: '종료일은 시작일보다 빠를 수 없습니다',
+    message: VALIDATION_MESSAGES.END_BEFORE_START,
     path: ['endDate'],
   });
 
 export type AssignmentCreate = z.infer<typeof assignmentCreateSchema>;
 
-// 수정: 직원은 바꿀 수 없다 (직원을 바꾸려면 취소하고 새로 투입)
+// 수정: 직원은 바꿀 수 없음 (직원을 바꾸려면 취소하고 새로 투입)
 export const assignmentUpdateSchema = z
   .object({
     startDate: dateSchema,
@@ -99,10 +100,10 @@ export const assignmentUpdateSchema = z
       value.startDate !== undefined ||
       value.endDate !== undefined ||
       value.plannedMinutes !== undefined,
-    { message: '변경할 값이 없습니다' },
+    { message: VALIDATION_MESSAGES.NO_CHANGES },
   )
   .refine((value) => !value.startDate || !value.endDate || value.startDate <= value.endDate, {
-    message: '종료일은 시작일보다 빠를 수 없습니다',
+    message: VALIDATION_MESSAGES.END_BEFORE_START,
     path: ['endDate'],
   });
 
@@ -112,7 +113,7 @@ export const assignmentCancelSchema = z.object({ confirmSuspended: confirmSchema
 
 export type AssignmentCancel = z.infer<typeof assignmentCancelSchema>;
 
-// 프로젝트 예정 기간 변경 이력 (서비스 기획서 §10.2)
+// 프로젝트 예정 기간 변경 이력
 export const projectPeriodChangeSchema = z.object({
   id: z.uuid(),
   fromStart: z.iso.date(),
@@ -133,7 +134,7 @@ export type ProjectPeriodHistory = z.infer<typeof projectPeriodHistorySchema>;
 export type RuleCheck = { ok: true } | { ok: false; path: string; message: string };
 
 /**
- * @description 이 프로젝트 상태에서 투입을 만들거나 바꿀 수 있는지 (§10.3 "투입 배정" 행)
+ * @description 이 프로젝트 상태에서 투입을 만들거나 바꿀 수 있는지 ("투입 배정" 행)
  * 예정·진행은 가능, 중단은 관리자 확인이 있을 때만, 완료·보증 중·종료·취소는 불가
  * (보증 중의 "사후 작업만 투입"은 보증 기능과 함께 4단계에서 개방)
  * @param status 프로젝트 상태
@@ -154,14 +155,14 @@ export const assignmentStatusCheck = (
       : {
           ok: false,
           path: 'confirmSuspended',
-          message: '중단 중인 프로젝트입니다. 투입하려면 확인이 필요합니다',
+          message: VALIDATION_MESSAGES.ASSIGNMENT_PAUSED_CONFIRM,
         };
   }
 
   return {
     ok: false,
     path: 'projectId',
-    message: `'${statusLabel(status)}' 상태의 프로젝트에는 투입을 바꿀 수 없습니다`,
+    message: VALIDATION_MESSAGES.ASSIGNMENT_BLOCKED_BY_STATUS(statusLabel(status)),
   };
 };
 
@@ -178,7 +179,7 @@ const STATUS_LABELS: Record<ProjectStatus, string> = {
 const statusLabel = (status: ProjectStatus) => STATUS_LABELS[projectStatusSchema.parse(status)];
 
 /**
- * @description 투입 기간이 프로젝트 예정 기간 안인지 검사 ("프로젝트 기간 밖은 입력할 수 없다", §9.4)
+ * @description 투입 기간이 프로젝트 예정 기간 안인지 검사 ("프로젝트 기간 밖은 입력할 수 없다")
  * @param startDate 투입 시작일
  * @param endDate 투입 종료일
  * @param project 프로젝트 예정 기간
@@ -190,14 +191,14 @@ export const checkAssignmentPeriod = (
   project: { plannedStart: string; plannedEnd: string },
 ): RuleCheck => {
   if (startDate > endDate) {
-    return { ok: false, path: 'endDate', message: '종료일은 시작일보다 빠를 수 없습니다' };
+    return { ok: false, path: 'endDate', message: VALIDATION_MESSAGES.END_BEFORE_START };
   }
 
   if (startDate < project.plannedStart) {
     return {
       ok: false,
       path: 'startDate',
-      message: `시작일은 프로젝트 시작 예정일(${project.plannedStart}) 이후여야 합니다`,
+      message: VALIDATION_MESSAGES.ASSIGNMENT_START_BEFORE_PROJECT(project.plannedStart),
     };
   }
 
@@ -205,7 +206,7 @@ export const checkAssignmentPeriod = (
     return {
       ok: false,
       path: 'endDate',
-      message: `종료일은 프로젝트 종료 예정일(${project.plannedEnd}) 이전이어야 합니다`,
+      message: VALIDATION_MESSAGES.ASSIGNMENT_END_AFTER_PROJECT(project.plannedEnd),
     };
   }
 

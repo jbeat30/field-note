@@ -48,7 +48,7 @@ export const Default: Story = {
     await expect(table.getByRole('rowheader', { name: /A동 외장 판금 공사/ })).toBeInTheDocument();
     // MM 환산 기준을 수치 옆에 표기
     await expect(canvas.getAllByText(/1MM = /).length).toBeGreaterThan(0);
-    // 임시 저장 작업 내역은 목록으로 알린다 (집계에는 포함되지 않음)
+    // 임시 저장 작업 내역은 목록으로 알림 (집계에는 포함되지 않음)
     await expect(
       canvas.getByRole('heading', { name: '임시 저장된 작업 내역 1건' }),
     ).toBeInTheDocument();
@@ -75,7 +75,7 @@ export const CloseNeedsDraftConfirm: Story = {
 
     await userEvent.click(await canvas.findByRole('button', { name: '공수 확정' }));
     await expect(
-      await canvas.findByText(/임시 저장된 작업 내역가 1건 있습니다/, {}, { timeout: 4000 }),
+      await canvas.findByText(/임시 저장된 작업 내역이 1건 있습니다/, {}, { timeout: 4000 }),
     ).toBeInTheDocument();
 
     await userEvent.click(

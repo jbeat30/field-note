@@ -7,7 +7,7 @@ import { useConfirm } from '../components/ui/confirm-dialog';
 
 import { useDevices, useRevokeDevice } from './useDevices';
 
-// 이만큼 쓰지 않은 로그인은 "오래 쓰지 않음"으로 접는다 (로그인 유지 기간 안에서 남아 있는 것들)
+// 이만큼 쓰지 않은 로그인은 "오래 쓰지 않음"으로 접음 (로그인 유지 기간 안에서 남아 있는 것들)
 const STALE_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 
@@ -63,7 +63,7 @@ const DeviceRow = ({
   </li>
 );
 
-// 로그인한 기기: 이 기기를 맨 위에, 이 기기가 아닌 로그인에만 로그아웃(확인 창), 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃 (§6.4)
+// 로그인한 기기: 이 기기를 맨 위에, 이 기기가 아닌 로그인에만 로그아웃(확인 창), 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃
 export const DevicesSection = () => {
   const devices = useDevices();
   const revoke = useRevokeDevice();

@@ -6,7 +6,7 @@ import { useLedgerSummary } from './useLedger';
 
 const wonText = (amount: number) => amount.toLocaleString('ko-KR');
 
-// 현황 화면의 지출·수입 합계 (08 문서 §6.2): 합계만 표시하고 내역은 비용·자재 메뉴에서 확인
+// 현황 화면의 지출·수입 합계: 합계만 표시하고 내역은 비용·자재 메뉴에서 확인
 export const LedgerOverviewPanel = ({ projectId }: { projectId: string }) => {
   const summary = useLedgerSummary(projectId);
 

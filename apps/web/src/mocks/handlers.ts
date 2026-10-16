@@ -94,6 +94,7 @@ import {
   signupRequestSchema,
   type ErrorCode,
   type MeResponse,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -185,7 +186,7 @@ import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
 import { mockDelay } from './latency';
 
-// 실제 API와 같은 상태 코드·오류 형식을 쓴다 (공유 패키지의 같은 표 사용)
+// 실제 API와 같은 상태 코드·오류 형식을 씀 (공유 패키지의 같은 표 사용)
 const STATUS = ERROR_STATUS;
 
 const apiError = (code: ErrorCode, details?: { path: string; message: string }[]) =>
@@ -244,12 +245,14 @@ const checkOption = (
   const option = getOptions(account).find((item) => item.id === id && item.kind === kind);
 
   if (!option) {
-    return apiError('VALIDATION_ERROR', [{ path, message: `선택할 수 없는 ${label}입니다` }]);
+    return apiError('VALIDATION_ERROR', [
+      { path, message: VALIDATION_MESSAGES.OPTION_NOT_SELECTABLE(label) },
+    ]);
   }
 
   return option.isActive
     ? null
-    : apiError('VALIDATION_ERROR', [{ path, message: `숨긴 ${label}은 새로 고를 수 없습니다` }]);
+    : apiError('VALIDATION_ERROR', [{ path, message: VALIDATION_MESSAGES.OPTION_HIDDEN(label) }]);
 };
 
 // 프로젝트의 고객·담당자·공종 검사 (서버와 같은 규칙): 같은 회사의 해당 구분·종류만, 숨기거나 퇴사한 대상은 새로 고를 수 없음
@@ -258,14 +261,14 @@ const checkClient = (account: MockAccount, id: string, currentId: string | null)
 
   if (!partner) {
     return apiError('VALIDATION_ERROR', [
-      { path: 'body.clientId', message: '선택할 수 없는 고객입니다' },
+      { path: 'body.clientId', message: VALIDATION_MESSAGES.CUSTOMER_NOT_SELECTABLE },
     ]);
   }
 
   return partner.isActive || id === currentId
     ? null
     : apiError('VALIDATION_ERROR', [
-        { path: 'body.clientId', message: '숨긴 고객은 새로 고를 수 없습니다' },
+        { path: 'body.clientId', message: VALIDATION_MESSAGES.CUSTOMER_HIDDEN },
       ]);
 };
 
@@ -274,14 +277,14 @@ const checkManager = (account: MockAccount, id: string, currentId: string | null
 
   if (!employee) {
     return apiError('VALIDATION_ERROR', [
-      { path: 'body.managerId', message: '선택할 수 없는 담당자입니다' },
+      { path: 'body.managerId', message: VALIDATION_MESSAGES.MANAGER_NOT_SELECTABLE },
     ]);
   }
 
   return employee.status !== 'LEFT' || id === currentId
     ? null
     : apiError('VALIDATION_ERROR', [
-        { path: 'body.managerId', message: '퇴사한 직원은 담당자로 지정할 수 없습니다' },
+        { path: 'body.managerId', message: VALIDATION_MESSAGES.MANAGER_RESIGNED },
       ]);
 };
 
@@ -366,7 +369,7 @@ const withAssignmentWarnings = (account: MockAccount, row: AssignmentRow) => {
     }
   }
 
-  // 프로젝트 필요 자격이 없거나 만료된 직원 (서비스 기획서 §8.4)
+  // 프로젝트 필요 자격이 없거나 만료된 직원
   warnings.push(
     ...mockCredentialWarnings(account, row.projectId, row.employeeId, {
       from: row.startDate,
@@ -539,7 +542,7 @@ export const handlers = [
 
     if (!requiredIds.every((id) => agreedIds.has(id))) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.consents', message: '필수 약관에 모두 동의해야 합니다' },
+        { path: 'body.consents', message: VALIDATION_MESSAGES.REQUIRED_TERMS_NOT_AGREED },
       ]);
     }
 
@@ -706,7 +709,7 @@ export const handlers = [
     if (account.hasPassword !== false) {
       if (!body.data.currentPassword) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.currentPassword', message: '비밀번호를 입력해 주세요' },
+          { path: 'body.currentPassword', message: VALIDATION_MESSAGES.required('비밀번호') },
         ]);
       }
 
@@ -882,7 +885,7 @@ export const handlers = [
 
     if (account.hasPassword !== false) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body', message: '이미 아이디·비밀번호 로그인이 설정되어 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.PASSWORD_LOGIN_ALREADY_SET },
       ]);
     }
 
@@ -927,13 +930,13 @@ export const handlers = [
 
     if (items.some((item) => item.kind === kind && normalizeOptionName(item.name) === key)) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '이미 같은 이름이 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.OPTION_NAME_DUPLICATE },
       ]);
     }
 
     if (items.filter((item) => item.kind === kind).length >= OPTION_MAX_PER_KIND) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '항목은 종류마다 100개까지 만들 수 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.OPTION_LIMIT_REACHED },
       ]);
     }
 
@@ -969,7 +972,7 @@ export const handlers = [
       ids.some((id) => !known.has(id))
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.ids', message: '목록이 바뀌었습니다. 새로 고친 뒤 다시 시도해 주세요' },
+        { path: 'body.ids', message: VALIDATION_MESSAGES.OPTION_LIST_CHANGED },
       ]);
     }
 
@@ -1022,7 +1025,7 @@ export const handlers = [
       )
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '이미 같은 이름이 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.OPTION_NAME_DUPLICATE },
       ]);
     }
 
@@ -1104,7 +1107,7 @@ export const handlers = [
 
     if (employees.length >= EMPLOYEE_MAX_PER_COMPANY) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body', message: '직원은 회사마다 500명까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.EMPLOYEE_LIMIT_REACHED },
       ]);
     }
 
@@ -1123,7 +1126,7 @@ export const handlers = [
 
     if (input.birthDate && input.birthDate > todayInSeoul(new Date())) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.birthDate', message: '생년월일은 오늘 이전이어야 합니다' },
+        { path: 'body.birthDate', message: VALIDATION_MESSAGES.BIRTH_DATE_FUTURE },
       ]);
     }
 
@@ -1225,7 +1228,7 @@ export const handlers = [
 
     if (input.birthDate && input.birthDate > today) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.birthDate', message: '생년월일은 오늘 이전이어야 합니다' },
+        { path: 'body.birthDate', message: VALIDATION_MESSAGES.BIRTH_DATE_FUTURE },
       ]);
     }
 
@@ -1233,7 +1236,7 @@ export const handlers = [
 
     if (hiredOn && resolved.leftOn && resolved.leftOn < hiredOn) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.leftOn', message: '퇴사일은 입사일보다 빠를 수 없습니다' },
+        { path: 'body.leftOn', message: VALIDATION_MESSAGES.RESIGN_BEFORE_HIRE },
       ]);
     }
 
@@ -1327,7 +1330,7 @@ export const handlers = [
 
     if (partners.length >= PARTNER_MAX_PER_COMPANY) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body', message: '명부는 회사마다 1000곳까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.PARTNER_LIMIT_REACHED },
       ]);
     }
 
@@ -1339,7 +1342,7 @@ export const handlers = [
       )
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '같은 구분에 이미 같은 상호가 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.PARTNER_NAME_DUPLICATE },
       ]);
     }
 
@@ -1415,7 +1418,7 @@ export const handlers = [
       )
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '같은 구분에 이미 같은 상호가 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.PARTNER_NAME_DUPLICATE },
       ]);
     }
 
@@ -1466,7 +1469,7 @@ export const handlers = [
       return apiError('VALIDATION_ERROR', [
         {
           path: 'params.id',
-          message: '프로젝트나 자재 기록에서 쓰고 있어 삭제할 수 없습니다. 숨기기를 이용해 주세요',
+          message: VALIDATION_MESSAGES.PARTNER_IN_USE,
         },
       ]);
     }
@@ -1698,11 +1701,15 @@ export const handlers = [
           allowed.length === 0
             ? {
                 path: 'body',
-                message: `'${PROJECT_STATUS_LABELS[current.status]}' 상태의 프로젝트는 수정할 수 없습니다`,
+                message: VALIDATION_MESSAGES.PROJECT_LOCKED_BY_STATUS(
+                  PROJECT_STATUS_LABELS[current.status],
+                ),
               }
             : {
                 path: `body.${blocked[0]}`,
-                message: `'${PROJECT_STATUS_LABELS[current.status]}' 상태에서는 담당자와 메모만 수정할 수 있습니다`,
+                message: VALIDATION_MESSAGES.PROJECT_LIMITED_BY_STATUS(
+                  PROJECT_STATUS_LABELS[current.status],
+                ),
               },
         ]);
       }
@@ -1727,7 +1734,7 @@ export const handlers = [
 
     if (plannedStart > plannedEnd) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.plannedEnd', message: '종료 예정일은 시작 예정일보다 빠를 수 없습니다' },
+        { path: 'body.plannedEnd', message: VALIDATION_MESSAGES.PROJECT_END_BEFORE_START },
       ]);
     }
 
@@ -1741,7 +1748,7 @@ export const handlers = [
         return apiError('VALIDATION_ERROR', [
           {
             path: 'body.periodChangeReason',
-            message: '시작한 프로젝트의 기간을 바꿀 때는 사유를 입력해 주세요',
+            message: VALIDATION_MESSAGES.required('시작한 프로젝트의 기간을 바꿀 때는 사유'),
           },
         ]);
       }
@@ -1757,7 +1764,7 @@ export const handlers = [
         return apiError('VALIDATION_ERROR', [
           {
             path: input.plannedStart !== undefined ? 'body.plannedStart' : 'body.plannedEnd',
-            message: `투입 ${outside}건이 새 기간 밖에 있습니다. 먼저 투입 기간을 조정하거나 취소해 주세요`,
+            message: VALIDATION_MESSAGES.ASSIGNMENT_OUTSIDE_PERIOD(outside),
           },
         ]);
       }
@@ -2116,7 +2123,9 @@ export const handlers = [
       if (!project || !current) return apiError('NOT_FOUND');
 
       if (current.cancelledAt) {
-        return apiError('VALIDATION_ERROR', [{ path: 'body', message: '이미 취소된 투입입니다' }]);
+        return apiError('VALIDATION_ERROR', [
+          { path: 'body', message: VALIDATION_MESSAGES.ASSIGNMENT_ALREADY_CANCELED },
+        ]);
       }
 
       const statusCheck = assignmentStatusCheck(
@@ -2324,7 +2333,7 @@ export const handlers = [
 
     if (!canRecordProgress(project.status)) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'projectId', message: '이 상태의 프로젝트에는 진행률을 입력할 수 없습니다' },
+        { path: 'projectId', message: VALIDATION_MESSAGES.PROGRESS_BLOCKED_BY_STATUS },
       ]);
     }
 
@@ -2333,7 +2342,7 @@ export const handlers = [
 
     if (recordedOn > today) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.recordedOn', message: '기준일은 오늘 이후로 정할 수 없습니다' },
+        { path: 'body.recordedOn', message: VALIDATION_MESSAGES.REFERENCE_DATE_FUTURE },
       ]);
     }
 
@@ -2457,7 +2466,7 @@ export const handlers = [
 
     if (body.data.effectiveFrom < '2000-01-01' || body.data.effectiveFrom > limit) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.effectiveFrom', message: '적용 시작일이 너무 먼 날짜입니다' },
+        { path: 'body.effectiveFrom', message: VALIDATION_MESSAGES.LABOR_RATE_START_TOO_FAR },
       ]);
     }
 
@@ -2813,7 +2822,7 @@ export const handlers = [
 
     if (!dateCheck.ok) return invalid(dateCheck.path, dateCheck.message);
 
-    // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없다 (서버와 같은 규칙)
+    // 월 공수가 확정된 달의 작업 내역은 재오픈 전까지 고칠 수 없음 (서버와 같은 규칙)
     const lockCheck = mockMonthLockCheck(account, workDate);
 
     if (!lockCheck.ok) return invalid(lockCheck.path, lockCheck.message);
@@ -3006,7 +3015,7 @@ export const handlers = [
     if (account.hasPassword !== false) {
       if (!body.data.currentPassword) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.currentPassword', message: '현재 비밀번호를 입력해 주세요' },
+          { path: 'body.currentPassword', message: VALIDATION_MESSAGES.required('현재 비밀번호') },
         ]);
       }
 
@@ -3099,13 +3108,13 @@ export const handlers = [
 
     if (newEmail === account.email) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.newEmail', message: '현재 이메일과 같습니다' },
+        { path: 'body.newEmail', message: VALIDATION_MESSAGES.EMAIL_SAME_AS_CURRENT },
       ]);
     }
 
     if (isEmailInUse(newEmail)) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.newEmail', message: '이미 사용 중인 이메일입니다' },
+        { path: 'body.newEmail', message: VALIDATION_MESSAGES.EMAIL_TAKEN },
       ]);
     }
 

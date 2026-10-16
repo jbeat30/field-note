@@ -24,6 +24,7 @@ import {
   type MaterialRecordListQuery,
   type MaterialRecordUpdate,
   type MaterialUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
@@ -46,11 +47,11 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'DUPLICATE':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '같은 이름과 규격의 자재가 이미 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.MATERIAL_DUPLICATE },
       ]);
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '자재는 회사마다 2000개까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.MATERIAL_LIMIT_REACHED },
       ]);
     case 'INVALID':
       return new AppError('VALIDATION_ERROR', error.detail ? [error.detail] : undefined);
@@ -58,7 +59,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 사용 자재 라우트. 회사 ID는 세션에서만 얻는다 (자재 목록 관리, 프로젝트별 기록, 잔량)
+ * @description 사용 자재 라우트, 회사 ID는 세션에서만 얻음 (자재 목록 관리, 프로젝트별 기록, 잔량)
  * @param registry 라우트 등록소
  * @param materials 자재 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

@@ -4,6 +4,7 @@ import {
   credentialCreateSchema,
   credentialUpdateSchema,
   type EmployeeCredential,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { useState, type FormEvent } from 'react';
 
@@ -45,7 +46,7 @@ const daysText = (daysLeft: number | null) =>
         ? '오늘 만료'
         : `${daysLeft}일 남음`;
 
-// 새 창은 클릭과 같은 순간에 열고 주소를 받으면 이동시킨다 (비동기 뒤에 열면 모바일 브라우저가 차단)
+// 새 창은 클릭과 같은 순간에 열고 주소를 받으면 이동시킴 (비동기 뒤에 열면 모바일 브라우저가 차단)
 const openFile = async (employeeId: string, credentialId: string, onError: (m: string) => void) => {
   const popup = window.open('', '_blank');
 
@@ -246,7 +247,7 @@ const CredentialRow = ({
   );
 };
 
-// 서류·자격: 자격증·안전교육 이수증·건강검진 서류를 올리고 만료일을 관리한다 (서비스 기획서 §8.4)
+// 서류·자격: 자격증·안전교육 이수증·건강검진 서류를 올리고 만료일을 관리함
 export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string }) => {
   const credentials = useCredentials(employeeId);
   const options = useOptions();
@@ -268,7 +269,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
     setRootError('');
 
     if (!typeId) {
-      setErrors({ typeId: '서류 종류를 선택해 주세요' });
+      setErrors({ typeId: VALIDATION_MESSAGES.selectRequired('서류 종류') });
       return;
     }
 

@@ -28,6 +28,7 @@ import {
   type SignupRequest,
   signupResponseSchema,
   successResponseSchema,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { AccountError, type AccountService } from '../auth/accountService';
@@ -77,15 +78,15 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('LOGIN_ID_TAKEN');
     case 'EMAIL_TAKEN':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.email', message: '이미 사용 중인 이메일입니다' },
+        { path: 'body.email', message: VALIDATION_MESSAGES.EMAIL_TAKEN },
       ]);
     case 'CONSENT_REQUIRED':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.consents', message: '필수 약관에 모두 동의해야 합니다' },
+        { path: 'body.consents', message: VALIDATION_MESSAGES.REQUIRED_TERMS_NOT_AGREED },
       ]);
     case 'CONSENT_UNKNOWN_DOCUMENT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.consents', message: '동의할 수 없는 문서가 포함되어 있습니다' },
+        { path: 'body.consents', message: VALIDATION_MESSAGES.TERMS_DOCUMENT_INVALID },
       ]);
     case 'INVALID_CREDENTIALS':
       return new AppError('INVALID_CREDENTIALS');
@@ -99,7 +100,7 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'SOCIAL_ALREADY_LINKED':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '소셜 계정을 사용할 수 없습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.SOCIAL_ACCOUNT_UNAVAILABLE },
       ]);
     case 'LAST_LOGIN_METHOD':
       return new AppError('LAST_LOGIN_METHOD');
@@ -107,7 +108,7 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('ACCOUNT_CLOSING');
     case 'PASSWORD_ALREADY_SET':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '이미 아이디·비밀번호 로그인이 설정되어 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.PASSWORD_LOGIN_ALREADY_SET },
       ]);
   }
 };
@@ -130,19 +131,19 @@ const toVerificationError = (error: unknown): unknown => {
       return new AppError('TOO_MANY_REQUESTS');
     case 'ALREADY_VERIFIED':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '이미 인증된 이메일입니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.EMAIL_ALREADY_VERIFIED },
       ]);
     case 'NO_EMAIL':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '인증할 이메일이 없습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.EMAIL_NOTHING_TO_VERIFY },
       ]);
     case 'EMAIL_TAKEN':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.newEmail', message: '이미 사용 중인 이메일입니다' },
+        { path: 'body.newEmail', message: VALIDATION_MESSAGES.EMAIL_TAKEN },
       ]);
     case 'SAME_EMAIL':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.newEmail', message: '현재 이메일과 같습니다' },
+        { path: 'body.newEmail', message: VALIDATION_MESSAGES.EMAIL_SAME_AS_CURRENT },
       ]);
     default:
       // 새 오류 코드를 추가하고 변환을 빠뜨리면 500이 아니라 컴파일 단계에서 잡히게 함

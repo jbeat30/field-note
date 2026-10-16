@@ -1,7 +1,8 @@
 import { z } from 'zod';
 
-// 통합 검색 (서비스 기획서 §14 "찾기"): 프로젝트·직원·메모·자료(문서)·작업 내역을 한 검색창에서 검색
-// 검색 범위는 로그인한 회사 하나뿐이며, 직원의 연락처·생년월일·메모처럼 목록에서 가리는 개인정보는 검색 대상이 아니다 (§7.3)
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 통합 검색 ("찾기"): 프로젝트·직원·메모·자료(문서)·작업 내역을 한 검색창에서 검색
+// 검색 범위는 로그인한 회사 하나뿐이며, 직원의 연락처·생년월일·메모처럼 목록에서 가리는 개인정보는 검색 대상이 아님
 export const SEARCH_HIT_TYPES = ['PROJECT', 'EMPLOYEE', 'MEMO', 'DOCUMENT', 'WORK_LOG'] as const;
 
 export const searchHitTypeSchema = z.enum(SEARCH_HIT_TYPES);
@@ -25,8 +26,8 @@ export const searchQuerySchema = z.object({
   q: z
     .string()
     .trim()
-    .min(1, '검색어를 입력해 주세요')
-    .max(SEARCH_QUERY_MAX_LENGTH, `검색어는 ${SEARCH_QUERY_MAX_LENGTH}자까지 입력할 수 있습니다`),
+    .min(1, VALIDATION_MESSAGES.required('검색어'))
+    .max(SEARCH_QUERY_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('검색어', SEARCH_QUERY_MAX_LENGTH)),
   // 프로젝트 안에서만 찾을 때 (메모·자료·작업 내역만 검색)
   projectId: z.uuid().optional(),
   // 종류마다 보여 줄 최대 개수
@@ -78,7 +79,7 @@ export const searchResponseSchema = z.object({
 export type SearchResponse = z.infer<typeof searchResponseSchema>;
 
 /**
- * @description 본문에서 검색어가 처음 나온 곳 주변만 잘라 보여 줌 (대소문자 무시). 앞뒤가 잘렸으면 말줄임표를 붙이고 줄바꿈은 공백으로 바꾼다
+ * @description 본문에서 검색어가 처음 나온 곳 주변만 잘라 표시 (대소문자 무시), 앞뒤가 잘렸으면 말줄임표를 붙이고 줄바꿈은 공백으로 변환
  * @param text 본문
  * @param query 검색어
  * @param radius 검색어 앞뒤로 남길 글자 수
@@ -97,7 +98,7 @@ export const makeSnippet = (text: string, query: string, radius = SNIPPET_RADIUS
 };
 
 /**
- * @description LIKE 검색에서 와일드카드로 해석되는 글자(`%`, `_`)와 이스케이프 글자(`\`)를 일반 글자로 바꿈.
+ * @description LIKE 검색에서 와일드카드로 해석되는 글자(`%`, `_`)와 이스케이프 글자(`\`)를 일반 글자로 바꿈
  * 사용자가 "100%"나 "A_B"를 검색할 때 모든 글자와 일치하는 검색이 되지 않도록 방지
  * @param text 사용자가 입력한 검색어
  * @returns 이스케이프한 검색어

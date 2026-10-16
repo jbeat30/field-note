@@ -17,7 +17,7 @@ const notImplemented: RouteHandler = async () => {
 };
 
 /**
- * @description 홈 대시보드·알림 설정 라우트. 회사 ID는 세션에서만 얻는다. 알림은 저장하지 않고 조회할 때 계산한다
+ * @description 홈 대시보드·알림 설정 라우트, 회사 ID는 세션에서만 획득, 알림은 저장하지 않고 조회 시점에 계산
  * @param registry 라우트 등록소
  * @param dashboard 대시보드 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */
@@ -60,7 +60,7 @@ export const registerDashboardRoutes = (registry: RouteRegistry, dashboard?: Das
       errors: [],
     },
     async ({ auth, body }) => dashboard!.saveSettings(auth!.companyId, body as AlertSettingsUpdate),
-    // 알림 숨기기는 활동 기록이 아니다 (데이터를 바꾸는 일이 아니라 화면 정리)
+    // 알림 숨기기는 활동 기록이 아님 (데이터를 바꾸는 일이 아니라 화면 정리)
   );
 
   add(

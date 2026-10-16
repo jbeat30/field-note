@@ -321,7 +321,7 @@ describe('직원 서류·자격', () => {
     ).toEqual([]);
     expect((await del(`/employees/${worker}/credentials/${credentialId}`)).status).toBe(404);
 
-    // 기록은 남는다 (삭제 시각만 기록)
+    // 기록은 남음 (삭제 시각만 기록)
     expect(await db.owner.employeeCredential.count({ where: { id: credentialId } })).toBe(1);
   });
 });

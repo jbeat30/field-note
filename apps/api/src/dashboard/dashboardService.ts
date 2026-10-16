@@ -22,9 +22,9 @@ export type DashboardService = {
   // 홈 대시보드: 위젯과 켜 둔 알림 (알림은 저장하지 않고 열 때마다 기록을 보고 계산)
   get: (companyId: string) => Promise<DashboardResponse>;
   getSettings: (companyId: string) => Promise<AlertSettings>;
-  // 보낸 종류만 켜고 끈다 (행이 없는 종류는 켜짐이 기본값)
+  // 보낸 종류만 켜고 끔 (행이 없는 종류는 켜짐이 기본값)
   saveSettings: (companyId: string, update: AlertSettingsUpdate) => Promise<AlertSettings>;
-  // 알림 숨기기: 키를 남기면 조건이 바뀌기 전까지 홈·알림에 나오지 않는다 (같은 키를 다시 숨겨도 무시)
+  // 알림 숨기기: 키를 남기면 조건이 바뀌기 전까지 홈·알림에 나오지 않음 (같은 키를 다시 숨겨도 무시)
   dismiss: (companyId: string, userId: string, input: AlertDismiss) => Promise<void>;
 };
 

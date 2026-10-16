@@ -34,7 +34,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 직원 서류·자격 라우트. 회사 ID·등록자는 세션에서만 얻는다. 서류 파일 열람은 감사 기록으로 남는다
+ * @description 직원 서류·자격 라우트, 회사 ID·등록자는 세션에서만 획득, 서류 파일 열람은 감사 기록으로 보존
  * @param registry 라우트 등록소
  * @param credentials 서류 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

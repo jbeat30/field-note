@@ -10,8 +10,8 @@ const escapeHtml = (value: string) =>
   );
 
 /**
- * @description 개발 환경 전용 가짜 소셜 로그인 화면. 소셜 앱 등록 전에도 연동·로그인·가입 흐름을 끝까지 테스트
- * 운영에서는 이 함수를 호출하지 않으므로 해당 주소는 존재하지 않는다 (호출 여부는 `chooseSocialProvider` 결과로만 결정)
+ * @description 개발 환경 전용 가짜 소셜 로그인 화면, 소셜 앱 등록 전에도 연동·로그인·가입 흐름을 끝까지 테스트
+ * 운영에서는 이 함수를 호출하지 않으므로 해당 주소는 존재하지 않음 (호출 여부는 `chooseSocialProvider` 결과로만 결정)
  * @param app Express 앱
  * @param secret 가짜 인가 코드 서명용 비밀 값
  */

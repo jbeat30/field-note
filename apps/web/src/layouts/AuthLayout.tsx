@@ -9,7 +9,7 @@ const FEATURES = [
 ];
 
 // 로그인·가입 등 로그인 전 화면 공통 틀, 넓은 화면은 소개 패널 + 폼, 좁은 화면은 폼만 (모바일 우선 단일 컬럼)
-// 약관과 개인정보 처리방침은 어느 화면에서나 볼 수 있게 하단에 둠 (서비스 기획서 §5.7)
+// 약관과 개인정보 처리방침은 어느 화면에서나 볼 수 있게 하단에 둠
 export const AuthLayout = () => (
   <div className="min-h-dvh lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
     <aside className="hidden flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex">

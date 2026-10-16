@@ -4,7 +4,7 @@ import { formatWork } from '../workSummary/formatWork';
 
 import { useAfterServiceUsage } from './useRepairs';
 
-// 사후 작업으로 쓴 공수·자재 (§10.6): 작업 내역과 자재 기록에 "사후 작업" 표시를 한 것의 합계 (보증 비용 파악용)
+// 사후 작업으로 쓴 공수·자재: 작업 내역과 자재 기록에 "사후 작업" 표시를 한 것의 합계 (보증 비용 파악용)
 export const AfterServiceUsagePanel = ({ projectId }: { projectId: string }) => {
   const usage = useAfterServiceUsage(projectId);
   const settings = useCompanySettings();

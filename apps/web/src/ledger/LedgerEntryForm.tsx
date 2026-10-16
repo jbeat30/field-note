@@ -25,7 +25,7 @@ import { useOptions } from '../settings/useOptions';
 
 import { useCreateLedgerEntry, useUpdateLedgerEntry } from './useLedger';
 
-// 구분마다 쓰는 분류 목록이 다르다 (서버와 같은 규칙)
+// 구분마다 쓰는 분류 목록이 다름 (서버와 같은 규칙)
 export const LEDGER_CATEGORY_KIND: Record<LedgerKind, OptionKind> = {
   EXPENSE: 'EXPENSE_CATEGORY',
   INCOME: 'INCOME_CATEGORY',
@@ -41,7 +41,7 @@ type Props = {
   onDone: () => void;
 };
 
-// 지출·수입 한 건 입력 (08 문서 §6.2): 지출이 기본이고 수입은 구분 단추로 전환, 분류·거래처·추가 공사·증빙 문서는 선택
+// 지출·수입 한 건 입력: 지출이 기본이고 수입은 구분 단추로 전환, 분류·거래처·추가 공사·증빙 문서는 선택
 export const LedgerEntryForm = ({
   projectId,
   entry,

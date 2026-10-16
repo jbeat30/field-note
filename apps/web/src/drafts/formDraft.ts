@@ -1,4 +1,4 @@
-// 작성 중인 입력 폼 초안 (서비스 기획서 §14 "임시 저장": 통신이 불안정한 곳에서도 입력이 유실되지 않게 기기에 먼저 저장)
+// 작성 중인 입력 폼 초안 ("임시 저장": 통신이 불안정한 곳에서도 입력이 유실되지 않게 기기에 먼저 저장)
 // 서버 저장(임시 저장 상태의 작업 내역)과 별개로 저장 버튼을 누르기 전의 입력 내용을 이 기기의 IndexedDB에 보관
 export const DRAFT_MAX_AGE_DAYS = 30;
 
@@ -15,7 +15,7 @@ export const draftKey = (kind: DraftKind, projectId: string, date: string) =>
   `${kind}:${projectId}:${date}`;
 
 /**
- * @description 초안 저장 키에서 종류·프로젝트·날짜를 읽음 (홈의 "이어서 작성" 목록용). 메모 초안처럼 형식이 다른 키는 null
+ * @description 초안 저장 키에서 종류·프로젝트·날짜를 읽음 (홈의 "이어서 작성" 목록용), 메모 초안처럼 형식이 다른 키는 null
  * @param key 저장 키
  * @returns 종류·프로젝트·날짜 (형식이 다르면 null)
  */
@@ -32,7 +32,7 @@ export const parseDraftKey = (key: string) => {
 export const serializeDraft = <T>(draft: FormDraft<T>) => JSON.stringify(draft);
 
 /**
- * @description 저장된 초안 글자를 읽음. 깨졌거나 형식이 다르면 null (초안 때문에 화면이 멈추지 않게)
+ * @description 저장된 초안 글자를 읽음, 깨졌거나 형식이 다르면 null (초안 때문에 화면이 멈추지 않게)
  * @param raw 저장된 글자
  * @returns 초안 (읽을 수 없으면 null)
  */
@@ -59,7 +59,7 @@ export const parseDraft = <T>(raw: string | undefined): FormDraft<T> | null => {
 };
 
 /**
- * @description 오래된 초안을 지움 (기기에 영원히 남지 않게). 작업 내역·자재 초안만 대상이며 메모 초안 같은 다른 글자는 건드리지 않는다
+ * @description 오래된 초안 삭제 (기기에 영원히 남지 않게), 작업 내역·자재 초안만 대상이며 메모 초안 같은 다른 글자는 유지
  * @param drafts 저장된 초안 전체
  * @param now 현재 시각
  * @returns 오래된 초안을 뺀 새 객체 (지울 것이 없으면 같은 객체)
@@ -88,7 +88,7 @@ export type ResumableDraft = {
 
 /**
  * @description 홈에서 "이어서 작성"으로 보여 줄 초안 목록 (읽을 수 있는 작업 내역·자재 초안, 최근 저장이 먼저)
- * 같은 프로젝트·날짜의 작업 내역과 자재 초안은 한 줄로 합친다 (같은 화면에서 이어 쓰므로)
+ * 같은 프로젝트·날짜의 작업 내역과 자재 초안은 한 줄로 합침 (같은 화면에서 이어 쓰므로)
  * @param drafts 저장된 초안 전체
  * @returns 이어 쓸 수 있는 초안 (프로젝트·날짜 단위)
  */

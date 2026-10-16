@@ -18,7 +18,8 @@ import { projectStatusSchema, type ProjectStatus } from './projects';
 import { warrantyDaysLeft } from './warranty';
 import { periodStart } from './workSummary';
 
-// 홈 대시보드와 알림 (서비스 기획서 §15.2, §15.3), 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 홈 대시보드와 알림, 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산
 // (초기: 화면 표시), 4단계에서 보증 종료 임박·미처리 보수·보증서·직원 서류 만료·월 공수 미확정 추가
 const dateSchema = z.iso.date();
 
@@ -54,10 +55,10 @@ export const ALERT_KIND_LABELS: Record<AlertKind, string> = {
   MONTH_UNCLOSED: '지난달에 저장한 작업 내역이 있는데 월 공수를 확정하지 않았을 때',
 };
 
-// 협의 중 변경 작업을 오래 방치된 것으로 보는 기준 (§15.3)
+// 협의 중 변경 작업을 오래 방치된 것으로 보는 기준
 export const CHANGE_STALE_DAYS = 7;
 
-// 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준 (§15.3), 직원 서류는 CREDENTIAL_EXPIRING_DAYS
+// 보증 종료 임박(60일), 접수 후 방치된 보수 요청(3일), 보증서 만료 임박(30일) 기준, 직원 서류는 CREDENTIAL_EXPIRING_DAYS
 export const WARRANTY_ENDING_DAYS = 60;
 
 export const REPAIR_UNHANDLED_DAYS = 3;
@@ -73,11 +74,13 @@ export const alertSettingsSchema = z.object({
 
 export type AlertSettings = z.infer<typeof alertSettingsSchema>;
 
-// 보낸 종류만 바꾼다 (같은 종류가 두 번 있으면 거부)
+// 보낸 종류만 바꿈 (같은 종류가 두 번 있으면 거부)
 export const alertSettingsUpdateSchema = z
-  .object({ items: alertSettingsSchema.shape.items.min(1, '바꿀 알림을 선택해 주세요') })
+  .object({
+    items: alertSettingsSchema.shape.items.min(1, VALIDATION_MESSAGES.selectRequired('바꿀 알림')),
+  })
   .refine((value) => new Set(value.items.map((item) => item.kind)).size === value.items.length, {
-    message: '같은 알림이 두 번 들어 있습니다',
+    message: VALIDATION_MESSAGES.ALERT_DUPLICATE,
     path: ['items'],
   });
 
@@ -161,7 +164,7 @@ export const dashboardAlertSchema = z.discriminatedUnion('kind', [
 
 export type DashboardAlert = z.infer<typeof dashboardAlertSchema>;
 
-// 알림 숨기기: 화면에 보이는 알림 키를 보낸다 (한 번에 모두 숨기기도 같은 요청)
+// 알림 숨기기: 화면에 보이는 알림 키를 보냄 (한 번에 모두 숨기기도 같은 요청)
 export const ALERT_DISMISS_MAX = 200;
 
 export const alertDismissSchema = z.object({
@@ -180,9 +183,9 @@ export const dashboardAlertItemSchema = z.object({
 export type DashboardAlertItem = z.infer<typeof dashboardAlertItemSchema>;
 
 /**
- * @description 알림을 숨길 때 쓰는 키: 종류·대상·조건 값. 같은 대상이어도 조건이 바뀌면(겹친 날이 달라짐, 새 만료일) 키가 달라져 다시 보인다
+ * @description 알림을 숨길 때 쓰는 키: 종류·대상·조건 값, 같은 대상이어도 조건이 바뀌면(겹친 날이 달라짐, 새 만료일) 키가 달라져 다시 표시
  * @param alert 알림
- * @param today 오늘(서울 기준, 오늘 기록 없음 알림은 날마다 다시 보이도록 키에 넣는다)
+ * @param today 오늘(서울 기준, 오늘 기록 없음 알림은 날마다 다시 보이도록 키에 포함)
  */
 export const dashboardAlertKey = (alert: DashboardAlert, today: string): string => {
   const parts: (string | number)[] = [alert.kind];
@@ -459,7 +462,7 @@ export const weekRange = (today: string) => {
 };
 
 /**
- * @description 모아 온 기록으로 홈 대시보드를 만든다 (서버와 목업이 같은 규칙을 쓰도록 순수 함수로 둠)
+ * @description 모아 온 기록으로 홈 대시보드를 만듦 (서버와 목업이 같은 규칙을 쓰도록 순수 함수로 둠)
  * 위젯은 현재 기록으로 만들 수 있는 것만 포함하고 알림은 켜 둔 종류만 포함
  * @param input 프로젝트·투입·작업 내역·메모함·배치·변경 작업 현황과 켜 둔 알림 종류
  * @returns 대시보드
@@ -823,7 +826,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
 };
 
 /**
- * @description 알림을 화면에 보여 줄 문장으로 바꾼다
+ * @description 알림을 화면에 보여 줄 문장으로 변환
  * @param alert 알림
  * @returns 안내 문장
  */

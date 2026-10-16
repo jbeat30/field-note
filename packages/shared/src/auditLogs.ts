@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { PAY_TYPE_LABELS } from './laborCost';
 import { auditActionSchema, type AuditAction } from './documents';
 
-// 활동 기록 (서비스 기획서 §13.1, 09 문서 §5.2): 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 한곳에서 조회
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 활동 기록 (문서): 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 한곳에서 조회
 // 인건비·단가 조회는 기록 제외 (이 서비스는 볼 권한이 있는 관리자만 사용하므로 열람 기록이 무의미), 기록은 수정·삭제 불가이며 이 화면은 조회 전용
 const dateSchema = z.iso.date();
 
@@ -91,7 +92,7 @@ export const auditTargetTypeSchema = z.enum(AUDIT_TARGET_TYPES);
 export type AuditTargetType = z.infer<typeof auditTargetTypeSchema>;
 
 /**
- * @description 감사 기록 행위의 대상 종류. 내보내기는 작업일보(프로젝트)와 월 공수표(회사)가 있어 상세로 가른다
+ * @description 감사 기록 행위의 대상 종류, 내보내기는 작업일보(프로젝트)와 월 공수표(회사)가 있어 상세로 구분
  * @param action 행위
  * @param detail 기록 상세
  * @returns 대상 종류
@@ -156,7 +157,7 @@ export const auditChanges = (detail: unknown): AuditChange[] => {
 };
 
 /**
- * @description 기록 상세를 한 줄 설명으로 바꾼다 (모르는 값은 빼고, 상세가 비어 있으면 null)
+ * @description 기록 상세를 한 줄 설명으로 바꿈 (모르는 값은 빼고, 상세가 비어 있으면 null)
  * @param action 행위
  * @param detail 기록 상세(JSON)
  * @returns 설명 (없으면 null)
@@ -314,7 +315,7 @@ export const auditLogListQuerySchema = z
       .default(AUDIT_PAGE_DEFAULT_LIMIT),
   })
   .refine((value) => !value.from || !value.to || value.from <= value.to, {
-    message: '끝 날짜는 시작 날짜보다 빠를 수 없습니다',
+    message: VALIDATION_MESSAGES.RANGE_END_BEFORE_START,
     path: ['to'],
   });
 

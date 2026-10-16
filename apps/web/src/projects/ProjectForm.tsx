@@ -8,6 +8,7 @@ import {
   projectCreateSchema,
   projectUpdateSchema,
   type ProjectDetail,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -124,7 +125,7 @@ const toBody = (values: FormValues) => ({
   periodChangeReason: orNull(values.periodChangeReason),
 });
 
-// 상태 때문에 수정할 수 없는 항목은 안의 입력과 버튼을 한꺼번에 막는다 (레이아웃은 그대로)
+// 상태 때문에 수정할 수 없는 항목은 안의 입력과 버튼을 한꺼번에 막음 (레이아웃은 그대로)
 const Lockable = ({ locked, children }: { locked: boolean; children: ReactNode }) => (
   <fieldset disabled={locked} className="contents">
     {children}
@@ -132,7 +133,7 @@ const Lockable = ({ locked, children }: { locked: boolean; children: ReactNode }
 );
 
 /**
- * @description 프로젝트 기본정보 폼 (등록과 수정이 같은 화면을 쓴다)
+ * @description 프로젝트 기본정보 폼 (등록과 수정이 같은 화면 사용)
  * 고객·담당자·공종은 명부·직원·선택 목록에서 선택, 목록에 없으면 그 자리에서 추가 가능
  * @param props project가 있으면 수정, 없으면 등록
  */
@@ -163,13 +164,13 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   const plannedStartValue = useWatch({ control, name: 'plannedStart' });
   const plannedEndValue = useWatch({ control, name: 'plannedEnd' });
   const isEdit = Boolean(project);
-  // 예정 기간을 바꾸면 사유를 받는다 (시작한 뒤에는 필수, 예정 상태에서는 선택)
+  // 예정 기간을 바꾸면 사유를 받음 (시작한 뒤에는 필수, 예정 상태에서는 선택)
   const periodChanged =
     Boolean(project) &&
     (plannedStartValue !== project?.plannedStart || plannedEndValue !== project?.plannedEnd);
   const reasonRequired =
     periodChanged && project !== undefined && periodChangeNeedsReason(project.status);
-  // 상태별 수정 제한 (서비스 기획서 §10.3): 종료·취소는 수정 불가, 보증 중은 담당자·메모만
+  // 상태별 수정 제한: 종료·취소는 수정 불가, 보증 중은 담당자·메모만
   const allowed = project ? allowedProjectFields(project.status) : 'all';
   const isLocked = (field: string) => allowed !== 'all' && !allowed.includes(field);
   const isReadOnly = allowed !== 'all' && allowed.length === 0;
@@ -228,7 +229,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       return;
     }
 
-    // 막힌 항목은 보내지 않는다 (보증 중에는 담당자·메모만)
+    // 막힌 항목은 보내지 않음 (보증 중에는 담당자·메모만)
     const body = toBody({ ...toValues(project!), ...values });
 
     // 기간을 바꾸지 않았다면 사유는 보내지 않음
@@ -250,7 +251,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
     // 기간 순서 같은 입력 오류를 먼저 보여 주고, 그다음에 사유 누락을 확인
     if (periodChanged && reasonRequired && !body.periodChangeReason) {
       setError('periodChangeReason', {
-        message: '시작한 프로젝트의 기간을 바꿀 때는 사유를 입력해 주세요',
+        message: VALIDATION_MESSAGES.required('시작한 프로젝트의 기간을 바꿀 때는 사유'),
       });
       return;
     }

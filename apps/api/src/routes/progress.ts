@@ -27,7 +27,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 진행률·진행 점검 라우트 (프로젝트 아래). 회사 ID·기록자는 세션에서만 얻는다. 기록의 수정·삭제 API는 없다
+ * @description 진행률·진행 점검 라우트 (프로젝트 아래), 회사 ID·기록자는 세션에서만 획득, 기록의 수정·삭제 API 없음
  * @param registry 라우트 등록소
  * @param progress 진행률 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

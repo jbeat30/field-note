@@ -1,4 +1,4 @@
-import { passwordSchema } from '@field-note/shared';
+import { passwordSchema, VALIDATION_MESSAGES } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -18,7 +18,7 @@ const resetFormSchema = z
   .object({ newPassword: passwordSchema, newPasswordConfirm: z.string() })
   .refine((values) => values.newPassword === values.newPasswordConfirm, {
     path: ['newPasswordConfirm'],
-    message: '비밀번호가 일치하지 않습니다',
+    message: VALIDATION_MESSAGES.PASSWORD_MISMATCH,
   });
 
 type ResetForm = z.infer<typeof resetFormSchema>;
@@ -105,7 +105,7 @@ export const ResetPasswordPage = () => {
       setError('root', {
         message:
           response.status === 404
-            ? '링크가 만료되었거나 이미 사용되었습니다'
+            ? VALIDATION_MESSAGES.LINK_EXPIRED_OR_USED
             : getErrorMessage(error),
       });
       return;

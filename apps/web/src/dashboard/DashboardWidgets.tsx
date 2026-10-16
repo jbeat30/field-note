@@ -185,7 +185,7 @@ const DueRow = ({
   </li>
 );
 
-// 홈 대시보드 (09 문서 §5.5): 수치 줄, 진행 중 프로젝트 표 + 확인할 일(알림), 이번 주 인력(weekSlot), 보증·만료 임박 줄
+// 홈 대시보드: 수치 줄, 진행 중 프로젝트 표 + 확인할 일(알림), 이번 주 인력(weekSlot), 보증·만료 임박 줄
 export const DashboardWidgets = ({
   dashboard,
   weekSlot,

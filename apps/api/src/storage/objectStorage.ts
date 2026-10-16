@@ -13,7 +13,7 @@ import {
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
-// 객체 저장소 추상화: 업무 코드는 S3 SDK를 직접 알지 않고 이 인터페이스만 사용 (공급자 교체·테스트 용이, 기술 기획서 §10)
+// 객체 저장소 추상화: 업무 코드는 S3 SDK를 직접 알지 않고 이 인터페이스만 사용 (공급자 교체·테스트 용이)
 export type ObjectStorage = {
   // 브라우저가 직접 올릴 짧은 만료의 PUT 주소, 형식·크기를 서명에 포함해 신청과 다른 파일은 저장소가 거부
   presignUpload: (
@@ -174,7 +174,7 @@ export const createS3Storage = (config: S3Config) => {
 };
 
 /**
- * @description 메모리 객체 저장소 (DB·저장소 없는 단위 테스트용). 주소는 가짜지만 형식·크기 서명 값을 기록해 둠
+ * @description 메모리 객체 저장소 (DB·저장소 없는 단위 테스트용), 주소는 가짜지만 형식·크기 서명 값을 기록해 둠
  * @returns 객체 저장소와 테스트용 조작 함수
  */
 export const createMemoryStorage = () => {

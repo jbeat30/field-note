@@ -48,7 +48,7 @@ export const WarrantyForm = ({
   const [saved, setSaved] = useState('');
   const monthsNumber = months.trim() === '' ? Number.NaN : Number(months);
   const effectiveStart = startBasis === 'ACTUAL_END' ? project.actualEnd : startOn || null;
-  // 입력 중에 계산되는 종료 예정일을 바로 보여 준다 (직접 지정한 값이 있으면 그 값)
+  // 입력 중에 계산되는 종료 예정일을 바로 보여 줌 (직접 지정한 값이 있으면 그 값)
   const preview =
     Number.isInteger(monthsNumber) && monthsNumber >= 0 && effectiveStart
       ? monthsNumber === 0

@@ -8,14 +8,14 @@ export const IDEMPOTENCY_HEADER = 'Idempotency-Key';
 
 const KEY_PATTERN = /^[A-Za-z0-9_-]{8,128}$/;
 export const IDEMPOTENCY_TTL_MS = 24 * 60 * 60 * 1000;
-// 처리 중 표시는 짧게 둔다 (서버가 도중에 멈춰도 같은 키로 곧 다시 시도할 수 있게)
+// 처리 중 표시는 짧게 둠 (서버가 도중에 멈춰도 같은 키로 곧 다시 시도할 수 있게)
 export const IDEMPOTENCY_PROCESSING_TTL_MS = 2 * 60 * 1000;
 
 export type IdempotencyEntry =
   | { state: 'processing'; fingerprint: string; expiresAt: number }
   | { state: 'done'; fingerprint: string; status: number; body: unknown; expiresAt: number };
 
-// 키는 회사마다 따로 보관한다 (다른 회사의 키와 겹쳐도 서로 보이지 않음)
+// 키는 회사마다 따로 보관함 (다른 회사의 키와 겹쳐도 서로 보이지 않음)
 export type IdempotencyStore = {
   // 처음 보는 키는 처리 중으로 선점하고 null 반환, 이미 있으면(만료 전) 그 기록 반환, 동시에 같은 키가 와도 한 요청만 선점
   claim: (
@@ -34,7 +34,7 @@ export type IdempotencyStore = {
 };
 
 /**
- * @description 메모리 기반 멱등 키 저장소 (단위 테스트용. 운영은 DB 구현 `createPrismaIdempotencyStore`)
+ * @description 메모리 기반 멱등 키 저장소 (단위 테스트용, 운영은 DB 구현 `createPrismaIdempotencyStore`)
  * @returns 저장소
  */
 export const createMemoryIdempotencyStore = (): IdempotencyStore => {

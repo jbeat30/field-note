@@ -80,7 +80,7 @@ export const loadWarrantyForTransition = async (
 };
 
 /**
- * @description 완료 → 보증 중 전환에서 설정이 없으면 기본값(12개월, 실제 완료일 기준)으로 만든다
+ * @description 완료 → 보증 중 전환에서 설정이 없으면 기본값(12개월, 실제 완료일 기준)으로 생성
  * @param tx 회사 범위 트랜잭션
  * @param companyId 회사
  * @param userId 변경자
@@ -294,7 +294,7 @@ export const createWarrantyService = (
 
         assertAllows(project.status);
 
-        // 같은 프로젝트의 삭제되지 않은 문서만 보증서로 등록할 수 있다 (다른 회사·다른 프로젝트 문서는 없는 것으로 취급)
+        // 같은 프로젝트의 삭제되지 않은 문서만 보증서로 등록할 수 있음 (다른 회사·다른 프로젝트 문서는 없는 것으로 취급)
         const document = await tx.document.findFirst({
           where: { id: input.documentId, projectId, deletedAt: null },
           select: { id: true },
