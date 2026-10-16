@@ -503,5 +503,6 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - [개발 순서 설계](docs/01-development-plan.md)
 - [데이터 모델](docs/04-data-model.md)
 - [백업·복구와 환경 분리](docs/05-backup-restore.md)
+- [배포 준비: 필요한 서비스·환경 변수](docs/10-deployment-prep.md)
 - [진행 현황](docs/03-progress.md)
 - [서비스 기획서 v2.4](docs/planning/service-plan-v2.4.md) / [기술 기획서 v0.5](docs/planning/tech-plan-v0.5.md)
