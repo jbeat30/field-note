@@ -16,7 +16,7 @@ import { RepairForm } from '../repairs/RepairForm';
 import { RepairItem } from '../repairs/RepairItem';
 import { useRepairs } from '../repairs/useRepairs';
 
-// 보수 요청 (서비스 기획서 §10.6): 보증 중 고객이 요청한 하자 보수를 접수부터 처리까지 기록
+// 보수 요청: 보증 중 고객이 요청한 하자 보수를 접수부터 처리까지 기록
 // 보수 작업은 작업 내역·자재 기록에 "사후 작업"으로 표시하고 요청에 연결해 건별 공수·자재 확인
 export const ProjectRepairsPage = () => {
   const { id = '' } = useParams();

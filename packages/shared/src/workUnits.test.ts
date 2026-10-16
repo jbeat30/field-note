@@ -11,7 +11,7 @@ import {
   toManMonths,
 } from './workUnits';
 
-// 기준시간 8시간, 월 기준일수 22일 (서비스 기획서 §9.5 예시와 같은 설정)
+// 기준시간 8시간, 월 기준일수 22일 (예시와 같은 설정)
 const STANDARD = 480;
 const MONTHLY_DAYS = 22;
 

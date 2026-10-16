@@ -21,7 +21,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 const th = 'border border-border bg-muted px-2 py-1 text-left text-sm font-medium';
 const td = 'border border-border px-2 py-1 text-sm align-top';
 
-// 프로젝트 요약 한 장 (완료 리포트, 서비스 기획서 §10.7): 화면 확인 후 인쇄·PDF 저장
+// 프로젝트 요약 한 장 (완료 리포트): 화면 확인 후 인쇄·PDF 저장
 // 금액과 민감 문서는 제외하고 기간·공수·자재·변경 작업·사진·자료 같은 사실 기록만 수집
 export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSummary }) => {
   const { project, work, materials, changeWorks, afterService, photos, documents, settings } =

@@ -30,7 +30,7 @@ const GROUPS: { title: string; description: string; kinds: AlertKind[] }[] = [
   },
 ];
 
-// 설정 > 알림 설정: 알림 종류별 켜기·끄기 (서비스 기획서 §15.3), 알림은 홈 화면에 표시
+// 설정 > 알림 설정: 알림 종류별 켜기·끄기, 알림은 홈 화면에 표시
 export const AlertSettingsPage = () => {
   const settings = useAlertSettings();
   const save = useSaveAlertSettings();

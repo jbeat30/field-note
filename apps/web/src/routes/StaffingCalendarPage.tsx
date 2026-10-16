@@ -76,7 +76,7 @@ const periodLabel = (view: View, from: string, to: string) =>
 const READING_GUIDE =
   '막대는 그 프로젝트에서 일한 날이고 안의 숫자는 그날 시간입니다. 같은 날 두 곳에서 일하면 막대가 위아래로 쌓이고 빨간 테두리로 표시됩니다. 막대를 누르면 그날 하루 기록, 빈 칸을 누르면 프로젝트를 골라 그날 기록으로 갑니다';
 
-// 인력 배치 (09 문서 §4): 사람 행 × 날짜 열 타임라인, 누가 어디에서 일했고 누가 비었고 어디가 겹치는지 한눈에 확인
+// 인력 배치: 사람 행 × 날짜 열 타임라인, 누가 어디에서 일했고 누가 비었고 어디가 겹치는지 한눈에 확인
 export const StaffingCalendarPage = () => {
   const [params, setParams] = useSearchParams();
   const view: View = isView(params.get('view')) ? (params.get('view') as View) : 'week';

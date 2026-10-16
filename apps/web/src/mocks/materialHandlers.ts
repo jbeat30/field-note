@@ -112,7 +112,7 @@ const addRecord = (
   return record;
 };
 
-// 더미 자재: 기획서 예시(아연도강판 1.0T 반입 100·사용 72·반출 10·폐기 3 → 잔량 15)와 잔량이 마이너스인 자재 하나
+// 더미 자재: 예시(아연도강판 1.0T 반입 100·사용 72·반출 10·폐기 3 → 잔량 15)와 잔량이 마이너스인 자재 하나
 const seed = (account: MockAccount) => {
   if (seeded.has(scopeOf(account))) return;
 

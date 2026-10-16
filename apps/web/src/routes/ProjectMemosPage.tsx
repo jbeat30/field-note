@@ -23,7 +23,7 @@ const filterQuery = (filter: Filter) => {
   return { tag: filter };
 };
 
-// 프로젝트 메모 노트: 하루 기록에서 쓴 메모를 날짜별로 모아서 조회, 할 일 체크·수정·삭제도 여기서 가능 (09 문서 §3.5)
+// 프로젝트 메모 노트: 하루 기록에서 쓴 메모를 날짜별로 모아서 조회, 할 일 체크·수정·삭제도 여기서 가능
 export const ProjectMemosPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);

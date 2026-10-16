@@ -162,7 +162,7 @@ export const createChangeWorkHandlers = ({ apiError, parseBody }: Helpers) => {
       issues.map((issue) => ({ path: ['query', ...issue.path].join('.'), message: issue.message })),
     );
 
-  // 프로젝트 상태에 따라 막히는지 (§10.3)
+  // 프로젝트 상태에 따라 막히는지
   const projectCheck = (
     account: MockAccount,
     projectId: string,

@@ -16,7 +16,7 @@ export type LoginMethods = {
 };
 
 export type SocialService = {
-  // 제공자 사용자 번호로 계정을 찾음 (이메일로는 절대 찾지 않음, §6.1), 정지·해지 요청 중인 회사는 없는 것으로 취급
+  // 제공자 사용자 번호로 계정을 찾음 (이메일로는 절대 찾지 않음), 정지·해지 요청 중인 회사는 없는 것으로 취급
   findAccount: (
     provider: SocialProviderId,
     providerUserId: string,

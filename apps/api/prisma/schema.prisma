@@ -41,7 +41,7 @@ model Company {
   id                         String                      @id @default(dbgenerated("uuidv7()")) @db.Uuid
   name                       String
   status                     CompanyStatus               @default(ACTIVE)
-  // 회사별 저장 용량 한도(바이트), 운영자가 서버 용량에 맞춰 조정 (서비스 기획서 §12.1)
+  // 회사별 저장 용량 한도(바이트), 운영자가 서버 용량에 맞춰 조정
   storageQuotaBytes          BigInt                      @default(5368709120) @map("storage_quota_bytes")
   createdAt                  DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
   users                      User[]
@@ -98,7 +98,7 @@ model Company {
   @@map("companies")
 }
 
-// 프로젝트 상태 (서비스 기획서 §10.3), 전환 규칙과 이력은 P1-6에서 구현하고 P1-5에서는 등록 시 '예정'으로만 생성
+// 프로젝트 상태, 전환 규칙과 이력은 P1-6에서 구현하고 P1-5에서는 등록 시 '예정'으로만 생성
 enum ProjectStatus {
   PLANNED
   IN_PROGRESS
@@ -111,7 +111,7 @@ enum ProjectStatus {
   @@map("project_status")
 }
 
-// 프로젝트 (서비스 기획서 §10.2), 계약 금액은 저장하지 않음
+// 프로젝트, 계약 금액은 저장하지 않음
 // 고객·담당자·공종은 같은 회사의 명부·직원·선택 목록만 복합 키로 가리킬 수 있음
 model Project {
   companyId            String                      @map("company_id") @db.Uuid
@@ -168,7 +168,7 @@ model Project {
   @@map("projects")
 }
 
-// 프로젝트 상태 변경 이력 (변경자·시각·사유, 서비스 기획서 §10.3), 추가만 가능하고 수정·삭제할 수 없음
+// 프로젝트 상태 변경 이력 (변경자·시각·사유), 추가만 가능하고 수정·삭제할 수 없음
 model ProjectStatusChange {
   companyId   String        @map("company_id") @db.Uuid
   id          String        @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -190,7 +190,7 @@ model ProjectStatusChange {
   @@map("project_status_changes")
 }
 
-// 진행률 기록: 담당자가 수시로 입력하는 진행 정도(%)이며 가장 최근 기록이 현재 진행률 (서비스 기획서 §10.4)
+// 진행률 기록: 담당자가 수시로 입력하는 진행 정도(%)이며 가장 최근 기록이 현재 진행률
 // 추가만 가능하고 고치거나 지우지 않음 (잘못 입력했으면 새로 기록)
 model ProjectProgressRecord {
   companyId  String   @map("company_id") @db.Uuid
@@ -242,7 +242,7 @@ model EmployeePayRate {
   @@map("employee_pay_rates")
 }
 
-// 투입: 직원을 프로젝트 기간 안의 일정 기간에 배정 (서비스 기획서 §9.1)
+// 투입: 직원을 프로젝트 기간 안의 일정 기간에 배정
 // 지우지 않고 취소 표시(cancelled_at)만 남겨, 이후 작업일지가 참조해도 기록이 보존됨
 model ProjectAssignment {
   companyId      String    @map("company_id") @db.Uuid
@@ -266,7 +266,7 @@ model ProjectAssignment {
   @@map("project_assignments")
 }
 
-// 프로젝트 예정 기간 변경 이력 (연장·단축한 날짜와 사유, 서비스 기획서 §10.2), 추가만 가능
+// 프로젝트 예정 기간 변경 이력 (연장·단축한 날짜와 사유), 추가만 가능
 model ProjectPeriodChange {
   companyId String   @map("company_id") @db.Uuid
   id        String   @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -287,7 +287,7 @@ model ProjectPeriodChange {
   @@map("project_period_changes")
 }
 
-// 작업일지 상태: 임시 저장은 집계에서 제외, 저장됨은 집계에 반영 (서비스 기획서 §9.4)
+// 작업일지 상태: 임시 저장은 집계에서 제외, 저장됨은 집계에 반영
 enum WorkLogStatus {
   DRAFT
   SAVED
@@ -560,7 +560,7 @@ enum OperatorActionType {
   @@map("operator_action_type")
 }
 
-// 운영자 작업 기록 (추가만 가능, §5.4), 개인정보는 담지 않고 대상 회사 식별값과 작업자만 기록
+// 운영자 작업 기록 (추가만 가능), 개인정보는 담지 않고 대상 회사 식별값과 작업자만 기록
 model OperatorAction {
   id        String             @id @default(dbgenerated("uuidv7()")) @db.Uuid
   companyId String             @map("company_id") @db.Uuid
@@ -618,7 +618,7 @@ model PasswordReset {
   @@map("password_resets")
 }
 
-// 공수 입력 방식: 비율(하루=1.0) 또는 시간 (서비스 기획서 §9.5)
+// 공수 입력 방식: 비율(하루=1.0) 또는 시간
 enum WorkUnitMode {
   RATIO
   HOURS
@@ -634,7 +634,7 @@ model CompanySettings {
   // MM(맨먼스) 계산에 쓰는 월 기준일수
   monthlyWorkDays       Float        @default(26) @map("monthly_work_days")
   workUnitMode          WorkUnitMode @default(RATIO) @map("work_unit_mode")
-  // 경고 기준(서비스 기획서 §10.4)과 보증 기본 기간(§10.6)
+  // 경고 기준과 보증 기본 기간
   burnWarnPercent       Int          @default(80) @map("burn_warn_percent")
   burnLimitPercent      Int          @default(100) @map("burn_limit_percent")
   aheadGapPercent       Int          @default(20) @map("ahead_gap_percent")
@@ -696,7 +696,7 @@ enum EmployeeStatus {
   @@map("employee_status")
 }
 
-// 직원 카드, 직원은 서비스에 로그인하지 않고 관리자가 기록 (서비스 기획서 §8)
+// 직원 카드, 직원은 서비스에 로그인하지 않고 관리자가 기록
 // 주민등록번호·계좌번호·급여는 저장 제외, 목록 API에는 생년월일·연락처를 제외하고 카드(상세)에서만 표시
 model Employee {
   companyId       String               @map("company_id") @db.Uuid
@@ -730,7 +730,7 @@ model Employee {
   @@map("employees")
 }
 
-// 명부 구분: 고객(발주처·원청), 협력업체(타 공종 팀·외주), 자재 공급처 (서비스 기획서 §10.1)
+// 명부 구분: 고객(발주처·원청), 협력업체(타 공종 팀·외주), 자재 공급처
 enum PartnerKind {
   CLIENT
   SUBCONTRACTOR
@@ -774,7 +774,7 @@ enum SocialProvider {
   @@map("social_provider")
 }
 
-// 소셜 계정 연동, 제공자가 준 사용자 번호로만 계정을 찾고 이메일이 같다는 이유로는 연결 제외 (§6.1)
+// 소셜 계정 연동, 제공자가 준 사용자 번호로만 계정을 찾고 이메일이 같다는 이유로는 연결 제외
 // 로그인 전에 조회해야 하므로 회사 범위 밖 전용 계정만 접근
 model SocialAccount {
   provider       SocialProvider
@@ -792,7 +792,7 @@ model SocialAccount {
   @@map("social_accounts")
 }
 
-// 계정 해지 진행 상태 (회사당 한 행), 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제 (서비스 기획서 §6.5)
+// 계정 해지 진행 상태 (회사당 한 행), 요청하면 즉시 로그인이 막히고 14일 유예 뒤 삭제
 // 취소 토큰은 원문 대신 해시만 저장, 삭제 완료 후 purged_at만 남겨 파기 기록으로 보존 (개인정보 없음)
 model CompanyClosure {
   companyId       String    @id @map("company_id") @db.Uuid
@@ -836,7 +836,7 @@ enum FileRejectReason {
   @@map("file_reject_reason")
 }
 
-// 업로드 파일의 메타데이터 (실제 내용은 객체 저장소), 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남김 (서비스 기획서 §12.1)
+// 업로드 파일의 메타데이터 (실제 내용은 객체 저장소), 덮어쓰지 않고 새 파일로 추가하며, 올린 사람·시각·SHA-256을 함께 남김
 model StoredFile {
   companyId       String               @map("company_id") @db.Uuid
   id              String               @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -874,7 +874,7 @@ model StoredFile {
   @@map("files")
 }
 
-// 작업 사진 구분 (서비스 기획서 §12.2)
+// 작업 사진 구분
 enum PhotoCategory {
   BEFORE
   DURING
@@ -917,7 +917,7 @@ model Photo {
   @@map("photos")
 }
 
-// 메모 태그 (서비스 기획서 §10.9)
+// 메모 태그
 enum MemoTag {
   NEGOTIATION
   INSTRUCTION
@@ -952,7 +952,7 @@ model Memo {
   @@map("memos")
 }
 
-// 자재 분류 (서비스 기획서 §11.2)
+// 자재 분류
 enum MaterialCategory {
   RAW
   SUB
@@ -962,7 +962,7 @@ enum MaterialCategory {
   @@map("material_category")
 }
 
-// 자재 기록 구분: 반입 / 사용 / 반출 / 폐기 (서비스 기획서 §11.3)
+// 자재 기록 구분: 반입 / 사용 / 반출 / 폐기
 enum MaterialRecordKind {
   RECEIVED
   USED
@@ -1018,7 +1018,7 @@ enum LedgerKind {
   @@map("ledger_kind")
 }
 
-// 지출·수입 기록 (08 문서 §6): 프로젝트에서 나간 돈과 가끔 생기는 수입, 금액은 원 단위 정수, 삭제는 deleted_at 기록의 소프트 삭제
+// 지출·수입 기록: 프로젝트에서 나간 돈과 가끔 생기는 수입, 금액은 원 단위 정수, 삭제는 deleted_at 기록의 소프트 삭제
 // 증빙은 문서함의 문서를 연결하고, 추가 공사 번호를 붙일 수 있음
 model LedgerEntry {
   companyId    String      @map("company_id") @db.Uuid
@@ -1086,7 +1086,7 @@ model MaterialRecord {
   @@map("material_records")
 }
 
-// 작업자료 분류 (서비스 기획서 §12.3)
+// 작업자료 분류
 enum DocumentCategory {
   DRAWING
   CONTRACT
@@ -1097,7 +1097,7 @@ enum DocumentCategory {
   @@map("document_category")
 }
 
-// 감사 기록 종류 (서비스 기획서 §13.1): 민감 자료 열람·내려받기, 내보내기(§7.3)
+// 감사 기록 종류: 민감 자료 열람·내려받기, 내보내기
 enum AuditAction {
   DOCUMENT_VIEWED
   DOCUMENT_DOWNLOADED
@@ -1171,7 +1171,7 @@ model DocumentVersion {
   @@map("document_versions")
 }
 
-// 회사 감사 기록: 수정·삭제할 수 없고 추가만 가능 (서비스 기획서 §13.1), 운영자 기록(operator_actions)과 분리
+// 회사 감사 기록: 수정·삭제할 수 없고 추가만 가능, 운영자 기록(operator_actions)과 분리
 model AuditLog {
   companyId String      @map("company_id") @db.Uuid
   id        String      @default(dbgenerated("uuidv7()")) @db.Uuid
@@ -1192,7 +1192,7 @@ model AuditLog {
   @@map("audit_logs")
 }
 
-// 변경·추가 작업 기록 상태: 협의 중 / 합의됨 / 철회 (서비스 기획서 §10.5)
+// 변경·추가 작업 기록 상태: 협의 중 / 합의됨 / 철회
 enum ChangeWorkStatus {
   NEGOTIATING
   AGREED
@@ -1273,7 +1273,7 @@ model ChangeWorkDocument {
   @@map("change_work_documents")
 }
 
-// 보증 시작 기준 (서비스 기획서 §10.6)
+// 보증 시작 기준
 enum WarrantyStartBasis {
   ACTUAL_END
   INSPECTION
@@ -1348,7 +1348,7 @@ model WarrantyCertificate {
   @@map("warranty_certificates")
 }
 
-// 보수 요청 상태 (서비스 기획서 §10.6)
+// 보수 요청 상태
 enum RepairStatus {
   RECEIVED
   IN_PROGRESS
@@ -1482,7 +1482,7 @@ model MonthlyCloseEvent {
   @@map("monthly_close_events")
 }
 
-// 직원 서류·자격 (서비스 기획서 §8.4): 자격증·안전교육 이수증·건강검진 서류 등, 종류는 회사가 관리하는 목록(CREDENTIAL_TYPE)
+// 직원 서류·자격: 자격증·안전교육 이수증·건강검진 서류 등, 종류는 회사가 관리하는 목록(CREDENTIAL_TYPE)
 // 만료일이 없으면 만료 없는 서류, 삭제는 removed_at만 기록, 파일은 직원 서류 용도로 올린 것을 연결
 model EmployeeCredential {
   companyId  String      @map("company_id") @db.Uuid
@@ -1509,7 +1509,7 @@ model EmployeeCredential {
   @@map("employee_credentials")
 }
 
-// 프로젝트의 필요 자격 (서비스 기획서 §10.1): 투입 배정 때 자격이 없거나 만료된 직원을 경고하는 기준
+// 프로젝트의 필요 자격: 투입 배정 때 자격이 없거나 만료된 직원을 경고하는 기준
 model ProjectRequiredCredential {
   companyId String     @map("company_id") @db.Uuid
   projectId String     @map("project_id") @db.Uuid
@@ -1523,7 +1523,7 @@ model ProjectRequiredCredential {
   @@map("project_required_credentials")
 }
 
-// 알림 종류 (서비스 기획서 §15.3), 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산, 종류별 켜기·끄기
+// 알림 종류, 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산, 종류별 켜기·끄기
 enum AlertKind {
   NO_LOG_TODAY
   INBOX_STALE

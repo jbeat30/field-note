@@ -4,7 +4,7 @@ import type { RuleCheck } from './assignments';
 import { documentCategorySchema } from './documents';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
-// 변경·추가 작업 기록 (서비스 기획서 §10.5): 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청·합의 기록
+// 변경·추가 작업 기록: 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청·합의 기록
 // 말로 합의하고 먼저 작업하는 일이 많아 "누가 언제 요청했는가"가 근거, 금액은 기록 제외
 export const CHANGE_WORK_STATUSES = ['NEGOTIATING', 'AGREED', 'WITHDRAWN'] as const;
 
@@ -44,7 +44,7 @@ const contentSchema = z
     `내용은 ${CHANGE_WORK_CONTENT_MAX_LENGTH}자까지 입력할 수 있습니다`,
   );
 
-// 완료된 프로젝트에 기록할 때 관리자가 확인했다는 표시 (§10.3)
+// 완료된 프로젝트에 기록할 때 관리자가 확인했다는 표시
 const confirmSchema = z.boolean().optional();
 
 export const changeWorkCreateSchema = z.object({
@@ -182,7 +182,7 @@ export const changeWorkDetailSchema = changeWorkSchema.extend({
 
 export type ChangeWorkDetail = z.infer<typeof changeWorkDetailSchema>;
 
-// 변경·추가 작업으로 쓴 공수·자재 (§10.5): 작업 내역·자재 기록의 "변경 작업" 표시를 프로젝트 단위로 합산한 값
+// 변경·추가 작업으로 쓴 공수·자재: 작업 내역·자재 기록의 "변경 작업" 표시를 프로젝트 단위로 합산한 값
 export const changeUsageSchema = z.object({
   // 변경·추가 작업 표시가 된 저장 작업 내역의 수와 공수 합(분)
   workLogCount: z.number().int(),
@@ -201,7 +201,7 @@ export const changeUsageSchema = z.object({
 
 export type ChangeUsage = z.infer<typeof changeUsageSchema>;
 
-// 이 프로젝트 상태에서 변경·추가 작업을 기록·수정할 수 있는지 (§10.3 "변경·추가 작업 기록" 행)
+// 이 프로젝트 상태에서 변경·추가 작업을 기록·수정할 수 있는지 ("변경·추가 작업 기록" 행)
 // 예정·진행·중단은 가능, 완료는 관리자 확인이 있을 때만, 보증 중·종료·취소는 불가
 export const changeWorkProjectCheck = (
   status: ProjectStatus,
@@ -267,7 +267,7 @@ export const validateChangeWorkTransition = (input: {
 };
 
 /**
- * @description 협의 중인 채로 며칠이 지났는지 (오래 방치된 건 알림의 기준, §15.3 "7일 경과")
+ * @description 협의 중인 채로 며칠이 지났는지 (오래 방치된 건 알림의 기준, "7일 경과")
  * @param statusChangedOn 현재 상태가 된 날
  * @param today 오늘(서울 기준)
  * @returns 지난 일수 (오늘 바뀌었으면 0)

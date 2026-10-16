@@ -43,7 +43,7 @@ type KindFilter = LedgerKind | 'ALL';
 
 const wonText = (amount: number) => amount.toLocaleString('ko-KR');
 
-// 비용·자재 메뉴의 첫 구역 (08 문서 §6.2): 합계 줄(지출 · 인건비 추정 · 수입) + 내역 표 + 구분·분류·기간 필터
+// 비용·자재 메뉴의 첫 구역: 합계 줄(지출 · 인건비 추정 · 수입) + 내역 표 + 구분·분류·기간 필터
 // 지출이 기본이고 수입은 구분 단추로 전환해 입력, 계약 금액·청구·입금은 제외
 export const LedgerPanel = ({ projectId }: { projectId: string }) => {
   const today = todayInSeoul(new Date());

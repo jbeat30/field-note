@@ -9,7 +9,7 @@ type Clock = () => Date;
 
 export const EMAIL_VERIFICATION_QUEUE = 'email-verification.send';
 
-// 정책 (서비스 기획서 §6.7: 유효시간 10분 안팎, 재발송 간격과 시도 횟수 제한)
+// 정책 (유효시간 10분 안팎, 재발송 간격과 시도 횟수 제한)
 export const CODE_TTL_MS = 10 * 60 * 1000;
 export const RESEND_INTERVAL_MS = 30 * 1000;
 export const MAX_CODE_ATTEMPTS = 5;
