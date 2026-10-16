@@ -161,7 +161,7 @@ pnpm operator purge-due [--dry-run]                                 # 유예(14�
 
 ## 화면 전체 시험 (E2E)
 
-- 실제 DB·객체 저장소·API·웹을 띄워 Chromium(모바일 크기)으로 **핵심 흐름**(로그인 → 프로젝트 → 직원 선택·투입 자동 추가 → 작업 내역 → 자재 → 지출 기록 → 사진 → 작업일보)과 **하루 일지 입력 시간**을 확인한다. 위치는 `apps/web/e2e`다
+- 실제 DB·객체 저장소·API·웹을 띄워 Chromium(모바일 크기)으로 **핵심 흐름**(로그인 → 프로젝트 → 직원 선택·투입 자동 추가 → 작업 내역 → 자재 → 지출 기록 → 사진 → 작업일보), **프로젝트 생애 흐름**(진행률 → 완료 → 보증 설정·시작 → 보수 요청), **월 공수 확정·재오픈**, **직원 서류 등록**, **홈 확인 목록**, **저장 용량·전체 데이터 내려받기**와 **하루 일지 입력 시간**을 확인한다. 위치는 `apps/web/e2e`다
 - 실행: `pnpm --filter @field-note/api db:generate && pnpm infra:up && pnpm db:setup && pnpm db:seed` 후 `pnpm e2e` (API는 3001번, 웹은 5173번으로 시험이 직접 띄우며 이미 떠 있으면 재사용). 목업 서버가 실행 중이면 `E2E_API_PORT`·`E2E_WEB_PORT`를 다른 포트로 지정하고 `CI=true`로 서버 재사용을 끈다 (PowerShell 예: `$env:E2E_API_PORT='13001'; $env:E2E_WEB_PORT='15173'; $env:CI='true'; pnpm e2e`). 처음에는 `pnpm --filter @field-note/web exec playwright install chromium`이 필요하다
 - 하루 일지 입력 시간은 스크립트가 사람 속도를 흉내 낸 값(누르기 전 0.8초, 글자 0.2초/자)이라 **참고용 측정**이다. 실제 사람의 시간은 실사용 시험에서 재다
 - CI의 `e2e` 잡이 같은 순서로 준비해 돌리고, 실패하면 보고서와 추적 파일(`playwright-report`, `test-results`)을 보관한다
@@ -200,7 +200,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 | RustFS     | 사진·자료 저장소 (S3 호환)            | API `localhost:9000`, 관리 화면 `localhost:9001`        |
 | Mailpit    | 보낸 메일을 받아 보여주는 가짜 메일함 | 메일 수신 `localhost:1025`, 확인 화면 `localhost:8025`  |
 
-- 메일은 실제로 발송되지 않는다. 인증 메일 등은 `localhost:8025`에서 확인한다
+- 메일은 실제로 발송되지 않는다. 인증 메일 등은 `localhost:8025`에서 확인한다 (포트가 막히면 `.env`에 `MAILPIT_UI_PORT=18025`처럼 적어 바꾼다)
 - MinIO 공식 이미지가 더 이상 배포되지 않아 호환 제품인 RustFS를 쓴다
 
 ## DB와 회사 격리
