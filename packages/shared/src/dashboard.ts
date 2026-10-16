@@ -18,6 +18,7 @@ import { projectStatusSchema, type ProjectStatus } from './projects';
 import { warrantyDaysLeft } from './warranty';
 import { periodStart } from './workSummary';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 홈 대시보드와 알림, 알림은 저장하지 않고 대시보드를 열 때 기록을 보고 계산
 // (초기: 화면 표시), 4단계에서 보증 종료 임박·미처리 보수·보증서·직원 서류 만료·월 공수 미확정 추가
 const dateSchema = z.iso.date();
@@ -75,9 +76,11 @@ export type AlertSettings = z.infer<typeof alertSettingsSchema>;
 
 // 보낸 종류만 바꿈 (같은 종류가 두 번 있으면 거부)
 export const alertSettingsUpdateSchema = z
-  .object({ items: alertSettingsSchema.shape.items.min(1, '바꿀 알림을 선택해 주세요') })
+  .object({
+    items: alertSettingsSchema.shape.items.min(1, VALIDATION_MESSAGES.selectRequired('바꿀 알림')),
+  })
   .refine((value) => new Set(value.items.map((item) => item.kind)).size === value.items.length, {
-    message: '같은 알림이 두 번 들어 있습니다',
+    message: VALIDATION_MESSAGES.ALERT_DUPLICATE,
     path: ['items'],
   });
 

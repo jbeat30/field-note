@@ -14,6 +14,7 @@ import {
   type AssignmentWarning,
   type EmployeeCredential,
   type ErrorCode,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -224,12 +225,16 @@ export const createCredentialHandlers = ({ apiError, parseBody }: Helpers) => {
     );
 
     if (!type) {
-      return apiError('VALIDATION_ERROR', [{ path, message: '자격 종류 목록에 없는 종류입니다' }]);
+      return apiError('VALIDATION_ERROR', [
+        { path, message: VALIDATION_MESSAGES.CREDENTIAL_TYPE_UNKNOWN },
+      ]);
     }
 
     return type.isActive
       ? null
-      : apiError('VALIDATION_ERROR', [{ path, message: '사용하지 않는 종류입니다' }]);
+      : apiError('VALIDATION_ERROR', [
+          { path, message: VALIDATION_MESSAGES.CREDENTIAL_TYPE_INACTIVE },
+        ]);
   };
 
   const fileError = (employeeId: string, fileId: string) => {
@@ -237,13 +242,13 @@ export const createCredentialHandlers = ({ apiError, parseBody }: Helpers) => {
 
     if (!file || file.employeeId !== employeeId || file.purpose !== 'EMPLOYEE_DOCUMENT') {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.fileId', message: '이 직원의 서류로 올린 파일이 아닙니다' },
+        { path: 'body.fileId', message: VALIDATION_MESSAGES.CREDENTIAL_FILE_NOT_EMPLOYEE },
       ]);
     }
 
     return file.status === 'REJECTED'
       ? apiError('VALIDATION_ERROR', [
-          { path: 'body.fileId', message: '검사에서 거부된 파일은 연결할 수 없습니다' },
+          { path: 'body.fileId', message: VALIDATION_MESSAGES.CREDENTIAL_FILE_REJECTED },
         ])
       : null;
   };
@@ -362,7 +367,7 @@ export const createCredentialHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (issuedOn && expiresOn && issuedOn > expiresOn) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.expiresOn', message: '만료일은 취득일보다 빠를 수 없습니다' },
+          { path: 'body.expiresOn', message: VALIDATION_MESSAGES.CREDENTIAL_EXPIRY_BEFORE_ISSUE },
         ]);
       }
 
@@ -423,7 +428,7 @@ export const createCredentialHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (file.status !== 'READY') {
         return apiError('VALIDATION_ERROR', [
-          { path: 'params.credentialId', message: '검사가 끝난 파일만 열 수 있습니다' },
+          { path: 'params.credentialId', message: VALIDATION_MESSAGES.FILE_NOT_READY_TO_OPEN },
         ]);
       }
 

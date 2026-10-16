@@ -6,6 +6,7 @@ import {
   type AuditLog,
   type AuditTargetType,
   type ErrorCode,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 
@@ -176,7 +177,7 @@ export const createAuditHandlers = ({ apiError }: Helpers) => [
 
     if (cursor && start === 0) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'query.cursor', message: '목록 위치가 올바르지 않습니다' },
+        { path: 'query.cursor', message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID },
       ]);
     }
 

@@ -16,6 +16,7 @@ import {
   type Photo,
   type PhotoCategory,
   type StoredFile,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -356,7 +357,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
           return apiError('VALIDATION_ERROR', [
             {
               path: 'file',
-              message: '파일이 아직 올라오지 않았습니다. 업로드를 마친 뒤 알려 주세요',
+              message: VALIDATION_MESSAGES.FILE_UPLOAD_NOT_COMPLETE,
             },
           ]);
         }
@@ -411,7 +412,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (file.status !== 'READY') {
         return apiError('VALIDATION_ERROR', [
-          { path: 'file', message: '검사가 끝난 파일만 열 수 있습니다' },
+          { path: 'file', message: VALIDATION_MESSAGES.FILE_NOT_READY_TO_OPEN },
         ]);
       }
 
@@ -456,7 +457,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
         file.status === 'REJECTED'
       ) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.fileId', message: '이 프로젝트에 올린 사진 파일이 아닙니다' },
+          { path: 'body.fileId', message: VALIDATION_MESSAGES.PHOTO_FILE_NOT_IN_PROJECT },
         ]);
       }
 
@@ -570,7 +571,7 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
         return apiError('VALIDATION_ERROR', [
           {
             path: 'body.includeInSummary',
-            message: `요약에 넣을 사진은 프로젝트마다 ${SUMMARY_PHOTO_MAX}장까지입니다`,
+            message: VALIDATION_MESSAGES.SUMMARY_PHOTO_LIMIT(SUMMARY_PHOTO_MAX),
           },
         ]);
       }

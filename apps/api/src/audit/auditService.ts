@@ -8,6 +8,7 @@ import {
   type AuditLog,
   type AuditLogListQuery,
   type AuditLogsResponse,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -55,7 +56,10 @@ const decodeCursor = (cursor: string): { createdAt: Date; id: string } => {
 
     return { createdAt: date, id };
   } catch {
-    throw new AuditError({ path: 'query.cursor', message: '목록 위치가 올바르지 않습니다' });
+    throw new AuditError({
+      path: 'query.cursor',
+      message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID,
+    });
   }
 };
 

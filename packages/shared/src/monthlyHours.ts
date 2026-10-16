@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { workUnitModeSchema } from './account';
 import { minutesToManDays, roundTo, toManMonths } from './workUnits';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 월 공수 확정과 월 공수표: 공수 기록이 급여·정산의 근거로 쓰이므로 월 단위로 확정(잠금)
 // 확정은 선택 기능이며 확정하면 그달의 작업 내역 수정 불가, 재오픈(사유 기록)으로만 정정
 // 확정 시점의 하루 기준시간과 월 기준일수를 그 시점 값으로 고정
@@ -10,7 +11,7 @@ export const MONTH_REASON_MAX_LENGTH = 500;
 
 export const monthSchema = z
   .string()
-  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, '월 형식이 올바르지 않습니다 (YYYY-MM)');
+  .regex(/^\d{4}-(0[1-9]|1[0-2])$/, VALIDATION_MESSAGES.MONTH_FORMAT_INVALID);
 
 export const monthlyHoursQuerySchema = z.object({ month: monthSchema });
 
@@ -29,8 +30,8 @@ export const monthlyReopenSchema = z.object({
   reason: z
     .string()
     .trim()
-    .min(1, '재오픈 사유를 입력해 주세요')
-    .max(MONTH_REASON_MAX_LENGTH, `사유는 ${MONTH_REASON_MAX_LENGTH}자까지 입력할 수 있습니다`),
+    .min(1, VALIDATION_MESSAGES.required('재오픈 사유'))
+    .max(MONTH_REASON_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('사유', MONTH_REASON_MAX_LENGTH)),
 });
 
 export type MonthlyReopen = z.infer<typeof monthlyReopenSchema>;
@@ -121,18 +122,18 @@ export const validateMonthClose = (input: {
   confirmDrafts: boolean;
 }): { ok: true } | { ok: false; path: 'month' | 'confirmDrafts'; message: string } => {
   if (input.month > monthOf(input.today)) {
-    return { ok: false, path: 'month', message: '아직 오지 않은 달은 확정할 수 없습니다' };
+    return { ok: false, path: 'month', message: VALIDATION_MESSAGES.MONTH_NOT_ARRIVED };
   }
 
   if (input.isClosed) {
-    return { ok: false, path: 'month', message: '이미 확정한 달입니다' };
+    return { ok: false, path: 'month', message: VALIDATION_MESSAGES.MONTH_ALREADY_CONFIRMED };
   }
 
   if (input.draftLogCount > 0 && !input.confirmDrafts) {
     return {
       ok: false,
       path: 'confirmDrafts',
-      message: `임시 저장된 작업 내역가 ${input.draftLogCount}건 있습니다. 저장하거나 정리한 뒤 확정하거나, 확인 후 확정해 주세요`,
+      message: VALIDATION_MESSAGES.MONTH_DRAFT_LOGS_REMAIN(input.draftLogCount),
     };
   }
 
@@ -153,7 +154,7 @@ export const monthLockCheck = (
     ? {
         ok: false,
         path: 'workDate',
-        message: `공수가 확정된 달(${monthOf(workDate)})입니다. 수정하려면 월 공수를 재오픈해 주세요`,
+        message: VALIDATION_MESSAGES.MONTH_CONFIRMED_LOCK(monthOf(workDate)),
       }
     : { ok: true };
 

@@ -75,7 +75,7 @@ export const CloseNeedsDraftConfirm: Story = {
 
     await userEvent.click(await canvas.findByRole('button', { name: '공수 확정' }));
     await expect(
-      await canvas.findByText(/임시 저장된 작업 내역가 1건 있습니다/, {}, { timeout: 4000 }),
+      await canvas.findByText(/임시 저장된 작업 내역이 1건 있습니다/, {}, { timeout: 4000 }),
     ).toBeInTheDocument();
 
     await userEvent.click(

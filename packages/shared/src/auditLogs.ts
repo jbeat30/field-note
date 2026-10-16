@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { PAY_TYPE_LABELS } from './laborCost';
 import { auditActionSchema, type AuditAction } from './documents';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 활동 기록 (문서): 데이터를 바꾼 일(저장·수정·삭제), 내보내기, 월 공수 확정·재오픈, 민감 자료 열람을 한곳에서 조회
 // 인건비·단가 조회는 기록 제외 (이 서비스는 볼 권한이 있는 관리자만 사용하므로 열람 기록이 무의미), 기록은 수정·삭제 불가이며 이 화면은 조회 전용
 const dateSchema = z.iso.date();
@@ -314,7 +315,7 @@ export const auditLogListQuerySchema = z
       .default(AUDIT_PAGE_DEFAULT_LIMIT),
   })
   .refine((value) => !value.from || !value.to || value.from <= value.to, {
-    message: '끝 날짜는 시작 날짜보다 빠를 수 없습니다',
+    message: VALIDATION_MESSAGES.RANGE_END_BEFORE_START,
     path: ['to'],
   });
 

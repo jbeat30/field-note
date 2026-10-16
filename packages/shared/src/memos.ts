@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 프로젝트 메모 노트와 메모함, 정해진 양식에 들어가지 않는 내용(통화, 지시, 이슈, 할 일)을 날짜별로 누적
 export const MEMO_TAGS = ['NEGOTIATION', 'INSTRUCTION', 'ISSUE', 'TODO', 'OTHER'] as const;
 
@@ -24,8 +25,8 @@ const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 const contentSchema = z
   .string()
   .trim()
-  .min(1, '내용을 입력해 주세요')
-  .max(MEMO_CONTENT_MAX_LENGTH, `메모는 ${MEMO_CONTENT_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .min(1, VALIDATION_MESSAGES.required('내용'))
+  .max(MEMO_CONTENT_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('메모', MEMO_CONTENT_MAX_LENGTH));
 
 export const memoParamsSchema = z.object({ id: z.uuid() });
 
@@ -49,7 +50,7 @@ export const memoUpdateSchema = z
     isDone: z.boolean(),
   })
   .partial()
-  .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
+  .refine((value) => Object.keys(value).length > 0, VALIDATION_MESSAGES.NO_VALUES_TO_UPDATE);
 
 export type MemoUpdate = z.infer<typeof memoUpdateSchema>;
 
@@ -73,7 +74,7 @@ export const memoListQuerySchema = z
   })
   .refine((value) => (value.scope === 'PROJECT') === Boolean(value.projectId), {
     path: ['projectId'],
-    message: '프로젝트 메모는 프로젝트를 지정하고, 메모함은 지정하지 않습니다',
+    message: VALIDATION_MESSAGES.MEMO_PROJECT_SCOPE,
   });
 
 export type MemoListQuery = z.infer<typeof memoListQuerySchema>;

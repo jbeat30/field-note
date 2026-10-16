@@ -15,6 +15,7 @@ import { Input } from '../components/ui/input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { resetClientState } from '../stores/resetClientState';
 
+import { VALIDATION_MESSAGES } from '@field-note/shared';
 const formSchema = z.object({ currentPassword: z.string() });
 
 type Form = z.infer<typeof formSchema>;
@@ -38,7 +39,7 @@ export const ClosureSection = () => {
 
   const onSubmit = handleSubmit(async ({ currentPassword }) => {
     if (needsPassword && !currentPassword) {
-      setError('currentPassword', { message: '현재 비밀번호를 입력해 주세요' });
+      setError('currentPassword', { message: VALIDATION_MESSAGES.required('현재 비밀번호') });
       return;
     }
 

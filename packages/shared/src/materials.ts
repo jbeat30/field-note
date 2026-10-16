@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { materialRemaining, roundTo } from './workUnits';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 사용 자재 관리, 가격·구매·발주·재고는 제외하고 어떤 자재가 언제 얼마나 들어오고 쓰이고 나갔는지만 기록
 export const MATERIAL_CATEGORIES = ['RAW', 'SUB', 'FINISH', 'CONSUMABLE'] as const;
 
@@ -54,29 +55,29 @@ export const normalizeMaterialText = (value: string | null | undefined) =>
 const nameSchema = z
   .string()
   .trim()
-  .min(1, '자재명을 입력해 주세요')
-  .max(MATERIAL_NAME_MAX_LENGTH, `자재명은 ${MATERIAL_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .min(1, VALIDATION_MESSAGES.required('자재명'))
+  .max(MATERIAL_NAME_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('자재명', MATERIAL_NAME_MAX_LENGTH));
 
 const specSchema = z
   .string()
   .trim()
   .min(1)
-  .max(MATERIAL_SPEC_MAX_LENGTH, `규격은 ${MATERIAL_SPEC_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(MATERIAL_SPEC_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('규격', MATERIAL_SPEC_MAX_LENGTH));
 
 const unitSchema = z
   .string()
   .trim()
-  .min(1, '단위를 입력해 주세요')
-  .max(MATERIAL_UNIT_MAX_LENGTH, `단위는 ${MATERIAL_UNIT_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .min(1, VALIDATION_MESSAGES.required('단위'))
+  .max(MATERIAL_UNIT_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('단위', MATERIAL_UNIT_MAX_LENGTH));
 
 // 수량: 0보다 크고 소수 셋째 자리까지
 export const quantitySchema = z
   .number()
-  .positive('수량은 0보다 커야 합니다')
-  .max(MATERIAL_QUANTITY_MAX, '수량이 너무 큽니다')
+  .positive(VALIDATION_MESSAGES.QUANTITY_NOT_POSITIVE)
+  .max(MATERIAL_QUANTITY_MAX, VALIDATION_MESSAGES.QUANTITY_TOO_LARGE)
   .refine(
     (value) => Math.round(value * 1000) / 1000 === value,
-    '수량은 소수 셋째 자리까지 입력할 수 있습니다',
+    VALIDATION_MESSAGES.QUANTITY_DECIMAL_LIMIT,
   );
 
 export const materialParamsSchema = z.object({ id: z.uuid() });
@@ -103,7 +104,7 @@ export const materialUpdateSchema = z
     isActive: z.boolean(),
   })
   .partial()
-  .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
+  .refine((value) => Object.keys(value).length > 0, VALIDATION_MESSAGES.NO_VALUES_TO_UPDATE);
 
 export type MaterialUpdate = z.infer<typeof materialUpdateSchema>;
 
@@ -223,7 +224,7 @@ export const materialRecordUpdateSchema = z
     memo: recordFields.memo.nullable(),
   })
   .partial()
-  .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
+  .refine((value) => Object.keys(value).length > 0, VALIDATION_MESSAGES.NO_VALUES_TO_UPDATE);
 
 export type MaterialRecordUpdate = z.infer<typeof materialRecordUpdateSchema>;
 

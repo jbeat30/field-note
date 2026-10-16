@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 작업 사진, 파일 자체는 파일 업로드(files)에 있고 사진은 구분·구역·촬영일시·설명을 덧붙인 기록
 export const PHOTO_CATEGORIES = [
   'BEFORE',
@@ -38,7 +39,7 @@ const areaSchema = z
   .string()
   .trim()
   .min(1)
-  .max(PHOTO_AREA_MAX_LENGTH, `구역은 ${PHOTO_AREA_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(PHOTO_AREA_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('구역', PHOTO_AREA_MAX_LENGTH));
 
 const descriptionSchema = z
   .string()
@@ -46,7 +47,7 @@ const descriptionSchema = z
   .min(1)
   .max(
     PHOTO_DESCRIPTION_MAX_LENGTH,
-    `설명은 ${PHOTO_DESCRIPTION_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('설명', PHOTO_DESCRIPTION_MAX_LENGTH),
   );
 
 export const photoParamsSchema = z.object({ id: z.uuid() });
@@ -76,7 +77,7 @@ export const photoUpdateSchema = z
     includeInSummary: z.boolean(),
   })
   .partial()
-  .refine((value) => Object.keys(value).length > 0, '바꿀 값을 하나 이상 보내 주세요');
+  .refine((value) => Object.keys(value).length > 0, VALIDATION_MESSAGES.NO_VALUES_TO_UPDATE);
 
 export type PhotoUpdate = z.infer<typeof photoUpdateSchema>;
 

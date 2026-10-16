@@ -1,4 +1,9 @@
-import { fileExtension, type CredentialCreate, type CredentialUpdate } from '@field-note/shared';
+import {
+  fileExtension,
+  type CredentialCreate,
+  type CredentialUpdate,
+  VALIDATION_MESSAGES,
+} from '@field-note/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 
 import { apiClient } from '../api/client';
@@ -148,7 +153,7 @@ export const uploadEmployeeDocument = async (employeeId: string, file: File): Pr
   const contentType = EMPLOYEE_DOCUMENT_TYPES[fileExtension(file.name)];
 
   if (!contentType) {
-    throw new DocumentUploadError('올릴 수 없는 파일 형식입니다 (이미지, PDF만 가능)');
+    throw new DocumentUploadError(VALIDATION_MESSAGES.UPLOAD_TYPE_IMAGE_PDF);
   }
 
   const { data: ticket, error } = await apiClient.POST('/api/v1/employees/{employeeId}/files', {

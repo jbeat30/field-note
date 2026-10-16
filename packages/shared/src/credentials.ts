@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { fileStatusSchema } from './files';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 직원 서류·자격: 자격증, 안전교육 이수증, 건강검진 서류 등을 직원 카드에 올리고 만료일 관리
 // 종류는 회사가 관리하는 선택 목록(자격 종류)
 
@@ -94,19 +95,19 @@ export const credentialParamsSchema = z.object({ id: z.uuid(), credentialId: z.u
 const memoSchema = z
   .string()
   .trim()
-  .max(CREDENTIAL_MEMO_MAX_LENGTH, `메모는 ${CREDENTIAL_MEMO_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(CREDENTIAL_MEMO_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('메모', CREDENTIAL_MEMO_MAX_LENGTH));
 
 const refineDates = <T extends { issuedOn?: string | null; expiresOn?: string | null }>(value: T) =>
   !value.issuedOn || !value.expiresOn || value.issuedOn <= value.expiresOn;
 
 const DATES_ORDER_MESSAGE = {
-  message: '만료일은 취득일보다 빠를 수 없습니다',
+  message: VALIDATION_MESSAGES.CREDENTIAL_EXPIRY_BEFORE_ISSUE,
   path: ['expiresOn'],
 };
 
 export const credentialCreateSchema = z
   .object({
-    typeId: z.uuid('서류 종류를 선택해 주세요'),
+    typeId: z.uuid(VALIDATION_MESSAGES.selectRequired('서류 종류')),
     issuedOn: dateSchema.nullish(),
     expiresOn: dateSchema.nullish(),
     // 직원 서류로 올린 파일 (선택)
@@ -128,7 +129,7 @@ export const credentialUpdateSchema = z
   })
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
-    message: '변경할 값이 없습니다',
+    message: VALIDATION_MESSAGES.NO_CHANGES,
   })
   .refine(refineDates, DATES_ORDER_MESSAGE);
 

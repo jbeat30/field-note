@@ -8,6 +8,7 @@ import {
   type EmployeeCreate,
   type EmployeeListQuery,
   type EmployeeUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { EmployeeError, type EmployeeService } from '../employee/employeeService';
@@ -30,7 +31,7 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '직원은 회사마다 500명까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.EMPLOYEE_LIMIT_REACHED },
       ]);
     case 'INVALID':
       return new AppError('VALIDATION_ERROR', error.detail ? [error.detail] : undefined);

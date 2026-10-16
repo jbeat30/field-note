@@ -24,6 +24,7 @@ import {
   type MaterialRecordListQuery,
   type MaterialRecordUpdate,
   type MaterialUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
@@ -46,11 +47,11 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'DUPLICATE':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '같은 이름과 규격의 자재가 이미 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.MATERIAL_DUPLICATE },
       ]);
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '자재는 회사마다 2000개까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.MATERIAL_LIMIT_REACHED },
       ]);
     case 'INVALID':
       return new AppError('VALIDATION_ERROR', error.detail ? [error.detail] : undefined);
