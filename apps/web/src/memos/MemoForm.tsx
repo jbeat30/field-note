@@ -1,4 +1,4 @@
-import { MEMO_TAGS, MEMO_TAG_LABELS, type MemoTag } from '@field-note/shared';
+import { MEMO_TAGS, MEMO_TAG_LABELS, type MemoTag, VALIDATION_MESSAGES } from '@field-note/shared';
 import { useState } from 'react';
 
 import { Alert } from '../components/ui/alert';
@@ -37,7 +37,7 @@ export const MemoForm = ({
     event.preventDefault();
 
     if (!draft.trim()) {
-      setError('내용을 입력해 주세요');
+      setError(VALIDATION_MESSAGES.required('내용'));
 
       return;
     }

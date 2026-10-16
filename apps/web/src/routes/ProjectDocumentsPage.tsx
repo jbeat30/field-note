@@ -19,6 +19,7 @@ import { useAddDocumentVersion, useCreateDocument, useDocuments } from '../docum
 import { useOpenDocument } from '../documents/useOpenDocument';
 import { useProject } from '../projects/useProjects';
 
+import { VALIDATION_MESSAGES } from '@field-note/shared';
 // 프로젝트 문서함: 도면·작업지시서·계약서·안전 서류를 분류 폴더별로 모으고, 개정되면 새 판으로 올림 (문서)
 export const ProjectDocumentsPage = () => {
   const { id = '' } = useParams();
@@ -65,7 +66,7 @@ export const ProjectDocumentsPage = () => {
       }));
 
     if (same && !asVersion) {
-      throw new DocumentUploadError('올리지 않았습니다. 따로 만들려면 문서 이름을 바꿔 주세요');
+      throw new DocumentUploadError(VALIDATION_MESSAGES.DOCUMENT_NOT_UPLOADED_RENAME);
     }
 
     const fileId = await uploadDocumentFile(id, values.file, onProgress);

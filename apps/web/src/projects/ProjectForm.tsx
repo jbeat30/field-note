@@ -8,6 +8,7 @@ import {
   projectCreateSchema,
   projectUpdateSchema,
   type ProjectDetail,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { useState } from 'react';
 import { useForm, useWatch } from 'react-hook-form';
@@ -250,7 +251,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
     // 기간 순서 같은 입력 오류를 먼저 보여 주고, 그다음에 사유 누락을 확인
     if (periodChanged && reasonRequired && !body.periodChangeReason) {
       setError('periodChangeReason', {
-        message: '시작한 프로젝트의 기간을 바꿀 때는 사유를 입력해 주세요',
+        message: VALIDATION_MESSAGES.required('시작한 프로젝트의 기간을 바꿀 때는 사유'),
       });
       return;
     }

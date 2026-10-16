@@ -5,6 +5,7 @@ import { changeUsageSchema } from './changeWorks';
 import { materialRecordKindSchema } from './materials';
 import type { ProjectStatus } from './projects';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 보수 요청: 보증 중 고객이 요청한 하자 보수를 접수부터 처리까지 기록
 // 보수 작업은 작업 내역·자재 기록에 "사후 작업"으로 입력하고 이 요청에 연결해 사용한 공수·자재를 건별로 확인
 export const REPAIR_STATUSES = ['RECEIVED', 'IN_PROGRESS', 'ON_HOLD', 'DONE'] as const;
@@ -33,25 +34,25 @@ const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 const requesterSchema = z
   .string()
   .trim()
-  .min(1, '요청자를 입력해 주세요')
+  .min(1, VALIDATION_MESSAGES.required('요청자'))
   .max(
     REPAIR_REQUESTER_MAX_LENGTH,
-    `요청자는 ${REPAIR_REQUESTER_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('요청자', REPAIR_REQUESTER_MAX_LENGTH),
   );
 
 const contentSchema = z
   .string()
   .trim()
-  .min(1, '요청 내용을 입력해 주세요')
+  .min(1, VALIDATION_MESSAGES.required('요청 내용'))
   .max(
     REPAIR_CONTENT_MAX_LENGTH,
-    `요청 내용은 ${REPAIR_CONTENT_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('요청 내용', REPAIR_CONTENT_MAX_LENGTH),
   );
 
 const locationSchema = z
   .string()
   .trim()
-  .max(REPAIR_LOCATION_MAX_LENGTH, `위치는 ${REPAIR_LOCATION_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(REPAIR_LOCATION_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('위치', REPAIR_LOCATION_MAX_LENGTH));
 
 export const repairCreateSchema = z.object({
   // 비우면 서울 기준 오늘 (접수한 날, 오늘 이후는 불가)
@@ -68,7 +69,7 @@ export type RepairCreate = z.infer<typeof repairCreateSchema>;
 export const repairUpdateSchema = repairCreateSchema
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
-    message: '변경할 값이 없습니다',
+    message: VALIDATION_MESSAGES.NO_CHANGES,
   });
 
 export type RepairUpdate = z.infer<typeof repairUpdateSchema>;
@@ -81,7 +82,7 @@ export const repairTransitionSchema = z.object({
   note: z
     .string()
     .trim()
-    .max(REPAIR_NOTE_MAX_LENGTH, `메모는 ${REPAIR_NOTE_MAX_LENGTH}자까지 입력할 수 있습니다`)
+    .max(REPAIR_NOTE_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('메모', REPAIR_NOTE_MAX_LENGTH))
     .nullish(),
 });
 
@@ -91,7 +92,7 @@ export type RepairTransition = z.infer<typeof repairTransitionSchema>;
 export const repairLinkSchema = z
   .object({ workLogId: z.uuid().optional(), materialRecordId: z.uuid().optional() })
   .refine((value) => (value.workLogId === undefined) !== (value.materialRecordId === undefined), {
-    message: '작업 내역 또는 자재 기록 중 하나를 선택해 주세요',
+    message: VALIDATION_MESSAGES.selectRequired('작업 내역 또는 자재 기록 중 하나'),
   });
 
 export type RepairLink = z.infer<typeof repairLinkSchema>;
@@ -208,10 +209,10 @@ export const repairProjectCheck = (status: ProjectStatus): RuleCheck => {
     path: 'projectId',
     message:
       status === 'CLOSED'
-        ? '종료된 프로젝트입니다. 재오픈한 뒤 보수 요청을 기록할 수 있습니다'
+        ? VALIDATION_MESSAGES.REPAIR_PROJECT_CLOSED
         : status === 'COMPLETED'
-          ? '보증을 시작한 뒤에 보수 요청을 기록할 수 있습니다'
-          : '보증 중인 프로젝트에서만 보수 요청을 기록할 수 있습니다',
+          ? VALIDATION_MESSAGES.REPAIR_AFTER_WARRANTY_START
+          : VALIDATION_MESSAGES.REPAIR_WARRANTY_ONLY,
   };
 };
 
@@ -229,26 +230,30 @@ export const validateRepairTransition = (input: {
   today: string;
 }): RuleCheck => {
   if (input.from === input.to) {
-    return { ok: false, path: 'toStatus', message: '이미 같은 상태입니다' };
+    return { ok: false, path: 'toStatus', message: VALIDATION_MESSAGES.STATUS_ALREADY_SAME };
   }
 
   if (input.to === 'ON_HOLD' && !input.note) {
-    return { ok: false, path: 'note', message: '보류 사유를 입력해 주세요' };
+    return { ok: false, path: 'note', message: VALIDATION_MESSAGES.required('보류 사유') };
   }
 
   if (input.from === 'DONE' && !input.note) {
-    return { ok: false, path: 'note', message: '완료를 되돌리는 사유를 입력해 주세요' };
+    return {
+      ok: false,
+      path: 'note',
+      message: VALIDATION_MESSAGES.required('완료를 되돌리는 사유'),
+    };
   }
 
   if (input.effectiveOn > input.today) {
-    return { ok: false, path: 'effectiveOn', message: '오늘 이후 날짜로 바꿀 수 없습니다' };
+    return { ok: false, path: 'effectiveOn', message: VALIDATION_MESSAGES.DATE_AFTER_TODAY_CHANGE };
   }
 
   if (input.effectiveOn < input.receivedOn) {
     return {
       ok: false,
       path: 'effectiveOn',
-      message: `접수일(${input.receivedOn})보다 앞선 날짜로 바꿀 수 없습니다`,
+      message: VALIDATION_MESSAGES.REPAIR_DATE_BEFORE_RECEIPT(input.receivedOn),
     };
   }
 

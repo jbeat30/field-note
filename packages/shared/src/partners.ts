@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { normalizeOptionName } from './options';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 고객·협력업체·자재 공급처 명부, 금액·거래 내역은 제외
 export const PARTNER_KINDS = ['CLIENT', 'SUBCONTRACTOR', 'SUPPLIER'] as const;
 
@@ -33,8 +34,8 @@ export const normalizePartnerName = normalizeOptionName;
 export const partnerNameSchema = z
   .string()
   .trim()
-  .min(1, '상호를 입력해 주세요')
-  .max(PARTNER_NAME_MAX_LENGTH, `상호는 ${PARTNER_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .min(1, VALIDATION_MESSAGES.required('상호'))
+  .max(PARTNER_NAME_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('상호', PARTNER_NAME_MAX_LENGTH));
 
 const contactNameSchema = z
   .string()
@@ -42,7 +43,7 @@ const contactNameSchema = z
   .min(1)
   .max(
     PARTNER_CONTACT_MAX_LENGTH,
-    `담당자는 ${PARTNER_CONTACT_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('담당자', PARTNER_CONTACT_MAX_LENGTH),
   );
 
 // 숫자·하이픈·괄호·공백·+ 만 허용
@@ -50,12 +51,12 @@ const phoneSchema = z
   .string()
   .trim()
   .min(1)
-  .max(PARTNER_PHONE_MAX_LENGTH, `연락처는 ${PARTNER_PHONE_MAX_LENGTH}자까지 입력할 수 있습니다`)
-  .regex(/^[0-9+\-() ]+$/, '연락처는 숫자와 - ( ) + 만 입력할 수 있습니다');
+  .max(PARTNER_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('연락처', PARTNER_PHONE_MAX_LENGTH))
+  .regex(/^[0-9+\-() ]+$/, VALIDATION_MESSAGES.PHONE_FORMAT);
 
 const memoSchema = z
   .string()
-  .max(PARTNER_MEMO_MAX_LENGTH, `메모는 ${PARTNER_MEMO_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .max(PARTNER_MEMO_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('메모', PARTNER_MEMO_MAX_LENGTH));
 
 // 목록: 담당자 이름까지만 보여 주고 연락처·메모는 카드에서만 (제3자 정보를 목록에 늘어놓지 않음)
 export const partnerSummarySchema = z.object({
@@ -113,7 +114,7 @@ export const partnerUpdateSchema = z
   })
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
-    message: '변경할 값이 없습니다',
+    message: VALIDATION_MESSAGES.NO_CHANGES,
   });
 
 export type PartnerUpdate = z.infer<typeof partnerUpdateSchema>;

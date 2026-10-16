@@ -308,7 +308,7 @@ export const CompleteShowsNotices: Story = {
     const notices = within(await form.findByRole('list', { name: '확인할 것' }));
 
     // 더미: 임시 저장 작업 내역 1건, 진행률 40%, 협의 중 변경 작업 1건
-    await expect(notices.getByText(/임시 저장된 작업 내역가 1건/)).toBeInTheDocument();
+    await expect(notices.getByText(/임시 저장된 작업 내역이 1건/)).toBeInTheDocument();
     await expect(notices.getByText(/진행률이 40%입니다/)).toBeInTheDocument();
     await expect(notices.getByText(/협의 중인 변경·추가 작업이 1건/)).toBeInTheDocument();
 

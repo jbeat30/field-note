@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 통합 검색 ("찾기"): 프로젝트·직원·메모·자료(문서)·작업 내역을 한 검색창에서 검색
 // 검색 범위는 로그인한 회사 하나뿐이며, 직원의 연락처·생년월일·메모처럼 목록에서 가리는 개인정보는 검색 대상이 아님
 export const SEARCH_HIT_TYPES = ['PROJECT', 'EMPLOYEE', 'MEMO', 'DOCUMENT', 'WORK_LOG'] as const;
@@ -25,8 +26,8 @@ export const searchQuerySchema = z.object({
   q: z
     .string()
     .trim()
-    .min(1, '검색어를 입력해 주세요')
-    .max(SEARCH_QUERY_MAX_LENGTH, `검색어는 ${SEARCH_QUERY_MAX_LENGTH}자까지 입력할 수 있습니다`),
+    .min(1, VALIDATION_MESSAGES.required('검색어'))
+    .max(SEARCH_QUERY_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('검색어', SEARCH_QUERY_MAX_LENGTH)),
   // 프로젝트 안에서만 찾을 때 (메모·자료·작업 내역만 검색)
   projectId: z.uuid().optional(),
   // 종류마다 보여 줄 최대 개수

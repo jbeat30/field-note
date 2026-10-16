@@ -5,6 +5,7 @@ import {
   resolveSensitive,
   todayInSeoul,
   type DocumentCategory,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { FileUp } from 'lucide-react';
 import { useRef, useState } from 'react';
@@ -76,13 +77,13 @@ export const DocumentUploadForm = ({ mode, onSubmit }: DocumentUploadFormProps) 
     setError(null);
 
     if (!file) {
-      setError('올릴 파일을 골라 주세요');
+      setError(VALIDATION_MESSAGES.UPLOAD_FILE_REQUIRED);
 
       return;
     }
 
     if (mode === 'create' && !title.trim()) {
-      setError('문서 이름을 입력해 주세요');
+      setError(VALIDATION_MESSAGES.required('문서 이름'));
 
       return;
     }

@@ -1,5 +1,6 @@
 import { z } from 'zod';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 회사 데이터 관리: 저장 용량 현황과 해지 전 전체 데이터 내보내기
 
 export const storageUsageSchema = z.object({
@@ -29,7 +30,7 @@ export type StorageUsage = z.infer<typeof storageUsageSchema>;
 
 // 전체 데이터 내보내기는 본인 확인을 위해 비밀번호 재입력 필요
 export const companyExportRequestSchema = z.object({
-  currentPassword: z.string().min(1, '비밀번호를 입력해 주세요').max(200),
+  currentPassword: z.string().min(1, VALIDATION_MESSAGES.required('비밀번호')).max(200),
 });
 
 export type CompanyExportRequest = z.infer<typeof companyExportRequestSchema>;

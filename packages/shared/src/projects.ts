@@ -2,6 +2,7 @@ import { z } from 'zod';
 
 import { projectWarningTypeSchema } from './projectWarnings';
 
+import { VALIDATION_MESSAGES } from './errorMessages';
 // 프로젝트, 계약 금액은 제외
 export const PROJECT_STATUSES = [
   'PLANNED',
@@ -54,16 +55,16 @@ export const formatProjectCode = (year: number, sequence: number) =>
 const nameSchema = z
   .string()
   .trim()
-  .min(1, '프로젝트명을 입력해 주세요')
-  .max(PROJECT_NAME_MAX_LENGTH, `프로젝트명은 ${PROJECT_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`);
+  .min(1, VALIDATION_MESSAGES.required('프로젝트명'))
+  .max(PROJECT_NAME_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('프로젝트명', PROJECT_NAME_MAX_LENGTH));
 
 const siteNameSchema = z
   .string()
   .trim()
-  .min(1, '현장 이름을 입력해 주세요')
+  .min(1, VALIDATION_MESSAGES.required('현장 이름'))
   .max(
     PROJECT_SITE_NAME_MAX_LENGTH,
-    `현장 이름은 ${PROJECT_SITE_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('현장 이름', PROJECT_SITE_NAME_MAX_LENGTH),
   );
 
 const siteAddressSchema = z
@@ -72,7 +73,7 @@ const siteAddressSchema = z
   .min(1)
   .max(
     PROJECT_SITE_ADDRESS_MAX_LENGTH,
-    `주소는 ${PROJECT_SITE_ADDRESS_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('주소', PROJECT_SITE_ADDRESS_MAX_LENGTH),
   );
 
 // 지도 링크는 http(s)만 허용 (javascript: 같은 주소가 링크로 열리지 않게 함)
@@ -81,9 +82,9 @@ const mapUrlSchema = z
   .trim()
   .max(
     PROJECT_MAP_URL_MAX_LENGTH,
-    `지도 링크는 ${PROJECT_MAP_URL_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('지도 링크', PROJECT_MAP_URL_MAX_LENGTH),
   )
-  .regex(/^https?:\/\/\S+$/i, '지도 링크는 http:// 또는 https://로 시작해야 합니다');
+  .regex(/^https?:\/\/\S+$/i, VALIDATION_MESSAGES.MAP_URL_SCHEME);
 
 const contactNameSchema = z
   .string()
@@ -91,26 +92,26 @@ const contactNameSchema = z
   .min(1)
   .max(
     PROJECT_CONTACT_NAME_MAX_LENGTH,
-    `담당자는 ${PROJECT_CONTACT_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('담당자', PROJECT_CONTACT_NAME_MAX_LENGTH),
   );
 
 const phoneSchema = z
   .string()
   .trim()
   .min(1)
-  .max(PROJECT_PHONE_MAX_LENGTH, `연락처는 ${PROJECT_PHONE_MAX_LENGTH}자까지 입력할 수 있습니다`)
-  .regex(/^[0-9+\-() ]+$/, '연락처는 숫자와 - ( ) + 만 입력할 수 있습니다');
+  .max(PROJECT_PHONE_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('연락처', PROJECT_PHONE_MAX_LENGTH))
+  .regex(/^[0-9+\-() ]+$/, VALIDATION_MESSAGES.PHONE_FORMAT);
 
 const memoSchema = (label: string) =>
   z
     .string()
-    .max(PROJECT_MEMO_MAX_LENGTH, `${label}는 ${PROJECT_MEMO_MAX_LENGTH}자까지 입력할 수 있습니다`);
+    .max(PROJECT_MEMO_MAX_LENGTH, VALIDATION_MESSAGES.tooLong(label, PROJECT_MEMO_MAX_LENGTH));
 
 const dateSchema = z.iso
   .date('날짜 형식이 올바르지 않습니다')
   .refine(
     (value) => value >= PROJECT_MIN_DATE && value <= PROJECT_MAX_DATE,
-    '날짜 범위를 확인해 주세요',
+    VALIDATION_MESSAGES.DATE_RANGE_CHECK,
   );
 
 // 목록·카드 공통 항목 (현장 연락처·출입 메모·계약일·메모는 카드에서만)
@@ -219,7 +220,7 @@ const periodRefinement = (value: { plannedStart?: string; plannedEnd?: string })
   !value.plannedStart || !value.plannedEnd || value.plannedStart <= value.plannedEnd;
 
 const PERIOD_ERROR = {
-  message: '종료 예정일은 시작 예정일보다 빠를 수 없습니다',
+  message: VALIDATION_MESSAGES.PROJECT_END_BEFORE_START,
   path: ['plannedEnd'],
 };
 
@@ -233,11 +234,11 @@ export const projectCreateSchema = z
     siteContactName: contactNameSchema.nullish(),
     siteContactPhone: phoneSchema.nullish(),
     accessMemo: memoSchema('출입·주의 메모').nullish(),
-    clientId: z.uuid('고객을 선택해 주세요'),
-    managerId: z.uuid('담당자를 선택해 주세요'),
+    clientId: z.uuid(VALIDATION_MESSAGES.selectRequired('고객')),
+    managerId: z.uuid(VALIDATION_MESSAGES.selectRequired('담당자')),
     tradeIds: z
       .array(z.uuid())
-      .max(PROJECT_MAX_TRADES, `공종은 ${PROJECT_MAX_TRADES}개까지 고를 수 있습니다`)
+      .max(PROJECT_MAX_TRADES, VALIDATION_MESSAGES.TRADES_LIMIT(PROJECT_MAX_TRADES))
       .optional(),
     contractDate: dateSchema,
     plannedStart: dateSchema,
@@ -262,7 +263,7 @@ export const projectUpdateSchema = z
     managerId: z.uuid(),
     tradeIds: z
       .array(z.uuid())
-      .max(PROJECT_MAX_TRADES, `공종은 ${PROJECT_MAX_TRADES}개까지 고를 수 있습니다`),
+      .max(PROJECT_MAX_TRADES, VALIDATION_MESSAGES.TRADES_LIMIT(PROJECT_MAX_TRADES)),
     contractDate: dateSchema,
     plannedStart: dateSchema,
     plannedEnd: dateSchema,
@@ -271,12 +272,12 @@ export const projectUpdateSchema = z
     periodChangeReason: z
       .string()
       .trim()
-      .max(500, '사유는 500자까지 입력할 수 있습니다')
+      .max(500, VALIDATION_MESSAGES.tooLong('사유', 500))
       .nullable(),
   })
   .partial()
   .refine((value) => Object.values(value).some((item) => item !== undefined), {
-    message: '변경할 값이 없습니다',
+    message: VALIDATION_MESSAGES.NO_CHANGES,
   })
   .refine(periodRefinement, PERIOD_ERROR);
 
@@ -287,7 +288,7 @@ export type ProjectUpdate = z.infer<typeof projectUpdateSchema>;
 export const projectTransitionSchema = z.object({
   toStatus: projectStatusSchema,
   effectiveOn: dateSchema.optional(),
-  reason: z.string().trim().max(500, '사유는 500자까지 입력할 수 있습니다').nullish(),
+  reason: z.string().trim().max(500, VALIDATION_MESSAGES.tooLong('사유', 500)).nullish(),
   confirmSummary: z.boolean().optional(),
 });
 

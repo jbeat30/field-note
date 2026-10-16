@@ -9,6 +9,7 @@ import {
   type PartnerCreate,
   type PartnerListQuery,
   type PartnerUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
@@ -30,18 +31,18 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'DUPLICATE':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '같은 구분에 이미 같은 상호가 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.PARTNER_NAME_DUPLICATE },
       ]);
     case 'IN_USE':
       return new AppError('VALIDATION_ERROR', [
         {
           path: 'params.id',
-          message: '프로젝트나 자재 기록에서 쓰고 있어 삭제할 수 없습니다. 숨기기를 이용해 주세요',
+          message: VALIDATION_MESSAGES.PARTNER_IN_USE,
         },
       ]);
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '명부는 회사마다 1000곳까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.PARTNER_LIMIT_REACHED },
       ]);
   }
 };

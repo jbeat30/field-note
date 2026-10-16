@@ -4,6 +4,26 @@ import storybook from 'eslint-plugin-storybook';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
 
+// 한글이 들어 있는 문자열·템플릿 (사용자 문구 후보)
+const KOREAN_TEXT =
+  ':matches(Literal[value=/[가-힣]/], TemplateLiteral:has(TemplateElement[value.raw=/[가-힣]/]))';
+const ZOD_METHODS =
+  '/^(min|max|length|regex|email|url|refine|superRefine|int|positive|nonnegative|nonempty|startsWith|endsWith|uuid|datetime|gt|gte|lt|lte)$/';
+const FORM_ERROR_SETTERS = '/^(setError|setErrors|setFormError)$/';
+const INLINE_ERROR_MESSAGE_NOTICE =
+  '사용자에게 보이는 오류 문구는 packages/shared/src/errorMessages.ts의 상수로 관리 (인라인 문자열 금지)';
+// 인라인 오류 문구가 들어가는 자리: message 속성, 검증 메서드 인자, 폼 오류 설정, 도메인 오류 생성자
+const INLINE_ERROR_MESSAGE_SELECTORS = [
+  `Property[key.name='message'] > ${KOREAN_TEXT}`,
+  `Property[key.name='message'] > ConditionalExpression > ${KOREAN_TEXT}`,
+  `Property[key.name='message'] > ConditionalExpression > ConditionalExpression > ${KOREAN_TEXT}`,
+  `CallExpression[callee.property.name=${ZOD_METHODS}] > ${KOREAN_TEXT}`,
+  `CallExpression[callee.name=${FORM_ERROR_SETTERS}] > ${KOREAN_TEXT}`,
+  `CallExpression[callee.name=${FORM_ERROR_SETTERS}] > ConditionalExpression > ${KOREAN_TEXT}`,
+  `CallExpression[callee.name=${FORM_ERROR_SETTERS}] > ObjectExpression > Property > ${KOREAN_TEXT}`,
+  `NewExpression[callee.name=/.Error$/][callee.name!=/^(Range|Type|Syntax|Reference|Eval|URI)Error$/] > ${KOREAN_TEXT}`,
+];
+
 /**
  * @description 저장소 공통 ESLint flat 설정
  * @returns 무시 경로, 기본 규칙, 앱별 환경 설정 배열
@@ -58,6 +78,27 @@ export const createConfig = () =>
               },
             ],
           },
+        ],
+      },
+    },
+    {
+      // 사용자에게 보이는 오류 문구는 packages/shared/src/errorMessages.ts의 상수만 사용 (인라인 한글 문구 금지)
+      files: ['apps/**/*.{ts,tsx}', 'packages/**/*.ts'],
+      ignores: [
+        '**/*.test.{ts,tsx}',
+        '**/*.stories.tsx',
+        '**/e2e/**',
+        '**/scripts/**',
+        '**/generated/**',
+        'packages/shared/src/errorMessages.ts',
+      ],
+      rules: {
+        'no-restricted-syntax': [
+          'error',
+          ...INLINE_ERROR_MESSAGE_SELECTORS.map((selector) => ({
+            selector,
+            message: INLINE_ERROR_MESSAGE_NOTICE,
+          })),
         ],
       },
     },

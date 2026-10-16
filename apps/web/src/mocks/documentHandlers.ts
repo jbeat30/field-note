@@ -16,6 +16,7 @@ import {
   type DocumentDetail,
   type DocumentVersion,
   type ErrorCode,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -187,12 +188,14 @@ export const createMockEvidenceDocument = (
     file.purpose !== 'DOCUMENT' ||
     existing
   ) {
-    return { error: { path: 'body.fileId', message: '이 프로젝트에 올린 문서 파일이 아닙니다' } };
+    return {
+      error: { path: 'body.fileId', message: VALIDATION_MESSAGES.DOCUMENT_FILE_NOT_IN_PROJECT },
+    };
   }
 
   if (file.status === 'REJECTED') {
     return {
-      error: { path: 'body.fileId', message: '검사에서 거부된 파일은 문서로 등록할 수 없습니다' },
+      error: { path: 'body.fileId', message: VALIDATION_MESSAGES.DOCUMENT_FILE_REJECTED },
     };
   }
 
@@ -272,13 +275,13 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
       file.purpose !== 'DOCUMENT'
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.fileId', message: '이 프로젝트에 올린 문서 파일이 아닙니다' },
+        { path: 'body.fileId', message: VALIDATION_MESSAGES.DOCUMENT_FILE_NOT_IN_PROJECT },
       ]);
     }
 
     if (file.status === 'REJECTED') {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.fileId', message: '검사에서 거부된 파일은 문서로 등록할 수 없습니다' },
+        { path: 'body.fileId', message: VALIDATION_MESSAGES.DOCUMENT_FILE_REJECTED },
       ]);
     }
 
@@ -318,7 +321,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (existing) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.fileId', message: '이미 다른 문서에 등록된 파일입니다' },
+          { path: 'body.fileId', message: VALIDATION_MESSAGES.DOCUMENT_FILE_ALREADY_USED },
         ]);
       }
 
@@ -419,7 +422,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
         return apiError('VALIDATION_ERROR', [
           {
             path: 'body.isPinned',
-            message: `고정한 문서는 프로젝트마다 ${DOCUMENT_PINNED_MAX}개까지입니다`,
+            message: VALIDATION_MESSAGES.DOCUMENT_PINNED_LIMIT(DOCUMENT_PINNED_MAX),
           },
         ]);
       }
@@ -479,7 +482,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
       // 이미 이 문서의 버전이면 그대로 (재시도에 안전), 다른 문서에 쓴 파일이면 거부
       if (used && used.id !== document.id) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.fileId', message: '이미 다른 문서에 등록된 파일입니다' },
+          { path: 'body.fileId', message: VALIDATION_MESSAGES.DOCUMENT_FILE_ALREADY_USED },
         ]);
       }
 
@@ -521,7 +524,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (getMockFile(version.fileId)!.status !== 'READY') {
         return apiError('VALIDATION_ERROR', [
-          { path: 'params.versionNo', message: '검사가 끝난 파일만 열 수 있습니다' },
+          { path: 'params.versionNo', message: VALIDATION_MESSAGES.FILE_NOT_READY_TO_OPEN },
         ]);
       }
 
