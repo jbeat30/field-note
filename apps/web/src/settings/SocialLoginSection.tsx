@@ -9,7 +9,7 @@ import { Button } from '../components/ui/button';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useSocialLinkStart, useSocialMethods, useSocialUnlink } from '../auth/useSocial';
 
-// 소셜 로그인 연동: 이메일이 같다고 자동 연결하지 않고, 로그인한 상태에서만 연동 (§6.1)
+// 소셜 로그인 연동: 이메일이 같다고 자동 연결하지 않고, 로그인한 상태에서만 연동
 export const SocialLoginSection = () => {
   const methods = useSocialMethods();
   const linkStart = useSocialLinkStart();

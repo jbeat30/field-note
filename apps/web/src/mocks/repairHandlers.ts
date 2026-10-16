@@ -260,7 +260,7 @@ export const createRepairHandlers = ({ apiError, parseBody }: Helpers) => {
   const invalid = (path: string, message: string) =>
     apiError('VALIDATION_ERROR', [{ path, message }]);
 
-  // 프로젝트 상태에 따라 막히는지 (§10.3)
+  // 프로젝트 상태에 따라 막히는지
   const projectCheck = (account: MockAccount, projectId: string) => {
     const project = getProjects(account).find((item) => item.id === projectId);
 

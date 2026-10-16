@@ -24,7 +24,7 @@ import { Input } from '../components/ui/input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 
-// 가입 1단계: 약관 동의와 만 14세 확인 (필수와 선택 구분, §5.7)
+// 가입 1단계: 약관 동의와 만 14세 확인 (필수와 선택 구분)
 type ConsentStepProps = {
   invitation: InvitationResponse;
   onNext: (consents: { documentId: string; isAgreed: boolean }[]) => void;

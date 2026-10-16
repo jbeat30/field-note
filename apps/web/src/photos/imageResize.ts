@@ -1,4 +1,4 @@
-// 올리기 전 압축 기준 (기술 기획서 부록: 긴 변 2,000px, JPEG)
+// 올리기 전 압축 기준 (부록: 긴 변 2,000px, JPEG)
 export const PHOTO_MAX_SIDE = 2000;
 export const PHOTO_JPEG_QUALITY = 0.85;
 

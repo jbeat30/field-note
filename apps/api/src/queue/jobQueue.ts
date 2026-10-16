@@ -23,7 +23,7 @@ export type QueueOptions = {
 const DEFAULT_OPTIONS = { retryLimit: 5, retryDelaySeconds: 30 };
 
 /**
- * @description PostgreSQL 기반 작업 큐 (Redis 없음, 기술 기획서 §7.4)
+ * @description PostgreSQL 기반 작업 큐 (Redis 없음)
  * 큐 전용 DB 계정으로 접속, 큐 테이블은 `pgboss` 스키마에만 생성
  * @param connectionString 큐 전용 계정(DATABASE_QUEUE_URL) 접속 주소
  * @param logger 오류 기록용 로거

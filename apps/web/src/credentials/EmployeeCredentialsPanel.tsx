@@ -246,7 +246,7 @@ const CredentialRow = ({
   );
 };
 
-// 서류·자격: 자격증·안전교육 이수증·건강검진 서류를 올리고 만료일을 관리함 (서비스 기획서 §8.4)
+// 서류·자격: 자격증·안전교육 이수증·건강검진 서류를 올리고 만료일을 관리함
 export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string }) => {
   const credentials = useCredentials(employeeId);
   const options = useOptions();

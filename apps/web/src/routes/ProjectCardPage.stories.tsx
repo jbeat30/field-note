@@ -297,7 +297,7 @@ export const CompleteProject: Story = {
   },
 };
 
-// 완료 전에 확인할 것을 알려 주되 막지는 않음 (§10.3)
+// 완료 전에 확인할 것을 알려 주되 막지는 않음
 export const CompleteShowsNotices: Story = {
   play: async ({ canvasElement }) => {
     const canvas = panel(canvasElement);
@@ -362,7 +362,7 @@ export const SuspendedProjectHistory: Story = {
   },
 };
 
-// 완료 → 보증 중은 프로젝트 요약을 확인해야 함 (§10.3)
+// 완료 → 보증 중은 프로젝트 요약을 확인해야 함
 export const StartWarrantyNeedsSummaryConfirm: Story = {
   parameters: { router: routerFor('옛날상가 간판 교체') },
   play: async ({ canvasElement }) => {

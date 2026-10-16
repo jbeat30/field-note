@@ -3,7 +3,7 @@ import { z } from 'zod';
 import { workUnitModeSchema } from './account';
 import { minutesToManDays, roundTo, toManMonths } from './workUnits';
 
-// 월 공수 확정과 월 공수표 (서비스 기획서 §13.2, §15.4): 공수 기록이 급여·정산의 근거로 쓰이므로 월 단위로 확정(잠금)
+// 월 공수 확정과 월 공수표: 공수 기록이 급여·정산의 근거로 쓰이므로 월 단위로 확정(잠금)
 // 확정은 선택 기능이며 확정하면 그달의 작업 내역 수정 불가, 재오픈(사유 기록)으로만 정정
 // 확정 시점의 하루 기준시간과 월 기준일수를 그 시점 값으로 고정
 export const MONTH_REASON_MAX_LENGTH = 500;
@@ -140,7 +140,7 @@ export const validateMonthClose = (input: {
 };
 
 /**
- * @description 이 날짜의 작업 내역를 고칠 수 있는지: 확정된 달은 재오픈해야 함 (§9.4, §13.2)
+ * @description 이 날짜의 작업 내역를 고칠 수 있는지: 확정된 달은 재오픈해야 함
  * @param workDate 작업 일자
  * @param closedMonths 확정된 달 목록
  * @returns 통과 여부와 거부 사유

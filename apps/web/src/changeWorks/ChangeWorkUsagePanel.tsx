@@ -4,7 +4,7 @@ import { formatWork } from '../workSummary/formatWork';
 
 import { useChangeUsage } from './useChangeWorks';
 
-// 변경·추가 작업으로 쓴 공수·자재 (§10.5): 작업 내역과 자재 기록에 "변경·추가 작업" 표시를 한 것의 합계 (정산·협의 근거)
+// 변경·추가 작업으로 쓴 공수·자재: 작업 내역과 자재 기록에 "변경·추가 작업" 표시를 한 것의 합계 (정산·협의 근거)
 export const ChangeWorkUsagePanel = ({ projectId }: { projectId: string }) => {
   const usage = useChangeUsage(projectId);
   const settings = useCompanySettings();

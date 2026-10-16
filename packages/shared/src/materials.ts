@@ -2,7 +2,7 @@ import { z } from 'zod';
 
 import { materialRemaining, roundTo } from './workUnits';
 
-// 사용 자재 관리 (서비스 기획서 §11), 가격·구매·발주·재고는 제외하고 어떤 자재가 언제 얼마나 들어오고 쓰이고 나갔는지만 기록
+// 사용 자재 관리, 가격·구매·발주·재고는 제외하고 어떤 자재가 언제 얼마나 들어오고 쓰이고 나갔는지만 기록
 export const MATERIAL_CATEGORIES = ['RAW', 'SUB', 'FINISH', 'CONSUMABLE'] as const;
 
 export const materialCategorySchema = z.enum(MATERIAL_CATEGORIES);

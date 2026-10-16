@@ -14,7 +14,7 @@ import { useEmployeeWorkHistory } from '../workSummary/useWorkSummary';
 
 import { optionNameMap } from './OptionSelect';
 
-// 직원 카드 머리의 수치 줄 (09 §7): 상태 · 직종 · 현재 단가 · 이번 달 공수
+// 직원 카드 머리의 수치 줄 (09): 상태 · 직종 · 현재 단가 · 이번 달 공수
 export const EmployeeSummaryStats = ({ employee }: { employee: EmployeeDetail }) => {
   const options = useOptions();
   const rates = usePayRates(employee.id);

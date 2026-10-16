@@ -10,7 +10,7 @@ import { MemoList } from '../memos/MemoList';
 import { useCreateMemo, useDeleteMemo, useMemoList, useUpdateMemo } from '../memos/useMemos';
 import { useProjectChoices } from '../projects/useProjects';
 
-// 메모함: 프로젝트를 정하지 않고 먼저 적어 둔 메모 보관, 나중에 프로젝트 연결 또는 삭제 (서비스 기획서 §14)
+// 메모함: 프로젝트를 정하지 않고 먼저 적어 둔 메모 보관, 나중에 프로젝트 연결 또는 삭제
 export const InboxPage = () => {
   const memos = useMemoList({ scope: 'INBOX' });
   const projects = useProjectChoices();

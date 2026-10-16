@@ -2,8 +2,8 @@ import { z } from 'zod';
 
 import { fileRejectReasonSchema, fileStatusSchema } from './files';
 
-// 작업자료 문서함 (서비스 기획서 §12.3), 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 수집
-// 파일은 덮어쓰지 않고 새 버전으로 추가하며(최신본이 기본, 이전본 보존), 민감 자료는 열람·다운로드를 감사 기록으로 남김 (§7.3, §13.1)
+// 작업자료 문서함, 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 수집
+// 파일은 덮어쓰지 않고 새 버전으로 추가하며(최신본이 기본, 이전본 보존), 민감 자료는 열람·다운로드를 감사 기록으로 남김
 export const DOCUMENT_CATEGORIES = ['DRAWING', 'CONTRACT', 'SAFETY', 'QUOTE', 'OTHER'] as const;
 
 export const documentCategorySchema = z.enum(DOCUMENT_CATEGORIES);
@@ -27,7 +27,7 @@ export const DOCUMENT_CATEGORY_HINTS: Record<DocumentCategory, string> = {
 };
 
 /**
- * @description 분류별 민감 자료 기본값: 계약·공문은 기본적으로 민감 자료 (서비스 기획서 §12.3), 직접 정하면 그 값 사용
+ * @description 분류별 민감 자료 기본값: 계약·공문은 기본적으로 민감 자료, 직접 정하면 그 값 사용
  * @param category 문서 분류
  * @param explicit 사용자가 직접 정한 값 (없으면 분류 기본값)
  * @returns 민감 자료 여부
@@ -225,7 +225,7 @@ export const AUDIT_ACTION_LABELS: Record<AuditAction, string> = {
   EMPLOYEE_UPDATED: '직원 정보 수정',
 };
 
-// 민감 자료 열람 기록 (수정·삭제할 수 없는 감사 기록, 서비스 기획서 §13.1)
+// 민감 자료 열람 기록 (수정·삭제할 수 없는 감사 기록)
 export const documentAccessLogSchema = z.object({
   id: z.uuid(),
   action: auditActionSchema,

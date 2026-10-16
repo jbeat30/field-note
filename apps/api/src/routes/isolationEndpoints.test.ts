@@ -47,7 +47,7 @@ import { createPrismaSessionStore } from '../session/sessionStore';
 import { withCompany } from '../db/withCompany';
 import { createWorkLogService } from '../workLog/workLogService';
 
-// 1단계(직원·프로젝트·투입·작업 내역) 모든 엔드포인트의 회사 격리를 HTTP 수준에서 확인함 (기술 기획서 §5.1)
+// 1단계(직원·프로젝트·투입·작업 내역) 모든 엔드포인트의 회사 격리를 HTTP 수준에서 확인함
 // 회사 A의 데이터를 만들고 회사 B의 세션으로 A의 ID를 쓰는 모든 경로를 호출해 차단 여부 확인
 let db: TestDatabase;
 let documentIds: string[];

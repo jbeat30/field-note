@@ -5,7 +5,7 @@ import { materialRecordKindSchema } from './materials';
 import { photoCategorySchema } from './photos';
 import { workLogStatusSchema } from './workLogs';
 
-// 작업일보 (서비스 기획서 §15.4): 한 프로젝트의 하루 작업 내용·인원·공수·자재·사진을 모아 인쇄·PDF·엑셀로 내보냄 (고객 제출용)
+// 작업일보: 한 프로젝트의 하루 작업 내용·인원·공수·자재·사진을 모아 인쇄·PDF·엑셀로 내보냄 (고객 제출용)
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
 export const REPORT_MAX_DAYS = 93;
@@ -90,7 +90,7 @@ export const dailyReportSchema = z.object({
 
 export type DailyReport = z.infer<typeof dailyReportSchema>;
 
-// 엑셀 내보내기: 기간 안의 작업 내역·공수·자재를 시트로 나눠 다운로드, 내보내기는 기록 저장 (§7.3)
+// 엑셀 내보내기: 기간 안의 작업 내역·공수·자재를 시트로 나눠 다운로드, 내보내기는 기록 저장
 export const reportExportQuerySchema = z
   .object({
     from: dateSchema,

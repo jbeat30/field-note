@@ -63,7 +63,7 @@ const DeviceRow = ({
   </li>
 );
 
-// 로그인한 기기: 이 기기를 맨 위에, 이 기기가 아닌 로그인에만 로그아웃(확인 창), 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃 (§6.4)
+// 로그인한 기기: 이 기기를 맨 위에, 이 기기가 아닌 로그인에만 로그아웃(확인 창), 오래 쓰지 않은 로그인은 접어 두고 한 번에 로그아웃
 export const DevicesSection = () => {
   const devices = useDevices();
   const revoke = useRevokeDevice();

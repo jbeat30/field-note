@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-// 회사 데이터 관리 (서비스 기획서 §6.5, §7.3, §12.1): 저장 용량 현황과 해지 전 전체 데이터 내보내기
+// 회사 데이터 관리: 저장 용량 현황과 해지 전 전체 데이터 내보내기
 
 export const storageUsageSchema = z.object({
   // 회사별 저장 용량 한도와 사용량 (바이트)
@@ -27,7 +27,7 @@ export const storageUsageSchema = z.object({
 
 export type StorageUsage = z.infer<typeof storageUsageSchema>;
 
-// 전체 데이터 내보내기는 본인 확인을 위해 비밀번호 재입력 필요 (§7.3)
+// 전체 데이터 내보내기는 본인 확인을 위해 비밀번호 재입력 필요
 export const companyExportRequestSchema = z.object({
   currentPassword: z.string().min(1, '비밀번호를 입력해 주세요').max(200),
 });

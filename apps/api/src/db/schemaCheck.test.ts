@@ -130,7 +130,7 @@ describe('스키마 검사', () => {
   });
 
   // 계정별로 접근할 수 있는 테이블을 목록으로 고정한다: 새 테이블이 실수로 운영자·로그인 전용·작업 큐 계정에 열리면 이 시험이 실패하고,
-  // 정말 필요하면 목록을 고치는 변경이 리뷰에 드러남 (서비스 기획서 §5.1: 운영자도 회사 업무 데이터를 열람하지 않음)
+  // 정말 필요하면 목록을 고치는 변경이 리뷰에 드러남 (운영자도 회사 업무 데이터를 열람하지 않음)
   const grantedTables = async (role: string) => {
     const { rows } = await db.ownerPool.query<{ table_name: string }>(
       `SELECT DISTINCT table_name FROM information_schema.role_table_grants
