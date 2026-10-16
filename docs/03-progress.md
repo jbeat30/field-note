@@ -757,3 +757,24 @@ gh pr create --base feature/0.8.0        # CI 통과 후 squash 머지
 - 사용자에게 보이는 오류 문구는 `packages/shared/src/errorMessages.ts`의 `VALIDATION_MESSAGES`로 모았고, 인라인 한글 문구(`message:`·zod 메서드 인자·`setError`·도메인 오류 생성자)는 ESLint가 막는다 (`packages/config/eslint.js`)
 - 규칙이 닿지 않는 곳: 화면 문구(라벨·안내·성공 알림)와 `projectCompletion`·`dashboard`의 안내 문장 같은 비오류 문구는 대상이 아니다
 - 개발용 MCP 도입(`.mcp.json`): `context7`(@upstash/context7-mcp 4.4.2, 공식 문서·패턴 조회)와 `chrome-devtools`(chrome-devtools-mcp 1.11.0, 실제 DOM·콘솔·네트워크 확인). Playwright는 반복 시험, MCP는 개발 중 렌더링 점검용. 두 서버를 직접 띄워 시험함 (context7: TanStack Query 검색·문서 조회, chrome-devtools: 웹 화면 열기·DOM 스냅샷·스크립트 실행·콘솔 읽기)
+
+## 0.10.0 로컬 최종 점검
+
+점검 항목을 작업(L-1 ~ L-7)으로 나눠 항목마다 PR을 올린다. 점검에서 나온 문제는 같은 PR에서 고치고, 문제가 없으면 결과만 기록한다
+
+| ID  | 작업                                                               | 상태 |
+| --- | ------------------------------------------------------------------ | ---- |
+| L-1 | 전 엔드포인트 회사 격리 재확인                                     | 완료 |
+| L-2 | Playwright 핵심 흐름을 4~5단계까지 확장, 하루 일지 입력 3분 재측정 |      |
+| L-3 | 보안 점검: 권한, 입력 검증, 파일 업로드                            |      |
+| L-4 | 접근성·모바일 점검 (스토리 a11y 포함)                              |      |
+| L-5 | 대용량 데이터 성능                                                 |      |
+| L-6 | 현장 데이터 1~2건을 직접 입력한 시나리오 시험과 불편 항목 반영     |      |
+| L-7 | 운영 이행 체크리스트·환경 변수 목록 정리                           |      |
+
+### L-1 격리 재확인 결과
+
+- 로그인이 필요한 엔드포인트 전부가 격리 시험 목록 또는 본인 계정 전용 목록에 있는지를 시험이 openapi 기준으로 스스로 검사한다(`isolationEndpoints.test.ts`). 엔드포인트는 라우트 등록부 하나에서 Express 경로와 openapi가 함께 만들어지므로 openapi에 빠진 경로가 생기지 않는다. 현재 153개 동작 중 로그인 없이 열리는 것은 12개
+- 격리 시험(`isolationEndpoints`·`isolationFiles`·`db/isolation`·`db/schemaCheck`) 4개 파일 45개 시험이 모두 통과
+- 로그인 없는 12개는 상태 확인, 초대·비밀번호 재설정·해지 취소 토큰, 가입·로그인, 소셜 로그인 시작·콜백으로, 회사 데이터를 직접 돌려주는 경로가 없다. 개발용 가짜 소셜 로그인(`/api/v1/dev/fake-social/...`)은 개발 환경에서만 선택되고 운영에서는 `none`이 되며 시험이 있다(`provider.test.ts`, `socialRoutes.test.ts`)
+- 고칠 문제는 발견되지 않아 코드 변경 없음
