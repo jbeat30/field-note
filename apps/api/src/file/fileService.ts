@@ -84,8 +84,8 @@ export type FileServiceDeps = {
 };
 
 /**
- * @description 파일 업로드 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 브라우저가 저장소에 직접 올리고,
- * 서버는 올라온 뒤 내용 검사(file-type)·크기 확인·썸네일(sharp)을 작업으로 처리한다 (기술 기획서 §10)
+ * @description 파일 업로드 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 브라우저가 저장소에 직접 올리고,
+ * 서버는 올라온 뒤 내용 검사(file-type)·크기 확인·썸네일(sharp)을 작업으로 처리함 (기술 기획서 §10)
  * @param deps 앱 계정 Prisma 클라이언트, 객체 저장소, 작업 큐, 현재 시각
  * @returns 파일 서비스
  */
@@ -108,7 +108,7 @@ export const createFileService = ({
     return row;
   };
 
-  // 검사에서 걸러진 파일은 저장소에서도 지운다 (악성 파일을 남겨 두지 않음)
+  // 검사에서 걸러진 파일은 저장소에서도 지움 (악성 파일을 남겨 두지 않음)
   const reject = async (row: Row, reason: FileRejectReason) => {
     await storage.remove(row.objectKey);
     await withCompany(app, row.companyId, (tx) =>
@@ -238,8 +238,8 @@ export const createFileService = ({
         throw new FileError('NOT_READY');
       }
 
-      // 작업자료 문서 파일은 문서 API로만 열람한다 (민감 자료 열람 기록을 거치지 않고 열 수 없게 함)
-      // 직원 서류 파일도 서류 API로만 연다 (열람 기록을 거침)
+      // 작업자료 문서 파일은 문서 API로만 열람함 (민감 자료 열람 기록을 거치지 않고 열 수 없게 함)
+      // 직원 서류 파일도 서류 API로만 염 (열람 기록을 거침)
       if (row.purpose === 'DOCUMENT' || row.purpose === 'EMPLOYEE_DOCUMENT') {
         throw new FileError('NOT_FOUND');
       }
@@ -323,7 +323,7 @@ export const createFileService = ({
 };
 
 /**
- * @description 파일 처리 작업 처리기 등록. 저장소 장애처럼 일시적인 오류는 예외로 던져 재시도하고,
+ * @description 파일 처리 작업 처리기 등록, 저장소 장애처럼 일시적인 오류는 예외로 던져 재시도하고,
  * 파일 자체의 문제(형식 위조 등)는 거부 상태로 기록한 뒤 정상 종료
  * @param queue 작업 큐
  * @param service 파일 서비스

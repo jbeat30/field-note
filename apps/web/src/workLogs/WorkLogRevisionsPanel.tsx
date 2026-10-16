@@ -15,7 +15,7 @@ const formatChangedAt = (iso: string) =>
     minute: '2-digit',
   }).format(new Date(iso));
 
-// 고치기 전 값(수정 이력)을 접어 두었다가 펼치면 보여 준다 (서비스 기획서 §9.1, 분쟁 때 기록의 신뢰성)
+// 고치기 전 값(수정 이력)을 접어 두었다가 펼치면 보여 줌 (서비스 기획서 §9.1, 분쟁 때 기록의 신뢰성)
 export const WorkLogRevisionsPanel = ({
   projectId,
   workDate,

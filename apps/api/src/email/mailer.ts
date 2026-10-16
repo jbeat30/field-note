@@ -22,7 +22,7 @@ export type MailerOptions = {
 };
 
 /**
- * @description SMTP 메일 발송기 (nodemailer). 로컬은 Mailpit, 운영은 메일 발송 서비스의 SMTP
+ * @description SMTP 메일 발송기 (nodemailer), 로컬은 Mailpit, 운영은 메일 발송 서비스의 SMTP
  * 465 포트는 TLS 직접 연결, 그 외는 서버가 지원할 때 STARTTLS로 격상
  * @param options 접속 정보와 발신 주소
  * @returns 메일 발송기
@@ -44,7 +44,7 @@ export const createSmtpMailer = (options: MailerOptions): Mailer => {
 };
 
 /**
- * @description 메모리 메일 발송기 (테스트용). 보낸 메일을 기록만 함
+ * @description 메모리 메일 발송기 (테스트용), 보낸 메일을 기록만 함
  * @returns 발송기와 보낸 메일 목록
  */
 export const createMemoryMailer = () => {

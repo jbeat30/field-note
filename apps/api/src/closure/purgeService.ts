@@ -21,7 +21,7 @@ export type PurgeResult = {
 /**
  * @description 해지 유예가 끝난 회사의 데이터 삭제·익명화 (삭제 전용 계정 전용)
  * 한 트랜잭션이라 중간에 실패하면 아무것도 바뀌지 않는다. `PURGE_POLICY`의 DELETE는 삭제, ANONYMIZE는 개인 식별 항목 제거, KEEP은 건드리지 않음
- * 업로드 파일은 저장소를 넘기면 회사 경로(`company/{회사ID}/`) 아래 객체를 먼저 지운다 (삭제 시기 확인 뒤, 중간에 실패해도 다시 실행하면 이어서 처리)
+ * 업로드 파일은 저장소를 넘기면 회사 경로(`company/{회사ID}/`) 아래 객체를 먼저 지움 (삭제 시기 확인 뒤, 중간에 실패해도 다시 실행하면 이어서 처리)
  * @param prisma 삭제 전용 계정(DATABASE_PURGE_URL) Prisma 클라이언트
  * @param companyId 대상 회사
  * @param now 현재 시각

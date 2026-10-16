@@ -7,7 +7,7 @@ import { useConfirm } from '../components/ui/confirm-dialog';
 
 import { useDevices, useRevokeDevice } from './useDevices';
 
-// 이만큼 쓰지 않은 로그인은 "오래 쓰지 않음"으로 접는다 (로그인 유지 기간 안에서 남아 있는 것들)
+// 이만큼 쓰지 않은 로그인은 "오래 쓰지 않음"으로 접음 (로그인 유지 기간 안에서 남아 있는 것들)
 const STALE_DAYS = 7;
 const DAY_MS = 24 * 60 * 60 * 1000;
 

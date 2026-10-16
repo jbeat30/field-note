@@ -22,7 +22,7 @@ import { Modal } from '../components/ui/modal';
 import { Select } from '../components/ui/select';
 import { useProject } from '../projects/useProjects';
 
-// 추가 공사: 계약 밖에서 생긴 작업의 요청·협의·승인을 표로 모아 보고, 상세 창에서 상태·증빙(사진·공문)을 다룬다 (09 문서 §3.7)
+// 추가 공사: 계약 밖에서 생긴 작업의 요청·협의·승인을 표로 모아 보고, 상세 창에서 상태·증빙(사진·공문)을 다룸 (09 문서 §3.7)
 export const ProjectChangeWorksPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);

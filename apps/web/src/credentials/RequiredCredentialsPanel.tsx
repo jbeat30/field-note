@@ -74,7 +74,7 @@ const Editor = ({
   );
 };
 
-// 프로젝트의 필요 자격: 정해 두면 투입 배정 때 자격이 없거나 만료된 직원을 경고한다 (서비스 기획서 §8.4)
+// 프로젝트의 필요 자격: 정해 두면 투입 배정 때 자격이 없거나 만료된 직원을 경고함 (서비스 기획서 §8.4)
 export const RequiredCredentialsPanel = ({ projectId }: { projectId: string }) => {
   const required = useRequiredCredentials(projectId);
   const options = useOptions();

@@ -34,7 +34,7 @@ export const putWithProgress = (
   });
 
 /**
- * @description 문서 파일 한 개를 올림: 신청 → 저장소 업로드 → 완료 알림. 올라간 파일의 ID를 돌려주며 문서 등록은 호출한 쪽이 한다
+ * @description 문서 파일 한 개 업로드: 신청 → 저장소 업로드 → 완료 알림, 올라간 파일의 ID 반환, 문서 등록은 호출한 쪽 담당
  * 문서는 사진보다 적고 한 번에 한 개라 대기열 없이 진행률 표시, 실패 시 사유와 함께 재시도 유도
  * @param projectId 프로젝트 ID
  * @param file 사용자가 고른 파일

@@ -174,7 +174,7 @@ export const createS3Storage = (config: S3Config) => {
 };
 
 /**
- * @description 메모리 객체 저장소 (DB·저장소 없는 단위 테스트용). 주소는 가짜지만 형식·크기 서명 값을 기록해 둠
+ * @description 메모리 객체 저장소 (DB·저장소 없는 단위 테스트용), 주소는 가짜지만 형식·크기 서명 값을 기록해 둠
  * @returns 객체 저장소와 테스트용 조작 함수
  */
 export const createMemoryStorage = () => {

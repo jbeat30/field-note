@@ -5,7 +5,7 @@ import { materialRecordKindSchema } from './materials';
 import { photoCategorySchema } from './photos';
 import { workLogStatusSchema } from './workLogs';
 
-// 작업일보 (서비스 기획서 §15.4): 한 프로젝트의 하루 작업 내용·인원·공수·자재·사진을 모아 인쇄·PDF·엑셀로 내보낸다 (고객 제출용)
+// 작업일보 (서비스 기획서 §15.4): 한 프로젝트의 하루 작업 내용·인원·공수·자재·사진을 모아 인쇄·PDF·엑셀로 내보냄 (고객 제출용)
 const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 
 export const REPORT_MAX_DAYS = 93;
@@ -122,7 +122,7 @@ export const REPORT_XLSX_CONTENT_TYPE =
   'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet';
 
 /**
- * @description 공수(분)를 회사 설정의 표시 방식 값으로 바꿈 (비율이면 MD, 시간이면 시간, 소수 둘째 자리). 일보 화면과 엑셀이 같은 값을 쓴다
+ * @description 공수(분)를 회사 설정의 표시 방식 값으로 변환 (비율이면 MD, 시간이면 시간, 소수 둘째 자리), 일보 화면과 엑셀이 같은 값 사용
  * @param minutes 공수(분)
  * @param settings 회사 설정의 공수 표시 방식과 하루 기준시간
  * @returns 표시용 공수 값

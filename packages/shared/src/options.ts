@@ -48,7 +48,7 @@ export const optionItemSchema = z.object({
   id: z.uuid(),
   kind: optionKindSchema,
   name: z.string(),
-  // 쓰지 않는 항목은 삭제하지 않고 숨긴다 (이미 기록에 쓰인 이름이 사라지지 않게 함)
+  // 쓰지 않는 항목은 삭제하지 않고 숨김 (이미 기록에 쓰인 이름이 사라지지 않게 함)
   isActive: z.boolean(),
 });
 

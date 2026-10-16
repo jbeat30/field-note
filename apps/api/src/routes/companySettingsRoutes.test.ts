@@ -163,7 +163,7 @@ describe('GET·PUT /api/v1/company/settings', () => {
       workUnitMode: 'RATIO',
     });
 
-    // 월 기준일수는 소수 첫째 자리까지 저장된다 (주 5일 21.7일)
+    // 월 기준일수는 소수 첫째 자리까지 저장됨 (주 5일 21.7일)
     const decimal = { standardWorkMinutes: 480, monthlyWorkDays: 21.7, workUnitMode: 'RATIO' };
 
     expect((await put(instance, cookie, decimal)).body).toEqual(decimal);

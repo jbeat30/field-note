@@ -63,7 +63,7 @@ export const resetMockWarranties = () => stores.clear();
 // 회사 구분 값 (회사가 없는 가입 직후 계정은 계정 단위로 나눔)
 const scopeOf = (account: MockAccount) => account.companyId ?? account.loginId;
 
-// 더미 보증 설정은 DB 시드와 같은 원본을 쓴다 (프로젝트 코드로 연결)
+// 더미 보증 설정은 DB 시드와 같은 원본을 씀 (프로젝트 코드로 연결)
 const storeOf = (account: MockAccount): Store => {
   const existing = stores.get(scopeOf(account));
 
@@ -120,7 +120,7 @@ export const getMockWarrantyForTransition = (account: MockAccount, projectId: st
 };
 
 /**
- * @description 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 만든다
+ * @description 보증 중이 될 때 설정이 없으면 기본값(실제 완료일 기준)으로 생성
  * @param account 현재 계정
  * @param project 프로젝트
  */

@@ -1,7 +1,7 @@
 import { ALLOWED_FILE_TYPES, fileExtension } from '@field-note/shared';
 
 /**
- * @description 확장자로 문서 파일의 형식(mime)을 정함. 브라우저가 알려 주는 형식은 기기마다 달라 믿지 않고 (서버가 올라온 내용으로 다시 확인), 허용 목록에 없으면 null
+ * @description 확장자로 문서 파일의 형식(mime)을 정함, 브라우저가 알려 주는 형식은 기기마다 달라 믿지 않고 (서버가 올라온 내용으로 다시 확인), 허용 목록에 없으면 null
  * @param fileName 파일 이름
  * @returns 문서로 올릴 수 있는 형식 (없으면 null)
  */

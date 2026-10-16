@@ -42,7 +42,7 @@ export const ClosureSection = () => {
       return;
     }
 
-    // 되돌리기 어려운 요청이라 비밀번호를 확인한 뒤 한 번 더 묻는다 (14일 안에는 메일 링크로 취소할 수 있음)
+    // 되돌리기 어려운 요청이라 비밀번호를 확인한 뒤 한 번 더 묻음 (14일 안에는 메일 링크로 취소할 수 있음)
     const ok = await confirm({
       title: '계정을 해지할까요?',
       description:

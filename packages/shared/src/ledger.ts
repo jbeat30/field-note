@@ -147,8 +147,8 @@ export type LedgerSummary = z.infer<typeof ledgerSummarySchema>;
 export const ledgerEntryParamsSchema = z.object({ id: z.uuid() });
 
 /**
- * @description 지출·수입 합계와 분류별 합계 (서버와 목업이 같은 규칙을 쓴다). 순수익이 아니라 두 합계를 따로 보여 준다
- * @param entries 합계를 낼 기록 (지운 기록은 미리 빼고 넘긴다)
+ * @description 지출·수입 합계와 분류별 합계 (서버와 목업이 같은 규칙 사용), 순수익이 아니라 두 합계를 따로 표시
+ * @param entries 합계를 낼 기록 (지운 기록은 미리 제외하고 전달)
  * @returns 지출 합계·수입 합계·건수·분류별 합계 (구분 순서: 지출 먼저, 같은 구분 안에서는 큰 금액 먼저)
  */
 export const summarizeLedger = (

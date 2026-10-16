@@ -106,7 +106,7 @@ export const useRemoveCredential = (employeeId: string) => {
 };
 
 /**
- * @description 서류 파일 열람 주소 (이 호출이 열람 기록으로 남는다)
+ * @description 서류 파일 열람 주소 (이 호출이 열람 기록으로 보존)
  * @param employeeId 직원 ID
  * @param credentialId 서류 ID
  * @returns 짧은 만료의 주소
@@ -138,7 +138,7 @@ export const EMPLOYEE_DOCUMENT_ACCEPT = Object.keys(EMPLOYEE_DOCUMENT_TYPES)
   .join(',');
 
 /**
- * @description 직원 서류 파일 한 개를 올림: 신청 → 저장소 업로드 → 완료 알림. 올라간 파일 ID를 돌려주며 서류 연결은 호출한 쪽이 한다
+ * @description 직원 서류 파일 한 개 업로드: 신청 → 저장소 업로드 → 완료 알림, 올라간 파일 ID 반환, 서류 연결은 호출한 쪽 담당
  * @param employeeId 직원 ID
  * @param file 사용자가 고른 파일
  * @returns 업로드한 파일 ID

@@ -390,7 +390,7 @@ export const createRepairService = (
         assertProjectAllows(current.project.status);
 
         if (input.workLogId) {
-          // 같은 프로젝트에서 사후 작업으로 표시한 저장된 작업 내역만 연결할 수 있다 (다른 회사·프로젝트 작업 내역은 없는 것으로 취급)
+          // 같은 프로젝트에서 사후 작업으로 표시한 저장된 작업 내역만 연결할 수 있음 (다른 회사·프로젝트 작업 내역은 없는 것으로 취급)
           const log = await tx.workLog.findFirst({
             where: {
               id: input.workLogId,

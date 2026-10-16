@@ -129,7 +129,7 @@ export const createLaborService = (
         },
       });
 
-      // 금액 자체는 기록에 복사하지 않는다 (단가표에 이미 있고, 감사 기록은 누가 언제 무엇을 바꿨는지만)
+      // 금액 자체는 기록에 복사하지 않음 (단가표에 이미 있고, 감사 기록은 누가 언제 무엇을 바꿨는지만)
       await tx.auditLog.create({
         data: {
           companyId,

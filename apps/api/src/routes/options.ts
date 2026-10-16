@@ -44,7 +44,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 선택 목록 관리 라우트 (직종·작업 구분·공종·직원 구분). 회사 ID는 세션에서만 얻는다
+ * @description 선택 목록 관리 라우트 (직종·작업 구분·공종·직원 구분), 회사 ID는 세션에서만 획득
  * @param registry 라우트 등록소
  * @param options 선택 목록 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

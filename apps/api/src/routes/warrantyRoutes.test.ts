@@ -151,7 +151,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
   };
 };
 
-// 프로젝트를 만들어 진행 상태까지 올린다 (2026-09-01 시작)
+// 프로젝트를 만들어 진행 상태까지 올림 (2026-09-01 시작)
 const setup = async () => {
   const instance = app();
   const cookie = await signedUp(instance);

@@ -34,7 +34,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 작업 사진 라우트. 회사 ID는 세션에서만 얻는다 (파일 올리기는 파일 라우트, 여기서는 사진 기록 등록·사진첩 조회·수정·삭제)
+ * @description 작업 사진 라우트, 회사 ID는 세션에서만 얻음 (파일 올리기는 파일 라우트, 여기서는 사진 기록 등록·사진첩 조회·수정·삭제)
  * @param registry 라우트 등록소
  * @param photos 사진 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

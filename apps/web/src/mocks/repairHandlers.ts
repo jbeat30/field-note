@@ -62,7 +62,7 @@ export const resetMockRepairs = () => {
 // 회사 구분 값 (회사가 없는 가입 직후 계정은 계정 단위로 나눔)
 const scopeOf = (account: MockAccount) => account.companyId ?? account.loginId;
 
-// 더미 보수 요청은 DB 시드와 같은 원본을 쓴다 (프로젝트 코드로 연결)
+// 더미 보수 요청은 DB 시드와 같은 원본을 씀 (프로젝트 코드로 연결)
 const seed = (account: MockAccount) => {
   if (seeded.has(scopeOf(account))) return;
 

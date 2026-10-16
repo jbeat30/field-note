@@ -42,7 +42,7 @@ const STATUS_TONE: Record<ProjectStatus, 'neutral' | 'primary' | 'success' | 'wa
 
 type ProjectItem = NonNullable<ReturnType<typeof useProjects>['data']>['items'][number];
 
-// 표에 넣을 줄: 고객·담당자·공종 이름을 미리 풀어 둔다 (이름 조회가 끝나면 새 줄 객체가 되어 표가 다시 계산함)
+// 표에 넣을 줄: 고객·담당자·공종 이름을 미리 풀어 둠 (이름 조회가 끝나면 새 줄 객체가 되어 표가 다시 계산함)
 type Row = ProjectItem & { clientName?: string; managerName?: string; tradeNames: string };
 
 // 상태로 한 번에 찾는 버튼 (나머지 상태는 자세히 찾기의 상태 선택)
@@ -67,7 +67,7 @@ const SORT_KEY: Record<string, ProjectSortKey> = {
 
 const helper = columnHelper<Row>();
 
-// 열 정의: 머리 글자를 누르면 그 열 기준으로 정렬된다 (번호는 등록순, 이름·고객·담당자는 가나다순, 기간은 시작일순)
+// 열 정의: 머리 글자를 누르면 그 열 기준으로 정렬됨 (번호는 등록순, 이름·고객·담당자는 가나다순, 기간은 시작일순)
 const columns = helper.columns([
   helper.accessor('code', {
     id: 'code',
@@ -162,7 +162,7 @@ const columns = helper.columns([
 
 // 프로젝트 목록: 번호·이름·현장명·상태·경고·고객·담당자·공종·기간만 표시, 경고는 진행·중단 프로젝트에만 부착되고 회사 설정의 경고 기준 적용 (현장 연락처·출입 메모는 카드에서만)
 export const ProjectListPage = () => {
-  // 검색·필터는 서버 조회 조건, 정렬·쪽도 서버에 넘긴다 (한 쪽만 받음)
+  // 검색·필터는 서버 조회 조건, 정렬·쪽도 서버에 넘김 (한 쪽만 받음)
   const [filter, setFilter] = useState<ProjectListQuery>({});
   const [searchText, setSearchText] = useState('');
   const [siteText, setSiteText] = useState('');

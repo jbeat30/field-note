@@ -23,7 +23,7 @@ const Section = ({ title, children }: { title: string; children: React.ReactNode
 const th = 'border border-border bg-muted px-2 py-1 text-left text-sm font-medium';
 const td = 'border border-border px-2 py-1 text-sm align-top';
 
-// 작업일보 한 장: 화면에서는 그대로 보고, 인쇄하면 A4 한 장 분량으로 나온다 (고객 제출용, 서비스 기획서 §15.4)
+// 작업일보 한 장: 화면에서는 그대로 보고, 인쇄하면 A4 한 장 분량으로 나옴 (고객 제출용, 서비스 기획서 §15.4)
 // 금액은 제외하고 작업 내용·인원·공수·자재·사진 같은 사실 기록만 포함
 export const ReportSheet = ({ report }: ReportSheetProps) => {
   const { project, workLog, entries, totals, settings, materials, photos } = report;

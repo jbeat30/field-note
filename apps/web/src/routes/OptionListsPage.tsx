@@ -8,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { OptionListSection } from '../settings/OptionListSection';
 import { useOptions } from '../settings/useOptions';
 
-// 설정 > 목록 관리: 직종·작업 구분·공종·직원 구분·자격 종류를 회사가 정한다 (서비스 기획서 §8.3, §9.2, §10.2)
+// 설정 > 목록 관리: 직종·작업 구분·공종·직원 구분·자격 종류를 회사가 정함 (서비스 기획서 §8.3, §9.2, §10.2)
 // 종류별 탭으로 구분, 선택한 종류는 주소(?kind=)에 보관
 export const OptionListsPage = () => {
   const options = useOptions();

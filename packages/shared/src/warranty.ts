@@ -33,7 +33,7 @@ const reasonSchema = z
   .max(WARRANTY_REASON_MAX_LENGTH, `사유는 ${WARRANTY_REASON_MAX_LENGTH}자까지 입력할 수 있습니다`);
 
 /**
- * @description 날짜에 개월 수를 더한다. 해당 달에 그 날이 없으면 말일로 맞춘다 (1월 31일 + 1개월 = 2월 28일)
+ * @description 날짜에 개월 수를 더함, 해당 달에 그 날이 없으면 말일로 맞춤 (1월 31일 + 1개월 = 2월 28일)
  * @param date YYYY-MM-DD
  * @param months 더할 개월 수
  * @returns YYYY-MM-DD
@@ -51,7 +51,7 @@ export const addMonths = (date: string, months: number) => {
 };
 
 /**
- * @description 보증 종료 예정일: 시작일 + 보증 기간. 기간이 0이면 보증이 없으므로 시작일과 같다
+ * @description 보증 종료 예정일: 시작일 + 보증 기간, 기간이 0이면 보증이 없으므로 시작일과 동일
  * @param startOn 보증 시작일
  * @param months 보증 기간(개월)
  * @returns 종료 예정일
@@ -91,7 +91,7 @@ export const warrantyUpdateSchema = z.object({
     .min(0, '보증 기간은 0 이상이어야 합니다')
     .max(WARRANTY_MONTHS_MAX, `보증 기간은 ${WARRANTY_MONTHS_MAX}개월까지 입력할 수 있습니다`),
   startBasis: warrantyStartBasisSchema,
-  // 실제 완료일 기준이면 쓰지 않는다 (프로젝트의 실제 완료일이 시작일)
+  // 실제 완료일 기준이면 쓰지 않음 (프로젝트의 실제 완료일이 시작일)
   startOn: dateSchema.nullish(),
   // 계산된 종료 예정일을 직접 바꿀 때 (보증 연장 등, 사유 필수)
   endOn: dateSchema.nullish(),
@@ -113,9 +113,9 @@ export type WarrantyUpdateResult =
   | { ok: false; path: 'months' | 'startOn' | 'endOn' | 'reason'; message: string };
 
 /**
- * @description 보증 설정 입력을 검사하고 시작일·종료 예정일을 확정한다.
+ * @description 보증 설정 입력 검사와 시작일·종료 예정일 확정
  * 시작일은 실제 완료일 기준이면 프로젝트의 완료일, 아니면 입력값, 종료 예정일은 시작일 + 기간이고 직접 변경하면 사유 필수
- * 이미 설정이 있으면 바꿀 때도 사유가 필수이다 (이력의 신뢰성)
+ * 이미 설정이 있으면 바꿀 때도 사유가 필수 (이력의 신뢰성)
  * @param params 입력, 프로젝트 실제 완료일, 기존 설정 여부
  * @returns 확정된 시작일·종료 예정일·사유 또는 어느 입력이 왜 안 되는지
  */
