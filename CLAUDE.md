@@ -34,6 +34,12 @@
 7. **보고**: 한국어로 구현 내용·검증 결과·남은 일을 짧게 보고하고, 사용자의 컨펌(PR 확인·승인) 전에는 다음 작업을 시작하지 않는다. 보고 끝에 "확인 후 알려 주세요"라고 요청한다.
 8. **합의가 필요한 일**: GitHub 저장소 보호 설정 변경, 운영 서버·카카오 앱 등록(운영 서버 작업 때로 미룸)은 사용자와 합의 후에만 한다
 
+### 개발용 MCP (`.mcp.json`)
+
+- `context7`: 라이브러리 공식 문서·사용 패턴 조회. 쓰는 라이브러리의 API나 버전별 동작이 불확실하면 추측하지 않고 `resolve-library-id` → `query-docs`로 확인한다
+- `chrome-devtools`: 실행 중인 화면의 실제 DOM·콘솔·네트워크·성능 확인(`take_snapshot`·`list_console_messages`·`list_network_requests`·`lighthouse_audit`). 반복 시험은 Playwright, 렌더링 결과를 들여다보는 디버깅은 MCP로 나눠 쓴다
+- 처음 열 때 승인 프롬프트가 뜬다. Windows는 `cmd /c npx`로 실행하고 버전은 고정한다
+
 ### 로컬 실행 요령
 
 - 인프라·DB: `pnpm infra:up`, 데이터 초기화는 `pnpm db:reset` (시드 계정 `hanbit` / `Hanbit-demo-2026!`)
