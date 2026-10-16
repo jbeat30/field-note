@@ -67,3 +67,34 @@ export const selectByText = async (page: Page, label: string, text: string | num
   await expect(option.first(), `${label}에 '${text}' 항목이 있어야 함`).toBeVisible();
   await option.first().click();
 };
+
+/**
+ * @description 프로젝트를 등록하고 작업 시작 상태로 바꿈 (화면에서 직접)
+ * @param page 로그인된 화면
+ * @param name 프로젝트명
+ * @returns 만든 프로젝트 ID
+ */
+export const createStartedProject = async (page: Page, name: string) => {
+  await page.goto('/projects/new');
+  await page.getByLabel('프로젝트명').fill(name);
+  await page.getByLabel('현장 이름').fill('E2E 현장');
+  await selectByText(page, '고객', '가나다건설');
+  await selectByText(page, '담당자', 0);
+  await page.getByLabel('계약일').fill(seoulDate(-30));
+  await page.getByLabel('시작 예정일').fill(seoulDate(-7));
+  await page.getByLabel('종료 예정일').fill(seoulDate(60));
+  await page.getByRole('button', { name: '프로젝트 등록' }).click();
+  await expect(page.getByRole('heading', { name })).toBeVisible();
+
+  const projectId = page.url().split('/projects/')[1]!;
+
+  await page.getByRole('link', { name: '현황', exact: true }).click();
+  await page.getByRole('button', { name: '작업 시작' }).click();
+  await page.getByLabel('실제 시작일').fill(seoulDate(-7));
+  await page.getByRole('button', { name: '확인', exact: true }).click();
+  await expect(page.getByText('현재 상태').locator('xpath=following-sibling::dd[1]')).toHaveText(
+    '진행',
+  );
+
+  return projectId;
+};
