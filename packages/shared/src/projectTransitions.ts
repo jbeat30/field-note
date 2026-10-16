@@ -1,6 +1,7 @@
 import { PROJECT_STATUS_LABELS, type ProjectStatus } from './projects';
 
-// 프로젝트 상태 전환 규칙 (서비스 기획서 §10.3), 서버와 목업 서버가 같은 규칙 사용
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 프로젝트 상태 전환 규칙, 서버와 목업 서버가 같은 규칙 사용
 // 완료 → 보증 중 → 종료, 종료 재오픈 (보증 중으로 되돌림)
 // 완료 → 종료는 보증 기간이 0개월일 때만 (검사는 validateProjectTransition)
 export const PROJECT_TRANSITIONS: Record<ProjectStatus, readonly ProjectStatus[]> = {
@@ -40,7 +41,7 @@ export const transitionNeedsReason = (
 };
 
 /**
- * @description 완료 → 보증 중에서 프로젝트 요약을 확인해야 하는지 (§10.3 전환 조건)
+ * @description 완료 → 보증 중에서 프로젝트 요약을 확인해야 하는지 (전환 조건)
  * @param from 현재 상태
  * @param to 바꿀 상태
  * @returns 요약 확인 필수 여부
@@ -109,7 +110,10 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'toStatus',
-      message: `'${PROJECT_STATUS_LABELS[from]}' 상태에서는 '${PROJECT_STATUS_LABELS[to]}'(으)로 바꿀 수 없습니다`,
+      message: VALIDATION_MESSAGES.STATUS_TRANSITION_NOT_ALLOWED(
+        PROJECT_STATUS_LABELS[from],
+        PROJECT_STATUS_LABELS[to],
+      ),
     };
   }
 
@@ -117,7 +121,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'effectiveOn',
-      message: `${label}은 오늘 이후 날짜로 입력할 수 없습니다`,
+      message: VALIDATION_MESSAGES.DATE_AFTER_TODAY_INPUT(label),
     };
   }
 
@@ -125,7 +129,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'effectiveOn',
-      message: `${label}은 이전 상태 변경일(${lastEffectiveOn})보다 빠를 수 없습니다`,
+      message: VALIDATION_MESSAGES.DATE_BEFORE_LAST_STATUS_CHANGE(label, lastEffectiveOn),
     };
   }
 
@@ -133,7 +137,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'effectiveOn',
-      message: '실제 완료일은 실제 시작일보다 빠를 수 없습니다',
+      message: VALIDATION_MESSAGES.ACTUAL_END_BEFORE_START,
     };
   }
 
@@ -143,14 +147,14 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     transitionNeedsReason(from, to, { effectiveOn, warrantyEndOn: input.warrantyEndOn }) &&
     trimmed.length === 0
   ) {
-    return { ok: false, path: 'reason', message: '사유를 입력해 주세요' };
+    return { ok: false, path: 'reason', message: VALIDATION_MESSAGES.required('사유') };
   }
 
   if (trimmed.length > PROJECT_REASON_MAX_LENGTH) {
     return {
       ok: false,
       path: 'reason',
-      message: `사유는 ${PROJECT_REASON_MAX_LENGTH}자까지 입력할 수 있습니다`,
+      message: VALIDATION_MESSAGES.tooLong('사유', PROJECT_REASON_MAX_LENGTH),
     };
   }
 
@@ -158,7 +162,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'confirmSummary',
-      message: '보증 중으로 바꾸려면 프로젝트 요약을 확인해 주세요',
+      message: VALIDATION_MESSAGES.WARRANTY_CHECK_SUMMARY,
     };
   }
 
@@ -166,7 +170,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'toStatus',
-      message: '보증 기간이 0개월입니다. 보증 없이 종료하거나 보증 기간을 먼저 설정해 주세요',
+      message: VALIDATION_MESSAGES.WARRANTY_ZERO_MONTHS_CLOSE,
     };
   }
 
@@ -174,7 +178,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'toStatus',
-      message: `보증 기간이 ${input.warrantyMonths}개월입니다. 보증을 시작하거나 보증 기간을 0개월로 바꾼 뒤 종료해 주세요`,
+      message: VALIDATION_MESSAGES.WARRANTY_PENDING_CLOSE(input.warrantyMonths),
     };
   }
 
@@ -182,7 +186,7 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'toStatus',
-      message: `접수·처리 중인 보수 요청이 ${input.openRepairCount}건 있어 종료할 수 없습니다. 완료하거나 보류로 정리한 뒤 다시 시도해 주세요`,
+      message: VALIDATION_MESSAGES.OPEN_REPAIRS_BLOCK_CLOSE(input.openRepairCount),
     };
   }
 
@@ -190,14 +194,14 @@ export const validateProjectTransition = (input: TransitionCheckInput): Transiti
     return {
       ok: false,
       path: 'toStatus',
-      message: `임시 저장된 작업 내역가 ${input.draftLogCount}건 있어 종료할 수 없습니다. 저장하거나 삭제한 뒤 다시 시도해 주세요`,
+      message: VALIDATION_MESSAGES.DRAFT_LOGS_BLOCK_CLOSE(input.draftLogCount),
     };
   }
 
   return { ok: true };
 };
 
-// 상태별 기본정보 수정 제한 (§10.3 "상태별 허용 작업" 표의 '기본정보 수정' 행)
+// 상태별 기본정보 수정 제한 ("상태별 허용 작업" 표의 '기본정보 수정' 행)
 export const EDITABLE_ON_WARRANTY = ['managerId', 'memo'] as const;
 
 export const isProjectEditable = (status: ProjectStatus) =>

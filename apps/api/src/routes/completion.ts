@@ -21,7 +21,7 @@ const toAppError = (error: unknown): unknown =>
   error instanceof CompletionError ? new AppError('NOT_FOUND') : error;
 
 /**
- * @description 상태 전환 안내·프로젝트 요약 라우트 (조회만, 아무것도 저장하지 않음). 회사 ID는 세션에서만 얻는다
+ * @description 상태 전환 안내·프로젝트 요약 라우트 (조회만, 아무것도 저장하지 않음), 회사 ID는 세션에서만 획득
  * @param registry 라우트 등록소
  * @param completion 상태 전환 안내·요약 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

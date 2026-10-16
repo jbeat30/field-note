@@ -69,7 +69,7 @@ export type RouteDependencies = {
 const toExpressPath = (openApiPath: string) => openApiPath.replace(/\{(\w+)\}/g, ':$1');
 
 /**
- * @description 라우트 등록소 생성. 모든 라우트는 add로만 등록하며 표준 순서
+ * @description 라우트 등록소 생성, 모든 라우트는 add로만 등록하며 표준 순서
  * (속도 제한 → 검증 → 인증 → 멱등 키 → 핸들러)와 응답 스키마 파싱 강제
  * @param deps 인증 해석기와 멱등 키 저장소
  * @returns 라우터와 등록된 라우트 목록 (OpenAPI 생성·일치 테스트에서 사용)
@@ -108,7 +108,7 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
     if (spec.idempotent) {
       middlewares.push(idempotency(deps.idempotencyStore));
     } else if (spec.method === 'post' && spec.auth === 'required' && !spec.file && !spec.redirect) {
-      // 데이터를 만드는 요청은 회선이 불안해 다시 보내도 중복 저장되지 않게 한다 (웹 앱이 키를 항상 보냄)
+      // 데이터를 만드는 요청은 회선이 불안해 다시 보내도 중복 저장되지 않게 함 (웹 앱이 키를 항상 보냄)
       middlewares.push(idempotency(deps.idempotencyStore, { optional: true }));
     }
 
@@ -126,7 +126,7 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
       const before = spec.audit?.before ? await spec.audit.before(context).catch(() => null) : null;
       const data = await handler(context);
 
-      // 성공한 뒤에 활동 기록을 남긴다 (기록 실패는 처리 결과를 바꾸지 않고 오류 로그로 알림)
+      // 성공한 뒤에 활동 기록을 남김 (기록 실패는 처리 결과를 바꾸지 않고 오류 로그로 알림)
       if (spec.audit && deps.recordAudit && context.auth) {
         try {
           const entry = spec.audit.entry(context, data, before);

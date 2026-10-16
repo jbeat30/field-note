@@ -9,7 +9,7 @@ import { createIndexedDbUploadStore } from './uploadStore';
 let instance: UploadQueue | null = null;
 
 /**
- * @description 앱 전체가 함께 쓰는 사진 업로드 대기열 (처음 쓸 때 만들고, 저장해 둔 항목을 이어서 올림).
+ * @description 앱 전체가 함께 쓰는 사진 업로드 대기열 (처음 쓸 때 만들고, 저장해 둔 항목을 이어서 올림)
  * 화면을 옮겨 다녀도 업로드 작업이 끊기지 않도록 화면이 아니라 모듈에 보관
  * @returns 업로드 대기열
  */

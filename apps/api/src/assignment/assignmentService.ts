@@ -54,7 +54,7 @@ const fromDate = (value: Date) => value.toISOString().slice(0, 10);
 const invalid = (path: string, message: string) =>
   new AssignmentError('INVALID', { path, message });
 
-// 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음, 서비스 기획서 §9.4)
+// 같은 날 다른 프로젝트에 겹쳐 배정되거나 휴직·퇴사 직원이면 경고 (막지는 않음)
 // 취소된 프로젝트와 취소한 투입은 겹침 판정에서 제외
 const warningsFor = async (tx: Prisma.TransactionClient, rows: Row[]) => {
   const warnings = new Map<string, AssignmentWarning[]>(rows.map((row) => [row.id, []]));
@@ -112,7 +112,7 @@ const warningsFor = async (tx: Prisma.TransactionClient, rows: Row[]) => {
       }
     }
 
-    // 필요 자격이 없거나 만료된 직원 (취소한 투입은 제외, 서비스 기획서 §8.4)
+    // 필요 자격이 없거나 만료된 직원 (취소한 투입은 제외)
     if (!row.cancelledAt) {
       const needed = required.filter((item) => item.projectId === row.projectId);
       const gaps = findCredentialGaps(
@@ -358,7 +358,7 @@ export const createAssignmentService = (app: PrismaClient): AssignmentService =>
         throw invalid('body.employeeId', '선택할 수 없는 직원입니다');
       }
 
-      // 퇴사한 직원은 신규 투입에서 제외 (서비스 기획서 §8.6)
+      // 퇴사한 직원은 신규 투입에서 제외
       if (employee.status === 'LEFT') {
         throw invalid('body.employeeId', '퇴사한 직원은 투입할 수 없습니다');
       }

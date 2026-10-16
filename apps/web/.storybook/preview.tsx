@@ -19,7 +19,7 @@ import '../src/index.css';
 configure({ asyncUtilTimeout: 5000 });
 
 const preview: Preview = {
-  // API 응답은 스토리마다 msw 핸들러로 가짜 응답을 준다 (기본은 목업 서버 전체)
+  // API 응답은 스토리마다 msw 핸들러로 가짜 응답을 줌 (기본은 목업 서버 전체)
   loaders: [
     () => {
       // 스토리끼리 가짜 서버 상태(로그인·가입)가 섞이지 않게 초기화

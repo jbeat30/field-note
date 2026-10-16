@@ -47,14 +47,14 @@ const LABELS: { key: keyof CompanyRules; label: string; unit: string; hint: stri
 
 const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
 
-// 회사 관리의 경고·보증 기준: 공수 소진율 경고·한도, 진행률 간격, 보증 기본 기간 (서비스 기획서 §10.4, §10.6)
+// 회사 관리의 경고·보증 기준: 공수 소진율 경고·한도, 진행률 간격, 보증 기본 기간
 export const CompanyRulesForm = () => {
   const rules = useCompanyRules();
   const save = useSaveCompanyRules();
   const [fields, setFields] = useState<Fields | null>(null);
   const [errors, setErrors] = useState<Partial<Record<keyof CompanyRules, string>>>({});
   const [message, setMessage] = useState('');
-  // 서버 값이 도착하면 입력칸을 채운다 (고치는 중에는 덮어쓰지 않음)
+  // 서버 값이 도착하면 입력칸을 채움 (고치는 중에는 덮어쓰지 않음)
   const current = fields ?? (rules.data ? toFields(rules.data) : null);
 
   if (rules.isError) {

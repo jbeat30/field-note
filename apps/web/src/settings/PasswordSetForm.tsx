@@ -1,4 +1,4 @@
-import { loginIdSchema, passwordSchema } from '@field-note/shared';
+import { loginIdSchema, passwordSchema, VALIDATION_MESSAGES } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useState } from 'react';
@@ -21,7 +21,7 @@ const formSchema = z
   })
   .refine((values) => values.newPassword === values.newPasswordConfirm, {
     path: ['newPasswordConfirm'],
-    message: '비밀번호가 일치하지 않습니다',
+    message: VALIDATION_MESSAGES.PASSWORD_MISMATCH,
   });
 
 type Form = z.infer<typeof formSchema>;

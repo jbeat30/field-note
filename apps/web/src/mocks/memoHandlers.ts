@@ -6,6 +6,7 @@ import {
   todayInSeoul,
   type ErrorCode,
   type Memo,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -146,7 +147,7 @@ export const createMemoHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (body.data.projectId && !hasProject(account, body.data.projectId)) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.projectId', message: '선택할 수 없는 프로젝트입니다' },
+          { path: 'body.projectId', message: VALIDATION_MESSAGES.PROJECT_NOT_SELECTABLE },
         ]);
       }
 
@@ -260,13 +261,13 @@ export const createMemoHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (input.projectId && !hasProject(account, input.projectId)) {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.projectId', message: '선택할 수 없는 프로젝트입니다' },
+          { path: 'body.projectId', message: VALIDATION_MESSAGES.PROJECT_NOT_SELECTABLE },
         ]);
       }
 
       if (input.isDone && tag !== 'TODO') {
         return apiError('VALIDATION_ERROR', [
-          { path: 'body.isDone', message: '완료 표시는 "할 일" 메모에만 할 수 있습니다' },
+          { path: 'body.isDone', message: VALIDATION_MESSAGES.MEMO_DONE_TODO_ONLY },
         ]);
       }
 

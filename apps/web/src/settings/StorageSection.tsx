@@ -9,7 +9,7 @@ const PURPOSE_LABELS = { PHOTO: '사진', DOCUMENT: '문서', EMPLOYEE_DOCUMENT:
 
 const TOP_PROJECTS = 5;
 
-// 회사 관리의 저장 용량: 한도 대비 사용량, 용도별·프로젝트별 사용량 (서비스 기획서 §12.1), 80% 이상이면 정리 안내
+// 회사 관리의 저장 용량: 한도 대비 사용량, 용도별·프로젝트별 사용량, 80% 이상이면 정리 안내
 export const StorageSection = () => {
   const usage = useStorageUsage();
 

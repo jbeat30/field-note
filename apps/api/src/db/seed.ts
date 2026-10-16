@@ -436,7 +436,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         where: { companyId: item.companyId, employeeId: item.employeeId },
       }))
     ) {
-      // 같은 직원의 서류는 한꺼번에 만든다 (일부만 만들어진 채로 남지 않게 첫 서류 기준으로 판단)
+      // 같은 직원의 서류는 한꺼번에 만듦 (일부만 만들어진 채로 남지 않게 첫 서류 기준으로 판단)
       for (const own of DEMO_CREDENTIALS.filter(
         (candidate) =>
           candidate.companyId === item.companyId && candidate.employeeId === item.employeeId,

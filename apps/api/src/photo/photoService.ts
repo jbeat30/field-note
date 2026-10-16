@@ -7,6 +7,7 @@ import {
   type PhotoListQuery,
   type PhotosResponse,
   type PhotoUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -62,7 +63,7 @@ const decodeCursor = (cursor: string): { takenAt: Date; id: string } => {
   } catch {
     throw new PhotoError('INVALID', {
       path: 'query.cursor',
-      message: '목록 위치가 올바르지 않습니다',
+      message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID,
     });
   }
 };
@@ -70,8 +71,8 @@ const decodeCursor = (cursor: string): { takenAt: Date; id: string } => {
 const isoDate = (value: Date) => value.toISOString().slice(0, 10);
 
 /**
- * @description 작업 사진 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 파일 업로드(P2-1)로 올라온 파일에
- * 구분·구역·촬영일시·설명을 붙이고, 사진첩 조회·대표 사진 지정·소프트 삭제를 맡는다 (서비스 기획서 §12.2)
+ * @description 작업 사진 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 파일 업로드(P2-1)로 올라온 파일에
+ * 구분·구역·촬영일시·설명을 붙이고, 사진첩 조회·대표 사진 지정·소프트 삭제를 맡음
  * @param app 앱 계정 Prisma 클라이언트
  * @param storage 객체 저장소 (썸네일 주소 발급용)
  * @param now 현재 시각
@@ -130,14 +131,14 @@ export const createPhotoService = (
         if (!file || file.purpose !== 'PHOTO') {
           throw new PhotoError('INVALID', {
             path: 'body.fileId',
-            message: '이 프로젝트에 올린 사진 파일이 아닙니다',
+            message: VALIDATION_MESSAGES.PHOTO_FILE_NOT_IN_PROJECT,
           });
         }
 
         if (file.status === 'REJECTED') {
           throw new PhotoError('INVALID', {
             path: 'body.fileId',
-            message: '검사에서 거부된 파일은 사진으로 등록할 수 없습니다',
+            message: VALIDATION_MESSAGES.PHOTO_FILE_REJECTED,
           });
         }
 
@@ -147,7 +148,7 @@ export const createPhotoService = (
           if (existing.deletedAt) {
             throw new PhotoError('INVALID', {
               path: 'body.fileId',
-              message: '이미 삭제된 사진의 파일입니다',
+              message: VALIDATION_MESSAGES.PHOTO_FILE_DELETED,
             });
           }
 
@@ -237,7 +238,7 @@ export const createPhotoService = (
           if (chosen >= SUMMARY_PHOTO_MAX) {
             throw new PhotoError('INVALID', {
               path: 'body.includeInSummary',
-              message: `요약에 넣을 사진은 프로젝트마다 ${SUMMARY_PHOTO_MAX}장까지입니다`,
+              message: VALIDATION_MESSAGES.SUMMARY_PHOTO_LIMIT(SUMMARY_PHOTO_MAX),
             });
           }
         }

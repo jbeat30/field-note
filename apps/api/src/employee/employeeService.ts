@@ -9,6 +9,7 @@ import {
   type EmployeeSummary,
   type EmployeeUpdate,
   type OptionKind,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -62,7 +63,7 @@ const toDetail = (row: Row): EmployeeDetail => ({
   updatedAt: row.updatedAt.toISOString(),
 });
 
-// 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있다 (다른 회사 항목은 RLS로 보이지 않음)
+// 직종·직원 구분은 같은 회사의 해당 종류 항목만 고를 수 있음 (다른 회사 항목은 RLS로 보이지 않음)
 // 숨긴 항목은 새로 선택할 수 없지만 이미 사용 중인 직원은 그대로 유지 가능
 const assertOption = async (
   tx: Prisma.TransactionClient,
@@ -79,11 +80,14 @@ const assertOption = async (
   const option = await tx.optionItem.findFirst({ where: { id, kind } });
 
   if (!option) {
-    throw new EmployeeError('INVALID', { path, message: `선택할 수 없는 ${label}입니다` });
+    throw new EmployeeError('INVALID', {
+      path,
+      message: VALIDATION_MESSAGES.OPTION_NOT_SELECTABLE(label),
+    });
   }
 
   if (!option.isActive) {
-    throw new EmployeeError('INVALID', { path, message: `숨긴 ${label}은 새로 고를 수 없습니다` });
+    throw new EmployeeError('INVALID', { path, message: VALIDATION_MESSAGES.OPTION_HIDDEN(label) });
   }
 };
 
@@ -151,7 +155,7 @@ export const createEmployeeService = (
       if (input.birthDate && input.birthDate > today) {
         throw new EmployeeError('INVALID', {
           path: 'body.birthDate',
-          message: '생년월일은 오늘 이전이어야 합니다',
+          message: VALIDATION_MESSAGES.BIRTH_DATE_FUTURE,
         });
       }
 
@@ -212,7 +216,7 @@ export const createEmployeeService = (
       if (input.birthDate && input.birthDate > today) {
         throw new EmployeeError('INVALID', {
           path: 'body.birthDate',
-          message: '생년월일은 오늘 이전이어야 합니다',
+          message: VALIDATION_MESSAGES.BIRTH_DATE_FUTURE,
         });
       }
 
@@ -221,7 +225,7 @@ export const createEmployeeService = (
       if (hiredOn && resolved.leftOn && resolved.leftOn < hiredOn) {
         throw new EmployeeError('INVALID', {
           path: 'body.leftOn',
-          message: '퇴사일은 입사일보다 빠를 수 없습니다',
+          message: VALIDATION_MESSAGES.RESIGN_BEFORE_HIRE,
         });
       }
 

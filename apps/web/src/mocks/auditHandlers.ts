@@ -6,6 +6,7 @@ import {
   type AuditLog,
   type AuditTargetType,
   type ErrorCode,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 
@@ -112,7 +113,7 @@ const storeOf = (account: MockAccount) => {
 };
 
 /**
- * @description 다른 목업이 감사 기록을 남길 때 쓴다 (서버가 같은 트랜잭션에서 기록을 남기는 것을 흉내)
+ * @description 다른 목업이 감사 기록을 남길 때 씀 (서버가 같은 트랜잭션에서 기록을 남기는 것을 흉내)
  * @param account 현재 계정
  * @param entry 행위와 대상
  */
@@ -176,7 +177,7 @@ export const createAuditHandlers = ({ apiError }: Helpers) => [
 
     if (cursor && start === 0) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'query.cursor', message: '목록 위치가 올바르지 않습니다' },
+        { path: 'query.cursor', message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID },
       ]);
     }
 

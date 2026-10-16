@@ -5,7 +5,7 @@ import type { ProjectStatus } from './projects';
 import { LEGAL_DOCUMENT_CONTENTS, legalDocumentText } from './legal';
 
 // 로컬 개발 전용 더미 데이터: 목업 서버(웹)와 DB 시드(api)가 같은 값을 쓰도록 한 곳에 배치
-// 운영 번들에 섞이지 않도록 `@field-note/shared/demo`로만 가져온다 (index에서 내보내지 않음)
+// 운영 번들에 섞이지 않도록 `@field-note/shared/demo`로만 가져옴 (index에서 내보내지 않음)
 // 실제 개인정보는 사용하지 않고 이메일은 example.com만 사용
 
 export type DemoAccount = {
@@ -79,7 +79,7 @@ const HANBIT = '0198d000-0000-7000-8000-0000000000a1';
 const SAERON = '0198d000-0000-7000-8000-0000000000a2';
 const employeeId = (n: number) => `0198d000-0000-7000-8000-0000000001${String(n).padStart(2, '0')}`;
 
-// 가상의 인물과 번호만 사용한다 (연락처는 실제로 쓰이지 않는 0000 대역)
+// 가상의 인물과 번호만 사용함 (연락처는 실제로 쓰이지 않는 0000 대역)
 export const DEMO_EMPLOYEES: readonly DemoEmployee[] = [
   {
     id: employeeId(1),
@@ -217,7 +217,7 @@ export type DemoPartner = {
 
 const partnerId = (n: number) => `0198d000-0000-7000-8000-0000000002${String(n).padStart(2, '0')}`;
 
-// 가상의 업체와 담당자만 사용한다 (연락처는 실제로 쓰이지 않는 0000 대역)
+// 가상의 업체와 담당자만 사용함 (연락처는 실제로 쓰이지 않는 0000 대역)
 export const DEMO_PARTNERS: readonly DemoPartner[] = [
   {
     id: partnerId(1),

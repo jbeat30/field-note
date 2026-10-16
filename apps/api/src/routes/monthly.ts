@@ -23,7 +23,7 @@ const toAppError = (error: unknown): unknown =>
   error instanceof MonthlyError ? new AppError('VALIDATION_ERROR', [error.detail]) : error;
 
 /**
- * @description 월 공수 확정·월 공수표 라우트. 회사 ID·확정자는 세션에서만 얻는다. 확정·재오픈은 이력으로 남고 삭제 API는 없다
+ * @description 월 공수 확정·월 공수표 라우트, 회사 ID·확정자는 세션에서만 획득, 확정·재오픈 이력 보존과 삭제 API 없음
  * @param registry 라우트 등록소
  * @param monthly 월 공수 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

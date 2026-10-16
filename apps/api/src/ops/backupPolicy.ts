@@ -42,7 +42,7 @@ export const parseBackupId = (id: string): Date | null => {
 };
 
 /**
- * @description 보관 기간이 지난 백업 선별. 가장 최근 백업은 기간이 지났어도 남긴다 (백업이 끊긴 상태에서 마지막 하나까지 지우지 않기 위함)
+ * @description 보관 기간이 지난 백업 선별, 가장 최근 백업은 기간이 지났어도 남김 (백업이 끊긴 상태에서 마지막 하나까지 지우지 않기 위함)
  * @param ids 백업 폴더 이름 목록 (형식이 다른 것은 무시)
  * @param now 현재 시각
  * @param retentionDays 보관 기간(일)

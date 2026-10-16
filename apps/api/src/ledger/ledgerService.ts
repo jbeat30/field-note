@@ -9,6 +9,7 @@ import {
   type LedgerSummary,
   type LedgerSummaryQuery,
   type OptionKind,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -60,7 +61,7 @@ type EntryRow = Prisma.LedgerEntryGetPayload<object>;
 const asDate = (value: string) => new Date(`${value}T00:00:00Z`);
 const isoDate = (value: Date) => value.toISOString().slice(0, 10);
 
-// 구분마다 쓰는 분류 목록이 다르다 (지출은 지출 분류, 수입은 수입 분류)
+// 구분마다 쓰는 분류 목록이 다름 (지출은 지출 분류, 수입은 수입 분류)
 const CATEGORY_KIND: Record<LedgerKind, OptionKind> = {
   EXPENSE: 'EXPENSE_CATEGORY',
   INCOME: 'INCOME_CATEGORY',
@@ -101,7 +102,7 @@ const decodeCursor = (cursor: string): { entryDate: Date; id: string } => {
   } catch {
     throw new LedgerError('INVALID', {
       path: 'query.cursor',
-      message: '목록 위치가 올바르지 않습니다',
+      message: VALIDATION_MESSAGES.LIST_CURSOR_INVALID,
     });
   }
 };
@@ -124,7 +125,7 @@ const filterOf = (
 });
 
 /**
- * @description 지출·수입 기록 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 프로젝트에서 나간 돈과 가끔 생기는 수입만 적는다 (08 문서 §6).
+ * @description 지출·수입 기록 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 프로젝트에서 나간 돈과 가끔 생기는 수입만 적음
  * 계약 금액·청구·입금 관리와 회계·세금·급여는 범위 밖
  * @param app 앱 계정 Prisma 클라이언트
  * @param now 현재 시각 (소프트 삭제 시각 기록용)
@@ -160,14 +161,14 @@ export const createLedgerService = (
     ) {
       throw new LedgerError('INVALID', {
         path: 'body.categoryId',
-        message: '선택할 수 없는 분류입니다',
+        message: VALIDATION_MESSAGES.CATEGORY_NOT_SELECTABLE,
       });
     }
 
     if (ref.partnerId && !(await tx.partner.findFirst({ where: { id: ref.partnerId } }))) {
       throw new LedgerError('INVALID', {
         path: 'body.partnerId',
-        message: '선택할 수 없는 업체입니다',
+        message: VALIDATION_MESSAGES.PARTNER_NOT_SELECTABLE,
       });
     }
 
@@ -179,7 +180,7 @@ export const createLedgerService = (
     ) {
       throw new LedgerError('INVALID', {
         path: 'body.documentId',
-        message: '이 프로젝트의 문서만 증빙으로 연결할 수 있습니다',
+        message: VALIDATION_MESSAGES.LEDGER_DOCUMENT_OTHER_PROJECT,
       });
     }
 
@@ -189,7 +190,7 @@ export const createLedgerService = (
     ) {
       throw new LedgerError('INVALID', {
         path: 'body.changeWorkId',
-        message: '이 프로젝트의 추가 공사만 연결할 수 있습니다',
+        message: VALIDATION_MESSAGES.LEDGER_CHANGE_WORK_OTHER_PROJECT,
       });
     }
   };
@@ -283,7 +284,7 @@ export const createLedgerService = (
               ? null
               : undefined;
 
-        // 바뀌지 않은 연결은 다시 검사하지 않는다 (예전에 연결한 문서가 지워졌어도 다른 곳을 고칠 수 있게)
+        // 바뀌지 않은 연결은 다시 검사하지 않음 (예전에 연결한 문서가 지워졌어도 다른 곳을 고칠 수 있게)
         await checkReferences(tx, current.projectId, {
           kind,
           categoryId,

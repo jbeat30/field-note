@@ -9,6 +9,7 @@ import {
   type PartnerCreate,
   type PartnerListQuery,
   type PartnerUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { AppError } from '../http/AppError';
@@ -30,24 +31,24 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'DUPLICATE':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body.name', message: '같은 구분에 이미 같은 상호가 있습니다' },
+        { path: 'body.name', message: VALIDATION_MESSAGES.PARTNER_NAME_DUPLICATE },
       ]);
     case 'IN_USE':
       return new AppError('VALIDATION_ERROR', [
         {
           path: 'params.id',
-          message: '프로젝트나 자재 기록에서 쓰고 있어 삭제할 수 없습니다. 숨기기를 이용해 주세요',
+          message: VALIDATION_MESSAGES.PARTNER_IN_USE,
         },
       ]);
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '명부는 회사마다 1000곳까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.PARTNER_LIMIT_REACHED },
       ]);
   }
 };
 
 /**
- * @description 고객·협력업체·자재 공급처 명부 라우트. 회사 ID는 세션에서만 얻는다 (쓰이지 않은 업체만 삭제, 쓰고 있으면 숨김)
+ * @description 고객·협력업체·자재 공급처 명부 라우트, 회사 ID는 세션에서만 얻음 (쓰이지 않은 업체만 삭제, 쓰고 있으면 숨김)
  * @param registry 라우트 등록소
  * @param partners 명부 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

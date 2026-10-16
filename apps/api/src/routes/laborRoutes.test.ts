@@ -141,7 +141,7 @@ const setup = async () => {
     effectiveOn: '2026-09-01',
   });
 
-  // 작업 내역은 투입된 직원만 넣을 수 있다 (김작업은 계획 공수 10일)
+  // 작업 내역은 투입된 직원만 넣을 수 있음 (김작업은 계획 공수 10일)
   await client.id(`/projects/${project}/assignments`, {
     employeeId: worker,
     startDate: '2026-09-01',
@@ -309,7 +309,7 @@ describe('직원 단가표', () => {
       [worker, project],
     );
 
-    // 볼 권한이 있는 관리자만 쓰는 서비스라 조회 기록은 의미가 없어 남기지 않는다 (09 문서 결정 ④)
+    // 볼 권한이 있는 관리자만 쓰는 서비스라 조회 기록은 의미가 없어 남기지 않음
     expect(rows.map((row) => [row.action, row.target_id])).toEqual([['PAY_RATE_CHANGED', worker]]);
     expect(JSON.stringify(rows[0]!.detail)).not.toContain('777000');
     expect(rows[0]!.detail).toEqual({ payType: 'DAILY', effectiveFrom: '2026-10-01' });

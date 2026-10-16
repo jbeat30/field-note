@@ -2,7 +2,7 @@ import { expect, test } from '@playwright/test';
 
 import { login, photoFile, seoulDate, selectByText, uniqueName } from './helpers';
 
-// 핵심 흐름(기술 기획서 §13): 로그인 → 프로젝트 → 투입 → 작업 내역 일괄 입력(공수·자재) → 지출 기록 → 사진 업로드 → 저장 → 작업일보
+// 핵심 흐름: 로그인 → 프로젝트 → 투입 → 작업 내역 일괄 입력(공수·자재) → 지출 기록 → 사진 업로드 → 저장 → 작업일보
 test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 이어진다', async ({ page }) => {
   const projectName = uniqueName('E2E 판금 공사');
   // 자재 이름은 회사 안에서 겹칠 수 없으므로 시험마다 다르게 (같은 DB로 다시 돌려도 되게)
@@ -75,7 +75,7 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
   });
 
   await test.step('하루 기록에서 사진을 올리면 나타난다', async () => {
-    // 사진은 하루 기록 화면에서 바로 올린다 (사진 탭은 모아 보기)
+    // 사진은 하루 기록 화면에서 바로 올림 (사진 탭은 모아 보기)
     await page.goto(`/projects/${projectId}/work/${today}`);
     await page.getByRole('button', { name: '사진 올리기' }).click();
     await page

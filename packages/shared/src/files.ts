@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
-// 파일 업로드 공통 규칙 (서비스 기획서 §12.1, 기술 기획서 §10), 서버와 웹 목업이 같은 규칙 사용
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 파일 업로드 공통 규칙, 서버와 웹 목업이 같은 규칙 사용
 export const FILE_PURPOSES = ['PHOTO', 'DOCUMENT', 'EMPLOYEE_DOCUMENT'] as const;
 
 export const filePurposeSchema = z.enum(FILE_PURPOSES);
@@ -124,7 +125,7 @@ export const isAllowedFileType = (purpose: FilePurpose, mime: string, name: stri
   );
 
 /**
- * @description 객체 저장소 경로 (경로에 회사가 들어가며 저장소는 공개하지 않음, 기술 기획서 §10)
+ * @description 객체 저장소 경로 (경로에 회사가 들어가며 저장소는 공개하지 않음)
  * @param companyId 회사 ID
  * @param projectId 프로젝트 ID
  * @param fileId 파일 ID
@@ -170,9 +171,9 @@ const hasForbiddenNameChar = (name: string) =>
 const fileNameSchema = z
   .string()
   .trim()
-  .min(1, '파일 이름을 입력해 주세요')
-  .max(FILE_NAME_MAX_LENGTH, `파일 이름은 ${FILE_NAME_MAX_LENGTH}자까지 입력할 수 있습니다`)
-  .refine((value) => !hasForbiddenNameChar(value), '파일 이름에 사용할 수 없는 문자가 있습니다');
+  .min(1, VALIDATION_MESSAGES.required('파일 이름'))
+  .max(FILE_NAME_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('파일 이름', FILE_NAME_MAX_LENGTH))
+  .refine((value) => !hasForbiddenNameChar(value), VALIDATION_MESSAGES.FILE_NAME_INVALID_CHARS);
 
 // 프로젝트에 올리는 파일의 용도 (직원 서류는 직원 서류 업로드 신청으로만 올림)
 export const projectFilePurposeSchema = z.enum(['PHOTO', 'DOCUMENT']);
@@ -181,7 +182,7 @@ const uploadFields = {
   name: fileNameSchema,
   // 브라우저가 알려 준 형식 (신뢰하지 않고 허용 목록과 업로드 후 내용 검사로 다시 확인)
   contentType: z.string().trim().min(1).max(100),
-  size: z.number().int().min(1, '빈 파일은 올릴 수 없습니다'),
+  size: z.number().int().min(1, VALIDATION_MESSAGES.FILE_EMPTY),
 };
 
 const checkUpload = (
@@ -192,7 +193,7 @@ const checkUpload = (
     context.addIssue({
       code: 'custom',
       path: ['contentType'],
-      message: '올릴 수 없는 파일 형식입니다 (이미지, PDF, Word·Excel·PowerPoint만 가능)',
+      message: VALIDATION_MESSAGES.UPLOAD_TYPE_DOCUMENT,
     });
   }
 
@@ -200,7 +201,7 @@ const checkUpload = (
     context.addIssue({
       code: 'custom',
       path: ['size'],
-      message: `파일 하나는 ${FILE_MAX_BYTES[value.purpose] / MEGABYTE}MB까지 올릴 수 있습니다`,
+      message: VALIDATION_MESSAGES.FILE_TOO_LARGE(FILE_MAX_BYTES[value.purpose] / MEGABYTE),
     });
   }
 };

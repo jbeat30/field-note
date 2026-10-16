@@ -4,8 +4,9 @@ import { countDays } from './staffing';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 import { projectWarningTypeSchema, type ProjectWarningType } from './projectWarnings';
 
-// 일정과 진행 (서비스 기획서 §10.4): 진행률 기록, 공수 소진율, 경고
-// 경고 기준의 기본값은 기획서 결정값(공수 소진율 80% / 100%)이고 회사가 설정에서 바꾼다 (`companyRulesSchema`)
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 일정과 진행: 진행률 기록, 공수 소진율, 경고
+// 경고 기준의 기본값은 정해 둔 값(공수 소진율 80% / 100%)이고 회사가 설정에서 바꿈 (`companyRulesSchema`)
 export const BURN_WARN_PERCENT = 80;
 
 export const BURN_LIMIT_PERCENT = 100;
@@ -20,16 +21,16 @@ const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 export const progressRecordCreateSchema = z.object({
   percent: z
     .number()
-    .int('진행률은 정수여야 합니다')
-    .min(0, '진행률은 0 이상이어야 합니다')
-    .max(100, '진행률은 100 이하여야 합니다'),
+    .int(VALIDATION_MESSAGES.PROGRESS_NOT_INTEGER)
+    .min(0, VALIDATION_MESSAGES.PROGRESS_MIN)
+    .max(100, VALIDATION_MESSAGES.PROGRESS_MAX),
   // 비우면 서울 기준 오늘
   recordedOn: dateSchema.optional(),
   note: z
     .string()
     .trim()
-    .min(1, '메모를 비우려면 보내지 마세요')
-    .max(PROGRESS_NOTE_MAX_LENGTH, `메모는 ${PROGRESS_NOTE_MAX_LENGTH}자까지 쓸 수 있습니다`)
+    .min(1, VALIDATION_MESSAGES.OMIT_TO_CLEAR_NOTE)
+    .max(PROGRESS_NOTE_MAX_LENGTH, VALIDATION_MESSAGES.tooLong('메모', PROGRESS_NOTE_MAX_LENGTH))
     .optional(),
 });
 
@@ -87,14 +88,14 @@ type HealthInput = {
   rules?: Pick<CompanyRules, 'burnWarnPercent' | 'burnLimitPercent' | 'aheadGapPercent'>;
 };
 
-// 진행률 입력은 예정·진행·중단에서만 (§10.3)
+// 진행률 입력은 예정·진행·중단에서만
 const PROGRESS_STATUSES: ProjectStatus[] = ['PLANNED', 'IN_PROGRESS', 'SUSPENDED'];
 
 // 경고는 아직 끝나지 않은 진행 중 프로젝트에만
 const ACTIVE_STATUSES: ProjectStatus[] = ['IN_PROGRESS', 'SUSPENDED'];
 
 /**
- * @description 이 프로젝트 상태에서 진행률을 입력할 수 있는지 (§10.3 "진행률 입력" 행)
+ * @description 이 프로젝트 상태에서 진행률을 입력할 수 있는지 ("진행률 입력" 행)
  * @param status 프로젝트 상태
  * @returns 입력 가능 여부
  */
@@ -104,8 +105,8 @@ export const canRecordProgress = (status: ProjectStatus) =>
 const roundOne = (value: number) => Math.round(value * 10) / 10;
 
 /**
- * @description 공수 소진율·예상 필요 공수·경고를 계산한다
- * 예시(§10.4): 계획 80MD, 투입 56MD(소진율 70%), 진행률 45% → 예상 필요 공수 124MD, 소진율이 진행률보다 25%p 앞서 경고
+ * @description 공수 소진율·예상 필요 공수·경고 계산
+ * 예시: 계획 80MD, 투입 56MD(소진율 70%), 진행률 45% → 예상 필요 공수 124MD, 소진율이 진행률보다 25%p 앞서 경고
  * @param input 상태·공수·진행률·예정 기간·오늘(서울 기준)
  * @returns 프로젝트 진행 점검 결과
  */
@@ -163,7 +164,7 @@ export const evaluateProjectHealth = (input: HealthInput): ProjectHealth => {
   };
 };
 
-// 회사별 경고 기준 (서비스 기획서 §10.4 "회사가 정한다"), 기본값은 기획서 결정값
+// 회사별 경고 기준 ("회사가 정한다"), 기본값은 정해 둔 값
 export const companyRulesSchema = z
   .object({
     // 공수 소진율이 이 값(%) 이상이면 경고
@@ -176,7 +177,7 @@ export const companyRulesSchema = z
     warrantyDefaultMonths: z.number().int().min(0).max(120),
   })
   .refine((value) => value.burnLimitPercent > value.burnWarnPercent, {
-    message: '한도 기준은 경고 기준보다 커야 합니다',
+    message: VALIDATION_MESSAGES.HEALTH_LIMIT_NOT_ABOVE_WARNING,
     path: ['burnLimitPercent'],
   });
 

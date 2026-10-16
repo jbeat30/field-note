@@ -111,7 +111,7 @@ const columns = helper.columns([
   }),
 ]);
 
-// 직원 목록 (09 §7): `직원 목록 | 단가표` 탭, 목록은 이름·직책·직종·구분·현재 단가·상태만 표시 (생년월일·연락처는 직원 카드에서만 표시)
+// 직원 목록 (09): `직원 목록 | 단가표` 탭, 목록은 이름·직책·직종·구분·현재 단가·상태만 표시 (생년월일·연락처는 직원 카드에서만 표시)
 export const EmployeeListPage = () => {
   const options = useOptions();
   const [filter, setFilter] = useState<EmployeeListQuery>({});
