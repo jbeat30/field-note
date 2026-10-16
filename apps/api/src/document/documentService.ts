@@ -14,6 +14,7 @@ import {
   type DocumentUpdate,
   type DocumentVersion,
   type DocumentVersionCreate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -112,8 +113,8 @@ const toDetail = (row: Row): DocumentDetail => ({
 });
 
 /**
- * @description 작업자료 문서함 서비스 (앱 계정으로 자기 회사 범위에서만 처리). 문서마다 버전을 쌓고(덮어쓰지 않음),
- * 민감 자료는 열람·내려받기를 수정·삭제할 수 없는 감사 기록으로 남긴다 (서비스 기획서 §12.3, §7.3, §13.1)
+ * @description 작업자료 문서함 서비스 (앱 계정으로 자기 회사 범위에서만 처리), 문서마다 버전을 쌓고(덮어쓰지 않음),
+ * 민감 자료는 열람·내려받기를 수정·삭제할 수 없는 감사 기록으로 남김
  * @param app 앱 계정 Prisma 클라이언트
  * @param storage 객체 저장소 (열람 주소 발급용)
  * @param now 현재 시각
@@ -149,14 +150,14 @@ export const createDocumentService = (
     if (!file || file.purpose !== 'DOCUMENT') {
       throw new DocumentError('INVALID', {
         path: 'body.fileId',
-        message: '이 프로젝트에 올린 문서 파일이 아닙니다',
+        message: VALIDATION_MESSAGES.DOCUMENT_FILE_NOT_IN_PROJECT,
       });
     }
 
     if (file.status === 'REJECTED') {
       throw new DocumentError('INVALID', {
         path: 'body.fileId',
-        message: '검사에서 거부된 파일은 문서로 등록할 수 없습니다',
+        message: VALIDATION_MESSAGES.DOCUMENT_FILE_REJECTED,
       });
     }
 
@@ -165,7 +166,7 @@ export const createDocumentService = (
     if (used && used.documentId !== allowedDocumentId) {
       throw new DocumentError('INVALID', {
         path: 'body.fileId',
-        message: '이미 다른 문서에 등록된 파일입니다',
+        message: VALIDATION_MESSAGES.DOCUMENT_FILE_ALREADY_USED,
       });
     }
 
@@ -288,7 +289,7 @@ export const createDocumentService = (
           if (pinned >= DOCUMENT_PINNED_MAX) {
             throw new DocumentError('INVALID', {
               path: 'body.isPinned',
-              message: `고정한 문서는 프로젝트마다 ${DOCUMENT_PINNED_MAX}개까지입니다`,
+              message: VALIDATION_MESSAGES.DOCUMENT_PINNED_LIMIT(DOCUMENT_PINNED_MAX),
             });
           }
         }
@@ -329,7 +330,7 @@ export const createDocumentService = (
         if (version.file.status !== 'READY') {
           throw new DocumentError('INVALID', {
             path: 'params.versionNo',
-            message: '검사가 끝난 파일만 열 수 있습니다',
+            message: VALIDATION_MESSAGES.FILE_NOT_READY_TO_OPEN,
           });
         }
 

@@ -4,7 +4,8 @@ import type { RuleCheck } from './assignments';
 import { documentCategorySchema } from './documents';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
-// 변경·추가 작업 기록 (서비스 기획서 §10.5): 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청·합의 기록
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 변경·추가 작업 기록: 계약 후 범위·내용이 바뀌거나 늘어나는 일의 요청·합의 기록
 // 말로 합의하고 먼저 작업하는 일이 많아 "누가 언제 요청했는가"가 근거, 금액은 기록 제외
 export const CHANGE_WORK_STATUSES = ['NEGOTIATING', 'AGREED', 'WITHDRAWN'] as const;
 
@@ -29,22 +30,22 @@ const dateSchema = z.iso.date('날짜 형식이 올바르지 않습니다');
 const requesterSchema = z
   .string()
   .trim()
-  .min(1, '요청자를 입력해 주세요')
+  .min(1, VALIDATION_MESSAGES.required('요청자'))
   .max(
     CHANGE_WORK_REQUESTER_MAX_LENGTH,
-    `요청자는 ${CHANGE_WORK_REQUESTER_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('요청자', CHANGE_WORK_REQUESTER_MAX_LENGTH),
   );
 
 const contentSchema = z
   .string()
   .trim()
-  .min(1, '내용을 입력해 주세요')
+  .min(1, VALIDATION_MESSAGES.required('내용'))
   .max(
     CHANGE_WORK_CONTENT_MAX_LENGTH,
-    `내용은 ${CHANGE_WORK_CONTENT_MAX_LENGTH}자까지 입력할 수 있습니다`,
+    VALIDATION_MESSAGES.tooLong('내용', CHANGE_WORK_CONTENT_MAX_LENGTH),
   );
 
-// 완료된 프로젝트에 기록할 때 관리자가 확인했다는 표시 (§10.3)
+// 완료된 프로젝트에 기록할 때 관리자가 확인했다는 표시
 const confirmSchema = z.boolean().optional();
 
 export const changeWorkCreateSchema = z.object({
@@ -57,7 +58,7 @@ export const changeWorkCreateSchema = z.object({
 
 export type ChangeWorkCreate = z.infer<typeof changeWorkCreateSchema>;
 
-// 협의 중일 때만 고칠 수 있다 (합의·철회된 기록은 그대로 보존)
+// 협의 중일 때만 고칠 수 있음 (합의·철회된 기록은 그대로 보존)
 export const changeWorkUpdateSchema = z
   .object({
     requestedOn: dateSchema,
@@ -71,7 +72,7 @@ export const changeWorkUpdateSchema = z
       value.requestedOn !== undefined ||
       value.requester !== undefined ||
       value.content !== undefined,
-    { message: '변경할 값이 없습니다' },
+    { message: VALIDATION_MESSAGES.NO_CHANGES },
   );
 
 export type ChangeWorkUpdate = z.infer<typeof changeWorkUpdateSchema>;
@@ -84,10 +85,10 @@ export const changeWorkTransitionSchema = z.object({
   note: z
     .string()
     .trim()
-    .min(1, '메모를 비우려면 보내지 마세요')
+    .min(1, VALIDATION_MESSAGES.OMIT_TO_CLEAR_NOTE)
     .max(
       CHANGE_WORK_NOTE_MAX_LENGTH,
-      `메모는 ${CHANGE_WORK_NOTE_MAX_LENGTH}자까지 입력할 수 있습니다`,
+      VALIDATION_MESSAGES.tooLong('메모', CHANGE_WORK_NOTE_MAX_LENGTH),
     )
     .optional(),
   confirmCompleted: confirmSchema,
@@ -96,7 +97,7 @@ export const changeWorkTransitionSchema = z.object({
 export type ChangeWorkTransition = z.infer<typeof changeWorkTransitionSchema>;
 
 export const changeWorkLinkSchema = z.object({
-  documentId: z.uuid('문서를 선택해 주세요'),
+  documentId: z.uuid(VALIDATION_MESSAGES.selectRequired('문서')),
   confirmCompleted: confirmSchema,
 });
 
@@ -105,7 +106,7 @@ export type ChangeWorkLink = z.infer<typeof changeWorkLinkSchema>;
 // 증빙 올리기: 올린 파일로 문서함에 "계약·공문" 문서를 만들고 이 변경·추가 작업에 한 번에 연결
 export const changeWorkEvidenceCreateSchema = z.object({
   fileId: z.uuid(),
-  title: z.string().trim().min(1, '증빙 이름을 입력해 주세요').max(100),
+  title: z.string().trim().min(1, VALIDATION_MESSAGES.required('증빙 이름')).max(100),
   confirmCompleted: confirmSchema,
 });
 
@@ -182,7 +183,7 @@ export const changeWorkDetailSchema = changeWorkSchema.extend({
 
 export type ChangeWorkDetail = z.infer<typeof changeWorkDetailSchema>;
 
-// 변경·추가 작업으로 쓴 공수·자재 (§10.5): 작업 내역·자재 기록의 "변경 작업" 표시를 프로젝트 단위로 합산한 값
+// 변경·추가 작업으로 쓴 공수·자재: 작업 내역·자재 기록의 "변경 작업" 표시를 프로젝트 단위로 합산한 값
 export const changeUsageSchema = z.object({
   // 변경·추가 작업 표시가 된 저장 작업 내역의 수와 공수 합(분)
   workLogCount: z.number().int(),
@@ -201,7 +202,7 @@ export const changeUsageSchema = z.object({
 
 export type ChangeUsage = z.infer<typeof changeUsageSchema>;
 
-// 이 프로젝트 상태에서 변경·추가 작업을 기록·수정할 수 있는지 (§10.3 "변경·추가 작업 기록" 행)
+// 이 프로젝트 상태에서 변경·추가 작업을 기록·수정할 수 있는지 ("변경·추가 작업 기록" 행)
 // 예정·진행·중단은 가능, 완료는 관리자 확인이 있을 때만, 보증 중·종료·취소는 불가
 export const changeWorkProjectCheck = (
   status: ProjectStatus,
@@ -219,14 +220,14 @@ export const changeWorkProjectCheck = (
       : {
           ok: false,
           path: 'confirmCompleted',
-          message: '완료된 프로젝트입니다. 변경·추가 작업을 기록하려면 확인이 필요합니다',
+          message: VALIDATION_MESSAGES.CHANGE_WORK_COMPLETED_CONFIRM,
         };
   }
 
   return {
     ok: false,
     path: 'projectId',
-    message: '이 상태의 프로젝트에는 변경·추가 작업을 기록할 수 없습니다',
+    message: VALIDATION_MESSAGES.CHANGE_WORK_BLOCKED_BY_STATUS,
   };
 };
 
@@ -244,22 +245,22 @@ export const validateChangeWorkTransition = (input: {
   today: string;
 }): RuleCheck => {
   if (input.from === input.to) {
-    return { ok: false, path: 'toStatus', message: '이미 같은 상태입니다' };
+    return { ok: false, path: 'toStatus', message: VALIDATION_MESSAGES.STATUS_ALREADY_SAME };
   }
 
   if (input.to === 'WITHDRAWN' && !input.note) {
-    return { ok: false, path: 'note', message: '철회 사유를 입력해 주세요' };
+    return { ok: false, path: 'note', message: VALIDATION_MESSAGES.required('철회 사유') };
   }
 
   if (input.effectiveOn > input.today) {
-    return { ok: false, path: 'effectiveOn', message: '오늘 이후 날짜로 바꿀 수 없습니다' };
+    return { ok: false, path: 'effectiveOn', message: VALIDATION_MESSAGES.DATE_AFTER_TODAY_CHANGE };
   }
 
   if (input.effectiveOn < input.requestedOn) {
     return {
       ok: false,
       path: 'effectiveOn',
-      message: `요청일(${input.requestedOn})보다 앞선 날짜로 바꿀 수 없습니다`,
+      message: VALIDATION_MESSAGES.CHANGE_WORK_DATE_BEFORE_REQUEST(input.requestedOn),
     };
   }
 
@@ -267,7 +268,7 @@ export const validateChangeWorkTransition = (input: {
 };
 
 /**
- * @description 협의 중인 채로 며칠이 지났는지 (오래 방치된 건 알림의 기준, §15.3 "7일 경과")
+ * @description 협의 중인 채로 며칠이 지났는지 (오래 방치된 건 알림의 기준, "7일 경과")
  * @param statusChangedOn 현재 상태가 된 날
  * @param today 오늘(서울 기준)
  * @returns 지난 일수 (오늘 바뀌었으면 0)

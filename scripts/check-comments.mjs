@@ -1,15 +1,18 @@
 import { execSync } from 'node:child_process';
 import { readFileSync } from 'node:fs';
 
-// 주석 규칙 점검: 명사형 종결, 마침표 금지 (jbeat-conventions comment-conventions)
+// 주석 규칙 점검: 명사형 종결, 마침표 금지, 출처(절·문서) 번호 안내 금지 (jbeat-conventions comment-conventions)
 // 사용: pnpm check:comments [--all]  (기본은 변경한 파일만, --all은 저장소 전체)
 const all = process.argv.includes('--all');
 const names = execSync(all ? 'git ls-files' : 'git diff --name-only HEAD', { encoding: 'utf8' })
   .split('\n')
   .filter((file) => /\.(ts|tsx|sql|prisma|mjs|cjs)$/.test(file))
+  // 적용된 마이그레이션은 파일이 바뀌면 체크섬이 어긋나므로 점검 대상에서 제외
+  .filter((file) => !file.includes('/migrations/'))
   .filter((file) => !file.includes('generated') && !file.endsWith('schema.d.ts'));
 // 서술형 종결 어미: 다로 끝나는 모든 서술형(한다·이다·합니다 등), 필요·개요처럼 명사로 끝나는 말은 대상 아님
 const VERB_ENDING = /(다|해요|이에요|예요|세요)$/;
+const MID_VERB = /[가-힣](?<!마)다(?:[,;] | \()/;
 const NOUN_ENDING_EXCEPTIONS = /(필요|불필요|중요|마다)$/;
 const findings = [];
 
@@ -30,13 +33,23 @@ for (const file of names) {
 
     const body = match[1].trim().replace(/\*\/$/, '').trim();
 
-    if (!body || body.startsWith('@') || !/[가-힣]/.test(body)) return;
+    // JSDoc 태그(@description·@param 이름·@returns)는 뒤따르는 설명만 검사
+    const text = body
+      .replace(/^@(?:description|returns?|throws)\s*/, '')
+      .replace(/^@param\s+\S+\s*/, '');
 
-    const bare = body.replace(/[)\]]+$/, '');
-    const hasVerb = VERB_ENDING.test(bare) && !NOUN_ENDING_EXCEPTIONS.test(bare);
-    const hasPeriod = /[가-힣)]\.$/.test(body) || /[가-힣)]\. [가-힣(]/.test(body);
+    if (!text || text.startsWith('@') || !/[가-힣]/.test(text)) return;
 
-    if (hasVerb || hasPeriod) findings.push(`${file}:${index + 1}: ${body}`);
+    const bare = text.replace(/[)\]]+$/, '');
+    // 문장 중간의 서술형(쉼표·괄호 앞의 다)도 같은 규칙으로 취급
+    const hasVerb =
+      (VERB_ENDING.test(bare) && !NOUN_ENDING_EXCEPTIONS.test(bare)) || MID_VERB.test(text);
+    const hasPeriod = /[가-힣)]\.$/.test(text) || /[가-힣)]\. [가-힣(]/.test(text);
+
+    // 출처 번호 안내는 주석에 두지 않음 (주석은 코드 설명만)
+    const hasDocRef = /§|기획서|(?:^|\s)\d{2} 문서/.test(text);
+
+    if (hasVerb || hasPeriod || hasDocRef) findings.push(`${file}:${index + 1}: ${body}`);
   });
 }
 

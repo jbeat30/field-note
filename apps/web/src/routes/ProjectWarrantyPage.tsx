@@ -25,7 +25,7 @@ const formatChangedAt = (iso: string) =>
 const daysText = (daysLeft: number) =>
   daysLeft < 0 ? `${-daysLeft}일 지남` : daysLeft === 0 ? '오늘 종료' : `${daysLeft}일 남음`;
 
-// 보증 (서비스 기획서 §10.6): 보증 기간과 종료 예정일, 보증서, 변경 이력 관리, 완료·보증 중에만 변경 가능
+// 보증: 보증 기간과 종료 예정일, 보증서, 변경 이력 관리, 완료·보증 중에만 변경 가능
 export const ProjectWarrantyPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);

@@ -28,7 +28,7 @@ type Story = StoryObj<typeof meta>;
 // 2026-09-08 A동 외장 판금 공사에 투입된 사람 (시험 데이터)
 const TEAM = ['정판금', '최설치', '한용접', '김일용'];
 
-// 회사 직원 표에서 일한 사람을 고른다 (처음에는 하루 8시간으로 채워짐)
+// 회사 직원 표에서 일한 사람을 고름 (처음에는 하루 8시간으로 채워짐)
 const pick = async (canvas: ReturnType<typeof within>, names: readonly string[] = TEAM) => {
   for (const name of names) {
     await userEvent.click(await canvas.findByRole('checkbox', { name: `${name} 일함` }));

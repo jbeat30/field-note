@@ -39,7 +39,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 지출·수입 기록 라우트. 회사 ID는 세션에서만 얻는다 (프로젝트별 기록, 합계)
+ * @description 지출·수입 기록 라우트, 회사 ID는 세션에서만 얻음 (프로젝트별 기록, 합계)
  * @param registry 라우트 등록소
  * @param ledger 지출·수입 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

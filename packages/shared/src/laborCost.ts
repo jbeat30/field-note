@@ -2,7 +2,8 @@ import { z } from 'zod';
 
 import type { CompanySettings } from './account';
 
-// 직원 단가표와 프로젝트 인건비 추정 (회사가 정한 범위 확장, 개발 계획 §8 결정 005)
+import { VALIDATION_MESSAGES } from './errorMessages';
+// 직원 단가표와 프로젝트 인건비 추정 (회사가 정한 범위 확장, 개발 계획 결정 005)
 // 이 서비스는 급여를 계산하지 않음, 단가표 금액과 기록된 공수로 "최소 얼마가 드는지"만 추정하며
 // 4대보험·수당·퇴직금·세금은 제외
 
@@ -35,9 +36,9 @@ export const payRateCreateSchema = z.object({
   payType: payTypeSchema,
   amount: z
     .number()
-    .int('금액은 원 단위 정수여야 합니다')
-    .min(1, '금액은 0보다 커야 합니다')
-    .max(PAY_AMOUNT_MAX, '금액이 너무 큽니다'),
+    .int(VALIDATION_MESSAGES.AMOUNT_NOT_INTEGER)
+    .min(1, VALIDATION_MESSAGES.AMOUNT_NOT_POSITIVE)
+    .max(PAY_AMOUNT_MAX, VALIDATION_MESSAGES.AMOUNT_TOO_LARGE),
   // 이 날짜 근무분부터 적용 (과거 날짜도 가능: 늦게 알게 된 인상 반영)
   effectiveFrom: dateSchema,
 });
@@ -64,7 +65,7 @@ type RateFor = { payType: PayType; amount: number };
 type WorkUnits = Pick<CompanySettings, 'standardWorkMinutes' | 'monthlyWorkDays'>;
 
 /**
- * @description 단가를 분당 금액으로 환산 (공수는 분 단위로 저장하므로 그대로 곱할 수 있다)
+ * @description 단가를 분당 금액으로 환산 (공수는 분 단위로 저장하므로 그대로 곱하기 가능)
  * 일급제: 일급 ÷ 하루 기준시간, 시급제: 시급 ÷ 60, 월급제: 월급 ÷ (월 기준일수 × 하루 기준시간), 연봉제: 연봉 ÷ 12를 월급제와 같게
  * @param rate 단가 종류와 금액
  * @param units 하루 기준시간(분)·월 기준일수 (회사 설정)
@@ -139,8 +140,8 @@ export type LaborCost = z.infer<typeof laborCostSchema>;
 type CostItem = { employeeId: string; date: string; minutes: number };
 
 /**
- * @description 공수 항목마다 그날 적용되는 단가로 금액을 계산해 직원별·전체로 합산한다
- * 단가가 없는 날의 공수는 금액 없이 따로 센다 (그래서 합계는 "최소")
+ * @description 공수 항목마다 그날 적용되는 단가로 금액을 계산해 직원별·전체로 합산
+ * 단가가 없는 날의 공수는 금액 없이 따로 셈 (그래서 합계는 "최소")
  * @param items 직원·날짜·공수(분) 항목
  * @param ratesByEmployee 직원 ID별 단가 기록
  * @param units 하루 기준시간·월 기준일수
@@ -194,13 +195,13 @@ export const payRateSummarySchema = z.object({
 
 export type PayRateSummary = z.infer<typeof payRateSummarySchema>;
 
-// 단가가 한 번이라도 등록된 직원만 나온다 (없는 직원은 단가 없음)
+// 단가가 한 번이라도 등록된 직원만 나옴 (없는 직원은 단가 없음)
 export const payRateSummariesResponseSchema = z.object({ items: z.array(payRateSummarySchema) });
 
 export type PayRateSummariesResponse = z.infer<typeof payRateSummariesResponseSchema>;
 
 /**
- * @description 한 직원의 단가 기록에서 현재·이전·적용 예정 단가를 가려냄 (서버와 목업이 같은 규칙을 쓴다)
+ * @description 한 직원의 단가 기록에서 현재·이전·적용 예정 단가 선별 (서버와 목업이 같은 규칙 사용)
  * 현재 = 오늘까지 시작한 단가 중 가장 최근, 이전 = 현재보다 앞서 시작한 것 중 가장 최근, 예정 = 오늘 이후 시작하는 것 중 가장 이른 것
  * @param rates 직원의 단가 기록 (순서 무관)
  * @param today 오늘 (서울 기준)

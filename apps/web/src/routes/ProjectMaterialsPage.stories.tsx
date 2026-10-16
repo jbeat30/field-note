@@ -74,7 +74,7 @@ export const NeedsQuantityAndUnit: Story = {
   },
 };
 
-// 전에 쓴 자재는 위의 칩을 눌러 한 번에 줄로 넣는다 (단위까지 채워짐)
+// 전에 쓴 자재는 위의 칩을 눌러 한 번에 줄로 넣음 (단위까지 채워짐)
 export const RecentMaterialAddsRow: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);

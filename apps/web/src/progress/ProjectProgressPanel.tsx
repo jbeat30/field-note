@@ -5,6 +5,7 @@ import {
   roundTo,
   todayInSeoul,
   type ProjectStatus,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { ChevronRight } from 'lucide-react';
 import { useState, type FormEvent } from 'react';
@@ -50,7 +51,7 @@ const ProgressDialog = ({
     const value = Number(percent);
 
     if (percent.trim() === '' || !Number.isInteger(value) || value < 0 || value > 100) {
-      setError('0부터 100 사이의 정수를 입력해 주세요');
+      setError(VALIDATION_MESSAGES.required('0부터 100 사이의 정수'));
       return;
     }
 
@@ -111,7 +112,7 @@ const ProgressDialog = ({
 };
 
 /**
- * @description 프로젝트 진행 현황 (서비스 기획서 §10.4): 진행률·공수 소진율·투입 공수를 한 줄로 보고, 진행률은 한 번에 바꾼다
+ * @description 프로젝트 진행 현황: 진행률·공수 소진율·투입 공수를 한 줄로 표시, 진행률은 한 번에 변경
  * 경고(일정보다 뒤처짐 등)는 점 + 글자로 표시, 진행률 이력은 접어 둠
  */
 export const ProjectProgressPanel = ({

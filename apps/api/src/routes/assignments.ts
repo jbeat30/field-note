@@ -36,7 +36,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 투입 라우트 (프로젝트 아래). 회사 ID는 세션에서만 얻는다. 삭제 API는 없고 취소 표시만 한다
+ * @description 투입 라우트 (프로젝트 아래), 회사 ID는 세션에서만 획득, 삭제 API 없이 취소 표시만 제공
  * @param registry 라우트 등록소
  * @param assignments 투입 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

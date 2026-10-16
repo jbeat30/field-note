@@ -11,6 +11,7 @@ import {
   type EmployeeFileUploadRequest,
   type FileUploadRequest,
   type FileUrlQuery,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { FileError, type FileService } from '../file/fileService';
@@ -34,17 +35,17 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('STORAGE_QUOTA_EXCEEDED');
     case 'NOT_UPLOADED':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'file', message: '파일이 아직 올라오지 않았습니다. 업로드를 마친 뒤 알려 주세요' },
+        { path: 'file', message: VALIDATION_MESSAGES.FILE_UPLOAD_NOT_COMPLETE },
       ]);
     case 'NOT_READY':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'file', message: '검사가 끝난 파일만 열 수 있습니다' },
+        { path: 'file', message: VALIDATION_MESSAGES.FILE_NOT_READY_TO_OPEN },
       ]);
   }
 };
 
 /**
- * @description 파일 업로드 라우트. 회사 ID는 세션에서만 얻는다 (브라우저가 저장소에 직접 올리는 방식:
+ * @description 파일 업로드 라우트, 회사 ID는 세션에서만 얻음 (브라우저가 저장소에 직접 올리는 방식:
  * 신청 → 발급된 주소로 PUT → 완료 알림 → 서버 검사 → 사용 가능)
  * @param registry 라우트 등록소
  * @param files 파일 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)

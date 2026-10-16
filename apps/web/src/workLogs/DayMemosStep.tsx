@@ -12,7 +12,7 @@ type DayMemosStepProps = {
   date: string;
 };
 
-// 하루 기록의 메모: 통화·지시·이슈·할 일을 이 날짜로 남긴다 (모아 보기는 메모 탭)
+// 하루 기록의 메모: 통화·지시·이슈·할 일을 이 날짜로 남김 (모아 보기는 메모 탭)
 export const DayMemosStep = ({ projectId, date }: DayMemosStepProps) => {
   const memos = useMemoList({ scope: 'PROJECT', projectId }, { memoDate: date });
   const create = useCreateMemo();

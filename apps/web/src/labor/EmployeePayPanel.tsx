@@ -123,7 +123,7 @@ const dailyEquivalent = (rate: PayRate, settings: CompanySettings) =>
     ? null
     : Math.round(ratePerMinute(rate, settings) * settings.standardWorkMinutes);
 
-// 직원 카드의 단가 탭 (09 §7): 현재 단가 강조, 일 환산, 변경 이력 타임라인, 이력은 수정 없이 추가하며 `단가 변경`은 창에서 수행
+// 직원 카드의 단가 탭 (09): 현재 단가 강조, 일 환산, 변경 이력 타임라인, 이력은 수정 없이 추가하며 `단가 변경`은 창에서 수행
 export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
   const rates = usePayRates(employeeId);
   const settings = useCompanySettings();

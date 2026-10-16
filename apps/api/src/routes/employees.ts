@@ -8,6 +8,7 @@ import {
   type EmployeeCreate,
   type EmployeeListQuery,
   type EmployeeUpdate,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import { EmployeeError, type EmployeeService } from '../employee/employeeService';
@@ -30,7 +31,7 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('NOT_FOUND');
     case 'LIMIT':
       return new AppError('VALIDATION_ERROR', [
-        { path: 'body', message: '직원은 회사마다 500명까지 등록할 수 있습니다' },
+        { path: 'body', message: VALIDATION_MESSAGES.EMPLOYEE_LIMIT_REACHED },
       ]);
     case 'INVALID':
       return new AppError('VALIDATION_ERROR', error.detail ? [error.detail] : undefined);
@@ -38,8 +39,8 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 직원 카드 라우트. 회사 ID는 세션에서만 얻는다
- * 삭제 API는 없다 (퇴사는 상태 변경, 개인정보 정정·삭제 요청은 익명화로 처리 예정)
+ * @description 직원 카드 라우트, 회사 ID는 세션에서만 획득
+ * 삭제 API는 없음 (퇴사는 상태 변경, 개인정보 정정·삭제 요청은 익명화로 처리 예정)
  * @param registry 라우트 등록소
  * @param employees 직원 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

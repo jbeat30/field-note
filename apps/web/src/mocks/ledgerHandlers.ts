@@ -11,6 +11,7 @@ import {
   type LedgerEntry,
   type LedgerKind,
   type OptionKind,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 import { http, HttpResponse } from 'msw';
 import type { ZodType } from 'zod';
@@ -44,7 +45,7 @@ const MOCK_USER_ID = '0198d000-0000-7000-8000-000000000001';
 // 회사 구분 값 (회사가 없는 가입 직후 계정은 계정 단위로 나눔)
 const scopeOf = (account: MockAccount) => account.companyId ?? account.loginId;
 
-// 구분마다 쓰는 분류 목록이 다르다 (서버와 같은 규칙)
+// 구분마다 쓰는 분류 목록이 다름 (서버와 같은 규칙)
 const CATEGORY_KIND: Record<LedgerKind, OptionKind> = {
   EXPENSE: 'EXPENSE_CATEGORY',
   INCOME: 'INCOME_CATEGORY',
@@ -146,7 +147,7 @@ const toEntry = (entry: MockEntry): LedgerEntry => ({
 });
 
 /**
- * @description 한 프로젝트의 지출·수입 기록 (지운 것 제외). 다른 목업(개요 합계 등)이 쓴다
+ * @description 한 프로젝트의 지출·수입 기록 (지운 것 제외), 다른 목업(개요 합계 등)에서 사용
  * @param account 현재 계정
  * @param projectId 프로젝트 ID
  * @returns 기록 목록
@@ -202,13 +203,13 @@ export const createLedgerHandlers = ({ apiError, parseBody }: Helpers) => {
       )
     ) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.categoryId', message: '선택할 수 없는 분류입니다' },
+        { path: 'body.categoryId', message: VALIDATION_MESSAGES.CATEGORY_NOT_SELECTABLE },
       ]);
     }
 
     if (ref.partnerId && !getPartners(account).some((partner) => partner.id === ref.partnerId)) {
       return apiError('VALIDATION_ERROR', [
-        { path: 'body.partnerId', message: '선택할 수 없는 업체입니다' },
+        { path: 'body.partnerId', message: VALIDATION_MESSAGES.PARTNER_NOT_SELECTABLE },
       ]);
     }
 
@@ -318,7 +319,7 @@ export const createLedgerHandlers = ({ apiError, parseBody }: Helpers) => {
       if (!entry) return apiError('NOT_FOUND');
 
       const kind = body.data.kind ?? entry.kind;
-      // 구분이 바뀌는데 새 분류를 안 보내면 분류를 비운다 (서버와 같은 규칙)
+      // 구분이 바뀌는데 새 분류를 안 보내면 분류를 비움 (서버와 같은 규칙)
       const categoryId =
         body.data.categoryId !== undefined
           ? body.data.categoryId

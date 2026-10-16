@@ -2,7 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 
 import { login, photoFile, seoulDate, selectByText, uniqueName } from './helpers';
 
-// 하루 작업 내역 입력 3분 목표(서비스 기획서 §14, P2-9): 직원 공수 → 작업 내용 → 자재 → 사진을 모바일 크기에서 끝내는 데 걸리는 시간 측정
+// 하루 작업 내역 입력 3분 목표(P2-9): 직원 공수 → 작업 내용 → 자재 → 사진을 모바일 크기에서 끝내는 데 걸리는 시간 측정
 // 사람이 아니라 스크립트가 하므로 사람의 속도를 흉내 낸다: 화면을 누르거나 고르기 전 0.8초 생각하고, 글자는 한 자에 0.2초(분당 300자)로 치고,
 // 휴대폰의 사진 고르기 창에 걸리는 시간은 5초로 가정, 실제 사람의 시간은 실사용 시험에서 재측정
 const GOAL_SECONDS = 180;

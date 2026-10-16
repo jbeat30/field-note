@@ -35,7 +35,7 @@ const baseSchema = z.object({
   SMTP_FROM: z.email(),
 });
 
-// 로컬 개발용 값이 운영에 섞이는 사고를 막는 검사 (환경 분리, 기술 기획서 §14)
+// 로컬 개발용 값이 운영에 섞이는 사고를 막는 검사 (환경 분리)
 const LOCAL_HOSTS = new Set([
   'localhost',
   '127.0.0.1',

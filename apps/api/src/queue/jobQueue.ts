@@ -23,7 +23,7 @@ export type QueueOptions = {
 const DEFAULT_OPTIONS = { retryLimit: 5, retryDelaySeconds: 30 };
 
 /**
- * @description PostgreSQL 기반 작업 큐 (Redis 없음, 기술 기획서 §7.4)
+ * @description PostgreSQL 기반 작업 큐 (Redis 없음)
  * 큐 전용 DB 계정으로 접속, 큐 테이블은 `pgboss` 스키마에만 생성
  * @param connectionString 큐 전용 계정(DATABASE_QUEUE_URL) 접속 주소
  * @param logger 오류 기록용 로거
@@ -63,7 +63,7 @@ export const createPgBossQueue = async (
 };
 
 /**
- * @description 메모리 작업 큐 (DB 없는 단위 테스트용). 보낸 작업을 기록하고 처리기가 있으면 바로 실행
+ * @description 메모리 작업 큐 (DB 없는 단위 테스트용), 보낸 작업을 기록하고 처리기가 있으면 바로 실행
  * @returns 작업 큐와 보낸 작업 목록
  */
 export const createMemoryQueue = () => {

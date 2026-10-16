@@ -27,7 +27,7 @@ const same = (a: unknown, b: unknown) =>
   JSON.stringify(a ?? null) === JSON.stringify(b ?? null) || (a ?? '') === (b ?? '');
 
 /**
- * @description 수정 요청에서 실제로 바뀐 항목의 전·후를 만든다. 요청에 없는 항목과 같은 값으로 보낸 항목은 뺀다
+ * @description 수정 요청에서 실제로 바뀐 항목의 전·후 생성 (요청에 없는 항목과 같은 값으로 보낸 항목은 제외)
  * @param before 바꾸기 전 값 (읽지 못했으면 null)
  * @param request 요청 본문 (바꾸려는 값)
  * @param fields 기록할 항목 이름과 보이는 방식

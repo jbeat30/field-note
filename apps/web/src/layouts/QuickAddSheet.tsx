@@ -15,7 +15,7 @@ type Mode = 'MENU' | 'MEMO';
 const linkClass =
   'flex min-h-touch items-center justify-center rounded-md bg-muted px-4 text-base font-medium text-foreground hover:bg-muted/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
 
-// 빠른 추가: 어느 화면에서든 한 번에 "메모 / 사진 / 오늘 작업" 이동 (서비스 기획서 §14), 프로젝트 화면에서는 해당 프로젝트에 바로 연결하고 그 밖은 메모함에 저장
+// 빠른 추가: 어느 화면에서든 한 번에 "메모 / 사진 / 오늘 작업" 이동, 프로젝트 화면에서는 해당 프로젝트에 바로 연결하고 그 밖은 메모함에 저장
 export const QuickAddSheet = () => {
   const isOpen = useUiStore((state) => state.isQuickAddOpen);
   const setOpen = useUiStore((state) => state.setQuickAddOpen);

@@ -147,7 +147,7 @@ export const LinkEvidence: Story = {
     await expect(
       await dialog.findByRole('button', { name: '1층 시공도 연결 해제' }),
     ).toBeInTheDocument();
-    // 표의 증빙 수도 바뀐다 (마지막 칸)
+    // 표의 증빙 수도 바뀜 (마지막 칸)
     await waitFor(() => expect(rowOf(canvas, 2)).toHaveTextContent(/1$/));
 
     await userEvent.click(dialog.getByRole('button', { name: '1층 시공도 연결 해제' }));

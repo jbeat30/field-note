@@ -225,7 +225,7 @@ export const Pagination: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByText('25건')).toBeInTheDocument();
-    // 고객·담당자 이름까지 불러온 뒤에 쪽을 넘긴다 (불러오면 표가 첫 쪽으로 돌아감)
+    // 고객·담당자 이름까지 불러온 뒤에 쪽을 넘김 (불러오면 표가 첫 쪽으로 돌아감)
     await waitFor(() =>
       expect(rows(canvas).some((text) => text.includes('가나다건설'))).toBe(true),
     );

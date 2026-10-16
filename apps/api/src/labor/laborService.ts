@@ -7,6 +7,7 @@ import {
   type PayRate,
   type PayRateCreate,
   type PayRateSummary,
+  VALIDATION_MESSAGES,
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
@@ -114,7 +115,7 @@ export const createLaborService = (
       if (input.effectiveFrom < EARLIEST || input.effectiveFrom > addDays(today, MAX_FUTURE_DAYS)) {
         throw new LaborError('INVALID', {
           path: 'body.effectiveFrom',
-          message: '적용 시작일이 너무 먼 날짜입니다',
+          message: VALIDATION_MESSAGES.LABOR_RATE_START_TOO_FAR,
         });
       }
 
@@ -129,7 +130,7 @@ export const createLaborService = (
         },
       });
 
-      // 금액 자체는 기록에 복사하지 않는다 (단가표에 이미 있고, 감사 기록은 누가 언제 무엇을 바꿨는지만)
+      // 금액 자체는 기록에 복사하지 않음 (단가표에 이미 있고, 감사 기록은 누가 언제 무엇을 바꿨는지만)
       await tx.auditLog.create({
         data: {
           companyId,

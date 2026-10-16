@@ -1,5 +1,6 @@
 import { getErrorDetailMessage } from '../lib/apiError';
 
+import { VALIDATION_MESSAGES } from '@field-note/shared';
 export class ReportExportError extends Error {}
 
 /**
@@ -27,7 +28,7 @@ const downloadXlsx = async (url: string, fallbackName: string) => {
   try {
     response = await fetch(url, { credentials: 'same-origin' });
   } catch {
-    throw new ReportExportError('연결이 끊겼습니다. 연결을 확인하고 다시 시도해 주세요');
+    throw new ReportExportError(VALIDATION_MESSAGES.NETWORK_OFFLINE_RETRY);
   }
 
   if (!response.ok) {
@@ -53,7 +54,7 @@ const downloadXlsx = async (url: string, fallbackName: string) => {
 };
 
 /**
- * @description 기간 안의 작업일보를 엑셀로 내려받음. 내보내기는 서버에 기록으로 남는다
+ * @description 기간 안의 작업일보 엑셀 내려받기, 내보내기 기록은 서버에 보존
  * @param projectId 프로젝트 ID
  * @param from 시작 날짜
  * @param to 끝 날짜
@@ -67,7 +68,7 @@ export const downloadReportXlsx = (projectId: string, from: string, to: string) 
   );
 
 /**
- * @description 회사 전체 데이터를 엑셀로 내려받음 (해지 전 데이터 반환). 비밀번호 로그인 계정은 비밀번호 재확인, 내보내기는 서버에 기록으로 남는다
+ * @description 회사 전체 데이터 엑셀 내려받기 (해지 전 데이터 반환), 비밀번호 로그인 계정은 비밀번호 재확인, 내보내기 기록은 서버에 보존
  * @param currentPassword 현재 비밀번호 (소셜 로그인만 쓰는 계정은 생략)
  * @returns 내려받은 파일 이름
  * @throws 비밀번호가 틀리거나 서버 오류일 때 사유와 함께
@@ -83,7 +84,7 @@ export const downloadCompanyDataXlsx = async (currentPassword?: string) => {
       body: JSON.stringify(currentPassword ? { currentPassword } : {}),
     });
   } catch {
-    throw new ReportExportError('연결이 끊겼습니다. 연결을 확인하고 다시 시도해 주세요');
+    throw new ReportExportError(VALIDATION_MESSAGES.NETWORK_OFFLINE_RETRY);
   }
 
   if (!response.ok) {
@@ -108,7 +109,7 @@ export const downloadCompanyDataXlsx = async (currentPassword?: string) => {
 };
 
 /**
- * @description 프로젝트 요약을 엑셀로 내려받음 (요약과 같은 내용). 내보내기는 서버에 기록으로 남는다
+ * @description 프로젝트 요약 엑셀 내려받기 (요약과 같은 내용), 내보내기 기록은 서버에 보존
  * @param projectId 프로젝트 ID
  * @returns 내려받은 파일 이름
  * @throws 서버 오류일 때 사유와 함께
@@ -117,7 +118,7 @@ export const downloadSummaryXlsx = (projectId: string) =>
   downloadXlsx(`/api/v1/projects/${projectId}/summary.xlsx`, '프로젝트요약.xlsx');
 
 /**
- * @description 월 공수표를 엑셀로 내려받음 (급여·정산 담당에게 전달하는 용도). 내보내기는 서버에 기록으로 남는다
+ * @description 월 공수표 엑셀 내려받기 (급여·정산 담당에게 전달하는 용도), 내보내기 기록은 서버에 보존
  * @param month YYYY-MM
  * @returns 내려받은 파일 이름
  * @throws 서버 오류일 때 사유와 함께
@@ -129,7 +130,7 @@ export const downloadMonthlyXlsx = (month: string) =>
   );
 
 /**
- * @description 사진이 모두 불러와진 뒤에 인쇄 창을 엶 (사진이 빠진 채 인쇄·PDF 저장되지 않게). 5초 안에 못 불러오면 그대로 연다
+ * @description 사진이 모두 불러와진 뒤 인쇄 창 열기 (사진이 빠진 채 인쇄·PDF 저장되지 않게), 5초 안에 못 불러오면 그대로 열기
  */
 export const printWhenReady = async () => {
   const pending = [...document.images].filter((image) => !image.complete);

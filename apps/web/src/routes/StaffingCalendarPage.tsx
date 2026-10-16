@@ -76,7 +76,7 @@ const periodLabel = (view: View, from: string, to: string) =>
 const READING_GUIDE =
   '막대는 그 프로젝트에서 일한 날이고 안의 숫자는 그날 시간입니다. 같은 날 두 곳에서 일하면 막대가 위아래로 쌓이고 빨간 테두리로 표시됩니다. 막대를 누르면 그날 하루 기록, 빈 칸을 누르면 프로젝트를 골라 그날 기록으로 갑니다';
 
-// 인력 배치 (09 문서 §4): 사람 행 × 날짜 열 타임라인, 누가 어디에서 일했고 누가 비었고 어디가 겹치는지 한눈에 확인
+// 인력 배치: 사람 행 × 날짜 열 타임라인, 누가 어디에서 일했고 누가 비었고 어디가 겹치는지 한눈에 확인
 export const StaffingCalendarPage = () => {
   const [params, setParams] = useSearchParams();
   const view: View = isView(params.get('view')) ? (params.get('view') as View) : 'week';
@@ -103,7 +103,7 @@ export const StaffingCalendarPage = () => {
     (row) =>
       (!title || row.employee.title === title) && (!onlyConflicts || row.conflictDates.length > 0),
   );
-  // 프로젝트마다 막대에서 같은 구분 색을 쓴다 (프로젝트 id 순서로 0~5번 색을 돌려 씀)
+  // 프로젝트마다 막대에서 같은 구분 색을 씀 (프로젝트 id 순서로 0~5번 색을 돌려 씀)
   const projectColors = useMemo(() => {
     const ids = [...new Set((calendar.data?.workDays ?? []).map((item) => item.projectId))].sort();
 

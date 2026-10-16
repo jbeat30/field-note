@@ -9,7 +9,7 @@ const fromDate = (value: Date) => value.toISOString().slice(0, 10);
 const ACTIVE = ['IN_PROGRESS', 'SUSPENDED'] as const;
 
 /**
- * @description 프로젝트들의 경고를 한꺼번에 계산한다 (회사별 경고 기준을 따름). 진행·중단 프로젝트만 경고가 있을 수 있다
+ * @description 프로젝트들의 경고 일괄 계산 (회사별 경고 기준 적용), 진행·중단 프로젝트만 경고 대상
  * 프로젝트별 개별 조회 대신 투입 계획 합계·저장된 작업 내역 합계·최근 진행률을 묶어서 조회
  * @param tx 회사 범위 트랜잭션
  * @param projects 대상 프로젝트

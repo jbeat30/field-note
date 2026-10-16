@@ -37,7 +37,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 보수 요청 라우트. 회사 ID·작성자는 세션에서만 얻는다. 삭제 API는 없고 상태(접수·처리 중·보류·완료)와 이력으로 표현한다
+ * @description 보수 요청 라우트, 회사 ID·작성자는 세션에서만 획득, 삭제 API 없이 상태(접수·처리 중·보류·완료)와 이력으로 표현
  * @param registry 라우트 등록소
  * @param repairs 보수 요청 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

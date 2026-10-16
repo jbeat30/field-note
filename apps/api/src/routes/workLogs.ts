@@ -42,7 +42,7 @@ const toAppError = (error: unknown): unknown => {
 };
 
 /**
- * @description 작업 내역 라우트 (프로젝트 아래, 날짜마다 한 건). 회사 ID는 세션에서만 얻는다. 삭제 API는 없다
+ * @description 작업 내역 라우트 (프로젝트 아래, 날짜마다 한 건), 회사 ID는 세션에서만 획득, 삭제 API 없음
  * @param registry 라우트 등록소
  * @param workLogs 작업 내역 서비스 (없으면 구현 전 상태 501로 등록해 OpenAPI 문서는 항상 같음)
  */

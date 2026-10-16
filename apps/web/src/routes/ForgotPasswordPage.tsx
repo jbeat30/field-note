@@ -11,7 +11,7 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { getErrorMessage } from '../lib/apiError';
 
-// 비밀번호를 잊었을 때: 가입 여부를 알려 주지 않도록 결과 문구는 항상 같음 (§6.7)
+// 비밀번호를 잊었을 때: 가입 여부를 알려 주지 않도록 결과 문구는 항상 같음
 export const ForgotPasswordPage = () => {
   const [isRequested, setRequested] = useState(false);
   const {
