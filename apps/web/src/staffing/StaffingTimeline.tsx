@@ -176,7 +176,7 @@ const EmployeeRow = ({
       >
         <Link
           to={`/employees/${employee.id}`}
-          className="w-fit text-sm font-semibold underline-offset-2 hover:underline"
+          className="w-fit py-1 text-sm font-semibold underline-offset-2 hover:underline"
         >
           {employee.name}
         </Link>
