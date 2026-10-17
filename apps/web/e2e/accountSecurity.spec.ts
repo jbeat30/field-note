@@ -43,6 +43,8 @@ const logout = async (page: Page) => {
   await expect(page.getByRole('heading', { name: '로그인', exact: true })).toBeVisible();
 };
 
+// 로그인 요청 제한(1분에 10번) 안에서 끝나도록 로그인 횟수를 줄이고, 다른 시험의 로그인과 겹치지 않게 파일 이름을 앞 순서로 둠
+// 시험이 끝나면 2단계 인증을 꺼서 다른 시험의 로그인에 영향이 없게 함
 test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복구 코드로 끌 수 있다', async ({
   page,
 }) => {
@@ -80,10 +82,7 @@ test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복�
   await expect(page.getByLabel('인증 코드')).toBeFocused();
   await expect(page).toHaveURL(/\/login/);
 
-  // 틀린 코드는 거부, 맞는 코드는 통과 (등록에 쓴 구간은 재사용할 수 없어 다음 구간의 코드를 사용)
-  await page.getByLabel('인증 코드').fill('000000');
-  await page.getByRole('button', { name: '로그인', exact: true }).click();
-  await expect(page.getByText('인증 코드가 올바르지 않습니다')).toBeVisible();
+  // 맞는 코드면 통과 (등록에 쓴 구간은 재사용할 수 없어 다음 구간의 코드를 사용, 틀린 코드는 단위·스토리 시험이 확인)
   await page.getByLabel('인증 코드').fill(totpCode(secret, 30));
   await page.getByRole('button', { name: '로그인', exact: true }).click();
   await expect(page.getByRole('heading', { name: '한빛판금' })).toBeVisible();
