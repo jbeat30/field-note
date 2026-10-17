@@ -20,6 +20,8 @@ const baseSchema = z.object({
   NAVER_CLIENT_SECRET: z.string().min(1).optional(),
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  // 앞단 프록시(CloudFront·로드 밸런서 등) 단계 수 (0은 프록시 없는 직접 접속, 프록시 뒤에서 0이면 모든 사용자가 같은 IP로 보여 요청 횟수 제한 공유)
+  TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   // 브라우저에서 접속하는 웹 주소 (CSRF Origin 검증 기준)
   APP_ORIGIN: z.url(),
   S3_ENDPOINT: z.url(),

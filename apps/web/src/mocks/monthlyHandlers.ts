@@ -69,7 +69,7 @@ export const getMockClosedMonths = (account: MockAccount) =>
     .map(([month]) => month);
 
 /**
- * @description 이 날짜의 작업 내역를 고칠 수 있는지 (확정된 달은 재오픈해야 함)
+ * @description 이 날짜의 작업 내역을 고칠 수 있는지 (확정된 달은 재오픈해야 함)
  * @param account 현재 계정
  * @param workDate 작업 일자
  * @returns 통과 여부와 거부 사유

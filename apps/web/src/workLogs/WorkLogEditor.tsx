@@ -604,7 +604,7 @@ export const WorkLogEditor = ({
       </Modal>
 
       {/* xl+: 왼쪽 Steps 1-3, 오른쪽 Step 4 */}
-      <div className="grid gap-5 xl:grid-cols-[1fr_440px]">
+      <div className="grid grid-cols-1 gap-5 xl:grid-cols-[1fr_440px]">
         <div className="flex flex-col gap-5">
           <WorkStep
             number={1}

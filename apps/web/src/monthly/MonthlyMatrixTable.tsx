@@ -47,7 +47,7 @@ export const MonthlyMatrixTable = ({
         onValueChange={setAxis}
         options={AXES}
       />
-      <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+      <div className="isolate overflow-x-auto rounded-xl border border-line bg-surface">
         <table className="w-full min-w-max border-collapse text-sm" aria-label="월 공수표">
           <thead>
             <tr className="bg-surface-nested">
