@@ -1,11 +1,13 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
+import { MOCK_TOTP_CODE } from '../mocks/data';
 import {
   addAccount,
   findAccount,
   getCurrentAccount,
   getRules,
+  saveMockTotp,
   setSocialProfile,
   signIn,
 } from '../mocks/state';
@@ -660,5 +662,108 @@ export const DataExport: Story = {
     await expect(
       await canvas.findByText(/전체데이터_.*\.xlsx 파일을 내려받았습니다/),
     ).toBeInTheDocument();
+  },
+};
+
+// 2단계 인증 (선택 기능): 꺼진 상태에서 켜면 복구 코드를 보여 주고, 확인해야 닫을 수 있음
+const securityRow = async (canvas: ReturnType<typeof within>) =>
+  within((await canvas.findByText('2단계 인증')).closest('li')!);
+
+export const TotpOffByDefault: Story = {
+  play: async ({ canvasElement }) => {
+    const row = await securityRow(within(canvasElement));
+
+    await expect(await row.findByText(/꺼짐/)).toBeInTheDocument();
+    await expect(row.getByRole('button', { name: '2단계 인증 켜기' })).toBeInTheDocument();
+  },
+};
+
+export const TotpEnable: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = await securityRow(canvas);
+
+    await userEvent.click(await row.findByRole('button', { name: '2단계 인증 켜기' }));
+
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    await expect(await dialog.findByAltText('인증 앱 등록 QR 코드')).toBeInTheDocument();
+    await expect(dialog.getByLabelText('인증 키')).toBeInTheDocument();
+
+    // 틀린 코드는 거부
+    await userEvent.type(dialog.getByLabelText('인증 앱의 6자리 코드'), '000000');
+    await userEvent.click(dialog.getByRole('button', { name: '확인하고 켜기' }));
+    await expect(await dialog.findByText(/인증 코드가 올바르지 않습니다/)).toBeInTheDocument();
+
+    // 맞는 코드면 복구 코드를 보여 주고, 적어 두었다고 확인해야 완료할 수 있음
+    await userEvent.clear(dialog.getByLabelText('인증 앱의 6자리 코드'));
+    await userEvent.type(dialog.getByLabelText('인증 앱의 6자리 코드'), MOCK_TOTP_CODE);
+    await userEvent.click(dialog.getByRole('button', { name: '확인하고 켜기' }));
+
+    const codes = within(await within(document.body).findByRole('dialog', { name: '복구 코드' }));
+
+    await expect(await codes.findAllByRole('listitem')).toHaveLength(8);
+    await expect(codes.getByRole('button', { name: '완료' })).toBeDisabled();
+    await userEvent.click(codes.getByRole('checkbox'));
+    await userEvent.click(codes.getByRole('button', { name: '완료' }));
+
+    await expect(await row.findByText(/켜짐 · 복구 코드 8개 남음/)).toBeInTheDocument();
+  },
+};
+
+export const TotpDisable: Story = {
+  loaders: [
+    () => {
+      saveMockTotp(findAccount('hanbit')!, { isEnabled: true, recoveryCodes: ['ABCDE-FGHJK'] });
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const row = await securityRow(canvas);
+
+    await expect(await row.findByText(/켜짐 · 복구 코드 1개 남음/)).toBeInTheDocument();
+    // 복구 코드가 거의 없으면 다시 받도록 안내
+    await expect(row.getByText(/복구 코드가 1개 남았습니다/)).toBeInTheDocument();
+
+    await userEvent.click(row.getByRole('button', { name: '2단계 인증 끄기' }));
+
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    await userEvent.type(dialog.getByLabelText('현재 비밀번호'), 'wrong-password-1');
+    await userEvent.type(dialog.getByLabelText('인증 코드'), MOCK_TOTP_CODE);
+    await userEvent.click(dialog.getByRole('button', { name: '2단계 인증 끄기' }));
+    await expect(await dialog.findByText('현재 비밀번호가 올바르지 않습니다')).toBeInTheDocument();
+
+    await userEvent.clear(dialog.getByLabelText('현재 비밀번호'));
+    await userEvent.type(dialog.getByLabelText('현재 비밀번호'), 'Hanbit-demo-2026!');
+    await userEvent.click(dialog.getByRole('button', { name: '2단계 인증 끄기' }));
+    await expect(await row.findByText(/꺼짐/)).toBeInTheDocument();
+  },
+};
+
+export const TotpRegenerateRecoveryCodes: Story = {
+  loaders: [
+    () => {
+      saveMockTotp(findAccount('hanbit')!, { isEnabled: true, recoveryCodes: ['ABCDE-FGHJK'] });
+    },
+  ],
+  play: async ({ canvasElement }) => {
+    const row = await securityRow(within(canvasElement));
+
+    await userEvent.click(await row.findByRole('button', { name: '복구 코드 다시 받기' }));
+
+    const dialog = within(await within(document.body).findByRole('dialog'));
+
+    await userEvent.type(dialog.getByLabelText('인증 코드'), '000000');
+    await userEvent.click(dialog.getByRole('button', { name: '새 복구 코드 받기' }));
+    await expect(await dialog.findByText(/인증 코드가 올바르지 않습니다/)).toBeInTheDocument();
+
+    await userEvent.clear(dialog.getByLabelText('인증 코드'));
+    await userEvent.type(dialog.getByLabelText('인증 코드'), MOCK_TOTP_CODE);
+    await userEvent.click(dialog.getByRole('button', { name: '새 복구 코드 받기' }));
+
+    const codes = within(await within(document.body).findByRole('dialog', { name: '복구 코드' }));
+
+    await expect(await codes.findAllByRole('listitem')).toHaveLength(8);
   },
 };
