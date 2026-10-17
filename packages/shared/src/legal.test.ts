@@ -86,8 +86,23 @@ describe('약관·처리방침 문서 원본', () => {
   });
 
   it('이용약관과 처리방침은 함께 바뀐 새 버전이다', () => {
-    expect(getLegalDocumentContent('TERMS_OF_SERVICE').version).toBe('2026-10-16');
-    expect(getLegalDocumentContent('PRIVACY_POLICY').version).toBe('2026-10-16');
+    expect(getLegalDocumentContent('TERMS_OF_SERVICE').version).toBe('2026-10-18');
+    expect(getLegalDocumentContent('PRIVACY_POLICY').version).toBe('2026-10-18');
+  });
+
+  it('2단계 인증(선택 기능)의 수집 항목·권리·보호 조치를 처리방침에 담는다', () => {
+    const privacy = legalDocumentText(getLegalDocumentContent('PRIVACY_POLICY'));
+
+    expect(privacy).toContain('2단계 인증을 켠 경우');
+    expect(privacy).toContain('인증 앱 등록 키(암호화해 저장)');
+    expect(privacy).toContain('2단계 인증 켜기·끄기');
+    expect(privacy).toContain('복구 코드는 원문을 저장하지 않으며');
+  });
+
+  it('"내역"에 붙는 조사는 받침에 맞게 "은"을 쓴다 (잘못된 조사 재발 방지)', () => {
+    for (const type of ['TERMS_OF_SERVICE', 'PRIVACY_POLICY'] as const) {
+      expect(legalDocumentText(getLegalDocumentContent(type))).not.toContain('작업 내역는');
+    }
   });
 
   it('시드가 쓰는 데모 문서는 이 원본의 버전·본문을 그대로 쓴다', () => {
