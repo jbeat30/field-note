@@ -76,7 +76,7 @@ export const registerMonthlyRoutes = (registry: RouteRegistry, monthly?: Monthly
       method: 'post',
       path: '/monthly-hours/reopen',
       summary:
-        '월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역를 다시 고칠 수 있다',
+        '월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역을 다시 고칠 수 있다',
       auth: 'required',
       request: { body: monthlyReopenSchema },
       response: { status: 200, schema: monthlyHoursSchema },
