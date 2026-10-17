@@ -53,6 +53,17 @@ describe('프로젝트 등록 검증', () => {
     }
   });
 
+  it('비어 있는 날짜는 형식·범위 오류 대신 입력 안내 하나만 낸다', () => {
+    const result = projectCreateSchema.safeParse({ ...valid, plannedStart: '' });
+
+    expect(result.success).toBe(false);
+
+    const issues = result.error?.issues.filter((issue) => issue.path[0] === 'plannedStart') ?? [];
+
+    expect(issues).toHaveLength(1);
+    expect(issues[0]?.message).toBe('날짜를 입력해 주세요');
+  });
+
   it('종료 예정일이 시작 예정일보다 빠르면 종료일 칸에 오류를 낸다', () => {
     const result = projectCreateSchema.safeParse({
       ...valid,
