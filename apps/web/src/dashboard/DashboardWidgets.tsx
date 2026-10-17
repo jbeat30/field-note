@@ -98,7 +98,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
               <td className="py-3 pr-3 align-top">
                 <Link
                   to={`/projects/${project.id}`}
-                  className="font-medium underline-offset-2 hover:underline"
+                  className="inline-block py-1 font-medium underline-offset-2 hover:underline"
                 >
                   {project.name}
                 </Link>
@@ -220,7 +220,7 @@ export const DashboardWidgets = ({
         ]}
       />
 
-      <div className="grid items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Widget
           title="진행 중 프로젝트"
           id="projects-heading"
@@ -263,7 +263,7 @@ export const DashboardWidgets = ({
 
       {weekSlot}
 
-      <div className="grid items-start gap-4 lg:grid-cols-2">
+      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
         <Widget title="보증 종료 임박" id="warranty-heading">
           <p className="text-sm">처리하지 않은 보수 요청 {warranty.openRepairCount}건</p>
           {warranty.ending.length === 0 ? (
