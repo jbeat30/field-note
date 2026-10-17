@@ -200,13 +200,24 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   };
 
   const showSchemaErrors = (issues: { path: PropertyKey[]; message: string }[]) => {
+    const shown = new Set<string>();
+
+    // 같은 칸에 문제가 여러 개면 가장 먼저 걸린 것만 보여 줌
     for (const issue of issues) {
       const field = String(issue.path[0] ?? '');
 
-      if ((FIELDS as readonly string[]).includes(field)) {
+      if ((FIELDS as readonly string[]).includes(field) && !shown.has(field)) {
+        shown.add(field);
         setError(field as keyof FormValues, { message: issue.message });
       }
     }
+
+    // 긴 입력 화면에서 버튼 아래에서는 오류가 보이지 않으므로 가장 위의 오류 칸으로 이동
+    // (오류 표시가 화면에 반영된 뒤에 찾아야 하므로 잠시 뒤에 실행)
+    window.setTimeout(
+      () => document.querySelector<HTMLElement>('form [aria-invalid="true"]')?.focus(),
+      50,
+    );
   };
 
   const submit = handleSubmit((values) => {
@@ -486,7 +497,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
               </FormField>
               <FormField
                 label="시작 예정일"
-                hint="작업 내역를 입력할 수 있는 기간이 됩니다"
+                hint="작업 내역을 입력할 수 있는 기간이 됩니다"
                 error={errors.plannedStart?.message}
               >
                 <DateInput {...register('plannedStart')} />

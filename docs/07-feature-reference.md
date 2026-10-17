@@ -161,7 +161,7 @@ pnpm operator purge-due [--dry-run]                                 # 유예(14�
 
 ## 화면 전체 시험 (E2E)
 
-- 실제 DB·객체 저장소·API·웹을 띄워 Chromium(모바일 크기)으로 **핵심 흐름**(로그인 → 프로젝트 → 직원 선택·투입 자동 추가 → 작업 내역 → 자재 → 지출 기록 → 사진 → 작업일보)과 **하루 일지 입력 시간**을 확인한다. 위치는 `apps/web/e2e`다
+- 실제 DB·객체 저장소·API·웹을 띄워 Chromium(모바일 크기)으로 **핵심 흐름**(로그인 → 프로젝트 → 직원 선택·투입 자동 추가 → 작업 내역 → 자재 → 지출 기록 → 사진 → 작업일보), **프로젝트 생애 흐름**(진행률 → 완료 → 보증 설정·시작 → 보수 요청), **월 공수 확정·재오픈**, **직원 서류 등록**, **홈 확인 목록**, **저장 용량·전체 데이터 내려받기**와 **하루 일지 입력 시간**을 확인한다. 위치는 `apps/web/e2e`다
 - 실행: `pnpm --filter @field-note/api db:generate && pnpm infra:up && pnpm db:setup && pnpm db:seed` 후 `pnpm e2e` (API는 3001번, 웹은 5173번으로 시험이 직접 띄우며 이미 떠 있으면 재사용). 목업 서버가 실행 중이면 `E2E_API_PORT`·`E2E_WEB_PORT`를 다른 포트로 지정하고 `CI=true`로 서버 재사용을 끈다 (PowerShell 예: `$env:E2E_API_PORT='13001'; $env:E2E_WEB_PORT='15173'; $env:CI='true'; pnpm e2e`). 처음에는 `pnpm --filter @field-note/web exec playwright install chromium`이 필요하다
 - 하루 일지 입력 시간은 스크립트가 사람 속도를 흉내 낸 값(누르기 전 0.8초, 글자 0.2초/자)이라 **참고용 측정**이다. 실제 사람의 시간은 실사용 시험에서 재다
 - CI의 `e2e` 잡이 같은 순서로 준비해 돌리고, 실패하면 보고서와 추적 파일(`playwright-report`, `test-results`)을 보관한다
@@ -200,7 +200,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 | RustFS     | 사진·자료 저장소 (S3 호환)            | API `localhost:9000`, 관리 화면 `localhost:9001`        |
 | Mailpit    | 보낸 메일을 받아 보여주는 가짜 메일함 | 메일 수신 `localhost:1025`, 확인 화면 `localhost:8025`  |
 
-- 메일은 실제로 발송되지 않는다. 인증 메일 등은 `localhost:8025`에서 확인한다
+- 메일은 실제로 발송되지 않는다. 인증 메일 등은 `localhost:8025`에서 확인한다 (포트가 막히면 `.env`에 `MAILPIT_UI_PORT=18025`처럼 적어 바꾼다)
 - MinIO 공식 이미지가 더 이상 배포되지 않아 호환 제품인 RustFS를 쓴다
 
 ## DB와 회사 격리
@@ -342,6 +342,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - **신청 단계**에서 허용 목록(JPEG·PNG·WebP, 자료는 PDF·docx·xlsx·pptx)·확장자 일치·크기(사진 20MB, 자료 50MB)·회사 저장 용량 한도(기본 5GB)를 검사한다. 주소에는 형식과 크기가 서명돼 있어 신청과 다르게 올리면 저장소가 거부한다
 - **올라온 뒤** 작업 큐가 크기를 다시 확인하고 **확장자·선언한 형식이 아니라 파일 내용(file-type)** 으로 형식을 판별한다. 위조(실행 파일을 `.jpg`로 등)나 열 수 없는 이미지는 `REJECTED`(사유 포함)로 기록하고 저장소에서도 지운다. 통과하면 원본의 SHA-256을 기록하고 이미지는 480px WebP 썸네일(위치 정보 등 메타데이터 제거)을 만든다. 원본의 EXIF는 증빙을 위해 보존한다
 - 내려받기 주소(`GET /files/{id}/url`)는 **회사 범위에서 찾은 검사 통과 파일에만** 5분 만료로 발급한다. 저장소는 공개하지 않으며 객체 키에 회사·프로젝트가 들어간다
+- API 응답에는 `X-Content-Type-Options: nosniff`·`X-Frame-Options: DENY`·`Referrer-Policy: no-referrer`를 붙인다(`securityHeaders`). 웹 쪽 CSP·HSTS는 배포 단계에서 CloudFront 응답 헤더로 설정한다
 - 로컬 저장소는 RustFS이고 API가 시작할 때 버킷이 없으면 만든다 (운영은 버킷을 미리 준비). HEIC는 지원하지 않으므로 앱이 올리기 전에 JPEG로 변환한다
 
 ### 사진 (API)

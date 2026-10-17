@@ -141,7 +141,7 @@ export const validateMonthClose = (input: {
 };
 
 /**
- * @description 이 날짜의 작업 내역를 고칠 수 있는지: 확정된 달은 재오픈해야 함
+ * @description 이 날짜의 작업 내역을 고칠 수 있는지: 확정된 달은 재오픈해야 함
  * @param workDate 작업 일자
  * @param closedMonths 확정된 달 목록
  * @returns 통과 여부와 거부 사유

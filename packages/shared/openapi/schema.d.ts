@@ -3536,11 +3536,8 @@ export interface paths {
                         /** Format: uuid */
                         managerId: string;
                         tradeIds?: string[];
-                        /** Format: date */
                         contractDate: string;
-                        /** Format: date */
                         plannedStart: string;
-                        /** Format: date */
                         plannedEnd: string;
                         memo?: string | null;
                     };
@@ -3785,11 +3782,8 @@ export interface paths {
                         /** Format: uuid */
                         managerId?: string;
                         tradeIds?: string[];
-                        /** Format: date */
                         contractDate?: string;
-                        /** Format: date */
                         plannedStart?: string;
-                        /** Format: date */
                         plannedEnd?: string;
                         memo?: string | null;
                         periodChangeReason?: string | null;
@@ -10881,7 +10875,7 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** 월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역를 다시 고칠 수 있다 */
+        /** 월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역을 다시 고칠 수 있다 */
         post: {
             parameters: {
                 query?: never;

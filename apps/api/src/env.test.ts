@@ -27,6 +27,13 @@ describe('parseEnv', () => {
     expect(env.SMTP_PORT).toBe(1025);
   });
 
+  it('프록시 단계 수는 기본 0이고 0~5의 정수만 받는다', () => {
+    expect(parseEnv(validEnv).TRUST_PROXY_HOPS).toBe(0);
+    expect(parseEnv({ ...validEnv, TRUST_PROXY_HOPS: '2' }).TRUST_PROXY_HOPS).toBe(2);
+    expect(() => parseEnv({ ...validEnv, TRUST_PROXY_HOPS: '6' })).toThrow('TRUST_PROXY_HOPS');
+    expect(() => parseEnv({ ...validEnv, TRUST_PROXY_HOPS: '-1' })).toThrow('TRUST_PROXY_HOPS');
+  });
+
   it('필수 값이 없으면 변수 이름이 담긴 오류를 던진다', () => {
     expect(() => parseEnv({ ...validEnv, DATABASE_URL: undefined })).toThrow('DATABASE_URL');
   });

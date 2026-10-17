@@ -1,6 +1,6 @@
 {
   "name": "field-note",
-  "version": "0.9.2",
+  "version": "0.10.0",
   "private": true,
   "type": "module",
   "description": "현장 팀 프로젝트 관리 서비스",
@@ -9,7 +9,7 @@
     "node": ">=24.0.0"
   },
   "scripts": {
-    "infra:up": "bash scripts/ensure-docker.sh && docker compose up -d --wait",
+    "infra:up": "node scripts/ensure-docker.mjs && docker compose up -d --wait",
     "infra:down": "docker compose down",
     "dev": "pnpm infra:up && pnpm -r --parallel --filter \"./apps/*\" dev",
     "dev:api": "pnpm --filter @field-note/api dev",

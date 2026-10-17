@@ -114,6 +114,9 @@ const dateSchema = z.iso
     VALIDATION_MESSAGES.DATE_RANGE_CHECK,
   );
 
+// 등록·수정 입력용: 비어 있으면 형식 오류 대신 입력 안내를 보여 줌
+const requiredDateSchema = z.string().min(1, VALIDATION_MESSAGES.required('날짜')).pipe(dateSchema);
+
 // 목록·카드 공통 항목 (현장 연락처·출입 메모·계약일·메모는 카드에서만)
 export const projectSummarySchema = z.object({
   id: z.uuid(),
@@ -240,9 +243,9 @@ export const projectCreateSchema = z
       .array(z.uuid())
       .max(PROJECT_MAX_TRADES, VALIDATION_MESSAGES.TRADES_LIMIT(PROJECT_MAX_TRADES))
       .optional(),
-    contractDate: dateSchema,
-    plannedStart: dateSchema,
-    plannedEnd: dateSchema,
+    contractDate: requiredDateSchema,
+    plannedStart: requiredDateSchema,
+    plannedEnd: requiredDateSchema,
     memo: memoSchema('메모').nullish(),
   })
   .refine(periodRefinement, PERIOD_ERROR);
@@ -264,9 +267,9 @@ export const projectUpdateSchema = z
     tradeIds: z
       .array(z.uuid())
       .max(PROJECT_MAX_TRADES, VALIDATION_MESSAGES.TRADES_LIMIT(PROJECT_MAX_TRADES)),
-    contractDate: dateSchema,
-    plannedStart: dateSchema,
-    plannedEnd: dateSchema,
+    contractDate: requiredDateSchema,
+    plannedStart: requiredDateSchema,
+    plannedEnd: requiredDateSchema,
     memo: memoSchema('메모').nullable(),
     // 예정 기간을 바꿀 때의 사유 (시작한 뒤에는 필수, 기간을 바꾸지 않으면 무시)
     periodChangeReason: z

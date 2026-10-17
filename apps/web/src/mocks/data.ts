@@ -91,7 +91,7 @@ export type MockAccount = {
   payRates?: Record<string, PayRate[]>;
   // 투입 (취소한 것 포함)
   assignments?: AssignmentRow[];
-  // 작업 내역와 작업 내역별 수정 이력 (작업 내역 id → 오래된 것부터)
+  // 작업 내역과 작업 내역별 수정 이력 (작업 내역 id → 오래된 것부터)
   workLogs?: MockWorkLog[];
   workLogRevisions?: Record<string, WorkLogRevision[]>;
 };
