@@ -20,6 +20,8 @@ const baseSchema = z.object({
   NAVER_CLIENT_SECRET: z.string().min(1).optional(),
   GOOGLE_CLIENT_ID: z.string().min(1).optional(),
   GOOGLE_CLIENT_SECRET: z.string().min(1).optional(),
+  // 2단계 인증 키를 DB에 암호화해 저장할 때 쓰는 서버 비밀 값 (바꾸면 켜 둔 2단계 인증이 모두 풀려 복구 절차가 필요하므로 정해진 뒤에는 유지)
+  TOTP_ENCRYPTION_KEY: z.string().min(32),
   // 앞단 프록시(CloudFront·로드 밸런서 등) 단계 수 (0은 프록시 없는 직접 접속, 프록시 뒤에서 0이면 모든 사용자가 같은 IP로 보여 요청 횟수 제한 공유)
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   // 브라우저에서 접속하는 웹 주소 (CSRF Origin 검증 기준)

@@ -163,6 +163,7 @@ describe('스키마 검사', () => {
       'sessions',
       'social_accounts',
       'user_credentials',
+      'user_totp',
       'users',
     ]);
   });
@@ -210,6 +211,19 @@ describe('스키마 검사', () => {
     );
 
     expect(rows).toEqual([]);
+  });
+
+  it('2단계 인증 테이블은 전용 계정만 접근하고, 앱·운영자 계정은 읽을 수 없다', async () => {
+    await expect(db.app.$queryRaw`SELECT * FROM user_totp`).rejects.toThrow();
+    await expect(db.operator.$queryRaw`SELECT * FROM user_totp`).rejects.toThrow();
+
+    const { rows } = await db.ownerPool.query<{ privilege_type: string }>(
+      `SELECT privilege_type FROM information_schema.role_table_grants
+        WHERE table_name = 'user_totp' AND grantee = 'field_note_auth' ORDER BY privilege_type`,
+    );
+
+    // 끄기·복구 코드 재발급을 위해 삭제도 허용
+    expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT', 'UPDATE']);
   });
 
   it('소셜 연동 테이블은 전용 계정만 접근하고, 앱·운영자·큐 계정은 읽을 수 없다', async () => {

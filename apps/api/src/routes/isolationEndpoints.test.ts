@@ -1162,7 +1162,7 @@ describe('회사 격리: 전 엔드포인트', () => {
         WHERE table_schema = 'public' AND column_name = 'company_id'
           AND table_name IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public')
           AND table_name NOT IN ('sessions', 'users', 'user_credentials', 'consents', 'invitations',
-            'operator_actions', 'email_verifications', 'password_resets', 'social_accounts', 'company_closures')
+            'operator_actions', 'email_verifications', 'password_resets', 'social_accounts', 'user_totp', 'company_closures')
         ORDER BY table_name`,
     );
     const seen: Record<string, { own: number; other: number }> = {};
