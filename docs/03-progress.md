@@ -786,7 +786,7 @@ gh pr create --base feature/0.8.0        # CI 통과 후 squash 머지
 - 시험이 같은 회사 데이터를 쓰므로 월 공수 확정은 지난달로 하고 끝나면 되돌리며, 반복 실행해도 겹치지 않게 글자에 번호를 붙인다. 같은 DB로 연속 2번 돌려 통과 확인
 - 시험을 쓰며 확인한 실제 흐름: 보증 중으로 바꾸려면 완료 뒤 "프로젝트 요약을 확인했습니다" 체크가 필요하고, 보수 요청은 보증 시작 뒤에만 접수된다 (보증 설정만으로는 접수 불가, 화면에 안내가 나온다)
 - 5단계 중 소셜 로그인 연동·계정 복구·소유자 이전은 개발용 가짜 제공자와 운영자 도구가 얽혀 있어 e2e에 넣지 않았고 서버 시험(`socialRoutes`·`takeoverRoutes`·`accountRoutes`)이 다룬다
-- Windows에서 `bash`가 WSL 실행기(`System32ash.exe`)로 잡히면 배포판이 없어 `pnpm infra:up`이 `execvpe(/bin/bash) failed`로 실패했다. `scripts/ensure-docker.sh`를 `ensure-docker.mjs`(Node)로 바꿔 bash 없이 돌고 Windows에서도 Docker Desktop을 자동 실행한다
+- Windows에서 `bash`가 WSL 실행기(`C:\Windows\System32\bash.exe`)로 잡히면 배포판이 없어 `pnpm infra:up`이 `execvpe(/bin/bash) failed`로 실패했다. `scripts/ensure-docker.sh`를 `ensure-docker.mjs`(Node)로 바꿔 bash 없이 돌고 Windows에서도 Docker Desktop을 자동 실행한다
 - Windows에서 메일함 포트 8025가 예약 범위에 들어가 `pnpm infra:up`이 실패해 `.env`의 `MAILPIT_UI_PORT`로 바꿀 수 있게 했다
 
 ### L-3 보안 점검 결과
