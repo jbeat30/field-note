@@ -3,6 +3,7 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 
 import { csrfGuard } from './http/csrf';
+import { securityHeaders } from './http/securityHeaders';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler';
 import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idempotency';
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
@@ -237,6 +238,7 @@ export const createApp = (options: AppOptions = {}) => {
   const registry = createRegistry({ ...options, sessionStore });
 
   app.disable('x-powered-by');
+  app.use(securityHeaders());
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 
