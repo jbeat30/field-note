@@ -12,6 +12,7 @@ export const PURGE_POLICY = {
   email_verifications: 'DELETE',
   password_resets: 'DELETE',
   social_accounts: 'DELETE',
+  user_totp: 'DELETE',
   company_settings: 'DELETE',
   projects: 'DELETE',
   project_trades: 'DELETE',
