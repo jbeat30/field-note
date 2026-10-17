@@ -39,6 +39,7 @@
 | `SMTP_HOST`·`SMTP_PORT`·`SMTP_FROM`        | 필수           | 메일 공급자 값, 발신 주소는 인증된 도메인                                                                                      |
 | `SMTP_USER`·`SMTP_PASSWORD`                | 운영 필수      | 메일 공급자 계정                                                                                                               |
 | `CODE_HASH_SECRET`                         | 필수           | 32자 이상 무작위 (바꾸면 미사용 인증 코드 무효)                                                                                |
+| `TOTP_ENCRYPTION_KEY`                      | 필수           | 32자 이상 무작위 (2단계 인증 키 암호화용, 바꾸면 켜 둔 2단계 인증이 모두 확인 불가가 되므로 정해진 뒤에는 유지·백업)           |
 | `OAUTH_COOKIE_SECRET`                      | 필수           | 32자 이상 무작위                                                                                                               |
 | `KAKAO_*`·`NAVER_*`·`GOOGLE_*` (ID·시크릿) | 선택           | 앱 등록 후 채움. 쌍이 없으면 해당 로그인 꺼짐                                                                                  |
 
@@ -72,7 +73,7 @@
 
 - [ ] §1 표의 "미정" 항목 결정 (호스팅·DB·객체 저장소·메일·도메인)과 계정 가입
 - [ ] DB의 소유 계정이 `CREATE ROLE`을 할 수 있어야 한다. 마이그레이션이 앱·전용 계정 5개(`field_note_app`·`auth`·`operator`·`queue`·`purge`)를 만들기 때문이다 (관리형 DB의 기본 관리자 계정이면 대개 가능)
-- [ ] 비밀 값은 배포 환경의 비밀 저장소에 직접 생성해 넣는다 (`pnpm env:init`은 로컬 전용). `CODE_HASH_SECRET`·`OAUTH_COOKIE_SECRET`은 32자 이상 무작위
+- [ ] 비밀 값은 배포 환경의 비밀 저장소에 직접 생성해 넣는다 (`pnpm env:init`은 로컬 전용). `CODE_HASH_SECRET`·`OAUTH_COOKIE_SECRET`·`TOTP_ENCRYPTION_KEY`는 32자 이상 무작위
 - [ ] 이미지(또는 실행 환경)에 `tsx`와 `prisma` CLI가 있어야 한다. 현재 두 패키지가 devDependencies이고 `start`·`db:setup`이 `tsx`로 실행되므로 개발 의존성을 포함해 설치하거나 0.11.0에서 빌드 방식을 정한다
 - [ ] 객체 저장소 버킷은 공개하지 않고, CORS에 웹 주소의 PUT·GET·HEAD와 `Content-Type` 헤더를 허용
 - [ ] 메일 발신 도메인 SPF·DKIM 설정과 발신 주소 인증
@@ -99,7 +100,7 @@
 ### 4.4 정기 점검
 
 - 매주 `pnpm backup drill` 결과 확인 (실패하면 종료 코드가 0이 아님)
-- 비밀 값을 바꾸면 영향이 있다: `CODE_HASH_SECRET`은 발송된 미사용 인증 코드가 무효가 되고, `OAUTH_COOKIE_SECRET`은 진행 중인 소셜 로그인이 실패한다. 객체 저장소 키는 새 키를 먼저 발급해 교체한 뒤 이전 키를 지운다
+- 비밀 값을 바꾸면 영향이 있다: `CODE_HASH_SECRET`은 발송된 미사용 인증 코드가 무효가 되고, `TOTP_ENCRYPTION_KEY`는 켜 둔 2단계 인증이 확인 불가가 되어 해당 사용자는 복구 링크로만 들어올 수 있고, `OAUTH_COOKIE_SECRET`은 진행 중인 소셜 로그인이 실패한다. 객체 저장소 키는 새 키를 먼저 발급해 교체한 뒤 이전 키를 지운다
 - 의존성 취약점은 CI의 `pnpm audit --prod`가 매 PR에서 확인
 
 ## 5. 0.11.0 배포 준비로 넘기는 항목
