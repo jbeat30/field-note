@@ -42,3 +42,48 @@ test('주요 화면이 모바일 폭에서 가로로 넘치지 않는다', async
     });
   }
 });
+
+// 표의 고정 열이 위쪽 머리글이나 하단 메뉴 위로 올라와 보이지 않는지 확인할 화면
+const STICKY_TABLE_PAGES = [
+  ['홈', '/'],
+  ['인력 배치', '/staffing'],
+  ['월 공수', '/monthly-hours'],
+] as const;
+
+test('스크롤해도 표가 머리글·하단 메뉴를 가리지 않는다', async ({ page }) => {
+  await login(page);
+
+  for (const [name, path] of STICKY_TABLE_PAGES) {
+    await test.step(name, async () => {
+      await page.goto(path);
+      await expect(page.getByRole('heading', { level: 1 })).toBeVisible();
+      await page.waitForLoadState('networkidle');
+
+      // 200px씩 내려가며 머리글 아래쪽과 하단 메뉴 위쪽에 실제로 보이는 요소가 그 영역 것인지 확인
+      const covered = await page.evaluate(async () => {
+        const header = document.querySelector('header');
+        const nav = document.querySelector('nav[aria-label="하단 메뉴"]');
+        const found: string[] = [];
+
+        if (!header || !nav) {
+          return ['머리글 또는 하단 메뉴 없음'];
+        }
+
+        for (let y = 0; y <= document.documentElement.scrollHeight; y += 200) {
+          window.scrollTo(0, y);
+          await new Promise((resolve) => requestAnimationFrame(resolve));
+
+          const top = document.elementFromPoint(40, header.getBoundingClientRect().bottom - 6);
+          const bottom = document.elementFromPoint(40, nav.getBoundingClientRect().top + 6);
+
+          if (top && !header.contains(top)) found.push(`머리글@${y}`);
+          if (bottom && !nav.contains(bottom)) found.push(`하단 메뉴@${y}`);
+        }
+
+        return found;
+      });
+
+      expect(covered, `${name} 화면에서 가려진 곳`).toEqual([]);
+    });
+  }
+});
