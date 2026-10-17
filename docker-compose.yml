@@ -36,7 +36,8 @@ services:
     image: axllent/mailpit:latest
     ports:
       - '1025:1025'
-      - '8025:8025'
+      # Windows는 8025번이 예약된 포트 범위에 들어가 막히는 경우가 있어 .env의 MAILPIT_UI_PORT로 바꿀 수 있음
+      - '${MAILPIT_UI_PORT:-8025}:8025'
 
 volumes:
   postgres-data:

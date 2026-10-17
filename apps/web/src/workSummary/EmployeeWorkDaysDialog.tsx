@@ -92,7 +92,7 @@ export const EmployeeWorkDaysDialog = ({
               { label: '하루 평균', value: hours(totalMinutes / days.length), unit: '시간' },
             ]}
           />
-          <div className="grid gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
+          <div className="grid grid-cols-1 gap-5 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)]">
             <WorkDaysCalendar projectId={projectId} days={days} onNavigate={onClose} />
             <section aria-label="일한 날 목록" className="flex min-w-0 flex-col gap-2">
               <p className="text-sm font-semibold">날짜 목록</p>

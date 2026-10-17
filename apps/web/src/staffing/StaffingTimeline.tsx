@@ -67,7 +67,7 @@ export const StaffingTimeline = ({
   })).filter((item) => item.items.length > 0);
 
   return (
-    <div className="overflow-x-auto rounded-xl border border-line bg-surface">
+    <div className="isolate overflow-x-auto rounded-xl border border-line bg-surface">
       <div role="group" aria-label="인력 배치 타임라인" className="min-w-max">
         <div className="grid border-b border-line" style={{ gridTemplateColumns: columns }}>
           <div className="sticky left-0 z-20 border-r border-line bg-surface-nested px-3 py-2.5 text-left text-sm font-semibold">
@@ -176,7 +176,7 @@ const EmployeeRow = ({
       >
         <Link
           to={`/employees/${employee.id}`}
-          className="w-fit text-sm font-semibold underline-offset-2 hover:underline"
+          className="w-fit py-1 text-sm font-semibold underline-offset-2 hover:underline"
         >
           {employee.name}
         </Link>

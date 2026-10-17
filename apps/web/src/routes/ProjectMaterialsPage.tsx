@@ -78,7 +78,7 @@ export const ProjectMaterialsPage = () => {
       </div>
 
       {/* 하단 2열: 합계(좁게) | 날짜별 기록(넓게) */}
-      <div className="grid items-start gap-5 xl:grid-cols-[280px_1fr]">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[280px_1fr]">
         <div className="rounded-xl bg-surface-subtle p-4 md:p-5">
           <Section title="자재별 합계" description="이 현장에 쓴 양을 자재마다 모았습니다">
             {totals.isError && <Alert>자재 합계를 불러오지 못했습니다</Alert>}

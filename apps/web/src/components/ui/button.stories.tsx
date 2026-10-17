@@ -41,7 +41,7 @@ export const TouchTarget: Story = {
 };
 
 export const LongText: Story = {
-  args: { children: '아주 긴 이름의 프로젝트 현장 작업 내역를 한 번에 저장하기' },
+  args: { children: '아주 긴 이름의 프로젝트 현장 작업 내역을 한 번에 저장하기' },
   decorators: [
     (Story) => (
       <div className="w-48">
