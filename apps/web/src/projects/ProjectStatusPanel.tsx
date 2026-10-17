@@ -49,7 +49,7 @@ const actionLabel = (from: ProjectStatus, to: ProjectStatus) => {
 };
 
 const confirmHint = (from: ProjectStatus, to: ProjectStatus) => {
-  if (to === 'IN_PROGRESS') return '작업 내역를 입력할 수 있게 됩니다';
+  if (to === 'IN_PROGRESS') return '작업 내역을 입력할 수 있게 됩니다';
   if (to === 'SUSPENDED') return '중단 중에는 새 투입이 막힙니다. 사유를 남겨 주세요';
   if (to === 'COMPLETED') return '완료하면 보증 중 또는 종료로 이어서 관리할 수 있습니다';
   if (to === 'CANCELLED') {
