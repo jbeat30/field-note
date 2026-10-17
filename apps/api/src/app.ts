@@ -3,6 +3,7 @@ import express from 'express';
 import swaggerUi from 'swagger-ui-express';
 
 import { csrfGuard } from './http/csrf';
+import { securityHeaders } from './http/securityHeaders';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler';
 import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idempotency';
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
@@ -143,6 +144,8 @@ export type AppOptions = {
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
+  // 앞단 프록시(CloudFront·로드 밸런서) 단계 수: 접속 IP(요청 횟수 제한·기기 목록)를 X-Forwarded-For에서 읽을 때 믿을 단계 수 (직접 접속이면 0)
+  trustProxyHops?: number;
   idempotencyStore?: IdempotencyStore;
   logger?: Logger;
   // 개발 환경에서만 API 문서 화면 제공
@@ -237,6 +240,8 @@ export const createApp = (options: AppOptions = {}) => {
   const registry = createRegistry({ ...options, sessionStore });
 
   app.disable('x-powered-by');
+  app.set('trust proxy', options.trustProxyHops ?? 0);
+  app.use(securityHeaders());
   app.use(express.json({ limit: '100kb' }));
   app.use(cookieParser());
 

@@ -123,7 +123,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
         />
       </div>
 
-      <div className="grid items-start gap-5 xl:grid-cols-[3fr_2fr]">
+      <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[3fr_2fr]">
         <div className="rounded-xl bg-surface-subtle p-5">
           {saved && <Alert variant="info">{saved}</Alert>}
           {errors.root && <Alert>{errors.root.message}</Alert>}
