@@ -1,5 +1,6 @@
 import { createApp } from './app';
 import { createAccountService } from './auth/accountService';
+import { createTotpService } from './auth/totpService';
 import {
   createEmailVerificationService,
   registerEmailVerificationWorker,
@@ -56,7 +57,12 @@ const main = async () => {
   const invitationStore = createPrismaInvitationStore(authPrisma);
   // 로그인 후 회사 범위 조회는 앱 계정(RLS 적용)으로만 수행
   const appPrisma = createPrismaClient(env.DATABASE_URL);
-  const accountService = createAccountService({ auth: authPrisma, app: appPrisma });
+  const totp = createTotpService({
+    auth: authPrisma,
+    secretKey: env.TOTP_ENCRYPTION_KEY,
+    issuer: '필드노트',
+  });
+  const accountService = createAccountService({ auth: authPrisma, app: appPrisma, totp });
   const companySettings = createCompanySettingsService(appPrisma);
   const options = createOptionService(appPrisma);
   const employees = createEmployeeService(appPrisma);
@@ -122,6 +128,7 @@ const main = async () => {
     queue,
     mailer,
     accountService,
+    totp,
     sessionStore,
     notifier,
     appOrigin: env.APP_ORIGIN,
@@ -170,6 +177,7 @@ const main = async () => {
     sessionStore,
     invitationStore,
     accountService,
+    totp,
     emailVerification,
     passwordService,
     companySettings,
