@@ -1,3 +1,5 @@
+import './zodBrowserConfig';
+
 export * from './health';
 export * from './http';
 export * from './account';
