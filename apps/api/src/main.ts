@@ -210,6 +210,7 @@ const main = async () => {
     notifier,
     appOrigin: env.APP_ORIGIN,
     isSecureCookie: env.NODE_ENV === 'production',
+    trustProxyHops: env.TRUST_PROXY_HOPS,
     isDocsEnabled: env.NODE_ENV === 'development',
   }).listen(env.PORT, () => {
     logger.info({ port: env.PORT }, '[api.main] 서버 시작');
