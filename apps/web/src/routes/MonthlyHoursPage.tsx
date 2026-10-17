@@ -238,7 +238,7 @@ export const MonthlyHoursPage = () => {
           </div>
 
           {/* xl+ 2열: 왼쪽 표 / 오른쪽 확정+이력 */}
-          <div className="grid items-start gap-5 xl:grid-cols-[1fr_300px]">
+          <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[1fr_300px]">
             {/* 왼쪽: 임시저장 경고 + 표 + 직원별 합계 */}
             <div className="flex flex-col gap-4">
               {data.draftLogCount > 0 && (
