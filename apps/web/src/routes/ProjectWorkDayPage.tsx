@@ -119,7 +119,7 @@ export const ProjectWorkDayPage = () => {
             />
           )}
           {!problem && (
-            <div className="grid items-start gap-5 xl:grid-cols-[1fr_440px]">
+            <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[1fr_440px]">
               <DayPhotosStep projectId={id} date={date} />
               <DayMemosStep projectId={id} date={date} />
             </div>
