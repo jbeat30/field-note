@@ -63,7 +63,7 @@ export const acceptInvitation = async (
 };
 
 /**
- * @description 복구·소유자 이전 링크 사용 시점의 기존 로그인 수단 해제 (세션·소셜 연동·아이디·비밀번호·미사용 인증 코드·재설정 링크)
+ * @description 복구·소유자 이전 링크 사용 시점의 기존 로그인 수단 해제 (세션·소셜 연동·2단계 인증·아이디·비밀번호·미사용 인증 코드·재설정 링크)
  * 회사 데이터와 계정 ID(작성자 표시)는 유지하고 이어지는 가입 단계에서 새 아이디·비밀번호·이메일 등록
  * @param tx 트랜잭션
  * @param invitation 복구·소유자 이전 초대
@@ -80,6 +80,8 @@ const resetOwnerAccount = async (
 
   await tx.session.deleteMany({ where: { companyId, userId } });
   await tx.socialAccount.deleteMany({ where: { companyId, userId } });
+  // 로그인 수단을 잃은 계정의 복구이므로 2단계 인증도 해제하고, 새로 등록한 뒤 다시 켜게 함
+  await tx.userTotp.deleteMany({ where: { companyId, userId } });
   await tx.userCredential.updateMany({
     where: { companyId, userId },
     data: { loginId: null, passwordHash: null, failedLoginCount: 0, lockedUntil: null },

@@ -8,6 +8,7 @@ import type { SessionStore } from '../session/sessionStore';
 import type { AccountService, AuthenticatedAccount } from './accountService';
 import { hashPassword } from './password';
 import { generateToken, hashToken } from './token';
+import type { TotpService } from './totpService';
 
 type Clock = () => Date;
 
@@ -30,10 +31,11 @@ export type PasswordService = {
   requestReset: (email: string) => Promise<void>;
   // 작업 처리기에서 호출: 링크 토큰을 만들어 해시를 저장하고 메일 발송
   deliverReset: (account: AuthenticatedAccount) => Promise<void>;
-  // 링크 화면 진입 시 유효 여부 확인 (사용·만료·없는 링크는 구분하지 않음)
-  isResetLinkValid: (token: string) => Promise<boolean>;
+  // 링크 화면 진입 시 유효 여부 확인 (사용·만료·없는 링크는 구분하지 않고 null), 인증 코드 칸이 필요한지도 알림
+  checkResetLink: (token: string) => Promise<{ requiresTotp: boolean } | null>;
   // 새 비밀번호 설정: 링크 폐기, 실패 횟수·잠금 해제, 모든 기기 로그아웃, 완료 알림
-  confirmReset: (token: string, newPassword: string) => Promise<void>;
+  // 2단계 인증을 켠 계정은 인증 코드(또는 복구 코드)가 맞아야 하며, 틀려도 링크는 소모되지 않음
+  confirmReset: (token: string, newPassword: string, totpCode?: string) => Promise<void>;
   // 로그인한 상태의 변경: 현재 비밀번호를 확인하고, 현재 기기만 남기고 다른 기기 로그아웃, 알림
   changePassword: (
     account: AuthenticatedAccount,
@@ -46,6 +48,8 @@ type Deps = {
   queue: JobQueue;
   mailer: Mailer;
   accountService: AccountService;
+  // 없으면 모든 계정이 2단계 인증을 쓰지 않는 것으로 동작
+  totp?: Pick<TotpService, 'isEnabled'>;
   sessionStore: SessionStore;
   notifier: SecurityNotifier;
   // 재설정 링크의 웹 주소
@@ -63,6 +67,7 @@ export const createPasswordService = ({
   queue,
   mailer,
   accountService,
+  totp,
   sessionStore,
   notifier,
   appOrigin,
@@ -147,19 +152,33 @@ export const createPasswordService = ({
     );
   },
 
-  isResetLinkValid: async (token) => {
+  checkResetLink: async (token) => {
     const record = await auth.passwordReset.findUnique({ where: { tokenHash: hashToken(token) } });
 
-    return Boolean(record?.expiresAt && record.expiresAt > now());
+    if (!record?.expiresAt || record.expiresAt <= now()) {
+      return null;
+    }
+
+    return {
+      requiresTotp:
+        (await totp?.isEnabled({ companyId: record.companyId, userId: record.userId })) ?? false,
+    };
   },
 
-  confirmReset: async (token, newPassword) => {
+  confirmReset: async (token, newPassword, totpCode) => {
     const at = now();
     const tokenHash = hashToken(token);
     const record = await auth.passwordReset.findUnique({ where: { tokenHash } });
 
     if (!record?.expiresAt || record.expiresAt <= at) {
       throw new PasswordError('RESET_LINK_INVALID');
+    }
+
+    const owner = { companyId: record.companyId, userId: record.userId };
+
+    // 코드가 틀려도 링크는 소모하지 않도록 링크 폐기 전에 확인
+    if (await totp?.isEnabled(owner)) {
+      await accountService.verifySecondFactor(owner, totpCode);
     }
 
     const passwordHash = await hashPassword(newPassword);
