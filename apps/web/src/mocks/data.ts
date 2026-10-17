@@ -67,6 +67,8 @@ export type MockAccount = {
   socialProfiles?: Partial<Record<SocialProviderKey, string>>;
   // false면 소셜 로그인만 쓰는 계정 (비밀번호 로그인 없음)
   hasPassword?: boolean;
+  // 2단계 인증 (등록 중이면 isEnabled가 false), 인증 코드는 MOCK_TOTP_CODE로 고정
+  totp?: { isEnabled: boolean; recoveryCodes: string[] };
   // 해지 요청 중이면 삭제 예정 시각 (ISO)
   closingPurgeAfter?: string;
   // 선택 목록(직종·작업 구분·공종·직원 구분), 처음 조회할 때 프리셋으로 채움 (서버와 같은 동작)
@@ -141,6 +143,9 @@ export const DEMO_DEVICES: readonly Omit<Device, 'isCurrent'>[] = [
 
 // 인증 코드와 시연용 특수 값 (README 목업 모드 표와 같아야 함)
 export const MOCK_EMAIL_CODE = '123456';
+// 2단계 인증 시연용 인증 앱 코드와 등록 키 (실제 앱 없이 화면 흐름을 확인)
+export const MOCK_TOTP_CODE = '123456';
+export const MOCK_TOTP_SECRET = 'JBSWY3DPEHPK3PXPJBSWY3DPEHPK3PXP';
 // 비밀번호 재설정 링크 시연용 (`/reset-password/demo-reset-token-0001`), 한 번 쓰면 폐기
 export const MOCK_RESET_TOKEN = 'demo-reset-token-0001';
 // 해지 취소 링크 시연용 (`/closure/cancel/demo-closure-token-0001`), 해지를 요청한 뒤부터 유효하고 한 번 쓰면 폐기
