@@ -107,15 +107,26 @@ jobs:
             apps/web/test-results
           retention-days: 7
 
+  # 서버·마이그레이션 이미지가 빌드되는지 확인 (배포는 하지 않음)
+  image:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v7.0.1
+      - name: 서버 이미지 빌드
+        run: docker build -f apps/api/Dockerfile -t field-note-api .
+      - name: 마이그레이션 이미지 빌드
+        run: docker build -f apps/api/Dockerfile --target migrate -t field-note-migrate .
+
   verify:
-    needs: [static, test, stories, e2e]
+    needs: [static, test, stories, e2e, image]
     if: always()
     runs-on: ubuntu-latest
     steps:
       - name: 검사 결과 판정
         run: |
-          echo "static=${{ needs.static.result }} test=${{ needs.test.result }} stories=${{ needs.stories.result }} e2e=${{ needs.e2e.result }}"
-          if [[ "${{ needs.static.result }}" != "success" || "${{ needs.test.result }}" != "success" || "${{ needs.stories.result }}" != "success" || "${{ needs.e2e.result }}" != "success" ]]; then
+          echo "static=${{ needs.static.result }} test=${{ needs.test.result }} stories=${{ needs.stories.result }} e2e=${{ needs.e2e.result }} image=${{ needs.image.result }}"
+          if [[ "${{ needs.static.result }}" != "success" || "${{ needs.test.result }}" != "success" || "${{ needs.stories.result }}" != "success" || "${{ needs.e2e.result }}" != "success" || "${{ needs.image.result }}" != "success" ]]; then
             echo "실패한 검사가 있음"
             exit 1
           fi
