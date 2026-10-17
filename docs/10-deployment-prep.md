@@ -59,7 +59,7 @@
 
 ## 3. 처음 배포할 때 순서 (요약, 상세 확인 항목은 §4)
 
-1. DB 생성 후 `pnpm db:setup`으로 마이그레이션 적용과 앱·전용 계정 비밀번호 설정
+1. DB 생성 후 마이그레이션 이미지(§5.1)로 `db:setup`을 실행해 마이그레이션 적용과 앱·전용 계정 비밀번호 설정
 2. 객체 저장소 버킷 생성과 CORS 설정
 3. api 환경 변수 주입 후 기동, 헬스 체크 확인
 4. `pnpm operator`로 첫 회사·관리자 초대 링크 발급
@@ -103,19 +103,59 @@
 - 비밀 값을 바꾸면 영향이 있다: `CODE_HASH_SECRET`은 발송된 미사용 인증 코드가 무효가 되고, `TOTP_ENCRYPTION_KEY`는 켜 둔 2단계 인증이 확인 불가가 되어 해당 사용자는 복구 링크로만 들어올 수 있고, `OAUTH_COOKIE_SECRET`은 진행 중인 소셜 로그인이 실패한다. 객체 저장소 키는 새 키를 먼저 발급해 교체한 뒤 이전 키를 지운다
 - 의존성 취약점은 CI의 `pnpm audit --prod`가 매 PR에서 확인
 
-## 5. 0.11.0 배포 준비로 넘기는 항목
+## 5. 0.11.0에서 정리한 배포 준비
 
-점검(0.10.0)에서 나온, 공급자가 정해져야 처리할 수 있는 일이다
+### 5.1 API 실행 이미지
 
-- 실행 이미지(Dockerfile)와 `tsx`·`prisma` 개발 의존성 처리 방식, 헬스 체크 경로 `/api/v1/health` 연결
-- 웹 응답 헤더 정책: CSP·HSTS (정적 파일을 내려주는 CloudFront 쪽)
+`apps/api/Dockerfile`이 서버 이미지와 마이그레이션 이미지를 만든다. 저장소 루트에서 빌드한다.
+
+```bash
+docker build -f apps/api/Dockerfile -t field-note-api .                      # 서버 (기본)
+docker build -f apps/api/Dockerfile --target migrate -t field-note-migrate . # DB 마이그레이션 작업
+```
+
+- **서버 이미지**: `node:24-bookworm-slim`, 운영 의존성만 설치(`prisma` CLI·테스트 도구 없음), 일반 사용자(`node`)로 실행, 소스를 `tsx`로 바로 실행한다. 컴파일 단계가 없고 `tsx`는 운영 의존성이다. Prisma 클라이언트(`src/generated`)는 저장소에 없어 이미지를 만들 때 생성한다
+- **헬스 체크**: 이미지에 `HEALTHCHECK`가 있고 `/api/v1/health`를 본다. 호스팅의 헬스 체크 경로도 같은 값(`/api/v1/health`)으로 지정한다. 기동 중 DB 연결이나 환경 변수가 잘못되면 프로세스가 바로 종료한다
+- **종료**: `node`가 PID 1이라 종료 신호(SIGTERM)를 받으면 바로 정리하고 끝난다 (로컬 확인: 약 0.6초, 종료 코드 0)
+- **마이그레이션 이미지**: `prisma` CLI를 포함하고 기본 명령이 `db:setup`이다. 배포 때 소유 계정(`DATABASE_MIGRATE_URL`)과 계정 비밀번호용 접속 값(`DATABASE_URL`·`DATABASE_AUTH_URL`·`DATABASE_OPERATOR_URL`·`DATABASE_QUEUE_URL`·`DATABASE_PURGE_URL`)을 넣어 한 번 실행한다. 서버 이미지에는 소유 계정 접속 값을 넣지 않는다
+- **빌드 검사**: CI의 `image` 작업이 두 이미지가 빌드되는지 확인한다 (배포는 하지 않음)
+- **로컬 확인한 것**: 서버 이미지를 띄워 헬스 체크가 healthy가 되고, 로그인(argon2)이 동작하며, `NODE_ENV=production`에서 로컬 주소·http 주소 같은 값은 기동을 거부함을 확인했다. 마이그레이션 이미지는 로컬 DB에 실행해 "적용할 마이그레이션 없음"과 계정 비밀번호 설정까지 확인했다
+- **점검 작업의 백업 도구**: `pnpm backup`은 PostgreSQL 클라이언트 도구(`pg_dump` 등)가 있어야 하고, DB 서버와 같은 주 버전이어야 한다. 이 이미지에는 넣지 않았다. 관리형 DB의 자동 백업을 쓰거나 도구가 있는 곳에서 실행하는 방식은 공급자에 따라 정한다
+
+### 5.2 웹 응답 헤더 정책 (정적 호스팅·CDN에 설정)
+
+API 응답에는 `X-Content-Type-Options`·`X-Frame-Options`·`Referrer-Policy`가 이미 붙는다. 정적 파일(`apps/web/dist`)을 내려주는 쪽에는 아래를 설정한다.
+
+| 헤더                        | 값                                                                                                                                    |
+| --------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- |
+| `Content-Security-Policy`   | `STORAGE_ORIGIN=https://버킷주소 node scripts/csp-header.mjs`가 출력하는 값 (아래)                                                    |
+| `Strict-Transport-Security` | `max-age=31536000; includeSubDomains` (HTTPS가 확실히 동작한 뒤에 켠다. `preload`는 쓰지 않음)                                        |
+| `X-Content-Type-Options`    | `nosniff`                                                                                                                             |
+| `Referrer-Policy`           | `no-referrer`                                                                                                                         |
+| 캐시                        | `index.html`·`sw.js`·`manifest.webmanifest`는 `no-cache`, `assets/`는 `public, max-age=31536000, immutable` (파일 이름에 해시가 붙음) |
+
+**CSP**
+
+- `scripts/csp-header.mjs`는 `dist/index.html`의 인라인 스크립트(첫 화면 테마 적용)의 해시를 계산해 허용 목록에 넣는다. 빌드마다 다시 실행해 헤더 값을 갱신해야 한다
+- 정책 요약: 스크립트는 같은 출처와 위 해시만, 이미지는 `data:`(2단계 인증 QR)·`blob:`(사진 압축·미리보기)·객체 저장소, 연결(`connect-src`)은 같은 출처와 객체 저장소(브라우저가 저장소로 직접 올림·내려받음), `object-src 'none'`, `frame-ancestors 'none'`. `style-src`는 화면 라이브러리가 요소의 `style` 속성을 쓰므로 `'unsafe-inline'`을 허용한다 (스크립트는 허용하지 않음)
+- **`STORAGE_ORIGIN`은 사진·문서의 서명 주소가 가리키는 출처**와 같아야 한다 (예: `https://버킷.s3.리전.amazonaws.com`). 공급자를 정한 뒤 실제 주소로 확인한다. 다르면 사진·문서가 안 보이거나 올라가지 않는다
+- **확인한 방법**: 빌드한 웹을 위 정책을 **강제**하는 서버로 내려주고 `/api`를 API로 전달해, Playwright e2e 11개 전체(사진·문서 올리기와 내려받기, 엑셀 내려받기, 2단계 인증 QR 포함)를 통과시키고 주요 화면을 둘러보며 위반 보고가 0건임을 확인했다
+- 이 확인에서 zod의 `Function()` 시험이 위반 보고를 남기는 것을 찾았다. 기능에는 영향이 없었지만 콘솔 오류와 보고가 쌓이므로 브라우저에서만 이 시험을 끄도록 했다 (`packages/shared/src/zodBrowserConfig.ts`). `unsafe-eval`은 허용하지 않는다
+- 처음에는 `Content-Security-Policy-Report-Only`로 켜서 위반 보고를 확인한 뒤 강제로 바꾸는 방식을 권한다 (실제 도메인·저장소 주소는 로컬과 다름)
+
+## 6. 0.12.0 스테이징으로 넘기는 항목
+
+공급자가 정해져야 처리할 수 있는 일이다
+
+- 헤더 정책 적용: 선택한 호스팅·CDN에 §5.2의 헤더를 설정하고 실제 저장소 주소로 CSP 확인
 - 앞단 요청 제한: 로그인 후 경로에는 요청 횟수 제한이 없으므로 WAF 등에서 정한다
 - 회사 전체 데이터 내려받기 응답 시간: 데이터가 지금 규모의 5배쯤이면 앞단 기본 응답 대기(30초)를 넘으므로 대기 시간 상향 또는 작업 큐 방식 결정
 - 직원 작업 이력의 기간 제한 (몇 년 더 쌓이면)
+- 점검 작업(백업·삭제·복구 시험)을 돌릴 위치와 PostgreSQL 클라이언트 도구 준비
+- 처리방침 `pendingItems`(보호책임자·수탁·위탁·국외 이전)와 약관 `pendingItems` 채우기
 
-## 6. 아직 사용자 결정이 필요한 것
+## 7. 아직 사용자 결정이 필요한 것
 
 - 호스팅·DB·객체 저장소·메일 공급자 (§1 표의 "미정")
 - 운영자 DB 접속 방식 (§2)
 - 도메인
-- 이월된 P4-8 TOTP 시점
