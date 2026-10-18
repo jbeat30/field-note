@@ -37,6 +37,7 @@
     "pino-http": "11.0.0",
     "sharp": "0.35.5",
     "swagger-ui-express": "5.0.1",
+    "tsx": "4.23.15",
     "zod": "4.6.5"
   },
   "devDependencies": {
@@ -52,7 +53,6 @@
     "openapi-typescript": "7.13.0",
     "prisma": "7.10.0",
     "supertest": "7.3.1",
-    "testcontainers": "12.2.0",
-    "tsx": "4.23.15"
+    "testcontainers": "12.2.0"
   }
 }

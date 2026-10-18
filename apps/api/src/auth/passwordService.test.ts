@@ -226,7 +226,7 @@ describe('비밀번호 재설정 확인', () => {
 
     await service.confirmReset(token, NEW_PASSWORD);
     await expectCode(service.confirmReset(token, 'Another-password-2026!'), 'RESET_LINK_INVALID');
-    expect(await service.isResetLinkValid(token)).toBe(false);
+    expect(await service.checkResetLink(token)).toBeNull();
   });
 
   it('동시에 두 번 설정해도 한 번만 성공한다', async () => {
@@ -250,11 +250,11 @@ describe('비밀번호 재설정 확인', () => {
 
     const token = lastResetToken();
 
-    expect(await service.isResetLinkValid(token)).toBe(true);
+    expect(await service.checkResetLink(token)).toEqual({ requiresTotp: false });
 
     nowMs += RESET_TTL_MS + 1000;
 
-    expect(await service.isResetLinkValid(token)).toBe(false);
+    expect(await service.checkResetLink(token)).toBeNull();
     await expectCode(service.confirmReset(token, NEW_PASSWORD), 'RESET_LINK_INVALID');
     await expectCode(
       service.confirmReset('unknown-token-0000', NEW_PASSWORD),
@@ -273,8 +273,8 @@ describe('비밀번호 재설정 확인', () => {
     nowMs += RESET_REQUEST_INTERVAL_MS + 1000;
     await service.requestReset(email);
 
-    expect(await service.isResetLinkValid(first)).toBe(false);
-    expect(await service.isResetLinkValid(lastResetToken())).toBe(true);
+    expect(await service.checkResetLink(first)).toBeNull();
+    expect(await service.checkResetLink(lastResetToken())).toEqual({ requiresTotp: false });
   });
 
   it('재설정하면 로그인 잠금이 풀린다', async () => {

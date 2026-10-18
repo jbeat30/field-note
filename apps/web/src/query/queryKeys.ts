@@ -9,6 +9,7 @@ export const queryKeys = {
   storageUsage: () => ['company-settings', 'storage', {}] as const,
   socialProviders: () => ['social-providers', 'all', {}] as const,
   socialMethods: () => ['social-methods', 'current', {}] as const,
+  totp: () => ['totp', 'current', {}] as const,
   devices: () => ['devices', 'all', {}] as const,
   options: () => ['options', 'all', {}] as const,
   employees: (filter: object = {}) => ['employees', 'list', filter] as const,

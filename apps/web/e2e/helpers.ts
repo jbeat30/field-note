@@ -16,15 +16,33 @@ export const seoulDate = (days = 0) => {
   return base.toISOString().slice(0, 10);
 };
 
+// 로그인 요청은 1분에 10번까지라, 시험이 빠르게 이어지면 제한 안내가 뜰 수 있음 (제한이 풀릴 때까지 기다렸다가 다시 시도)
+const LOGIN_RETRY_WAIT_MS = 15_000;
+const LOGIN_MAX_ATTEMPTS = 6;
+
 export const login = async (page: Page) => {
-  await page.goto('/login');
-  await page.getByLabel('아이디').fill(DEMO_LOGIN.loginId);
-  await page.getByLabel('비밀번호').fill(DEMO_LOGIN.password);
-  await page
-    .getByRole('button', { name: /로그인/ })
-    .first()
-    .click();
-  await expect(page.getByRole('heading', { name: '한빛판금' })).toBeVisible();
+  for (let attempt = 1; attempt <= LOGIN_MAX_ATTEMPTS; attempt += 1) {
+    await page.goto('/login');
+    await page.getByLabel('아이디').fill(DEMO_LOGIN.loginId);
+    await page.getByLabel('비밀번호').fill(DEMO_LOGIN.password);
+    await page
+      .getByRole('button', { name: /로그인/ })
+      .first()
+      .click();
+
+    const home = page.getByRole('heading', { name: '한빛판금' });
+    const limited = page.getByText('요청이 너무 많습니다');
+
+    await expect(home.or(limited)).toBeVisible();
+
+    if (await home.isVisible()) {
+      return;
+    }
+
+    await page.waitForTimeout(LOGIN_RETRY_WAIT_MS);
+  }
+
+  throw new Error('[e2e.login] 요청 제한이 풀리지 않아 로그인하지 못함');
 };
 
 /**
