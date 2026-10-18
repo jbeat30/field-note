@@ -66,6 +66,16 @@ describe('로그인한 사용자별 요청 횟수 제한', () => {
     expect((await request(app).get('/ping').set('x-user', 'user-b')).status).toBe(200);
   });
 
+  it('한도는 라우트마다가 아니라 사용자의 전체 호출에 합산해서 센다', async () => {
+    const app = buildApp();
+
+    expect((await request(app).get('/ping').set('x-user', 'user-a')).status).toBe(200);
+    expect((await request(app).get('/report.xlsx').set('x-user', 'user-a')).status).toBe(200);
+    expect((await request(app).get('/ping').set('x-user', 'user-a')).status).toBe(200);
+    // 서로 다른 라우트를 번갈아 불러도 합쳐서 세 번을 넘으면 막힘
+    expect((await request(app).get('/ping').set('x-user', 'user-a')).status).toBe(429);
+  });
+
   it('파일 내려받기는 더 낮은 한도를 따로 적용한다', async () => {
     const app = buildApp();
 

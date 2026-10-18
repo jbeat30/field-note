@@ -89,6 +89,15 @@ const toExpressPath = (openApiPath: string) => openApiPath.replace(/\{(\w+)\}/g,
 export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
   const router = Router();
   const routes: RouteSpec[] = [];
+  // 사용자별 한도는 모든 라우트가 한 저장소를 함께 써야 전체 호출 횟수가 한도로 세어짐 (라우트마다 만들면 라우트별로 따로 셈)
+  const userLimiter =
+    deps.userRateLimit === false
+      ? null
+      : createUserRateLimiter(deps.userRateLimit ?? DEFAULT_RATE_LIMITS.user);
+  const exportLimiter =
+    deps.exportRateLimit === false
+      ? null
+      : createUserRateLimiter(deps.exportRateLimit ?? DEFAULT_RATE_LIMITS.export);
 
   const add = (spec: RouteSpec, handler: RouteHandler) => {
     if (spec.audit && spec.auth !== 'required') {
@@ -120,12 +129,12 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
         middlewares.push(requireVerifiedEmail(deps.isEmailVerified));
       }
 
-      if (deps.userRateLimit !== false) {
-        middlewares.push(createUserRateLimiter(deps.userRateLimit ?? DEFAULT_RATE_LIMITS.user));
+      if (userLimiter) {
+        middlewares.push(userLimiter);
       }
 
-      if (spec.file && deps.exportRateLimit !== false) {
-        middlewares.push(createUserRateLimiter(deps.exportRateLimit ?? DEFAULT_RATE_LIMITS.export));
+      if (spec.file && exportLimiter) {
+        middlewares.push(exportLimiter);
       }
     }
 
