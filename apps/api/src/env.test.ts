@@ -90,9 +90,15 @@ describe('parseEnv', () => {
       ['APP_ORIGIN', 'http://app.example.com'],
       ['LOG_LEVEL', 'debug'],
       ['SMTP_USER', undefined],
+      ['RATE_LIMIT_MULTIPLIER', '10'],
       ['DATABASE_MIGRATE_URL', 'postgresql://field_note:field_note@db.example.com:5432/field_note'],
     ])('운영에서 %s가 로컬·개발용 값이면 기동을 막는다', (key, value) => {
       expect(() => parseEnv({ ...production, [key]: value })).toThrow(key);
+    });
+
+    it('개발 환경에서는 호출 횟수 제한 배수를 올릴 수 있다', () => {
+      expect(parseEnv({ ...validEnv, RATE_LIMIT_MULTIPLIER: '10' }).RATE_LIMIT_MULTIPLIER).toBe(10);
+      expect(parseEnv(validEnv).RATE_LIMIT_MULTIPLIER).toBe(1);
     });
 
     it('개발 환경에서는 로컬 값을 그대로 쓸 수 있다', () => {

@@ -29,7 +29,12 @@ export default defineConfig({
     {
       command: 'npx tsx --env-file-if-exists=../../.env src/main.ts',
       cwd: '../api',
-      env: { PORT: String(API_PORT), APP_ORIGIN: `http://localhost:${WEB_PORT}` },
+      // 시험은 짧은 시간에 화면을 많이 열므로 호출 횟수 제한 한도를 늘림 (운영에서는 올릴 수 없는 설정)
+      env: {
+        PORT: String(API_PORT),
+        APP_ORIGIN: `http://localhost:${WEB_PORT}`,
+        RATE_LIMIT_MULTIPLIER: '10',
+      },
       url: `http://localhost:${API_PORT}/api/v1/health`,
       reuseExistingServer: !isCi,
       timeout: 120_000,
