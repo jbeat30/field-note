@@ -223,6 +223,12 @@ export const saveOptions = (account: MockAccount, options: OptionItem[]) => {
   persist();
 };
 
+// 2단계 인증 상태 저장 (undefined면 설정 없음)
+export const saveMockTotp = (account: MockAccount, totp: MockAccount['totp']) => {
+  account.totp = totp;
+  persist();
+};
+
 // 직원 카드: 처음 조회할 때 더미 직원으로 채움 (직종·구분은 선택 목록 항목과 이름으로 연결, DB 시드와 같은 방식)
 export const getEmployees = (account: MockAccount): EmployeeDetail[] => {
   if (!account.employees) {

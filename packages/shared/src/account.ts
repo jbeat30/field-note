@@ -83,9 +83,19 @@ export const emailResendResponseSchema = z.object({
   resendAfterSeconds: z.number().int().nonnegative(),
 });
 
+// 2단계 인증 코드: 인증 앱의 6자리 숫자 또는 복구 코드 (하이픈·공백은 서버가 무시)
+export const totpCodeSchema = z.string().trim().min(6).max(24);
+
+// 인증 앱 등록 확인에는 인증 앱이 보여 주는 6자리 숫자만 허용
+export const totpDigitsSchema = z
+  .string()
+  .regex(/^\d{6}$/, VALIDATION_MESSAGES.required('6자리 숫자'));
+
 export const loginRequestSchema = z.object({
   loginId: z.string().min(1),
   password: z.string().min(1),
+  // 2단계 인증을 켠 계정만 필요 (없으면 TOTP_REQUIRED 응답 후 화면이 코드를 받아 같은 요청을 다시 보냄)
+  totpCode: totpCodeSchema.optional(),
   // 현장 휴대폰용 자동 로그인
   isRemembered: z.boolean().default(true),
 });
@@ -102,7 +112,17 @@ export const passwordResetParamsSchema = z.object({ token: z.string().min(8).max
 export const passwordResetConfirmSchema = z.object({
   token: z.string().min(8).max(128),
   newPassword: passwordSchema,
+  // 2단계 인증을 켠 계정은 인증 코드 또는 복구 코드도 필요
+  totpCode: totpCodeSchema.optional(),
 });
+
+// 링크가 유효한지와 함께 인증 코드 입력 칸이 필요한지 알림
+export const passwordResetLinkResponseSchema = z.object({
+  success: z.literal(true),
+  requiresTotp: z.boolean(),
+});
+
+export type PasswordResetLinkResponse = z.infer<typeof passwordResetLinkResponseSchema>;
 
 export type PasswordResetConfirm = z.infer<typeof passwordResetConfirmSchema>;
 
@@ -130,6 +150,48 @@ export const emailChangeSchema = z.object({
 });
 
 export type EmailChange = z.infer<typeof emailChangeSchema>;
+
+// 2단계 인증(TOTP): 선택 기능, 켜면 아이디 로그인과 비밀번호 재설정에 인증 앱의 코드가 더 필요함
+export const TOTP_RECOVERY_CODE_COUNT = 8;
+
+export const totpStatusSchema = z.object({
+  isEnabled: z.boolean(),
+  // 아직 쓰지 않은 복구 코드 수 (꺼져 있으면 0)
+  recoveryCodesLeft: z.number().int().nonnegative(),
+});
+
+export type TotpStatus = z.infer<typeof totpStatusSchema>;
+
+// 등록 시작: 인증 앱에 넣을 키와 QR로 만들 주소 (확인 전까지는 켜지지 않음)
+export const totpSetupResponseSchema = z.object({
+  secret: z.string(),
+  otpauthUrl: z.string(),
+});
+
+export type TotpSetupResponse = z.infer<typeof totpSetupResponseSchema>;
+
+export const totpEnableSchema = z.object({ code: totpDigitsSchema });
+
+export type TotpEnable = z.infer<typeof totpEnableSchema>;
+
+// 복구 코드는 이 응답에서 한 번만 보여 주고 서버에는 해시만 남김
+export const totpRecoveryCodesResponseSchema = z.object({
+  recoveryCodes: z.array(z.string()),
+});
+
+export type TotpRecoveryCodesResponse = z.infer<typeof totpRecoveryCodesResponseSchema>;
+
+// 끄기: 비밀번호 로그인이 있는 계정은 현재 비밀번호도 다시 확인
+export const totpDisableSchema = z.object({
+  code: totpCodeSchema,
+  currentPassword: z.string().min(1).optional(),
+});
+
+export type TotpDisable = z.infer<typeof totpDisableSchema>;
+
+export const totpRecoveryRegenerateSchema = z.object({ code: totpCodeSchema });
+
+export type TotpRecoveryRegenerate = z.infer<typeof totpRecoveryRegenerateSchema>;
 
 // 소셜 로그인: 제공자는 서버 설정에 따라 켜지고, 시작 요청은 로그인 화면 주소를 돌려줌
 export const SOCIAL_PROVIDER_KEYS = ['kakao', 'naver', 'google'] as const;

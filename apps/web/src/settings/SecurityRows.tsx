@@ -7,11 +7,12 @@ import { Modal } from '../components/ui/modal';
 import { EmailChangeForm } from './EmailChangeForm';
 import { PasswordChangeForm } from './PasswordChangeForm';
 import { PasswordSetForm } from './PasswordSetForm';
+import { TotpRow } from './TotpRow';
 
 // 창을 연 시점의 종류를 기억: 설정을 마치면 비밀번호가 생겨 화면이 바뀌어도 완료 안내가 유지되도록 함
 type Target = 'password' | 'password-set' | 'email' | null;
 
-// 보안: 비밀번호·이메일을 줄마다 보이고 `변경`을 누르면 창에서 바꿈 (긴 폼을 늘 펼쳐 두지 않음)
+// 보안: 비밀번호·이메일·2단계 인증을 줄마다 보이고 `변경`을 누르면 창에서 바꿈 (긴 폼을 늘 펼쳐 두지 않음)
 // 소셜 로그인만 쓰는 계정은 비밀번호 줄이 `설정`이 되고, 이메일은 비밀번호 확인 없이 바꿈
 export const SecurityRows = ({ email }: { email?: string | null }) => {
   const [target, setTarget] = useState<Target>(null);
@@ -53,6 +54,7 @@ export const SecurityRows = ({ email }: { email?: string | null }) => {
             변경
           </Button>
         </li>
+        <TotpRow />
       </ul>
       <Modal
         open={target === 'password' || target === 'password-set'}

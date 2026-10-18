@@ -114,6 +114,7 @@ export const purgeCompany = (
     deleted.email_verifications = (await tx.emailVerification.deleteMany({ where })).count;
     deleted.password_resets = (await tx.passwordReset.deleteMany({ where })).count;
     deleted.social_accounts = (await tx.socialAccount.deleteMany({ where })).count;
+    deleted.user_totp = (await tx.userTotp.deleteMany({ where })).count;
     deleted.user_credentials = (await tx.userCredential.deleteMany({ where })).count;
     deleted.alert_dismissals = (await tx.alertDismissal.deleteMany({ where })).count;
     deleted.alert_preferences = (await tx.alertPreference.deleteMany({ where })).count;

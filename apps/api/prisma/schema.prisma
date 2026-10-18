@@ -48,6 +48,7 @@ model Company {
   sessions                   Session[]
   consents                   Consent[]
   credentials                UserCredential[]
+  userTotps                  UserTotp[]
   invitations                Invitation[]
   operatorActions            OperatorAction[]
   emailVerifications         EmailVerification[]
@@ -428,6 +429,7 @@ model User {
   updatedAt               DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   company                 Company                     @relation(fields: [companyId], references: [id])
   credential              UserCredential?
+  totp                    UserTotp?
   consents                Consent[]
   sessions                Session[]
   invitations             Invitation[]
@@ -485,6 +487,27 @@ model UserCredential {
 
   @@id([companyId, userId])
   @@map("user_credentials")
+}
+
+// 2단계 인증(TOTP) 설정 (회사 범위 밖 전용 계정만 접근), 켜기 전의 등록 중 상태도 한 행으로 표현
+model UserTotp {
+  companyId          String    @map("company_id") @db.Uuid
+  userId             String    @map("user_id") @db.Uuid
+  // 서버 비밀 값으로 암호화한 인증 키 (평문 저장 금지)
+  secretEncrypted    String    @map("secret_encrypted")
+  // 등록 확인을 마친 시각 (비어 있으면 등록 중이라 로그인에 요구하지 않음)
+  enabledAt          DateTime? @map("enabled_at") @db.Timestamptz(3)
+  // 마지막으로 쓴 30초 구간 번호 (같은 코드 재사용 차단)
+  lastUsedStep       Int       @default(0) @map("last_used_step")
+  // 복구 코드의 SHA-256 해시 (쓰면 해당 값을 제거)
+  recoveryCodeHashes String[]  @default([]) @map("recovery_code_hashes")
+  createdAt          DateTime  @default(now()) @map("created_at") @db.Timestamptz(3)
+  updatedAt          DateTime  @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
+  company            Company   @relation(fields: [companyId], references: [id])
+  user               User      @relation(fields: [companyId, userId], references: [companyId, id])
+
+  @@id([companyId, userId])
+  @@map("user_totp")
 }
 
 // 약관·개인정보 처리방침 등의 버전 (회사와 무관한 공용 자료, 쓰기는 운영 경로만)
