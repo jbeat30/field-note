@@ -16,6 +16,7 @@ import {
   passwordChangeSchema,
   passwordSetSchema,
   passwordResetConfirmSchema,
+  passwordResetLinkResponseSchema,
   passwordResetParamsSchema,
   passwordResetRequestSchema,
   type CompanyRules,
@@ -65,7 +66,7 @@ type AccountRouteOptions = {
 };
 
 // 계정 서비스의 업무 오류를 공통 오류 형식으로 변환
-const toAppError = (error: unknown): unknown => {
+export const toAppError = (error: unknown): unknown => {
   if (!(error instanceof AccountError)) {
     return error;
   }
@@ -94,6 +95,10 @@ const toAppError = (error: unknown): unknown => {
       return new AppError('CURRENT_PASSWORD_INVALID');
     case 'ACCOUNT_LOCKED':
       return new AppError('ACCOUNT_LOCKED');
+    case 'TOTP_REQUIRED':
+      return new AppError('TOTP_REQUIRED');
+    case 'TOTP_INVALID':
+      return new AppError('TOTP_INVALID');
     case 'ACCOUNT_NOT_FOUND':
       return new AppError('UNAUTHORIZED');
     case 'SOCIAL_NOT_LINKED':
@@ -332,7 +337,7 @@ export const registerAccountRoutes = (
       auth: 'none',
       request: { body: loginRequestSchema },
       response: { status: 200, schema: meResponseSchema },
-      errors: ['INVALID_CREDENTIALS', 'ACCOUNT_LOCKED'],
+      errors: ['INVALID_CREDENTIALS', 'ACCOUNT_LOCKED', 'TOTP_REQUIRED', 'TOTP_INVALID'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     isAccountReady
@@ -343,6 +348,7 @@ export const registerAccountRoutes = (
             const account = await accountService.login({
               loginId: input.loginId.trim().toLowerCase(),
               password: input.password,
+              totpCode: input.totpCode,
             });
             const session = await sessionStore.create(account, {
               isRemembered: input.isRemembered,
@@ -521,21 +527,23 @@ export const registerAccountRoutes = (
     {
       method: 'get',
       path: '/auth/password-reset/{token}',
-      summary: '비밀번호 재설정 링크 확인',
+      summary: '비밀번호 재설정 링크 확인 (2단계 인증 코드 입력 필요 여부 포함)',
       auth: 'none',
       request: { params: passwordResetParamsSchema },
-      response: { status: 200, schema: successResponseSchema },
+      response: { status: 200, schema: passwordResetLinkResponseSchema },
       errors: ['NOT_FOUND'],
       rateLimit: { windowMs: 60_000, limit: 30 },
     },
     passwordService
       ? async ({ params }) => {
           // 사용·만료·없는 링크는 구분하지 않음
-          if (!(await passwordService.isResetLinkValid((params as { token: string }).token))) {
+          const link = await passwordService.checkResetLink((params as { token: string }).token);
+
+          if (!link) {
             throw new AppError('NOT_FOUND');
           }
 
-          return { success: true };
+          return { success: true as const, requiresTotp: link.requiresTotp };
         }
       : notImplemented,
   );
@@ -548,7 +556,7 @@ export const registerAccountRoutes = (
       auth: 'none',
       request: { body: passwordResetConfirmSchema },
       response: { status: 200, schema: successResponseSchema },
-      errors: ['NOT_FOUND'],
+      errors: ['NOT_FOUND', 'TOTP_REQUIRED', 'TOTP_INVALID', 'ACCOUNT_LOCKED'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     passwordService
@@ -556,9 +564,9 @@ export const registerAccountRoutes = (
           const input = body as PasswordResetConfirm;
 
           try {
-            await passwordService.confirmReset(input.token, input.newPassword);
+            await passwordService.confirmReset(input.token, input.newPassword, input.totpCode);
           } catch (error) {
-            throw error instanceof PasswordError ? new AppError('NOT_FOUND') : error;
+            throw error instanceof PasswordError ? new AppError('NOT_FOUND') : toAppError(error);
           }
 
           return { success: true };

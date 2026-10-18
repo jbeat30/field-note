@@ -32,6 +32,8 @@ export type SecurityNoticeKind =
   | 'PASSWORD_CHANGED'
   | 'PASSWORD_RESET_DONE'
   | 'EMAIL_CHANGED'
+  | 'TOTP_ENABLED'
+  | 'TOTP_DISABLED'
   | 'CLOSURE_CANCELLED'
   | 'OWNER_REGISTERED_AGAIN';
 
@@ -63,6 +65,20 @@ const NOTICES: Record<SecurityNoticeKind, { subject: string; lines: (hint?: stri
       lines: () => [
         '계정 해지 요청이 취소되어 계정을 다시 사용할 수 있습니다.',
         '다시 로그인해 주세요.',
+      ],
+    },
+    TOTP_ENABLED: {
+      subject: '[field-note] 2단계 인증이 켜졌습니다',
+      lines: () => [
+        '계정의 2단계 인증이 켜졌습니다.',
+        '이제 아이디 로그인과 비밀번호 재설정 때 인증 앱의 6자리 코드가 필요합니다.',
+      ],
+    },
+    TOTP_DISABLED: {
+      subject: '[field-note] 2단계 인증이 꺼졌습니다',
+      lines: () => [
+        '계정의 2단계 인증이 꺼졌습니다.',
+        '이제 아이디와 비밀번호만으로 로그인할 수 있습니다.',
       ],
     },
     EMAIL_CHANGED: {

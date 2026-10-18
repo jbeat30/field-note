@@ -1,7 +1,8 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { findAccount, getCurrentAccount, startClosure } from '../mocks/state';
+import { MOCK_TOTP_CODE } from '../mocks/data';
+import { findAccount, getCurrentAccount, saveMockTotp, startClosure } from '../mocks/state';
 
 import { LoginPage } from './LoginPage';
 
@@ -130,5 +131,60 @@ export const SocialClosing: Story = {
     await expect(await within(canvasElement).findByRole('alert')).toHaveTextContent(
       '해지 요청 중인 계정',
     );
+  },
+};
+
+// 2단계 인증을 켠 계정: 비밀번호가 맞으면 인증 코드 칸이 열리고, 코드가 맞아야 로그인됨
+const withTotp = {
+  loaders: [
+    () => {
+      saveMockTotp(findAccount('hanbit')!, { isEnabled: true, recoveryCodes: ['ABCDE-FGHJK'] });
+    },
+  ],
+};
+
+export const TotpRequired: Story = {
+  ...withTotp,
+  play: async ({ canvasElement }) => {
+    const canvas = await fillAndSubmit(canvasElement, 'hanbit', 'Hanbit-demo-2026!');
+
+    await expect(await canvas.findByLabelText('인증 코드')).toBeInTheDocument();
+    await expect(canvas.getByText(/2단계 인증이 켜진 계정입니다/)).toBeInTheDocument();
+    // 코드를 받기 전에는 로그인되지 않음
+    await expect(getCurrentAccount()).toBeUndefined();
+  },
+};
+
+export const TotpWrongCode: Story = {
+  ...withTotp,
+  play: async ({ canvasElement }) => {
+    const canvas = await fillAndSubmit(canvasElement, 'hanbit', 'Hanbit-demo-2026!');
+
+    await userEvent.type(await canvas.findByLabelText('인증 코드'), '000000');
+    await userEvent.click(canvas.getByRole('button', { name: '로그인' }));
+    await expect(await canvas.findByText(/인증 코드가 올바르지 않습니다/)).toBeInTheDocument();
+    await expect(getCurrentAccount()).toBeUndefined();
+  },
+};
+
+export const TotpSuccess: Story = {
+  ...withTotp,
+  play: async ({ canvasElement }) => {
+    const canvas = await fillAndSubmit(canvasElement, 'hanbit', 'Hanbit-demo-2026!');
+
+    await userEvent.type(await canvas.findByLabelText('인증 코드'), MOCK_TOTP_CODE);
+    await userEvent.click(canvas.getByRole('button', { name: '로그인' }));
+    await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
+  },
+};
+
+export const TotpRecoveryCode: Story = {
+  ...withTotp,
+  play: async ({ canvasElement }) => {
+    const canvas = await fillAndSubmit(canvasElement, 'hanbit', 'Hanbit-demo-2026!');
+
+    await userEvent.type(await canvas.findByLabelText('인증 코드'), 'abcde-fghjk');
+    await userEvent.click(canvas.getByRole('button', { name: '로그인' }));
+    await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
   },
 };

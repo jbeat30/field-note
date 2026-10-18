@@ -722,7 +722,7 @@ const COLLECTIONS = [
 
 // 회사 데이터가 아니라 로그인한 본인의 계정·세션·회사 설정만 다루고 다른 회사의 ID를 받을 수 없는 엔드포인트
 // 회사 업무 데이터를 다루는 새 엔드포인트는 여기에 넣지 않고 위의 시험 목록(attacks·COLLECTIONS)에 추가
-// 각자 전용 시험이 있다: 계정(accountRoutes)·기기(deviceRoutes: 다른 회사 사용자의 기기 로그아웃 불가)·소셜(socialRoutes)·회사 설정(companySettingsRoutes: 두 회사의 설정은 서로 독립)
+// 각자 전용 시험이 있다: 계정(accountRoutes)·기기(deviceRoutes: 다른 회사 사용자의 기기 로그아웃 불가)·소셜(socialRoutes)·2단계 인증(totpService: 다른 회사 계정의 설정에 영향 없음)·회사 설정(companySettingsRoutes: 두 회사의 설정은 서로 독립)
 const OWN_ACCOUNT_ONLY = [
   // 틀 검증용 샘플 쓰기 API (업무 데이터 없음)
   'POST /samples',
@@ -739,6 +739,11 @@ const OWN_ACCOUNT_ONLY = [
   'POST /me/password/set',
   'POST /me/social/{provider}/start',
   'DELETE /me/social/{provider}',
+  'GET /me/totp',
+  'POST /me/totp/setup',
+  'POST /me/totp/enable',
+  'POST /me/totp/disable',
+  'POST /me/totp/recovery-codes',
   'GET /company/settings',
   'PUT /company/settings',
   'GET /company/rules',
@@ -1162,7 +1167,7 @@ describe('회사 격리: 전 엔드포인트', () => {
         WHERE table_schema = 'public' AND column_name = 'company_id'
           AND table_name IN (SELECT tablename FROM pg_tables WHERE schemaname = 'public')
           AND table_name NOT IN ('sessions', 'users', 'user_credentials', 'consents', 'invitations',
-            'operator_actions', 'email_verifications', 'password_resets', 'social_accounts', 'company_closures')
+            'operator_actions', 'email_verifications', 'password_resets', 'social_accounts', 'user_totp', 'company_closures')
         ORDER BY table_name`,
     );
     const seen: Record<string, { own: number; other: number }> = {};

@@ -167,6 +167,16 @@ describe('복구 링크 사용', () => {
     // 사용 전에는 기존 로그인이 유지됨
     expect((await login(instance, owner.loginId, 'Correct-horse-2026!')).status).toBe(200);
 
+    // 2단계 인증을 켜 둔 계정
+    await db.owner.userTotp.create({
+      data: {
+        companyId: owner.companyId,
+        userId: owner.userId,
+        secretEncrypted: 'placeholder',
+        enabledAt: new Date(),
+      },
+    });
+
     const before = await db.owner.company.findUniqueOrThrow({ where: { id: owner.companyId } });
     const newLoginId = `recovered-${sequence}`;
     const newEmail = `recovered${sequence}@example.com`;
@@ -177,6 +187,8 @@ describe('복구 링크 사용', () => {
     );
 
     expect(done.status).toBe(201);
+    // 로그인 수단을 잃은 복구이므로 2단계 인증도 해제됨
+    expect(await db.owner.userTotp.count({ where: { companyId: owner.companyId } })).toBe(0);
 
     // 이전 이메일로 보안 알림
     expect(notices).toContainEqual({ kind: 'OWNER_REGISTERED_AGAIN', to: owner.email });
