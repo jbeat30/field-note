@@ -164,7 +164,8 @@ export type AppOptions = {
 export const createRegistry = (options: AppOptions = {}) => {
   const sessionStore = options.sessionStore ?? createMemorySessionStore();
   const registry = createRouteRegistry({
-    resolveAuth: options.resolveAuth ?? createSessionResolver(sessionStore),
+    resolveAuth:
+      options.resolveAuth ?? createSessionResolver(sessionStore, options.isSecureCookie ?? false),
     idempotencyStore: options.idempotencyStore ?? createMemoryIdempotencyStore(),
     recordAudit: options.audit
       ? (companyId, actorId, entry) => options.audit!.record(companyId, actorId, entry)

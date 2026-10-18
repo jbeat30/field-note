@@ -11,7 +11,7 @@ import type { AuthResolver } from './types';
 export const requireAuth =
   (resolveAuth: AuthResolver): RequestHandler =>
   async (req, res, next) => {
-    const auth = await resolveAuth(req);
+    const auth = await resolveAuth(req, res);
 
     if (!auth) {
       next(new AppError('UNAUTHORIZED'));
