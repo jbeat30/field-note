@@ -521,6 +521,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 브라우저에는 `sid` 쿠키(HttpOnly, SameSite=Lax, 운영은 Secure)만 두고 로컬스토리지에는 아무것도 저장하지 않는다. 요청에는 `Authorization` 헤더 대신 쿠키가 자동으로 붙는다
 - 회사 ID는 세션에만 기록되며, 요청의 경로·쿼리·헤더·본문으로는 받지 않는다. API 문서에 회사 ID 입력이 생기면 테스트가 실패한다
 - 쓰기 요청(POST·PUT·PATCH·DELETE)은 CSRF 방어를 위해 `X-Field-Note-Client: web` 헤더가 필요하고, Origin이 있으면 `APP_ORIGIN`과 같아야 한다. 웹 API 클라이언트가 자동으로 붙인다
+- **요청 횟수 제한**(`apps/api/src/http/rateLimit.ts`): 접속 주소(IP)당 모든 API 호출 분당 600회, 로그인한 사용자당 분당 300회, 파일 내려받기(엑셀 등) 사용자당 분당 10회가 기본이고, 로그인 전 경로는 라우트마다 더 낮은 한도가 따로 있다. 넘으면 `429 TOO_MANY_REQUESTS`. 정상 사용에서는 닿지 않는 값이고(화면 하나가 보내는 호출은 수십 회 이하), 스크립트로 쓸어 가는 호출을 막는다. 횟수는 서버 프로세스 안에서 세므로 서버를 여러 대로 늘리면 앞단(WAF·CDN)에서도 제한한다. `createApp`의 `rateLimits`로 조정하거나 끌 수 있고(한꺼번에 많이 부르는 시험용), 운영 서버는 기본값을 쓴다
 - 회사 범위 밖 전용 계정을 쓰는 코드는 `apps/api/src/session/`처럼 정해진 위치에만 둔다. 다른 곳에서 DB 클라이언트를 직접 만들면 린트가 막는다
 
 ### 유효 기간 (`apps/api/src/auth/loginPolicy.ts`)

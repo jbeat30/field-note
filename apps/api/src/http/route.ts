@@ -5,7 +5,12 @@ import type { ErrorCode } from '@field-note/shared';
 
 import type { AuditEntry } from '../audit/auditService';
 import { idempotency, type IdempotencyStore } from './idempotency';
-import { createRateLimiter, type RateLimitOptions } from './rateLimit';
+import {
+  createRateLimiter,
+  createUserRateLimiter,
+  DEFAULT_RATE_LIMITS,
+  type RateLimitOptions,
+} from './rateLimit';
 import { requireAuth, requireVerifiedEmail } from './requireAuth';
 import type { AuthContext, AuthResolver } from './types';
 import { validate } from './validate';
@@ -64,6 +69,9 @@ export type RouteDependencies = {
   resolveAuth: AuthResolver;
   // 계정의 이메일 인증 여부 조회 (없으면 확인하지 않음: 계정 서비스가 없는 테스트 앱)
   isEmailVerified?: (auth: AuthContext) => Promise<boolean>;
+  // 로그인한 사용자별 전체 호출 한도와 파일 내려받기 한도 (없으면 기본값, false면 끔: 한꺼번에 많이 부르는 시험용)
+  userRateLimit?: RateLimitOptions | false;
+  exportRateLimit?: RateLimitOptions | false;
   idempotencyStore: IdempotencyStore;
   // 활동 기록 저장 함수 (없으면 기록 생략), 기록이 실패해도 이미 끝난 처리는 되돌리지 않고 알림
   recordAudit?: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;
@@ -81,6 +89,15 @@ const toExpressPath = (openApiPath: string) => openApiPath.replace(/\{(\w+)\}/g,
 export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
   const router = Router();
   const routes: RouteSpec[] = [];
+  // 사용자별 한도는 모든 라우트가 한 저장소를 함께 써야 전체 호출 횟수가 한도로 세어짐 (라우트마다 만들면 라우트별로 따로 셈)
+  const userLimiter =
+    deps.userRateLimit === false
+      ? null
+      : createUserRateLimiter(deps.userRateLimit ?? DEFAULT_RATE_LIMITS.user);
+  const exportLimiter =
+    deps.exportRateLimit === false
+      ? null
+      : createUserRateLimiter(deps.exportRateLimit ?? DEFAULT_RATE_LIMITS.export);
 
   const add = (spec: RouteSpec, handler: RouteHandler) => {
     if (spec.audit && spec.auth !== 'required') {
@@ -110,6 +127,14 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
 
       if (deps.isEmailVerified && !spec.allowUnverifiedEmail) {
         middlewares.push(requireVerifiedEmail(deps.isEmailVerified));
+      }
+
+      if (userLimiter) {
+        middlewares.push(userLimiter);
+      }
+
+      if (spec.file && exportLimiter) {
+        middlewares.push(exportLimiter);
       }
     }
 
