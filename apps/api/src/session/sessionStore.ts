@@ -12,6 +12,9 @@ import type { AuthContext } from '../http/types';
 // 세션 최대 유지 기간 (로그인 유지를 선택한 경우)
 export const SESSION_MAX_AGE_MS = REMEMBERED_SESSION_MS;
 
+// 한 계정이 동시에 로그인해 둘 수 있는 기기 수 (넘으면 가장 오래 쓰지 않은 세션부터 정리: 로그아웃하지 않고 다시 로그인해도 세션이 무한히 쌓이지 않게 함)
+export const MAX_SESSIONS_PER_USER = 10;
+
 export type CreatedSession = {
   // 쿠키로만 전달하는 원문 토큰 (저장소에는 해시만 보관)
   token: string;
@@ -119,6 +122,19 @@ export const createPrismaSessionStore = (
         },
       });
 
+      const stale = await prisma.session.findMany({
+        where: { userId },
+        orderBy: [{ lastActiveAt: 'desc' }, { createdAt: 'desc' }],
+        skip: MAX_SESSIONS_PER_USER,
+        select: { tokenHash: true },
+      });
+
+      if (stale.length > 0) {
+        await prisma.session.deleteMany({
+          where: { tokenHash: { in: stale.map((session) => session.tokenHash) } },
+        });
+      }
+
       return { token, expiresAt, isPersistent: options?.isRemembered !== false };
     },
     find: async (token, ip) => {
@@ -128,6 +144,8 @@ export const createPrismaSessionStore = (
       const session = await prisma.session.findFirst({
         where: {
           ...isActive(at),
+          // 정지·해지 중·삭제된 회사의 기존 세션은 쓸 수 없음 (로그인뿐 아니라 이미 로그인한 기기도 막음)
+          company: { status: 'ACTIVE' },
           OR: [{ tokenHash: hash }, { previousTokenHash: hash, rotatedAt: { gt: graceStart } }],
         },
       });
@@ -280,6 +298,15 @@ export const createMemorySessionStore = (now: Clock = () => new Date()): Session
         lastIp: options?.ipAddress ?? null,
         lastActiveAt: at,
       });
+
+      // 같은 시각이면 방금 만든 세션이 앞에 오도록 뒤집은 뒤 정렬
+      const own = sessions
+        .filter((session) => session.userId === userId)
+        .reverse()
+        .sort((a, b) => b.lastActiveAt.getTime() - a.lastActiveAt.getTime());
+      const stale = new Set(own.slice(MAX_SESSIONS_PER_USER));
+
+      removeWhere((session) => stale.has(session));
 
       return { token, expiresAt, isPersistent: options?.isRemembered !== false };
     },

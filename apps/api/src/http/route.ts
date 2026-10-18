@@ -82,7 +82,7 @@ const toExpressPath = (openApiPath: string) => openApiPath.replace(/\{(\w+)\}/g,
 
 /**
  * @description 라우트 등록소 생성, 모든 라우트는 add로만 등록하며 표준 순서
- * (속도 제한 → 검증 → 인증 → 멱등 키 → 핸들러)와 응답 스키마 파싱 강제
+ * (속도 제한 → 인증 → 사용자별 제한 → 검증 → 멱등 키 → 핸들러, 인증이 필요 없는 라우트는 검증이 인증 자리에 옴)와 응답 스키마 파싱 강제
  * @param deps 인증 해석기와 멱등 키 저장소
  * @returns 라우터와 등록된 라우트 목록 (OpenAPI 생성·일치 테스트에서 사용)
  */
@@ -118,7 +118,7 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
       middlewares.push(createRateLimiter(spec.rateLimit));
     }
 
-    if (spec.request) {
+    if (spec.request && spec.auth !== 'required') {
       middlewares.push(validate(spec.request));
     }
 
@@ -135,6 +135,11 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
 
       if (spec.file && exportLimiter) {
         middlewares.push(exportLimiter);
+      }
+
+      // 로그인이 필요한 라우트는 인증을 먼저 확인해 로그인하지 않은 호출에 입력 검증 사유(요청 형태)를 알려 주지 않음
+      if (spec.request) {
+        middlewares.push(validate(spec.request));
       }
     }
 
