@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation, useNavigation } from 'react-router';
 
 import { Button } from '../components/ui/button';
 
+import { isSigningOut } from './signOutIntent';
 import { useMe } from './useMe';
 
 // 로그인한 사용자만 통과, 이메일 인증 전이면 인증 화면으로 이동 (인증이 끝나야 가입 완료)
@@ -34,6 +35,11 @@ export const RequireAuth = () => {
         </Button>
       </div>
     );
+  }
+
+  if (!me.data && isSigningOut()) {
+    // 직접 로그아웃한 경우는 보던 화면을 기억하거나 만료 안내를 띄우지 않음
+    return <Navigate to="/login" replace />;
   }
 
   if (!me.data) {
