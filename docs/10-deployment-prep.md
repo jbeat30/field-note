@@ -138,8 +138,8 @@ API 응답에는 `X-Content-Type-Options`·`X-Frame-Options`·`Referrer-Policy`�
 
 **CSP**
 
-- `scripts/csp-header.mjs`는 `dist/index.html`의 인라인 스크립트(첫 화면 테마 적용)의 해시를 계산해 허용 목록에 넣는다. 빌드마다 다시 실행해 헤더 값을 갱신해야 한다
-- 정책 요약: 스크립트는 같은 출처와 위 해시만, 이미지는 `data:`(2단계 인증 QR)·`blob:`(사진 압축·미리보기)·객체 저장소, 연결(`connect-src`)은 같은 출처와 객체 저장소(브라우저가 저장소로 직접 올림·내려받음), `object-src 'none'`, `frame-ancestors 'none'`. `style-src`는 화면 라이브러리가 요소의 `style` 속성을 쓰므로 `'unsafe-inline'`을 허용한다 (스크립트는 허용하지 않음)
+- 인라인 스크립트는 없다. 첫 화면 테마 적용 스크립트는 `public/theme-init.js` 파일로 옮겼고, `scripts/csp-header.mjs`는 `dist/index.html`에 인라인 스크립트가 있으면 헤더를 만들지 않고 알린다 (해시 갱신이 필요 없음)
+- 정책 요약: 기본은 모두 막고(`default-src 'none'`) 스크립트는 같은 출처 파일만, 이미지는 `data:`(2단계 인증 QR)·`blob:`(사진 압축·미리보기)·객체 저장소, 연결(`connect-src`)은 같은 출처와 객체 저장소(브라우저가 저장소로 직접 올림·내려받음), `font-src`는 같은 출처와 `data:`, `base-uri 'none'`, `object-src 'none'`, `frame-ancestors 'none'`. `style-src`는 화면 라이브러리가 요소의 `style` 속성을 쓰므로 `'unsafe-inline'`을 허용한다 (스크립트는 허용하지 않음)
 - **`STORAGE_ORIGIN`은 사진·문서의 서명 주소가 가리키는 출처**와 같아야 한다 (예: `https://버킷.s3.리전.amazonaws.com`). 공급자를 정한 뒤 실제 주소로 확인한다. 다르면 사진·문서가 안 보이거나 올라가지 않는다
 - **확인한 방법**: 빌드한 웹을 위 정책을 **강제**하는 서버로 내려주고 `/api`를 API로 전달해, Playwright e2e 11개 전체(사진·문서 올리기와 내려받기, 엑셀 내려받기, 2단계 인증 QR 포함)를 통과시키고 주요 화면을 둘러보며 위반 보고가 0건임을 확인했다
 - 이 확인에서 zod의 `Function()` 시험이 위반 보고를 남기는 것을 찾았다. 기능에는 영향이 없었지만 콘솔 오류와 보고가 쌓이므로 브라우저에서만 이 시험을 끄도록 했다 (`packages/shared/src/zodBrowserConfig.ts`). `unsafe-eval`은 허용하지 않는다
