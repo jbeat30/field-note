@@ -3,6 +3,7 @@ import { useState, type ReactNode } from 'react';
 
 import { Button } from '../components/ui/button';
 import { getErrorDetailMessage } from '../lib/apiError';
+import { isHttpUrl } from '../lib/safeReturnPath';
 
 import { fetchDocumentAccess } from './useDocuments';
 
@@ -36,6 +37,10 @@ export const useOpenDocument = (): OpenDocument => {
 
     try {
       const { url } = await fetchDocumentAccess(target.id, versionNo, mode);
+
+      if (!isHttpUrl(url)) {
+        throw new Error('[web.useOpenDocument] 열 수 없는 주소');
+      }
 
       if (popup) {
         popup.opener = null;
