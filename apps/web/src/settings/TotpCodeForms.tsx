@@ -12,6 +12,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 
 const CODE_HINT = '인증 앱의 6자리 코드 또는 복구 코드';
@@ -73,7 +74,7 @@ export const TotpDisableForm = ({
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {needsPassword && (
         <FormField label="현재 비밀번호" error={errors.currentPassword?.message}>
-          <Input type="password" autoComplete="current-password" {...register('currentPassword')} />
+          <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
         </FormField>
       )}
       <FormField label="인증 코드" hint={CODE_HINT} error={errors.code?.message}>
