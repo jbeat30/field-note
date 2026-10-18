@@ -24,6 +24,8 @@ const baseSchema = z.object({
   TOTP_ENCRYPTION_KEY: z.string().min(32),
   // 앞단 프록시(CloudFront·로드 밸런서 등) 단계 수 (0은 프록시 없는 직접 접속, 프록시 뒤에서 0이면 모든 사용자가 같은 IP로 보여 요청 횟수 제한 공유)
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
+  // 호출 횟수 제한 한도에 곱하는 배수 (화면 전체 흐름 시험처럼 짧은 시간에 많이 부르는 개발용, 운영에서는 1이어야 함)
+  RATE_LIMIT_MULTIPLIER: z.coerce.number().int().min(1).max(20).default(1),
   // 브라우저에서 접속하는 웹 주소 (CSRF Origin 검증 기준)
   APP_ORIGIN: z.url(),
   S3_ENDPOINT: z.url(),
@@ -73,6 +75,10 @@ const envSchema = baseSchema.superRefine((env, context) => {
     'S3_ENDPOINT',
   ] as const) {
     if (isLocalHost(env[key])) problem(key, '운영에서는 로컬 주소를 쓸 수 없음');
+  }
+
+  if (env.RATE_LIMIT_MULTIPLIER !== 1) {
+    problem('RATE_LIMIT_MULTIPLIER', '운영에서는 호출 횟수 제한 배수를 올릴 수 없음');
   }
 
   if (isLocalHost(env.SMTP_HOST)) problem('SMTP_HOST', '운영에서는 로컬 메일 수신기를 쓸 수 없음');

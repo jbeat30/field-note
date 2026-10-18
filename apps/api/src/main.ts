@@ -1,4 +1,5 @@
 import { createApp } from './app';
+import { DEFAULT_RATE_LIMITS } from './http/rateLimit';
 import { createAccountService } from './auth/accountService';
 import { createTotpService } from './auth/totpService';
 import {
@@ -170,7 +171,16 @@ const main = async () => {
   await registerPasswordResetWorker(queue, passwordService);
   await registerSecurityNoticeWorker(queue, mailer);
 
+  const multiply = (limit: { windowMs: number; limit: number }) => ({
+    windowMs: limit.windowMs,
+    limit: limit.limit * env.RATE_LIMIT_MULTIPLIER,
+  });
   const server = createApp({
+    rateLimits: {
+      ip: multiply(DEFAULT_RATE_LIMITS.ip),
+      user: multiply(DEFAULT_RATE_LIMITS.user),
+      export: multiply(DEFAULT_RATE_LIMITS.export),
+    },
     logger,
     // 서버 재시작·다중 인스턴스에서도 재전송을 한 번만 처리하도록 키를 DB에 저장
     idempotencyStore: createPrismaIdempotencyStore(appPrisma),
