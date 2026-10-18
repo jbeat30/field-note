@@ -51,12 +51,19 @@ test('직접 로그아웃하면 만료 안내 없이 로그인 화면으로 가�
   await expect(page.getByRole('heading', { name: '로그인', exact: true })).toBeVisible();
   await expect(page.getByText('로그인이 끝났습니다')).toHaveCount(0);
 
+  // 같은 화면에서 다시 로그인 (로그인 횟수 제한에 걸리면 기다렸다 다시 누름)
   await page.getByLabel('아이디').fill(DEMO_LOGIN.loginId);
   await page.getByLabel('비밀번호', { exact: true }).fill(DEMO_LOGIN.password);
-  await page
-    .getByRole('button', { name: /로그인/ })
-    .first()
-    .click();
 
-  await expect(page.getByRole('heading', { name: '한빛판금' })).toBeVisible();
+  const home = page.getByRole('heading', { name: '한빛판금' });
+
+  for (let attempt = 0; attempt < 6 && !(await home.isVisible()); attempt += 1) {
+    await page
+      .getByRole('button', { name: /로그인/ })
+      .first()
+      .click();
+    await page.waitForTimeout(attempt === 0 ? 1500 : 15_000);
+  }
+
+  await expect(home).toBeVisible();
 });
