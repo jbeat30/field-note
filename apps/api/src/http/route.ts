@@ -6,7 +6,7 @@ import type { ErrorCode } from '@field-note/shared';
 import type { AuditEntry } from '../audit/auditService';
 import { idempotency, type IdempotencyStore } from './idempotency';
 import { createRateLimiter, type RateLimitOptions } from './rateLimit';
-import { requireAuth } from './requireAuth';
+import { requireAuth, requireVerifiedEmail } from './requireAuth';
 import type { AuthContext, AuthResolver } from './types';
 import { validate } from './validate';
 
@@ -19,6 +19,8 @@ export type RouteSpec = {
   path: string;
   summary: string;
   auth: 'required' | 'none';
+  // true면 이메일 인증 전 계정도 호출할 수 있음 (인증 화면이 쓰는 요청만, 나머지 인증 필요 라우트는 인증을 마친 계정만)
+  allowUnverifiedEmail?: boolean;
   request?: { params?: ZodType; query?: ZodType; body?: ZodType };
   response: { status: number; schema: ZodType };
   // true면 핸들러가 돌려준 주소로 이동시키는 라우트 (소셜 로그인 콜백처럼 브라우저 이동 응답), 응답 스키마는 쓰지 않음
@@ -60,6 +62,8 @@ export type RouteRegistry = {
 
 export type RouteDependencies = {
   resolveAuth: AuthResolver;
+  // 계정의 이메일 인증 여부 조회 (없으면 확인하지 않음: 계정 서비스가 없는 테스트 앱)
+  isEmailVerified?: (auth: AuthContext) => Promise<boolean>;
   idempotencyStore: IdempotencyStore;
   // 활동 기록 저장 함수 (없으면 기록 생략), 기록이 실패해도 이미 끝난 처리는 되돌리지 않고 알림
   recordAudit?: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;
@@ -103,6 +107,10 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
 
     if (spec.auth === 'required') {
       middlewares.push(requireAuth(deps.resolveAuth));
+
+      if (deps.isEmailVerified && !spec.allowUnverifiedEmail) {
+        middlewares.push(requireVerifiedEmail(deps.isEmailVerified));
+      }
     }
 
     if (spec.idempotent) {

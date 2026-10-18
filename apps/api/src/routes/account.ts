@@ -277,6 +277,7 @@ export const registerAccountRoutes = (
       path: '/auth/email/verify',
       summary: '이메일 인증 코드 확인 (가입 완료)',
       auth: 'required',
+      allowUnverifiedEmail: true,
       request: { body: emailVerifyRequestSchema },
       response: { status: 200, schema: meResponseSchema },
       errors: ['EMAIL_CODE_INVALID'],
@@ -314,6 +315,7 @@ export const registerAccountRoutes = (
       path: '/auth/email/resend',
       summary: '이메일 인증 코드 재발송',
       auth: 'required',
+      allowUnverifiedEmail: true,
       response: { status: 200, schema: emailResendResponseSchema },
       errors: ['TOO_MANY_REQUESTS'],
       rateLimit: { windowMs: 60_000, limit: 3 },
@@ -372,6 +374,7 @@ export const registerAccountRoutes = (
       path: '/me',
       summary: '로그인한 관리자 정보',
       auth: 'required',
+      allowUnverifiedEmail: true,
       response: { status: 200, schema: meResponseSchema },
     },
     accountService
@@ -612,6 +615,7 @@ export const registerAccountRoutes = (
       summary:
         '이메일 변경·등록 요청 (새 주소로 인증 코드 발송, 인증해야 반영, 비밀번호가 있는 계정은 현재 비밀번호 필요)',
       auth: 'required',
+      allowUnverifiedEmail: true,
       request: { body: emailChangeSchema },
       response: { status: 200, schema: emailChangeResponseSchema },
       errors: ['CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED', 'TOO_MANY_REQUESTS'],
