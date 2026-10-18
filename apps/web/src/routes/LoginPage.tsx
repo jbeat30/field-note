@@ -18,6 +18,7 @@ import { Input } from '../components/ui/input';
 import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
+import { resetClientState } from '../stores/resetClientState';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
@@ -75,6 +76,8 @@ export const LoginPage = () => {
       return;
     }
 
+    // 세션이 만료된 채 남은 이전 사용자의 화면 데이터가 새 로그인에 섞이지 않게 비움
+    await resetClientState(queryClient);
     queryClient.setQueryData(queryKeys.me(), data);
     await navigate(data.isEmailVerified ? '/' : '/verify-email', { replace: true });
   });

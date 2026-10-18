@@ -7,6 +7,7 @@ import {
 
 import {
   LAST_ACTIVE_TOUCH_INTERVAL_MS,
+  MAX_SESSIONS_PER_USER,
   SESSION_MAX_AGE_MS,
   type SessionStore,
 } from './sessionStore';
@@ -58,6 +59,20 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
       nowMs += SESSION_MAX_AGE_MS + 1000;
 
       expect(await store.find(token)).toBeNull();
+    });
+
+    it('한 계정의 세션이 한도를 넘으면 가장 오래 쓰지 않은 세션부터 정리하고 다른 계정은 건드리지 않는다', async () => {
+      const first = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+      const other = await store.create({ userId: USER_2, companyId: COMPANY_2 });
+
+      for (let index = 0; index < MAX_SESSIONS_PER_USER; index += 1) {
+        nowMs += 1000;
+        await store.create({ userId: USER_1, companyId: COMPANY_1 });
+      }
+
+      expect(await store.find(first.token)).toBeNull();
+      expect(await store.find(other.token)).toEqual({ userId: USER_2, companyId: COMPANY_2 });
+      expect((await store.listDevices(USER_1, 'x')).length).toBe(MAX_SESSIONS_PER_USER);
     });
 
     it('삭제한 세션은 찾지 못한다', async () => {
