@@ -25,7 +25,10 @@ export const LoginPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   // 로그인이 필요한 화면에서 넘어온 경우 로그인 뒤 그 화면으로 돌아감 (앱 안의 경로만 허용)
-  const returnPath = toSafeReturnPath((location.state as { from?: unknown } | null)?.from);
+  const loginState = location.state as { from?: unknown; expired?: unknown } | null;
+  const returnPath = toSafeReturnPath(loginState?.from);
+  // 쓰던 중에 세션이 끝나 이동해 온 경우 이유를 알려 줌
+  const isExpired = loginState?.expired === true;
   const queryClient = useQueryClient();
   const me = useMe();
   const providers = useSocialProviders();
@@ -90,6 +93,11 @@ export const LoginPage = () => {
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
       <h1 className="text-xl font-bold">로그인</h1>
       <SocialNotice />
+      {isExpired && (
+        <Alert variant="info">
+          로그인이 끝났습니다. 보시던 화면으로 돌아가려면 다시 로그인해 주세요
+        </Alert>
+      )}
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField label="아이디" error={errors.loginId && '아이디를 입력해 주세요'}>
         <Input
