@@ -30,6 +30,7 @@
 | `LOG_LEVEL`                                | 선택           | `info` 이상 (debug·trace 불가)                                                                                                 |
 | `APP_ORIGIN`                               | 필수           | 서비스 웹 주소 (https)                                                                                                         |
 | `TRUST_PROXY_HOPS`                         | 프록시 뒤 필수 | 앞단 프록시 단계 수 (CloudFront → 로드 밸런서 → API면 2). 0이면 모든 사용자가 프록시 IP 하나로 보여 요청 횟수 제한을 함께 쓴다 |
+| `RATE_LIMIT_MULTIPLIER`                    | 개발·시험 전용 | 호출 횟수 제한 한도에 곱하는 배수(기본 1, 1~20). 화면 전체 흐름 시험이 쓰며 운영에서 1이 아니면 기동을 막는다                  |
 | `DATABASE_URL`                             | 필수           | 앱 계정 `field_note_app` 접속 주소                                                                                             |
 | `DATABASE_AUTH_URL`                        | 필수           | 회사 범위 밖 전용 계정 `field_note_auth`                                                                                       |
 | `DATABASE_QUEUE_URL`                       | 필수           | 작업 큐 계정 `field_note_queue`                                                                                                |
