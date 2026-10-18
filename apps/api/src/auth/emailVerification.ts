@@ -306,10 +306,14 @@ export const createEmailVerificationService = ({
         throw new EmailVerificationError('CODE_INVALID');
       }
 
-      if (!safeEqual(record.codeHash!, hashCode(secret, account, code))) {
-        await tx.emailVerification.update({ where, data: { attempts: { increment: 1 } } });
+      // 확인하기 전에 시도 횟수를 조건부로 먼저 올림 (동시에 여러 번 보내도 행 잠금 때문에 한도를 넘는 시도는 통과하지 못함)
+      const { count } = await tx.emailVerification.updateMany({
+        where: { ...where.companyId_userId, attempts: { lt: MAX_CODE_ATTEMPTS } },
+        data: { attempts: { increment: 1 } },
+      });
 
-        // 실패 횟수 기록을 롤백하지 않도록 트랜잭션 밖에서 오류 처리
+      // 시도 횟수 기록을 롤백하지 않도록 트랜잭션 밖에서 오류 처리
+      if (count !== 1 || !safeEqual(record.codeHash!, hashCode(secret, account, code))) {
         return { mismatch: true as const };
       }
 
