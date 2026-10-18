@@ -262,6 +262,11 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
           const token = readSessionToken(request);
           const current = token ? await sessionStore.find(token) : null;
 
+          // 이 조회에서 토큰이 교체됐으면 새 쿠키를 내려보내야 로그인이 풀리지 않음
+          if (current?.rotated) {
+            setSessionCookie(response, current.rotated, options.isSecureCookie);
+          }
+
           if (current?.userId !== session.userId || current.companyId !== session.companyId) {
             return redirectTo('/settings', 'failed');
           }
