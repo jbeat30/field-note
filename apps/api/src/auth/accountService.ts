@@ -49,6 +49,8 @@ export type AccountService = {
     account: AuthenticatedAccount,
     input: { loginId: string; newPassword: string },
   ) => Promise<void>;
+  // 이메일 인증을 마친 계정인지 (끝나기 전에는 인증 관련 요청 외의 API를 막는 데 씀)
+  isEmailVerified: (account: AuthenticatedAccount) => Promise<boolean>;
   // 로그인한 관리자 정보 (회사 식별값은 응답에 없음)
   getMe: (account: AuthenticatedAccount) => Promise<MeResponse>;
 };
@@ -341,6 +343,15 @@ export const createAccountService = ({
       } catch (error) {
         throw mapUniqueViolation(error) ?? error;
       }
+    },
+
+    isEmailVerified: async ({ userId, companyId }) => {
+      const user = await auth.user.findFirst({
+        where: { companyId, id: userId },
+        select: { emailVerifiedAt: true },
+      });
+
+      return user?.emailVerifiedAt != null;
     },
 
     getMe: ({ userId, companyId }) =>

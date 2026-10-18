@@ -20,6 +20,7 @@ export const registerAuthRoutes = (
       path: '/auth/logout',
       summary: '로그아웃',
       auth: 'required',
+      allowUnverifiedEmail: true,
       response: { status: 200, schema: logoutResponseSchema },
     },
     async ({ request, response }) => {
