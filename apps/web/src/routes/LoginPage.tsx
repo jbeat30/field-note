@@ -6,6 +6,7 @@ import { Controller, useForm } from 'react-hook-form';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 
 import { apiClient } from '../api/client';
+import { setSigningOut } from '../auth/signOutIntent';
 import { SocialButton } from '../auth/SocialButton';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useMe } from '../auth/useMe';
@@ -47,6 +48,11 @@ export const LoginPage = () => {
     resolver: zodResolver(loginRequestSchema),
     defaultValues: { loginId: '', password: '', isRemembered: true },
   });
+
+  // 로그인 화면에 도착하면 직접 로그아웃 중이던 상태는 끝
+  useEffect(() => {
+    setSigningOut(false);
+  }, []);
 
   useEffect(() => {
     if (isTotpStep) {
