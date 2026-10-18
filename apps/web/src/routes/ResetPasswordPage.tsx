@@ -11,6 +11,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { resetClientState } from '../stores/resetClientState';
 
@@ -138,11 +139,15 @@ export const ResetPasswordPage = () => {
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
       <h1 className="text-xl font-bold">새 비밀번호 설정</h1>
       {errors.root && <Alert>{errors.root.message}</Alert>}
-      <FormField label="새 비밀번호" hint="10자 이상" error={errors.newPassword?.message}>
-        <Input type="password" autoComplete="new-password" {...register('newPassword')} />
+      <FormField
+        label="새 비밀번호"
+        hint={VALIDATION_MESSAGES.PASSWORD_HINT}
+        error={errors.newPassword?.message}
+      >
+        <PasswordInput autoComplete="new-password" {...register('newPassword')} />
       </FormField>
       <FormField label="새 비밀번호 확인" error={errors.newPasswordConfirm?.message}>
-        <Input type="password" autoComplete="new-password" {...register('newPasswordConfirm')} />
+        <PasswordInput autoComplete="new-password" {...register('newPasswordConfirm')} />
       </FormField>
       {requiresTotp && (
         <FormField
