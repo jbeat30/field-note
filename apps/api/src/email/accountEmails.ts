@@ -1,3 +1,4 @@
+import { escapeHtml } from './escapeHtml';
 import type { MailMessage } from './mailer';
 
 /**
@@ -24,7 +25,7 @@ export const buildPasswordResetEmail = (
   ].join('\n'),
   html: `<p>비밀번호 재설정을 요청하셨습니다.</p>
 <p>아래 링크에서 새 비밀번호를 설정해 주세요. 링크는 ${ttlMinutes}분 동안, 한 번만 사용할 수 있습니다.</p>
-<p><a href="${link}">비밀번호 재설정하기</a></p>
+<p><a href="${escapeHtml(link)}">비밀번호 재설정하기</a></p>
 <p>본인이 요청하지 않았다면 이 메일을 무시해 주세요. 비밀번호는 바뀌지 않습니다.</p>`,
 });
 
@@ -113,7 +114,7 @@ export const buildSecurityNoticeEmail = (
     to,
     subject: notice.subject,
     text: lines.join('\n'),
-    html: lines.map((line) => (line ? `<p>${line}</p>` : '')).join('\n'),
+    html: lines.map((line) => (line ? `<p>${escapeHtml(line)}</p>` : '')).join('\n'),
   };
 };
 
@@ -157,9 +158,9 @@ export const buildClosureEmail = (to: string, link: string, purgeAfter: Date): M
     html: lines
       .map((line) =>
         line.startsWith('http')
-          ? `<p><a href="${line}">해지 취소하기</a></p>`
+          ? `<p><a href="${escapeHtml(line)}">해지 취소하기</a></p>`
           : line
-            ? `<p>${line}</p>`
+            ? `<p>${escapeHtml(line)}</p>`
             : '',
       )
       .join('\n'),

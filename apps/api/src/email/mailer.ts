@@ -28,12 +28,19 @@ export type MailerOptions = {
  * @returns 메일 발송기
  */
 export const createSmtpMailer = (options: MailerOptions): Mailer => {
+  const hasAuth = Boolean(options.user && options.password);
   const transport = nodemailer.createTransport({
     host: options.host,
     port: options.port,
     secure: options.port === 465,
-    auth:
-      options.user && options.password ? { user: options.user, pass: options.password } : undefined,
+    // 계정 정보를 보내는 연결은 TLS가 반드시 있어야 함 (격상이 안 되면 중단해 평문으로 보내지 않음), 접속 정보가 없는 로컬 수신기는 제외
+    requireTLS: hasAuth && options.port !== 465,
+    tls: { minVersion: 'TLSv1.2' },
+    // 메일 서버가 응답하지 않아도 작업 처리기가 오래 붙잡히지 않게 함 (실패하면 작업 큐가 다시 시도)
+    connectionTimeout: 10_000,
+    greetingTimeout: 10_000,
+    socketTimeout: 30_000,
+    auth: hasAuth ? { user: options.user, pass: options.password } : undefined,
   });
 
   return {
