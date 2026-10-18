@@ -1,4 +1,11 @@
 import {
+  ROTATION_GRACE_MS,
+  SESSION_ROTATE_INTERVAL_MS,
+  SHORT_SESSION_IDLE_MS,
+  SHORT_SESSION_MS,
+} from '../auth/loginPolicy';
+
+import {
   LAST_ACTIVE_TOUCH_INTERVAL_MS,
   SESSION_MAX_AGE_MS,
   type SessionStore,
@@ -230,6 +237,159 @@ export const describeSessionStoreContract = (name: string, getContext: () => Con
 
       expect(await store.find(old.token)).toBeNull();
       expect(await store.find(fresh.token)).not.toBeNull();
+    });
+
+    describe('유효 기간과 토큰 교체', () => {
+      const MINUTE = 60_000;
+      const created = { userId: USER_1, companyId: COMPANY_1 };
+
+      it('로그인 유지 세션은 로그인 7일 뒤 만료되고 사용해도 연장되지 않는다', async () => {
+        const first = await store.create(created);
+
+        nowMs += 3 * 24 * 60 * MINUTE;
+        const middle = await store.find(first.token);
+
+        // 하루 안 쓴 세션도 교체 간격이 지났으므로 새 토큰으로 이어짐
+        expect(middle?.rotated).toBeDefined();
+        const token = middle!.rotated!.token;
+
+        nowMs += 4 * 24 * 60 * MINUTE - MINUTE;
+        expect(await store.find(token)).not.toBeNull();
+
+        nowMs += 2 * MINUTE;
+        expect(await store.find(token)).toBeNull();
+      });
+
+      it('로그인 유지를 선택하지 않은 세션은 1시간 쓰지 않으면 만료된다', async () => {
+        const { token } = await store.create(created, { isRemembered: false });
+
+        nowMs += SHORT_SESSION_IDLE_MS + MINUTE;
+
+        expect(await store.find(token)).toBeNull();
+      });
+
+      it('로그인 유지를 선택하지 않은 세션도 사용하면 미사용 만료가 연장된다', async () => {
+        let { token } = await store.create(created, { isRemembered: false });
+
+        for (let step = 0; step < 6; step += 1) {
+          nowMs += 50 * MINUTE;
+          const found = await store.find(token);
+
+          expect(found).not.toBeNull();
+          token = found?.rotated?.token ?? token;
+        }
+
+        nowMs += SHORT_SESSION_IDLE_MS + MINUTE;
+        expect(await store.find(token)).toBeNull();
+      });
+
+      it('로그인 유지를 선택하지 않은 세션은 계속 써도 12시간이 지나면 만료된다', async () => {
+        let { token } = await store.create(created, { isRemembered: false });
+        const startedAt = nowMs;
+        let expiredAfterMs: number | null = null;
+
+        for (let step = 0; step < 20 && expiredAfterMs === null; step += 1) {
+          nowMs += 50 * MINUTE;
+          const found = await store.find(token);
+
+          if (found) {
+            token = found.rotated?.token ?? token;
+          } else {
+            expiredAfterMs = nowMs - startedAt;
+          }
+        }
+
+        expect(expiredAfterMs).toBeGreaterThan(SHORT_SESSION_MS);
+        expect(expiredAfterMs).toBeLessThanOrEqual(SHORT_SESSION_MS + 50 * MINUTE);
+      });
+
+      it('교체 간격 전에는 토큰을 바꾸지 않는다', async () => {
+        const { token } = await store.create(created);
+
+        nowMs += SESSION_ROTATE_INTERVAL_MS - MINUTE;
+
+        expect(await store.find(token)).toEqual({ userId: USER_1, companyId: COMPANY_1 });
+      });
+
+      it('교체 간격이 지나면 새 토큰을 주고 만료 시각과 쿠키 종류는 그대로다', async () => {
+        const first = await store.create(created, { isRemembered: false });
+
+        // 미사용 만료(1시간)가 교체 간격과 같아서 중간에 한 번 써야 이어짐
+        nowMs += SESSION_ROTATE_INTERVAL_MS / 2;
+        await store.find(first.token);
+        nowMs += SESSION_ROTATE_INTERVAL_MS / 2;
+        const found = await store.find(first.token);
+
+        expect(found?.rotated).toBeDefined();
+        expect(found?.rotated?.token).not.toBe(first.token);
+        expect(found?.rotated?.expiresAt).toEqual(first.expiresAt);
+        expect(found?.rotated?.isPersistent).toBe(false);
+        expect(await store.find(found!.rotated!.token)).toEqual({
+          userId: USER_1,
+          companyId: COMPANY_1,
+        });
+      });
+
+      it('교체 직전 토큰은 잠시 허용하고(다시 교체하지 않음) 그 뒤에는 거부한다', async () => {
+        const first = await store.create(created);
+
+        nowMs += SESSION_ROTATE_INTERVAL_MS;
+        const rotated = (await store.find(first.token))!.rotated!;
+
+        nowMs += ROTATION_GRACE_MS - MINUTE;
+        expect(await store.find(first.token)).toEqual({ userId: USER_1, companyId: COMPANY_1 });
+
+        nowMs += 2 * MINUTE;
+        expect(await store.find(first.token)).toBeNull();
+        expect(await store.find(rotated.token)).not.toBeNull();
+      });
+
+      it('교체한 뒤에도 이전 토큰으로 지키는 기기 판별·로그아웃이 같은 세션을 가리킨다', async () => {
+        const first = await store.create(created);
+        const other = await store.create(created, { deviceLabel: '다른 기기' });
+
+        nowMs += SESSION_ROTATE_INTERVAL_MS;
+        const rotated = (await store.find(first.token))!.rotated!;
+
+        const devices = await store.listDevices(USER_1, first.token);
+
+        expect(devices.filter((device) => device.isCurrent)).toHaveLength(1);
+
+        await store.deleteByUserExcept(USER_1, first.token);
+        expect(await store.find(rotated.token)).not.toBeNull();
+        expect(await store.find(other.token)).toBeNull();
+
+        await store.delete(first.token);
+        expect(await store.find(rotated.token)).toBeNull();
+      });
+
+      it('교체한 뒤 이전 토큰으로는 현재 기기를 원격 로그아웃할 수 없다', async () => {
+        const first = await store.create(created);
+        const second = await store.create(created, { deviceLabel: '다른 기기' });
+
+        nowMs += SESSION_ROTATE_INTERVAL_MS;
+        await store.find(first.token);
+
+        const [mine] = (await store.listDevices(USER_1, first.token)).filter(
+          (device) => device.isCurrent,
+        );
+
+        expect(await store.revokeDevice(USER_1, mine!.id, first.token)).toBe(false);
+        expect(await store.find(second.token)).not.toBeNull();
+      });
+
+      it('미사용으로 만료된 세션은 기기 목록에서 빠지고 정리된다', async () => {
+        const gone = await store.create(created, { isRemembered: false });
+
+        nowMs += SHORT_SESSION_IDLE_MS + MINUTE;
+        const kept = await store.create(created);
+
+        expect((await store.listDevices(USER_1, kept.token)).length).toBe(1);
+
+        await store.deleteExpired();
+        expect(await store.find(gone.token)).toBeNull();
+        expect(await store.find(kept.token)).not.toBeNull();
+      });
     });
 
     it('세션마다 서로 다른 토큰을 발급한다', async () => {
