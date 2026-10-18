@@ -3,7 +3,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
-import { Link, Navigate, useNavigate } from 'react-router';
+import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 
 import { apiClient } from '../api/client';
 import { SocialButton } from '../auth/SocialButton';
@@ -17,11 +17,15 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
+import { toSafeReturnPath } from '../lib/safeReturnPath';
 import { queryKeys } from '../query/queryKeys';
 import { resetClientState } from '../stores/resetClientState';
 
 export const LoginPage = () => {
   const navigate = useNavigate();
+  const location = useLocation();
+  // 로그인이 필요한 화면에서 넘어온 경우 로그인 뒤 그 화면으로 돌아감 (앱 안의 경로만 허용)
+  const returnPath = toSafeReturnPath((location.state as { from?: unknown } | null)?.from);
   const queryClient = useQueryClient();
   const me = useMe();
   const providers = useSocialProviders();
@@ -47,9 +51,9 @@ export const LoginPage = () => {
     }
   }, [isTotpStep, setFocus]);
 
-  // 이미 로그인한 상태로 로그인 화면에 오면 홈으로
+  // 이미 로그인한 상태로 로그인 화면에 오면 홈으로 (로그인 직후에도 같은 곳으로 가도록 돌아갈 화면을 따름)
   if (me.data) {
-    return <Navigate to="/" replace />;
+    return <Navigate to={returnPath ?? '/'} replace />;
   }
 
   const onSubmit = handleSubmit(async (values) => {
@@ -79,7 +83,7 @@ export const LoginPage = () => {
     // 세션이 만료된 채 남은 이전 사용자의 화면 데이터가 새 로그인에 섞이지 않게 비움
     await resetClientState(queryClient);
     queryClient.setQueryData(queryKeys.me(), data);
-    await navigate(data.isEmailVerified ? '/' : '/verify-email', { replace: true });
+    await navigate(data.isEmailVerified ? (returnPath ?? '/') : '/verify-email', { replace: true });
   });
 
   return (
