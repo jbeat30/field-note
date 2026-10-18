@@ -306,6 +306,8 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 
 - 이메일은 요청 처리 중에 직접 보내지 않고 작업 큐(PostgreSQL 기반 pg-boss)를 거친다. 발송에 실패하면 30초부터 지수적으로 늘려 5번까지 다시 시도한다
 - 인증 코드 원문은 큐·DB·로그에 남기지 않는다. 작업 처리기가 발송 직전에 만들고, DB에는 서버 비밀 값으로 만든 해시만 저장한다
+- 인증 코드는 6자리이고 10분간 유효하며, 틀린 시도는 코드당 5번까지다. 시도 횟수는 확인 전에 조건부로 먼저 올려, 동시에 여러 번 보내도 한도를 넘는 시도는 통과하지 못한다. 재발송은 30초 간격, 1시간에 5번까지다
+- **이메일 인증 전 계정은 API도 막는다**: 인증 화면이 쓰는 요청(`GET /me`, `POST /auth/email/verify`, `/auth/email/resend`, `/me/email/change`, `/auth/logout`)만 허용하고, 나머지 로그인 필요 요청은 `403 EMAIL_NOT_VERIFIED`로 거부한다. 화면 이동(`RequireAuth`)에만 맡기지 않고 서버가 요청마다 확인한다 (`route.ts`의 `allowUnverifiedEmail`)
 - 로컬은 Mailpit, 운영은 `SMTP_HOST`·`SMTP_PORT`·`SMTP_USER`·`SMTP_PASSWORD`·`SMTP_FROM`만 메일 발송 서비스 값으로 바꾼다 (코드 변경 없음)
 
 ## 프로젝트
