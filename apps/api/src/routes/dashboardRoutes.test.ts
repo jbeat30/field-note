@@ -21,6 +21,7 @@ import { createMemoryQueue } from '../queue/jobQueue';
 import { createMemoryStorage } from '../storage/objectStorage';
 import { createDashboardService } from '../dashboard/dashboardService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { createEmployeeService } from '../employee/employeeService';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createMemoService } from '../memo/memoService';
@@ -110,6 +111,7 @@ const signedUp = async (instance: ReturnType<typeof app>) => {
       isAgeConfirmed: true,
       consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
     });
+  await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
 
   return (res.headers['set-cookie'] as unknown as string[]).find((value) =>
     value.startsWith(`${SESSION_COOKIE}=`),
