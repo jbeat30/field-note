@@ -7,6 +7,7 @@ import { securityHeaders } from './http/securityHeaders';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler';
 import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idempotency';
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
+import { createRateLimiter, DEFAULT_RATE_LIMITS, type RateLimitOptions } from './http/rateLimit';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import type { AccountService } from './auth/accountService';
@@ -154,6 +155,12 @@ export type AppOptions = {
   logger?: Logger;
   // 개발 환경에서만 API 문서 화면 제공
   isDocsEnabled?: boolean;
+  // 요청 횟수 제한 (없으면 기본값, false면 끔: 한꺼번에 많이 부르는 시험용)
+  rateLimits?: {
+    ip?: RateLimitOptions | false;
+    user?: RateLimitOptions | false;
+    export?: RateLimitOptions | false;
+  };
 };
 
 /**
@@ -166,6 +173,8 @@ export const createRegistry = (options: AppOptions = {}) => {
   const registry = createRouteRegistry({
     resolveAuth:
       options.resolveAuth ?? createSessionResolver(sessionStore, options.isSecureCookie ?? false),
+    userRateLimit: options.rateLimits?.user,
+    exportRateLimit: options.rateLimits?.export,
     isEmailVerified: options.accountService
       ? (auth) => options.accountService!.isEmailVerified(auth)
       : undefined,
@@ -275,6 +284,11 @@ export const createApp = (options: AppOptions = {}) => {
   // 개발 환경에서만 켜지는 가짜 소셜 로그인 화면 (운영에서는 지정되지 않음)
   if (options.social?.fakeSecret) {
     mountFakeSocialRoutes(app, options.social.fakeSecret);
+  }
+
+  // 접속 주소당 전체 호출 한도 (로그인 전 호출과 잘못된 쿠키로 쓸어 보는 호출도 포함)
+  if (options.rateLimits?.ip !== false) {
+    app.use(API_PREFIX, createRateLimiter(options.rateLimits?.ip ?? DEFAULT_RATE_LIMITS.ip));
   }
 
   app.use(API_PREFIX, csrfGuard(options.appOrigin ?? 'http://localhost:5173'), registry.router);
