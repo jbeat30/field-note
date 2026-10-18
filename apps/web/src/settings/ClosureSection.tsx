@@ -11,7 +11,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { useConfirm } from '../components/ui/confirm-dialog';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { resetClientState } from '../stores/resetClientState';
 
@@ -98,7 +98,7 @@ export const ClosureSection = () => {
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {needsPassword && (
         <FormField label="현재 비밀번호" error={errors.currentPassword?.message}>
-          <Input type="password" autoComplete="current-password" {...register('currentPassword')} />
+          <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
         </FormField>
       )}
       <div className="flex gap-2">

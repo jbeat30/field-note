@@ -22,6 +22,7 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 
@@ -220,11 +221,15 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
           {...register('loginId')}
         />
       </FormField>
-      <FormField label="비밀번호" hint="10자 이상" error={errors.password?.message}>
-        <Input type="password" autoComplete="new-password" {...register('password')} />
+      <FormField
+        label="비밀번호"
+        hint={VALIDATION_MESSAGES.PASSWORD_HINT}
+        error={errors.password?.message}
+      >
+        <PasswordInput autoComplete="new-password" {...register('password')} />
       </FormField>
       <FormField label="비밀번호 확인" error={errors.passwordConfirm?.message}>
-        <Input type="password" autoComplete="new-password" {...register('passwordConfirm')} />
+        <PasswordInput autoComplete="new-password" {...register('passwordConfirm')} />
       </FormField>
       <FormField
         label="이메일"
