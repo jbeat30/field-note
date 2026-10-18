@@ -166,6 +166,9 @@ export const createRegistry = (options: AppOptions = {}) => {
   const registry = createRouteRegistry({
     resolveAuth:
       options.resolveAuth ?? createSessionResolver(sessionStore, options.isSecureCookie ?? false),
+    isEmailVerified: options.accountService
+      ? (auth) => options.accountService!.isEmailVerified(auth)
+      : undefined,
     idempotencyStore: options.idempotencyStore ?? createMemoryIdempotencyStore(),
     recordAudit: options.audit
       ? (companyId, actorId, entry) => options.audit!.record(companyId, actorId, entry)
