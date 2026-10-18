@@ -25,6 +25,7 @@ import { Input } from '../components/ui/input';
 import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
+import { resetClientState } from '../stores/resetClientState';
 
 // 가입 1단계: 약관 동의와 만 14세 확인 (필수와 선택 구분)
 type ConsentStepProps = {
@@ -178,6 +179,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
     }
 
     // 가입 직후 로그인 상태(이메일 미인증)이므로 내 정보를 다시 읽어 인증 화면으로 이동
+    await resetClientState(queryClient);
     await queryClient.invalidateQueries({ queryKey: queryKeys.me() });
     await navigate('/verify-email', { replace: true });
   });
