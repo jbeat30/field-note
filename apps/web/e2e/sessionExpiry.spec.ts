@@ -40,3 +40,23 @@ test('연결이 끊기면 안내 띠가 보이고 연결되면 사라진다', as
   await context.setOffline(false);
   await expect(page.getByText('인터넷에 연결되어 있지 않습니다')).toBeHidden();
 });
+
+test('직접 로그아웃하면 만료 안내 없이 로그인 화면으로 가고, 다시 로그인하면 홈으로 간다', async ({
+  page,
+}) => {
+  await login(page);
+  await page.goto('/settings');
+  await page.getByRole('button', { name: '로그아웃', exact: true }).click();
+
+  await expect(page.getByRole('heading', { name: '로그인', exact: true })).toBeVisible();
+  await expect(page.getByText('로그인이 끝났습니다')).toHaveCount(0);
+
+  await page.getByLabel('아이디').fill(DEMO_LOGIN.loginId);
+  await page.getByLabel('비밀번호', { exact: true }).fill(DEMO_LOGIN.password);
+  await page
+    .getByRole('button', { name: /로그인/ })
+    .first()
+    .click();
+
+  await expect(page.getByRole('heading', { name: '한빛판금' })).toBeVisible();
+});
