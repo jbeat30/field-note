@@ -366,7 +366,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - **신청 단계**에서 허용 목록(JPEG·PNG·WebP, 자료는 PDF·docx·xlsx·pptx)·확장자 일치·크기(사진 20MB, 자료 50MB)·회사 저장 용량 한도(기본 5GB)를 검사한다. 주소에는 형식과 크기가 서명돼 있어 신청과 다르게 올리면 저장소가 거부한다
 - **올라온 뒤** 작업 큐가 크기를 다시 확인하고 **확장자·선언한 형식이 아니라 파일 내용(file-type)** 으로 형식을 판별한다. 위조(실행 파일을 `.jpg`로 등)나 열 수 없는 이미지는 `REJECTED`(사유 포함)로 기록하고 저장소에서도 지운다. 통과하면 원본의 SHA-256을 기록하고 이미지는 480px WebP 썸네일(위치 정보 등 메타데이터 제거)을 만든다. 원본의 EXIF는 증빙을 위해 보존한다
 - 내려받기 주소(`GET /files/{id}/url`)는 **회사 범위에서 찾은 검사 통과 파일에만** 5분 만료로 발급한다. 저장소는 공개하지 않으며 객체 키에 회사·프로젝트가 들어간다
-- API 응답에는 `X-Content-Type-Options: nosniff`·`X-Frame-Options: DENY`·`Referrer-Policy: no-referrer`를 붙인다(`securityHeaders`). 웹 쪽 CSP·HSTS는 배포 단계에서 CloudFront 응답 헤더로 설정한다
+- API 응답에는 `X-Content-Type-Options: nosniff`·`X-Frame-Options: DENY`·`Referrer-Policy: no-referrer`를 붙인다(`securityHeaders`). 웹 쪽 CSP·HSTS는 배포 단계에서 정적 파일을 내려주는 쪽(Caddy)의 응답 헤더로 설정한다. CSP 값은 `scripts/csp-header.mjs`가 만든다 (인라인 스크립트 없음, 스크립트는 같은 출처 파일만 실행)
 - 로컬 저장소는 RustFS이고 API가 시작할 때 버킷이 없으면 만든다 (운영은 버킷을 미리 준비). HEIC는 지원하지 않으므로 앱이 올리기 전에 JPEG로 변환한다
 
 ### 사진 (API)
