@@ -9,11 +9,14 @@ export const loginIdSchema = z
   .string()
   .regex(/^[a-z0-9_-]{4,20}$/, VALIDATION_MESSAGES.LOGIN_ID_FORMAT);
 
-// 비밀번호 정책은 결정 전까지 최소 기준만 둠 (10~72자, bcrypt·argon2 입력 한도 고려)
+// 비밀번호 정책: 10~72자, 숫자만으로는 불가, 특수문자(글자·숫자·공백이 아닌 문자) 하나 이상
+// 새로 정하는 비밀번호에만 적용 (로그인 입력에는 쓰지 않아 정책 이전에 만든 비밀번호로도 로그인 가능)
 export const passwordSchema = z
   .string()
   .min(10, VALIDATION_MESSAGES.PASSWORD_TOO_SHORT)
-  .max(72, VALIDATION_MESSAGES.PASSWORD_TOO_LONG);
+  .max(72, VALIDATION_MESSAGES.PASSWORD_TOO_LONG)
+  .refine((value) => !/^\d+$/.test(value), VALIDATION_MESSAGES.PASSWORD_DIGITS_ONLY)
+  .refine((value) => /[^\p{L}\p{N}\s]/u.test(value), VALIDATION_MESSAGES.PASSWORD_NEEDS_SYMBOL);
 
 export const legalDocumentTypeSchema = z.enum(['TERMS_OF_SERVICE', 'PRIVACY_POLICY', 'MARKETING']);
 
