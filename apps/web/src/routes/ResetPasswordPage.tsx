@@ -11,11 +11,16 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
-import { getErrorMessage } from '../lib/apiError';
+import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { resetClientState } from '../stores/resetClientState';
 
 const resetFormSchema = z
-  .object({ newPassword: passwordSchema, newPasswordConfirm: z.string() })
+  .object({
+    newPassword: passwordSchema,
+    newPasswordConfirm: z.string(),
+    // 2단계 인증을 켠 계정만 입력
+    totpCode: z.string().optional(),
+  })
   .refine((values) => values.newPassword === values.newPasswordConfirm, {
     path: ['newPasswordConfirm'],
     message: VALIDATION_MESSAGES.PASSWORD_MISMATCH,
@@ -49,14 +54,14 @@ export const ResetPasswordPage = () => {
 
       // 사용·만료·없는 링크는 서버가 구분하지 않으므로 화면도 같은 안내
       if (response.status === 404) {
-        return false;
+        return null;
       }
 
       if (!data) {
         throw new Error('[web.ResetPasswordPage] 링크 확인 실패');
       }
 
-      return true;
+      return { requiresTotp: data.requiresTotp };
     },
     retry: false,
   });
@@ -67,7 +72,7 @@ export const ResetPasswordPage = () => {
     formState: { errors, isSubmitting },
   } = useForm<ResetForm>({
     resolver: zodResolver(resetFormSchema),
-    defaultValues: { newPassword: '', newPasswordConfirm: '' },
+    defaultValues: { newPassword: '', newPasswordConfirm: '', totpCode: '' },
   });
 
   if (link.isPending) {
@@ -96,12 +101,25 @@ export const ResetPasswordPage = () => {
     );
   }
 
-  const onSubmit = handleSubmit(async ({ newPassword }) => {
+  const requiresTotp = link.data?.requiresTotp === true;
+
+  const onSubmit = handleSubmit(async ({ newPassword, totpCode }) => {
     const { data, error, response } = await apiClient.POST('/api/v1/auth/password-reset/confirm', {
-      body: { token, newPassword },
+      body: {
+        token,
+        newPassword,
+        totpCode: requiresTotp ? totpCode?.trim() || undefined : undefined,
+      },
     });
 
     if (!data) {
+      const errorCode = getErrorCode(error);
+
+      if (errorCode === 'TOTP_REQUIRED' || errorCode === 'TOTP_INVALID') {
+        setError('totpCode', { message: getErrorMessage(error) });
+        return;
+      }
+
       setError('root', {
         message:
           response.status === 404
@@ -126,6 +144,20 @@ export const ResetPasswordPage = () => {
       <FormField label="새 비밀번호 확인" error={errors.newPasswordConfirm?.message}>
         <Input type="password" autoComplete="new-password" {...register('newPasswordConfirm')} />
       </FormField>
+      {requiresTotp && (
+        <FormField
+          label="인증 코드"
+          hint="2단계 인증이 켜진 계정입니다. 인증 앱의 6자리 코드 또는 복구 코드를 입력해 주세요"
+          error={errors.totpCode?.message}
+        >
+          <Input
+            autoComplete="one-time-code"
+            autoCapitalize="characters"
+            autoCorrect="off"
+            {...register('totpCode')}
+          />
+        </FormField>
+      )}
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '저장 중' : '비밀번호 바꾸기'}
       </Button>

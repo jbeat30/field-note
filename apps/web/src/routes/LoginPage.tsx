@@ -1,6 +1,7 @@
 import { SOCIAL_PROVIDER_KEYS, loginRequestSchema, type LoginRequest } from '@field-note/shared';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { useQueryClient } from '@tanstack/react-query';
+import { useEffect, useState } from 'react';
 import { Controller, useForm } from 'react-hook-form';
 import { Link, Navigate, useNavigate } from 'react-router';
 
@@ -14,7 +15,7 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
-import { getErrorMessage } from '../lib/apiError';
+import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 
 export const LoginPage = () => {
@@ -23,17 +24,26 @@ export const LoginPage = () => {
   const me = useMe();
   const providers = useSocialProviders();
   const socialStart = useSocialStart();
+  // 비밀번호가 맞고 2단계 인증이 켜진 계정이면 코드 입력 칸을 보여 줌
+  const [isTotpStep, setTotpStep] = useState(false);
   const enabledProviders = SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider]);
   const {
     register,
     control,
     handleSubmit,
     setError,
+    setFocus,
     formState: { errors, isSubmitting },
   } = useForm<LoginRequest>({
     resolver: zodResolver(loginRequestSchema),
     defaultValues: { loginId: '', password: '', isRemembered: true },
   });
+
+  useEffect(() => {
+    if (isTotpStep) {
+      setFocus('totpCode');
+    }
+  }, [isTotpStep, setFocus]);
 
   // 이미 로그인한 상태로 로그인 화면에 오면 홈으로
   if (me.data) {
@@ -42,11 +52,25 @@ export const LoginPage = () => {
 
   const onSubmit = handleSubmit(async (values) => {
     const { data, error } = await apiClient.POST('/api/v1/auth/login', {
-      body: { ...values, loginId: values.loginId.trim().toLowerCase() },
+      body: {
+        ...values,
+        loginId: values.loginId.trim().toLowerCase(),
+        totpCode: values.totpCode?.trim() || undefined,
+      },
     });
 
     if (!data) {
-      setError('root', { message: getErrorMessage(error) });
+      const errorCode = getErrorCode(error);
+
+      // 처음 요청에서 코드가 필요하다고 하면 칸을 열고, 이미 열린 뒤의 같은 응답은 입력 안내로 표시
+      if (errorCode === 'TOTP_REQUIRED' && !isTotpStep) {
+        setTotpStep(true);
+      } else if (errorCode === 'TOTP_REQUIRED' || errorCode === 'TOTP_INVALID') {
+        setError('totpCode', { message: getErrorMessage(error) });
+      } else {
+        setError('root', { message: getErrorMessage(error) });
+      }
+
       return;
     }
 
@@ -70,6 +94,29 @@ export const LoginPage = () => {
       <FormField label="비밀번호" error={errors.password && '비밀번호를 입력해 주세요'}>
         <Input type="password" autoComplete="current-password" {...register('password')} />
       </FormField>
+      {isTotpStep && (
+        <>
+          <Alert variant="info">
+            2단계 인증이 켜진 계정입니다. 인증 앱에 나온 코드를 입력해 주세요
+          </Alert>
+          <FormField
+            label="인증 코드"
+            hint="인증 앱의 6자리 코드 (휴대폰을 잃어버렸다면 복구 코드)"
+            error={errors.totpCode?.message}
+          >
+            <Input
+              inputMode="text"
+              autoComplete="one-time-code"
+              autoCapitalize="characters"
+              autoCorrect="off"
+              {...register('totpCode', {
+                setValueAs: (value: unknown) =>
+                  typeof value === 'string' && value.trim() ? value.trim() : undefined,
+              })}
+            />
+          </FormField>
+        </>
+      )}
       <Controller
         control={control}
         name="isRemembered"

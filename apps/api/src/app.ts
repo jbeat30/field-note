@@ -70,6 +70,8 @@ import type { InvitationStore } from './invitation/invitationStore';
 import { createLogger, type Logger } from './logger';
 import { registerAccountRoutes } from './routes/account';
 import { registerSocialRoutes } from './routes/social';
+import { registerTotpRoutes } from './routes/totp';
+import type { TotpService } from './auth/totpService';
 import type { SocialService } from './auth/socialService';
 import { mountFakeSocialRoutes } from './social/fakeSocialRoutes';
 import type { SocialProviderChoices } from './social/provider';
@@ -88,6 +90,8 @@ export type AppOptions = {
   invitationStore?: InvitationStore;
   // 없으면 가입·로그인·내 정보 API는 501
   accountService?: AccountService;
+  // 없으면 2단계 인증 설정 API는 501
+  totp?: TotpService;
   // 없으면 이메일 인증 확인·재발송 API는 501
   emailVerification?: EmailVerificationService;
   // 없으면 비밀번호 재설정·변경 API는 501
@@ -220,6 +224,17 @@ export const createRegistry = (options: AppOptions = {}) => {
           cookieSecret: options.social.cookieSecret,
           appOrigin: options.appOrigin ?? 'http://localhost:5173',
           isSecureCookie: options.isSecureCookie ?? false,
+          logger: options.logger,
+        }
+      : undefined,
+  );
+  registerTotpRoutes(
+    registry,
+    options.totp && options.accountService
+      ? {
+          totp: options.totp,
+          accountService: options.accountService,
+          notifier: options.notifier,
           logger: options.logger,
         }
       : undefined,

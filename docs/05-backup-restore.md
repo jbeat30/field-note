@@ -62,6 +62,6 @@
 | 시드·더미 데이터 | 사용 (`pnpm db:seed`)             | 사용하지 않음      | 거부 (`NODE_ENV=production`이면 실행 거부)  |
 | 비밀 값          | `pnpm env:init`이 무작위로 생성   | 환경별로 새로 생성 | 환경별로 새로 생성, 배포 환경의 비밀 저장소 |
 
-- 환경마다 DB 비밀번호·`CODE_HASH_SECRET`·`OAUTH_COOKIE_SECRET`을 **다르게** 만든다 (같은 값을 쓰면 한 환경의 유출이 다른 환경으로 번진다)
+- 환경마다 DB 비밀번호·`CODE_HASH_SECRET`·`OAUTH_COOKIE_SECRET`·`TOTP_ENCRYPTION_KEY`를 **다르게** 만든다 (같은 값을 쓰면 한 환경의 유출이 다른 환경으로 번진다)
 - 운영 기동 검사(`apps/api/src/env.ts`): `NODE_ENV=production`이면 로컬 주소(DB·저장소·메일), `http` 주소, `debug` 로그, 메일 계정 누락, 로컬 기본 비밀번호가 있을 때 **기동을 중단**하고 어떤 변수가 문제인지 알려 준다 (값은 노출하지 않음)
 - 위 표의 스테이징·운영 열은 계획이다. 공급자가 정해지면 값을 채운다

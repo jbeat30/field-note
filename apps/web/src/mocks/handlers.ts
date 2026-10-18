@@ -182,6 +182,7 @@ import { createLedgerHandlers } from './ledgerHandlers';
 import { createMaterialHandlers, hasMockMaterialRecordForPartner } from './materialHandlers';
 import { createReportHandlers } from './reportHandlers';
 import { createSearchHandlers } from './searchHandlers';
+import { createTotpHandlers, isMockTotpEnabled, verifyMockTotp } from './totpHandlers';
 import { createMemoHandlers } from './memoHandlers';
 import { createPhotoHandlers } from './photoHandlers';
 import { mockDelay } from './latency';
@@ -491,6 +492,7 @@ export const handlers = [
   ...createCompletionHandlers({ apiError }),
   ...createDashboardHandlers({ apiError, parseBody }),
   ...createSearchHandlers({ apiError }),
+  ...createTotpHandlers({ apiError, parseBody, hasCsrfHeader }),
   ...createReportHandlers({ apiError }),
 
   http.get('/api/v1/health', async () => {
@@ -615,6 +617,17 @@ export const handlers = [
         return apiError('ACCOUNT_LOCKED');
 
       return apiError('INVALID_CREDENTIALS');
+    }
+
+    // 2단계 인증을 켠 계정은 코드까지 맞아야 통과 (실제 서버처럼 코드 실패도 같은 잠금 횟수에 셈)
+    if (isMockTotpEnabled(account)) {
+      if (!body.data.totpCode) return apiError('TOTP_REQUIRED');
+
+      if (!verifyMockTotp(account, body.data.totpCode)) {
+        return recordFailedLogin(loginId) >= MOCK_MAX_FAILED_LOGINS
+          ? apiError('ACCOUNT_LOCKED')
+          : apiError('TOTP_INVALID');
+      }
     }
 
     clearFailedLogins(loginId);
@@ -812,7 +825,10 @@ export const handlers = [
       return apiError('NOT_FOUND');
     }
 
-    return HttpResponse.json({ success: true });
+    return HttpResponse.json({
+      success: true,
+      requiresTotp: isMockTotpEnabled(findAccount(getMockResetTarget() ?? 'hanbit')),
+    });
   }),
 
   http.post('/api/v1/auth/password-reset/confirm', async ({ request }) => {
@@ -827,6 +843,12 @@ export const handlers = [
     if (body.data.token !== MOCK_RESET_TOKEN || !isMockResetUsable()) return apiError('NOT_FOUND');
 
     const account = findAccount(getMockResetTarget() ?? 'hanbit');
+
+    // 2단계 인증을 켠 계정은 코드가 맞아야 하고, 틀려도 링크는 소모하지 않음
+    if (account && isMockTotpEnabled(account)) {
+      if (!body.data.totpCode) return apiError('TOTP_REQUIRED');
+      if (!verifyMockTotp(account, body.data.totpCode)) return apiError('TOTP_INVALID');
+    }
 
     if (account) {
       setPassword(account, body.data.newPassword);

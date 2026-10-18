@@ -7,6 +7,7 @@ const validEnv = {
   DATABASE_QUEUE_URL: 'postgresql://queue:pw@localhost:5432/db',
   CODE_HASH_SECRET: 'test-secret-test-secret-test-secret-0000',
   OAUTH_COOKIE_SECRET: 'oauth-secret-oauth-secret-oauth-secret-0',
+  TOTP_ENCRYPTION_KEY: 'totp-key-totp-key-totp-key-totp-key-0',
   APP_ORIGIN: 'http://localhost:5173',
   S3_ENDPOINT: 'http://localhost:9000',
   S3_REGION: 'us-east-1',
@@ -19,6 +20,15 @@ const validEnv = {
 };
 
 describe('parseEnv', () => {
+  it('2단계 인증 암호화 키는 32자 이상이어야 한다', () => {
+    expect(() => parseEnv({ ...validEnv, TOTP_ENCRYPTION_KEY: 'short' })).toThrow(
+      /TOTP_ENCRYPTION_KEY/,
+    );
+    expect(() => parseEnv({ ...validEnv, TOTP_ENCRYPTION_KEY: undefined })).toThrow(
+      /TOTP_ENCRYPTION_KEY/,
+    );
+  });
+
   it('유효한 값은 기본값을 채워 반환한다', () => {
     const env = parseEnv(validEnv);
 
