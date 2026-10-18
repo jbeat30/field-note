@@ -8,6 +8,7 @@ import {
   registerEmailVerificationWorker,
 } from '../auth/emailVerification';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { createSmtpMailer } from '../email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from '../email/securityNotice';
 import { startTestMailpit, type TestMailpit } from '../email/testMailpit';
@@ -124,6 +125,9 @@ const register = async () => {
     isAgeConfirmed: true,
     consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
   });
+  // 가입 때 요청한 인증 코드 메일이 도착한 뒤에 인증을 마친 것으로 바꿈 (먼저 바꾸면 발송 작업이 메일을 보내지 않음)
+  await mailpit.waitForCount(email, 1);
+  await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
 
   return { email, loginId, cookie: cookieOf(signup), companyId: invitation.companyId };
 };
