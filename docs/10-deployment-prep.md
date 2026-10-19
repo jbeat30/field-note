@@ -167,12 +167,13 @@ Oracle Cloud 무료 VM 한 대에서 PostgreSQL·API·웹(Caddy)을 `deploy/dock
 | `migrate` | (`tools` 프로필) 마이그레이션과 DB 계정 비밀번호 설정을 한 번 실행                                                                                                  |
 | `ops`     | (`tools` 프로필) 백업·복구 시험·해지 회사 삭제·운영자 CLI. DB 서버와 같은 주 버전(18)의 PostgreSQL 도구가 들어 있다                                                 |
 
-- **환경 변수 파일 2개**: `deploy/.env`(api·compose, 접속 주소·DB 주소·비밀 값·R2·Gmail)와 `deploy/ops.env`(운영자·삭제 전용 DB 계정, 백업 키, 서버 밖 백업 저장소). `ops.env`는 api 컨테이너에 전달하지 않는다. `pnpm env:init --production`이 두 템플릿(`deploy/env.example`, `deploy/ops.env.example`)의 비밀 값을 같은 값으로 채워 만들고, <꺾쇠> 값(접속 주소·저장소·메일)은 서버에서 직접 채운다. 꺾쇠를 채우지 않으면 api가 기동을 멈춘다. 두 파일은 저장소에서 제외된다
+- **환경 변수 파일 2개**: `deploy/.env`(api·compose, 접속 주소·DB 주소·비밀 값·R2·Gmail)와 `deploy/ops.env`(운영자·삭제 전용 DB 계정, 백업 키, 서버 밖 백업 저장소). `ops.env`는 api 컨테이너에 전달하지 않는다. 서버에서는 `deploy/scripts/init-env.sh`(openssl만 필요), 개발 PC에서는 `pnpm env:init --production`이 두 템플릿(`deploy/env.example`, `deploy/ops.env.example`)의 비밀 값을 같은 값으로 채워 만들고, <꺾쇠> 값(접속 주소·저장소·메일)은 서버에서 직접 채운다. 꺾쇠를 채우지 않으면 api가 기동을 멈춘다. 두 파일은 저장소에서 제외된다
 - **자원 한도**(메모리 6GB 이상 서버 기준 기본값): db 1GB·1CPU, api 1GB·1CPU, web 256MB·0.5CPU. `deploy/.env`의 `*_MEM_LIMIT`·`*_CPUS`·`API_HEAP_MB`·`DB_SHARED_BUFFERS`로 바꾼다. DB 최대 연결 수는 60(api 15 + 점검 작업 여유)
 - **웹 응답 헤더**는 `deploy/Caddyfile`에 있다: CSP(`scripts/csp-header.mjs` 출력과 같아야 하며 시험이 비교), HSTS, nosniff, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `Server` 헤더 제거. `assets/`는 1년 캐시, 진입 파일(`index.html`·`sw.js` 등)은 `no-cache`. CSP의 저장소 출처는 `deploy/.env`의 `S3_ENDPOINT`를 그대로 쓴다
 - **접속 기록**은 표준 출력(`docker compose logs web`)으로 나가고, 초대·비밀번호 재설정·해지 취소 링크의 토큰(주소 경로)과 `token·code·state` 쿼리 값, 쿠키·인증 헤더는 가려서 남긴다
 - **접속자 IP**: Caddy가 `X-Forwarded-For`를 덮어써 넘기고 api는 한 단계를 신뢰한다(`TRUST_PROXY_HOPS=1`). 요청 횟수 제한과 로그인 기기 목록의 IP가 여기에 의존한다
 - **로컬에서 확인한 것**: 이미지 4개(api·migrate·ops·web) 빌드, `db → migrate → api → web` 기동(api 헬스 체크 통과), 접속 주소 `localhost`의 자체 인증서로 HTTPS 응답, 위 헤더 전부, 해시 파일 장기 캐시·진입 파일 no-cache, 화면 이동 주소의 `index.html` 대체, `/api/v1/health` 전달과 `/api/docs` 404, 로그인 실패 응답, 접속 기록의 토큰 가림, `ops`에서 암호화 백업 생성과 복구 시험 통과, `pnpm operator list` 동작
+- **서버 설정·배포 스크립트**(`deploy/scripts/`, 사용 순서는 `docs/11-server-deploy.md`): `server-setup.sh`(Docker·시간대·자동 보안 업데이트·fail2ban·SSH 강화·ufw·스왑·로그 정리), `init-env.sh`, `deploy.sh`(배포 전 백업 → 빌드 → 마이그레이션 → 시작 → 헬스 체크, 이전 태그를 넣으면 되돌리기), `run-ops.sh`(점검 작업 래퍼: 겹침 방지·로그·실패 시 알림 메일), `server-check.sh`(열린 포트·SSH·방화벽·컨테이너·백업 점검)
 - **실제 환경(C 단계)에서 확인할 것**: sslip.io 주소로 인증서 발급, R2 주소 기준 CSP와 업로드·내려받기, Gmail 발송, 접속자 IP가 요청 횟수 제한·기기 목록에 맞게 잡히는지, 소셜 로그인 앱 등록
 
 ## 6. 0.12.0 스테이징으로 넘기는 항목
