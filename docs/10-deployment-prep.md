@@ -23,26 +23,27 @@
 
 ### api 서버가 읽는 값
 
-| 변수                                       | 필수           | 운영 값                                                                                                                                |
-| ------------------------------------------ | -------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| `NODE_ENV`                                 | 필수           | `production`                                                                                                                           |
-| `PORT`                                     | 선택           | 호스팅이 지정하는 포트                                                                                                                 |
-| `LOG_LEVEL`                                | 선택           | `info` 이상 (debug·trace 불가)                                                                                                         |
-| `APP_ORIGIN`                               | 필수           | 서비스 웹 주소 (https)                                                                                                                 |
-| `TRUST_PROXY_HOPS`                         | 프록시 뒤 필수 | 앞단 프록시 단계 수 (CloudFront → 로드 밸런서 → API면 2). 0이면 모든 사용자가 프록시 IP 하나로 보여 요청 횟수 제한을 함께 쓴다         |
-| `RATE_LIMIT_MULTIPLIER`                    | 개발·시험 전용 | 호출 횟수 제한 한도에 곱하는 배수(기본 1, 1~20). 화면 전체 흐름 시험이 쓰며 운영에서 1이 아니면 기동을 막는다                          |
-| `DATABASE_URL`                             | 필수           | 앱 계정 `field_note_app` 접속 주소                                                                                                     |
-| `DATABASE_AUTH_URL`                        | 필수           | 회사 범위 밖 전용 계정 `field_note_auth`                                                                                               |
-| `DATABASE_QUEUE_URL`                       | 필수           | 작업 큐 계정 `field_note_queue`                                                                                                        |
-| `DATABASE_MIGRATE_URL`                     | 필수           | 소유 계정 `field_note` (기동 검사에 필요)                                                                                              |
-| `S3_ENDPOINT`·`S3_REGION`·`S3_BUCKET`      | 필수           | 객체 저장소 공급자 값                                                                                                                  |
-| `S3_ACCESS_KEY`·`S3_SECRET_KEY`            | 필수           | 버킷 전용 키 (공급자가 발급한 값 그대로. R2는 이 버킷만 가리키는 토큰의 Object Read & Write 권한. 키 길이·형식은 코드가 검사하지 않음) |
-| `SMTP_HOST`·`SMTP_PORT`·`SMTP_FROM`        | 필수           | 메일 공급자 값, 발신 주소는 인증된 도메인                                                                                              |
-| `SMTP_USER`·`SMTP_PASSWORD`                | 운영 필수      | 메일 공급자 계정                                                                                                                       |
-| `CODE_HASH_SECRET`                         | 필수           | 32자 이상 무작위 (바꾸면 미사용 인증 코드 무효)                                                                                        |
-| `TOTP_ENCRYPTION_KEY`                      | 필수           | 32자 이상 무작위 (2단계 인증 키 암호화용, 바꾸면 켜 둔 2단계 인증이 모두 확인 불가가 되므로 정해진 뒤에는 유지·백업)                   |
-| `OAUTH_COOKIE_SECRET`                      | 필수           | 32자 이상 무작위                                                                                                                       |
-| `KAKAO_*`·`NAVER_*`·`GOOGLE_*` (ID·시크릿) | 선택           | 앱 등록 후 채움. 쌍이 없으면 해당 로그인 꺼짐                                                                                          |
+| 변수                                       | 필수           | 운영 값                                                                                                                                         |
+| ------------------------------------------ | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `NODE_ENV`                                 | 필수           | `production`                                                                                                                                    |
+| `DB_POOL_MAX`                              | 선택           | DB 연결 수 상한 (기본 10, 1~50). api는 앱·전용·작업 큐 세 곳이 각각 이 수까지 열므로 DB 최대 연결 수는 이 값의 3배보다 커야 한다. 서버 구성은 5 |
+| `PORT`                                     | 선택           | 호스팅이 지정하는 포트                                                                                                                          |
+| `LOG_LEVEL`                                | 선택           | `info` 이상 (debug·trace 불가)                                                                                                                  |
+| `APP_ORIGIN`                               | 필수           | 서비스 웹 주소 (https)                                                                                                                          |
+| `TRUST_PROXY_HOPS`                         | 프록시 뒤 필수 | 앞단 프록시 단계 수 (CloudFront → 로드 밸런서 → API면 2). 0이면 모든 사용자가 프록시 IP 하나로 보여 요청 횟수 제한을 함께 쓴다                  |
+| `RATE_LIMIT_MULTIPLIER`                    | 개발·시험 전용 | 호출 횟수 제한 한도에 곱하는 배수(기본 1, 1~20). 화면 전체 흐름 시험이 쓰며 운영에서 1이 아니면 기동을 막는다                                   |
+| `DATABASE_URL`                             | 필수           | 앱 계정 `field_note_app` 접속 주소                                                                                                              |
+| `DATABASE_AUTH_URL`                        | 필수           | 회사 범위 밖 전용 계정 `field_note_auth`                                                                                                        |
+| `DATABASE_QUEUE_URL`                       | 필수           | 작업 큐 계정 `field_note_queue`                                                                                                                 |
+| `DATABASE_MIGRATE_URL`                     | 필수           | 소유 계정 `field_note` (기동 검사에 필요)                                                                                                       |
+| `S3_ENDPOINT`·`S3_REGION`·`S3_BUCKET`      | 필수           | 객체 저장소 공급자 값                                                                                                                           |
+| `S3_ACCESS_KEY`·`S3_SECRET_KEY`            | 필수           | 버킷 전용 키 (공급자가 발급한 값 그대로. R2는 이 버킷만 가리키는 토큰의 Object Read & Write 권한. 키 길이·형식은 코드가 검사하지 않음)          |
+| `SMTP_HOST`·`SMTP_PORT`·`SMTP_FROM`        | 필수           | 메일 공급자 값, 발신 주소는 인증된 도메인                                                                                                       |
+| `SMTP_USER`·`SMTP_PASSWORD`                | 운영 필수      | 메일 공급자 계정                                                                                                                                |
+| `CODE_HASH_SECRET`                         | 필수           | 32자 이상 무작위 (바꾸면 미사용 인증 코드 무효)                                                                                                 |
+| `TOTP_ENCRYPTION_KEY`                      | 필수           | 32자 이상 무작위 (2단계 인증 키 암호화용, 바꾸면 켜 둔 2단계 인증이 모두 확인 불가가 되므로 정해진 뒤에는 유지·백업)                            |
+| `OAUTH_COOKIE_SECRET`                      | 필수           | 32자 이상 무작위                                                                                                                                |
+| `KAKAO_*`·`NAVER_*`·`GOOGLE_*` (ID·시크릿) | 선택           | 앱 등록 후 채움. 쌍이 없으면 해당 로그인 꺼짐                                                                                                   |
 
 ### 운영자·점검 작업만 쓰는 값 (api 서버에는 넣지 않음)
 
@@ -153,6 +154,26 @@ API 응답에는 `X-Content-Type-Options`·`X-Frame-Options`·`Referrer-Policy`�
 - **확인한 방법**: 빌드한 웹을 위 정책을 **강제**하는 서버로 내려주고 `/api`를 API로 전달해, Playwright e2e 11개 전체(사진·문서 올리기와 내려받기, 엑셀 내려받기, 2단계 인증 QR 포함)를 통과시키고 주요 화면을 둘러보며 위반 보고가 0건임을 확인했다
 - 이 확인에서 zod의 `Function()` 시험이 위반 보고를 남기는 것을 찾았다. 기능에는 영향이 없었지만 콘솔 오류와 보고가 쌓이므로 브라우저에서만 이 시험을 끄도록 했다 (`packages/shared/src/zodBrowserConfig.ts`). `unsafe-eval`은 허용하지 않는다
 - 처음에는 `Content-Security-Policy-Report-Only`로 켜서 위반 보고를 확인한 뒤 강제로 바꾸는 방식을 권한다 (실제 도메인·저장소 주소는 로컬과 다름)
+
+### 5.3 서버 한 대 구성 (deploy/)
+
+Oracle Cloud 무료 VM 한 대에서 PostgreSQL·API·웹(Caddy)을 `deploy/docker-compose.yml`로 함께 돌린다. 저장소 루트에서 `docker compose -f deploy/docker-compose.yml --env-file deploy/.env <명령>`으로 실행한다 (프로젝트 이름 `field-note-prod`라 로컬 개발용 compose와 섞이지 않는다).
+
+| 서비스    | 역할                                                                                                                                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `db`      | PostgreSQL 18. **외부 포트를 열지 않음**(운영자는 SSH 터널). 서비스 이름이 `postgres`가 아닌 `db`인 것은 api가 로컬 주소로 보이는 이름을 운영에서 거부하기 때문이다 |
+| `api`     | API 서버 이미지. 읽기 전용 파일 시스템, 모든 권한 제거(`cap_drop: ALL`), `no-new-privileges`, Node 힙 상한 640MB, DB 연결 수 상한 5                                 |
+| `web`     | Caddy + 웹 빌드 결과. 80·443만 열고 인증서를 자동 발급·갱신한다. `/api/*`를 api로 전달하고 나머지는 정적 파일(없으면 `index.html`)                                  |
+| `migrate` | (`tools` 프로필) 마이그레이션과 DB 계정 비밀번호 설정을 한 번 실행                                                                                                  |
+| `ops`     | (`tools` 프로필) 백업·복구 시험·해지 회사 삭제·운영자 CLI. DB 서버와 같은 주 버전(18)의 PostgreSQL 도구가 들어 있다                                                 |
+
+- **환경 변수 파일 2개**: `deploy/.env`(api·compose, 접속 주소·DB 주소·비밀 값·R2·Gmail)와 `deploy/ops.env`(운영자·삭제 전용 DB 계정, 백업 키, 서버 밖 백업 저장소). `ops.env`는 api 컨테이너에 전달하지 않는다. `pnpm env:init --production`이 두 템플릿(`deploy/env.example`, `deploy/ops.env.example`)의 비밀 값을 같은 값으로 채워 만들고, <꺾쇠> 값(접속 주소·저장소·메일)은 서버에서 직접 채운다. 꺾쇠를 채우지 않으면 api가 기동을 멈춘다. 두 파일은 저장소에서 제외된다
+- **자원 한도**(메모리 6GB 이상 서버 기준 기본값): db 1GB·1CPU, api 1GB·1CPU, web 256MB·0.5CPU. `deploy/.env`의 `*_MEM_LIMIT`·`*_CPUS`·`API_HEAP_MB`·`DB_SHARED_BUFFERS`로 바꾼다. DB 최대 연결 수는 60(api 15 + 점검 작업 여유)
+- **웹 응답 헤더**는 `deploy/Caddyfile`에 있다: CSP(`scripts/csp-header.mjs` 출력과 같아야 하며 시험이 비교), HSTS, nosniff, `Referrer-Policy: no-referrer`, `Permissions-Policy`, `Server` 헤더 제거. `assets/`는 1년 캐시, 진입 파일(`index.html`·`sw.js` 등)은 `no-cache`. CSP의 저장소 출처는 `deploy/.env`의 `S3_ENDPOINT`를 그대로 쓴다
+- **접속 기록**은 표준 출력(`docker compose logs web`)으로 나가고, 초대·비밀번호 재설정·해지 취소 링크의 토큰(주소 경로)과 `token·code·state` 쿼리 값, 쿠키·인증 헤더는 가려서 남긴다
+- **접속자 IP**: Caddy가 `X-Forwarded-For`를 덮어써 넘기고 api는 한 단계를 신뢰한다(`TRUST_PROXY_HOPS=1`). 요청 횟수 제한과 로그인 기기 목록의 IP가 여기에 의존한다
+- **로컬에서 확인한 것**: 이미지 4개(api·migrate·ops·web) 빌드, `db → migrate → api → web` 기동(api 헬스 체크 통과), 접속 주소 `localhost`의 자체 인증서로 HTTPS 응답, 위 헤더 전부, 해시 파일 장기 캐시·진입 파일 no-cache, 화면 이동 주소의 `index.html` 대체, `/api/v1/health` 전달과 `/api/docs` 404, 로그인 실패 응답, 접속 기록의 토큰 가림, `ops`에서 암호화 백업 생성과 복구 시험 통과, `pnpm operator list` 동작
+- **실제 환경(C 단계)에서 확인할 것**: sslip.io 주소로 인증서 발급, R2 주소 기준 CSP와 업로드·내려받기, Gmail 발송, 접속자 IP가 요청 횟수 제한·기기 목록에 맞게 잡히는지, 소셜 로그인 앱 등록
 
 ## 6. 0.12.0 스테이징으로 넘기는 항목
 
