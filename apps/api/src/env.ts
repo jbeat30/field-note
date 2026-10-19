@@ -26,6 +26,8 @@ const baseSchema = z.object({
   TRUST_PROXY_HOPS: z.coerce.number().int().min(0).max(5).default(0),
   // 호출 횟수 제한 한도에 곱하는 배수 (화면 전체 흐름 시험처럼 짧은 시간에 많이 부르는 개발용, 운영에서는 1이어야 함)
   RATE_LIMIT_MULTIPLIER: z.coerce.number().int().min(1).max(20).default(1),
+  // DB 연결 수 상한 (api는 앱·전용·작업 큐 세 곳에서 각각 이 수만큼까지 열므로 DB의 최대 연결 수는 이 값의 3배보다 커야 함)
+  DB_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
   // 브라우저에서 접속하는 웹 주소 (CSRF Origin 검증 기준)
   APP_ORIGIN: z.url(),
   S3_ENDPOINT: z.url(),
@@ -90,6 +92,18 @@ const envSchema = baseSchema.superRefine((env, context) => {
       'LOG_LEVEL',
       '운영에서는 debug 이하 로그를 켤 수 없음 (개인정보가 로그에 남을 수 있음)',
     );
+  }
+
+  // 서버 템플릿(deploy/env.example)의 <꺾쇠> 자리표시자를 채우지 않은 채 기동하는 사고 차단
+  for (const key of [
+    'S3_ENDPOINT',
+    'S3_BUCKET',
+    'S3_ACCESS_KEY',
+    'S3_SECRET_KEY',
+    'SMTP_USER',
+    'SMTP_PASSWORD',
+  ] as const) {
+    if (/[<>]/.test(env[key] ?? '')) problem(key, '자리표시자(<…>)를 실제 값으로 바꿔야 함');
   }
 
   // 로컬 `.env.example`에서 만든 값 그대로의 사용 차단 (비밀 값은 환경마다 새로 생성)
