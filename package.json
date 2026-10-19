@@ -32,6 +32,7 @@
     "db:reset": "docker compose down -v && pnpm infra:up && pnpm db:setup && pnpm db:seed",
     "operator": "pnpm --filter @field-note/api operator",
     "backup": "pnpm --filter @field-note/api backup",
+    "mail:check": "pnpm --filter @field-note/api mail:check",
     "e2e": "pnpm --filter @field-note/web e2e"
   },
   "devDependencies": {

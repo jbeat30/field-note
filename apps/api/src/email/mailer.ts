@@ -27,7 +27,9 @@ export type MailerOptions = {
  * @param options 접속 정보와 발신 주소
  * @returns 메일 발송기
  */
-export const createSmtpMailer = (options: MailerOptions): Mailer => {
+export const createSmtpMailer = (
+  options: MailerOptions,
+): Mailer & { verify: () => Promise<void> } => {
   const hasAuth = Boolean(options.user && options.password);
   const transport = nodemailer.createTransport({
     host: options.host,
@@ -46,6 +48,10 @@ export const createSmtpMailer = (options: MailerOptions): Mailer => {
   return {
     send: async (message) => {
       await transport.sendMail({ from: options.from, ...message });
+    },
+    // 서버 연결, TLS, 로그인까지 확인 (메일은 보내지 않음)
+    verify: async () => {
+      await transport.verify();
     },
   };
 };
