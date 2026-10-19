@@ -15,3 +15,6 @@ backups
 docs
 ops
 DEPLOY-NOTES.md
+deploy/.env
+deploy/ops.env
+deploy/backups

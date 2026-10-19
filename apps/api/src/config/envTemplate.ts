@@ -26,12 +26,11 @@ const GENERATORS: Record<string, () => string> = {
  * @description `.env.example`의 `{{이름}}` 토큰을 새로 만든 비밀 값으로 바꿔 `.env` 내용 생성
  * 같은 토큰은 모든 위치에서 같은 값 (예: DB 비밀번호가 컨테이너 설정과 접속 주소에 함께 쓰임)
  * @param template `.env.example` 내용
+ * @param values 이미 만든 토큰 값 (여러 템플릿이 같은 비밀 값을 나눠 쓸 때 같은 맵을 넘김)
  * @returns 비밀 값이 채워진 `.env` 내용
  * @throws 알 수 없는 토큰이 있는 경우
  */
-export const renderEnvTemplate = (template: string) => {
-  const values = new Map<string, string>();
-
+export const renderEnvTemplate = (template: string, values = new Map<string, string>()) => {
   return template.replace(/\{\{([A-Z0-9_]+)\}\}/g, (_match, name: string) => {
     const generate = GENERATORS[name];
 

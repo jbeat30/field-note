@@ -1,0 +1,62 @@
+# 웹 서버 설정: 정적 웹 제공, /api를 API 컨테이너로 전달, HTTPS 인증서 자동 발급·갱신
+# 값은 docker-compose.yml이 환경 변수로 넣음
+#   SITE_ADDRESS    접속 주소 (예: 203-0-113-10.sslip.io), 인증서 발급 대상
+#   STORAGE_ORIGIN  사진·문서 저장소 출처 (S3_ENDPOINT와 같은 값, CSP의 img-src·connect-src)
+# CSP 값은 scripts/csp-header.mjs의 출력과 같아야 하며 시험이 두 값을 비교한다
+
+{
+	# 관리용 API는 켜지 않음
+	admin off
+}
+
+{$SITE_ADDRESS} {
+	encode zstd gzip
+
+	# 응답 헤더 (API 응답에도 붙음)
+	header {
+		Strict-Transport-Security "max-age=31536000; includeSubDomains"
+		X-Content-Type-Options "nosniff"
+		Referrer-Policy "no-referrer"
+		Permissions-Policy "camera=(self), microphone=(), geolocation=(), payment=(), usb=()"
+		Content-Security-Policy "default-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data: blob: {$STORAGE_ORIGIN}; font-src 'self' data:; connect-src 'self' {$STORAGE_ORIGIN}; worker-src 'self'; manifest-src 'self'; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+		-Server
+	}
+
+	# API: 접속자 주소는 Caddy가 X-Forwarded-For로 넘기고 API는 앞단 1단계를 신뢰함 (TRUST_PROXY_HOPS=1)
+	handle /api/* {
+		reverse_proxy api:3000 {
+			# 응답이 없는 API를 오래 붙잡지 않음 (회사 전체 내려받기 같은 긴 응답은 응답 시작 후라 영향 없음)
+			transport http {
+				response_header_timeout 60s
+				dial_timeout 5s
+			}
+		}
+	}
+
+	# 웹: 파일이 없으면 index.html (화면 이동 주소로 직접 들어오거나 새로고침한 경우)
+	handle {
+		root * /srv
+		try_files {path} /index.html
+
+		# 해시가 붙은 파일은 오래 캐시, 진입 파일은 매번 새 버전 확인
+		@hashed path /assets/*
+		header @hashed Cache-Control "public, max-age=31536000, immutable"
+		@entry path / /index.html /sw.js /registerSW.js /manifest.webmanifest /theme-init.js
+		header @entry Cache-Control "no-cache"
+
+		file_server
+	}
+
+	# 접속 기록: 표준 출력으로 내보내 `docker compose logs`로 봄
+	# 초대·비밀번호 재설정·해지 취소 링크의 토큰은 주소 경로에 들어 있어 가리고, 쿠키·인증 헤더와 토큰성 쿼리 값(token·code·state)은 남기지 않음
+	log {
+		output stdout
+		format filter {
+			wrap json
+			request>uri regexp "^(/(?:api/v1/)?(?:invite|invitations|reset-password|auth/password-reset|closure/cancel|auth/closure)/)[^/?]+" "${1}REDACTED"
+			request>uri regexp "([?&](?:token|code|state)=)[^&]*" "${1}REDACTED"
+			request>headers>Cookie delete
+			request>headers>Authorization delete
+		}
+	}
+}
