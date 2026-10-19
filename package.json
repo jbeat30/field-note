@@ -33,6 +33,7 @@
     "operator": "pnpm --filter @field-note/api operator",
     "backup": "pnpm --filter @field-note/api backup",
     "mail:check": "pnpm --filter @field-note/api mail:check",
+    "alert:mail": "pnpm --filter @field-note/api alert:mail",
     "e2e": "pnpm --filter @field-note/web e2e"
   },
   "devDependencies": {
