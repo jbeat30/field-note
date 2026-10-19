@@ -96,6 +96,22 @@ describe('parseEnv', () => {
       expect(() => parseEnv({ ...production, [key]: value })).toThrow(key);
     });
 
+    it('운영에서 <꺾쇠> 자리표시자가 남아 있으면 기동을 막는다', () => {
+      expect(() => parseEnv({ ...production, S3_ACCESS_KEY: '<R2 접근 키 ID>' })).toThrow(
+        'S3_ACCESS_KEY',
+      );
+      expect(() => parseEnv({ ...production, SMTP_PASSWORD: '<Gmail 앱 비밀번호>' })).toThrow(
+        'SMTP_PASSWORD',
+      );
+    });
+
+    it('DB 연결 수 상한은 기본 10이고 1~50 범위만 받는다', () => {
+      expect(parseEnv(production).DB_POOL_MAX).toBe(10);
+      expect(parseEnv({ ...production, DB_POOL_MAX: '5' }).DB_POOL_MAX).toBe(5);
+      expect(() => parseEnv({ ...production, DB_POOL_MAX: '0' })).toThrow('DB_POOL_MAX');
+      expect(() => parseEnv({ ...production, DB_POOL_MAX: '51' })).toThrow('DB_POOL_MAX');
+    });
+
     it('개발 환경에서는 호출 횟수 제한 배수를 올릴 수 있다', () => {
       expect(parseEnv({ ...validEnv, RATE_LIMIT_MULTIPLIER: '10' }).RATE_LIMIT_MULTIPLIER).toBe(10);
       expect(parseEnv(validEnv).RATE_LIMIT_MULTIPLIER).toBe(1);

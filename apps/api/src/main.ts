@@ -53,11 +53,11 @@ const main = async () => {
   const logger = createLogger(env.LOG_LEVEL);
 
   // 회사 범위 밖 전용 계정은 세션·초대·인증 코드 처리에만 연결 (업무 쿼리는 withCompany 경로로만)
-  const authPrisma = createPrismaClient(env.DATABASE_AUTH_URL);
+  const authPrisma = createPrismaClient(env.DATABASE_AUTH_URL, env.DB_POOL_MAX);
   const sessionStore = createPrismaSessionStore(authPrisma);
   const invitationStore = createPrismaInvitationStore(authPrisma);
   // 로그인 후 회사 범위 조회는 앱 계정(RLS 적용)으로만 수행
-  const appPrisma = createPrismaClient(env.DATABASE_URL);
+  const appPrisma = createPrismaClient(env.DATABASE_URL, env.DB_POOL_MAX);
   const totp = createTotpService({
     auth: authPrisma,
     secretKey: env.TOTP_ENCRYPTION_KEY,
@@ -79,7 +79,7 @@ const main = async () => {
   const monthly = createMonthlyService(appPrisma);
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작, 큐는 전용 계정으로 접속
-  const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
+  const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger, env.DB_POOL_MAX);
   // 객체 저장소 (로컬은 버킷이 없으면 생성, 운영은 운영자가 버킷을 사전 준비)
   const { storage, ensureBucket } = createS3Storage({
     endpoint: env.S3_ENDPOINT,
