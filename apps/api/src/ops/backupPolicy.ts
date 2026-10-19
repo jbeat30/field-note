@@ -14,6 +14,9 @@ export type BackupManifest = {
   createdAt: string;
   database: string;
   dumpFile: string;
+  // 암호화해 저장한 백업이면 방식 (없으면 평문)
+  encryption?: 'aes-256-gcm';
+  // 파일 내용(암호화했다면 암호문)의 체크섬
   sha256: string;
   sizeBytes: number;
   serverVersion: string;

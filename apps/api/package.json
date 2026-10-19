@@ -14,7 +14,8 @@
     "db:seed": "tsx --env-file-if-exists=../../.env scripts/db-seed.ts",
     "env:init": "tsx scripts/init-env.ts",
     "operator": "tsx --env-file-if-exists=../../.env scripts/operator.ts",
-    "backup": "tsx --env-file-if-exists=../../.env scripts/backup.ts"
+    "backup": "tsx --env-file-if-exists=../../.env scripts/backup.ts",
+    "mail:check": "tsx --env-file-if-exists=../../.env scripts/mail-check.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "9.1.0",

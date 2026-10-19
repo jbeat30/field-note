@@ -491,6 +491,8 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 
 - `pnpm backup create`로 DB 백업(덤프·계정 정의·확인용 기록)을 `backups/`에 만들고 30일이 지난 백업을 정리한다
 - `pnpm backup drill`은 최근 백업을 **임시 DB에 복구해 검증**한다 (체크섬·행 수·마이그레이션·회사 격리). 운영 DB는 건드리지 않고, 실패하면 종료 코드가 0이 아니다
+- `BACKUP_ENCRYPTION_KEY`가 있으면 백업 파일을 AES-256-GCM으로 암호화해 저장한다(운영 필수). `BACKUP_S3_*`가 있으면 서버 밖 저장소(별도 버킷)에도 사본을 올린다. `pnpm backup decrypt`로 복구용으로 풀고, `pnpm backup remote-check`로 서버 밖 저장소 접속을 확인한다
+- `pnpm mail:check [받는 주소]`는 메일 서버 연결·TLS·로그인을 확인하고(주소를 주면 확인 메일도 발송) 접속 값은 출력하지 않는다. Gmail은 465(TLS 직접) 또는 587(STARTTLS) 포트를 쓰며, 계정 정보를 보내는 연결은 TLS가 없으면 중단한다
 - 호스트에 PostgreSQL 도구가 없어도 되도록 Docker 컨테이너 안의 도구를 쓴다 (서버에 설치돼 있으면 `BACKUP_PG_MODE=local`)
 - 절차·복구 시험 기록·환경 분리 표는 [docs/05-backup-restore.md](docs/05-backup-restore.md), 정기 실행 예시는 `ops/crontab.example`
 - 운영(`NODE_ENV=production`)에서는 로컬 주소·`http`·`debug` 로그·로컬 기본 비밀번호가 있으면 api가 기동을 중단한다
