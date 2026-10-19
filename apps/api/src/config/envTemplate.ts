@@ -15,6 +15,7 @@ const GENERATORS: Record<string, () => string> = {
   CODE_HASH_SECRET: () => randomBytes(32).toString('base64url'),
   OAUTH_COOKIE_SECRET: () => randomBytes(32).toString('base64url'),
   TOTP_ENCRYPTION_KEY: () => randomBytes(32).toString('base64url'),
+  BACKUP_ENCRYPTION_KEY: () => randomBytes(32).toString('base64url'),
   // S3 호환 저장소의 접근 키(20자 대문자·숫자)와 비밀 키(40자)
   S3_ACCESS_KEY: () =>
     Array.from(randomBytes(20), (byte) => UPPER_ALNUM[byte % UPPER_ALNUM.length]).join(''),

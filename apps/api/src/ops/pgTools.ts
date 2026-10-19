@@ -1,5 +1,6 @@
 import { spawn } from 'node:child_process';
 import { createReadStream, createWriteStream } from 'node:fs';
+import type { Transform } from 'node:stream';
 import { pipeline } from 'node:stream/promises';
 
 import { withDatabase } from '../db/connectionUrl';
@@ -15,7 +16,13 @@ export type PgTools = {
   run: (
     tool: string,
     args: string[],
-    options?: { database?: string; stdoutFile?: string; stdinFile?: string },
+    options?: {
+      database?: string;
+      stdoutFile?: string;
+      // 표준 출력을 파일에 쓰기 전에 거치는 변환 (백업 암호화용, 평문이 디스크에 남지 않음)
+      stdoutTransform?: Transform;
+      stdinFile?: string;
+    },
   ) => Promise<void>;
 };
 
@@ -32,7 +39,11 @@ export const createPgTools = (mode: PgMode, ownerUrl: string): PgTools => {
 
   return {
     mode,
-    run: async (tool, args, { database = defaultDatabase, stdoutFile, stdinFile } = {}) => {
+    run: async (
+      tool,
+      args,
+      { database = defaultDatabase, stdoutFile, stdoutTransform, stdinFile } = {},
+    ) => {
       // pg_dumpall은 접속 DB 지정 방식이 달라 호출하는 쪽이 필요한 값만 args에 넘김
       const connection =
         mode === 'docker'
@@ -63,7 +74,13 @@ export const createPgTools = (mode: PgMode, ownerUrl: string): PgTools => {
 
       await Promise.all([
         exit,
-        stdoutFile && child.stdout ? pipeline(child.stdout, createWriteStream(stdoutFile)) : null,
+        stdoutFile && child.stdout
+          ? pipeline([
+              child.stdout,
+              ...(stdoutTransform ? [stdoutTransform] : []),
+              createWriteStream(stdoutFile, { mode: 0o600 }),
+            ])
+          : null,
         stdinFile && child.stdin ? pipeline(createReadStream(stdinFile), child.stdin) : null,
       ]);
     },
