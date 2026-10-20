@@ -1,3 +1,4 @@
+import { escapeHtml } from './escapeHtml';
 import type { MailMessage } from './mailer';
 
 /**
@@ -24,7 +25,7 @@ export const buildVerificationEmail = (
     '본인이 요청하지 않았다면 이 메일을 무시해 주세요.',
   ].join('\n'),
   html: `<p>field-note 이메일 인증 코드입니다.</p>
-<p style="font-size:28px;font-weight:bold;letter-spacing:6px">${code}</p>
+<p style="font-size:28px;font-weight:bold;letter-spacing:6px">${escapeHtml(code)}</p>
 <p>이 코드는 ${ttlMinutes}분 동안만 유효합니다.</p>
 <p>본인이 요청하지 않았다면 이 메일을 무시해 주세요.</p>`,
 });

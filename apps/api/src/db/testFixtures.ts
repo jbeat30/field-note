@@ -42,3 +42,19 @@ export const createTestProject = async (owner: PrismaClient, companyId: string, 
 
   return { project, clientId: client.id, managerId: manager.id };
 };
+
+/**
+ * @description 테스트용 회사의 계정을 모두 이메일 인증을 마친 활성 상태로 만듦
+ * 이메일 인증 전 계정은 인증 관련 API 외에 막혀 있어서, 업무 API를 시험하는 계정에 필요
+ * @param owner 소유 계정 연결 (SQL 실행기)
+ * @param companyId 회사 ID
+ */
+export const markCompanyEmailsVerified = async (
+  owner: { query: (sql: string, params: string[]) => Promise<unknown> },
+  companyId: string,
+) => {
+  await owner.query(
+    `UPDATE users SET email_verified_at = now(), status = 'ACTIVE' WHERE company_id = $1`,
+    [companyId],
+  );
+};

@@ -10,6 +10,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 
@@ -80,11 +81,15 @@ export const PasswordSetForm = ({ onDone }: { onDone: () => void }) => {
       >
         <Input autoComplete="username" autoCapitalize="none" {...register('loginId')} />
       </FormField>
-      <FormField label="비밀번호" hint="10자 이상" error={errors.newPassword?.message}>
-        <Input type="password" autoComplete="new-password" {...register('newPassword')} />
+      <FormField
+        label="비밀번호"
+        hint={VALIDATION_MESSAGES.PASSWORD_HINT}
+        error={errors.newPassword?.message}
+      >
+        <PasswordInput autoComplete="new-password" {...register('newPassword')} />
       </FormField>
       <FormField label="비밀번호 확인" error={errors.newPasswordConfirm?.message}>
-        <Input type="password" autoComplete="new-password" {...register('newPasswordConfirm')} />
+        <PasswordInput autoComplete="new-password" {...register('newPasswordConfirm')} />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '설정 중' : '아이디·비밀번호 설정'}

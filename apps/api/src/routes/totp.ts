@@ -104,8 +104,10 @@ export const registerTotpRoutes = (registry: RouteRegistry, config?: TotpRouteOp
       path: '/me/totp/setup',
       summary: '2단계 인증 등록 시작 (인증 키 발급, 확인 전에는 켜지지 않음)',
       auth: 'required',
+      blockedInDemo: true,
       response: { status: 200, schema: totpSetupResponseSchema },
       rateLimit: { windowMs: 60_000, limit: 10 },
+      errors: ['DEMO_RESTRICTED'],
     },
     async ({ auth }) => {
       try {
@@ -122,9 +124,10 @@ export const registerTotpRoutes = (registry: RouteRegistry, config?: TotpRouteOp
       path: '/me/totp/enable',
       summary: '인증 앱의 코드로 등록 확인 (켜지고 복구 코드를 한 번만 보여 줌)',
       auth: 'required',
+      blockedInDemo: true,
       request: { body: totpEnableSchema },
       response: { status: 200, schema: totpRecoveryCodesResponseSchema },
-      errors: ['TOTP_INVALID'],
+      errors: ['DEMO_RESTRICTED', 'TOTP_INVALID'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     async ({ auth, body }) => {
@@ -147,9 +150,10 @@ export const registerTotpRoutes = (registry: RouteRegistry, config?: TotpRouteOp
       summary:
         '2단계 인증 끄기 (인증 코드 또는 복구 코드 필요, 비밀번호가 있는 계정은 현재 비밀번호도 필요)',
       auth: 'required',
+      blockedInDemo: true,
       request: { body: totpDisableSchema },
       response: { status: 200, schema: successResponseSchema },
-      errors: ['CURRENT_PASSWORD_INVALID', 'TOTP_INVALID', 'ACCOUNT_LOCKED'],
+      errors: ['DEMO_RESTRICTED', 'CURRENT_PASSWORD_INVALID', 'TOTP_INVALID', 'ACCOUNT_LOCKED'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     async ({ auth, body }) => {
@@ -182,9 +186,10 @@ export const registerTotpRoutes = (registry: RouteRegistry, config?: TotpRouteOp
       path: '/me/totp/recovery-codes',
       summary: '복구 코드 다시 발급 (이전 코드는 모두 무효, 인증 코드 또는 복구 코드 필요)',
       auth: 'required',
+      blockedInDemo: true,
       request: { body: totpRecoveryRegenerateSchema },
       response: { status: 200, schema: totpRecoveryCodesResponseSchema },
-      errors: ['TOTP_INVALID', 'ACCOUNT_LOCKED'],
+      errors: ['DEMO_RESTRICTED', 'TOTP_INVALID', 'ACCOUNT_LOCKED'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     async ({ auth, body }) => {

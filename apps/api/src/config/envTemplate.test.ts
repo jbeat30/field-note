@@ -48,4 +48,59 @@ describe('renderEnvTemplate', () => {
     expect(rendered).not.toContain('{{');
     expect(() => parseEnv(parseDotenv(rendered))).not.toThrow();
   });
+
+  describe('서버용 템플릿(deploy)', () => {
+    const read = (file: string) =>
+      readFileSync(path.resolve(__dirname, '../../../../deploy', file), 'utf8');
+    const values = new Map<string, string>();
+    const main = renderEnvTemplate(read('env.example'), values);
+    const ops = renderEnvTemplate(read('ops.env.example'), values);
+
+    it('두 파일이 같은 DB 계정 비밀번호를 쓰고 비밀 값 토큰이 남지 않는다', () => {
+      const pick = (text: string, name: string) => parseDotenv(text)[name]!;
+
+      expect(main).not.toContain('{{');
+      expect(ops).not.toContain('{{');
+      expect(new URL(pick(main, 'DATABASE_MIGRATE_URL')).password).toBe(
+        pick(main, 'POSTGRES_PASSWORD'),
+      );
+      expect(pick(ops, 'BACKUP_ENCRYPTION_KEY')).toHaveLength(43);
+    });
+
+    it('자리표시자를 실제 값으로 바꾸면 api가 운영 모드로 기동할 수 있다 (필요한 값이 빠지지 않음)', () => {
+      const filled = Object.fromEntries(
+        Object.entries(parseDotenv(main)).map(([key, value]) => [
+          key,
+          value
+            .replace('<서버IP-하이픈.sslip.io>', '203-0-113-10.sslip.io')
+            .replace('<R2 계정 ID>', 'abc123')
+            .replace(/<[^>]+>/, 'filled-value'),
+        ]),
+      );
+
+      expect(
+        parseEnv({
+          ...filled,
+          SMTP_FROM: 'service@gmail.com',
+          NODE_ENV: 'production',
+          LOG_LEVEL: 'info',
+          TRUST_PROXY_HOPS: '1',
+          APP_ORIGIN: 'https://203-0-113-10.sslip.io',
+          SMTP_USER: 'service@gmail.com',
+        }).NODE_ENV,
+      ).toBe('production');
+    });
+
+    it('자리표시자를 채우지 않으면 기동을 막는다', () => {
+      expect(() =>
+        parseEnv({
+          ...parseDotenv(main),
+          NODE_ENV: 'production',
+          LOG_LEVEL: 'info',
+          APP_ORIGIN: 'https://203-0-113-10.sslip.io',
+          SMTP_FROM: 'service@gmail.com',
+        }),
+      ).toThrow();
+    });
+  });
 });

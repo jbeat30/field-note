@@ -1,6 +1,6 @@
 # field-note
 
-현장 팀(판금·전기·목공 등)의 관리자가 **프로젝트별 투입 인원·공수·작업 기록·자재·사진·지출**을 수첩처럼 남기는 서비스.
+현장 팀(판금·전기·목공 등)의 관리자가 **프로젝트별 투입 인원·공수·작업 기록·자재·사진·지출**을 수첩처럼 남기는 서비스. 비공개 저장소이며 팀 내부에서만 사용한다.
 
 - 프로젝트마다 작업 달력에서 하루 기록(누가 몇 시간 무슨 일을 했는지, 자재, 사진, 메모, 비용)을 쓴다
 - 인력 배치 타임라인, 월 공수표, 직원 단가·프로젝트 인건비 추정, 알림, 마감·보증·보수 관리
@@ -14,18 +14,8 @@
 | `apps/api`        | Express 5 + Prisma 7 + PostgreSQL (행 수준 보안), 작업 큐 pg-boss               |
 | `packages/shared` | Zod 스키마, 공통 타입, 서버·목업이 함께 쓰는 계산 규칙(공수·단가·알림 등)       |
 | `packages/config` | tsconfig·ESLint·Jest 공통 설정                                                  |
-| `docs`            | 기획서, 개발 순서, 진행 현황, 데이터 모델, 기능 상세                            |
-
-## 바이브 코딩으로 해 보는 제로 투 백
-
-기획부터 설계, 구현, 검증까지 프로젝트 전 과정을 바이브 코딩으로 끝까지 만들어 보는 실험이다. 무엇을 만들지와 어떻게 만들지는 직접 정하고, AI는 그 기준에 맞춰 세부 구현의 속도와 품질을 끌어올리는 도구로 쓴다.
-
-1. **기획 보완·설계를 직접 주도**: 서비스 기획을 서술하고 빈틈을 보완하며 요구사항을 구체적으로 정한 뒤, 세부 개발 단위로 쪼갠 개발 순서(`docs/`)를 기준으로 진행한다. 기획이 바뀌면 문서(`docs/08~09-renewal-plan*.md`)부터 고친다
-2. **기술 선택도 직접 결정**: React, 패키지 매니저(pnpm 모노레포), Prisma·PostgreSQL, Tailwind·Radix, TanStack Query 같은 패키지와 써드파티를 직접 고르고, 버전도 정확히 고정한다
-3. **컨벤션을 규칙으로 강제**: 작업 절차와 금지 사항은 `CLAUDE.md`, 코드 스타일은 [jbeat-conventions](https://github.com/jbeat30/jbeat-conventions)에 두고 같은 기준을 일관되게 적용한다
-4. **한 단계씩 구현 → 검증 → 확인**: 타입·린트·테스트·빌드와 실제 DB·브라우저(Playwright) 확인을 거치고, 화면은 직접 보며 수정 방향을 정한다. 확인한 단계만 커밋하고 PR·릴리즈(`feature` → `release` → `main`)와 머지도 직접 한다
-5. **자동 검증이 막아 준다**: 다른 회사 자료가 보이지 않는지(실제 PostgreSQL 격리 테스트), 새 테이블에 보호 정책이 빠지지 않았는지, API 문서와 라우트가 일치하는지, 컴포넌트 동작·접근성(Storybook)을 PR마다 CI가 검사한다
-6. **진행은 문서에 남긴다**: 완료·다음 작업·메모를 `docs/03-progress.md`에 기록해 작업이 끊겨도 이어서 진행한다
+| `deploy`          | 서버 한 대 배포용 Compose·Caddy·스크립트와 환경 변수 템플릿                     |
+| `docs`            | 기획서, 개발 순서, 진행 현황, 데이터 모델, 기능 상세, 배포 가이드               |
 
 ## 시작하는 방법
 
@@ -54,6 +44,8 @@ pnpm dev            # api(:3000) + web(:5173)
 - 3000번 포트가 사용 중이면 `PORT=3001`로 api를 띄우고 web은 `API_PROXY_TARGET=http://localhost:3001`로 실행한다
 - DB를 처음 상태로: `pnpm db:reset`
 
+## 개발 가이드
+
 ### 검증
 
 ```bash
@@ -63,9 +55,48 @@ pnpm test:stories    # Storybook 동작·접근성 (최초 1회 pnpm --filter @f
 pnpm e2e             # 실제 서버로 핵심 흐름 확인 (infra:up·db:setup·db:seed 뒤에)
 ```
 
+PR마다 CI가 같은 검사를 돌리고, 다른 회사 자료가 보이지 않는지(실제 PostgreSQL 격리 테스트), 새 테이블에 보호 정책이 빠지지 않았는지, API 문서와 라우트가 일치하는지, 컴포넌트 동작·접근성(Storybook)까지 확인한다.
+
+### 작업 규칙
+
+- 브랜치·PR·릴리즈: `main` → `feature/<버전>` → 작업 브랜치(`<타입>-<작업명>`) 순으로 나누고, 모든 PR은 CI 통과가 필요하다 ([브랜치·릴리즈 전략](docs/02-git-workflow.md))
+- 코드·주석·커밋 규칙, 작업 진행 절차는 `CLAUDE.md`에 있다 (오류 문구는 `packages/shared/src/errorMessages.ts`의 상수로만 쓴다)
+- 새 엔드포인트는 `pnpm openapi:generate`, 새 회사 범위 테이블은 RLS·삭제 정책·격리 테스트 목록까지 함께 반영한다
+- 의존성은 정확한 버전으로 고정하고 정식 릴리스만 쓴다
+- 진행 상황과 다음 작업은 `docs/03-progress.md`에 기록한다
+
+## 서버 배포·운영
+
+서버 한 대에서 Docker Compose로 웹(Caddy)·API·DB를 함께 띄우는 구성이다. 단계별 순서와 점검 목록은 [서버 배포 순서](docs/11-server-deploy.md)에 있다.
+
+```bash
+./deploy/scripts/server-setup.sh   # 서버 보안 설정 (방화벽, SSH 강화, Docker, 스왑)
+./deploy/scripts/init-env.sh       # deploy/.env, deploy/ops.env 생성 (비밀 값 자동 생성)
+# <꺾쇠> 값(R2·Gmail 등)은 서버에서 직접 채운다
+./deploy/scripts/deploy.sh         # 이미지 빌드, 마이그레이션, 기동
+sudo ./deploy/scripts/server-check.sh   # 포트·권한·상태 점검
+```
+
+- 회사·초대 링크 발급, 약관 등록 같은 운영 작업은 운영자 CLI(`pnpm operator ...`)로 한다. 명령은 [기능·운영 상세](docs/07-feature-reference.md)에 있다
+- 백업(암호화, 서버 밖 사본)과 복구 시험은 [백업·복구](docs/05-backup-restore.md)를 따른다
+- 환경 변수 파일(`deploy/.env`, `deploy/ops.env`)과 키·비밀번호는 서버에만 두고 저장소·채팅에 남기지 않는다
+
+### 공개 시연 환경
+
+가상 데이터만 담은 `Test Company`를 두고 사람들이 둘러볼 수 있게 할 수 있다. 서버 `deploy/.env`에 `PUBLIC_DEMO_ENABLED=true`를 두면 로그인 화면에 시연 계정이 안내된다.
+
+```bash
+pnpm operator legal-register   # 약관 등록 (처음 한 번)
+pnpm operator demo-reset       # 시연 회사를 만들거나 처음 상태로 되돌림 (서버에서는 ops 컨테이너로 실행, 크론이 매일 새벽 실행)
+pnpm operator demo-remove      # 시연 환경을 끌 때 정리
+```
+
+해지·비밀번호/이메일 변경·2단계 인증·소셜 연동·기기 목록은 시연 계정에서 막혀 있다. 자세한 동작은 [기능·운영 상세](docs/07-feature-reference.md)의 "공개 시연 환경"에 있다.
+
 ## 문서
 
 - [기획서 분석](docs/00-analysis.md) · [개발 순서](docs/01-development-plan.md) · [브랜치·릴리즈 전략](docs/02-git-workflow.md)
 - [진행 현황](docs/03-progress.md) · [데이터 모델](docs/04-data-model.md) · [백업·복구](docs/05-backup-restore.md)
 - [기능·운영 상세 (API 규칙, 화면별 동작, 운영자 CLI, 환경 변수 등)](docs/07-feature-reference.md)
+- [배포 준비](docs/10-deployment-prep.md) · [서버 배포 순서](docs/11-server-deploy.md)
 - [서비스 기획서 v2.4](docs/planning/service-plan-v2.4.md) · [기술 기획서 v0.5](docs/planning/tech-plan-v0.5.md)

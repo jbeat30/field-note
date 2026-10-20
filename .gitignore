@@ -14,3 +14,7 @@ apps/api/src/generated
 backups/
 apps/web/test-results/
 apps/web/playwright-report/
+
+# 서버용 비밀 값 파일과 백업
+deploy/ops.env
+deploy/backups/

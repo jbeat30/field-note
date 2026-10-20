@@ -13,6 +13,7 @@ import { createAccountService } from '../auth/accountService';
 import { createOptionService } from '../company/optionService';
 import { createCompanySettingsService } from '../company/companySettingsService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { createEmployeeService } from '../employee/employeeService';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createLaborService } from '../labor/laborService';
@@ -84,6 +85,7 @@ const signedUp = async (instance: ReturnType<typeof app>) => {
       isAgeConfirmed: true,
       consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
     });
+  await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
 
   return (res.headers['set-cookie'] as unknown as string[]).find((value) =>
     value.startsWith(`${SESSION_COOKIE}=`),

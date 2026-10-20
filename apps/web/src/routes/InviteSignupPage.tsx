@@ -22,8 +22,10 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
+import { resetClientState } from '../stores/resetClientState';
 
 // 가입 1단계: 약관 동의와 만 14세 확인 (필수와 선택 구분)
 type ConsentStepProps = {
@@ -177,6 +179,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
     }
 
     // 가입 직후 로그인 상태(이메일 미인증)이므로 내 정보를 다시 읽어 인증 화면으로 이동
+    await resetClientState(queryClient);
     await queryClient.invalidateQueries({ queryKey: queryKeys.me() });
     await navigate('/verify-email', { replace: true });
   });
@@ -220,11 +223,15 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
           {...register('loginId')}
         />
       </FormField>
-      <FormField label="비밀번호" hint="10자 이상" error={errors.password?.message}>
-        <Input type="password" autoComplete="new-password" {...register('password')} />
+      <FormField
+        label="비밀번호"
+        hint={VALIDATION_MESSAGES.PASSWORD_HINT}
+        error={errors.password?.message}
+      >
+        <PasswordInput autoComplete="new-password" {...register('password')} />
       </FormField>
       <FormField label="비밀번호 확인" error={errors.passwordConfirm?.message}>
-        <Input type="password" autoComplete="new-password" {...register('passwordConfirm')} />
+        <PasswordInput autoComplete="new-password" {...register('passwordConfirm')} />
       </FormField>
       <FormField
         label="이메일"

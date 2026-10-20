@@ -1,5 +1,6 @@
 import type { QueryClient } from '@tanstack/react-query';
 
+import { setSigningOut } from '../auth/signOutIntent';
 import { resetClientState } from '../stores/resetClientState';
 
 import { apiClient } from './client';
@@ -10,6 +11,8 @@ import { apiClient } from './client';
  * @param queryClient 비울 React Query 클라이언트
  */
 export const logout = async (queryClient: QueryClient) => {
+  setSigningOut(true);
+
   try {
     await apiClient.POST('/api/v1/auth/logout');
   } finally {

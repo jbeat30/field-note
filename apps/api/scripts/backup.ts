@@ -14,10 +14,18 @@ import {
   sha256File,
   type BackupManifest,
 } from '../src/ops/backupPolicy';
+import {
+  ENCRYPTED_SUFFIX,
+  createEncryptStream,
+  decryptFile,
+  parseBackupKey,
+} from '../src/ops/backupCrypto';
+import { createBackupUploader, readBackupRemoteConfig } from '../src/ops/backupUpload';
 import { createPgTools, type PgMode } from '../src/ops/pgTools';
 
 // 백업·복구 시험 CLI: `pnpm backup create | list | prune | drill [백업ID]`
 // 접속 정보는 .env의 소유 계정(DATABASE_MIGRATE_URL) 사용, 운영 환경에서는 운영자 PC·점검 작업에서만 실행
+// BACKUP_ENCRYPTION_KEY가 있으면 덤프와 계정 정의를 암호화해 저장하고(운영 필수), BACKUP_S3_*가 있으면 서버 밖 저장소에도 사본을 올림
 const ownerUrl = process.env.DATABASE_MIGRATE_URL;
 const appUrl = process.env.DATABASE_URL;
 
@@ -32,6 +40,21 @@ const backupRoot = path.resolve(
 const retentionDays = Number(process.env.BACKUP_RETENTION_DAYS ?? DEFAULT_RETENTION_DAYS);
 const database = new URL(ownerUrl).pathname.slice(1);
 const tools = createPgTools(mode, ownerUrl);
+const encryptionKey = parseBackupKey(process.env.BACKUP_ENCRYPTION_KEY);
+const remoteConfig = readBackupRemoteConfig(process.env);
+
+// 운영에서 암호화 키 없이 백업하면 개인정보가 담긴 덤프가 평문으로 남으므로 중단
+if (process.env.NODE_ENV === 'production' && !encryptionKey) {
+  throw new Error('[backup] 운영에서는 BACKUP_ENCRYPTION_KEY 필요');
+}
+
+const requireKey = () => {
+  if (!encryptionKey) {
+    throw new Error('[backup] 암호화된 백업이라 BACKUP_ENCRYPTION_KEY 필요');
+  }
+
+  return encryptionKey;
+};
 
 // 회사와 무관해 RLS가 없는 테이블
 const RLS_EXEMPT = ['legal_documents', '_prisma_migrations'];
@@ -89,7 +112,9 @@ const createBackup = async () => {
 
   await mkdir(dir, { recursive: true });
 
-  const dumpFile = path.join(dir, 'db.dump');
+  const dumpName = encryptionKey ? `db.dump${ENCRYPTED_SUFFIX}` : 'db.dump';
+  const rolesName = encryptionKey ? `roles.sql${ENCRYPTED_SUFFIX}` : 'roles.sql';
+  const dumpFile = path.join(dir, dumpName);
   const client = new pg.Client({ connectionString: ownerUrl });
 
   await client.connect();
@@ -107,19 +132,22 @@ const createBackup = async () => {
 
     await tools.run('pg_dump', ['--format=custom', `--snapshot=${snapshot}`], {
       stdoutFile: dumpFile,
+      stdoutTransform: encryptionKey ? createEncryptStream(encryptionKey) : undefined,
     });
     await client.query('COMMIT');
 
     // 계정(역할) 정의는 데이터베이스 덤프에 포함되지 않아 따로 보관 (비밀번호는 제외, 새 서버에서는 `db:setup`이 다시 설정)
     await tools.run('pg_dumpall', ['--roles-only', '--no-role-passwords'], {
-      stdoutFile: path.join(dir, 'roles.sql'),
+      stdoutFile: path.join(dir, rolesName),
+      stdoutTransform: encryptionKey ? createEncryptStream(encryptionKey) : undefined,
     });
 
     const manifest: BackupManifest = {
       version: 1,
       createdAt: new Date().toISOString(),
       database,
-      dumpFile: 'db.dump',
+      dumpFile: dumpName,
+      encryption: encryptionKey ? 'aes-256-gcm' : undefined,
       sha256: await sha256File(dumpFile),
       sizeBytes: (await stat(dumpFile)).size,
       serverVersion: version,
@@ -153,6 +181,57 @@ const pruneBackups = async () => {
   console.log(
     `[backup] 보관 ${retentionDays}일 초과 ${expired.length}개 삭제 ${expired.join(' ')}`.trim(),
   );
+};
+
+const readManifest = async (id: string) =>
+  JSON.parse(await readFile(path.join(backupRoot, id, 'manifest.json'), 'utf8')) as BackupManifest;
+
+const uploadBackup = async (id: string) => {
+  if (!remoteConfig) {
+    console.log('[backup] 서버 밖 저장소 설정(BACKUP_S3_*)이 없어 사본을 올리지 않음');
+
+    return;
+  }
+
+  const manifest = await readManifest(id);
+
+  // 평문 백업은 서버 밖으로 보내지 않음
+  if (!manifest.encryption) {
+    throw new Error('[backup] 암호화하지 않은 백업은 서버 밖으로 올리지 않음');
+  }
+
+  const names = [manifest.dumpFile, `roles.sql${ENCRYPTED_SUFFIX}`, 'manifest.json'];
+
+  await createBackupUploader(remoteConfig).upload(
+    `field-note/${id}`,
+    names.map((name) => ({ path: path.join(backupRoot, id, name), name })),
+  );
+  console.log(`[backup] 서버 밖 저장소에 올림 id=${id} 파일=${names.length}개`);
+};
+
+// 복구가 필요할 때 암호화된 백업을 풀어 pg_restore에 쓸 수 있는 파일로 만듦
+const decryptBackup = async (id: string, outDir: string) => {
+  const manifest = await readManifest(id);
+
+  if (!manifest.encryption) {
+    throw new Error('[backup] 암호화된 백업이 아님 (db.dump를 그대로 쓰면 됨)');
+  }
+
+  const key = requireKey();
+  const target = path.resolve(outDir);
+
+  await mkdir(target, { recursive: true, mode: 0o700 });
+  await decryptFile(
+    path.join(backupRoot, id, manifest.dumpFile),
+    path.join(target, 'db.dump'),
+    key,
+  );
+  await decryptFile(
+    path.join(backupRoot, id, `roles.sql${ENCRYPTED_SUFFIX}`),
+    path.join(target, 'roles.sql'),
+    key,
+  );
+  console.log(`[backup] 복호화 완료 ${target} (복구가 끝나면 이 폴더를 지우기)`);
 };
 
 type DrillCheck = { name: string; ok: boolean; detail?: string };
@@ -193,10 +272,17 @@ const runDrill = async (requestedId?: string) => {
     client.query(`CREATE DATABASE ${pg.escapeIdentifier(drillDatabase)}`),
   );
 
+  // 암호화된 백업은 임시 파일로 풀어 복구하고 시험이 끝나면 지움
+  const plainDump = manifest.encryption ? path.join(dir, `.drill-${Date.now()}.dump`) : null;
+
   try {
+    if (plainDump) {
+      await decryptFile(path.join(dir, manifest.dumpFile), plainDump, requireKey());
+    }
+
     await tools.run('pg_restore', ['--exit-on-error', '--no-owner'], {
       database: drillDatabase,
-      stdinFile: path.join(dir, manifest.dumpFile),
+      stdinFile: plainDump ?? path.join(dir, manifest.dumpFile),
     });
 
     const restoredUrl = withDatabase(ownerUrl, drillDatabase);
@@ -272,6 +358,10 @@ const runDrill = async (requestedId?: string) => {
       });
     }
   } finally {
+    if (plainDump) {
+      await rm(plainDump, { force: true });
+    }
+
     await withClient(admin, (client) =>
       client.query(`DROP DATABASE IF EXISTS ${pg.escapeIdentifier(drillDatabase)} WITH (FORCE)`),
     );
@@ -299,13 +389,50 @@ const runDrill = async (requestedId?: string) => {
   }
 };
 
-const [command, argument] = process.argv.slice(2);
+const [command, argument, extra] = process.argv.slice(2);
 
 switch (command) {
-  case 'create':
-    await createBackup();
+  case 'create': {
+    const id = await createBackup();
+
+    // 사본 올리기가 실패해도 서버 안 백업은 유지하고, 종료 코드로 알림에 연결
+    await uploadBackup(id).catch((error: unknown) => {
+      console.error(`[backup] 서버 밖 저장소 업로드 실패: ${(error as Error).message}`);
+      process.exitCode = 1;
+    });
     await pruneBackups();
     break;
+  }
+  case 'upload': {
+    const id = argument ?? (await listBackupIds()).at(-1);
+
+    if (!id) {
+      throw new Error('[backup] 올릴 백업이 없음');
+    }
+
+    await uploadBackup(id);
+    break;
+  }
+  case 'remote-check': {
+    if (!remoteConfig) {
+      throw new Error('[backup] BACKUP_S3_* 설정 필요');
+    }
+
+    console.log(
+      `[backup] 연결 확인 완료 ${await createBackupUploader(remoteConfig).check('field-note/_check')}`,
+    );
+    break;
+  }
+  case 'decrypt': {
+    const id = argument ?? (await listBackupIds()).at(-1);
+
+    if (!id || !extra) {
+      throw new Error('사용법: pnpm backup decrypt <백업ID> <풀어 둘 폴더>');
+    }
+
+    await decryptBackup(id, extra);
+    break;
+  }
   case 'list':
     for (const id of await listBackupIds()) {
       const manifest = JSON.parse(
@@ -325,6 +452,6 @@ switch (command) {
     break;
   default:
     console.log(
-      '사용법: pnpm backup <create|list|prune|drill [백업ID]>\n  create  백업 생성 후 보관 기간이 지난 백업 정리\n  list    백업 목록\n  prune   보관 기간이 지난 백업 삭제\n  drill   최근 백업을 임시 DB에 복구해 검증 (결과는 backups/drill-log.jsonl에 기록)',
+      '사용법: pnpm backup <create|list|prune|drill|upload|remote-check|decrypt>\n  create  백업 생성(암호화 키가 있으면 암호화) 후 서버 밖 저장소에 사본 올리기, 보관 기간이 지난 백업 정리\n  upload  [백업ID] 서버 밖 저장소에 사본 올리기 (기본 최근 백업)\n  remote-check  서버 밖 저장소 접속·권한 확인\n  decrypt <백업ID> <폴더>  암호화된 백업을 복구용 파일로 풀기\n  list    백업 목록\n  prune   보관 기간이 지난 백업 삭제\n  drill   최근 백업을 임시 DB에 복구해 검증 (결과는 backups/drill-log.jsonl에 기록)',
     );
 }

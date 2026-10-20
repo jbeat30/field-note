@@ -1,0 +1,158 @@
+# 서버 한 대에서 서비스를 돌리는 구성 (PostgreSQL + API + Caddy 웹)
+# 저장소 루트에서 실행: docker compose -f deploy/docker-compose.yml --env-file deploy/.env <명령>
+# 환경 변수 파일(deploy/.env, deploy/ops.env)은 `pnpm env:init --production`이 비밀 값을 채워 만들고, 접속 정보는 사용자가 서버에서 직접 채운다
+# ops.env에는 운영자·삭제 전용 DB 계정과 백업 키가 있어 api 컨테이너에는 주지 않는다
+# 자원 한도는 서버 메모리에 맞춰 deploy/.env에서 바꿀 수 있다 (기본값은 메모리 6GB 이상 서버 기준)
+name: field-note-prod
+
+x-hardening: &hardening
+  restart: unless-stopped
+  security_opt:
+    - no-new-privileges:true
+  logging:
+    driver: json-file
+    options:
+      max-size: 10m
+      max-file: '5'
+
+services:
+  # DB: 외부 포트를 열지 않음 (운영자는 SSH 터널로만 접속)
+  # 서비스 이름을 postgres·localhost가 아닌 db로 둔 것은 api가 로컬 주소로 보이는 이름을 운영에서 거부하기 때문
+  db:
+    <<: *hardening
+    image: postgres:18
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    # api가 세 곳(앱·전용·작업 큐)에서 DB_POOL_MAX까지 열고 점검 작업이 몇 개 더 열므로 60이면 충분
+    command:
+      - postgres
+      - -c
+      - max_connections=60
+      - -c
+      - shared_buffers=${DB_SHARED_BUFFERS:-256MB}
+    volumes:
+      - db-data:/var/lib/postgresql
+    mem_limit: ${DB_MEM_LIMIT:-1g}
+    cpus: ${DB_CPUS:-1.0}
+    shm_size: 256m
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U $${POSTGRES_USER} -d $${POSTGRES_DB}']
+      interval: 10s
+      timeout: 3s
+      retries: 10
+
+  # DB 마이그레이션과 계정 비밀번호 설정: 배포 때 한 번 실행하고 끝난다
+  #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env run --rm migrate
+  migrate:
+    profiles: [tools]
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: migrate
+    image: field-note-migrate
+    env_file:
+      - .env
+      - ops.env
+    environment:
+      npm_config_verify_deps_before_run: 'false'
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 512m
+
+  api:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+    image: field-note-api
+    env_file: .env
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      LOG_LEVEL: info
+      # Caddy 한 단계 뒤에서 접속자 주소를 구분 (요청 횟수 제한·기기 목록)
+      TRUST_PROXY_HOPS: '1'
+      APP_ORIGIN: https://${SITE_ADDRESS}
+      DB_POOL_MAX: ${DB_POOL_MAX:-5}
+      # 힙 상한은 컨테이너 메모리 한도보다 작게 (이미지·네이티브 모듈이 힙 밖에서도 메모리를 씀)
+      NODE_OPTIONS: --max-old-space-size=${API_HEAP_MB:-640}
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: ${API_MEM_LIMIT:-1g}
+    cpus: ${API_CPUS:-1.0}
+    pids_limit: 256
+    read_only: true
+    tmpfs:
+      - /tmp:size=256m
+    cap_drop:
+      - ALL
+
+  # 웹(Caddy): 80·443만 외부에 엶. 인증서는 volume에 보관해 재시작해도 다시 발급하지 않음
+  web:
+    <<: *hardening
+    build:
+      context: ..
+      dockerfile: deploy/web.Dockerfile
+    image: field-note-web
+    environment:
+      SITE_ADDRESS: ${SITE_ADDRESS}
+      # 사진·문서 저장소 출처 (서명 주소가 가리키는 곳)
+      STORAGE_ORIGIN: ${S3_ENDPOINT}
+    ports:
+      - '80:80'
+      - '443:443'
+      - '443:443/udp'
+    volumes:
+      - caddy-data:/data
+      - caddy-config:/config
+    depends_on:
+      api:
+        condition: service_healthy
+    mem_limit: ${WEB_MEM_LIMIT:-256m}
+    cpus: ${WEB_CPUS:-0.5}
+    pids_limit: 128
+    read_only: true
+    tmpfs:
+      - /tmp:size=64m
+    cap_drop:
+      - ALL
+    cap_add:
+      - NET_BIND_SERVICE
+
+  # 점검 작업(백업·복구 시험·해지 회사 삭제): 서버 크론이 필요할 때만 띄움
+  #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env run --rm ops pnpm backup create
+  # 백업 폴더는 서버의 deploy/backups를 연결 (컨테이너의 node 사용자(uid 1000)가 쓸 수 있어야 함)
+  ops:
+    profiles: [tools]
+    build:
+      context: ..
+      dockerfile: apps/api/Dockerfile
+      target: ops
+    image: field-note-ops
+    env_file:
+      - .env
+      - ops.env
+    environment:
+      NODE_ENV: production
+      # 운영자 CLI(pnpm operator)가 api와 같은 환경 변수 검사를 거치므로 필요
+      APP_ORIGIN: https://${SITE_ADDRESS}
+      # 컨테이너 안에서 의존성을 다시 설치하려 하지 않음
+      npm_config_verify_deps_before_run: 'false'
+      BACKUP_DIR: /backups
+      # DB 서버와 같은 주 버전의 클라이언트 도구가 이미지에 있어 컨테이너 안에서 직접 접속
+      BACKUP_PG_MODE: local
+    volumes:
+      - ./backups:/backups
+    depends_on:
+      db:
+        condition: service_healthy
+    mem_limit: 1g
+
+volumes:
+  db-data:
+  caddy-data:
+  caddy-config:

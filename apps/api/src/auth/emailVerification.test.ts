@@ -234,6 +234,27 @@ describe('인증 코드 확인', () => {
     });
   });
 
+  it('틀린 코드를 동시에 여러 번 보내도 시도 한도를 넘어 확인되지 않는다', async () => {
+    const { verification, account, lastCode } = await setup();
+
+    await verification.request(account);
+
+    const code = lastCode();
+    const wrong = code === '000000' ? '111111' : '000000';
+    // 한도의 몇 배를 한꺼번에 보낸 뒤, 마지막에 맞는 코드도 보냄 (모두 한도 안에서만 처리되어야 함)
+    const burst = await Promise.allSettled([
+      ...Array.from({ length: MAX_CODE_ATTEMPTS * 4 }, () => verification.verify(account, wrong)),
+    ]);
+    const { rows } = await db.ownerPool.query<{ attempts: number }>(
+      'SELECT attempts FROM email_verifications WHERE user_id = $1',
+      [account.userId],
+    );
+
+    expect(burst.every((result) => result.status === 'rejected')).toBe(true);
+    expect(rows[0]?.attempts).toBe(MAX_CODE_ATTEMPTS);
+    await expectError(verification.verify(account, code), 'CODE_INVALID');
+  });
+
   it('유효 시간이 지난 코드는 거부한다', async () => {
     const { verification, account, lastCode } = await setup();
 

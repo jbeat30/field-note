@@ -43,3 +43,32 @@ describeSessionStoreContract('PostgreSQL', () => ({
     return rows.map((row) => row.token_hash);
   },
 }));
+
+describe('회사 상태와 세션', () => {
+  it.each(['SUSPENDED', 'CLOSING', 'CLOSED'])(
+    '회사가 %s이면 이미 만든 세션도 쓸 수 없고 ACTIVE로 돌아오면 다시 쓸 수 있다',
+    async (status) => {
+      await db.ownerPool.query('DELETE FROM sessions');
+
+      const store = createPrismaSessionStore(db.auth);
+      const { token } = await store.create({ userId: USER_1, companyId: COMPANY_1 });
+
+      expect(await store.find(token)).toEqual({ userId: USER_1, companyId: COMPANY_1 });
+
+      try {
+        await db.ownerPool.query(`UPDATE companies SET status = $1 WHERE id = $2`, [
+          status,
+          COMPANY_1,
+        ]);
+
+        expect(await store.find(token)).toBeNull();
+      } finally {
+        await db.ownerPool.query(`UPDATE companies SET status = 'ACTIVE' WHERE id = $1`, [
+          COMPANY_1,
+        ]);
+      }
+
+      expect(await store.find(token)).toEqual({ userId: USER_1, companyId: COMPANY_1 });
+    },
+  );
+});
