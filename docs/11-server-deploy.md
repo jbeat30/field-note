@@ -1,6 +1,6 @@
 # 서버 배포 순서 (Oracle Cloud 무료 VM 한 대)
 
-> 대상: 0.12.0 스테이징과 1.0.0 첫 배포. 구성 설명은 `docs/10-deployment-prep.md` §5.3, 백업·복구는 `docs/05-backup-restore.md`
+> 대상: 서버 실환경 시험(1.0.0 전)과 1.0.0 첫 배포. 구성 설명은 `docs/10-deployment-prep.md` §5.3, 백업·복구는 `docs/05-backup-restore.md`
 > 서버 안의 명령은 사용자가 SSH로 접속해 직접 실행한다. **접속 키·비밀번호·R2 키·Gmail 앱 비밀번호는 채팅·저장소·메신저에 붙여 넣지 않는다.** 값은 서버의 `deploy/.env`와 `deploy/ops.env`에만 둔다
 > 가입 화면(Oracle·Cloudflare·Google)의 메뉴 이름은 바뀔 수 있다. 아래는 작성 시점의 일반적인 흐름이며, 화면이 다르면 같은 뜻의 항목을 찾아 진행한다
 > 서버는 Oracle Cloud 무료 VM을 기준으로 썼지만 같은 구성이 AWS Lightsail 같은 일반 VPS(Ubuntu 24.04, 메모리 2GB 이상)에서도 동작한다. §3은 Oracle 기준 절차이고 다른 업체는 같은 뜻의 항목(고정 IP, 방화벽 22·80·443)으로 바꿔 진행한다. 메모리가 작은 서버(2GB)는 `deploy/.env`의 자원 한도(`DB_MEM_LIMIT`, `DB_SHARED_BUFFERS`, `API_MEM_LIMIT`, `API_HEAP_MB`, `WEB_MEM_LIMIT`)를 줄여 쓰고 `server-setup.sh`가 스왑을 만든다
@@ -195,7 +195,7 @@ sudo ./deploy/scripts/server-check.sh                       # 열린 포트·SSH
 - 백업은 매일 03:00(암호화·서버 밖 사본), 해지 회사 삭제는 03:30, 복구 시험은 월요일 04:00, 시연 회사 초기화는 매일 04:30에 돈다. 결과는 `deploy/logs/*.log`, 실패하면 `ALERT_MAIL_TO`로 메일이 온다
 - 알림 메일이 오는지 확인하려면 일부러 실패시킨다: `./deploy/scripts/run-ops.sh alert-test false` (종료 코드 1로 끝나며 알림 메일이 와야 한다)
 
-**실제 환경 동작 시험 체크리스트** (0.12.0 릴리즈 전에 모두 통과해야 한다, 상세는 `docs/10` §4.2)
+**실제 환경 동작 시험 체크리스트** (1.0.0 첫 배포 전에 모두 통과해야 한다. 0.12.0 릴리즈 때는 서버가 없어 이월했다, 상세는 `docs/10` §4.2)
 
 - [ ] `https://<SITE_ADDRESS>`가 열리고 인증서가 유효하다, `http://`는 https로 넘어간다
 - [ ] 브라우저 개발자 도구에서 CSP 위반이 없다 (콘솔), 응답 헤더에 HSTS·CSP·nosniff·`Referrer-Policy: no-referrer`
