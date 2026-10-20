@@ -88,6 +88,19 @@ describe('deploy/scripts', () => {
     },
   );
 
+  it('서버 단축어 파일은 문법이 맞고 문서의 명령을 모두 정의한다', () => {
+    const file = path.join(DEPLOY, 'server-aliases.sh');
+    const syntax = spawnSync('bash', ['-n', file], { encoding: 'utf8' });
+
+    expect(syntax.status).toBe(0);
+
+    const aliases = readFileSync(file, 'utf8');
+
+    for (const name of ['fnc', 'fn-ops', 'new-company', 'reissue-invite', 'list-companies']) {
+      expect(aliases).toContain(`\n${name}() {`);
+    }
+  });
+
   it('crontab 예시의 작업이 run-ops.sh를 거친다', () => {
     const crontab = readFileSync(path.resolve(DEPLOY, '../ops/crontab.example'), 'utf8');
     const jobs = crontab.split('\n').filter((line) => /^[\d*]/.test(line));
