@@ -46,6 +46,32 @@ export const OnlyRequiredAgreed: Story = {
   },
 };
 
+export const ViewTermsInDialog: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '이용약관 보기' }));
+
+    // 새 탭이나 화면 이동 없이 같은 화면의 창에서 전문을 보여 주고, 긴 문서는 창 안에서 스크롤됨
+    const dialog = within(await within(document.body).findByRole('dialog', { name: '이용약관' }));
+    const body = dialog.getByRole('region', { name: '이용약관 전문' });
+
+    await expect(dialog.getByText('제1조 (목적)')).toBeInTheDocument();
+    await expect(body.className).toContain('overflow-y-auto');
+    await expect(canvas.queryByRole('link', { name: '보기' })).not.toBeInTheDocument();
+
+    // 모서리 X와 아래 닫기 두 곳 모두 같은 이름이라 아래 버튼을 누름
+    const closeButtons = dialog.getAllByRole('button', { name: '닫기' });
+
+    await userEvent.click(closeButtons[closeButtons.length - 1]!);
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+    // 가입 화면과 입력 상태는 그대로
+    await expect(canvas.getByRole('checkbox', { name: '전체 동의' })).toBeInTheDocument();
+  },
+};
+
 export const InvalidLink: Story = {
   parameters: {
     router: { initialEntries: ['/invite/expired-invite-0001'], path: '/invite/:token' },
