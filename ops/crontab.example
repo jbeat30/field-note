@@ -11,3 +11,7 @@
 
 # 매주 월요일 04:00 최근 백업을 임시 DB에 복구해 검증
 0 4 * * 1 /srv/field-note/deploy/scripts/run-ops.sh drill pnpm backup drill
+
+# 매일 04:30 공개 시연 회사(Test Company)를 처음 상태로 되돌림 (PUBLIC_DEMO_ENABLED=true일 때만 동작, 약관을 먼저 등록해야 함)
+# 시연 환경을 끄는 서비스 단계에서는 이 줄을 지우고 `pnpm operator demo-remove`로 정리
+30 4 * * * /srv/field-note/deploy/scripts/run-ops.sh demo pnpm operator demo-reset

@@ -37,6 +37,15 @@ describe('parseEnv', () => {
     expect(env.SMTP_PORT).toBe(1025);
   });
 
+  it('공개 시연 계정 안내는 기본으로 꺼져 있고 true일 때만 켜진다', () => {
+    expect(parseEnv(validEnv).PUBLIC_DEMO_ENABLED).toBe(false);
+    expect(parseEnv({ ...validEnv, PUBLIC_DEMO_ENABLED: 'true' }).PUBLIC_DEMO_ENABLED).toBe(true);
+    expect(parseEnv({ ...validEnv, PUBLIC_DEMO_ENABLED: 'false' }).PUBLIC_DEMO_ENABLED).toBe(false);
+    expect(() => parseEnv({ ...validEnv, PUBLIC_DEMO_ENABLED: 'maybe' })).toThrow(
+      /PUBLIC_DEMO_ENABLED/,
+    );
+  });
+
   it('프록시 단계 수는 기본 0이고 0~5의 정수만 받는다', () => {
     expect(parseEnv(validEnv).TRUST_PROXY_HOPS).toBe(0);
     expect(parseEnv({ ...validEnv, TRUST_PROXY_HOPS: '2' }).TRUST_PROXY_HOPS).toBe(2);

@@ -78,6 +78,7 @@ import { mountFakeSocialRoutes } from './social/fakeSocialRoutes';
 import type { SocialProviderChoices } from './social/provider';
 import { registerAuthRoutes } from './routes/auth';
 import { registerHealthRoutes } from './routes/health';
+import { registerPublicDemoRoutes } from './routes/publicDemo';
 import { registerSampleRoutes } from './routes/samples';
 import { createMemorySessionStore, type SessionStore } from './session/sessionStore';
 import { createSessionResolver } from './session/cookie';
@@ -149,6 +150,8 @@ export type AppOptions = {
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
+  // 로그인 화면에 공개 시연 계정을 안내할지 (기본은 끔)
+  isPublicDemoEnabled?: boolean;
   // 앞단 프록시(CloudFront·로드 밸런서) 단계 수: 접속 IP(요청 횟수 제한·기기 목록)를 X-Forwarded-For에서 읽을 때 믿을 단계 수 (직접 접속이면 0)
   trustProxyHops?: number;
   idempotencyStore?: IdempotencyStore;
@@ -187,6 +190,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   });
 
   registerHealthRoutes(registry);
+  registerPublicDemoRoutes(registry, options.isPublicDemoEnabled);
   registerSampleRoutes(registry);
   registerAccountRoutes(registry, {
     invitationStore: options.invitationStore,

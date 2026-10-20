@@ -3,6 +3,7 @@ import { Link, useNavigate, useSearchParams } from 'react-router';
 
 import { logout } from '../api/logout';
 import { useMe } from '../auth/useMe';
+import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { PageHeader } from '../components/ui/page-header';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
@@ -25,6 +26,8 @@ type SettingsTab = (typeof SETTINGS_TABS)[number]['value'];
 
 export const SettingsPage = () => {
   const me = useMe();
+  // 공개 시연 계정은 로그인 정보 변경·2단계 인증·소셜 연동·기기 관리·해지를 쓸 수 없음 (서버도 막고 있어 화면에서 숨김)
+  const isDemo = me.data?.isDemo === true;
   const navigate = useNavigate();
   const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -70,6 +73,12 @@ export const SettingsPage = () => {
         </TabsList>
         <TabsContent value="account">
           <p className="mb-4 text-sm text-foreground/70">로그인과 보안에 관한 설정</p>
+          {isDemo && (
+            <Alert variant="info" className="mb-4">
+              시연용 계정이라 비밀번호·이메일 변경, 2단계 인증, 소셜 로그인 연동, 로그인한 기기
+              관리, 계정 해지는 제공하지 않습니다
+            </Alert>
+          )}
           <div className="grid items-start gap-4 lg:grid-cols-2">
             <div className="flex flex-col gap-4">
               <section
@@ -86,34 +95,40 @@ export const SettingsPage = () => {
                   <dd>{me.data?.displayName}</dd>
                 </dl>
               </section>
-              <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-                aria-labelledby="security-heading"
-              >
-                <h2 id="security-heading" className="text-lg font-bold">
-                  보안
-                </h2>
-                <SecurityRows email={me.data?.email} />
-              </section>
-              <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-                aria-labelledby="social-heading"
-              >
-                <h2 id="social-heading" className="text-lg font-bold">
-                  소셜 로그인
-                </h2>
-                <SocialLoginSection />
-              </section>
+              {!isDemo && (
+                <>
+                  <section
+                    className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                    aria-labelledby="security-heading"
+                  >
+                    <h2 id="security-heading" className="text-lg font-bold">
+                      보안
+                    </h2>
+                    <SecurityRows email={me.data?.email} />
+                  </section>
+                  <section
+                    className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                    aria-labelledby="social-heading"
+                  >
+                    <h2 id="social-heading" className="text-lg font-bold">
+                      소셜 로그인
+                    </h2>
+                    <SocialLoginSection />
+                  </section>
+                </>
+              )}
             </div>
-            <section
-              className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="devices-heading"
-            >
-              <h2 id="devices-heading" className="text-lg font-bold">
-                로그인한 기기
-              </h2>
-              <DevicesSection />
-            </section>
+            {!isDemo && (
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                aria-labelledby="devices-heading"
+              >
+                <h2 id="devices-heading" className="text-lg font-bold">
+                  로그인한 기기
+                </h2>
+                <DevicesSection />
+              </section>
+            )}
           </div>
         </TabsContent>
         <TabsContent value="company">
@@ -202,15 +217,17 @@ export const SettingsPage = () => {
         <TabsContent value="etc">
           <p className="mb-4 text-sm text-foreground/70">약관과 계정 해지</p>
           <div className="gap-4 lg:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
-            <section
-              className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
-              aria-labelledby="closure-heading"
-            >
-              <h2 id="closure-heading" className="text-lg font-bold">
-                계정 해지
-              </h2>
-              <ClosureSection />
-            </section>
+            {!isDemo && (
+              <section
+                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                aria-labelledby="closure-heading"
+              >
+                <h2 id="closure-heading" className="text-lg font-bold">
+                  계정 해지
+                </h2>
+                <ClosureSection />
+              </section>
+            )}
             <section className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5">
               <p className="text-lg font-bold">안내</p>
               <Link

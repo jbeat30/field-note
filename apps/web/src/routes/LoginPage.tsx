@@ -6,10 +6,12 @@ import { Controller, useForm } from 'react-hook-form';
 import { Link, Navigate, useLocation, useNavigate } from 'react-router';
 
 import { apiClient } from '../api/client';
+import { DemoAccountNotice } from '../auth/DemoAccountNotice';
 import { setSigningOut } from '../auth/signOutIntent';
 import { SocialButton } from '../auth/SocialButton';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useMe } from '../auth/useMe';
+import { usePublicDemo } from '../auth/usePublicDemo';
 import { useSocialProviders, useSocialStart } from '../auth/useSocial';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
@@ -33,6 +35,7 @@ export const LoginPage = () => {
   const queryClient = useQueryClient();
   const me = useMe();
   const providers = useSocialProviders();
+  const publicDemo = usePublicDemo();
   const socialStart = useSocialStart();
   // 비밀번호가 맞고 2단계 인증이 켜진 계정이면 코드 입력 칸을 보여 줌
   const [isTotpStep, setTotpStep] = useState(false);
@@ -43,6 +46,7 @@ export const LoginPage = () => {
     handleSubmit,
     setError,
     setFocus,
+    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginRequest>({
     resolver: zodResolver(loginRequestSchema),
@@ -99,6 +103,16 @@ export const LoginPage = () => {
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
       <h1 className="text-xl font-bold">로그인</h1>
       <SocialNotice />
+      {publicDemo.data?.enabled && publicDemo.data.loginId && publicDemo.data.password && (
+        <DemoAccountNotice
+          loginId={publicDemo.data.loginId}
+          password={publicDemo.data.password}
+          onFill={() => {
+            setValue('loginId', publicDemo.data.loginId ?? '');
+            setValue('password', publicDemo.data.password ?? '');
+          }}
+        />
+      )}
       {isExpired && (
         <Alert variant="info">
           로그인이 끝났습니다. 보시던 화면으로 돌아가려면 다시 로그인해 주세요

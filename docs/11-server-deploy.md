@@ -3,6 +3,7 @@
 > 대상: 0.12.0 스테이징과 1.0.0 첫 배포. 구성 설명은 `docs/10-deployment-prep.md` §5.3, 백업·복구는 `docs/05-backup-restore.md`
 > 서버 안의 명령은 사용자가 SSH로 접속해 직접 실행한다. **접속 키·비밀번호·R2 키·Gmail 앱 비밀번호는 채팅·저장소·메신저에 붙여 넣지 않는다.** 값은 서버의 `deploy/.env`와 `deploy/ops.env`에만 둔다
 > 가입 화면(Oracle·Cloudflare·Google)의 메뉴 이름은 바뀔 수 있다. 아래는 작성 시점의 일반적인 흐름이며, 화면이 다르면 같은 뜻의 항목을 찾아 진행한다
+> 서버는 Oracle Cloud 무료 VM을 기준으로 썼지만 같은 구성이 AWS Lightsail 같은 일반 VPS(Ubuntu 24.04, 메모리 2GB 이상)에서도 동작한다. §3은 Oracle 기준 절차이고 다른 업체는 같은 뜻의 항목(고정 IP, 방화벽 22·80·443)으로 바꿔 진행한다. 메모리가 작은 서버(2GB)는 `deploy/.env`의 자원 한도(`DB_MEM_LIMIT`, `DB_SHARED_BUFFERS`, `API_MEM_LIMIT`, `API_HEAP_MB`, `WEB_MEM_LIMIT`)를 줄여 쓰고 `server-setup.sh`가 스왑을 만든다
 
 ## 1. 전체 순서
 
@@ -170,6 +171,18 @@ $C run --rm ops pnpm operator legal-register          # 약관·처리방침을 
 
 출력된 초대 링크를 관리자에게 전달해 가입한다. 링크는 7일간 유효하며 `reissue`로 다시 발급한다.
 
+공개 시연 환경(선택): 가상 데이터만 담은 `Test Company`를 두고 로그인 화면에 시연 계정을 안내한다 (상세는 `docs/07-feature-reference.md`의 "공개 시연 환경").
+
+```bash
+# deploy/.env에 PUBLIC_DEMO_ENABLED=true (env.example에 이미 있음), 바꿨다면 api를 다시 시작한다
+$C up -d api
+$C run --rm ops pnpm operator legal-register          # 약관이 먼저 등록돼 있어야 함 (위에서 했다면 생략)
+$C run --rm ops pnpm operator demo-reset              # 시연 회사 생성 또는 처음 상태로 되돌리기 (몇 초~1분)
+```
+
+- 시연 회사는 방문자가 바꾼 내용·올린 파일이 쌓이므로 크론(§9)이 매일 04:30에 되돌린다. 시연 계정으로 로그인할 때 해지·비밀번호·이메일·2단계 인증·소셜 연동·기기 목록은 막혀 있다
+- 시연 환경을 끄는 서비스 단계에서는 `PUBLIC_DEMO_ENABLED=false`, 크론 줄 삭제, `$C run --rm ops pnpm operator demo-remove` 순서로 정리한다
+
 ## 9. 점검 작업 크론과 서버 점검
 
 ```bash
@@ -179,7 +192,7 @@ crontab -e      # ops/crontab.example 내용을 붙여 넣는다 (저장소 위�
 sudo ./deploy/scripts/server-check.sh                       # 열린 포트·SSH·방화벽·컨테이너·백업 점검
 ```
 
-- 백업은 매일 03:00(암호화·서버 밖 사본), 해지 회사 삭제는 03:30, 복구 시험은 월요일 04:00에 돈다. 결과는 `deploy/logs/*.log`, 실패하면 `ALERT_MAIL_TO`로 메일이 온다
+- 백업은 매일 03:00(암호화·서버 밖 사본), 해지 회사 삭제는 03:30, 복구 시험은 월요일 04:00, 시연 회사 초기화는 매일 04:30에 돈다. 결과는 `deploy/logs/*.log`, 실패하면 `ALERT_MAIL_TO`로 메일이 온다
 - 알림 메일이 오는지 확인하려면 일부러 실패시킨다: `./deploy/scripts/run-ops.sh alert-test false` (종료 코드 1로 끝나며 알림 메일이 와야 한다)
 
 **실제 환경 동작 시험 체크리스트** (0.12.0 릴리즈 전에 모두 통과해야 한다, 상세는 `docs/10` §4.2)
@@ -188,6 +201,7 @@ sudo ./deploy/scripts/server-check.sh                       # 열린 포트·SSH
 - [ ] 브라우저 개발자 도구에서 CSP 위반이 없다 (콘솔), 응답 헤더에 HSTS·CSP·nosniff·`Referrer-Policy: no-referrer`
 - [ ] 초대 링크로 가입 → 이메일 인증 코드 메일 도착 → 로그인 → 2단계 인증 켜고 끄기
 - [ ] 비밀번호 재설정 메일 도착과 재설정
+- [ ] 시연 환경(켠 경우): 로그인 화면에 시연 안내가 보이고 `tester`로 로그인된다, 설정 화면에서 막힌 구역이 숨겨진다, `demo-reset`이 약관 등록 뒤 오류 없이 끝나고 시연 회사에서 올린 사진이 초기화 뒤 사라진다 (R2에서 `company/<시연 회사 ID>/` 확인)
 - [ ] 사진·문서 올리기와 내려받기, 썸네일 생성 (R2 CORS·CSP 확인)
 - [ ] 두 곳(예: 사무실과 휴대폰 데이터)에서 접속해 한쪽의 로그인 실패가 다른 쪽을 막지 않고, 기기 목록에 실제 IP가 보인다
 - [ ] 회사 간 격리 외부 점검: 두 회사 계정으로 `node scripts/isolation-probe.mjs` 종료 코드 0 (`docs/10` §4.2)

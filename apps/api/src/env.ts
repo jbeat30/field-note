@@ -28,6 +28,8 @@ const baseSchema = z.object({
   RATE_LIMIT_MULTIPLIER: z.coerce.number().int().min(1).max(20).default(1),
   // DB 연결 수 상한 (api는 앱·전용·작업 큐 세 곳에서 각각 이 수만큼까지 열므로 DB의 최대 연결 수는 이 값의 3배보다 커야 함)
   DB_POOL_MAX: z.coerce.number().int().min(1).max(50).default(10),
+  // 로그인 화면에 공개 시연 계정을 안내할지 (켜도 시연 회사 데이터는 `operator demo-reset`으로 따로 만들어야 함)
+  PUBLIC_DEMO_ENABLED: z.stringbool().default(false),
   // 브라우저에서 접속하는 웹 주소 (CSRF Origin 검증 기준)
   APP_ORIGIN: z.url(),
   S3_ENDPOINT: z.url(),

@@ -41,7 +41,8 @@ describe('deploy/scripts', () => {
     const crontab = readFileSync(path.resolve(DEPLOY, '../ops/crontab.example'), 'utf8');
     const jobs = crontab.split('\n').filter((line) => /^[\d*]/.test(line));
 
-    expect(jobs).toHaveLength(3);
+    // 백업, 해지 삭제, 복구 시험, 시연 회사 초기화
+    expect(jobs).toHaveLength(4);
     for (const job of jobs) {
       expect(job).toContain('deploy/scripts/run-ops.sh');
     }

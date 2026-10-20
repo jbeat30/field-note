@@ -25,6 +25,7 @@ import { createWorkLogService } from './workLog/workLogService';
 import { createPartnerService } from './partner/partnerService';
 import { createProjectService } from './project/projectService';
 import { createPrismaClient } from './db/client';
+import { guardDemoMailer } from './demo/demoMailer';
 import { createSmtpMailer } from './email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
 import { parseEnv } from './env';
@@ -110,13 +111,15 @@ const main = async () => {
   const reports = createReportService(appPrisma, storage);
   const completion = createCompletionService(appPrisma, storage);
   const dashboard = createDashboardService(appPrisma, assignments);
-  const mailer = createSmtpMailer({
+  const smtpMailer = createSmtpMailer({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
     from: env.SMTP_FROM,
     user: env.SMTP_USER,
     password: env.SMTP_PASSWORD,
   });
+  // 공개 시연 계정으로 가는 메일은 발송하지 않음 (방문자의 행동이 시연 메일함으로 쏟아지는 것을 막음)
+  const mailer = guardDemoMailer(smtpMailer, () => logger.info('시연 계정 대상 메일 발송 생략'));
   const emailVerification = createEmailVerificationService({
     auth: authPrisma,
     queue,
@@ -185,6 +188,7 @@ const main = async () => {
     // 서버 재시작·다중 인스턴스에서도 재전송을 한 번만 처리하도록 키를 DB에 저장
     idempotencyStore: createPrismaIdempotencyStore(appPrisma),
     sessionStore,
+    isPublicDemoEnabled: env.PUBLIC_DEMO_ENABLED,
     invitationStore,
     accountService,
     totp,
