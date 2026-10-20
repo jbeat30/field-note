@@ -1,5 +1,6 @@
 import { generateToken, hashToken } from '../auth/token';
 import type { PrismaClient } from '../db/client';
+import { isPublicDemoCompany, PUBLIC_DEMO_MAX_SESSIONS } from '../demo/publicDemo';
 import {
   REMEMBERED_SESSION_MS,
   ROTATION_GRACE_MS,
@@ -125,7 +126,7 @@ export const createPrismaSessionStore = (
       const stale = await prisma.session.findMany({
         where: { userId },
         orderBy: [{ lastActiveAt: 'desc' }, { createdAt: 'desc' }],
-        skip: MAX_SESSIONS_PER_USER,
+        skip: isPublicDemoCompany(companyId) ? PUBLIC_DEMO_MAX_SESSIONS : MAX_SESSIONS_PER_USER,
         select: { tokenHash: true },
       });
 

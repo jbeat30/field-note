@@ -12,6 +12,7 @@ type OpenApi = { paths: Record<string, Record<string, Operation>> };
 // 로그인 없이 부를 수 있는 엔드포인트 (가입·로그인·재설정·해지 취소·소셜 로그인·상태 확인), 새 공개 엔드포인트는 여기에 이유와 함께 추가해야 함
 const PUBLIC_ENDPOINTS = [
   'GET /health',
+  'GET /public/demo',
   'GET /invitations/{token}',
   'POST /auth/signup',
   'POST /auth/login',

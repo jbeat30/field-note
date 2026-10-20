@@ -284,6 +284,8 @@ export const meResponseSchema = z.object({
   email: z.email().nullable(),
   isEmailVerified: z.boolean(),
   companyName: z.string(),
+  // 공개 시연 회사의 계정 여부 (화면이 시연 안내를 보이고 막힌 설정을 숨김)
+  isDemo: z.boolean(),
 });
 
 export type MeResponse = z.infer<typeof meResponseSchema>;

@@ -57,9 +57,10 @@ export const registerClosureRoutes = (registry: RouteRegistry, closure?: Closure
       path: '/me/closure',
       summary: '계정 해지 요청 (즉시 로그인 차단, 14일 유예 뒤 삭제)',
       auth: 'required',
+      blockedInDemo: true,
       request: { body: closureRequestSchema },
       response: { status: 200, schema: closureResponseSchema },
-      errors: ['CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED'],
+      errors: ['DEMO_RESTRICTED', 'CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED'],
       rateLimit: { windowMs: 60_000, limit: 5 },
     },
     async ({ auth, body }) => {
