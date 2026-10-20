@@ -180,9 +180,10 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
       path: '/me/social/{provider}/start',
       summary: '로그인한 계정에 소셜 계정 연동 시작',
       auth: 'required',
+      blockedInDemo: true,
       request: { params: socialProviderParamsSchema },
       response: { status: 200, schema: socialStartResponseSchema },
-      errors: ['NOT_IMPLEMENTED'],
+      errors: ['DEMO_RESTRICTED', 'NOT_IMPLEMENTED'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     async ({ auth, params, response }) =>
@@ -262,6 +263,11 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
           const token = readSessionToken(request);
           const current = token ? await sessionStore.find(token) : null;
 
+          // 이 조회에서 토큰이 교체됐으면 새 쿠키를 내려보내야 로그인이 풀리지 않음
+          if (current?.rotated) {
+            setSessionCookie(response, current.rotated, options.isSecureCookie);
+          }
+
           if (current?.userId !== session.userId || current.companyId !== session.companyId) {
             return redirectTo('/settings', 'failed');
           }
@@ -330,9 +336,10 @@ export const registerSocialRoutes = (registry: RouteRegistry, config?: SocialRou
       path: '/me/social/{provider}',
       summary: '소셜 연동 해제 (로그인 수단이 하나 이상 남아야 함)',
       auth: 'required',
+      blockedInDemo: true,
       request: { params: socialProviderParamsSchema },
       response: { status: 200, schema: successResponseSchema },
-      errors: ['LAST_LOGIN_METHOD'],
+      errors: ['DEMO_RESTRICTED', 'LAST_LOGIN_METHOD'],
     },
     async ({ auth, params }) => {
       try {

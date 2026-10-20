@@ -11,6 +11,7 @@ import { createAccountService } from '../auth/accountService';
 import { generateTotpCode } from '../auth/totp';
 import { createTotpService } from '../auth/totpService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { createMemoryMailer } from '../email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from '../email/securityNotice';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
@@ -92,6 +93,7 @@ const signedUp = async (app: TestApp) => {
     isAgeConfirmed: true,
     consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
   });
+  await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
   const cookie = (res.headers['set-cookie'] as unknown as string[]).find((value) =>
     value.startsWith(`${SESSION_COOKIE}=`),
   )!;

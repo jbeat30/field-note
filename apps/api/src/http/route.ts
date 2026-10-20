@@ -5,8 +5,14 @@ import type { ErrorCode } from '@field-note/shared';
 
 import type { AuditEntry } from '../audit/auditService';
 import { idempotency, type IdempotencyStore } from './idempotency';
-import { createRateLimiter, type RateLimitOptions } from './rateLimit';
-import { requireAuth } from './requireAuth';
+import {
+  createRateLimiter,
+  createUserRateLimiter,
+  DEFAULT_RATE_LIMITS,
+  type RateLimitOptions,
+} from './rateLimit';
+import { blockInPublicDemo } from './demoGuard';
+import { requireAuth, requireVerifiedEmail } from './requireAuth';
 import type { AuthContext, AuthResolver } from './types';
 import { validate } from './validate';
 
@@ -19,6 +25,10 @@ export type RouteSpec = {
   path: string;
   summary: string;
   auth: 'required' | 'none';
+  // true면 이메일 인증 전 계정도 호출할 수 있음 (인증 화면이 쓰는 요청만, 나머지 인증 필요 라우트는 인증을 마친 계정만)
+  allowUnverifiedEmail?: boolean;
+  // true면 공개 시연 회사의 계정은 호출할 수 없음 (계정 해지·로그인 정보 변경·다른 방문자 정보가 보이는 기능), 인증 필요 라우트만 가능
+  blockedInDemo?: boolean;
   request?: { params?: ZodType; query?: ZodType; body?: ZodType };
   response: { status: number; schema: ZodType };
   // true면 핸들러가 돌려준 주소로 이동시키는 라우트 (소셜 로그인 콜백처럼 브라우저 이동 응답), 응답 스키마는 쓰지 않음
@@ -60,6 +70,11 @@ export type RouteRegistry = {
 
 export type RouteDependencies = {
   resolveAuth: AuthResolver;
+  // 계정의 이메일 인증 여부 조회 (없으면 확인하지 않음: 계정 서비스가 없는 테스트 앱)
+  isEmailVerified?: (auth: AuthContext) => Promise<boolean>;
+  // 로그인한 사용자별 전체 호출 한도와 파일 내려받기 한도 (없으면 기본값, false면 끔: 한꺼번에 많이 부르는 시험용)
+  userRateLimit?: RateLimitOptions | false;
+  exportRateLimit?: RateLimitOptions | false;
   idempotencyStore: IdempotencyStore;
   // 활동 기록 저장 함수 (없으면 기록 생략), 기록이 실패해도 이미 끝난 처리는 되돌리지 않고 알림
   recordAudit?: (companyId: string, actorId: string, entry: AuditEntry) => Promise<void>;
@@ -70,18 +85,33 @@ const toExpressPath = (openApiPath: string) => openApiPath.replace(/\{(\w+)\}/g,
 
 /**
  * @description 라우트 등록소 생성, 모든 라우트는 add로만 등록하며 표준 순서
- * (속도 제한 → 검증 → 인증 → 멱등 키 → 핸들러)와 응답 스키마 파싱 강제
+ * (속도 제한 → 인증 → 사용자별 제한 → 검증 → 멱등 키 → 핸들러, 인증이 필요 없는 라우트는 검증이 인증 자리에 옴)와 응답 스키마 파싱 강제
  * @param deps 인증 해석기와 멱등 키 저장소
  * @returns 라우터와 등록된 라우트 목록 (OpenAPI 생성·일치 테스트에서 사용)
  */
 export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
   const router = Router();
   const routes: RouteSpec[] = [];
+  // 사용자별 한도는 모든 라우트가 한 저장소를 함께 써야 전체 호출 횟수가 한도로 세어짐 (라우트마다 만들면 라우트별로 따로 셈)
+  const userLimiter =
+    deps.userRateLimit === false
+      ? null
+      : createUserRateLimiter(deps.userRateLimit ?? DEFAULT_RATE_LIMITS.user);
+  const exportLimiter =
+    deps.exportRateLimit === false
+      ? null
+      : createUserRateLimiter(deps.exportRateLimit ?? DEFAULT_RATE_LIMITS.export);
 
   const add = (spec: RouteSpec, handler: RouteHandler) => {
     if (spec.audit && spec.auth !== 'required') {
       throw new Error(
         `[http.route] 활동 기록은 인증 필요 라우트에만 사용 ${spec.method} ${spec.path}`,
+      );
+    }
+
+    if (spec.blockedInDemo && spec.auth !== 'required') {
+      throw new Error(
+        `[http.route] 시연 차단은 인증 필요 라우트에만 사용 ${spec.method} ${spec.path}`,
       );
     }
 
@@ -97,12 +127,33 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
       middlewares.push(createRateLimiter(spec.rateLimit));
     }
 
-    if (spec.request) {
+    if (spec.request && spec.auth !== 'required') {
       middlewares.push(validate(spec.request));
     }
 
     if (spec.auth === 'required') {
       middlewares.push(requireAuth(deps.resolveAuth));
+
+      if (deps.isEmailVerified && !spec.allowUnverifiedEmail) {
+        middlewares.push(requireVerifiedEmail(deps.isEmailVerified));
+      }
+
+      if (spec.blockedInDemo) {
+        middlewares.push(blockInPublicDemo);
+      }
+
+      if (userLimiter) {
+        middlewares.push(userLimiter);
+      }
+
+      if (spec.file && exportLimiter) {
+        middlewares.push(exportLimiter);
+      }
+
+      // 로그인이 필요한 라우트는 인증을 먼저 확인해 로그인하지 않은 호출에 입력 검증 사유(요청 형태)를 알려 주지 않음
+      if (spec.request) {
+        middlewares.push(validate(spec.request));
+      }
     }
 
     if (spec.idempotent) {

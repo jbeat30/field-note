@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { http, HttpResponse } from 'msw';
 import { expect, fn, userEvent, waitFor, within } from 'storybook/test';
 
 import { MOCK_TOTP_CODE } from '../mocks/data';
+import { handlers } from '../mocks/handlers';
 import {
   addAccount,
   findAccount,
@@ -765,5 +767,39 @@ export const TotpRegenerateRecoveryCodes: Story = {
     const codes = within(await within(document.body).findByRole('dialog', { name: '복구 코드' }));
 
     await expect(await codes.findAllByRole('listitem')).toHaveLength(8);
+  },
+};
+
+// 공개 시연 계정: 막힌 설정 구역은 숨기고 이유를 안내
+export const DemoAccount: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.get('/api/v1/me', () =>
+          HttpResponse.json({
+            displayName: 'Tester',
+            email: 'jbeatfield@gmail.com',
+            isEmailVerified: true,
+            companyName: 'Test Company',
+            isDemo: true,
+          }),
+        ),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText(/시연용 계정이라/)).toBeInTheDocument();
+    await expect(canvas.getByText('Test Company')).toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('button', { name: '비밀번호 변경하기' }),
+    ).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('heading', { name: '소셜 로그인' })).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('heading', { name: '로그인한 기기' })).not.toBeInTheDocument();
+
+    await userEvent.click(canvas.getByRole('tab', { name: '기타' }));
+    await expect(canvas.queryByRole('heading', { name: '계정 해지' })).not.toBeInTheDocument();
   },
 };

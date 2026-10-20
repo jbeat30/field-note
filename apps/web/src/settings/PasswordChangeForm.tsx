@@ -8,7 +8,7 @@ import { apiClient } from '../api/client';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 
 const formSchema = z
@@ -69,13 +69,17 @@ export const PasswordChangeForm = () => {
         </Alert>
       )}
       <FormField label="현재 비밀번호" error={errors.currentPassword?.message}>
-        <Input type="password" autoComplete="current-password" {...register('currentPassword')} />
+        <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
       </FormField>
-      <FormField label="새 비밀번호" hint="10자 이상" error={errors.newPassword?.message}>
-        <Input type="password" autoComplete="new-password" {...register('newPassword')} />
+      <FormField
+        label="새 비밀번호"
+        hint={VALIDATION_MESSAGES.PASSWORD_HINT}
+        error={errors.newPassword?.message}
+      >
+        <PasswordInput autoComplete="new-password" {...register('newPassword')} />
       </FormField>
       <FormField label="새 비밀번호 확인" error={errors.newPasswordConfirm?.message}>
-        <Input type="password" autoComplete="new-password" {...register('newPasswordConfirm')} />
+        <PasswordInput autoComplete="new-password" {...register('newPasswordConfirm')} />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '변경 중' : '비밀번호 변경'}

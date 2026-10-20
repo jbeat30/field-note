@@ -2,6 +2,7 @@ import type { MeResponse } from '@field-note/shared';
 
 import type { PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { isPublicDemoCompany } from '../demo/publicDemo';
 
 import { AccountError } from './accountError';
 import { acceptInvitation, recordConsents } from './invitationAcceptance';
@@ -49,6 +50,8 @@ export type AccountService = {
     account: AuthenticatedAccount,
     input: { loginId: string; newPassword: string },
   ) => Promise<void>;
+  // 이메일 인증을 마친 계정인지 (끝나기 전에는 인증 관련 요청 외의 API를 막는 데 씀)
+  isEmailVerified: (account: AuthenticatedAccount) => Promise<boolean>;
   // 로그인한 관리자 정보 (회사 식별값은 응답에 없음)
   getMe: (account: AuthenticatedAccount) => Promise<MeResponse>;
 };
@@ -110,6 +113,11 @@ export const createAccountService = ({
 
   // 실패 한 번을 기록하고 잠금 기준에 도달했는지 반환 (비밀번호와 2단계 인증 코드가 같은 횟수를 공유)
   const recordFailure = async (credential: CredentialRow, at: Date): Promise<boolean> => {
+    // 공개 시연 계정은 누구나 입력해 볼 수 있어 실패가 쌓이면 모든 방문자가 잠기므로 잠금을 적용하지 않음 (요청 횟수 제한은 그대로 적용)
+    if (isPublicDemoCompany(credential.companyId)) {
+      return false;
+    }
+
     const where = credentialKey(credential);
     // 잠금이 이미 풀린 뒤의 첫 실패는 횟수를 처음부터 다시 셈
     const expired = credential.lockedUntil !== null && credential.lockedUntil <= at;
@@ -343,6 +351,15 @@ export const createAccountService = ({
       }
     },
 
+    isEmailVerified: async ({ userId, companyId }) => {
+      const user = await auth.user.findFirst({
+        where: { companyId, id: userId },
+        select: { emailVerifiedAt: true },
+      });
+
+      return user?.emailVerifiedAt != null;
+    },
+
     getMe: ({ userId, companyId }) =>
       withCompany(app, companyId, async (tx) => {
         const [user, company] = await Promise.all([
@@ -359,6 +376,7 @@ export const createAccountService = ({
           email: user.email,
           isEmailVerified: user.emailVerifiedAt !== null,
           companyName: company.name,
+          isDemo: isPublicDemoCompany(companyId),
         };
       }),
   };

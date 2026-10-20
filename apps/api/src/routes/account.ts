@@ -277,6 +277,7 @@ export const registerAccountRoutes = (
       path: '/auth/email/verify',
       summary: '이메일 인증 코드 확인 (가입 완료)',
       auth: 'required',
+      allowUnverifiedEmail: true,
       request: { body: emailVerifyRequestSchema },
       response: { status: 200, schema: meResponseSchema },
       errors: ['EMAIL_CODE_INVALID'],
@@ -314,6 +315,7 @@ export const registerAccountRoutes = (
       path: '/auth/email/resend',
       summary: '이메일 인증 코드 재발송',
       auth: 'required',
+      allowUnverifiedEmail: true,
       response: { status: 200, schema: emailResendResponseSchema },
       errors: ['TOO_MANY_REQUESTS'],
       rateLimit: { windowMs: 60_000, limit: 3 },
@@ -372,6 +374,7 @@ export const registerAccountRoutes = (
       path: '/me',
       summary: '로그인한 관리자 정보',
       auth: 'required',
+      allowUnverifiedEmail: true,
       response: { status: 200, schema: meResponseSchema },
     },
     accountService
@@ -446,7 +449,9 @@ export const registerAccountRoutes = (
       path: '/me/devices',
       summary: '로그인 기기 목록',
       auth: 'required',
+      blockedInDemo: true,
       response: { status: 200, schema: devicesResponseSchema },
+      errors: ['DEMO_RESTRICTED'],
     },
     sessionStore
       ? async ({ auth, request }) => {
@@ -475,9 +480,10 @@ export const registerAccountRoutes = (
       path: '/me/devices/{id}',
       summary: '기기 원격 로그아웃',
       auth: 'required',
+      blockedInDemo: true,
       request: { params: deviceParamsSchema },
       response: { status: 200, schema: successResponseSchema },
-      errors: ['NOT_FOUND'],
+      errors: ['DEMO_RESTRICTED', 'NOT_FOUND'],
     },
     sessionStore
       ? async ({ auth, params, request }) => {
@@ -581,9 +587,10 @@ export const registerAccountRoutes = (
       path: '/me/password',
       summary: '비밀번호 변경 (다른 기기 로그아웃)',
       auth: 'required',
+      blockedInDemo: true,
       request: { body: passwordChangeSchema },
       response: { status: 200, schema: successResponseSchema },
-      errors: ['CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED'],
+      errors: ['DEMO_RESTRICTED', 'CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     passwordService
@@ -612,9 +619,16 @@ export const registerAccountRoutes = (
       summary:
         '이메일 변경·등록 요청 (새 주소로 인증 코드 발송, 인증해야 반영, 비밀번호가 있는 계정은 현재 비밀번호 필요)',
       auth: 'required',
+      blockedInDemo: true,
+      allowUnverifiedEmail: true,
       request: { body: emailChangeSchema },
       response: { status: 200, schema: emailChangeResponseSchema },
-      errors: ['CURRENT_PASSWORD_INVALID', 'ACCOUNT_LOCKED', 'TOO_MANY_REQUESTS'],
+      errors: [
+        'DEMO_RESTRICTED',
+        'CURRENT_PASSWORD_INVALID',
+        'ACCOUNT_LOCKED',
+        'TOO_MANY_REQUESTS',
+      ],
       rateLimit: { windowMs: 60_000, limit: 5 },
     },
     emailVerification && accountService
@@ -645,9 +659,10 @@ export const registerAccountRoutes = (
       path: '/me/password/set',
       summary: '소셜 로그인만 쓰는 계정의 아이디·비밀번호 로그인 설정 (이미 있으면 거부)',
       auth: 'required',
+      blockedInDemo: true,
       request: { body: passwordSetSchema },
       response: { status: 200, schema: successResponseSchema },
-      errors: ['LOGIN_ID_TAKEN'],
+      errors: ['DEMO_RESTRICTED', 'LOGIN_ID_TAKEN'],
       rateLimit: { windowMs: 60_000, limit: 10 },
     },
     accountService

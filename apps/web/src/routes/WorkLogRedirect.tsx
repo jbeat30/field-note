@@ -8,5 +8,13 @@ export const WorkLogRedirect = () => {
   const project = params.get('project');
   const date = params.get('date') ?? undefined;
 
-  return <Navigate to={project ? projectWorkPath(project, date) : '/projects'} replace />;
+  // 주소의 값은 식별자 글자(영문·숫자·하이픈)일 때만 경로에 넣음
+  const isSafe = (value: string | null | undefined) => !value || /^[\w-]+$/.test(value);
+
+  return (
+    <Navigate
+      to={project && isSafe(project) && isSafe(date) ? projectWorkPath(project, date) : '/projects'}
+      replace
+    />
+  );
 };

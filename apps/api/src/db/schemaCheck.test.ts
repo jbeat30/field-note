@@ -121,6 +121,23 @@ describe('스키마 검사', () => {
     expect(rows.map((row) => row.privilege_type)).toEqual(['DELETE', 'INSERT', 'SELECT']);
   });
 
+  it('회사 범위 밖 전용 계정이 세션에서 고칠 수 있는 컬럼은 사용 시각·IP·미사용 만료·토큰 교체 값뿐이다', async () => {
+    const { rows } = await db.ownerPool.query<{ column_name: string }>(
+      `SELECT column_name FROM information_schema.role_column_grants
+        WHERE grantee = 'field_note_auth' AND table_name = 'sessions' AND privilege_type = 'UPDATE'
+        ORDER BY column_name`,
+    );
+
+    expect(rows.map((row) => row.column_name)).toEqual([
+      'idle_expires_at',
+      'last_active_at',
+      'last_ip',
+      'previous_token_hash',
+      'rotated_at',
+      'token_hash',
+    ]);
+  });
+
   it('운영자 계정은 업무 테이블·세션·비밀번호에 접근할 수 없다', async () => {
     await expect(db.operator.$queryRaw`SELECT * FROM projects`).rejects.toThrow();
     await expect(db.operator.$queryRaw`SELECT * FROM employees`).rejects.toThrow();

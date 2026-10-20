@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { http, HttpResponse } from 'msw';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
 import { MOCK_TOTP_CODE } from '../mocks/data';
+import { handlers } from '../mocks/handlers';
 import { findAccount, getCurrentAccount, saveMockTotp, startClosure } from '../mocks/state';
 
 import { LoginPage } from './LoginPage';
@@ -186,5 +188,38 @@ export const TotpRecoveryCode: Story = {
     await userEvent.type(await canvas.findByLabelText('인증 코드'), 'abcde-fghjk');
     await userEvent.click(canvas.getByRole('button', { name: '로그인' }));
     await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
+  },
+};
+
+// 서버가 시연 계정 안내를 켠 경우: 가상 데이터 안내와 계정이 보이고 한 번에 채울 수 있음
+export const DemoNotice: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.get('/api/v1/public/demo', () =>
+          HttpResponse.json({ enabled: true, loginId: 'tester', password: 'Visit-Demo-2026!' }),
+        ),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByText('시연용 체험 환경입니다')).toBeInTheDocument();
+    await expect(canvas.getByText(/모두 가상의 데이터/)).toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: '이 계정으로 채우기' }));
+    await expect(canvas.getByLabelText('아이디')).toHaveValue('tester');
+    await expect(canvas.getByLabelText('비밀번호')).toHaveValue('Visit-Demo-2026!');
+  },
+};
+
+// 안내가 꺼져 있으면 시연 문구가 보이지 않음
+export const NoDemoNoticeByDefault: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(canvas.getByRole('button', { name: '로그인' })).toBeInTheDocument();
+    await expect(canvas.queryByText('시연용 체험 환경입니다')).not.toBeInTheDocument();
   },
 };

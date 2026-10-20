@@ -14,6 +14,7 @@ import { createAccountService } from '../auth/accountService';
 import { createOptionService } from '../company/optionService';
 import { createCredentialService } from '../credential/credentialService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService, registerFileWorker } from '../file/fileService';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
@@ -95,6 +96,7 @@ const signedUp = async (instance: Awaited<ReturnType<typeof harness>>['instance'
       isAgeConfirmed: true,
       consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
     });
+  await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
 
   return (res.headers['set-cookie'] as unknown as string[]).find((value) =>
     value.startsWith(`${SESSION_COOKIE}=`),
