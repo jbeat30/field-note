@@ -37,6 +37,15 @@ describe('parseEnv', () => {
     expect(env.SMTP_PORT).toBe(1025);
   });
 
+  it('공개 시연 계정 안내는 기본으로 꺼져 있고 true일 때만 켜진다', () => {
+    expect(parseEnv(validEnv).PUBLIC_DEMO_ENABLED).toBe(false);
+    expect(parseEnv({ ...validEnv, PUBLIC_DEMO_ENABLED: 'true' }).PUBLIC_DEMO_ENABLED).toBe(true);
+    expect(parseEnv({ ...validEnv, PUBLIC_DEMO_ENABLED: 'false' }).PUBLIC_DEMO_ENABLED).toBe(false);
+    expect(() => parseEnv({ ...validEnv, PUBLIC_DEMO_ENABLED: 'maybe' })).toThrow(
+      /PUBLIC_DEMO_ENABLED/,
+    );
+  });
+
   it('프록시 단계 수는 기본 0이고 0~5의 정수만 받는다', () => {
     expect(parseEnv(validEnv).TRUST_PROXY_HOPS).toBe(0);
     expect(parseEnv({ ...validEnv, TRUST_PROXY_HOPS: '2' }).TRUST_PROXY_HOPS).toBe(2);
@@ -90,9 +99,31 @@ describe('parseEnv', () => {
       ['APP_ORIGIN', 'http://app.example.com'],
       ['LOG_LEVEL', 'debug'],
       ['SMTP_USER', undefined],
+      ['RATE_LIMIT_MULTIPLIER', '10'],
       ['DATABASE_MIGRATE_URL', 'postgresql://field_note:field_note@db.example.com:5432/field_note'],
     ])('운영에서 %s가 로컬·개발용 값이면 기동을 막는다', (key, value) => {
       expect(() => parseEnv({ ...production, [key]: value })).toThrow(key);
+    });
+
+    it('운영에서 <꺾쇠> 자리표시자가 남아 있으면 기동을 막는다', () => {
+      expect(() => parseEnv({ ...production, S3_ACCESS_KEY: '<R2 접근 키 ID>' })).toThrow(
+        'S3_ACCESS_KEY',
+      );
+      expect(() => parseEnv({ ...production, SMTP_PASSWORD: '<Gmail 앱 비밀번호>' })).toThrow(
+        'SMTP_PASSWORD',
+      );
+    });
+
+    it('DB 연결 수 상한은 기본 10이고 1~50 범위만 받는다', () => {
+      expect(parseEnv(production).DB_POOL_MAX).toBe(10);
+      expect(parseEnv({ ...production, DB_POOL_MAX: '5' }).DB_POOL_MAX).toBe(5);
+      expect(() => parseEnv({ ...production, DB_POOL_MAX: '0' })).toThrow('DB_POOL_MAX');
+      expect(() => parseEnv({ ...production, DB_POOL_MAX: '51' })).toThrow('DB_POOL_MAX');
+    });
+
+    it('개발 환경에서는 호출 횟수 제한 배수를 올릴 수 있다', () => {
+      expect(parseEnv({ ...validEnv, RATE_LIMIT_MULTIPLIER: '10' }).RATE_LIMIT_MULTIPLIER).toBe(10);
+      expect(parseEnv(validEnv).RATE_LIMIT_MULTIPLIER).toBe(1);
     });
 
     it('개발 환경에서는 로컬 값을 그대로 쓸 수 있다', () => {

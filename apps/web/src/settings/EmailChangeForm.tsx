@@ -14,6 +14,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 
@@ -172,7 +173,7 @@ export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: bool
           hint="계정 보호를 위해 한 번 더 확인합니다"
           error={errors.currentPassword?.message}
         >
-          <Input type="password" autoComplete="current-password" {...register('currentPassword')} />
+          <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
         </FormField>
       )}
       <Button type="submit" disabled={isSubmitting}>

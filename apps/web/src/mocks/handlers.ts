@@ -227,6 +227,7 @@ const toMe = (account: MockAccount): MeResponse => ({
   email: account.email || null,
   isEmailVerified: account.isEmailVerified,
   companyName: account.companyName,
+  isDemo: false,
 });
 
 // 쓰기 요청에 CSRF 헤더가 없으면 서버처럼 거부해 웹 클라이언트 회귀 검출
@@ -3143,6 +3144,13 @@ export const handlers = [
     setPendingEmail(account, newEmail);
 
     return HttpResponse.json({ resendAfterSeconds: 30 });
+  }),
+
+  // 시연 계정 안내: 목업에서는 끔 (스토리·시험이 필요할 때 이 핸들러를 덮어씀)
+  http.get('/api/v1/public/demo', async () => {
+    await simulateLatency();
+
+    return HttpResponse.json({ enabled: false });
   }),
 
   // 소셜 로그인 (카카오·네이버·구글), 시작은 목업 소셜 화면(/mock-social) 주소를 돌려줌

@@ -27,13 +27,15 @@ const DEFAULT_OPTIONS = { retryLimit: 5, retryDelaySeconds: 30 };
  * 큐 전용 DB 계정으로 접속, 큐 테이블은 `pgboss` 스키마에만 생성
  * @param connectionString 큐 전용 계정(DATABASE_QUEUE_URL) 접속 주소
  * @param logger 오류 기록용 로거
+ * @param maxConnections 큐가 동시에 열 수 있는 DB 연결 수 상한 (지정하지 않으면 pg-boss 기본값)
  * @returns 시작된 작업 큐
  */
 export const createPgBossQueue = async (
   connectionString: string,
   logger: Logger,
+  maxConnections?: number,
 ): Promise<JobQueue> => {
-  const boss = new PgBoss({ connectionString, schema: 'pgboss' });
+  const boss = new PgBoss({ connectionString, schema: 'pgboss', max: maxConnections });
 
   // 큐 내부 오류는 서버를 죽이지 않고 기록 (재시도 정책이 처리)
   boss.on('error', (error) => logger.error({ err: error }, '[queue.pgBoss] 작업 큐 오류'));

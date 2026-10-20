@@ -24,7 +24,7 @@ export const login = async (page: Page) => {
   for (let attempt = 1; attempt <= LOGIN_MAX_ATTEMPTS; attempt += 1) {
     await page.goto('/login');
     await page.getByLabel('아이디').fill(DEMO_LOGIN.loginId);
-    await page.getByLabel('비밀번호').fill(DEMO_LOGIN.password);
+    await page.getByLabel('비밀번호', { exact: true }).fill(DEMO_LOGIN.password);
     await page
       .getByRole('button', { name: /로그인/ })
       .first()

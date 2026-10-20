@@ -12,7 +12,7 @@ test('설정에서 저장 용량을 보고 전체 데이터를 엑셀로 내려�
   });
 
   await test.step('현재 비밀번호를 넣고 전체 데이터를 내려받으면 엑셀 파일이 받아진다', async () => {
-    await page.getByLabel('현재 비밀번호').last().fill(DEMO_LOGIN.password);
+    await page.getByLabel('현재 비밀번호', { exact: true }).last().fill(DEMO_LOGIN.password);
 
     const download = page.waitForEvent('download');
 

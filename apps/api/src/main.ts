@@ -1,4 +1,5 @@
 import { createApp } from './app';
+import { DEFAULT_RATE_LIMITS } from './http/rateLimit';
 import { createAccountService } from './auth/accountService';
 import { createTotpService } from './auth/totpService';
 import {
@@ -24,6 +25,7 @@ import { createWorkLogService } from './workLog/workLogService';
 import { createPartnerService } from './partner/partnerService';
 import { createProjectService } from './project/projectService';
 import { createPrismaClient } from './db/client';
+import { guardDemoMailer } from './demo/demoMailer';
 import { createSmtpMailer } from './email/mailer';
 import { createSecurityNotifier, registerSecurityNoticeWorker } from './email/securityNotice';
 import { parseEnv } from './env';
@@ -52,11 +54,11 @@ const main = async () => {
   const logger = createLogger(env.LOG_LEVEL);
 
   // 회사 범위 밖 전용 계정은 세션·초대·인증 코드 처리에만 연결 (업무 쿼리는 withCompany 경로로만)
-  const authPrisma = createPrismaClient(env.DATABASE_AUTH_URL);
+  const authPrisma = createPrismaClient(env.DATABASE_AUTH_URL, env.DB_POOL_MAX);
   const sessionStore = createPrismaSessionStore(authPrisma);
   const invitationStore = createPrismaInvitationStore(authPrisma);
   // 로그인 후 회사 범위 조회는 앱 계정(RLS 적용)으로만 수행
-  const appPrisma = createPrismaClient(env.DATABASE_URL);
+  const appPrisma = createPrismaClient(env.DATABASE_URL, env.DB_POOL_MAX);
   const totp = createTotpService({
     auth: authPrisma,
     secretKey: env.TOTP_ENCRYPTION_KEY,
@@ -78,7 +80,7 @@ const main = async () => {
   const monthly = createMonthlyService(appPrisma);
 
   // 작업 큐와 처리기는 같은 프로세스에서 동작, 큐는 전용 계정으로 접속
-  const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger);
+  const queue = await createPgBossQueue(env.DATABASE_QUEUE_URL, logger, env.DB_POOL_MAX);
   // 객체 저장소 (로컬은 버킷이 없으면 생성, 운영은 운영자가 버킷을 사전 준비)
   const { storage, ensureBucket } = createS3Storage({
     endpoint: env.S3_ENDPOINT,
@@ -109,13 +111,15 @@ const main = async () => {
   const reports = createReportService(appPrisma, storage);
   const completion = createCompletionService(appPrisma, storage);
   const dashboard = createDashboardService(appPrisma, assignments);
-  const mailer = createSmtpMailer({
+  const smtpMailer = createSmtpMailer({
     host: env.SMTP_HOST,
     port: env.SMTP_PORT,
     from: env.SMTP_FROM,
     user: env.SMTP_USER,
     password: env.SMTP_PASSWORD,
   });
+  // 공개 시연 계정으로 가는 메일은 발송하지 않음 (방문자의 행동이 시연 메일함으로 쏟아지는 것을 막음)
+  const mailer = guardDemoMailer(smtpMailer, () => logger.info('시연 계정 대상 메일 발송 생략'));
   const emailVerification = createEmailVerificationService({
     auth: authPrisma,
     queue,
@@ -170,11 +174,21 @@ const main = async () => {
   await registerPasswordResetWorker(queue, passwordService);
   await registerSecurityNoticeWorker(queue, mailer);
 
+  const multiply = (limit: { windowMs: number; limit: number }) => ({
+    windowMs: limit.windowMs,
+    limit: limit.limit * env.RATE_LIMIT_MULTIPLIER,
+  });
   const server = createApp({
+    rateLimits: {
+      ip: multiply(DEFAULT_RATE_LIMITS.ip),
+      user: multiply(DEFAULT_RATE_LIMITS.user),
+      export: multiply(DEFAULT_RATE_LIMITS.export),
+    },
     logger,
     // 서버 재시작·다중 인스턴스에서도 재전송을 한 번만 처리하도록 키를 DB에 저장
     idempotencyStore: createPrismaIdempotencyStore(appPrisma),
     sessionStore,
+    isPublicDemoEnabled: env.PUBLIC_DEMO_ENABLED,
     invitationStore,
     accountService,
     totp,
