@@ -226,6 +226,7 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 - 모든 라우트는 `routeRegistry.add(spec, handler)`로만 등록한다. 등록하면 속도 제한 → 입력 검증 → 로그인 확인 → 멱등 키 → 응답 스키마 파싱이 정해진 순서로 자동 적용된다
 - 같은 정의에서 API 문서(OpenAPI)가 만들어진다. 결과물은 `packages/shared/openapi/`에 커밋하며, 라우트를 바꾸고 `pnpm openapi:generate`를 안 하면 테스트가 실패한다
 - 오류 응답은 항상 `{ error: { code, message, details? } }` 형식이다. 사용자 문구는 `packages/shared/src/errorMessages.ts`에 모은다 (오류 코드별 문구는 `ERROR_MESSAGES`, 검증·업무 규칙 문구는 `VALIDATION_MESSAGES`)
+- 스키마에 문구를 적지 않은 입력 검증(길이·형식·범위)이 실패하면 zod의 영어 기본 문구가 아니라 `ZOD_MESSAGES`(`errorMessages.ts`)의 쉬운 한국어가 나온다. `zodErrorMessages.ts`가 서버와 웹 모두에 전역으로 적용하며, 정해 두지 않은 종류는 zod 한국어 기본 문구가 대신한다. 스키마에 직접 적은 문구는 그대로 우선한다
 - 서버·웹 폼·목업이 같은 상수를 쓴다. `message:`·zod 검증·`setError`·도메인 오류 생성자에 한글 문구를 직접 쓰면 ESLint가 막으므로 문구가 필요하면 `VALIDATION_MESSAGES`에 의미 단위 상수를 추가한다 (항목 이름만 바뀌는 문구는 `required`·`selectRequired`·`tooLong` 함수 사용)
 - 쓰기 요청은 `Idempotency-Key` 헤더가 필요하다. 네트워크가 끊겨 같은 요청을 다시 보내도 한 번만 처리된다
 - 개발 서버(`NODE_ENV=development`)에서는 `http://localhost:3000/api/docs`에서 API 문서를 볼 수 있다
