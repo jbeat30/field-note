@@ -1,5 +1,6 @@
 import {
   SOCIAL_PROVIDER_KEYS,
+  getLegalDocumentContent,
   loginIdSchema,
   passwordSchema,
   type InvitationResponse,
@@ -22,10 +23,12 @@ import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
+import { Modal } from '../components/ui/modal';
 import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
 import { resetClientState } from '../stores/resetClientState';
+import { LegalDocumentBody } from './LegalDocumentBody';
 
 // 가입 1단계: 약관 동의와 만 14세 확인 (필수와 선택 구분)
 type ConsentStepProps = {
@@ -36,6 +39,8 @@ type ConsentStepProps = {
 const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
   const [agreed, setAgreed] = useState<Record<string, boolean>>({});
   const [isAgeConfirmed, setAgeConfirmed] = useState(false);
+  // 가입 화면을 떠나지 않고 약관 전문을 보는 창
+  const [viewing, setViewing] = useState<LegalDocumentSummary | null>(null);
 
   const required = invitation.documents.filter((document) => document.isRequired);
   const isAll = invitation.documents.every((document) => agreed[document.id]) && isAgeConfirmed;
@@ -62,13 +67,14 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
           {document.title}
         </span>
       </label>
-      <Link
-        className="min-h-touch content-center px-2 text-sm text-primary underline"
-        to={document.path}
-        target="_blank"
+      <button
+        type="button"
+        aria-label={`${document.title} 보기`}
+        className="min-h-touch px-2 text-sm text-primary underline"
+        onClick={() => setViewing(document)}
       >
         보기
-      </Link>
+      </button>
     </div>
   );
 
@@ -114,6 +120,28 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
       >
         다음
       </Button>
+      <Modal
+        open={viewing !== null}
+        onOpenChange={(open) => !open && setViewing(null)}
+        title={viewing?.title ?? ''}
+        variant="dialog"
+        size="lg"
+      >
+        {/* 문서가 길면 이 안에서만 스크롤되고 제목과 닫기 버튼은 그대로 보임 */}
+        <div
+          role="region"
+          aria-label={`${viewing?.title ?? ''} 전문`}
+          tabIndex={0}
+          className="max-h-[60dvh] overflow-y-auto rounded-lg border border-border p-3 focus-visible:outline-2 focus-visible:outline-primary"
+        >
+          {viewing && (
+            <LegalDocumentBody content={getLegalDocumentContent(viewing.type)} showTitle={false} />
+          )}
+        </div>
+        <Button variant="secondary" onClick={() => setViewing(null)}>
+          닫기
+        </Button>
+      </Modal>
     </div>
   );
 };
