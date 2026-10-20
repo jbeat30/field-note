@@ -8,6 +8,7 @@ export const queryKeys = {
   companyRules: () => ['company-settings', 'rules', {}] as const,
   storageUsage: () => ['company-settings', 'storage', {}] as const,
   socialProviders: () => ['social-providers', 'all', {}] as const,
+  publicDemo: () => ['public-demo', 'current', {}] as const,
   socialMethods: () => ['social-methods', 'current', {}] as const,
   totp: () => ['totp', 'current', {}] as const,
   devices: () => ['devices', 'all', {}] as const,

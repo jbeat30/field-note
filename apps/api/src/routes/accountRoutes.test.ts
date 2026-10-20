@@ -279,3 +279,59 @@ describe('회사 격리', () => {
     expect(meB.body).toMatchObject({ companyName: '격리B', email: bodyB.email });
   });
 });
+
+describe('이메일 인증 전 계정의 접근', () => {
+  const errorCodeOf = (res: request.Response) => errorResponseSchema.parse(res.body).error.code;
+
+  it('인증 화면이 쓰는 요청 외에는 API를 직접 호출해도 403이고, 인증을 마치면 통과한다', async () => {
+    const app = buildApp();
+    const invitation = await newInvitation();
+    const body = signupBody(invitation.token);
+    const cookie = cookieOf(await post(app, '/api/v1/auth/signup').send(body))!;
+
+    for (const path of [
+      '/api/v1/employees',
+      '/api/v1/projects',
+      '/api/v1/company/settings',
+      '/api/v1/me/devices',
+      '/api/v1/me/totp',
+    ]) {
+      const res = await request(app).get(path).set('Cookie', cookie);
+
+      expect([path, res.status, errorCodeOf(res)]).toEqual([path, 403, 'EMAIL_NOT_VERIFIED']);
+    }
+
+    const write = await post(app, '/api/v1/me/totp/setup').set('Cookie', cookie);
+
+    expect([write.status, errorCodeOf(write)]).toEqual([403, 'EMAIL_NOT_VERIFIED']);
+
+    // 인증 화면이 쓰는 요청은 허용 (재발송은 제한 시간 안이면 429)
+    expect((await request(app).get('/api/v1/me').set('Cookie', cookie)).status).toBe(200);
+    expect((await post(app, '/api/v1/auth/email/resend').set('Cookie', cookie)).status).not.toBe(
+      403,
+    );
+
+    await db.ownerPool.query(`UPDATE users SET email_verified_at = now() WHERE email = $1`, [
+      body.email,
+    ]);
+
+    // 인증을 마치면 같은 세션으로 막히지 않음 (서비스가 없는 앱이라 501)
+    const after = await request(app).get('/api/v1/employees').set('Cookie', cookie);
+
+    expect(after.status).not.toBe(403);
+    expect((await post(app, '/api/v1/auth/logout').set('Cookie', cookie)).status).toBe(200);
+  });
+
+  it('인증 전 계정도 로그아웃과 이메일 변경 요청은 할 수 있다', async () => {
+    const app = buildApp();
+    const invitation = await newInvitation();
+    const body = signupBody(invitation.token);
+    const cookie = cookieOf(await post(app, '/api/v1/auth/signup').send(body))!;
+    const change = await post(app, '/api/v1/me/email/change')
+      .set('Cookie', cookie)
+      .send({ newEmail: `changed-${body.email}`, currentPassword: body.password });
+
+    expect(change.status).not.toBe(403);
+    expect((await post(app, '/api/v1/auth/logout').set('Cookie', cookie)).status).toBe(200);
+  });
+});

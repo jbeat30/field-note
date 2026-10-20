@@ -15,6 +15,7 @@ import { Input } from '../components/ui/input';
 import { Modal } from '../components/ui/modal';
 import { DateInput } from '../components/ui/date-input';
 import { getErrorDetailMessage } from '../lib/apiError';
+import { isHttpUrl } from '../lib/safeReturnPath';
 import { splitServerErrors } from '../lib/serverErrors';
 import { OptionSelect } from '../employees/OptionSelect';
 import { useOptions } from '../settings/useOptions';
@@ -52,6 +53,10 @@ const openFile = async (employeeId: string, credentialId: string, onError: (m: s
 
   try {
     const { url } = await fetchCredentialFileUrl(employeeId, credentialId);
+
+    if (!isHttpUrl(url)) {
+      throw new Error('[web.EmployeeCredentialsPanel] 열 수 없는 주소');
+    }
 
     if (popup) {
       popup.opener = null;

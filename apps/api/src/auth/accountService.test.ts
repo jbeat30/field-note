@@ -212,6 +212,8 @@ describe('로그인', () => {
       email: input.email,
       isEmailVerified: false,
       companyName: expect.any(String),
+      // 일반 회사는 시연 계정이 아님
+      isDemo: false,
     });
   });
 

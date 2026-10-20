@@ -7,6 +7,14 @@ import { createPrismaClient } from '../src/db/client';
 import { listDueClosures, purgeDueCompanies } from '../src/closure/purgeService';
 import { registerLegalDocuments, LegalContentChangedError } from '../src/legal/legalDocuments';
 import {
+  DemoLegalMissingError,
+  DemoResetBusyError,
+  removePublicDemo,
+  resetPublicDemo,
+  withDemoResetLock,
+} from '../src/demo/publicDemoReset';
+import { createS3Storage } from '../src/storage/objectStorage';
+import {
   buildInvitationLink,
   createCompanyWithInvitation,
   InvitationReissueError,
@@ -26,7 +34,9 @@ const USAGE = `운영자 CLI (회사 업무 데이터는 조회하지 않음)
   pnpm operator list
   pnpm operator legal-register
   pnpm operator closures                       # 해지 요청 목록 (삭제 전용 계정 필요)
-  pnpm operator purge-due [--dry-run]          # 유예가 끝난 회사의 데이터 삭제·익명화 (삭제 전용 계정 필요)`;
+  pnpm operator purge-due [--dry-run]          # 유예가 끝난 회사의 데이터 삭제·익명화 (삭제 전용 계정 필요)
+  pnpm operator demo-reset                     # 공개 시연 회사(Test Company)를 처음 상태로 되돌림 (PUBLIC_DEMO_ENABLED=true, 소유 계정 필요, 약관 등록 뒤)
+  pnpm operator demo-remove                    # 공개 시연 회사의 데이터·파일·로그인을 없앰 (시연 환경을 끌 때, 소유 계정 필요)`;
 
 const LEGAL_USAGE_NOTE =
   '약관·처리방침 문서를 DB에 등록 (이미 등록된 같은 버전은 건너뛰고, 내용이 달라졌는데 버전이 같으면 거부)';
@@ -36,6 +46,15 @@ const envSchema = z.object({
   DATABASE_OPERATOR_URL: z.url(),
   // 해지 삭제 명령에만 필요
   DATABASE_PURGE_URL: z.url().optional(),
+  // 시연 회사 초기화에만 필요: 소유 계정과 업로드 파일을 지울 객체 저장소
+  DATABASE_MIGRATE_URL: z.url().optional(),
+  // 시연 회사를 만드는 초기화가 켜진 환경에서만 실행되도록 막는 스위치 (서비스 단계에서 끄면 새벽 크론이 시연 회사를 되살리지 않음)
+  PUBLIC_DEMO_ENABLED: z.stringbool().default(false),
+  S3_ENDPOINT: z.url().optional(),
+  S3_REGION: z.string().min(1).optional(),
+  S3_BUCKET: z.string().min(1).optional(),
+  S3_ACCESS_KEY: z.string().min(1).optional(),
+  S3_SECRET_KEY: z.string().min(1).optional(),
   APP_ORIGIN: z.url(),
 });
 
@@ -165,6 +184,49 @@ const main = async () => {
       } finally {
         await purgePrisma.$disconnect();
       }
+    } else if (command === 'demo-reset' || command === 'demo-remove') {
+      if (!env.DATABASE_MIGRATE_URL) {
+        throw new Error('DATABASE_MIGRATE_URL 필요 (소유 계정)');
+      }
+
+      if (command === 'demo-reset' && !env.PUBLIC_DEMO_ENABLED) {
+        throw new Error('PUBLIC_DEMO_ENABLED=true일 때만 시연 회사를 만들 수 있음');
+      }
+
+      const { S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY } = env;
+      const storage =
+        S3_ENDPOINT && S3_REGION && S3_BUCKET && S3_ACCESS_KEY && S3_SECRET_KEY
+          ? createS3Storage({
+              endpoint: S3_ENDPOINT,
+              region: S3_REGION,
+              bucket: S3_BUCKET,
+              accessKey: S3_ACCESS_KEY,
+              secretKey: S3_SECRET_KEY,
+            }).storage
+          : undefined;
+
+      if (!storage) {
+        console.warn('※ 객체 저장소 설정이 없어 시연 회사가 올린 파일은 지우지 않습니다');
+      }
+
+      const ownerPrisma = createPrismaClient(env.DATABASE_MIGRATE_URL);
+
+      try {
+        const result = await withDemoResetLock(env.DATABASE_MIGRATE_URL, () =>
+          command === 'demo-reset'
+            ? resetPublicDemo(ownerPrisma, storage)
+            : removePublicDemo(ownerPrisma, storage),
+        );
+
+        console.log(
+          `시연 회사 ${command === 'demo-reset' ? '초기화' : '제거'} 완료: 업로드 파일 ${result.removedObjects}개 삭제`,
+        );
+        console.table(result.deleted);
+
+        if ('seeded' in result) console.table(result.seeded);
+      } finally {
+        await ownerPrisma.$disconnect();
+      }
     } else if (command === 'list') {
       console.table(await listCompanies(prisma));
     } else {
@@ -177,6 +239,8 @@ const main = async () => {
 
 main().catch((error: unknown) => {
   if (error instanceof LegalContentChangedError) {
+    console.error(error.message);
+  } else if (error instanceof DemoResetBusyError || error instanceof DemoLegalMissingError) {
     console.error(error.message);
   } else if (error instanceof InvitationReissueError) {
     console.error(`재발급할 수 없음: ${error.message}`);

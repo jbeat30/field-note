@@ -6,6 +6,7 @@ import { createAccountService } from '../auth/accountService';
 import { createEmailVerificationService } from '../auth/emailVerification';
 import { createSocialService } from '../auth/socialService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createPrismaInvitationStore } from '../invitation/invitationStore';
 import { createCompanyWithInvitation } from '../operator/operatorService';
@@ -108,6 +109,7 @@ const loggedInBrowser = async (app: ReturnType<typeof buildApp>, email?: string)
     isAgeConfirmed: true,
     consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
   });
+  await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
 
   return {
     browser,
@@ -224,9 +226,12 @@ describe('소셜 로그인', () => {
 
   it('이메일 인증 전 계정은 로그인 후 인증 화면으로 이동한다', async () => {
     const app = buildApp();
-    const { browser } = await loggedInBrowser(app);
+    const { browser, companyId } = await loggedInBrowser(app);
 
     await linkKakao(browser, 'hanbit');
+    await db.ownerPool.query('UPDATE users SET email_verified_at = NULL WHERE company_id = $1', [
+      companyId,
+    ]);
 
     const fresh = request.agent(app);
     const res = await callback(fresh, await startLogin(fresh), 'hanbit');
@@ -486,6 +491,17 @@ describe('초대 링크로 카카오 가입', () => {
 
     expect(emailRequest.status).toBe(200);
 
+    // 이메일 인증을 마치기 전에는 비밀번호 로그인을 설정할 수 없음
+    const early = await write(browser, 'post', '/api/v1/me/password/set').send({
+      loginId: 'social-set-1',
+      newPassword: PASSWORD,
+    });
+
+    expect(early.status).toBe(403);
+    expect(errorResponseSchema.parse(early.body).error.code).toBe('EMAIL_NOT_VERIFIED');
+
+    await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
+
     // 아이디·비밀번호 설정 후에는 로그인할 수 있고 이메일 변경에 비밀번호가 필요
     const set = await write(browser, 'post', '/api/v1/me/password/set').send({
       loginId: 'social-set-1',
@@ -532,6 +548,7 @@ describe('초대 링크로 카카오 가입', () => {
       'new-unverified',
     );
     await loggedInBrowser(app);
+    await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
 
     const res = await write(browser, 'post', '/api/v1/me/password/set').send({
       loginId: `route-social-${sequence}`,

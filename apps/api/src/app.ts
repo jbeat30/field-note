@@ -7,6 +7,7 @@ import { securityHeaders } from './http/securityHeaders';
 import { createErrorHandler, notFoundHandler } from './http/errorHandler';
 import { createMemoryIdempotencyStore, type IdempotencyStore } from './http/idempotency';
 import { API_PREFIX, generateOpenApiDocument } from './http/openapi';
+import { createRateLimiter, DEFAULT_RATE_LIMITS, type RateLimitOptions } from './http/rateLimit';
 import { createRouteRegistry } from './http/route';
 import type { AuthResolver } from './http/types';
 import type { AccountService } from './auth/accountService';
@@ -77,6 +78,7 @@ import { mountFakeSocialRoutes } from './social/fakeSocialRoutes';
 import type { SocialProviderChoices } from './social/provider';
 import { registerAuthRoutes } from './routes/auth';
 import { registerHealthRoutes } from './routes/health';
+import { registerPublicDemoRoutes } from './routes/publicDemo';
 import { registerSampleRoutes } from './routes/samples';
 import { createMemorySessionStore, type SessionStore } from './session/sessionStore';
 import { createSessionResolver } from './session/cookie';
@@ -148,12 +150,20 @@ export type AppOptions = {
   // CSRF Origin 검증 기준 웹 주소
   appOrigin?: string;
   isSecureCookie?: boolean;
+  // 로그인 화면에 공개 시연 계정을 안내할지 (기본은 끔)
+  isPublicDemoEnabled?: boolean;
   // 앞단 프록시(CloudFront·로드 밸런서) 단계 수: 접속 IP(요청 횟수 제한·기기 목록)를 X-Forwarded-For에서 읽을 때 믿을 단계 수 (직접 접속이면 0)
   trustProxyHops?: number;
   idempotencyStore?: IdempotencyStore;
   logger?: Logger;
   // 개발 환경에서만 API 문서 화면 제공
   isDocsEnabled?: boolean;
+  // 요청 횟수 제한 (없으면 기본값, false면 끔: 한꺼번에 많이 부르는 시험용)
+  rateLimits?: {
+    ip?: RateLimitOptions | false;
+    user?: RateLimitOptions | false;
+    export?: RateLimitOptions | false;
+  };
 };
 
 /**
@@ -164,7 +174,13 @@ export type AppOptions = {
 export const createRegistry = (options: AppOptions = {}) => {
   const sessionStore = options.sessionStore ?? createMemorySessionStore();
   const registry = createRouteRegistry({
-    resolveAuth: options.resolveAuth ?? createSessionResolver(sessionStore),
+    resolveAuth:
+      options.resolveAuth ?? createSessionResolver(sessionStore, options.isSecureCookie ?? false),
+    userRateLimit: options.rateLimits?.user,
+    exportRateLimit: options.rateLimits?.export,
+    isEmailVerified: options.accountService
+      ? (auth) => options.accountService!.isEmailVerified(auth)
+      : undefined,
     idempotencyStore: options.idempotencyStore ?? createMemoryIdempotencyStore(),
     recordAudit: options.audit
       ? (companyId, actorId, entry) => options.audit!.record(companyId, actorId, entry)
@@ -174,6 +190,7 @@ export const createRegistry = (options: AppOptions = {}) => {
   });
 
   registerHealthRoutes(registry);
+  registerPublicDemoRoutes(registry, options.isPublicDemoEnabled);
   registerSampleRoutes(registry);
   registerAccountRoutes(registry, {
     invitationStore: options.invitationStore,
@@ -271,6 +288,11 @@ export const createApp = (options: AppOptions = {}) => {
   // 개발 환경에서만 켜지는 가짜 소셜 로그인 화면 (운영에서는 지정되지 않음)
   if (options.social?.fakeSecret) {
     mountFakeSocialRoutes(app, options.social.fakeSecret);
+  }
+
+  // 접속 주소당 전체 호출 한도 (로그인 전 호출과 잘못된 쿠키로 쓸어 보는 호출도 포함)
+  if (options.rateLimits?.ip !== false) {
+    app.use(API_PREFIX, createRateLimiter(options.rateLimits?.ip ?? DEFAULT_RATE_LIMITS.ip));
   }
 
   app.use(API_PREFIX, csrfGuard(options.appOrigin ?? 'http://localhost:5173'), registry.router);

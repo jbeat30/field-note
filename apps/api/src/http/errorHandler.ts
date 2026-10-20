@@ -28,7 +28,8 @@ export const createErrorHandler =
 
     if (!(error instanceof AppError)) {
       logger.error(
-        { err: error, method: req.method, path: req.path },
+        // 주소 대신 라우트 형태를 남김 (재설정·초대·해지 취소 링크의 토큰이 로그에 남지 않게 함)
+        { err: error, method: req.method, route: req.route?.path ?? null },
         '[http.errorHandler] 처리되지 않은 오류',
       );
     }

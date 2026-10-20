@@ -30,7 +30,19 @@ RUN pnpm --filter @field-note/api exec prisma generate
 # 계정 비밀번호 설정)을 실행할 수 있다. 배포 때 소유 계정 접속 값으로 한 번 실행하고 서버에는 쓰지 않음
 FROM build AS migrate
 USER node
+# 실행할 때마다 pnpm을 내려받지 않도록 이미지를 만들 때 미리 받아 둠
+RUN pnpm --version
 CMD ["pnpm", "--filter", "@field-note/api", "db:setup"]
+
+# ---- 점검 작업용: 마이그레이션 이미지에 PostgreSQL 클라이언트 도구(pg_dump·pg_restore)를 더한 것
+# 백업·복구 시험·해지 회사 삭제(`pnpm backup`, `pnpm operator purge-due`)를 컨테이너 안에서 실행한다.
+# 도구는 DB 서버와 같은 주 버전(18)이어야 해서 PostgreSQL 공식 저장소에서 받는다
+#   docker build -f apps/api/Dockerfile --target ops -t field-note-ops .
+FROM build AS ops
+RUN apt-get update  && apt-get install -y --no-install-recommends curl gnupg  && install -d /usr/share/postgresql-common/pgdg  && curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc -o /usr/share/postgresql-common/pgdg/apt.postgresql.org.asc  && echo "deb [signed-by=/usr/share/postgresql-common/pgdg/apt.postgresql.org.asc] https://apt.postgresql.org/pub/repos/apt bookworm-pgdg main" > /etc/apt/sources.list.d/pgdg.list  && apt-get update  && apt-get install -y --no-install-recommends postgresql-client-18  && apt-get purge -y --auto-remove curl gnupg  && rm -rf /var/lib/apt/lists/*
+USER node
+RUN pnpm --version
+CMD ["pnpm", "backup", "list"]
 
 # ---- 서버 이미지 (마지막 단계라 기본 빌드 대상): 운영 의존성만 설치
 FROM base AS runtime

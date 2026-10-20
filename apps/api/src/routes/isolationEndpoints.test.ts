@@ -17,6 +17,7 @@ import { createAssignmentService } from '../assignment/assignmentService';
 import { createAccountService } from '../auth/accountService';
 import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
+import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
@@ -137,6 +138,7 @@ const signUp = async () => {
       isAgeConfirmed: true,
       consents: documentIds.map((documentId) => ({ documentId, isAgreed: true })),
     });
+  await markCompanyEmailsVerified(db.ownerPool, invitation.companyId);
 
   return (res.headers['set-cookie'] as unknown as string[]).find((value) =>
     value.startsWith(`${SESSION_COOKIE}=`),

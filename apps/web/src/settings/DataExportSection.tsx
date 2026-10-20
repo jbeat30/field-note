@@ -4,7 +4,7 @@ import { useSocialMethods } from '../auth/useSocial';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
-import { Input } from '../components/ui/input';
+import { PasswordInput } from '../components/ui/password-input';
 import { downloadCompanyDataXlsx } from '../reports/exportReport';
 
 import { VALIDATION_MESSAGES } from '@field-note/shared';
@@ -53,8 +53,7 @@ export const DataExportSection = () => {
       {exported && <Alert variant="info">{exported} 파일을 내려받았습니다</Alert>}
       {needsPassword && (
         <FormField label="현재 비밀번호" hint="전체 데이터라 본인 확인을 위해 한 번 더 입력합니다">
-          <Input
-            type="password"
+          <PasswordInput
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}

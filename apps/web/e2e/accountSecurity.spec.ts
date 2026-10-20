@@ -77,7 +77,7 @@ test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복�
   // 로그인: 비밀번호만으로는 통과하지 못하고 인증 코드 칸이 열림
   await logout(page);
   await page.getByLabel('아이디').fill(DEMO_LOGIN.loginId);
-  await page.getByLabel('비밀번호').fill(DEMO_LOGIN.password);
+  await page.getByLabel('비밀번호', { exact: true }).fill(DEMO_LOGIN.password);
   await page.getByRole('button', { name: '로그인', exact: true }).click();
   await expect(page.getByLabel('인증 코드')).toBeFocused();
   await expect(page).toHaveURL(/\/login/);
@@ -93,7 +93,7 @@ test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복�
 
   const disable = page.getByRole('dialog', { name: '2단계 인증 끄기' });
 
-  await disable.getByLabel('현재 비밀번호').fill(DEMO_LOGIN.password);
+  await disable.getByLabel('현재 비밀번호', { exact: true }).fill(DEMO_LOGIN.password);
   await disable.getByLabel('인증 코드').fill(recoveryCodes[0]!);
   await disable.getByRole('button', { name: '2단계 인증 끄기' }).click();
   await expect(page.getByText(/꺼짐 · 켜면 로그인할 때/)).toBeVisible();
