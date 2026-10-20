@@ -11,6 +11,7 @@ import {
   DEFAULT_RATE_LIMITS,
   type RateLimitOptions,
 } from './rateLimit';
+import { blockInPublicDemo } from './demoGuard';
 import { requireAuth, requireVerifiedEmail } from './requireAuth';
 import type { AuthContext, AuthResolver } from './types';
 import { validate } from './validate';
@@ -26,6 +27,8 @@ export type RouteSpec = {
   auth: 'required' | 'none';
   // true면 이메일 인증 전 계정도 호출할 수 있음 (인증 화면이 쓰는 요청만, 나머지 인증 필요 라우트는 인증을 마친 계정만)
   allowUnverifiedEmail?: boolean;
+  // true면 공개 시연 회사의 계정은 호출할 수 없음 (계정 해지·로그인 정보 변경·다른 방문자 정보가 보이는 기능), 인증 필요 라우트만 가능
+  blockedInDemo?: boolean;
   request?: { params?: ZodType; query?: ZodType; body?: ZodType };
   response: { status: number; schema: ZodType };
   // true면 핸들러가 돌려준 주소로 이동시키는 라우트 (소셜 로그인 콜백처럼 브라우저 이동 응답), 응답 스키마는 쓰지 않음
@@ -106,6 +109,12 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
       );
     }
 
+    if (spec.blockedInDemo && spec.auth !== 'required') {
+      throw new Error(
+        `[http.route] 시연 차단은 인증 필요 라우트에만 사용 ${spec.method} ${spec.path}`,
+      );
+    }
+
     if (spec.idempotent && spec.auth !== 'required') {
       throw new Error(
         `[http.route] 멱등 키는 인증 필요 라우트에만 사용 ${spec.method} ${spec.path}`,
@@ -127,6 +136,10 @@ export const createRouteRegistry = (deps: RouteDependencies): RouteRegistry => {
 
       if (deps.isEmailVerified && !spec.allowUnverifiedEmail) {
         middlewares.push(requireVerifiedEmail(deps.isEmailVerified));
+      }
+
+      if (spec.blockedInDemo) {
+        middlewares.push(blockInPublicDemo);
       }
 
       if (userLimiter) {

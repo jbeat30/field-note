@@ -81,6 +81,18 @@ sudo ./deploy/scripts/server-check.sh   # 포트·권한·상태 점검
 - 백업(암호화, 서버 밖 사본)과 복구 시험은 [백업·복구](docs/05-backup-restore.md)를 따른다
 - 환경 변수 파일(`deploy/.env`, `deploy/ops.env`)과 키·비밀번호는 서버에만 두고 저장소·채팅에 남기지 않는다
 
+### 공개 시연 환경
+
+가상 데이터만 담은 `Test Company`를 두고 사람들이 둘러볼 수 있게 할 수 있다. 서버 `deploy/.env`에 `PUBLIC_DEMO_ENABLED=true`를 두면 로그인 화면에 시연 계정이 안내된다.
+
+```bash
+pnpm operator legal-register   # 약관 등록 (처음 한 번)
+pnpm operator demo-reset       # 시연 회사를 만들거나 처음 상태로 되돌림 (서버에서는 ops 컨테이너로 실행, 크론이 매일 새벽 실행)
+pnpm operator demo-remove      # 시연 환경을 끌 때 정리
+```
+
+해지·비밀번호/이메일 변경·2단계 인증·소셜 연동·기기 목록은 시연 계정에서 막혀 있다. 자세한 동작은 [기능·운영 상세](docs/07-feature-reference.md)의 "공개 시연 환경"에 있다.
+
 ## 문서
 
 - [기획서 분석](docs/00-analysis.md) · [개발 순서](docs/01-development-plan.md) · [브랜치·릴리즈 전략](docs/02-git-workflow.md)

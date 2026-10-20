@@ -1,4 +1,4 @@
-import type { PrismaClient } from '../db/client';
+import type { Prisma, PrismaClient } from '../db/client';
 import type { ObjectStorage } from '../storage/objectStorage';
 
 import { ANONYMIZED_COMPANY_NAME, ANONYMIZED_USER_NAME } from './purgePolicy';
@@ -16,6 +16,76 @@ export type PurgeResult = {
   // 테이블별 삭제 행 수 (개인정보 없는 개수만)
   deleted: Record<string, number>;
   anonymizedUsers: number;
+};
+
+/**
+ * @description 회사의 업무 데이터 전체 삭제 (프로젝트·직원·명부·작업 기록·문서·파일 행 등, 계정·로그인·회사 설정은 제외)
+ * 해지 삭제와 시연 회사 초기화가 같이 쓰며, 외래 키 순서대로 지우며 호출하는 쪽이 같은 트랜잭션 안에서 실행해야 함
+ * @param tx 트랜잭션 클라이언트
+ * @param companyId 대상 회사
+ * @returns 테이블별 삭제 행 수
+ */
+export const deleteCompanyBusinessData = async (
+  tx: Prisma.TransactionClient,
+  companyId: string,
+): Promise<Record<string, number>> => {
+  const deleted: Record<string, number> = {};
+  const where = { companyId };
+
+  // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
+  // 작업 내역의 수정 이력 → 공수 항목 → 작업 내역 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
+  // 감사 기록 → 문서 버전 → 문서 순서 (버전이 파일·문서를, 문서가 프로젝트·계정을 참조하므로 파일·프로젝트보다 먼저)
+  // 변경 작업의 증빙 연결·상태 이력은 문서·변경 작업을 참조하므로 그보다 먼저 지움
+  deleted.monthly_close_events = (await tx.monthlyCloseEvent.deleteMany({ where })).count;
+  deleted.monthly_closes = (await tx.monthlyClose.deleteMany({ where })).count;
+  // 직원 서류는 파일·직원·선택 목록을, 필요 자격은 프로젝트·선택 목록을 참조하므로 그보다 먼저 지움
+  deleted.employee_credentials = (await tx.employeeCredential.deleteMany({ where })).count;
+  deleted.project_required_credentials = (
+    await tx.projectRequiredCredential.deleteMany({ where })
+  ).count;
+  // 보수 요청의 연결·상태 이력은 작업 내역·자재 기록·보수 요청을 참조하므로 그보다 먼저 지움
+  deleted.repair_request_links = (await tx.repairRequestLink.deleteMany({ where })).count;
+  deleted.repair_request_status_changes = (
+    await tx.repairRequestStatusChange.deleteMany({ where })
+  ).count;
+  deleted.repair_requests = (await tx.repairRequest.deleteMany({ where })).count;
+  // 보증서는 문서·프로젝트를 참조하므로 그보다 먼저, 보증 설정·변경 이력은 프로젝트를 참조하므로 프로젝트보다 먼저 지움
+  deleted.warranty_certificates = (await tx.warrantyCertificate.deleteMany({ where })).count;
+  deleted.project_warranty_changes = (await tx.projectWarrantyChange.deleteMany({ where })).count;
+  deleted.project_warranties = (await tx.projectWarranty.deleteMany({ where })).count;
+  // 지출·수입 기록은 프로젝트·추가 공사·문서·업체·분류를 참조하므로 그보다 먼저 지움
+  deleted.idempotency_keys = (await tx.idempotencyKey.deleteMany({ where })).count;
+  deleted.ledger_entries = (await tx.ledgerEntry.deleteMany({ where })).count;
+  deleted.change_work_documents = (await tx.changeWorkDocument.deleteMany({ where })).count;
+  deleted.change_work_status_changes = (
+    await tx.changeWorkStatusChange.deleteMany({ where })
+  ).count;
+  deleted.change_works = (await tx.changeWork.deleteMany({ where })).count;
+  deleted.audit_logs = (await tx.auditLog.deleteMany({ where })).count;
+  deleted.document_versions = (await tx.documentVersion.deleteMany({ where })).count;
+  deleted.documents = (await tx.document.deleteMany({ where })).count;
+  // 자재 기록이 프로젝트·자재·작업 구분·업체를 참조하므로 그보다 먼저 지움
+  deleted.material_records = (await tx.materialRecord.deleteMany({ where })).count;
+  deleted.materials = (await tx.material.deleteMany({ where })).count;
+  deleted.memos = (await tx.memo.deleteMany({ where })).count;
+  deleted.photos = (await tx.photo.deleteMany({ where })).count;
+  deleted.files = (await tx.storedFile.deleteMany({ where })).count;
+  deleted.work_log_revisions = (await tx.workLogRevision.deleteMany({ where })).count;
+  deleted.work_log_entries = (await tx.workLogEntry.deleteMany({ where })).count;
+  deleted.work_logs = (await tx.workLog.deleteMany({ where })).count;
+  deleted.project_assignments = (await tx.projectAssignment.deleteMany({ where })).count;
+  deleted.project_period_changes = (await tx.projectPeriodChange.deleteMany({ where })).count;
+  deleted.project_status_changes = (await tx.projectStatusChange.deleteMany({ where })).count;
+  deleted.project_progress_records = (await tx.projectProgressRecord.deleteMany({ where })).count;
+  deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
+  deleted.projects = (await tx.project.deleteMany({ where })).count;
+  deleted.project_code_sequences = (await tx.projectCodeSequence.deleteMany({ where })).count;
+  deleted.employee_pay_rates = (await tx.employeePayRate.deleteMany({ where })).count;
+  deleted.employees = (await tx.employee.deleteMany({ where })).count;
+  deleted.partners = (await tx.partner.deleteMany({ where })).count;
+  deleted.option_items = (await tx.optionItem.deleteMany({ where })).count;
+
+  return deleted;
 };
 
 /**
@@ -57,58 +127,7 @@ export const purgeCompany = (
       deleted.file_objects = await storage.removePrefix(`company/${companyId}/`);
     }
 
-    // 외래 키 순서: 프로젝트의 공종 → 프로젝트 → (프로젝트가 가리키는) 직원·명부 → 선택 목록 (참조하는 쪽이 먼저)
-    // 작업 내역의 수정 이력 → 공수 항목 → 작업 내역 순서로 지움 (프로젝트·직원·작업 구분을 참조하므로 그보다 먼저)
-    // 감사 기록 → 문서 버전 → 문서 순서 (버전이 파일·문서를, 문서가 프로젝트·계정을 참조하므로 파일·프로젝트보다 먼저)
-    // 변경 작업의 증빙 연결·상태 이력은 문서·변경 작업을 참조하므로 그보다 먼저 지움
-    deleted.monthly_close_events = (await tx.monthlyCloseEvent.deleteMany({ where })).count;
-    deleted.monthly_closes = (await tx.monthlyClose.deleteMany({ where })).count;
-    // 직원 서류는 파일·직원·선택 목록을, 필요 자격은 프로젝트·선택 목록을 참조하므로 그보다 먼저 지움
-    deleted.employee_credentials = (await tx.employeeCredential.deleteMany({ where })).count;
-    deleted.project_required_credentials = (
-      await tx.projectRequiredCredential.deleteMany({ where })
-    ).count;
-    // 보수 요청의 연결·상태 이력은 작업 내역·자재 기록·보수 요청을 참조하므로 그보다 먼저 지움
-    deleted.repair_request_links = (await tx.repairRequestLink.deleteMany({ where })).count;
-    deleted.repair_request_status_changes = (
-      await tx.repairRequestStatusChange.deleteMany({ where })
-    ).count;
-    deleted.repair_requests = (await tx.repairRequest.deleteMany({ where })).count;
-    // 보증서는 문서·프로젝트를 참조하므로 그보다 먼저, 보증 설정·변경 이력은 프로젝트를 참조하므로 프로젝트보다 먼저 지움
-    deleted.warranty_certificates = (await tx.warrantyCertificate.deleteMany({ where })).count;
-    deleted.project_warranty_changes = (await tx.projectWarrantyChange.deleteMany({ where })).count;
-    deleted.project_warranties = (await tx.projectWarranty.deleteMany({ where })).count;
-    // 지출·수입 기록은 프로젝트·추가 공사·문서·업체·분류를 참조하므로 그보다 먼저 지움
-    deleted.idempotency_keys = (await tx.idempotencyKey.deleteMany({ where })).count;
-    deleted.ledger_entries = (await tx.ledgerEntry.deleteMany({ where })).count;
-    deleted.change_work_documents = (await tx.changeWorkDocument.deleteMany({ where })).count;
-    deleted.change_work_status_changes = (
-      await tx.changeWorkStatusChange.deleteMany({ where })
-    ).count;
-    deleted.change_works = (await tx.changeWork.deleteMany({ where })).count;
-    deleted.audit_logs = (await tx.auditLog.deleteMany({ where })).count;
-    deleted.document_versions = (await tx.documentVersion.deleteMany({ where })).count;
-    deleted.documents = (await tx.document.deleteMany({ where })).count;
-    // 자재 기록이 프로젝트·자재·작업 구분·업체를 참조하므로 그보다 먼저 지움
-    deleted.material_records = (await tx.materialRecord.deleteMany({ where })).count;
-    deleted.materials = (await tx.material.deleteMany({ where })).count;
-    deleted.memos = (await tx.memo.deleteMany({ where })).count;
-    deleted.photos = (await tx.photo.deleteMany({ where })).count;
-    deleted.files = (await tx.storedFile.deleteMany({ where })).count;
-    deleted.work_log_revisions = (await tx.workLogRevision.deleteMany({ where })).count;
-    deleted.work_log_entries = (await tx.workLogEntry.deleteMany({ where })).count;
-    deleted.work_logs = (await tx.workLog.deleteMany({ where })).count;
-    deleted.project_assignments = (await tx.projectAssignment.deleteMany({ where })).count;
-    deleted.project_period_changes = (await tx.projectPeriodChange.deleteMany({ where })).count;
-    deleted.project_status_changes = (await tx.projectStatusChange.deleteMany({ where })).count;
-    deleted.project_progress_records = (await tx.projectProgressRecord.deleteMany({ where })).count;
-    deleted.project_trades = (await tx.projectTrade.deleteMany({ where })).count;
-    deleted.projects = (await tx.project.deleteMany({ where })).count;
-    deleted.project_code_sequences = (await tx.projectCodeSequence.deleteMany({ where })).count;
-    deleted.employee_pay_rates = (await tx.employeePayRate.deleteMany({ where })).count;
-    deleted.employees = (await tx.employee.deleteMany({ where })).count;
-    deleted.partners = (await tx.partner.deleteMany({ where })).count;
-    deleted.option_items = (await tx.optionItem.deleteMany({ where })).count;
+    Object.assign(deleted, await deleteCompanyBusinessData(tx, companyId));
     deleted.sessions = (await tx.session.deleteMany({ where })).count;
     deleted.invitations = (await tx.invitation.deleteMany({ where })).count;
     deleted.email_verifications = (await tx.emailVerification.deleteMany({ where })).count;

@@ -43,6 +43,74 @@ export type SeedResult = {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+// 시드가 입력하는 업무 데이터 묶음 (로컬 개발용 기본 묶음과 운영 시연 회사 묶음이 같은 입력 코드를 씀)
+export type DemoDataset = {
+  accounts: typeof DEMO_ACCOUNTS;
+  employees: typeof DEMO_EMPLOYEES;
+  partners: typeof DEMO_PARTNERS;
+  projects: typeof DEMO_PROJECTS;
+  assignments: typeof DEMO_ASSIGNMENTS;
+  workLogs: typeof DEMO_WORK_LOGS;
+  changeWorks: typeof DEMO_CHANGE_WORKS;
+  warranties: typeof DEMO_WARRANTIES;
+  credentials: typeof DEMO_CREDENTIALS;
+  requiredCredentials: typeof DEMO_REQUIRED_CREDENTIALS;
+  repairs: typeof DEMO_REPAIRS;
+  payRates: typeof DEMO_PAY_RATES;
+  progress: typeof DEMO_PROGRESS;
+};
+
+export const LOCAL_DEMO_DATASET: DemoDataset = {
+  accounts: DEMO_ACCOUNTS,
+  employees: DEMO_EMPLOYEES,
+  partners: DEMO_PARTNERS,
+  projects: DEMO_PROJECTS,
+  assignments: DEMO_ASSIGNMENTS,
+  workLogs: DEMO_WORK_LOGS,
+  changeWorks: DEMO_CHANGE_WORKS,
+  warranties: DEMO_WARRANTIES,
+  credentials: DEMO_CREDENTIALS,
+  requiredCredentials: DEMO_REQUIRED_CREDENTIALS,
+  repairs: DEMO_REPAIRS,
+  payRates: DEMO_PAY_RATES,
+  progress: DEMO_PROGRESS,
+};
+
+export type SeedOptions = {
+  dataset?: DemoDataset;
+  // draft: 개발용 약관 초안을 DB에 직접 입력, registered: 운영자 CLI(legal-register)로 등록된 약관에 동의 이력만 남김
+  legal?: 'draft' | 'registered';
+  // 가입 전 회사와 1회용 초대 링크 생성 여부 (개발용)
+  withInvitation?: boolean;
+};
+
+export class LegalNotRegisteredError extends Error {
+  constructor() {
+    super('[db.seed] 등록된 약관이 없음 (먼저 pnpm operator legal-register 실행)');
+  }
+}
+
+// 효력이 생긴 문서 중 종류별 최신 버전의 필수 문서
+const findRegisteredRequiredDocuments = async (prisma: PrismaClient) => {
+  const rows = await prisma.legalDocument.findMany({
+    where: { effectiveAt: { lte: new Date() } },
+    orderBy: { effectiveAt: 'desc' },
+  });
+  const latestByType = new Map<string, (typeof rows)[number]>();
+
+  for (const row of rows) {
+    if (!latestByType.has(row.type)) latestByType.set(row.type, row);
+  }
+
+  const documents = [...latestByType.values()];
+
+  if (!documents.some((document) => document.isRequired)) {
+    throw new LegalNotRegisteredError();
+  }
+
+  return documents;
+};
+
 // 문서 본문 해시 (운영자 등록 `registerLegalDocuments`와 같은 알고리즘, 같은 본문이면 같은 값)
 const sha256 = (text: string) => createHash('sha256').update(text).digest('hex');
 
@@ -50,28 +118,37 @@ const sha256 = (text: string) => createHash('sha256').update(text).digest('hex')
  * @description 로컬 개발용 더미 데이터 입력 (여러 번 실행해도 같은 결과, 소유 계정 클라이언트 전용)
  * 회사·계정·약관 버전·동의 이력과 가입 전 회사의 1회용 초대 링크(`demo-invite-0001`) 생성, 회사 설정(기준시간·월 기준일수·공수 방식)
  * @param prisma 소유 계정(DATABASE_MIGRATE_URL) Prisma 클라이언트
+ * @param options 입력할 데이터 묶음과 약관·초대 처리 방식 (기본은 로컬 개발용)
  * @returns 입력한 개수
+ * @throws legal이 registered인데 등록된 약관이 없는 경우
  */
-export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> => {
-  const documents = await Promise.all(
-    DEMO_LEGAL_DOCUMENTS.map((document) =>
-      prisma.legalDocument.upsert({
-        where: { type_version: { type: document.type, version: document.version } },
-        // 개발용 시드는 문서 원본이 바뀌면 같은 버전의 해시도 최신으로 맞춤 (운영 등록은 이를 거부함)
-        update: { contentHash: sha256(document.draftText) },
-        create: {
-          id: document.id,
-          type: document.type,
-          version: document.version,
-          effectiveAt: new Date(document.effectiveAt),
-          contentHash: sha256(document.draftText),
-          isRequired: document.isRequired,
-        },
-      }),
-    ),
-  );
+export const seedDemoData = async (
+  prisma: PrismaClient,
+  options: SeedOptions = {},
+): Promise<SeedResult> => {
+  const { dataset = LOCAL_DEMO_DATASET, legal = 'draft', withInvitation = true } = options;
+  const documents =
+    legal === 'registered'
+      ? await findRegisteredRequiredDocuments(prisma)
+      : await Promise.all(
+          DEMO_LEGAL_DOCUMENTS.map((document) =>
+            prisma.legalDocument.upsert({
+              where: { type_version: { type: document.type, version: document.version } },
+              // 개발용 시드는 문서 원본이 바뀌면 같은 버전의 해시도 최신으로 맞춤 (운영 등록은 이를 거부함)
+              update: { contentHash: sha256(document.draftText) },
+              create: {
+                id: document.id,
+                type: document.type,
+                version: document.version,
+                effectiveAt: new Date(document.effectiveAt),
+                contentHash: sha256(document.draftText),
+                isRequired: document.isRequired,
+              },
+            }),
+          ),
+        );
 
-  for (const account of DEMO_ACCOUNTS) {
+  for (const account of dataset.accounts) {
     const now = new Date();
 
     await prisma.company.upsert({
@@ -135,7 +212,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
 
   // 직원이 있는 회사는 선택 목록(직종·구분 프리셋)을 먼저 채우고 직원 카드를 입력 (앱이 처음 조회할 때 채우는 것과 같은 내용)
   // 직원은 처음 한 번만 만들고, 이후 화면에서 바꾼 값은 시드가 되돌리지 않음
-  for (const companyId of new Set(DEMO_EMPLOYEES.map((employee) => employee.companyId))) {
+  for (const companyId of new Set(dataset.employees.map((employee) => employee.companyId))) {
     for (const kind of OPTION_KINDS) {
       await prisma.optionItem.createMany({
         data: OPTION_PRESETS[kind].map((name, index) => ({
@@ -153,7 +230,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   const toDate = (value?: string) => (value ? new Date(`${value}T00:00:00.000Z`) : null);
   const requiredDate = (value: string) => new Date(`${value}T00:00:00.000Z`);
 
-  for (const employee of DEMO_EMPLOYEES) {
+  for (const employee of dataset.employees) {
     const optionId = async (kind: 'JOB_TYPE' | 'WORKER_TYPE', name?: string) =>
       name
         ? (
@@ -184,7 +261,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 고객·협력업체·자재 공급처 명부 (처음 한 번만 만들고, 이후 화면에서 바꾼 값은 시드가 되돌리지 않음)
-  for (const partner of DEMO_PARTNERS) {
+  for (const partner of dataset.partners) {
     await prisma.partner.upsert({
       where: { companyId_id: { companyId: partner.companyId, id: partner.id } },
       update: {},
@@ -203,7 +280,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 프로젝트 (고객·담당자·공종은 이름으로 찾아 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
-  for (const project of DEMO_PROJECTS) {
+  for (const project of dataset.projects) {
     const byName = async (kind: 'JOB_TYPE' | 'TRADE', name: string) =>
       (
         await prisma.optionItem.findFirstOrThrow({
@@ -255,7 +332,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         where: { companyId: project.companyId, projectId: project.id },
       })) === 0
     ) {
-      const admin = DEMO_ACCOUNTS.find((account) => account.companyId === project.companyId);
+      const admin = dataset.accounts.find((account) => account.companyId === project.companyId);
 
       if (admin) {
         for (const change of project.history) {
@@ -289,7 +366,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
         where: { companyId: project.companyId, projectId: project.id },
       })) === 0
     ) {
-      const admin = DEMO_ACCOUNTS.find((account) => account.companyId === project.companyId);
+      const admin = dataset.accounts.find((account) => account.companyId === project.companyId);
 
       if (admin) {
         for (const change of project.periodChanges) {
@@ -311,7 +388,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 투입 (프로젝트 코드와 직원 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
-  for (const assignment of DEMO_ASSIGNMENTS) {
+  for (const assignment of dataset.assignments) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: assignment.companyId, code: assignment.projectCode },
     });
@@ -336,11 +413,11 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 변경·추가 작업 (프로젝트 코드로 연결, 기록자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
-  for (const item of DEMO_CHANGE_WORKS) {
+  for (const item of dataset.changeWorks) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: item.companyId, code: item.projectCode },
     });
-    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+    const admin = dataset.accounts.find((account) => account.companyId === item.companyId);
 
     if (
       admin &&
@@ -380,11 +457,11 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 보증 설정 (프로젝트 코드로 연결, 입력자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
-  for (const item of DEMO_WARRANTIES) {
+  for (const item of dataset.warranties) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: item.companyId, code: item.projectCode },
     });
-    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+    const admin = dataset.accounts.find((account) => account.companyId === item.companyId);
 
     if (
       admin &&
@@ -427,8 +504,8 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
       })
     ).id;
 
-  for (const item of DEMO_CREDENTIALS) {
-    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+  for (const item of dataset.credentials) {
+    const admin = dataset.accounts.find((account) => account.companyId === item.companyId);
 
     if (
       admin &&
@@ -437,7 +514,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
       }))
     ) {
       // 같은 직원의 서류는 한꺼번에 만듦 (일부만 만들어진 채로 남지 않게 첫 서류 기준으로 판단)
-      for (const own of DEMO_CREDENTIALS.filter(
+      for (const own of dataset.credentials.filter(
         (candidate) =>
           candidate.companyId === item.companyId && candidate.employeeId === item.employeeId,
       )) {
@@ -456,7 +533,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     }
   }
 
-  for (const item of DEMO_REQUIRED_CREDENTIALS) {
+  for (const item of dataset.requiredCredentials) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: item.companyId, code: item.projectCode },
     });
@@ -476,11 +553,11 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 보수 요청 (프로젝트 코드로 연결, 기록자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
-  for (const item of DEMO_REPAIRS) {
+  for (const item of dataset.repairs) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: item.companyId, code: item.projectCode },
     });
-    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === item.companyId);
+    const admin = dataset.accounts.find((account) => account.companyId === item.companyId);
 
     if (
       admin &&
@@ -522,11 +599,11 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 직원 단가 (직원 이름으로 연결, 입력자는 해당 회사의 데모 관리자, 최초 한 번만 생성, 화면 확인용 가짜 금액)
-  for (const rate of DEMO_PAY_RATES) {
+  for (const rate of dataset.payRates) {
     const employee = await prisma.employee.findFirstOrThrow({
       where: { companyId: rate.companyId, name: rate.employeeName },
     });
-    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === rate.companyId);
+    const admin = dataset.accounts.find((account) => account.companyId === rate.companyId);
 
     if (admin) {
       await prisma.employeePayRate.upsert({
@@ -546,11 +623,11 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 진행률 기록 (프로젝트 코드로 연결, 기록자는 해당 회사의 데모 관리자, 최초 한 번만 생성)
-  for (const record of DEMO_PROGRESS) {
+  for (const record of dataset.progress) {
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: record.companyId, code: record.projectCode },
     });
-    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === record.companyId);
+    const admin = dataset.accounts.find((account) => account.companyId === record.companyId);
 
     if (admin) {
       await prisma.projectProgressRecord.upsert({
@@ -570,7 +647,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 작업 내역 (프로젝트 코드·직원 이름·작업 구분 이름으로 연결, 처음 한 번만 만들고 이후 화면에서 바꾼 값은 되돌리지 않음)
-  for (const log of DEMO_WORK_LOGS) {
+  for (const log of dataset.workLogs) {
     if (
       await prisma.workLog.findUnique({
         where: { companyId_id: { companyId: log.companyId, id: log.id } },
@@ -582,7 +659,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
     const project = await prisma.project.findFirstOrThrow({
       where: { companyId: log.companyId, code: log.projectCode },
     });
-    const admin = DEMO_ACCOUNTS.find((account) => account.companyId === log.companyId);
+    const admin = dataset.accounts.find((account) => account.companyId === log.companyId);
     const toEntries = async (
       items: readonly { employeeName: string; categoryName: string; minutes: number }[],
     ) =>
@@ -656,7 +733,7 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   // 코드 번호표를 시드의 마지막 번호에 맞춰 화면에서 새로 등록하면 이어서 붙게 함 (이미 더 큰 번호가 있으면 유지)
   const lastNumbers = new Map<string, { companyId: string; year: number; last: number }>();
 
-  for (const project of DEMO_PROJECTS) {
+  for (const project of dataset.projects) {
     const [year, number] = project.code.split('-').map(Number) as [number, number];
     const key = `${project.companyId}:${year}`;
     const known = lastNumbers.get(key);
@@ -683,45 +760,47 @@ export const seedDemoData = async (prisma: PrismaClient): Promise<SeedResult> =>
   }
 
   // 가입 전 회사: 운영자 CLI가 만드는 것과 같은 구조(초대 상태 관리자 + 해시만 저장된 초대 링크)
-  await prisma.company.upsert({
-    where: { id: DEMO_INVITATION.companyId },
-    update: { name: DEMO_INVITATION.companyName },
-    create: { id: DEMO_INVITATION.companyId, name: DEMO_INVITATION.companyName },
-  });
-  await prisma.user.upsert({
-    where: { companyId_id: { companyId: DEMO_INVITATION.companyId, id: DEMO_INVITATION.userId } },
-    update: {},
-    create: {
-      id: DEMO_INVITATION.userId,
-      companyId: DEMO_INVITATION.companyId,
-      displayName: DEMO_INVITATION.adminName,
-      status: 'INVITED',
-    },
-  });
+  if (withInvitation) {
+    await prisma.company.upsert({
+      where: { id: DEMO_INVITATION.companyId },
+      update: { name: DEMO_INVITATION.companyName },
+      create: { id: DEMO_INVITATION.companyId, name: DEMO_INVITATION.companyName },
+    });
+    await prisma.user.upsert({
+      where: { companyId_id: { companyId: DEMO_INVITATION.companyId, id: DEMO_INVITATION.userId } },
+      update: {},
+      create: {
+        id: DEMO_INVITATION.userId,
+        companyId: DEMO_INVITATION.companyId,
+        displayName: DEMO_INVITATION.adminName,
+        status: 'INVITED',
+      },
+    });
 
-  // 다시 실행하면 만료일만 연장하고, 이미 사용한 링크는 되살리지 않음
-  const expiresAt = new Date(Date.now() + DEMO_INVITATION.expiresInDays * DAY_MS);
+    // 다시 실행하면 만료일만 연장하고, 이미 사용한 링크는 되살리지 않음
+    const expiresAt = new Date(Date.now() + DEMO_INVITATION.expiresInDays * DAY_MS);
 
-  await prisma.invitation.upsert({
-    where: { tokenHash: hashToken(DEMO_INVITATION.token) },
-    update: { expiresAt },
-    create: {
-      tokenHash: hashToken(DEMO_INVITATION.token),
-      companyId: DEMO_INVITATION.companyId,
-      userId: DEMO_INVITATION.userId,
-      expiresAt,
-    },
-  });
+    await prisma.invitation.upsert({
+      where: { tokenHash: hashToken(DEMO_INVITATION.token) },
+      update: { expiresAt },
+      create: {
+        tokenHash: hashToken(DEMO_INVITATION.token),
+        companyId: DEMO_INVITATION.companyId,
+        userId: DEMO_INVITATION.userId,
+        expiresAt,
+      },
+    });
+  }
 
   return {
-    companies: DEMO_ACCOUNTS.length + 1,
-    users: DEMO_ACCOUNTS.length + 1,
+    companies: dataset.accounts.length + (withInvitation ? 1 : 0),
+    users: dataset.accounts.length + (withInvitation ? 1 : 0),
     documents: documents.length,
-    invitations: 1,
-    employees: DEMO_EMPLOYEES.length,
-    partners: DEMO_PARTNERS.length,
-    projects: DEMO_PROJECTS.length,
-    assignments: DEMO_ASSIGNMENTS.length,
-    workLogs: DEMO_WORK_LOGS.length,
+    invitations: withInvitation ? 1 : 0,
+    employees: dataset.employees.length,
+    partners: dataset.partners.length,
+    projects: dataset.projects.length,
+    assignments: dataset.assignments.length,
+    workLogs: dataset.workLogs.length,
   };
 };

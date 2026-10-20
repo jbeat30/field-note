@@ -1,7 +1,9 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
+import { http, HttpResponse } from 'msw';
 import { Route, Routes } from 'react-router';
 import { expect, userEvent, within } from 'storybook/test';
 
+import { handlers } from '../mocks/handlers';
 import { useThemeStore } from '../stores/themeStore';
 
 import { AppLayout } from './AppLayout';
@@ -51,5 +53,30 @@ export const ThemeSwitch: Story = {
       await within(canvasElement).findByRole('button', { name: '밝은 화면으로 전환' }),
     );
     await expect(useThemeStore.getState().mode).toBe('light');
+  },
+};
+
+// 공개 시연 계정으로 로그인하면 모든 화면 위에 가상 데이터 안내가 보임
+export const DemoBanner: Story = {
+  parameters: {
+    msw: {
+      handlers: [
+        http.get('/api/v1/me', () =>
+          HttpResponse.json({
+            displayName: 'Tester',
+            email: 'jbeatfield@gmail.com',
+            isEmailVerified: true,
+            companyName: 'Test Company',
+            isDemo: true,
+          }),
+        ),
+        ...handlers,
+      ],
+    },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(await canvas.findByRole('note')).toHaveTextContent('모든 데이터는 가상');
   },
 };

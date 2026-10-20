@@ -52,6 +52,38 @@
         }
       }
     },
+    "/api/v1/public/demo": {
+      "get": {
+        "summary": "시연 계정 안내 (켜져 있을 때만 아이디·비밀번호 포함)",
+        "security": [],
+        "responses": {
+          "200": {
+            "description": "성공",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "loginId": {
+                      "type": "string"
+                    },
+                    "password": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "enabled"
+                  ]
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/api/v1/samples": {
       "post": {
         "summary": "샘플 생성 (틀 검증용)",
@@ -141,6 +173,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -213,6 +246,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -285,6 +319,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -454,6 +489,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -526,6 +562,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -598,6 +635,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -766,6 +804,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -838,6 +877,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -910,6 +950,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -982,6 +1023,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1082,13 +1124,17 @@
                     },
                     "companyName": {
                       "type": "string"
+                    },
+                    "isDemo": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "displayName",
                     "email",
                     "isEmailVerified",
-                    "companyName"
+                    "companyName",
+                    "isDemo"
                   ]
                 }
               }
@@ -1119,6 +1165,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1191,6 +1238,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1263,6 +1311,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1366,6 +1415,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1438,6 +1488,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1548,13 +1599,17 @@
                     },
                     "companyName": {
                       "type": "string"
+                    },
+                    "isDemo": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "displayName",
                     "email",
                     "isEmailVerified",
-                    "companyName"
+                    "companyName",
+                    "isDemo"
                   ]
                 }
               }
@@ -1585,6 +1640,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1657,6 +1713,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1729,6 +1786,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1801,6 +1859,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -1882,13 +1941,17 @@
                     },
                     "companyName": {
                       "type": "string"
+                    },
+                    "isDemo": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "displayName",
                     "email",
                     "isEmailVerified",
-                    "companyName"
+                    "companyName",
+                    "isDemo"
                   ]
                 }
               }
@@ -1919,6 +1982,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2037,6 +2101,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2187,6 +2252,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2259,6 +2325,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2381,6 +2448,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2539,6 +2607,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2611,6 +2680,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2751,6 +2821,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2867,6 +3011,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -2939,6 +3084,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3011,6 +3230,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3132,6 +3352,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3204,6 +3425,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3321,6 +3543,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3393,6 +3616,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3465,6 +3689,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3597,6 +3822,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3669,6 +3895,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3741,6 +3968,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3813,6 +4041,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -3885,6 +4114,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4015,6 +4245,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4087,6 +4318,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4159,6 +4464,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4231,6 +4537,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4358,6 +4665,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4430,6 +4738,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4502,6 +4884,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4574,6 +4957,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4704,6 +5088,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4776,6 +5161,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4848,6 +5307,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -4920,6 +5380,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5039,6 +5500,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5111,6 +5573,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5183,6 +5719,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5255,6 +5792,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5366,6 +5904,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5438,6 +5977,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5510,6 +6050,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5631,6 +6172,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5703,6 +6245,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5775,6 +6318,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -5910,6 +6454,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6065,6 +6610,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6137,6 +6683,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6279,6 +6826,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6351,6 +6899,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6423,6 +6972,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6578,6 +7128,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6650,6 +7201,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6722,6 +7274,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -6930,6 +7483,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -7002,6 +7556,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -7266,6 +7821,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -7338,6 +7894,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -7536,6 +8093,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -7608,6 +8166,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -7680,6 +8239,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -7960,6 +8520,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8032,6 +8593,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8104,6 +8666,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8266,6 +8829,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8338,6 +8902,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8540,6 +9105,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8612,6 +9178,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8774,6 +9341,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8846,6 +9414,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -8918,6 +9487,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9122,6 +9692,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9194,6 +9765,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9266,6 +9838,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9380,6 +9953,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9452,6 +10026,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9524,6 +10099,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9861,6 +10437,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -9933,6 +10510,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -10266,6 +10844,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -10338,6 +10917,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -10578,6 +11158,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -10650,6 +11231,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -10722,6 +11304,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11064,6 +11647,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11136,6 +11720,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11208,6 +11793,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11489,6 +12075,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11561,6 +12148,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11633,6 +12221,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11801,6 +12390,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11873,6 +12463,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -11945,6 +12536,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -12102,6 +12694,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -12174,6 +12767,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -12246,6 +12840,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -12526,6 +13121,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -12598,6 +13194,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -12882,6 +13479,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -12954,6 +13552,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -13026,6 +13625,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -13326,6 +13926,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -13398,6 +13999,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -13470,6 +14072,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -13772,6 +14375,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -13844,6 +14448,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -13916,6 +14521,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -14202,6 +14808,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -14274,6 +14881,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -14346,6 +14954,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -14558,6 +15167,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -14630,6 +15240,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -14702,6 +15313,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -14971,6 +15583,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15043,6 +15656,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15115,6 +15729,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15291,6 +15906,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15363,6 +15979,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15435,6 +16052,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15612,6 +16230,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15684,6 +16303,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -15756,6 +16376,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -16081,6 +16702,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -16153,6 +16775,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -16225,6 +16848,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -16638,6 +17262,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -16710,6 +17335,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -16782,6 +17408,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -16854,6 +17481,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17066,6 +17694,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17138,6 +17767,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17210,6 +17840,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17356,6 +17987,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17428,6 +18060,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17500,6 +18133,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17662,6 +18296,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17734,6 +18369,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17806,6 +18442,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -17969,6 +18606,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18041,6 +18679,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18113,6 +18752,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18347,6 +18987,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18496,6 +19137,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18568,6 +19210,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18640,6 +19283,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18811,6 +19455,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18883,6 +19528,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -18955,6 +19601,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -19160,6 +19807,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -19232,6 +19880,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -19304,6 +19953,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -19492,6 +20142,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -19564,6 +20215,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -19636,6 +20288,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -19930,6 +20583,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20002,6 +20656,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20074,6 +20729,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20226,6 +20882,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20298,6 +20955,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20370,6 +21028,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20633,6 +21292,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20705,6 +21365,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -20777,6 +21438,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -21067,6 +21729,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -21139,6 +21802,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -21211,6 +21875,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -21509,6 +22174,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -21581,6 +22247,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -21653,6 +22320,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -21938,6 +22606,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22010,6 +22679,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22082,6 +22752,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22373,6 +23044,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22445,6 +23117,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22517,6 +23190,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22800,6 +23474,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22872,6 +23547,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -22944,6 +23620,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -23213,6 +23890,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -23285,6 +23963,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -23357,6 +24036,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -23674,6 +24354,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -23746,6 +24427,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -23818,6 +24500,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -24118,6 +24801,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -24190,6 +24874,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -24262,6 +24947,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -24563,6 +25249,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -24635,6 +25322,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -24707,6 +25395,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -24983,6 +25672,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25055,6 +25745,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25127,6 +25818,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25348,6 +26040,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25420,6 +26113,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25492,6 +26186,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25747,6 +26442,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25819,6 +26515,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -25891,6 +26588,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26154,6 +26852,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26226,6 +26925,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26298,6 +26998,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26421,6 +27122,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26493,6 +27195,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26565,6 +27268,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26693,6 +27397,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26765,6 +27470,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26837,6 +27543,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -26966,6 +27673,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -27038,6 +27746,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -27110,6 +27819,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -27260,6 +27970,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -27332,6 +28043,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -27404,6 +28116,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -27742,6 +28455,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -27814,6 +28528,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28019,6 +28734,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28091,6 +28807,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28163,6 +28880,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28595,6 +29313,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28667,6 +29386,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28739,6 +29459,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28891,6 +29612,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -28963,6 +29685,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -29035,6 +29758,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -29432,6 +30156,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -29504,6 +30229,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -29576,6 +30302,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -30004,6 +30731,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -30076,6 +30804,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -30148,6 +30877,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -30580,6 +31310,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -30652,6 +31383,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -30724,6 +31456,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -31141,6 +31874,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -31213,6 +31947,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -31285,6 +32020,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -31691,6 +32427,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -31763,6 +32500,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -31835,6 +32573,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -32091,6 +32830,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -32163,6 +32903,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -32430,6 +33171,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -32502,6 +33244,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -32772,6 +33515,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -32844,6 +33588,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -32950,6 +33695,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -33022,6 +33768,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -33317,6 +34064,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -33389,6 +34137,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -33461,6 +34210,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -34019,6 +34769,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -34091,6 +34842,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -34163,6 +34915,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -34269,6 +35022,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -34341,6 +35095,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -34413,6 +35168,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -35391,6 +36147,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -35521,6 +36278,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -35696,6 +36454,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -35768,6 +36527,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -35898,6 +36658,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -35970,6 +36731,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36253,6 +37015,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36325,6 +37088,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36397,6 +37161,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36469,6 +37234,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36744,6 +37510,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36816,6 +37583,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36888,6 +37656,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -36960,6 +37729,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37164,6 +37934,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37236,6 +38007,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37308,6 +38080,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37512,6 +38285,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37584,6 +38358,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37656,6 +38431,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37788,6 +38564,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37860,6 +38637,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -37932,6 +38710,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -38205,6 +38984,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -38277,6 +39057,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -38349,6 +39130,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -38645,6 +39427,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -38717,6 +39500,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -38789,6 +39573,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39012,6 +39797,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39084,6 +39870,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39156,6 +39943,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39431,6 +40219,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39503,6 +40292,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39575,6 +40365,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39689,6 +40480,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39761,6 +40553,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -39833,6 +40626,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40030,6 +40824,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40102,6 +40897,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40356,6 +41152,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40428,6 +41225,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40500,6 +41298,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40606,6 +41405,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40775,6 +41575,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40847,6 +41648,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -40919,6 +41721,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41127,6 +41930,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41199,6 +42003,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41271,6 +42076,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41385,6 +42191,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41457,6 +42264,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41529,6 +42337,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41725,6 +42534,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41797,6 +42607,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -41984,6 +42795,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -42056,6 +42868,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -42257,6 +43070,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -42329,6 +43143,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -42401,6 +43216,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -42675,6 +43491,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -42747,6 +43564,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -42819,6 +43637,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43091,6 +43910,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43163,6 +43983,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43235,6 +44056,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43533,6 +44355,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43605,6 +44428,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43677,6 +44501,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43849,6 +44674,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43921,6 +44747,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -43993,6 +44820,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44270,6 +45098,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44342,6 +45171,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44414,6 +45244,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44528,6 +45359,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44600,6 +45432,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44672,6 +45505,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44916,6 +45750,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -44988,6 +45823,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -45060,6 +45896,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -45335,6 +46172,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -45407,6 +46245,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -45479,6 +46318,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -45674,6 +46514,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -45746,6 +46587,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -45818,6 +46660,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46072,6 +46915,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46144,6 +46988,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46216,6 +47061,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46330,6 +47176,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46402,6 +47249,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46474,6 +47322,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46639,6 +47488,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46754,6 +47604,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46826,6 +47677,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46898,6 +47750,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -46970,6 +47823,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -47336,6 +48190,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -47408,6 +48263,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -47480,6 +48336,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -47765,6 +48622,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -47837,6 +48695,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -47909,6 +48768,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -48227,6 +49087,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -48299,6 +49160,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -48371,6 +49233,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -48723,6 +49586,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -48795,6 +49659,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -48867,6 +49732,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -48981,6 +49847,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49053,6 +49920,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49125,6 +49993,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49471,6 +50340,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49543,6 +50413,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49615,6 +50486,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49760,6 +50632,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49832,6 +50705,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -49904,6 +50778,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -50071,6 +50946,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -50143,6 +51019,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -50215,6 +51092,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -50774,6 +51652,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -50846,6 +51725,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -50918,6 +51798,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -51333,6 +52214,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -51405,6 +52287,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -51477,6 +52360,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -51601,6 +52485,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -51673,6 +52558,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -51745,6 +52631,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -51965,6 +52852,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52037,6 +52925,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52109,6 +52998,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52181,6 +53071,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52299,6 +53190,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52371,6 +53263,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52443,6 +53409,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52515,6 +53482,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52640,6 +53608,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52712,6 +53681,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52850,6 +53820,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -52970,6 +53941,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53042,6 +54014,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53114,6 +54160,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53221,6 +54268,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53327,6 +54375,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53399,6 +54521,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53523,6 +54646,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53595,6 +54719,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53667,6 +54865,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53796,6 +54995,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53868,6 +55068,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -53940,6 +55214,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -54012,6 +55287,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -54137,6 +55413,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -54209,6 +55486,80 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
+                            "EMAIL_CODE_INVALID",
+                            "NOT_IMPLEMENTED",
+                            "NOT_FOUND",
+                            "CONFLICT",
+                            "STORAGE_QUOTA_EXCEEDED",
+                            "IDEMPOTENCY_KEY_REQUIRED",
+                            "IDEMPOTENCY_KEY_REUSED",
+                            "IDEMPOTENCY_IN_PROGRESS",
+                            "TOO_MANY_REQUESTS",
+                            "INTERNAL_ERROR"
+                          ]
+                        },
+                        "message": {
+                          "type": "string"
+                        },
+                        "details": {
+                          "type": "array",
+                          "items": {
+                            "type": "object",
+                            "properties": {
+                              "path": {
+                                "type": "string"
+                              },
+                              "message": {
+                                "type": "string"
+                              }
+                            },
+                            "required": [
+                              "path",
+                              "message"
+                            ]
+                          }
+                        }
+                      },
+                      "required": [
+                        "code",
+                        "message"
+                      ]
+                    }
+                  },
+                  "required": [
+                    "error"
+                  ]
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "DEMO_RESTRICTED",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "error": {
+                      "type": "object",
+                      "properties": {
+                        "code": {
+                          "type": "string",
+                          "enum": [
+                            "VALIDATION_ERROR",
+                            "UNAUTHORIZED",
+                            "CSRF_REJECTED",
+                            "EMAIL_NOT_VERIFIED",
+                            "INVALID_CREDENTIALS",
+                            "CURRENT_PASSWORD_INVALID",
+                            "LAST_LOGIN_METHOD",
+                            "ACCOUNT_CLOSING",
+                            "ACCOUNT_LOCKED",
+                            "TOTP_REQUIRED",
+                            "TOTP_INVALID",
+                            "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -54281,6 +55632,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -54353,6 +55705,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",
@@ -54458,6 +55811,7 @@
                             "TOTP_REQUIRED",
                             "TOTP_INVALID",
                             "LOGIN_ID_TAKEN",
+                            "DEMO_RESTRICTED",
                             "EMAIL_CODE_INVALID",
                             "NOT_IMPLEMENTED",
                             "NOT_FOUND",

@@ -21,6 +21,7 @@ import { cn } from '../lib/cn';
 import { useUiStore } from '../stores/uiStore';
 
 import { QuickAddSheet } from './QuickAddSheet';
+import { DemoBanner } from './DemoBanner';
 import { OfflineNotice } from './OfflineNotice';
 import { ThemeToggle } from './ThemeToggle';
 
@@ -115,6 +116,7 @@ export const AppLayout = () => {
           </span>
         </header>
         <OfflineNotice />
+        <DemoBanner />
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 pt-4 pb-40 md:px-8 md:pt-8 md:pb-24 xl:px-10 print:p-0">
           <Outlet />
         </main>

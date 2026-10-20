@@ -2,6 +2,7 @@ import type { MeResponse } from '@field-note/shared';
 
 import type { PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { isPublicDemoCompany } from '../demo/publicDemo';
 
 import { AccountError } from './accountError';
 import { acceptInvitation, recordConsents } from './invitationAcceptance';
@@ -112,6 +113,11 @@ export const createAccountService = ({
 
   // 실패 한 번을 기록하고 잠금 기준에 도달했는지 반환 (비밀번호와 2단계 인증 코드가 같은 횟수를 공유)
   const recordFailure = async (credential: CredentialRow, at: Date): Promise<boolean> => {
+    // 공개 시연 계정은 누구나 입력해 볼 수 있어 실패가 쌓이면 모든 방문자가 잠기므로 잠금을 적용하지 않음 (요청 횟수 제한은 그대로 적용)
+    if (isPublicDemoCompany(credential.companyId)) {
+      return false;
+    }
+
     const where = credentialKey(credential);
     // 잠금이 이미 풀린 뒤의 첫 실패는 횟수를 처음부터 다시 셈
     const expired = credential.lockedUntil !== null && credential.lockedUntil <= at;
@@ -370,6 +376,7 @@ export const createAccountService = ({
           email: user.email,
           isEmailVerified: user.emailVerifiedAt !== null,
           companyName: company.name,
+          isDemo: isPublicDemoCompany(companyId),
         };
       }),
   };
