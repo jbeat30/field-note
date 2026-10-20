@@ -1,4 +1,14 @@
-import { readFileSync, readdirSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import {
+  chmodSync,
+  copyFileSync,
+  mkdirSync,
+  mkdtempSync,
+  readFileSync,
+  readdirSync,
+  rmSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import path from 'node:path';
 
 const DEPLOY = path.resolve(__dirname, '../../../../deploy');
@@ -36,6 +46,47 @@ describe('deploy/scripts', () => {
       expect(script).toMatch(/^set -[eu]*o pipefail|^set -[a-z]*u/m);
     }
   });
+
+  it('server-setup.sh는 로그 폴더를 크론을 돌리는 계정 소유로 만든다', () => {
+    const script = read('scripts/server-setup.sh');
+
+    expect(script).toMatch(/install -d -o "\$\{TARGET_USER:-root\}".*deploy\/logs/);
+  });
+
+  // 루트나 Windows는 권한 검사가 달라 폴더에 쓸 수 없는 상황을 만들 수 없음
+  const canRestrictWrite = process.platform !== 'win32' && process.getuid?.() !== 0;
+
+  (canRestrictWrite ? it : it.skip)(
+    'run-ops.sh는 로그 폴더에 쓸 수 없으면 조용히 넘어가지 않고 오류로 끝난다',
+    () => {
+      const root = mkdtempSync(path.join(tmpdir(), 'run-ops-'));
+      const logs = path.join(root, 'deploy/logs');
+
+      try {
+        mkdirSync(path.join(root, 'deploy/scripts'), { recursive: true });
+        mkdirSync(logs);
+        copyFileSync(
+          path.join(DEPLOY, 'scripts/run-ops.sh'),
+          path.join(root, 'deploy/scripts/run-ops.sh'),
+        );
+        chmodSync(logs, 0o500);
+
+        const result = spawnSync(
+          'bash',
+          [path.join(root, 'deploy/scripts/run-ops.sh'), 'backup', 'true'],
+          {
+            encoding: 'utf8',
+          },
+        );
+
+        expect(result.status).toBe(1);
+        expect(result.stderr).toContain('에 쓸 수 없음');
+      } finally {
+        chmodSync(logs, 0o700);
+        rmSync(root, { recursive: true, force: true });
+      }
+    },
+  );
 
   it('crontab 예시의 작업이 run-ops.sh를 거친다', () => {
     const crontab = readFileSync(path.resolve(DEPLOY, '../ops/crontab.example'), 'utf8');

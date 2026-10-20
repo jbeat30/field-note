@@ -32,12 +32,36 @@ describe('약관·처리방침 문서 원본', () => {
     }
   });
 
-  it('초안인 문서는 확정 전 항목을 밝힌다 (처리방침은 책임자·위탁·국외 이전 포함)', () => {
+  it('초안인 문서는 아직 확정되지 않은 항목(법률 검토·접속 기록 보관)만 밝힌다', () => {
     const pending = getLegalDocumentContent('PRIVACY_POLICY').pendingItems.join('\n');
 
-    expect(pending).toContain('보호책임자');
-    expect(pending).toContain('수탁·위탁');
-    expect(pending).toContain('국외 이전');
+    expect(pending).toContain('법률 검토');
+    expect(pending).toContain('접속 기록');
+    expect(pending).not.toContain('보호책임자');
+  });
+
+  it('보호책임자·운영자 정보와 수탁·국외 이전 현황, 처리 기한을 기재한다', () => {
+    const privacy = legalDocumentText(getLegalDocumentContent('PRIVACY_POLICY'));
+    const terms = legalDocumentText(getLegalDocumentContent('TERMS_OF_SERVICE'));
+
+    expect(privacy).toContain('성명은 강주빛이고 이메일은 jbeatfield@gmail.com');
+    expect(terms).toContain('서비스 운영자는 강주빛입니다');
+
+    for (const vendor of ['Amazon Web Services', 'Cloudflare', 'Google LLC']) {
+      expect(privacy).toContain(vendor);
+    }
+
+    expect(privacy).toContain('국외일 수 있음');
+    expect(privacy).toContain('10일 안에 처리 결과를 알립니다');
+  });
+
+  it('해지 후 유예가 끝나면 복구하지 않고 백업은 30일 안에 지워진다고 밝힌다', () => {
+    const privacy = legalDocumentText(getLegalDocumentContent('PRIVACY_POLICY'));
+    const terms = legalDocumentText(getLegalDocumentContent('TERMS_OF_SERVICE'));
+
+    expect(terms).toContain('운영자도 복구할 수 없고 되살려 드리지 않습니다');
+    expect(terms).toContain('최대 30일 남을 수 있으며');
+    expect(privacy).toContain('유예가 끝난 뒤에는 운영자도 복구할 수 없습니다');
   });
 
   it('본문 평문은 같은 입력이면 같고, 내용이 바뀌면 달라진다 (해시 입력)', () => {
@@ -86,8 +110,8 @@ describe('약관·처리방침 문서 원본', () => {
   });
 
   it('이용약관과 처리방침은 함께 바뀐 새 버전이다', () => {
-    expect(getLegalDocumentContent('TERMS_OF_SERVICE').version).toBe('2026-10-18');
-    expect(getLegalDocumentContent('PRIVACY_POLICY').version).toBe('2026-10-18');
+    expect(getLegalDocumentContent('TERMS_OF_SERVICE').version).toBe('2026-10-20');
+    expect(getLegalDocumentContent('PRIVACY_POLICY').version).toBe('2026-10-20');
   });
 
   it('2단계 인증(선택 기능)의 수집 항목·권리·보호 조치를 처리방침에 담는다', () => {

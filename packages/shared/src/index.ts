@@ -1,4 +1,5 @@
 import './zodBrowserConfig';
+import './zodErrorMessages';
 
 export * from './health';
 export * from './publicDemo';

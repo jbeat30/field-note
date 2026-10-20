@@ -157,7 +157,8 @@ fi
 # ---- 점검 작업 폴더: ops 컨테이너의 node 사용자(uid 1000)가 쓸 수 있어야 함
 log "백업·로그 폴더 준비"
 install -d -o 1000 -g 1000 -m 0700 "$ROOT/deploy/backups"
-install -d -m 0755 "$ROOT/deploy/logs"
+# 로그는 크론을 돌리는 계정이 써야 하므로 그 계정 소유로 둠 (루트 소유면 새벽 점검 작업이 로그·잠금을 못 써서 멈춤)
+install -d -o "${TARGET_USER:-root}" -g "$(id -gn "${TARGET_USER:-root}")" -m 0755 "$ROOT/deploy/logs"
 cat >/etc/logrotate.d/field-note <<CONF
 $ROOT/deploy/logs/*.log {
   weekly

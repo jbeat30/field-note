@@ -64,6 +64,22 @@ const hasFinalConsonant = (word: string) => {
 const topic = (word: string) => `${word}${hasFinalConsonant(word) ? '은' : '는'}`;
 const object = (word: string) => `${word}${hasFinalConsonant(word) ? '을' : '를'}`;
 
+// 스키마에 문구를 따로 적지 않은 검증이 실패했을 때 쓰는 기본 문구 (zod의 영어 기본 문구가 화면에 나오지 않게 함)
+export const ZOD_MESSAGES = {
+  required: '입력해 주세요',
+  invalidType: '입력한 값의 형식이 올바르지 않습니다',
+  invalidFormat: '형식이 올바르지 않습니다',
+  invalidEmail: '올바른 이메일 주소를 입력해 주세요',
+  invalidChoice: '선택할 수 없는 값입니다',
+  tooShort: (min: number) => `${min}자 이상 입력해 주세요`,
+  tooLong: (max: number) => `${max}자까지 입력할 수 있습니다`,
+  exactLength: (length: number) => `${length}자로 입력해 주세요`,
+  tooSmall: (min: number) => `${min} 이상이어야 합니다`,
+  tooBig: (max: number) => `${max} 이하여야 합니다`,
+  tooFewItems: (min: number) => `${min}개 이상 선택해 주세요`,
+  tooManyItems: (max: number) => `${max}개까지 선택할 수 있습니다`,
+} as const;
+
 // 입력 검증·업무 규칙 거부 문구 (서버·웹 폼·목업이 같은 문구를 사용, 의미 단위 상수)
 export const VALIDATION_MESSAGES = {
   required: (field: string) => `${object(field)} 입력해 주세요`,
