@@ -18,7 +18,12 @@ LOG_DIR="$ROOT/deploy/logs"
 LOG="$LOG_DIR/$NAME.log"
 COMPOSE=(docker compose -f "$ROOT/deploy/docker-compose.yml" --env-file "$ROOT/deploy/.env")
 
-mkdir -p "$LOG_DIR"
+# 로그 폴더에 쓸 수 없으면 잠금·로그가 모두 실패하므로 조용히 넘어가지 않고 오류로 끝냄 (크론이 백업을 못 돌리는 일을 막음)
+if ! mkdir -p "$LOG_DIR" 2>/dev/null || ! touch "$LOG" "$LOG_DIR/.$NAME.lock" 2>/dev/null; then
+  echo "[run-ops] $LOG_DIR 에 쓸 수 없음 (폴더 소유자가 이 계정인지 확인: sudo chown -R \$USER $LOG_DIR)" >&2
+  exit 1
+fi
+
 exec 9>"$LOG_DIR/.$NAME.lock"
 if ! flock -n 9; then
   echo "$(date -Is) $NAME 이전 작업이 아직 실행 중이라 건너뜀" >>"$LOG"

@@ -22,7 +22,10 @@ export const PrivacyPolicy: Story = {
     ).toBeInTheDocument();
     // 초안임을 알리고 확정 전 항목을 보여 줌
     await expect(canvas.getByText('초안입니다')).toBeInTheDocument();
-    await expect(canvas.getByText(/개인정보 보호책임자\(운영자\)/)).toBeInTheDocument();
+    await expect(canvas.getByText(/수탁·위탁과 국외 이전 표기가 .* 법률 검토/)).toBeInTheDocument();
+    // 보호책임자와 수탁자 현황은 기재됨
+    await expect(canvas.getByText(/성명은 강주빛이고 이메일은/)).toBeInTheDocument();
+    await expect(canvas.getByText('Cloudflare, Inc. (R2)')).toBeInTheDocument();
     // 수집 항목 표
     await expect(canvas.getByRole('columnheader', { name: '보유 기간' })).toBeInTheDocument();
     await expect(canvas.getAllByRole('row').length).toBeGreaterThan(4);

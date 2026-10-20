@@ -208,7 +208,7 @@ sudo ./deploy/scripts/server-check.sh                       # 열린 포트·SSH
 - [ ] 월 공수 엑셀·회사 전체 데이터 내려받기가 제한 시간 안에 끝난다
 - [ ] 백업 생성 → 서버 밖 버킷에 사본 → 복구 시험 통과, 백업 키로 `decrypt` 시험
 - [ ] `server-check.sh` 모두 통과
-- [ ] 처리방침·약관 `pendingItems`(보호책임자·수탁·위탁·국외 이전)를 채우고 버전을 올린다. 수탁·국외 이전 대상은 Cloudflare(R2), Google(메일), Oracle(서버)
+- [x] 처리방침·약관의 보호책임자·수탁·위탁·국외 이전을 채우고 버전을 올렸다 (2026-10-20판, 수탁은 AWS 서울 리전(서버), Cloudflare(R2), Google(메일)). 서버에서 `operator legal-register`로 이 판을 등록한다
 
 ## 10. 갱신과 되돌리기
 
