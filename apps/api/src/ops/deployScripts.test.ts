@@ -101,6 +101,14 @@ describe('deploy/scripts', () => {
     }
   });
 
+  it('ops·migrate 컨테이너는 pnpm 11이 읽는 이름으로 의존성 재설치 점검을 끈다', () => {
+    const compose = read('docker-compose.yml');
+
+    // pnpm 11은 npm_config_* 를 읽지 않으므로 옛 이름은 아무 효과가 없음
+    expect(compose).not.toMatch(/npm_config_verify_deps_before_run/);
+    expect(compose.match(/PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'/g)).toHaveLength(2);
+  });
+
   it('crontab 예시의 작업이 run-ops.sh를 거친다', () => {
     const crontab = readFileSync(path.resolve(DEPLOY, '../ops/crontab.example'), 'utf8');
     const jobs = crontab.split('\n').filter((line) => /^[\d*]/.test(line));
