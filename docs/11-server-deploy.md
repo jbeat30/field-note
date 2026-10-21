@@ -613,13 +613,39 @@ cd /srv/field-note
 
 ## 18. 운영자가 DB를 볼 때
 
-DB 포트는 어디에도 공개되지 않는다. 서버에 SSH로 접속해 컨테이너 안에서 본다.
+DB 포트(5432)는 `127.0.0.1`(서버 안)에만 묶여 있어 바깥에서는 닿지 않는다. 방법은 두 가지다.
+
+**1) 서버에서 직접 (소유 계정, 모든 회사가 보임)**
 
 ```bash
 fnc exec db psql -U field_note field_note
 ```
 
-내 PC의 DB 도구(DBeaver·WebStorm)에서 보려면 SSH 터널이 필요한데, 터널 대상이 컨테이너 내부 IP라 번거롭다. 1.0.1에서 `127.0.0.1`에만 묶는 포트와 읽기 전용 계정을 추가할 계획이다 (`docs/12-next-version-plan.md`).
+**2) 내 PC의 DB 도구(WebStorm·DBeaver)에서 SSH 터널로 (조회 전용 계정)**
+
+```bash
+# 🖥 내 PC: 로컬 15432 → 서버 안의 5432 (터널을 열어 둔 동안 유지)
+ssh -N -L 15432:127.0.0.1:5432 field-note
+```
+
+DB 도구의 접속 정보: 호스트 `localhost`, 포트 `15432`, 데이터베이스 `field_note`, 사용자 `field_note_readonly`, 비밀번호는 서버 `deploy/ops.env`의 `DATABASE_READONLY_URL` 안(`field_note_readonly:`와 `@db` 사이)에 있다. 화면에 찍지 말고 비밀번호 관리자에 옮겨 둔다.
+
+- 조회 전용 계정은 **SELECT만** 가능하고 회사 격리(RLS)가 앱과 같다. 접속 직후에는 어떤 행도 보이지 않으므로 볼 회사를 지정한다 (세션마다 한 번)
+
+  ```sql
+  SELECT set_config('app.company_id', '<회사 ID>', false);
+  SELECT * FROM projects;
+  ```
+
+  회사 ID는 `list-companies`로 확인한다. 세션·비밀번호 해시·2단계 인증·초대·인증 코드·소셜 연동·운영자 기록 테이블은 접근할 수 없다
+
+- 이미 운영 중인 서버(1.0.0)의 `ops.env`에는 `DATABASE_READONLY_URL`이 없으므로 1.0.1 배포 **전에** 한 번 추가한다 (없어도 배포는 되지만 이 계정이 로그인할 수 없는 상태로 남는다)
+
+  ```bash
+  printf 'DATABASE_READONLY_URL=postgresql://field_note_readonly:%s@db:5432/field_note\n' "$(openssl rand -base64 24 | tr -d '\n=' | tr '+/' '-_')" >> deploy/ops.env
+  ```
+
+  그다음 `deploy.sh`를 실행하면 마이그레이션 단계가 계정과 비밀번호를 만든다
 
 ## 19. 문제가 생겼을 때
 

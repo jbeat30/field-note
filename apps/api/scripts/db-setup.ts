@@ -8,6 +8,8 @@ const authUrl = process.env.DATABASE_AUTH_URL;
 const operatorUrl = process.env.DATABASE_OPERATOR_URL;
 const queueUrl = process.env.DATABASE_QUEUE_URL;
 const purgeUrl = process.env.DATABASE_PURGE_URL;
+// 조회 전용 계정은 선택: 없으면 로그인할 수 없는 상태로 둠
+const readonlyUrl = process.env.DATABASE_READONLY_URL;
 
 if (!migrateUrl || !appUrl || !authUrl || !operatorUrl || !queueUrl || !purgeUrl) {
   throw new Error(
@@ -23,7 +25,14 @@ execFileSync('pnpm', ['exec', 'prisma', 'migrate', 'deploy'], {
 });
 
 // 앱·회사 범위 밖 전용·운영자 계정 비밀번호는 마이그레이션 파일에 두지 않고 환경 변수 값으로 설정
-const roleUrls = [appUrl, authUrl, operatorUrl, queueUrl, purgeUrl];
+const roleUrls = [
+  appUrl,
+  authUrl,
+  operatorUrl,
+  queueUrl,
+  purgeUrl,
+  ...(readonlyUrl ? [readonlyUrl] : []),
+];
 const client = new pg.Client({ connectionString: migrateUrl });
 
 await client.connect();
