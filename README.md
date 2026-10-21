@@ -100,3 +100,4 @@ pnpm operator demo-remove      # 시연 환경을 끌 때 정리
 - [기능·운영 상세 (API 규칙, 화면별 동작, 운영자 CLI, 환경 변수 등)](docs/07-feature-reference.md)
 - [배포 준비](docs/10-deployment-prep.md) · [서버 배포 순서](docs/11-server-deploy.md)
 - [서비스 기획서 v2.4](docs/planning/service-plan-v2.4.md) · [기술 기획서 v0.5](docs/planning/tech-plan-v0.5.md)
+- [API 문서·Postman](docs/13-api-docs.md) · [Jest 가이드](docs/14-jest-guide.md) · [Playwright 가이드](docs/15-playwright-guide.md) · [Storybook 가이드](docs/16-storybook-guide.md)
