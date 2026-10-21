@@ -32,14 +32,6 @@ describe('약관·처리방침 문서 원본', () => {
     }
   });
 
-  it('초안인 문서는 아직 확정되지 않은 항목(법률 검토·접속 기록 보관)만 밝힌다', () => {
-    const pending = getLegalDocumentContent('PRIVACY_POLICY').pendingItems.join('\n');
-
-    expect(pending).toContain('법률 검토');
-    expect(pending).toContain('접속 기록');
-    expect(pending).not.toContain('보호책임자');
-  });
-
   it('보호책임자·운영자 정보와 수탁·국외 이전 현황, 처리 기한을 기재한다', () => {
     const privacy = legalDocumentText(getLegalDocumentContent('PRIVACY_POLICY'));
     const terms = legalDocumentText(getLegalDocumentContent('TERMS_OF_SERVICE'));
@@ -72,11 +64,14 @@ describe('약관·처리방침 문서 원본', () => {
     expect(legalDocumentText(edited)).not.toBe(legalDocumentText(privacy));
   });
 
-  it('초안 안내 항목은 동의 대상 본문(해시 입력)에 포함되지 않는다', () => {
-    const privacy = getLegalDocumentContent('PRIVACY_POLICY');
+  it('운영자는 평소 열람하지 않고 지원이 필요하면 이용자의 요청이나 승인을 받아 확인한다고 밝힌다', () => {
+    for (const type of ['TERMS_OF_SERVICE', 'PRIVACY_POLICY'] as const) {
+      const text = legalDocumentText(getLegalDocumentContent(type));
 
-    for (const item of privacy.pendingItems) {
-      expect(legalDocumentText(privacy)).not.toContain(item);
+      expect(text).toContain('열람하지 않');
+      expect(text).toContain('이용자의 요청이나 승인을 받아 확인');
+      expect(text).not.toContain('기록을 거칩니다');
+      expect(text).not.toContain('작업은 기록으로 남깁니다');
     }
   });
 
@@ -110,8 +105,8 @@ describe('약관·처리방침 문서 원본', () => {
   });
 
   it('이용약관과 처리방침은 함께 바뀐 새 버전이다', () => {
-    expect(getLegalDocumentContent('TERMS_OF_SERVICE').version).toBe('2026-10-20');
-    expect(getLegalDocumentContent('PRIVACY_POLICY').version).toBe('2026-10-20');
+    expect(getLegalDocumentContent('TERMS_OF_SERVICE').version).toBe('2026-10-21');
+    expect(getLegalDocumentContent('PRIVACY_POLICY').version).toBe('2026-10-21');
   });
 
   it('2단계 인증(선택 기능)의 수집 항목·권리·보호 조치를 처리방침에 담는다', () => {

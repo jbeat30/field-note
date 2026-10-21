@@ -4,6 +4,7 @@ import {
   CalendarDays,
   FolderKanban,
   House,
+  LogOut,
   Menu,
   Plus,
   Settings,
@@ -15,15 +16,18 @@ import { Link, NavLink, Outlet, useLocation } from 'react-router';
 import { useMe } from '../auth/useMe';
 import { AlertBell } from '../dashboard/AlertBell';
 import { Button } from '../components/ui/button';
+import { Badge } from '../components/ui/badge';
 import { Modal } from '../components/ui/modal';
 import { Toaster } from '../components/ui/toaster';
 import { cn } from '../lib/cn';
 import { useUiStore } from '../stores/uiStore';
 
+import { ProfileAvatar, ProfileMenu } from './ProfileMenu';
 import { QuickAddSheet } from './QuickAddSheet';
 import { DemoBanner } from './DemoBanner';
 import { OfflineNotice } from './OfflineNotice';
 import { ThemeToggle } from './ThemeToggle';
+import { useLogout } from './useLogout';
 
 type NavItem = { to: string; label: string; end?: boolean; icon: typeof House };
 
@@ -54,6 +58,7 @@ const tabClass = (isActive: boolean) =>
 export const AppLayout = () => {
   const setQuickAddOpen = useUiStore((state) => state.setQuickAddOpen);
   const me = useMe();
+  const onLogout = useLogout();
   const { pathname } = useLocation();
   const [isMoreOpen, setMoreOpen] = useState(false);
   // 더보기 안의 화면을 보고 있으면 더보기 탭을 강조
@@ -65,7 +70,10 @@ export const AppLayout = () => {
     <div className="flex min-h-dvh flex-col md:flex-row">
       <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-4 border-r border-line bg-surface p-4 md:flex print:hidden">
         <div className="flex items-center justify-between gap-2">
-          <p className="font-emphasis px-3 py-2 text-xl font-bold text-primary">{APP_NAME}</p>
+          <p className="font-emphasis flex items-center gap-2 px-1 py-2 text-lg font-bold whitespace-nowrap text-primary">
+            {APP_NAME}
+            <Badge tone="primary">베타</Badge>
+          </p>
           <AlertBell />
         </div>
         <nav aria-label="주 메뉴" className="flex flex-1 flex-col gap-5 overflow-y-auto">
@@ -93,23 +101,17 @@ export const AppLayout = () => {
             </div>
           ))}
         </nav>
-        <div className="flex items-center gap-3 border-t border-line pt-4">
-          <span
-            aria-hidden
-            className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-subtle font-bold text-primary"
-          >
-            {me.data?.displayName.slice(0, 1)}
-          </span>
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{me.data?.displayName}</p>
-            <p className="truncate text-xs text-foreground/70">{me.data?.companyName}</p>
-          </div>
+        <div className="flex items-center gap-1 border-t border-line pt-4">
+          <ProfileMenu />
           <ThemeToggle />
         </div>
       </aside>
       <div className="flex min-w-0 flex-1 flex-col">
         <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-surface/90 px-4 backdrop-blur md:hidden print:hidden">
-          <p className="font-emphasis shrink-0 text-lg font-bold text-primary">{APP_NAME}</p>
+          <p className="font-emphasis flex shrink-0 items-center gap-2 text-lg font-bold text-primary">
+            {APP_NAME}
+            <Badge tone="primary">베타</Badge>
+          </p>
           <span className="flex items-center">
             <AlertBell />
             <ThemeToggle />
@@ -173,6 +175,23 @@ export const AppLayout = () => {
             </li>
           ))}
         </ul>
+        <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
+          <ProfileAvatar name={me.data?.displayName} />
+          <div className="min-w-0 flex-1">
+            <p className="truncate text-sm font-semibold">{me.data?.displayName}</p>
+            <p className="truncate text-xs text-foreground/70">{me.data?.companyName}</p>
+          </div>
+          <Button
+            variant="secondary"
+            onClick={() => {
+              setMoreOpen(false);
+              void onLogout();
+            }}
+          >
+            <LogOut aria-hidden className="size-4" />
+            로그아웃
+          </Button>
+        </div>
       </Modal>
       <QuickAddSheet />
       <Toaster />
