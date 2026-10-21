@@ -109,11 +109,13 @@ pnpm operator closures                                              # 해지 요
 pnpm operator purge-due [--dry-run]                                 # 유예(14일)가 끝난 회사의 데이터 삭제·익명화 (--dry-run은 대상만 표시)
 pnpm operator demo-reset                                            # 공개 시연 회사(Test Company)를 처음 상태로 되돌림 (PUBLIC_DEMO_ENABLED=true, 소유 계정 필요)
 pnpm operator demo-remove                                           # 공개 시연 회사의 데이터·파일·로그인을 없앰 (시연 환경을 끌 때)
+pnpm operator delete-company --company-id <ID> --confirm-name "회사 이름" [--dry-run]   # 해지 유예 없이 회사를 완전 삭제 (시험 계정 정리용, 소유 계정 필요)
 ```
 
 - 링크는 발급 직후 한 번만 표시된다 (DB에는 해시만 저장)
 - 링크는 한 번 쓰면 폐기되고, 만료·사용 완료·없는 링크는 같은 화면으로 안내된다
 - `closures`·`purge-due`는 삭제 전용 DB 계정(`DATABASE_PURGE_URL`)으로 접속한다. 삭제는 api가 하지 않고, 서버 크론이 매일 03:30에 이 명령을 실행해 처리한다
+- `delete-company`는 회사 이름이 `--confirm-name`과 정확히 같을 때만 실행한다. `--dry-run`은 테이블별로 지울 행 수만 보여 주고 되돌린다. 실제 실행은 모든 테이블의 행(계정·약관 동의·운영자 기록 포함)과 `company/<회사 ID>/` 업로드 파일을 한 번에 지우며 되돌릴 수 없다. 회사 행이 사라져 `operator_actions`에 남길 수 없으므로 실행 기록(시각·운영자·회사 ID·이름)을 화면에 출력한다. 시연 회사는 대상에서 제외된다(`demo-remove` 사용). 시험 계정이 아닌 실제 회사는 해지 흐름(`purge-due`)을 쓴다
 - 운영자 작업은 `operator_actions`에 기록된다 (회사와 무관한 약관 문서 등록은 `legal_documents`의 생성 시각으로 확인)
 
 ### 자주 쓰는 명령
