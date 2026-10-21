@@ -3,6 +3,7 @@ import { useCallback, useEffect, useRef, useState } from 'react';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
 import { useDraftStore } from '../stores/draftStore';
 
+import { isStagedFileUsable } from './stageApi';
 import {
   expiredFileIds,
   parseStaged,
@@ -15,6 +16,8 @@ type Options = {
   // 같은 폼을 다시 열었을 때 이어 쓰도록 임시 파일 목록을 기기에 기억하는 구분자
   scope: string;
   discard: (fileId: string) => Promise<unknown>;
+  // 기기 초안에서 이어받은 파일이 아직 쓸 수 있는지 확인 (이미 연결됐거나 지워진 파일을 목록에서 뺌)
+  verify?: (fileId: string) => Promise<boolean>;
 };
 
 /**
@@ -23,7 +26,7 @@ type Options = {
  * @param options 초안 구분자, 서버 삭제 함수
  * @returns 목록·만료 표시와 추가·삭제·확정 함수
  */
-export const useStagedFiles = ({ scope, discard }: Options) => {
+export const useStagedFiles = ({ scope, discard, verify = isStagedFileUsable }: Options) => {
   const key = stagedDraftKey(scope);
   const hydrated = useDraftHydrated();
   const [files, setFiles] = useState<StagedFile[]>([]);
@@ -58,8 +61,19 @@ export const useStagedFiles = ({ scope, discard }: Options) => {
       // eslint-disable-next-line react-hooks/set-state-in-effect
       setFiles(saved);
       setExpired(new Set(expiredFileIds(saved, new Date())));
+
+      // 저장 직후 창이 닫히는 등으로 초안이 남았을 수 있어 서버 상태와 맞춤 (서버에서 지우지는 않음)
+      void Promise.all(
+        saved.map(async (file) => ((await verify(file.fileId)) ? null : file.fileId)),
+      ).then((gone) => {
+        const dropped = new Set(gone.filter((id): id is string => id !== null));
+
+        if (dropped.size > 0) {
+          persist(latest.current.filter((file) => !dropped.has(file.fileId)));
+        }
+      });
     }
-  }, [hydrated, key]);
+  }, [hydrated, key, verify, persist]);
 
   // 브라우저를 돌려놓고 다시 볼 때 업로드 시각으로 만료를 계산
   useEffect(() => {

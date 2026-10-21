@@ -25,19 +25,20 @@ export const lockFile = async (tx: Prisma.TransactionClient, fileId: string) => 
  * @param companyId 회사 ID
  * @param fileId 파일 ID
  * @param at 현재 시각
+ * @returns 잠금 뒤의 최신 파일 행 (없으면 null), 거부 여부는 이 행으로 판단
  */
 export const confirmStagedFile = async (
   tx: Prisma.TransactionClient,
   companyId: string,
   fileId: string,
   at: Date,
-) => {
+): Promise<Prisma.StoredFileGetPayload<object> | null> => {
   await lockFile(tx, fileId);
 
   const file = await tx.storedFile.findFirst({ where: { id: fileId } });
 
   if (!file) {
-    return;
+    return null;
   }
 
   if (file.status === 'REJECTED' && file.rejectReason === 'EXPIRED') {
@@ -45,14 +46,14 @@ export const confirmStagedFile = async (
   }
 
   if (file.status !== 'STAGED') {
-    return;
+    return file;
   }
 
   if (isStagedExpired(file.createdAt, at)) {
     throw new StagedFileExpiredError(fileId);
   }
 
-  await tx.storedFile.update({
+  return tx.storedFile.update({
     where: { companyId_id: { companyId, id: fileId } },
     data: { status: 'READY' },
   });

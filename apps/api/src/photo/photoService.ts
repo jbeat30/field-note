@@ -137,9 +137,9 @@ export const createPhotoService = (
         }
 
         // 임시 보관 중인 파일은 여기서 사용 가능으로 확정, 보관 시간이 지났으면 만료 오류
-        await confirmStagedFile(tx, companyId, file.id, now());
+        const confirmed = await confirmStagedFile(tx, companyId, file.id, now());
 
-        if (file.status === 'REJECTED') {
+        if ((confirmed ?? file).status === 'REJECTED') {
           throw new PhotoError('INVALID', {
             path: 'body.fileId',
             message: VALIDATION_MESSAGES.PHOTO_FILE_REJECTED,

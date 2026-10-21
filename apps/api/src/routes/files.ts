@@ -153,7 +153,7 @@ export const registerFileRoutes = (registry: RouteRegistry, files?: FileService)
     },
     async ({ auth, params }) => {
       try {
-        await files!.discard(auth!.companyId, (params as { id: string }).id);
+        await files!.discard(auth!.companyId, auth!.userId, (params as { id: string }).id);
 
         return { success: true as const };
       } catch (error) {

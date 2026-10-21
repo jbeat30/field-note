@@ -94,10 +94,12 @@ export const DocumentUploadForm = ({
     setProgress(0);
 
     try {
-      // 올려 둔 파일이 있으면 지우고 바꿈
+      // 새 파일이 올라간 뒤에 이전 파일을 지움 (새 업로드가 실패해도 이전 파일은 그대로)
+      const next = await stage(picked, setProgress);
+
       if (file) await staged.remove(file.fileId);
 
-      staged.add(await stage(picked, setProgress));
+      staged.add(next);
     } catch (caught) {
       setError(
         caught instanceof DocumentUploadError ? caught.message : getErrorDetailMessage(caught),

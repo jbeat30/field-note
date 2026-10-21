@@ -54,6 +54,26 @@ export const stageDocumentFile = async (
 };
 
 /**
+ * @description 기기 초안에 남은 임시 파일이 아직 폼에 쓸 수 있는지 서버에 확인 (이미 연결됐거나 지워졌으면 false)
+ * 네트워크·서버 오류처럼 알 수 없을 때는 지우지 않도록 true
+ * @param fileId 파일 ID
+ * @returns 이어서 쓸 수 있으면 true
+ */
+export const isStagedFileUsable = async (fileId: string) => {
+  try {
+    const { data, response } = await apiClient.GET('/api/v1/files/{id}', {
+      params: { path: { id: fileId } },
+    });
+
+    if (data) return ['PENDING', 'PROCESSING', 'STAGED'].includes(data.status);
+
+    return response.status !== 404;
+  } catch {
+    return true;
+  }
+};
+
+/**
  * @description 임시 파일을 서버에서 바로 지움 (폼 취소·파일 교체), 실패해도 24시간 만료가 정리하므로 조용히 넘어감
  * @param fileId 파일 ID
  * @returns 지웠는지 여부
