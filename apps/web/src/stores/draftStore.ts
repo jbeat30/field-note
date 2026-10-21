@@ -2,6 +2,7 @@ import { createStore, del, get, set } from 'idb-keyval';
 import { create } from 'zustand';
 
 import { pruneDrafts } from '../drafts/formDraft';
+import { pruneStagedDrafts } from '../staging/stagedFiles';
 import { createJSONStorage, persist, type StateStorage } from 'zustand/middleware';
 
 // 작성 중 작업 내역·메모 초안 (앱을 닫거나 연결이 끊겨도 IndexedDB에 남음)
@@ -37,11 +38,12 @@ export const useDraftStore = create<DraftState>()(
     {
       name: DRAFT_STORAGE_NAME,
       storage: createJSONStorage(() => indexedDbStorage),
-      // 읽어 온 뒤 오래된 작업 내역·자재 초안을 정리 (기기에 영원히 남지 않게)
+      // 읽어 온 뒤 오래된 작업 내역·자재 초안과 보관 시간이 지난 임시 파일 기록을 정리 (기기에 영원히 남지 않게)
       onRehydrateStorage: () => (state) => {
         if (!state) return;
 
-        const pruned = pruneDrafts(state.drafts, new Date());
+        const now = new Date();
+        const pruned = pruneStagedDrafts(pruneDrafts(state.drafts, now), now);
 
         if (pruned !== state.drafts) useDraftStore.setState({ drafts: pruned });
       },

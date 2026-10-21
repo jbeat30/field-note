@@ -128,7 +128,7 @@ describe('사진 목업 서버 계약', () => {
       ).data,
     );
 
-    expect(done).toMatchObject({ status: 'READY', hasThumbnail: true });
+    expect(done).toMatchObject({ status: 'STAGED', hasThumbnail: true });
 
     const created = await client.POST('/api/v1/projects/{projectId}/photos', {
       params: { path: { projectId } },
