@@ -9,7 +9,7 @@ import { useDraftStore } from '../stores/draftStore';
 import { HomePage } from './HomePage';
 
 const meta = {
-  title: 'Pages/홈',
+  title: 'Pages/대시보드',
   component: HomePage,
   loaders: [() => signIn('hanbit')],
 } satisfies Meta<typeof HomePage>;
@@ -98,7 +98,7 @@ export const EmptySearchDoesNothing: Story = {
   },
 };
 
-// 대시보드 위젯: 진행 중 프로젝트, 확인할 일, 이번 주 인력, 보증 종료 임박, 만료 임박 (09)
+// 대시보드 위젯: 진행 중 프로젝트, 확인할 일, 이번 달 인력, 보증 종료 임박, 만료 임박 (09)
 export const DashboardWidgets: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -106,7 +106,7 @@ export const DashboardWidgets: Story = {
     for (const title of [
       '진행 중 프로젝트',
       '확인할 일',
-      '이번 주 인력',
+      '이번 달 인력',
       '보증 종료 임박',
       '만료 임박',
     ]) {

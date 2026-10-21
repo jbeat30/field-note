@@ -31,7 +31,7 @@ import { useLogout } from './useLogout';
 
 type NavItem = { to: string; label: string; end?: boolean; icon: typeof House };
 
-const HOME: NavItem = { to: '/', label: '홈', end: true, icon: House };
+const HOME: NavItem = { to: '/', label: '대시보드', end: true, icon: House };
 const PROJECTS: NavItem = { to: '/projects', label: '프로젝트', icon: FolderKanban };
 const EMPLOYEES: NavItem = { to: '/employees', label: '직원', icon: Users };
 const PARTNERS: NavItem = { to: '/partners', label: '명부', icon: BookUser };

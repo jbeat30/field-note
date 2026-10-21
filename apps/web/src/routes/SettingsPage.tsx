@@ -183,7 +183,7 @@ export const SettingsPage = () => {
                   알림
                 </h2>
                 <p className="text-sm text-foreground/70">
-                  홈 화면에 보여 줄 알림(작업 내역 미입력, 공수 소진, 일정 지연 등)을 종류별로 켜고
+                  대시보드에 보여 줄 알림(작업 내역 미입력, 공수 소진, 일정 지연 등)을 종류별로 켜고
                   끕니다
                 </p>
                 <Button variant="secondary" asChild>
