@@ -94,7 +94,7 @@ const main = async () => {
     await ensureBucket(env.APP_ORIGIN);
   }
 
-  const files = createFileService({ app: appPrisma, storage, queue });
+  const files = createFileService({ app: appPrisma, storage, queue, logger });
   const photos = createPhotoService(appPrisma, storage);
   const memos = createMemoService(appPrisma);
   const materials = createMaterialService(appPrisma);

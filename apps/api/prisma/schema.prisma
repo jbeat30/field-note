@@ -846,10 +846,12 @@ enum FilePurpose {
   @@map("file_purpose")
 }
 
-// 업로드 신청(PENDING) → 올라온 뒤 내용 검사·썸네일 작업 중(PROCESSING) → 사용 가능(READY) 또는 거부(REJECTED)
+// 업로드 신청(PENDING) → 올라온 뒤 내용 검사·썸네일 작업 중(PROCESSING) → 폼에 연결 전 임시 보관(STAGED) → 폼 저장으로 연결되면 사용 가능(READY)
+// 검사에서 걸러지거나 임시 보관 24시간이 지나면 거부(REJECTED)
 enum FileStatus {
   PENDING
   PROCESSING
+  STAGED
   READY
   REJECTED
 
@@ -861,6 +863,8 @@ enum FileRejectReason {
   SIZE_MISMATCH
   NOT_UPLOADED
   UNREADABLE_IMAGE
+  EXPIRED
+  DISCARDED
 
   @@map("file_reject_reason")
 }

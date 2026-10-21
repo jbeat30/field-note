@@ -9,6 +9,8 @@ export type ConfirmOptions = {
   title: string;
   description?: string;
   confirmLabel?: string;
+  // 되돌아가는 버튼 문구 (기본 "취소"), 취소가 어느 쪽을 뜻하는지 헷갈릴 때 구체적으로 적음
+  cancelLabel?: string;
   danger?: boolean;
 };
 
@@ -26,6 +28,7 @@ export const ConfirmDialog = ({
   title,
   description,
   confirmLabel = '확인',
+  cancelLabel = '취소',
   danger = false,
 }: ConfirmDialogProps) => (
   <AlertDialog.Root open={open}>
@@ -46,7 +49,7 @@ export const ConfirmDialog = ({
         <div className="flex justify-end gap-2 pt-1">
           <AlertDialog.Cancel asChild>
             <Button type="button" variant="secondary" onClick={onCancel}>
-              취소
+              {cancelLabel}
             </Button>
           </AlertDialog.Cancel>
           <AlertDialog.Action asChild>
@@ -81,6 +84,7 @@ export const useConfirm = () => {
       title={state.title}
       description={state.description}
       confirmLabel={state.confirmLabel}
+      cancelLabel={state.cancelLabel}
       danger={state.danger}
       onConfirm={() => {
         const resolve = state.resolve;

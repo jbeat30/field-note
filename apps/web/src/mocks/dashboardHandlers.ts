@@ -7,7 +7,7 @@ import {
   monthRange,
   previousMonth,
   todayInSeoul,
-  weekRange,
+  dashboardCalendarRange,
   type AlertKind,
   type AlertSettings,
   type ErrorCode,
@@ -48,7 +48,7 @@ const settingsOf = (account: MockAccount): AlertSettings => ({
   items: ALERT_KINDS.map((kind) => ({ kind, enabled: account.alertSettings?.[kind] ?? true })),
 });
 
-// 이번 주 인력 배치 (인력 배치 캘린더 목업과 같은 규칙: 취소한 투입·취소된 프로젝트 제외, 퇴사 직원은 투입이 있을 때만)
+// 이번 달 인력 배치 (인력 배치 캘린더 목업과 같은 규칙: 취소한 투입·취소된 프로젝트 제외, 퇴사 직원은 투입이 있을 때만)
 const calendarOf = (account: MockAccount, from: string, to: string): StaffingCalendar => {
   const projects = getProjects(account);
   const assignments = getAssignments(account).flatMap((row) => {
@@ -129,7 +129,7 @@ const calendarOf = (account: MockAccount, from: string, to: string): StaffingCal
 const buildDashboard = (account: MockAccount) => {
   const now = new Date();
   const today = todayInSeoul(now);
-  const week = weekRange(today);
+  const range = dashboardCalendarRange(today);
   const settings = settingsOf(account);
   const projects = getProjects(account).filter((project) =>
     ['PLANNED', 'IN_PROGRESS', 'SUSPENDED'].includes(project.status),
@@ -195,7 +195,7 @@ const buildDashboard = (account: MockAccount) => {
         .filter((log) => log.workDate === today && log.status === 'SAVED')
         .flatMap((log) => log.entries.map((entry) => entry.employeeId)),
       draftLogCount: logs.filter((log) => log.status === 'DRAFT').length,
-      calendar: calendarOf(account, week.from, week.to),
+      calendar: calendarOf(account, range.from, range.to),
       negotiatingChanges: [...ids].flatMap((projectId) =>
         listMockChangeWorks(account, projectId)
           .filter((work) => work.status === 'NEGOTIATING')

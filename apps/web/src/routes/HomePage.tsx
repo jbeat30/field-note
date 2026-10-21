@@ -11,7 +11,7 @@ import { Input } from '../components/ui/input';
 import { Skeleton } from '../components/ui/skeleton';
 import { Alert } from '../components/ui/alert';
 import { DashboardWidgets } from '../dashboard/DashboardWidgets';
-import { WeekStaffing } from '../dashboard/WeekStaffing';
+import { MonthStaffing } from '../dashboard/MonthStaffing';
 import { useDashboard } from '../dashboard/useDashboard';
 import { useProjectChoices } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
@@ -25,7 +25,7 @@ const dateText = (date: string) => {
   return `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일 ${weekday}요일`;
 };
 
-// 로그인 후 첫 화면: 인사·오늘 날짜와 프로젝트 등록, 검색, 수치 줄, 진행 중 프로젝트·확인할 일, 이번 주 인력
+// 로그인 후 첫 화면: 인사·오늘 날짜와 프로젝트 등록, 검색, 수치 줄, 진행 중 프로젝트·확인할 일, 이번 달 인력
 // 보증·만료 임박, 이어서 작성할 초안
 export const HomePage = () => {
   const me = useMe();
@@ -40,7 +40,7 @@ export const HomePage = () => {
     <section className="flex flex-col gap-4">
       <div className="flex flex-wrap items-start justify-between gap-3">
         <div>
-          <h1 className="text-2xl font-bold">{me.data?.companyName ?? '홈'}</h1>
+          <h1 className="text-2xl font-bold">{me.data?.companyName ?? '대시보드'}</h1>
           <p className="mt-1 text-sm text-foreground/75">
             {me.data?.displayName}님, 안녕하세요 · {dateText(todayInSeoul(new Date()))}
           </p>
@@ -81,7 +81,7 @@ export const HomePage = () => {
       {dashboard.data && (
         <DashboardWidgets
           dashboard={dashboard.data.dashboard}
-          weekSlot={<WeekStaffing dashboard={dashboard.data.dashboard} />}
+          monthSlot={<MonthStaffing dashboard={dashboard.data.dashboard} />}
         />
       )}
       {isDraftReady && (

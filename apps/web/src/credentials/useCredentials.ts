@@ -10,6 +10,7 @@ import { apiClient } from '../api/client';
 import { putWithProgress, DocumentUploadError } from '../documents/uploadDocument';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { queryKeys } from '../query/queryKeys';
+import type { StagedFile } from '../staging/stagedFiles';
 
 export const useCredentials = (employeeId: string) =>
   useQuery({
@@ -143,13 +144,18 @@ export const EMPLOYEE_DOCUMENT_ACCEPT = Object.keys(EMPLOYEE_DOCUMENT_TYPES)
   .join(',');
 
 /**
- * @description 직원 서류 파일 한 개 업로드: 신청 → 저장소 업로드 → 완료 알림, 올라간 파일 ID 반환, 서류 연결은 호출한 쪽 담당
+ * @description 직원 서류 파일 한 개를 올려 임시 보관: 신청 → 저장소 업로드 → 완료 알림, 서류 저장 때 서버가 연결해 확정
  * @param employeeId 직원 ID
  * @param file 사용자가 고른 파일
- * @returns 업로드한 파일 ID
+ * @param onProgress 올리는 진행률 (0~1)
+ * @returns 임시 보관된 파일 (업로드 시각은 서버 기준)
  * @throws 허용되지 않은 형식이거나 서버·저장소 오류
  */
-export const uploadEmployeeDocument = async (employeeId: string, file: File): Promise<string> => {
+export const stageEmployeeDocument = async (
+  employeeId: string,
+  file: File,
+  onProgress: (ratio: number) => void = () => undefined,
+): Promise<StagedFile> => {
   const contentType = EMPLOYEE_DOCUMENT_TYPES[fileExtension(file.name)];
 
   if (!contentType) {
@@ -165,7 +171,7 @@ export const uploadEmployeeDocument = async (employeeId: string, file: File): Pr
     throw new DocumentUploadError(getErrorDetailMessage(error));
   }
 
-  await putWithProgress(ticket.upload.url, ticket.upload.headers, file, () => undefined);
+  await putWithProgress(ticket.upload.url, ticket.upload.headers, file, onProgress);
 
   const done = await apiClient.POST('/api/v1/files/{id}/complete', {
     params: { path: { id: ticket.file.id } },
@@ -175,7 +181,12 @@ export const uploadEmployeeDocument = async (employeeId: string, file: File): Pr
     throw new DocumentUploadError(getErrorDetailMessage(done.error));
   }
 
-  return ticket.file.id;
+  return {
+    fileId: ticket.file.id,
+    name: file.name,
+    size: file.size,
+    uploadedAt: ticket.file.createdAt,
+  };
 };
 
 export const useRequiredCredentials = (projectId: string) =>
