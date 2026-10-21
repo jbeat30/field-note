@@ -1,0 +1,4701 @@
+{
+  "info": {
+    "name": "field-note",
+    "description": "로그인 세션 쿠키(sid)로 인증합니다. 회사는 세션에서만 정해지므로 요청에 회사 ID를 넣지 않습니다.\n\n상태를 바꾸는 호출(POST·PUT·PATCH·DELETE)은 X-Field-Note-Client: web 헤더가 필요하고, Origin이 있으면 웹 주소와 같아야 합니다.\n재시도에 안전해야 하는 호출은 Idempotency-Key 헤더(8~128자)를 받습니다.\n\n오류는 { error: { code, message, details? } } 형식이며, 화면은 message 대신 code로 분기합니다.\n\n환경: field-note-local(로컬) / field-note-prod(운영)을 오른쪽 위에서 고릅니다.\n순서: 환경의 loginId·password(secret)를 채우고 \"로그인·가입 > 아이디 로그인\"을 보내면 세션 쿠키(sid)가 저장됩니다.\n이 컬렉션은 pnpm postman:generate로 openapi.json에서 만든 것이라 직접 고치지 않습니다.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "const safe = ['GET', 'HEAD', 'OPTIONS'];",
+          "if (!safe.includes(pm.request.method)) {",
+          "  pm.request.headers.upsert({ key: 'X-Field-Note-Client', value: 'web' });",
+          "  pm.request.headers.upsert({ key: 'Origin', value: pm.environment.get('appOrigin') });",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "상태 확인",
+      "item": [
+        {
+          "name": "GET /health — 서버 상태 확인",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "health"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 없이 호출할 수 있습니다"
+          }
+        }
+      ]
+    },
+    {
+      "name": "공개 정보",
+      "item": [
+        {
+          "name": "GET /public/demo — 시연 계정 안내 (켜져 있을 때만 아이디·비밀번호 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/public/demo",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "public", "demo"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 없이 호출할 수 있습니다"
+          }
+        }
+      ]
+    },
+    {
+      "name": "샘플",
+      "item": [
+        {
+          "name": "POST /samples — 샘플 생성 (틀 검증용)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              },
+              {
+                "key": "Idempotency-Key",
+                "value": "{{$guid}}"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/samples",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "samples"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: title (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 429 요청 과다"
+          }
+        }
+      ]
+    },
+    {
+      "name": "초대",
+      "item": [
+        {
+          "name": "GET /invitations/{token} — 초대 링크 확인 (가입 화면 진입)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/invitations/:token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "invitations", ":token"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 없이 호출할 수 있습니다\n\n경로 값(Path Variables)을 채워야 합니다: token\n\n오류 응답: 400 입력 오류, 404 NOT_FOUND, 429 요청 과다"
+          }
+        }
+      ]
+    },
+    {
+      "name": "로그인·가입",
+      "item": [
+        {
+          "name": "POST /auth/signup — 초대 링크로 가입 (약관 동의·만 14세 확인)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/signup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "signup"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"inviteToken\": \"string\",\n  \"loginId\": \"string\",\n  \"password\": \"string\",\n  \"email\": \"user@example.com\",\n  \"isAgeConfirmed\": true,\n  \"consents\": [\n    {\n      \"documentId\": \"00000000-0000-0000-0000-000000000000\",\n      \"isAgreed\": false\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 없이 호출할 수 있습니다\n\n본문 필수 항목: inviteToken, loginId, password, email, isAgeConfirmed, consents (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 404 NOT_FOUND, 409 LOGIN_ID_TAKEN, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /auth/email/verify — 이메일 인증 코드 확인 (가입 완료)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/email/verify",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "email", "verify"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: code (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 EMAIL_CODE_INVALID, 401 로그인 필요, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /auth/email/resend — 이메일 인증 코드 재발송",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/email/resend",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "email", "resend"],
+              "query": [],
+              "variable": []
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /auth/login — 아이디 로그인",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/login",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "login"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"loginId\": \"{{loginId}}\",\n  \"password\": \"{{password}}\",\n  \"isRemembered\": true\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "로그인 없이 호출할 수 있습니다\n\n본문 필수 항목: loginId, password (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 TOTP_INVALID, 401 TOTP_REQUIRED, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /auth/password-reset/request — 비밀번호 재설정 메일 요청 (가입 여부와 관계없이 같은 응답)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password-reset/request",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "password-reset", "request"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"user@example.com\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 없이 호출할 수 있습니다\n\n본문 필수 항목: email (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 429 요청 과다"
+          }
+        },
+        {
+          "name": "GET /auth/password-reset/{token} — 비밀번호 재설정 링크 확인 (2단계 인증 코드 입력 필요 여부 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password-reset/:token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "password-reset", ":token"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 없이 호출할 수 있습니다\n\n경로 값(Path Variables)을 채워야 합니다: token\n\n오류 응답: 400 입력 오류, 404 NOT_FOUND, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /auth/password-reset/confirm — 새 비밀번호 설정 (모든 기기 로그아웃)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/password-reset/confirm",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "password-reset", "confirm"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"string\",\n  \"newPassword\": \"string\",\n  \"totpCode\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 없이 호출할 수 있습니다\n\n본문 필수 항목: token, newPassword (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 TOTP_INVALID, 401 TOTP_REQUIRED, 404 NOT_FOUND, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "GET /auth/closure/{token} — 해지 취소 링크 확인 (삭제 예정 시각)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/closure/:token",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "closure", ":token"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "token",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 없이 호출할 수 있습니다\n\n경로 값(Path Variables)을 채워야 합니다: token\n\n오류 응답: 400 입력 오류, 404 NOT_FOUND, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /auth/closure/cancel — 해지 취소 (계정 복구)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/closure/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "closure", "cancel"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"token\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 없이 호출할 수 있습니다\n\n본문 필수 항목: token (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 404 NOT_FOUND, 429 요청 과다"
+          }
+        },
+        {
+          "name": "GET /auth/social/providers — 사용 가능한 소셜 로그인 제공자",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/social/providers",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "social", "providers"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 없이 호출할 수 있습니다"
+          }
+        },
+        {
+          "name": "POST /auth/{provider}/start — 소셜 로그인·가입 시작 (제공자 화면 주소 반환)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/:provider/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", ":provider", "start"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "provider",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"purpose\": \"login\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "로그인 없이 호출할 수 있습니다\n\n경로 값(Path Variables)을 채워야 합니다: provider\n\n오류 응답: 400 입력 오류, 404 NOT_FOUND, 429 요청 과다, 501 NOT_IMPLEMENTED"
+          }
+        },
+        {
+          "name": "GET /auth/{provider}/callback — 제공자에서 돌아오는 주소 (연동·로그인·가입을 마치고 웹 화면으로 이동)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/:provider/callback",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", ":provider", "callback"],
+              "query": [
+                {
+                  "key": "code",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "state",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "error",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "provider",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 없이 호출할 수 있습니다\n\n경로 값(Path Variables)을 채워야 합니다: provider\n\n오류 응답: 400 입력 오류, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /auth/logout — 로그아웃",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/auth/logout",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "auth", "logout"],
+              "query": [],
+              "variable": []
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        }
+      ]
+    },
+    {
+      "name": "내 계정",
+      "item": [
+        {
+          "name": "GET /me — 로그인한 관리자 정보",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /me/devices — 로그인 기기 목록",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/devices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "devices"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요, 403 DEMO_RESTRICTED"
+          }
+        },
+        {
+          "name": "DELETE /me/devices/{id} — 기기 원격 로그아웃",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/devices/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "devices", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 403 DEMO_RESTRICTED, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /me/password — 비밀번호 변경 (다른 기기 로그아웃)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/password",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "password"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"string\",\n  \"newPassword\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: currentPassword, newPassword (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 CURRENT_PASSWORD_INVALID, 401 로그인 필요, 403 DEMO_RESTRICTED, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /me/email/change — 이메일 변경·등록 요청 (새 주소로 인증 코드 발송, 인증해야 반영, 비밀번호가 있는 계정은 현재 비밀번호 필요)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/email/change",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "email", "change"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"newEmail\": \"user@example.com\",\n  \"currentPassword\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: newEmail (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 CURRENT_PASSWORD_INVALID, 401 로그인 필요, 403 DEMO_RESTRICTED, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /me/password/set — 소셜 로그인만 쓰는 계정의 아이디·비밀번호 로그인 설정 (이미 있으면 거부)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/password/set",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "password", "set"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"loginId\": \"string\",\n  \"newPassword\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: loginId, newPassword (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 403 DEMO_RESTRICTED, 409 LOGIN_ID_TAKEN, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /me/closure — 계정 해지 요청 (즉시 로그인 차단, 14일 유예 뒤 삭제)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/closure",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "closure"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 CURRENT_PASSWORD_INVALID, 401 로그인 필요, 403 DEMO_RESTRICTED, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /me/social/{provider}/start — 로그인한 계정에 소셜 계정 연동 시작",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/social/:provider/start",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "social", ":provider", "start"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "provider",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: provider\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 403 DEMO_RESTRICTED, 429 요청 과다, 501 NOT_IMPLEMENTED"
+          }
+        },
+        {
+          "name": "GET /me/social — 연동된 로그인 수단",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/social",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "social"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "DELETE /me/social/{provider} — 소셜 연동 해제 (로그인 수단이 하나 이상 남아야 함)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/social/:provider",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "social", ":provider"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "provider",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: provider\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 403 DEMO_RESTRICTED, 409 LAST_LOGIN_METHOD"
+          }
+        },
+        {
+          "name": "GET /me/totp — 2단계 인증 상태",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/totp",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "totp"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /me/totp/setup — 2단계 인증 등록 시작 (인증 키 발급, 확인 전에는 켜지지 않음)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/totp/setup",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "totp", "setup"],
+              "query": [],
+              "variable": []
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요, 403 DEMO_RESTRICTED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /me/totp/enable — 인증 앱의 코드로 등록 확인 (켜지고 복구 코드를 한 번만 보여 줌)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/totp/enable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "totp", "enable"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: code (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 TOTP_INVALID, 401 로그인 필요, 403 DEMO_RESTRICTED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /me/totp/disable — 2단계 인증 끄기 (인증 코드 또는 복구 코드 필요, 비밀번호가 있는 계정은 현재 비밀번호도 필요)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/totp/disable",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "totp", "disable"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"string\",\n  \"currentPassword\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: code (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 TOTP_INVALID, 401 로그인 필요, 403 DEMO_RESTRICTED, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        },
+        {
+          "name": "POST /me/totp/recovery-codes — 복구 코드 다시 발급 (이전 코드는 모두 무효, 인증 코드 또는 복구 코드 필요)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/me/totp/recovery-codes",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "me", "totp", "recovery-codes"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"code\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: code (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 TOTP_INVALID, 401 로그인 필요, 403 DEMO_RESTRICTED, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        }
+      ]
+    },
+    {
+      "name": "회사",
+      "item": [
+        {
+          "name": "GET /company/settings — 회사 설정 조회 (기준시간·월 기준일수·공수 방식)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "settings"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "PUT /company/settings — 회사 설정 변경",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "settings"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"standardWorkMinutes\": 60,\n  \"monthlyWorkDays\": 1,\n  \"workUnitMode\": \"RATIO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: standardWorkMinutes, monthlyWorkDays, workUnitMode (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /company/rules — 회사 경고 기준·보증 기본 기간 조회 (저장한 적이 없으면 기본값)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "rules"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "PUT /company/rules — 회사 경고 기준·보증 기본 기간 변경 (공수 소진율 경고·한도, 진행률 간격, 보증 기본 개월 수)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/rules",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "rules"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"burnWarnPercent\": 50,\n  \"burnLimitPercent\": 60,\n  \"aheadGapPercent\": 5,\n  \"warrantyDefaultMonths\": 0\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: burnWarnPercent, burnLimitPercent, aheadGapPercent, warrantyDefaultMonths (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /company/options — 선택 목록 전체 조회 (직종·작업 구분·공종·직원 구분, 처음에는 프리셋으로 채움)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "options"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /company/options — 선택 목록 항목 추가",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/options",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "options"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"JOB_TYPE\",\n  \"name\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: kind, name (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "PUT /company/options/order — 선택 목록 순서 변경 (해당 종류의 모든 항목을 원하는 순서로)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/options/order",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "options", "order"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"JOB_TYPE\",\n  \"ids\": [\n    \"00000000-0000-0000-0000-000000000000\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: kind, ids (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /company/options/{id} — 선택 목록 항목 이름 변경·숨기기",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/options/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "options", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /company/alert-settings — 알림 종류별 켜짐 여부 (설정하지 않은 종류는 켜짐)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/alert-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "alert-settings"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "PUT /company/alert-settings — 알림 종류별 켜고 끄기 (보낸 종류만 바꿈)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/alert-settings",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "alert-settings"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"items\": [\n    {\n      \"kind\": \"NO_LOG_TODAY\",\n      \"enabled\": false\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: items (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /company/storage — 저장 용량 현황 (한도·사용량·용도별·프로젝트별)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/storage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "storage"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /company/export — 회사 전체 데이터 엑셀 내보내기 (비밀번호 재입력 필요, 파일 원본 제외, 내보낸 기록이 남음)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/company/export",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "company", "export"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"currentPassword\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: currentPassword (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 CURRENT_PASSWORD_INVALID, 401 로그인 필요, 423 ACCOUNT_LOCKED, 429 요청 과다"
+          }
+        }
+      ]
+    },
+    {
+      "name": "직원",
+      "item": [
+        {
+          "name": "GET /employees — 직원 목록 (생년월일·연락처 제외, 상태·직종·구분·이름 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "jobTypeId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "workerTypeId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /employees — 직원 등록 (이름만으로도 가능)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"jobTypeId\": \"00000000-0000-0000-0000-000000000000\",\n  \"workerTypeId\": \"00000000-0000-0000-0000-000000000000\",\n  \"title\": \"string\",\n  \"status\": \"ACTIVE\",\n  \"hiredOn\": \"2026-01-01\",\n  \"birthDate\": \"2026-01-01\",\n  \"phone\": \"string\",\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: name (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /employees/{id} — 직원 카드 (생년월일·연락처 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /employees/{id} — 직원 정보 수정·상태 변경 (퇴사·재입사 포함)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"jobTypeId\": \"00000000-0000-0000-0000-000000000000\",\n  \"workerTypeId\": \"00000000-0000-0000-0000-000000000000\",\n  \"title\": \"string\",\n  \"status\": \"ACTIVE\",\n  \"hiredOn\": \"2026-01-01\",\n  \"leftOn\": \"2026-01-01\",\n  \"birthDate\": \"2026-01-01\",\n  \"phone\": \"string\",\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /employees/{id}/work-history — 직원의 프로젝트별 투입 이력과 이번 달·올해 공수 (저장된 작업 내역만 반영)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/work-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "work-history"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /employees/{id}/pay-rates — 직원 단가 기록 (적용 시작일 최근순)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/pay-rates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "pay-rates"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /employees/{id}/pay-rates — 직원 단가 추가 (기존 단가는 고치지 않고 적용 시작일부터 새 단가, 단가 변경 기록으로 남음)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/pay-rates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "pay-rates"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"payType\": \"DAILY\",\n  \"amount\": 1,\n  \"effectiveFrom\": \"2026-01-01\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: payType, amount, effectiveFrom (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /employees/{id}/credentials — 직원 서류·자격 목록 (만료가 빠른 순, 오늘 기준 상태 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/credentials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "credentials"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /employees/{id}/credentials — 직원 서류·자격 등록 (종류만 있어도 등록, 파일은 직원 서류로 올린 것 연결)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/credentials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "credentials"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeId\": \"00000000-0000-0000-0000-000000000000\",\n  \"issuedOn\": \"2026-01-01\",\n  \"expiresOn\": \"2026-01-01\",\n  \"fileId\": \"00000000-0000-0000-0000-000000000000\",\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: typeId (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 VALIDATION_ERROR, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /employees/{id}/credentials/{credentialId} — 직원 서류·자격 수정 (종류·날짜·파일·메모, 갱신하면 만료일을 바꿈)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/credentials/:credentialId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "credentials", ":credentialId"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "credentialId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeId\": \"00000000-0000-0000-0000-000000000000\",\n  \"issuedOn\": \"2026-01-01\",\n  \"expiresOn\": \"2026-01-01\",\n  \"fileId\": \"00000000-0000-0000-0000-000000000000\",\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, credentialId\n\n오류 응답: 400 VALIDATION_ERROR, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /employees/{id}/credentials/{credentialId} — 직원 서류·자격 삭제 (기록은 남고 목록에서만 사라짐)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/credentials/:credentialId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "credentials", ":credentialId"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "credentialId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, credentialId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /employees/{id}/credentials/{credentialId}/file-url — 서류 파일 열람 주소 발급 (열람 기록을 남기고 짧은 만료의 주소 발급)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:id/credentials/:credentialId/file-url",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":id", "credentials", ":credentialId", "file-url"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "credentialId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, credentialId\n\n오류 응답: 400 VALIDATION_ERROR, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /employees/{employeeId}/files — 직원 서류 파일 업로드 신청 (이미지·PDF, 열람은 직원 서류 API로만)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/employees/:employeeId/files",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "employees", ":employeeId", "files"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "employeeId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"contentType\": \"string\",\n  \"size\": 1\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: employeeId\n\n본문 필수 항목: name, contentType, size (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND, 409 STORAGE_QUOTA_EXCEEDED"
+          }
+        }
+      ]
+    },
+    {
+      "name": "명부(고객·협력사)",
+      "item": [
+        {
+          "name": "GET /partners — 고객·협력업체·자재 공급처 목록 (연락처·메모 제외, 구분·이름 검색)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/partners",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partners"],
+              "query": [
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /partners — 명부 등록 (구분과 상호만으로 가능)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/partners",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partners"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"kind\": \"CLIENT\",\n  \"name\": \"string\",\n  \"contactName\": \"string\",\n  \"phone\": \"string\",\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: kind, name (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /partners/{id} — 명부 카드 (연락처·메모 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/partners/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partners", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /partners/{id} — 명부 수정·숨기기 (구분은 바꿀 수 없음)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/partners/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partners", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"contactName\": \"string\",\n  \"phone\": \"string\",\n  \"memo\": \"string\",\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /partners/{id} — 명부 삭제 (프로젝트·자재 기록에서 쓰고 있으면 거부, 그때는 숨기기)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/partners/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "partners", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 VALIDATION_ERROR, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "프로젝트",
+      "item": [
+        {
+          "name": "GET /projects — 프로젝트 목록 (상태·고객·담당자·공종·기간·검색 필터, 정렬, 쪽 나누기)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "clientId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "managerId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "tradeId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "site",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "hasWarning",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sortBy",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "sortDir",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "page",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "pageSize",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /projects — 프로젝트 등록 (코드 자동 번호, 상태는 예정)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"siteName\": \"string\",\n  \"siteAddress\": \"string\",\n  \"siteMapUrl\": \"string\",\n  \"siteContactName\": \"string\",\n  \"siteContactPhone\": \"string\",\n  \"accessMemo\": \"string\",\n  \"clientId\": \"00000000-0000-0000-0000-000000000000\",\n  \"managerId\": \"00000000-0000-0000-0000-000000000000\",\n  \"tradeIds\": [\n    \"00000000-0000-0000-0000-000000000000\"\n  ],\n  \"contractDate\": \"string\",\n  \"plannedStart\": \"string\",\n  \"plannedEnd\": \"string\",\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: name, siteName, clientId, managerId, contractDate, plannedStart, plannedEnd (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /projects/{id} — 프로젝트 기본정보",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /projects/{id} — 프로젝트 기본정보 수정 (코드·상태는 바꿀 수 없음)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"siteName\": \"string\",\n  \"siteAddress\": \"string\",\n  \"siteMapUrl\": \"string\",\n  \"siteContactName\": \"string\",\n  \"siteContactPhone\": \"string\",\n  \"accessMemo\": \"string\",\n  \"clientId\": \"00000000-0000-0000-0000-000000000000\",\n  \"managerId\": \"00000000-0000-0000-0000-000000000000\",\n  \"tradeIds\": [\n    \"00000000-0000-0000-0000-000000000000\"\n  ],\n  \"contractDate\": \"string\",\n  \"plannedStart\": \"string\",\n  \"plannedEnd\": \"string\",\n  \"memo\": \"string\",\n  \"periodChangeReason\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{id}/status — 프로젝트 상태 전환 (예정 → 진행 → 중단·완료 → 보증 중 → 종료, 취소, 종료 재오픈). 날짜·사유와 함께 이력에 남음",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "status"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"PLANNED\",\n  \"effectiveOn\": \"2026-01-01\",\n  \"reason\": \"string\",\n  \"confirmSummary\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: toStatus (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/status-history — 프로젝트 상태 변경 이력 (최근이 맨 앞)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/status-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "status-history"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/period-history — 프로젝트 예정 기간 변경 이력 (연장·단축한 날짜와 사유, 최근이 맨 앞)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/period-history",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "period-history"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/assignments — 프로젝트 투입 목록 (같은 날 다른 프로젝트 겹침·휴직·퇴사 경고 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/assignments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "assignments"],
+              "query": [
+                {
+                  "key": "includeCancelled",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{id}/assignments — 투입 등록 (프로젝트 기간 안, 퇴사 직원 불가, 중단 중에는 관리자 확인 필요)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/assignments",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "assignments"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"employeeId\": \"00000000-0000-0000-0000-000000000000\",\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-01-01\",\n  \"plannedMinutes\": 1,\n  \"confirmSuspended\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: employeeId, startDate, endDate (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /projects/{id}/assignments/{assignmentId} — 투입 기간·계획 공수 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/assignments/:assignmentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "assignments", ":assignmentId"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "assignmentId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"startDate\": \"2026-01-01\",\n  \"endDate\": \"2026-01-01\",\n  \"plannedMinutes\": 1,\n  \"confirmSuspended\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, assignmentId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{id}/assignments/{assignmentId}/cancel — 투입 취소 (지우지 않고 취소 표시만 남김)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/assignments/:assignmentId/cancel",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "assignments", ":assignmentId", "cancel"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "assignmentId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"confirmSuspended\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, assignmentId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/work-logs — 프로젝트 작업 내역 목록 (날짜·상태 필터, 공수 합과 임시 저장 표시)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/work-logs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "work-logs"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/work-summary — 프로젝트 공수 집계 (직원별·작업 구분별·기간별, 저장된 작업 내역만 반영)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/work-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "work-summary"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "unit",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/work-summary/employees/{employeeId} — 한 사람이 이 프로젝트에서 일한 날 (날짜별 시간·한 일, 저장된 작업 내역만 반영)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/work-summary/employees/:employeeId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "work-summary", "employees", ":employeeId"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "employeeId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, employeeId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/work-logs/{workDate} — 그날의 작업 내역 (공수 항목과 경고 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/work-logs/:workDate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "work-logs", ":workDate"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "workDate",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, workDate\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PUT /projects/{id}/work-logs/{workDate} — 그날의 작업 내역 임시 저장·저장 (없으면 만들고 있으면 고침, 낙관적 잠금)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/work-logs/:workDate",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "work-logs", ":workDate"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "workDate",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"status\": \"DRAFT\",\n  \"content\": \"string\",\n  \"area\": \"string\",\n  \"notes\": \"string\",\n  \"isChange\": false,\n  \"isAfterService\": false,\n  \"entries\": [\n    {\n      \"employeeId\": \"00000000-0000-0000-0000-000000000000\",\n      \"categoryId\": \"00000000-0000-0000-0000-000000000000\",\n      \"minutes\": 1\n    }\n  ],\n  \"expectedVersion\": 1,\n  \"confirmStatus\": false,\n  \"addMissingAssignments\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, workDate\n\n본문 필수 항목: status, content, entries (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND, 409 CONFLICT"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/work-logs/{workDate}/revisions — 작업 내역 수정 이력 (고치기 전 값, 최근이 맨 앞)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/work-logs/:workDate/revisions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "work-logs", ":workDate", "revisions"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "workDate",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, workDate\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/progress — 진행률 기록 목록 (기준일 최근순)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/progress",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "progress"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{id}/progress — 진행률 기록 추가 (예정·진행·중단에서만, 고치거나 지우지 않고 새로 기록)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/progress",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "progress"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"percent\": 0,\n  \"recordedOn\": \"2026-01-01\",\n  \"note\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: percent (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/health — 프로젝트 진행 점검 (공수 소진율, 현재 진행률, 예상 필요 공수, 경고)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/health",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "health"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/labor-cost — 프로젝트 인건비 최소 추정 (실제 공수 × 근무일 단가, 계획 공수 기준 예상)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/labor-cost",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "labor-cost"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/change-works — 프로젝트 변경·추가 작업 목록 (번호 큰 것이 먼저, 상태 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/change-works",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "change-works"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{id}/change-works — 변경·추가 작업 기록 (예정·진행·중단, 완료는 확인 필요, 협의 중으로 시작)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/change-works",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "change-works"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedOn\": \"2026-01-01\",\n  \"requester\": \"string\",\n  \"content\": \"string\",\n  \"confirmCompleted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: requester, content (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/change-usage — 변경·추가 작업으로 쓴 공수·자재 (작업 내역·자재 기록의 변경 작업 표시 합계)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/change-usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "change-usage"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/warranty — 프로젝트 보증 설정·보증서·변경 이력 (설정이 없으면 기본 기간으로 계산한 값)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/warranty",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "warranty"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PUT /projects/{id}/warranty — 보증 설정 저장 (완료·보증 중에서만, 종료 예정일은 시작일 + 기간, 바꿀 때는 사유 필수, 이력에 남음)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/warranty",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "warranty"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"months\": 0,\n  \"startBasis\": \"ACTUAL_END\",\n  \"startOn\": \"2026-01-01\",\n  \"endOn\": \"2026-01-01\",\n  \"reason\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: months, startBasis (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{id}/warranty/certificates — 보증서 등록 (문서함의 같은 프로젝트 문서 + 만료일)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/warranty/certificates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "warranty", "certificates"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"00000000-0000-0000-0000-000000000000\",\n  \"expiresOn\": \"2026-01-01\",\n  \"issuer\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: documentId, expiresOn (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /projects/{id}/warranty/certificates/{certificateId} — 보증서 만료일·발급처 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/warranty/certificates/:certificateId",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                ":id",
+                "warranty",
+                "certificates",
+                ":certificateId"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "certificateId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"expiresOn\": \"2026-01-01\",\n  \"issuer\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, certificateId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /projects/{id}/warranty/certificates/{certificateId} — 보증서 삭제 (기록은 남고 삭제 시각만 기록)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/warranty/certificates/:certificateId",
+              "host": ["{{baseUrl}}"],
+              "path": [
+                "api",
+                "v1",
+                "projects",
+                ":id",
+                "warranty",
+                "certificates",
+                ":certificateId"
+              ],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "certificateId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, certificateId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/required-credentials — 프로젝트 필요 자격 (투입 배정 때 자격이 없거나 만료된 직원을 경고하는 기준)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/required-credentials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "required-credentials"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PUT /projects/{id}/required-credentials — 프로젝트 필요 자격 저장 (보낸 목록으로 바꿈)",
+          "request": {
+            "method": "PUT",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/required-credentials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "required-credentials"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"typeIds\": [\n    \"00000000-0000-0000-0000-000000000000\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: typeIds (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 VALIDATION_ERROR, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/repair-requests — 프로젝트 보수 요청 목록 (번호 큰 것이 먼저, 상태 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/repair-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "repair-requests"],
+              "query": [
+                {
+                  "key": "status",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{id}/repair-requests — 보수 요청 접수 (보증 중인 프로젝트에서만, 접수 상태로 시작)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/repair-requests",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "repair-requests"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receivedOn\": \"2026-01-01\",\n  \"requester\": \"string\",\n  \"content\": \"string\",\n  \"location\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: requester, content (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/after-service-usage — 사후 작업으로 쓴 공수·자재 (사후 작업 표시가 된 작업 내역·자재 기록 합계)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/after-service-usage",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "after-service-usage"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/transition-notices — 상태 전환 전 확인할 것 (완료: 임시 저장 작업 내역·진행률·남은 자재·협의 중 변경 작업, 재개: 종료 예정일 경과). 막지 않고 알림",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/transition-notices",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "transition-notices"],
+              "query": [
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/summary — 프로젝트 요약 (완료 리포트: 기본정보·투입 공수·자재·변경 작업·대표 사진·자료, 금액·민감 문서 제외)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "summary"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{id}/summary.xlsx — 프로젝트 요약 엑셀 내보내기 (요약과 같은 내용, 금액·민감 문서 제외, 내보낸 기록이 남음)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:id/summary.xlsx",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":id", "summary.xlsx"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{projectId}/files — 파일 업로드 신청 (형식·크기·회사 용량 확인 후 짧은 만료의 업로드 주소 발급)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/files",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "files"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"contentType\": \"string\",\n  \"size\": 1,\n  \"purpose\": \"PHOTO\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n본문 필수 항목: name, contentType, size, purpose (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND, 409 STORAGE_QUOTA_EXCEEDED"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/photos — 사진첩 (촬영일시 최근순, 구분·구역·작업일 필터, 커서 방식)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/photos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "photos"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "area",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "workDate",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{projectId}/photos — 올린 파일을 사진으로 등록 (같은 파일을 다시 등록하면 기존 사진을 돌려줌)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/photos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "photos"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileId\": \"00000000-0000-0000-0000-000000000000\",\n  \"category\": \"OTHER\",\n  \"area\": \"string\",\n  \"takenAt\": \"2026-01-01T00:00:00.000Z\",\n  \"workDate\": \"2026-01-01\",\n  \"description\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n본문 필수 항목: fileId (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/material-records — 프로젝트 자재 기록 (날짜 최근순, 날짜·자재·구분 필터, 커서 방식)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/material-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "material-records"],
+              "query": [
+                {
+                  "key": "date",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "materialId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{projectId}/material-records — 자재 기록 한 건 (반입·사용·반출·폐기)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/material-records",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "material-records"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"materialId\": \"00000000-0000-0000-0000-000000000000\",\n  \"recordDate\": \"2026-01-01\",\n  \"kind\": \"RECEIVED\",\n  \"quantity\": 0,\n  \"categoryId\": \"00000000-0000-0000-0000-000000000000\",\n  \"area\": \"string\",\n  \"partnerId\": \"00000000-0000-0000-0000-000000000000\",\n  \"sourceText\": \"string\",\n  \"isChange\": false,\n  \"isAfterService\": false,\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n본문 필수 항목: materialId, recordDate, kind, quantity (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{projectId}/material-records/batch — 자재 기록 여러 건 한꺼번에 (목록형 입력, 한 건이라도 잘못되면 전부 저장하지 않음)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/material-records/batch",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "material-records", "batch"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"records\": [\n    {\n      \"materialId\": \"00000000-0000-0000-0000-000000000000\",\n      \"recordDate\": \"2026-01-01\",\n      \"kind\": \"RECEIVED\",\n      \"quantity\": 0,\n      \"categoryId\": \"00000000-0000-0000-0000-000000000000\",\n      \"area\": \"string\",\n      \"partnerId\": \"00000000-0000-0000-0000-000000000000\",\n      \"sourceText\": \"string\",\n      \"isChange\": false,\n      \"isAfterService\": false,\n      \"memo\": \"string\"\n    }\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n본문 필수 항목: records (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/material-balance — 프로젝트별 자재 현황 (자재마다 반입·사용·반출·폐기 합계와 잔량, 마이너스 경고)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/material-balance",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "material-balance"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/ledger-entries — 프로젝트 지출·수입 내역 (날짜 최근순, 구분·분류·기간 필터, 커서 방식)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/ledger-entries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "ledger-entries"],
+              "query": [
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "date",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{projectId}/ledger-entries — 지출·수입 기록 한 건 (구분마다 분류 목록이 다름, 증빙 문서·추가 공사 연결은 선택)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/ledger-entries",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "ledger-entries"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entryDate\": \"2026-01-01\",\n  \"kind\": \"EXPENSE\",\n  \"categoryId\": \"00000000-0000-0000-0000-000000000000\",\n  \"amount\": 1,\n  \"partnerId\": \"00000000-0000-0000-0000-000000000000\",\n  \"content\": \"string\",\n  \"documentId\": \"00000000-0000-0000-0000-000000000000\",\n  \"changeWorkId\": \"00000000-0000-0000-0000-000000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n본문 필수 항목: entryDate, kind, amount (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/ledger-summary — 프로젝트 지출 합계·수입 합계·분류별 합계 (내역과 같은 필터)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/ledger-summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "ledger-summary"],
+              "query": [
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "categoryId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/documents — 프로젝트 문서함 (고정한 문서가 먼저, 분류·이름·고정 필터, 문서마다 최신본)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "documents"],
+              "query": [
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "pinned",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /projects/{projectId}/documents — 올린 파일로 문서 만들기 (첫 버전, 계약·공문은 기본 민감 자료, 같은 파일로 다시 부르면 같은 문서)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "documents"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileId\": \"00000000-0000-0000-0000-000000000000\",\n  \"title\": \"string\",\n  \"category\": \"OTHER\",\n  \"isSensitive\": false,\n  \"revisionDate\": \"2026-01-01\",\n  \"reason\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n본문 필수 항목: fileId, title (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/daily-reports/{date} — 작업일보 한 장 (그날의 작업 내역·인원·공수·자재·사진, 인쇄·PDF용)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/daily-reports/:date",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "daily-reports", ":date"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "date",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId, date\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /projects/{projectId}/daily-reports.xlsx — 작업일보 엑셀 내보내기 (기간 안의 작업 내역·공수·자재 시트, 내보낸 기록이 남음)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/projects/:projectId/daily-reports.xlsx",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "projects", ":projectId", "daily-reports.xlsx"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false
+                }
+              ],
+              "variable": [
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: projectId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "인력 배치",
+      "item": [
+        {
+          "name": "GET /staffing-calendar — 인력 배치 캘린더 (기간 안의 직원과 투입, 최대 42일)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/staffing-calendar",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "staffing-calendar"],
+              "query": [
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        }
+      ]
+    },
+    {
+      "name": "단가",
+      "item": [
+        {
+          "name": "GET /pay-rates — 단가표: 단가가 있는 직원마다 현재·이전·적용 예정 단가 (직원 목록·단가표 탭)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/pay-rates",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "pay-rates"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        }
+      ]
+    },
+    {
+      "name": "변경·추가 작업",
+      "item": [
+        {
+          "name": "GET /change-works/{id} — 변경·추가 작업 상세 (상태 이력과 증빙 문서 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/change-works/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "change-works", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /change-works/{id} — 변경·추가 작업 수정 (협의 중일 때만 요청일·요청자·내용)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/change-works/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "change-works", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"requestedOn\": \"2026-01-01\",\n  \"requester\": \"string\",\n  \"content\": \"string\",\n  \"confirmCompleted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /change-works/{id}/status — 변경·추가 작업 상태 변경 (협의 중·합의됨·철회, 철회는 사유 필수, 이력으로 남음)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/change-works/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "change-works", ":id", "status"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"NEGOTIATING\",\n  \"effectiveOn\": \"2026-01-01\",\n  \"note\": \"string\",\n  \"confirmCompleted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: toStatus (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /change-works/{id}/documents — 증빙 문서 연결 (같은 프로젝트의 문서함 문서)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/change-works/:id/documents",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "change-works", ":id", "documents"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"documentId\": \"00000000-0000-0000-0000-000000000000\",\n  \"confirmCompleted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: documentId (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /change-works/{id}/evidence — 증빙 올리기 (올린 파일로 문서함에 계약·공문 문서를 만들고 이 변경·추가 작업에 한 번에 연결, 같은 파일로 다시 부르면 이미 만든 증빙을 돌려줌)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/change-works/:id/evidence",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "change-works", ":id", "evidence"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileId\": \"00000000-0000-0000-0000-000000000000\",\n  \"title\": \"string\",\n  \"confirmCompleted\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: fileId, title (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /change-works/{id}/documents/{documentId} — 증빙 문서 연결 해제 (연결 기록은 남고 해제 시각만 기록)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/change-works/:id/documents/:documentId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "change-works", ":id", "documents", ":documentId"],
+              "query": [
+                {
+                  "key": "confirmCompleted",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "documentId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, documentId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "활동 기록",
+      "item": [
+        {
+          "name": "GET /audit-logs — 기록 조회 (민감 자료·직원 서류 열람, 내보내기, 단가·인건비 조회, 월 공수 확정·재오픈, 최근순 커서 방식)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/audit-logs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "audit-logs"],
+              "query": [
+                {
+                  "key": "action",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "kind",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "from",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "to",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 VALIDATION_ERROR, 401 로그인 필요"
+          }
+        }
+      ]
+    },
+    {
+      "name": "보수 요청",
+      "item": [
+        {
+          "name": "GET /repair-requests/{id} — 보수 요청 상세 (상태 이력, 연결한 작업 내역·자재 기록, 쓴 공수·자재 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/repair-requests/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "repair-requests", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /repair-requests/{id} — 보수 요청 수정 (완료 전까지만, 접수일·요청자·내용·위치)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/repair-requests/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "repair-requests", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"receivedOn\": \"2026-01-01\",\n  \"requester\": \"string\",\n  \"content\": \"string\",\n  \"location\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /repair-requests/{id}/status — 보수 요청 상태 변경 (보류·완료 되돌리기는 사유 필수, 이력에 남음)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/repair-requests/:id/status",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "repair-requests", ":id", "status"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"toStatus\": \"RECEIVED\",\n  \"effectiveOn\": \"2026-01-01\",\n  \"note\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: toStatus (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /repair-requests/{id}/links — 사후 작업 연결 (사후 작업으로 표시한 같은 프로젝트의 저장된 작업 내역 또는 자재 기록)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/repair-requests/:id/links",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "repair-requests", ":id", "links"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"workLogId\": \"00000000-0000-0000-0000-000000000000\",\n  \"materialRecordId\": \"00000000-0000-0000-0000-000000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /repair-requests/{id}/links/{linkId} — 사후 작업 연결 해제 (연결 기록은 남고 해제 시각만 기록)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/repair-requests/:id/links/:linkId",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "repair-requests", ":id", "links", ":linkId"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "linkId",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, linkId\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "월 공수표",
+      "item": [
+        {
+          "name": "GET /monthly-hours — 월 공수표 (프로젝트 × 직원별 저장된 작업 내역 공수, 확정 상태·확정 당시 기준값·임시 저장 작업 내역·이력)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/monthly-hours",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "monthly-hours"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /monthly-hours/close — 월 공수 확정 (이번 달까지, 임시 저장 작업 내역이 남아 있으면 확인 필요, 확정 당시 기준값 고정, 이력에 남음)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/monthly-hours/close",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "monthly-hours", "close"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"month\": \"string\",\n  \"confirmDrafts\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: month (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /monthly-hours/reopen — 월 공수 재오픈 (사유 필수, 이력에 남음). 재오픈하면 그달의 작업 내역을 다시 고칠 수 있다",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/monthly-hours/reopen",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "monthly-hours", "reopen"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"month\": \"string\",\n  \"reason\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: month, reason (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /monthly-hours.xlsx — 월 공수표 엑셀 내보내기 (급여·정산 담당에게 전달하는 용도, 내보낸 기록이 남음)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/monthly-hours.xlsx",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "monthly-hours.xlsx"],
+              "query": [
+                {
+                  "key": "month",
+                  "value": "",
+                  "disabled": false
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        }
+      ]
+    },
+    {
+      "name": "대시보드",
+      "item": [
+        {
+          "name": "GET /dashboard — 홈 대시보드 (오늘 투입·진행 프로젝트·위험·이번 주 인력·할 일과 켜 둔 알림)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/dashboard",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "dashboard"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        }
+      ]
+    },
+    {
+      "name": "알림",
+      "item": [
+        {
+          "name": "POST /alerts/dismiss — 알림 숨기기 (알림 키를 남겨 조건이 바뀌기 전까지 보이지 않게 함, 모두 숨기기도 같은 요청)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/alerts/dismiss",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "alerts", "dismiss"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"keys\": [\n    \"string\"\n  ]\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: keys (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        }
+      ]
+    },
+    {
+      "name": "파일 업로드",
+      "item": [
+        {
+          "name": "POST /files/{id}/complete — 업로드 완료 알림 (내용 검사·썸네일 작업 시작, 여러 번 보내도 안전)",
+          "request": {
+            "method": "POST",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/files/:id/complete",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "files", ":id", "complete"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /files/{id} — 파일 정보와 검사 상태 (거부되면 사유 포함)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/files/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "files", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /files/{id} — 폼 작성 취소로 임시 파일 삭제 (폼에 연결되지 않은 파일만, 여러 번 보내도 안전)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/files/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "files", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /files/{id}/url — 내려받기·미리보기 주소 발급 (검사가 끝난 파일만, 짧은 만료)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/files/:id/url",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "files", ":id", "url"],
+              "query": [
+                {
+                  "key": "variant",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "사진",
+      "item": [
+        {
+          "name": "GET /photos/{id} — 사진 한 장",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/photos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "photos", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /photos/{id} — 사진 정보 수정·대표 사진 지정 (대표는 프로젝트마다 한 장)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/photos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "photos", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"category\": \"BEFORE\",\n  \"area\": \"string\",\n  \"takenAt\": \"2026-01-01T00:00:00.000Z\",\n  \"workDate\": \"2026-01-01\",\n  \"description\": \"string\",\n  \"isCover\": false,\n  \"includeInSummary\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /photos/{id} — 사진 삭제 (소프트 삭제: 파일과 기록은 보존)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/photos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "photos", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "메모",
+      "item": [
+        {
+          "name": "GET /memos — 메모함(scope=INBOX) 또는 프로젝트 메모 노트(scope=PROJECT) 목록 (날짜 최근순, 태그·완료 필터, 커서 방식)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/memos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "memos"],
+              "query": [
+                {
+                  "key": "scope",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "tag",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "memoDate",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "isDone",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "cursor",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /memos — 메모 저장 (프로젝트를 정하지 않으면 메모함, 한 줄만 적어도 저장)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/memos",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "memos"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"string\",\n  \"tag\": \"OTHER\",\n  \"memoDate\": \"2026-01-01\",\n  \"projectId\": \"00000000-0000-0000-0000-000000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: content (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /memos/summary — 정리 안 된 메모함 건수와 끝내지 않은 할 일 건수",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/memos/summary",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "memos", "summary"],
+              "query": [],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 401 로그인 필요"
+          }
+        },
+        {
+          "name": "GET /memos/{id} — 메모 한 건",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/memos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "memos", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /memos/{id} — 메모 수정·프로젝트 연결(메모함 정리)·할 일 완료 표시",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/memos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "memos", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"content\": \"string\",\n  \"tag\": \"NEGOTIATION\",\n  \"memoDate\": \"2026-01-01\",\n  \"projectId\": \"00000000-0000-0000-0000-000000000000\",\n  \"isDone\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /memos/{id} — 메모 삭제 (소프트 삭제)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/memos/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "memos", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "자재",
+      "item": [
+        {
+          "name": "GET /materials — 자재 목록 (최근 기록한 자재가 먼저, 이름·규격 검색, 숨긴 자재는 기본 제외)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/materials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "materials"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "category",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "includeInactive",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "POST /materials — 자재 추가 (이름과 단위만으로 가능, 입력하다 목록에 없을 때 바로 추가)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/materials",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "materials"],
+              "query": [],
+              "variable": []
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"spec\": \"string\",\n  \"unit\": \"string\",\n  \"category\": \"CONSUMABLE\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n본문 필수 항목: name, unit (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요"
+          }
+        },
+        {
+          "name": "PATCH /materials/{id} — 자재 수정·숨기기 (기록이 있으면 단위는 바꿀 수 없음)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/materials/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "materials", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"name\": \"string\",\n  \"spec\": \"string\",\n  \"unit\": \"string\",\n  \"category\": \"RAW\",\n  \"isActive\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "자재 기록",
+      "item": [
+        {
+          "name": "PATCH /material-records/{id} — 자재 기록 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/material-records/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "material-records", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"recordDate\": \"2026-01-01\",\n  \"kind\": \"RECEIVED\",\n  \"quantity\": 0,\n  \"categoryId\": \"00000000-0000-0000-0000-000000000000\",\n  \"area\": \"string\",\n  \"partnerId\": \"00000000-0000-0000-0000-000000000000\",\n  \"sourceText\": \"string\",\n  \"isChange\": false,\n  \"isAfterService\": false,\n  \"memo\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /material-records/{id} — 자재 기록 삭제 (소프트 삭제)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/material-records/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "material-records", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "원장",
+      "item": [
+        {
+          "name": "PATCH /ledger-entries/{id} — 지출·수입 기록 수정 (구분을 바꾸면 분류도 새로 골라야 하며 안 고르면 비움)",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger-entries/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ledger-entries", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"entryDate\": \"2026-01-01\",\n  \"kind\": \"EXPENSE\",\n  \"categoryId\": \"00000000-0000-0000-0000-000000000000\",\n  \"amount\": 1,\n  \"partnerId\": \"00000000-0000-0000-0000-000000000000\",\n  \"content\": \"string\",\n  \"documentId\": \"00000000-0000-0000-0000-000000000000\",\n  \"changeWorkId\": \"00000000-0000-0000-0000-000000000000\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /ledger-entries/{id} — 지출·수입 기록 삭제 (소프트 삭제)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/ledger-entries/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "ledger-entries", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "문서함",
+      "item": [
+        {
+          "name": "GET /documents/{id} — 문서 한 건 (최신본과 이전 버전 전체)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "PATCH /documents/{id} — 문서 이름·분류·민감 표시·프로젝트 첫 화면 고정 수정",
+          "request": {
+            "method": "PATCH",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"title\": \"string\",\n  \"category\": \"DRAWING\",\n  \"isSensitive\": false,\n  \"isPinned\": false,\n  \"includeInSummary\": false\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "DELETE /documents/{id} — 문서 삭제 (소프트 삭제: 파일·버전·열람 기록은 보존)",
+          "request": {
+            "method": "DELETE",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/:id",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", ":id"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "POST /documents/{id}/versions — 새 버전 추가 (최신본이 기본으로 보이고 이전본은 보존, 개정일·사유 기록)",
+          "request": {
+            "method": "POST",
+            "header": [
+              {
+                "key": "Content-Type",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/:id/versions",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", ":id", "versions"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"fileId\": \"00000000-0000-0000-0000-000000000000\",\n  \"revisionDate\": \"2026-01-01\",\n  \"reason\": \"string\"\n}",
+              "options": {
+                "raw": {
+                  "language": "json"
+                }
+              }
+            },
+            "description": "⚠️ 데이터를 바꾸거나 지울 수 있는 요청입니다. 운영(field-note-prod) 환경에서는 신중히 보내세요\n\n로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n본문 필수 항목: fileId (값은 예시이므로 바꿔서 보내세요)\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /documents/{id}/versions/{versionNo}/url — 열람·내려받기 주소 발급 (짧은 만료, 민감 자료는 열람 기록을 남긴 뒤에만 발급)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/:id/versions/:versionNo/url",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", ":id", "versions", ":versionNo", "url"],
+              "query": [
+                {
+                  "key": "mode",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                },
+                {
+                  "key": "versionNo",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id, versionNo\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        },
+        {
+          "name": "GET /documents/{id}/access-logs — 민감 자료 열람·내려받기 기록 (최근순, 수정·삭제할 수 없는 감사 기록)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/documents/:id/access-logs",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "documents", ":id", "access-logs"],
+              "query": [],
+              "variable": [
+                {
+                  "key": "id",
+                  "value": "",
+                  "description": "필수"
+                }
+              ]
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n경로 값(Path Variables)을 채워야 합니다: id\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    },
+    {
+      "name": "검색",
+      "item": [
+        {
+          "name": "GET /search — 통합 검색 (프로젝트·직원·메모·자료·작업 내역, 종류마다 최대 개수, projectId로 프로젝트 안에서만 검색)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": {
+              "raw": "{{baseUrl}}/api/v1/search",
+              "host": ["{{baseUrl}}"],
+              "path": ["api", "v1", "search"],
+              "query": [
+                {
+                  "key": "q",
+                  "value": "",
+                  "disabled": false
+                },
+                {
+                  "key": "projectId",
+                  "value": "",
+                  "disabled": true
+                },
+                {
+                  "key": "limit",
+                  "value": "",
+                  "disabled": true
+                }
+              ],
+              "variable": []
+            },
+            "description": "로그인 필요: 먼저 \"로그인·가입 > 아이디 로그인\"을 보내 세션 쿠키를 받으세요\n\n오류 응답: 400 입력 오류, 401 로그인 필요, 404 NOT_FOUND"
+          }
+        }
+      ]
+    }
+  ]
+}
