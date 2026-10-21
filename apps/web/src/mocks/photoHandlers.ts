@@ -1,7 +1,9 @@
 import {
+  ERROR_MESSAGES,
   PHOTO_CATEGORY_LABELS,
   employeeFileParamsSchema,
   employeeFileUploadRequestSchema,
+  isStagedExpired,
   fileParamsSchema,
   fileUploadRequestSchema,
   fileUrlQuerySchema,
@@ -45,6 +47,28 @@ const seeded = new Set<string>();
 
 // 문서 목업이 쓰는 파일 조회·생성 (파일 업로드 목업과 같은 저장소를 공유)
 export const getMockFile = (id: string) => files.get(id);
+
+/**
+ * @description 폼에 연결하는 순간의 임시 파일 확정 (서버와 같은 규칙): 임시 보관이면 사용 가능으로 바꾸고,
+ * 보관 시간이 지났거나 이미 지워졌으면 false
+ * @param file 연결할 파일
+ * @returns 연결할 수 있으면 true
+ */
+export const confirmMockFile = (file: MockFile) => {
+  if (file.status === 'REJECTED' && file.rejectReason === 'EXPIRED') return false;
+
+  if (file.status !== 'STAGED') return true;
+
+  if (isStagedExpired(file.createdAt, new Date())) return false;
+
+  file.status = 'READY';
+
+  return true;
+};
+
+export const stagedExpiredDetail = [
+  { path: 'body.fileId', message: ERROR_MESSAGES.STAGED_FILE_EXPIRED },
+];
 
 export const addMockReadyFile = (
   companyId: string,
@@ -362,14 +386,37 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
           ]);
         }
 
-        // 실제 서버는 작업 큐에서 검사하지만 목업은 바로 통과시킴
-        file.status = 'READY';
+        // 실제 서버는 작업 큐에서 검사하지만 목업은 바로 통과시켜 폼에 연결되기 전까지 임시 보관으로 둠
+        file.status = 'STAGED';
         file.hasThumbnail = true;
         file.sha256 = 'b'.repeat(64);
         file.readyAt = new Date().toISOString();
       }
 
       return HttpResponse.json(toStoredFile(file));
+    }),
+
+    // 폼 작성을 취소해 임시 파일을 바로 지움 (연결된 파일은 지울 수 없고, 이미 지운 파일은 그대로 성공)
+    http.delete('/api/v1/files/:id', async ({ params }) => {
+      await latency();
+
+      const account = getCurrentAccount();
+
+      if (!account) return apiError('UNAUTHORIZED');
+
+      const parsed = fileParamsSchema.safeParse(params);
+      const file = parsed.success ? files.get(parsed.data.id) : undefined;
+
+      if (!file || file.companyId !== scopeOf(account) || file.status === 'READY') {
+        return apiError('NOT_FOUND');
+      }
+
+      if (file.status !== 'REJECTED') {
+        file.status = 'REJECTED';
+        file.rejectReason = 'DISCARDED';
+      }
+
+      return HttpResponse.json({ success: true });
     }),
 
     http.get('/api/v1/files/:id', async ({ params }) => {
@@ -410,7 +457,8 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
         return apiError('NOT_FOUND');
       }
 
-      if (file.status !== 'READY') {
+      // 임시 보관 중인 사진은 폼에서 미리 볼 수 있음
+      if (file.status !== 'READY' && !(file.status === 'STAGED' && file.purpose === 'PHOTO')) {
         return apiError('VALIDATION_ERROR', [
           { path: 'file', message: VALIDATION_MESSAGES.FILE_NOT_READY_TO_OPEN },
         ]);
@@ -465,6 +513,8 @@ export const createPhotoHandlers = ({ apiError, parseBody }: Helpers) => {
       const existing = [...photos.values()].find((photo) => photo.fileId === file.id);
 
       if (existing) return HttpResponse.json(toPhoto(existing), { status: 201 });
+
+      if (!confirmMockFile(file)) return apiError('STAGED_FILE_EXPIRED', stagedExpiredDetail);
 
       const takenAt = body.data.takenAt ?? new Date().toISOString();
       const created: MockPhoto = {

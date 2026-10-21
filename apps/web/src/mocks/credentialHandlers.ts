@@ -22,7 +22,7 @@ import type { ZodType } from 'zod';
 import { addMockAudit } from './auditHandlers';
 import type { MockAccount } from './data';
 import { DEMO_CREDENTIALS, DEMO_REQUIRED_CREDENTIALS } from './demoSource';
-import { getMockFile } from './photoHandlers';
+import { confirmMockFile, getMockFile, stagedExpiredDetail } from './photoHandlers';
 import { getCurrentAccount, getEmployees, getOptions, getProjects } from './state';
 import { mockDelay } from './latency';
 
@@ -245,6 +245,8 @@ export const createCredentialHandlers = ({ apiError, parseBody }: Helpers) => {
         { path: 'body.fileId', message: VALIDATION_MESSAGES.CREDENTIAL_FILE_NOT_EMPLOYEE },
       ]);
     }
+
+    if (!confirmMockFile(file)) return apiError('STAGED_FILE_EXPIRED', stagedExpiredDetail);
 
     return file.status === 'REJECTED'
       ? apiError('VALIDATION_ERROR', [
