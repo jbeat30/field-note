@@ -14,10 +14,13 @@ import { DocumentCategoryCards } from '../documents/DocumentCategoryCards';
 import { DocumentDetailDialog } from '../documents/DocumentDetailDialog';
 import { DocumentList } from '../documents/DocumentList';
 import { DocumentUploadForm, type DocumentFormValues } from '../documents/DocumentUploadForm';
-import { DocumentUploadError, uploadDocumentFile } from '../documents/uploadDocument';
+import { DocumentUploadError } from '../documents/uploadDocument';
 import { useAddDocumentVersion, useCreateDocument, useDocuments } from '../documents/useDocuments';
 import { useOpenDocument } from '../documents/useOpenDocument';
 import { useProject } from '../projects/useProjects';
+import { discardStagedFile } from '../staging/stageApi';
+import { useLeaveConfirm } from '../staging/useLeaveConfirm';
+import { useStagedFiles } from '../staging/useStagedFiles';
 
 import { VALIDATION_MESSAGES } from '@field-note/shared';
 // 프로젝트 문서함: 도면·작업지시서·계약서·안전 서류를 분류 폴더별로 모으고, 개정되면 새 판으로 올림 (문서)
@@ -35,6 +38,8 @@ export const ProjectDocumentsPage = () => {
   const create = useCreateDocument(id);
   const addVersion = useAddDocumentVersion();
   const { confirm, dialog: confirmDialog } = useConfirm();
+  const staged = useStagedFiles({ scope: `document:${id}`, discard: discardStagedFile });
+  const leave = useLeaveConfirm(staged, () => setIsUploadOpen(false));
   const opener = useOpenDocument();
   const all = useMemo(() => documents.data ?? [], [documents.data]);
   const counts = useMemo(() => {
@@ -54,7 +59,7 @@ export const ProjectDocumentsPage = () => {
     return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
   }
 
-  const upload = async (values: DocumentFormValues, onProgress: (ratio: number) => void) => {
+  const upload = async (values: DocumentFormValues) => {
     // 같은 이름 문서가 이미 있으면 새 판으로 올릴지 확인
     const same = all.find((item) => item.title.trim() === values.title.trim());
     const asVersion =
@@ -69,7 +74,7 @@ export const ProjectDocumentsPage = () => {
       throw new DocumentUploadError(VALIDATION_MESSAGES.DOCUMENT_NOT_UPLOADED_RENAME);
     }
 
-    const fileId = await uploadDocumentFile(id, values.file, onProgress);
+    const { fileId } = values.file;
 
     if (same) {
       await addVersion.mutateAsync({
@@ -160,14 +165,15 @@ export const ProjectDocumentsPage = () => {
       )}
       <Modal
         open={isUploadOpen}
-        onOpenChange={setIsUploadOpen}
+        onOpenChange={(open) => (open ? setIsUploadOpen(true) : void leave.requestClose())}
         title="문서 올리기"
         description="PDF·이미지 파일을 올립니다. 같은 이름의 문서가 있으면 새 판으로 올릴 수 있습니다"
         size="lg"
       >
-        <DocumentUploadForm mode="create" onSubmit={upload} />
+        <DocumentUploadForm mode="create" projectId={id} staged={staged} onSubmit={upload} />
       </Modal>
       {confirmDialog}
+      {leave.dialog}
       {opener.dialog}
     </div>
   );
