@@ -1,5 +1,6 @@
 import {
   buildStaffingGrid,
+  buildStaffingMonthCalendar,
   buildStaffingTimeline,
   summarizeStaffingTimeline,
   countDays,
@@ -261,5 +262,67 @@ describe('buildStaffingTimeline', () => {
     });
 
     expect(summarizeStaffingTimeline(rows).conflicts).toBe(2);
+  });
+});
+
+describe('buildStaffingMonthCalendar', () => {
+  const day = (employeeId: string, workDate: string, projectId: string, minutes: number) => ({
+    employeeId,
+    workDate,
+    projectId,
+    projectCode: projectId === P1 ? '2026-001' : '2026-002',
+    projectName: projectId === P1 ? '한빛 1공장' : '새론 2공장',
+    projectStatus: 'IN_PROGRESS' as const,
+    minutes,
+  });
+  // 2026-10은 목요일(1일)에 시작해 토요일(31일)에 끝남
+  const calendar: StaffingCalendar = {
+    from: '2026-10-01',
+    to: '2026-10-31',
+    employees: [employee(E1, '김철수'), employee(E2, '이영희')],
+    assignments: [],
+    workDays: [
+      day(E1, '2026-10-07', P1, 240),
+      day(E1, '2026-10-07', P2, 240),
+      day(E2, '2026-10-07', P1, 480),
+      day(E2, '2026-10-08', P1, 0),
+    ],
+  };
+
+  it('월요일 시작 주 단위로 묶고 앞뒤 빈 칸으로 한 주를 7칸 채운다', () => {
+    const weeks = buildStaffingMonthCalendar(calendar);
+
+    expect(weeks).toHaveLength(5);
+    expect(weeks.every((week) => week.length === 7)).toBe(true);
+    // 첫 주: 9/28(월)~10/4(일), 1일은 목요일이라 앞 세 칸이 빈 칸
+    expect(weeks[0]!.map((item) => [item.date, item.inMonth])).toEqual([
+      ['2026-09-28', false],
+      ['2026-09-29', false],
+      ['2026-09-30', false],
+      ['2026-10-01', true],
+      ['2026-10-02', true],
+      ['2026-10-03', true],
+      ['2026-10-04', true],
+    ]);
+    expect(weeks[4]!.at(-1)).toMatchObject({ date: '2026-11-01', inMonth: false });
+  });
+
+  it('날짜 칸에 일한 사람 수와 프로젝트별 사람, 겹친 사람 수를 담고 0분 기록은 뺀다', () => {
+    const weeks = buildStaffingMonthCalendar(calendar);
+    const seventh = weeks.flat().find((item) => item.date === '2026-10-07')!;
+
+    expect(seventh.headcount).toBe(2);
+    expect(seventh.conflictCount).toBe(1);
+    expect(
+      seventh.projects.map((project) => [project.name, project.people.map((p) => p.name)]),
+    ).toEqual([
+      ['새론 2공장', ['김철수']],
+      ['한빛 1공장', ['김철수', '이영희']],
+    ]);
+    expect(weeks.flat().find((item) => item.date === '2026-10-08')).toMatchObject({
+      headcount: 0,
+      projects: [],
+      conflictCount: 0,
+    });
   });
 });

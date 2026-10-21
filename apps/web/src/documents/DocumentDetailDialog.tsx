@@ -18,7 +18,6 @@ import { getErrorDetailMessage } from '../lib/apiError';
 import { formatDay } from '../lib/dates';
 
 import { DocumentUploadForm, type DocumentFormValues } from './DocumentUploadForm';
-import { uploadDocumentFile } from './uploadDocument';
 import {
   useAddDocumentVersion,
   useDeleteDocument,
@@ -27,6 +26,9 @@ import {
   useUpdateDocument,
 } from './useDocuments';
 import { useOpenDocument } from './useOpenDocument';
+import { discardStagedFile } from '../staging/stageApi';
+import { useLeaveConfirm } from '../staging/useLeaveConfirm';
+import { useStagedFiles, type StagedFiles } from '../staging/useStagedFiles';
 
 type DocumentDetailDialogProps = {
   documentId: string;
@@ -46,7 +48,15 @@ const formatTime = (iso: string) =>
   });
 
 // 문서 상세: 모든 버전(최신이 맨 앞, 이전본 보존), 새 버전 올리기, 이름·분류·민감 표시 수정, 민감 자료의 열람 기록, 삭제
-const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => void }) => {
+const Body = ({
+  document,
+  staged,
+  onClose,
+}: {
+  document: DocumentDetail;
+  staged: StagedFiles;
+  onClose: () => void;
+}) => {
   const update = useUpdateDocument();
   const remove = useDeleteDocument();
   const addVersion = useAddDocumentVersion();
@@ -75,13 +85,11 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
     }
   };
 
-  const uploadVersion = async (values: DocumentFormValues, onProgress: (ratio: number) => void) => {
-    const fileId = await uploadDocumentFile(document.projectId, values.file, onProgress);
-
+  const uploadVersion = async (values: DocumentFormValues) => {
     await addVersion.mutateAsync({
       id: document.id,
       body: {
-        fileId,
+        fileId: values.file.fileId,
         revisionDate: values.revisionDate || undefined,
         reason: values.reason.trim() || undefined,
       },
@@ -220,7 +228,12 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
         <p className="text-sm text-foreground/70">
           개정된 파일을 올리면 최신본이 바뀌고 이전본은 그대로 남습니다
         </p>
-        <DocumentUploadForm mode="version" onSubmit={uploadVersion} />
+        <DocumentUploadForm
+          mode="version"
+          projectId={document.projectId}
+          staged={staged}
+          onSubmit={uploadVersion}
+        />
       </section>
 
       {document.isSensitive && (
@@ -270,9 +283,11 @@ const Body = ({ document, onClose }: { document: DocumentDetail; onClose: () => 
 
 export const DocumentDetailDialog = ({ documentId, onClose }: DocumentDetailDialogProps) => {
   const document = useDocument(documentId);
+  const staged = useStagedFiles({ scope: `version:${documentId}`, discard: discardStagedFile });
+  const leave = useLeaveConfirm(staged, onClose);
 
   return (
-    <Dialog.Root open onOpenChange={(open) => !open && onClose()}>
+    <Dialog.Root open onOpenChange={(open) => !open && void leave.requestClose()}>
       <Dialog.Portal>
         <Dialog.Overlay className="fixed inset-0 bg-overlay" />
         <Dialog.Content
@@ -292,10 +307,16 @@ export const DocumentDetailDialog = ({ documentId, onClose }: DocumentDetailDial
           {document.isPending && <p className="text-sm">불러오는 중</p>}
           {document.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
           {document.data && (
-            <Body key={document.data.updatedAt} document={document.data} onClose={onClose} />
+            <Body
+              key={document.data.updatedAt}
+              document={document.data}
+              staged={staged}
+              onClose={onClose}
+            />
           )}
         </Dialog.Content>
       </Dialog.Portal>
+      {leave.dialog}
     </Dialog.Root>
   );
 };

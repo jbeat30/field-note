@@ -2,6 +2,7 @@ import { getErrorDetailMessage } from '../lib/apiError';
 
 import { StepError, type UploadApi, type UploadTicket } from './uploadQueue';
 import { apiClient } from '../api/client';
+import { discardStagedFile } from '../staging/stageApi';
 
 import { VALIDATION_MESSAGES } from '@field-note/shared';
 /**
@@ -99,6 +100,8 @@ export const createUploadApi = (): UploadApi => ({
       throw error;
     }
   },
+
+  discard: discardStagedFile,
 
   register: async (projectId, fileId, meta) => {
     await callApi(() =>

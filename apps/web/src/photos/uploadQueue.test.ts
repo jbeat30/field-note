@@ -44,6 +44,7 @@ const setup = (overrides: Partial<UploadApi> = {}, initial: UploadItem[] = []) =
     put: async () => void calls.push('put'),
     complete: async (fileId) => void calls.push(`complete:${fileId}`),
     register: async (_projectId, fileId) => void calls.push(`register:${fileId}`),
+    discard: async (fileId) => void calls.push(`discard:${fileId}`),
     ...overrides,
   };
   const memory = memoryStore(initial);
@@ -271,6 +272,34 @@ describe('업로드 대기열', () => {
     await s.queue.idle();
 
     expect(s.calls).toEqual([]);
+  });
+
+  it('이미 서버에 올라간 사진을 등록 전에 취소하면 임시 파일도 지운다', async () => {
+    const s = setup({
+      register: async () => {
+        throw new StepError('PERMANENT', '등록할 수 없는 파일입니다');
+      },
+    });
+    const id = await s.queue.enqueue('p1', blob, 'a.jpg', meta);
+
+    await s.queue.idle();
+    expect(s.queue.getItems()[0]).toMatchObject({ status: 'FAILED', step: 'REGISTER' });
+
+    await s.queue.cancel(id);
+
+    expect(s.calls).toContain('discard:file-1');
+  });
+
+  it('서버에 올리기 전에 취소하면 지울 임시 파일이 없다', async () => {
+    const s = setup();
+
+    s.online.value = false;
+
+    const id = await s.queue.enqueue('p1', blob, 'a.jpg', meta);
+
+    await s.queue.cancel(id);
+
+    expect(s.calls.filter((call) => call.startsWith('discard'))).toEqual([]);
   });
 
   it('구독자에게 변경을 알린다', async () => {

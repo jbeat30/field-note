@@ -6,7 +6,7 @@ import {
   previousMonth,
   shiftDate,
   todayInSeoul,
-  weekRange,
+  dashboardCalendarRange,
   type AlertDismiss,
   type AlertSettings,
   type AlertSettingsUpdate,
@@ -40,7 +40,7 @@ const toSettings = (rows: { kind: string; enabled: boolean }[]): AlertSettings =
 /**
  * @description 대시보드·알림 서비스 (앱 계정으로 자기 회사 범위에서만 조회, 알림 설정만 저장)
  * @param app 앱 계정(DATABASE_URL, RLS 적용) Prisma 클라이언트
- * @param assignments 투입 서비스 (이번 주 인력 배치 조회용)
+ * @param assignments 투입 서비스 (이번 달 인력 배치 조회용)
  * @param now 현재 시각 (시험에서 고정)
  * @returns 대시보드·알림 서비스
  */
@@ -55,8 +55,7 @@ export const createDashboardService = (
   return {
     get: async (companyId) => {
       const today = todayInSeoul(now());
-      const week = weekRange(today);
-      const calendar = await assignments.calendar(companyId, week);
+      const calendar = await assignments.calendar(companyId, dashboardCalendarRange(today));
       const settings = await loadSettings(companyId);
       const data = await withCompany(app, companyId, async (tx) => {
         const projects = await tx.project.findMany({
