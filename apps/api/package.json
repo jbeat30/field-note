@@ -16,7 +16,8 @@
     "operator": "tsx --env-file-if-exists=../../.env scripts/operator.ts",
     "backup": "tsx --env-file-if-exists=../../.env scripts/backup.ts",
     "mail:check": "tsx --env-file-if-exists=../../.env scripts/mail-check.ts",
-    "alert:mail": "tsx --env-file-if-exists=../../.env scripts/alert-mail.ts"
+    "alert:mail": "tsx --env-file-if-exists=../../.env scripts/alert-mail.ts",
+    "postman:generate": "tsx scripts/generate-postman.ts"
   },
   "dependencies": {
     "@asteasolutions/zod-to-openapi": "9.1.0",

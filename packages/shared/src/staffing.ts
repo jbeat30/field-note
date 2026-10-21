@@ -323,3 +323,90 @@ export const summarizeStaffingTimeline = (rows: readonly StaffingTimelineRow[]) 
     0,
   ),
 });
+
+// ── 달력(월간) 보기 ──
+// 날짜 칸마다 그날 저장된 작업 내역에 들어간 사람과 프로젝트를 모아 보여 줌
+
+export type StaffingMonthPerson = { employeeId: string; name: string; minutes: number };
+
+export type StaffingMonthProject = {
+  projectId: string;
+  name: string;
+  people: StaffingMonthPerson[];
+};
+
+export type StaffingMonthDay = {
+  date: string;
+  // 기간 밖 칸(앞뒤 주를 채우는 빈 칸)이면 false
+  inMonth: boolean;
+  // 그날 일한 사람 수 (두 프로젝트에 들어간 사람도 한 명)
+  headcount: number;
+  projects: StaffingMonthProject[];
+  // 같은 날 두 프로젝트 이상에 들어간 사람 수
+  conflictCount: number;
+};
+
+/**
+ * @description 인력 캘린더를 월요일 시작 주 단위 달력으로 변환 (0분 기록은 제외, 인력 타임라인과 같은 기준)
+ * 기간 앞뒤는 빈 칸으로 채워 한 주가 항상 7칸이 되게 함
+ * @param calendar 캘린더 응답 (보통 한 달)
+ * @returns 주 단위 날짜 칸 (프로젝트는 이름순, 사람은 이름순)
+ */
+export const buildStaffingMonthCalendar = (calendar: StaffingCalendar): StaffingMonthDay[][] => {
+  const names = new Map(calendar.employees.map((employee) => [employee.id, employee.name]));
+  const byDate = new Map<string, StaffingWorkDay[]>();
+
+  for (const item of calendar.workDays) {
+    if (item.minutes <= 0) continue;
+
+    byDate.set(item.workDate, [...(byDate.get(item.workDate) ?? []), item]);
+  }
+
+  const dayOf = (date: string, inMonth: boolean): StaffingMonthDay => {
+    const items = byDate.get(date) ?? [];
+    const projects = new Map<string, StaffingMonthProject>();
+    const projectCountByPerson = new Map<string, number>();
+
+    for (const item of items) {
+      const project = projects.get(item.projectId) ?? {
+        projectId: item.projectId,
+        name: item.projectName,
+        people: [],
+      };
+
+      project.people.push({
+        employeeId: item.employeeId,
+        name: names.get(item.employeeId) ?? '',
+        minutes: item.minutes,
+      });
+      projects.set(item.projectId, project);
+      projectCountByPerson.set(
+        item.employeeId,
+        (projectCountByPerson.get(item.employeeId) ?? 0) + 1,
+      );
+    }
+
+    return {
+      date,
+      inMonth,
+      headcount: projectCountByPerson.size,
+      projects: [...projects.values()]
+        .map((project) => ({
+          ...project,
+          people: project.people.sort((a, b) => a.name.localeCompare(b.name, 'ko')),
+        }))
+        .sort((a, b) => a.name.localeCompare(b.name, 'ko')),
+      conflictCount: [...projectCountByPerson.values()].filter((count) => count > 1).length,
+    };
+  };
+
+  // 월요일 시작: 일요일(0)은 6칸 앞, 그 밖은 요일 - 1칸 앞
+  const weekdayIndex = (date: string) => (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
+  const start = shiftDate(calendar.from, -weekdayIndex(calendar.from));
+  const end = shiftDate(calendar.to, 6 - weekdayIndex(calendar.to));
+  const days = listDates(start, end).map((date) =>
+    dayOf(date, date >= calendar.from && date <= calendar.to),
+  );
+
+  return Array.from({ length: days.length / 7 }, (_, week) => days.slice(week * 7, week * 7 + 7));
+};

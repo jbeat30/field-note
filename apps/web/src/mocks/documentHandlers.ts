@@ -23,7 +23,12 @@ import type { ZodType } from 'zod';
 
 import { addMockAudit } from './auditHandlers';
 import type { MockAccount } from './data';
-import { addMockReadyFile, getMockFile } from './photoHandlers';
+import {
+  addMockReadyFile,
+  confirmMockFile,
+  getMockFile,
+  stagedExpiredDetail,
+} from './photoHandlers';
 import { getCurrentAccount, getProjects } from './state';
 import { mockDelay } from './latency';
 
@@ -278,6 +283,8 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
         { path: 'body.fileId', message: VALIDATION_MESSAGES.DOCUMENT_FILE_NOT_IN_PROJECT },
       ]);
     }
+
+    if (!confirmMockFile(file)) return apiError('STAGED_FILE_EXPIRED', stagedExpiredDetail);
 
     if (file.status === 'REJECTED') {
       return apiError('VALIDATION_ERROR', [

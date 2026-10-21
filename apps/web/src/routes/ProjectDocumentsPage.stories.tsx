@@ -157,6 +157,7 @@ export const UploadNewDocument: Story = {
       dialog.getByLabelText('문서 파일'),
       new File(['%PDF-1.7'], '안전점검표.pdf', { type: 'application/pdf' }),
     );
+    await dialog.findByText(/올려 두었습니다/);
     await chooseOption(dialog.getByLabelText('분류'), '안전·검사');
     await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
@@ -186,6 +187,7 @@ export const SameNameOffersNewVersion: Story = {
       dialog.getByLabelText('문서 파일'),
       new File(['%PDF-1.7'], '도급 계약서.pdf', { type: 'application/pdf' }),
     );
+    await dialog.findByText(/올려 두었습니다/);
     await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
     const confirmDialog = within(await within(document.body).findByRole('alertdialog'));
@@ -204,6 +206,47 @@ export const SameNameOffersNewVersion: Story = {
   },
 };
 
+// 올려 둔 파일이 있는 채로 폼을 닫으려 하면 확인을 받고, 그만두면 파일이 지워져 다시 열어도 비어 있음
+export const CloseDiscardsStagedFile: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await canvas.findByText('1층 시공도');
+
+    const dialog = await openUpload(canvas);
+
+    await userEvent.upload(
+      dialog.getByLabelText('문서 파일'),
+      new File(['%PDF-1.7'], '임시.pdf', { type: 'application/pdf' }),
+    );
+    await dialog.findByText(/올려 두었습니다/);
+
+    // 계속 작성하면 폼과 올린 파일이 그대로
+    await userEvent.click(dialog.getByRole('button', { name: '닫기' }));
+
+    const confirmDialog = within(await within(document.body).findByRole('alertdialog'));
+
+    await userEvent.click(confirmDialog.getByRole('button', { name: '계속 작성' }));
+    await expect(dialog.getByText('임시.pdf')).toBeInTheDocument();
+
+    // 그만두면 폼이 닫히고, 다시 열면 올린 파일이 없음
+    await userEvent.click(dialog.getByRole('button', { name: '닫기' }));
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '그만두고 파일 삭제',
+      }),
+    );
+    await waitFor(() =>
+      expect(within(document.body).queryByRole('dialog')).not.toBeInTheDocument(),
+    );
+
+    const reopened = await openUpload(canvas);
+
+    await expect(reopened.queryByText('임시.pdf')).not.toBeInTheDocument();
+    await expect(reopened.getByRole('button', { name: '파일 고르기' })).toBeInTheDocument();
+  },
+};
+
 export const UnsupportedFileIsRejected: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -216,7 +259,6 @@ export const UnsupportedFileIsRejected: Story = {
     await userEvent.upload(dialog.getByLabelText('문서 파일'), new File(['MZ'], '설치.exe'), {
       applyAccept: false,
     });
-    await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
     await expect(await dialog.findByRole('alert')).toHaveTextContent('올릴 수 없는 파일 형식');
   },
@@ -249,6 +291,7 @@ export const DetailAddVersionAndDelete: Story = {
       dialog.getByLabelText('새 버전 파일'),
       new File(['%PDF-1.7'], '시방서_rev2.pdf', { type: 'application/pdf' }),
     );
+    await dialog.findByText(/올려 두었습니다/);
     await userEvent.type(dialog.getByLabelText('개정 사유'), '마감 색상 변경');
     await userEvent.click(
       within(dialog.getByLabelText('새 버전 파일').closest('form')!).getByRole('button', {

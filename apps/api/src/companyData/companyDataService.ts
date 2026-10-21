@@ -52,17 +52,26 @@ export const createCompanyDataService = ({
   usage: (companyId) =>
     withCompany(app, companyId, async (tx) => {
       const company = await tx.company.findUniqueOrThrow({ where: { id: companyId } });
-      // 용량 계산과 같은 기준: 검사 중·사용 가능 파일과 주소가 유효한 업로드 신청
+      // 용량 계산과 같은 기준: 검사 중·임시 보관·사용 가능 파일과 주소가 유효한 업로드 신청
       const where = {
         OR: [
-          { status: { in: ['PROCESSING', 'READY'] as ('PROCESSING' | 'READY')[] } },
+          {
+            status: {
+              in: ['PROCESSING', 'STAGED', 'READY'] as ('PROCESSING' | 'STAGED' | 'READY')[],
+            },
+          },
           {
             status: 'PENDING' as const,
             createdAt: { gt: new Date(now().getTime() - FILE_UPLOAD_URL_TTL_SECONDS * 1000) },
           },
         ],
       };
-      const [byPurpose, byProject] = await Promise.all([
+      const [staged, byPurpose, byProject] = await Promise.all([
+        tx.storedFile.aggregate({
+          where: { status: 'STAGED' },
+          _sum: { sizeBytes: true },
+          _count: { _all: true },
+        }),
         tx.storedFile.groupBy({
           by: ['purpose'],
           where,
@@ -85,6 +94,8 @@ export const createCompanyDataService = ({
       return {
         quotaBytes: Number(company.storageQuotaBytes),
         usedBytes: byPurpose.reduce((sum, row) => sum + Number(row._sum.sizeBytes ?? 0n), 0),
+        stagedBytes: Number(staged._sum.sizeBytes ?? 0n),
+        stagedCount: staged._count._all,
         byPurpose: byPurpose.map((row) => ({
           purpose: row.purpose,
           bytes: Number(row._sum.sizeBytes ?? 0n),
