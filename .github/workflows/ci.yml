@@ -5,6 +5,11 @@ on:
     branches: [main]
   pull_request:
 
+# 변경 파일 목록 조회(pull-requests)만 더하고 쓰기 권한은 주지 않음
+permissions:
+  contents: read
+  pull-requests: read
+
 # 같은 PR에 새로 푸시하면 이전 실행을 취소
 concurrency:
   group: ci-${{ github.event.pull_request.number || github.ref }}
