@@ -76,6 +76,8 @@ export type UploadApi = {
   put: (ticket: UploadTicket, blob: Blob) => Promise<void>;
   complete: (fileId: string) => Promise<void>;
   register: (projectId: string, fileId: string, meta: UploadMeta) => Promise<void>;
+  // 사진으로 등록하지 않기로 한 올려 둔 파일을 서버에서 지움 (실패해도 24시간 만료가 정리)
+  discard?: (fileId: string) => Promise<unknown>;
 };
 
 export type UploadStore = {
@@ -334,10 +336,17 @@ export const createUploadQueue = (deps: UploadQueueDeps): UploadQueue => {
       kick();
     },
     cancel: async (id) => {
+      const cancelled = find(id);
+
       items = items.filter((item) => item.id !== id);
       emit();
       await deps.store.remove(id);
       await deps.store.removeBlob(id);
+
+      // 이미 서버에 올라간 파일은 등록하지 않기로 했으므로 임시 파일을 지움
+      if (cancelled?.fileId && cancelled.status !== 'DONE') {
+        await deps.api.discard?.(cancelled.fileId).catch(() => undefined);
+      }
     },
     clearDone: () => {
       items = items.filter((item) => item.status !== 'DONE');
