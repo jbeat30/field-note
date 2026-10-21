@@ -14,6 +14,7 @@ import {
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { confirmStagedFile } from '../file/stagedFile';
 import type { ObjectStorage } from '../storage/objectStorage';
 
 export class CredentialError extends Error {
@@ -162,7 +163,10 @@ export const createCredentialService = ({
       throw invalid('body.fileId', '이 직원의 서류로 올린 파일이 아닙니다');
     }
 
-    if (file.status === 'REJECTED') {
+    // 임시 보관 중인 파일은 여기서 사용 가능으로 확정, 보관 시간이 지났으면 만료 오류
+    const confirmed = await confirmStagedFile(tx, file.companyId, file.id, now());
+
+    if ((confirmed ?? file).status === 'REJECTED') {
       throw invalid('body.fileId', '검사에서 거부된 파일은 연결할 수 없습니다');
     }
   };

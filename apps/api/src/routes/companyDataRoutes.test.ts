@@ -129,6 +129,8 @@ describe('저장 용량 현황', () => {
     expect(storageUsageSchema.parse((await get('/company/storage')).body)).toEqual({
       quotaBytes: 5_368_709_120,
       usedBytes: 0,
+      stagedBytes: 0,
+      stagedCount: 0,
       byPurpose: [],
       byProject: [],
     });
@@ -152,6 +154,7 @@ describe('저장 용량 현황', () => {
     const usage = storageUsageSchema.parse((await get('/company/storage')).body);
 
     expect(usage.usedBytes).toBe(4000);
+    expect(usage.stagedBytes).toBe(0);
     expect(usage.byPurpose).toEqual([{ purpose: 'PHOTO', bytes: 4000, count: 2 }]);
     expect(usage.byProject[0]).toMatchObject({
       projectId,
@@ -159,6 +162,24 @@ describe('저장 용량 현황', () => {
       bytes: 4000,
       count: 2,
     });
+  });
+});
+
+describe('저장 용량의 임시 파일', () => {
+  it('폼에 연결되지 않은 임시 파일은 사용량에 포함되고 따로도 집계된다', async () => {
+    const { post, get, projectId, companyId } = await setup();
+
+    await post(`/projects/${projectId}/files`, {
+      name: 'a.jpg',
+      contentType: 'image/jpeg',
+      purpose: 'PHOTO',
+      size: 3000,
+    });
+    await db.owner.storedFile.updateMany({ where: { companyId }, data: { status: 'STAGED' } });
+
+    const usage = storageUsageSchema.parse((await get('/company/storage')).body);
+
+    expect(usage).toMatchObject({ usedBytes: 3000, stagedBytes: 3000, stagedCount: 1 });
   });
 });
 

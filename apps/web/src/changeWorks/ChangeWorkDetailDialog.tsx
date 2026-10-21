@@ -25,11 +25,13 @@ import { Modal } from '../components/ui/modal';
 import { Select } from '../components/ui/select';
 import { Textarea } from '../components/ui/textarea';
 import { DOCUMENT_ACCEPT, titleFromFileName } from '../documents/documentFile';
-import { DocumentUploadError, uploadDocumentFile } from '../documents/uploadDocument';
+import { DocumentUploadError } from '../documents/uploadDocument';
 import { useDocuments } from '../documents/useDocuments';
 import { useOpenDocument } from '../documents/useOpenDocument';
 import { formatDay } from '../lib/dates';
 import { splitServerErrors } from '../lib/serverErrors';
+import { discardStagedFile, stageDocumentFile } from '../staging/stageApi';
+import type { StagedFile } from '../staging/stagedFiles';
 
 import {
   useAddChangeWorkEvidence,
@@ -268,18 +270,24 @@ const Evidence = ({
   const upload = async (file: File | undefined) => {
     if (!file) return;
 
+    let staged: StagedFile | null = null;
+
     setError('');
     setProgress(0);
 
     try {
-      const fileId = await uploadDocumentFile(projectId, file, setProgress);
+      // 고르는 즉시 증빙으로 등록하는 동작이라 임시 보관은 올리기부터 등록까지 잠깐뿐
+      staged = await stageDocumentFile(projectId, file, setProgress);
 
       await addEvidence.mutateAsync({
-        fileId,
+        fileId: staged.fileId,
         title: titleFromFileName(file.name).slice(0, 100),
         ...(confirmCompleted ? { confirmCompleted: true } : {}),
       });
     } catch (caught) {
+      // 등록하지 못한 임시 파일이 저장 용량을 차지하지 않게 바로 지움
+      if (staged) void discardStagedFile(staged.fileId);
+
       setError(
         caught instanceof DocumentUploadError ? caught.message : splitServerErrors(caught, []).root,
       );

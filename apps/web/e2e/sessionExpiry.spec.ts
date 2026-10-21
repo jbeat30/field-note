@@ -41,7 +41,7 @@ test('연결이 끊기면 안내 띠가 보이고 연결되면 사라진다', as
   await expect(page.getByText('인터넷에 연결되어 있지 않습니다')).toBeHidden();
 });
 
-test('직접 로그아웃하면 만료 안내 없이 로그인 화면으로 가고, 다시 로그인하면 홈으로 간다', async ({
+test('직접 로그아웃하면 만료 안내 없이 로그인 화면으로 가고, 다시 로그인하면 대시보드로 간다', async ({
   page,
 }) => {
   await login(page);

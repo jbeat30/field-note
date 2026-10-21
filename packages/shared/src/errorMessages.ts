@@ -19,7 +19,10 @@ export const ERROR_MESSAGES: Record<ErrorCode, string> = {
   EMAIL_CODE_INVALID: '인증 코드가 올바르지 않거나 만료되었습니다',
   NOT_IMPLEMENTED: '아직 제공되지 않는 기능입니다',
   NOT_FOUND: '요청한 자료를 찾을 수 없습니다',
-  STORAGE_QUOTA_EXCEEDED: '저장 용량 한도를 넘어 파일을 올릴 수 없습니다. 관리자에게 문의해 주세요',
+  STORAGE_QUOTA_EXCEEDED:
+    '저장 용량 한도를 넘어 파일을 올릴 수 없습니다. 아직 저장하지 않은 임시 파일도 용량에 포함되니, 작성 중인 내용을 저장하거나 필요 없는 파일을 지운 뒤 다시 시도해 주세요. 계속되면 관리자에게 문의해 주세요',
+  STAGED_FILE_EXPIRED:
+    '올린 지 하루가 지나 임시 보관이 끝난 파일이 있습니다. 해당 파일만 다시 올려 주세요',
   CONFLICT: '다른 곳에서 먼저 수정되었습니다. 새로 고친 뒤 다시 시도해 주세요',
   IDEMPOTENCY_KEY_REQUIRED: '요청 식별 키가 필요합니다',
   IDEMPOTENCY_KEY_REUSED: '같은 요청 식별 키로 다른 내용을 보낼 수 없습니다',
@@ -48,6 +51,7 @@ export const ERROR_STATUS: Record<ErrorCode, number> = {
   NOT_FOUND: 404,
   CONFLICT: 409,
   STORAGE_QUOTA_EXCEEDED: 409,
+  STAGED_FILE_EXPIRED: 409,
   IDEMPOTENCY_KEY_REQUIRED: 400,
   IDEMPOTENCY_KEY_REUSED: 422,
   IDEMPOTENCY_IN_PROGRESS: 409,

@@ -3,6 +3,7 @@ import {
   CREDENTIAL_STATUS_LABELS,
   credentialCreateSchema,
   credentialUpdateSchema,
+  ERROR_MESSAGES,
   type EmployeeCredential,
   VALIDATION_MESSAGES,
 } from '@field-note/shared';
@@ -14,16 +15,21 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { Modal } from '../components/ui/modal';
 import { DateInput } from '../components/ui/date-input';
-import { getErrorDetailMessage } from '../lib/apiError';
+import { getErrorCode, getErrorDetailMessage } from '../lib/apiError';
 import { isHttpUrl } from '../lib/safeReturnPath';
 import { splitServerErrors } from '../lib/serverErrors';
 import { OptionSelect } from '../employees/OptionSelect';
 import { useOptions } from '../settings/useOptions';
+import { LeaveGuard } from '../staging/LeaveGuard';
+import { discardStagedFile } from '../staging/stageApi';
+import { scrollToStagedField, StagedFileField } from '../staging/StagedFileField';
+import { useLeaveConfirm } from '../staging/useLeaveConfirm';
+import { useStagedFiles } from '../staging/useStagedFiles';
 
 import {
   EMPLOYEE_DOCUMENT_ACCEPT,
   fetchCredentialFileUrl,
-  uploadEmployeeDocument,
+  stageEmployeeDocument,
   useCreateCredential,
   useCredentials,
   useRemoveCredential,
@@ -86,9 +92,21 @@ const CredentialRow = ({
   const [issuedOn, setIssuedOn] = useState(credential.issuedOn ?? '');
   const [expiresOn, setExpiresOn] = useState(credential.expiresOn ?? '');
   const [memo, setMemo] = useState(credential.memo ?? '');
-  const [file, setFile] = useState<File | null>(null);
+  const fieldId = `credential-file-${credential.id}`;
+  const staged = useStagedFiles({
+    scope: `credential:${credential.id}`,
+    discard: discardStagedFile,
+  });
+  const leave = useLeaveConfirm(staged, () => setEditing(false));
   const [busy, setBusy] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
+
+  // 보관이 끝난 파일은 그 파일만 다시 올리게 안내하고 나머지 입력은 유지
+  const showExpired = (fileId: string) => {
+    staged.markExpired(fileId);
+    onError(ERROR_MESSAGES.STAGED_FILE_EXPIRED);
+    scrollToStagedField(fieldId);
+  };
 
   const save = async () => {
     setErrors({});
@@ -112,18 +130,30 @@ const CredentialRow = ({
       return;
     }
 
+    const fileId = staged.files[0]?.fileId;
+
+    if (fileId && staged.expiredIds.has(fileId)) {
+      showExpired(fileId);
+
+      return;
+    }
+
     setBusy(true);
 
     try {
-      const fileId = file ? await uploadEmployeeDocument(employeeId, file) : undefined;
-
       await update.mutateAsync({
         credentialId: credential.id,
         body: { ...parsed.data, ...(fileId ? { fileId } : {}) },
       });
+      staged.release();
       setEditing(false);
-      setFile(null);
     } catch (caught) {
+      if (fileId && getErrorCode(caught) === 'STAGED_FILE_EXPIRED') {
+        showExpired(fileId);
+
+        return;
+      }
+
       const { byField, root } = splitServerErrors(caught, FIELDS);
 
       setErrors(byField);
@@ -227,12 +257,17 @@ const CredentialRow = ({
             hint="이미지·PDF만 올릴 수 있습니다"
             error={errors.fileId}
           >
-            <Input
-              type="file"
+            <StagedFileField
+              id={fieldId}
+              label="서류 파일"
+              staged={staged}
+              stage={(file, onProgress) => stageEmployeeDocument(employeeId, file, onProgress)}
               accept={EMPLOYEE_DOCUMENT_ACCEPT}
-              onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+              onError={onError}
+              disabled={busy}
             />
           </FormField>
+          <LeaveGuard active={staged.files.length > 0} onLeave={staged.discardAll} />
           <div className="flex gap-2">
             <Button type="button" disabled={busy} onClick={() => void save()}>
               {busy ? '저장 중' : '저장'}
@@ -241,13 +276,14 @@ const CredentialRow = ({
               type="button"
               variant="secondary"
               disabled={busy}
-              onClick={() => setEditing(false)}
+              onClick={() => void leave.requestClose()}
             >
               취소
             </Button>
           </div>
         </div>
       )}
+      {leave.dialog}
     </li>
   );
 };
@@ -261,12 +297,23 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
   const [issuedOn, setIssuedOn] = useState('');
   const [expiresOn, setExpiresOn] = useState('');
   const [memo, setMemo] = useState('');
-  const [file, setFile] = useState<File | null>(null);
-  const [fileKey, setFileKey] = useState(0);
   const [busy, setBusy] = useState(false);
   const [open, setOpen] = useState(false);
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [rootError, setRootError] = useState('');
+  const staged = useStagedFiles({
+    scope: `credential-new:${employeeId}`,
+    discard: discardStagedFile,
+  });
+  const leave = useLeaveConfirm(staged, () => setOpen(false));
+  const createFieldId = 'credential-new-file';
+
+  // 보관이 끝난 파일은 그 파일만 다시 올리게 안내하고 나머지 입력은 유지
+  const showExpired = (fileId: string) => {
+    staged.markExpired(fileId);
+    setRootError(ERROR_MESSAGES.STAGED_FILE_EXPIRED);
+    scrollToStagedField(createFieldId);
+  };
 
   const submit = async (event: FormEvent) => {
     event.preventDefault();
@@ -296,21 +343,31 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
       return;
     }
 
+    const fileId = staged.files[0]?.fileId;
+
+    if (fileId && staged.expiredIds.has(fileId)) {
+      showExpired(fileId);
+
+      return;
+    }
+
     setBusy(true);
 
     try {
-      const fileId = file ? await uploadEmployeeDocument(employeeId, file) : undefined;
-
       await create.mutateAsync({ ...parsed.data, ...(fileId ? { fileId } : {}) });
       setTypeId('');
       setIssuedOn('');
       setExpiresOn('');
       setMemo('');
-      setFile(null);
-      // 같은 파일을 다시 고를 수 있도록 입력칸을 새로 그림
-      setFileKey((key) => key + 1);
+      staged.release();
       setOpen(false);
     } catch (caught) {
+      if (fileId && getErrorCode(caught) === 'STAGED_FILE_EXPIRED') {
+        showExpired(fileId);
+
+        return;
+      }
+
       const { byField, root } = splitServerErrors(caught, FIELDS);
 
       setErrors(byField);
@@ -357,7 +414,11 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
           ))}
         </ul>
       )}
-      <Modal open={open} onOpenChange={setOpen} title="서류 등록">
+      <Modal
+        open={open}
+        onOpenChange={(next) => (next ? setOpen(true) : void leave.requestClose())}
+        title="서류 등록"
+      >
         {open && (
           <form
             className="flex flex-col gap-3"
@@ -396,19 +457,24 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
               hint="이미지·PDF만 올릴 수 있습니다"
               error={errors.fileId}
             >
-              <Input
-                key={fileKey}
-                type="file"
+              <StagedFileField
+                id={createFieldId}
+                label="서류 파일"
+                staged={staged}
+                stage={(file, onProgress) => stageEmployeeDocument(employeeId, file, onProgress)}
                 accept={EMPLOYEE_DOCUMENT_ACCEPT}
-                onChange={(event) => setFile(event.target.files?.[0] ?? null)}
+                onError={setRootError}
+                disabled={busy}
               />
             </FormField>
+            <LeaveGuard active={staged.files.length > 0} onLeave={staged.discardAll} />
             <Button type="submit" disabled={busy}>
               {busy ? '등록 중' : '서류 등록'}
             </Button>
           </form>
         )}
       </Modal>
+      {leave.dialog}
     </section>
   );
 };

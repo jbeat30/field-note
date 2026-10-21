@@ -20,7 +20,7 @@ test('로그인하지 않고 열었던 화면으로 로그인 뒤에 돌아온�
   await expect(page).toHaveURL(/\/employees$/);
 });
 
-test('주소에 넣은 이동 대상은 무시하고 홈으로 간다', async ({ page }) => {
+test('주소에 넣은 이동 대상은 무시하고 대시보드로 간다', async ({ page }) => {
   await page.goto('/login?next=https://evil.example&from=//evil.example&returnTo=/employees');
   await signIn(page);
 

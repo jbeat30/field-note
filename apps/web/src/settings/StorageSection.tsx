@@ -21,7 +21,7 @@ export const StorageSection = () => {
     return <p className="text-sm">불러오는 중</p>;
   }
 
-  const { quotaBytes, usedBytes, byPurpose, byProject } = usage.data;
+  const { quotaBytes, usedBytes, stagedBytes, stagedCount, byPurpose, byProject } = usage.data;
   const percent = quotaBytes > 0 ? Math.min(100, Math.round((usedBytes / quotaBytes) * 100)) : 100;
   const level = storageLevel(usedBytes, quotaBytes);
 
@@ -35,6 +35,12 @@ export const StorageSection = () => {
         </span>
       </p>
       <ProgressBar aria-label="저장 용량 사용률" value={percent} />
+      {stagedCount > 0 && (
+        <p className="text-sm text-foreground/70">
+          사용량에는 아직 저장하지 않은 임시 파일 {formatBytes(stagedBytes)} · {stagedCount}개가
+          포함돼 있습니다. 올린 지 하루가 지나면 자동으로 지워집니다
+        </p>
+      )}
       {level === 'WARN' && (
         <Alert variant="info">
           저장 용량이 80%를 넘었습니다. 오래된 프로젝트의 사진·문서를 정리하거나 운영자에게 한도

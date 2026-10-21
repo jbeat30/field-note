@@ -8,7 +8,7 @@ const EMPLOYEE_ID = '0198d000-0000-7000-8000-000000000101';
 
 // 모바일 폭(390px)에서 화면이 옆으로 밀려나지 않는지 확인할 주요 화면
 const PAGES = [
-  ['홈', '/'],
+  ['대시보드', '/'],
   ['프로젝트 목록', '/projects'],
   ['프로젝트 등록', '/projects/new'],
   ['프로젝트 현황', `/projects/${PROJECT_ID}/overview`],
@@ -45,7 +45,7 @@ test('주요 화면이 모바일 폭에서 가로로 넘치지 않는다', async
 
 // 표의 고정 열이 위쪽 머리글이나 하단 메뉴 위로 올라와 보이지 않는지 확인할 화면
 const STICKY_TABLE_PAGES = [
-  ['홈', '/'],
+  ['대시보드', '/'],
   ['인력 배치', '/staffing'],
   ['월 공수', '/monthly-hours'],
 ] as const;

@@ -7,6 +7,9 @@ export const storageUsageSchema = z.object({
   // 회사별 저장 용량 한도와 사용량 (바이트)
   quotaBytes: z.number().int(),
   usedBytes: z.number().int(),
+  // 사용량 중 아직 폼에 연결되지 않은 임시 보관 파일 (저장하거나 지우면 줄어듦)
+  stagedBytes: z.number().int(),
+  stagedCount: z.number().int(),
   // 용도별 사용량 (사진·문서·직원 서류)
   byPurpose: z.array(
     z.object({

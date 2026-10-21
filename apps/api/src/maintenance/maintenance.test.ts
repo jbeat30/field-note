@@ -146,6 +146,33 @@ describe('정기 유지 작업', () => {
     expect(file).toMatchObject({ status: 'REJECTED', rejectReason: 'NOT_UPLOADED' });
   });
 
+  it('폼에 연결되지 않고 24시간이 지난 임시 파일만 만료로 닫는다', async () => {
+    const { requestUpload, maintenanceAt } = await setup();
+    const old = await requestUpload();
+    const fresh = await requestUpload();
+    const day = 24 * HOURS;
+
+    await db.owner.storedFile.updateMany({
+      where: { id: old },
+      data: { status: 'STAGED', createdAt: new Date(Date.now() - day - HOURS) },
+    });
+    await db.owner.storedFile.updateMany({
+      where: { id: fresh },
+      data: { status: 'STAGED', createdAt: new Date(Date.now() - day + HOURS) },
+    });
+
+    const result = await maintenanceAt(new Date()).run();
+
+    expect(result.expiredStaged).toBeGreaterThanOrEqual(1);
+    expect(await db.owner.storedFile.findFirstOrThrow({ where: { id: old } })).toMatchObject({
+      status: 'REJECTED',
+      rejectReason: 'EXPIRED',
+    });
+    expect((await db.owner.storedFile.findFirstOrThrow({ where: { id: fresh } })).status).toBe(
+      'STAGED',
+    );
+  });
+
   it('만료된 멱등 키만 치우고 유효한 키는 남긴다', async () => {
     const { companyId, maintenanceAt } = await setup();
     const store = createPrismaIdempotencyStore(db.app, () => NOW);
