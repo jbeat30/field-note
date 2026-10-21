@@ -61,7 +61,8 @@ describe('스키마 검사', () => {
       `SELECT table_name, privilege_type
          FROM information_schema.role_table_grants
         WHERE grantee = 'field_note_app'
-          AND privilege_type IN ('DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER')`,
+          AND privilege_type IN ('DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER')
+        ORDER BY table_name`,
     );
 
     // 예외: 프로젝트의 공종 선택은 수정할 때 연결 행을 지워야 하는 연결 테이블 (업무 기록이 아니라 선택 관계일 뿐이며 삭제만 허용)
@@ -70,11 +71,11 @@ describe('스키마 검사', () => {
     // 멱등 키는 업무 기록이 아니라 재전송 방지용 임시 기록이라 처리가 실패하면 선점을 풀고 만료된 것을 치움 (RLS가 자기 회사 행으로 제한)
     // 명부도 쓰이지 않은 업체는 직접 삭제할 수 있음 (RLS가 자기 회사 행으로 제한하고, 쓰고 있는 업체는 외래 키 Restrict가 막음)
     expect(rows).toEqual([
+      { table_name: 'idempotency_keys', privilege_type: 'DELETE' },
       { table_name: 'partners', privilege_type: 'DELETE' },
+      { table_name: 'project_required_credentials', privilege_type: 'DELETE' },
       { table_name: 'project_trades', privilege_type: 'DELETE' },
       { table_name: 'work_log_entries', privilege_type: 'DELETE' },
-      { table_name: 'project_required_credentials', privilege_type: 'DELETE' },
-      { table_name: 'idempotency_keys', privilege_type: 'DELETE' },
     ]);
   });
 
