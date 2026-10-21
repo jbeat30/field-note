@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import path from 'node:path';
 
 import type { Router } from 'express';
+import request from 'supertest';
 
 import { createApp, createRegistry } from '../app';
 
@@ -115,5 +116,31 @@ describe('회사 ID 입력 경로 없음', () => {
     }
 
     expect(inputNames.filter((name) => COMPANY_FIELD.test(name))).toEqual([]);
+  });
+});
+
+describe('API 문서 화면', () => {
+  it('켠 환경에서만 /api/docs가 열리고 꺼진 환경(운영)에서는 404다', async () => {
+    const on = await request(createApp({ isDocsEnabled: true })).get('/api/docs/');
+    const off = await request(createApp({ isDocsEnabled: false })).get('/api/docs/');
+    const offDefault = await request(createApp()).get('/api/docs/');
+
+    expect(on.status).toBe(200);
+    expect(off.status).toBe(404);
+    expect(offDefault.status).toBe(404);
+  });
+
+  it('모든 작업에 도메인 묶음(태그)이 있고 설명·서버 정보가 들어 있다', () => {
+    const document = generateOpenApiDocument(createRegistry().routes);
+    const untagged = Object.entries(document.paths ?? {}).flatMap(([apiPath, item]) =>
+      Object.entries(item as Record<string, { tags?: string[] }>)
+        .filter(([method]) => ['get', 'post', 'put', 'patch', 'delete'].includes(method))
+        .filter(([, operation]) => !operation.tags?.length)
+        .map(([method]) => `${method} ${apiPath}`),
+    );
+
+    expect(untagged).toEqual([]);
+    expect(document.info.description).toContain('X-Field-Note-Client');
+    expect(document.servers).toEqual([{ url: '/', description: '이 문서를 연 서버' }]);
   });
 });
