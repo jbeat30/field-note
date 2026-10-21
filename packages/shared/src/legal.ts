@@ -3,7 +3,7 @@ import { LEGAL_DOCUMENT_META, type LegalDocumentType } from './account';
 // 약관·처리방침 본문
 // 화면에 표시되는 내용과 동의 이력의 본문 해시가 같은 원본에서 나오도록 코드로 관리
 // 본문을 바꾸면 반드시 version을 올림 (같은 version에서 내용이 달라지면 운영자 등록이 거부됨)
-// 아래 문서는 초안이며, 서비스 공개 전에 전문가 검토를 거쳐 확정함
+// 아래 문서는 지인을 위한 초기(베타) 서비스 기준의 초안
 
 export type LegalBlock =
   | { type: 'paragraph'; text: string }
@@ -20,8 +20,6 @@ export type LegalDocumentContent = {
   title: string;
   isRequired: boolean;
   path: string;
-  // 확정 전에 채워야 하는 항목 (화면 상단 초안 안내에 표시)
-  pendingItems: readonly string[];
   sections: readonly LegalSection[];
 };
 
@@ -30,10 +28,10 @@ const list = (...items: string[]): LegalBlock => ({ type: 'list', items });
 
 const VERSION = '2026-10-06';
 const EFFECTIVE_AT = '2026-10-06T00:00:00.000Z';
-// 이용약관·처리방침이 함께 바뀐 날 (운영자·보호책임자 기재, 수탁·국외 이전 현황, 해지 후 복구 불가 명시, 2026-10-20)
-// 이전 판: 2026-10-18 (조사 오류 수정, 처리방침에 2단계 인증 항목 추가), 2026-10-16 (직원 단가·서류·소셜 로그인 세 종류·이메일 등록·데이터 내보내기·저장 용량 반영)
-const REVISED_VERSION = '2026-10-20';
-const REVISED_EFFECTIVE_AT = '2026-10-20T00:00:00.000Z';
+// 이용약관·처리방침이 함께 바뀐 날 (운영자 열람 문구를 요청·승인 기준으로 정리, 초안 안내 항목 삭제, 2026-10-21)
+// 이전 판: 2026-10-20 (운영자·보호책임자 기재, 수탁·국외 이전 현황, 해지 후 복구 불가 명시), 2026-10-18 (조사 오류 수정, 처리방침에 2단계 인증 항목 추가), 2026-10-16 (직원 단가·서류·소셜 로그인 세 종류·이메일 등록·데이터 내보내기·저장 용량 반영)
+const REVISED_VERSION = '2026-10-21';
+const REVISED_EFFECTIVE_AT = '2026-10-21T00:00:00.000Z';
 const PRIVACY_VERSION = REVISED_VERSION;
 const PRIVACY_EFFECTIVE_AT = REVISED_EFFECTIVE_AT;
 
@@ -43,10 +41,6 @@ const termsOfService: LegalDocumentContent = {
   effectiveAt: REVISED_EFFECTIVE_AT,
   ...LEGAL_DOCUMENT_META.TERMS_OF_SERVICE,
   isRequired: true,
-  pendingItems: [
-    '책임 제한과 분쟁 해결(관할) 조항의 법률 검토',
-    '회사와 운영자 사이 개인정보 처리 위탁 조항의 법률 검토',
-  ],
   sections: [
     {
       heading: '제1조 (목적)',
@@ -101,7 +95,7 @@ const termsOfService: LegalDocumentContent = {
         ),
         list(
           '운영자는 위탁받은 정보를 서비스 제공 외의 목적으로 이용하거나 제3자에게 제공하지 않습니다.',
-          '운영자는 회사 업무 데이터를 열람하지 않습니다. 지원이 필요한 경우 이용자의 승인과 기록을 거칩니다.',
+          '운영자는 회사 업무 데이터를 열람하지 않습니다. 지원이 필요한 경우 이용자의 요청이나 승인을 받아 확인합니다.',
           '회사 간 데이터는 서로 볼 수 없도록 분리해 보관합니다.',
         ),
       ],
@@ -159,10 +153,6 @@ const privacyPolicy: LegalDocumentContent = {
   effectiveAt: PRIVACY_EFFECTIVE_AT,
   ...LEGAL_DOCUMENT_META.PRIVACY_POLICY,
   isRequired: true,
-  pendingItems: [
-    '수탁·위탁과 국외 이전 표기가 법령이 요구하는 기재 사항을 충족하는지 법률 검토',
-    '법령에 따른 접속 기록(접속 IP·시각) 보관 의무가 있는 경우 그 보관 기간과 방법 (현재 로그인 세션의 IP는 위 기간 동안만 저장)',
-  ],
   sections: [
     {
       heading: '1. 처리하는 개인정보와 목적',
@@ -294,7 +284,7 @@ const privacyPolicy: LegalDocumentContent = {
         list(
           '비밀번호는 복원할 수 없는 방식으로 암호화해 저장하고, 인증 코드·재설정 링크 등 1회용 값은 원문을 저장하지 않습니다.',
           '회사 간 데이터는 데이터베이스 수준에서 분리하여 다른 회사의 정보는 조회되지 않습니다.',
-          '운영자는 회사의 업무 데이터를 열람하지 않으며, 운영자의 작업은 기록으로 남깁니다.',
+          '운영자는 회사의 업무 데이터를 열람하지 않으며, 지원이 필요한 경우에만 이용자의 요청이나 승인을 받아 확인합니다.',
           '비밀번호 입력 실패가 반복되면 일정 시간 로그인을 제한하고, 비밀번호·이메일 변경 시 알림 메일을 보냅니다.',
           '2단계 인증(선택)을 켜면 인증 앱 등록 키는 암호화해 저장하고 복구 코드는 원문을 저장하지 않으며, 인증 코드가 반복해서 틀리면 비밀번호와 같은 기준으로 로그인을 제한하고 켜기·끄기 시 알림 메일을 보냅니다.',
         ),
@@ -331,7 +321,6 @@ const marketing: LegalDocumentContent = {
   effectiveAt: EFFECTIVE_AT,
   ...LEGAL_DOCUMENT_META.MARKETING,
   isRequired: false,
-  pendingItems: ['마케팅 정보 발송을 시작하기 전까지의 발송 항목·방법 확정'],
   sections: [
     {
       heading: '마케팅 정보 수신 동의 (선택)',

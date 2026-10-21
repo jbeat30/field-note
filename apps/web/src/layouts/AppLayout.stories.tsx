@@ -80,3 +80,34 @@ export const DemoBanner: Story = {
     await expect(await canvas.findByRole('note')).toHaveTextContent('모든 데이터는 가상');
   },
 };
+
+// 왼쪽 메뉴 아래 내 정보를 누르면 설정과 로그아웃이 열림 (로그아웃은 설정까지 가지 않아도 가능)
+export const ProfileMenu: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(await canvas.findByRole('button', { name: '내 메뉴' }));
+
+    const menu = within(document.body);
+
+    await expect(await menu.findByRole('menuitem', { name: '설정' })).toHaveAttribute(
+      'href',
+      '/settings',
+    );
+    await expect(menu.getByRole('menuitem', { name: '로그아웃' })).toBeInTheDocument();
+    // 열린 메뉴는 나머지 화면을 보조 기술에서 가리므로 닫은 상태에서 접근성 검사가 돌게 함
+    await userEvent.keyboard('{Escape}');
+  },
+};
+
+// 좁은 화면은 더보기 시트에 내 정보와 로그아웃 버튼이 있음
+export const MoreSheetLogout: Story = {
+  play: async ({ canvasElement }) => {
+    const moreButton = canvasElement.querySelector('nav[aria-label="하단 메뉴"] button');
+
+    await userEvent.click(moreButton as HTMLElement);
+    await expect(
+      await within(document.body).findByRole('button', { name: '로그아웃' }),
+    ).toBeInTheDocument();
+  },
+};
