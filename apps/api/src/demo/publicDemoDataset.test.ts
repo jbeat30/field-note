@@ -78,6 +78,48 @@ describe('시연 회사 데이터 묶음', () => {
     }
   });
 
+  describe('날짜를 오늘 기준으로 옮김', () => {
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const dayOf = (date: string) => Date.parse(`${date}T00:00:00.000Z`) / DAY_MS;
+    const latestLog = (data: typeof dataset) =>
+      Math.max(...data.workLogs.map((log) => dayOf(log.workDate)));
+    // 한국 시간 2027-03-10 00:30은 UTC로는 전날이라 한국 날짜 기준으로 옮기는지도 함께 확인
+    const now = new Date('2027-03-09T15:30:00.000Z');
+    const today = dayOf('2027-03-10');
+
+    it('가장 최근 작업 일지가 오늘(한국 시간) 이전 일주일 안에 온다', () => {
+      const shifted = buildPublicDemoDataset(now);
+
+      expect(latestLog(shifted)).toBeLessThanOrEqual(today);
+      expect(today - latestLog(shifted)).toBeLessThan(7);
+    });
+
+    it('7의 배수 일수로 옮겨 요일 배치와 날짜 사이의 간격을 유지한다', () => {
+      const shifted = buildPublicDemoDataset(now);
+      const offset = latestLog(shifted) - latestLog(dataset);
+
+      expect(offset % 7).toBe(0);
+      shifted.workLogs.forEach((log, index) => {
+        expect(dayOf(log.workDate) - dayOf(dataset.workLogs[index]!.workDate)).toBe(offset);
+      });
+      shifted.projects.forEach((project, index) => {
+        const original = dataset.projects[index]!;
+
+        expect(dayOf(project.plannedEnd) - dayOf(project.plannedStart)).toBe(
+          dayOf(original.plannedEnd) - dayOf(original.plannedStart),
+        );
+      });
+    });
+
+    it('생년월일은 옮기지 않는다', () => {
+      const shifted = buildPublicDemoDataset(now);
+
+      expect(shifted.employees.map((employee) => employee.birthDate)).toEqual(
+        dataset.employees.map((employee) => employee.birthDate),
+      );
+    });
+  });
+
   it('내보내도 문제없는 가상 데이터만 담는다 (이메일은 시연 계정뿐, 연락처는 쓰이지 않는 번호)', () => {
     const text = JSON.stringify(dataset);
     const emails = text.match(/[\w.+-]+@[\w-]+\.[\w.]+/g) ?? [];
