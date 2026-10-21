@@ -68,13 +68,8 @@ export const LegalDocumentBody = ({ content, showTitle = true }: LegalDocumentBo
     <Alert variant="info">
       <p className="font-medium">초안입니다</p>
       <p className="mt-1">
-        이 문서는 서비스 공개 전에 전문가 검토를 거쳐 확정합니다. 아래 항목은 확정 후 채워집니다.
+        지인을 위한 초기(베타) 서비스 기준의 문서이며, 서비스를 개선하면서 바뀔 수 있습니다.
       </p>
-      <ul className="mt-1 list-disc space-y-0.5 pl-5">
-        {content.pendingItems.map((item) => (
-          <li key={item}>{item}</li>
-        ))}
-      </ul>
     </Alert>
     {content.sections.map((section) => (
       <section key={section.heading} className="flex flex-col gap-2">
