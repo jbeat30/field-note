@@ -21,12 +21,12 @@ const dashboard = (alertCount: number): Dashboard => ({
   today: '2026-10-11',
   alerts: noLog(alertCount),
   hiddenAlertCount: 0,
-  stats: { inProgress: 0, todayLoggedHeadcount: 0, todayHeadcount: 0, weekMinutes: 0 },
+  stats: { inProgress: 0, todayLoggedHeadcount: 0, todayHeadcount: 0, monthMinutes: 0 },
   todayAssignments: { headcount: 0, projects: [] },
   projectCounts: { planned: 0, inProgress: 0, suspended: 0 },
   activeProjects: [],
   risks: [],
-  week: { from: '2026-10-05', to: '2026-10-11', conflicts: [], workingCount: 0, idleCount: 0 },
+  month: { from: '2026-10-01', to: '2026-10-31', conflicts: [], workingCount: 0, idleCount: 0 },
   todos: { draftLogCount: 0, unclosedMonth: null },
   warranty: { ending: [], openRepairCount: 0 },
   expiring: { certificates: [], credentials: [] },
@@ -40,7 +40,7 @@ const project = (index: number, patch: Partial<Dashboard['activeProjects'][numbe
   status: 'IN_PROGRESS' as const,
   plannedEnd: '2026-10-31',
   hasLogToday: false,
-  weekMinutes: 960,
+  monthMinutes: 960,
   progressPercent: 40 + index * 10,
   burnPercent: 50,
   warnings: [],
@@ -71,7 +71,7 @@ export const StatsAndProjects: Story = {
   args: {
     dashboard: {
       ...dashboard(1),
-      stats: { inProgress: 2, todayLoggedHeadcount: 1, todayHeadcount: 3, weekMinutes: 2430 },
+      stats: { inProgress: 2, todayLoggedHeadcount: 1, todayHeadcount: 3, monthMinutes: 2430 },
       activeProjects: [
         project(1, { hasLogToday: true }),
         project(2, { plannedEnd: '2026-10-08', warnings: ['OVERDUE'] }),

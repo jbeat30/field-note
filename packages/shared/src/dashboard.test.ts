@@ -7,6 +7,7 @@ import {
   dashboardAlertPath,
   isUrgentAlert,
   previousMonth,
+  dashboardMonthRange,
   weekRange,
   type AlertKind,
   type Dashboard,
@@ -61,6 +62,13 @@ const base = (patch: Partial<DashboardInput> = {}): DashboardInput => ({
 
 const inner = (dashboard: Dashboard): DashboardAlert[] =>
   dashboard.alerts.map((item) => item.alert);
+
+describe('dashboardMonthRange', () => {
+  it('오늘이 속한 달의 1일부터 말일까지를 돌려준다', () => {
+    expect(dashboardMonthRange('2026-10-11')).toEqual({ from: '2026-10-01', to: '2026-10-31' });
+    expect(dashboardMonthRange('2026-02-28')).toEqual({ from: '2026-02-01', to: '2026-02-28' });
+  });
+});
 
 describe('weekRange', () => {
   it('월요일부터 일요일까지', () => {
@@ -147,7 +155,7 @@ describe('assembleDashboard: 프로젝트와 위험', () => {
   });
 });
 
-describe('assembleDashboard: 이번 주 인력', () => {
+describe('assembleDashboard: 이번 달 인력', () => {
   const workDay = (
     employeeId: string,
     workDate: string,
@@ -164,8 +172,8 @@ describe('assembleDashboard: 이번 주 인력', () => {
     minutes,
   });
   const calendar = {
-    from: '2026-10-05',
-    to: '2026-10-11',
+    from: '2026-10-01',
+    to: '2026-10-31',
     employees: [
       { id: E1, name: '김겹침', title: null, status: 'ACTIVE' as const, leftOn: null },
       { id: E2, name: '이한가', title: null, status: 'ACTIVE' as const, leftOn: null },
@@ -184,14 +192,14 @@ describe('assembleDashboard: 이번 주 인력', () => {
   it('같은 날 두 프로젝트에서 일한 직원을 이름·기간과 함께 알리고, 일한 사람·기록 없는 사람을 센다 (휴직은 기록 없는 사람이 아님)', () => {
     const dashboard = assembleDashboard(base({ calendar }));
 
-    expect(dashboard.week).toMatchObject({
-      from: '2026-10-05',
-      to: '2026-10-11',
+    expect(dashboard.month).toMatchObject({
+      from: '2026-10-01',
+      to: '2026-10-31',
       conflicts: [{ employeeId: E1, name: '김겹침', dateCount: 2 }],
       workingCount: 1,
       idleCount: 1,
     });
-    expect(dashboard.stats.weekMinutes).toBe(480 + 480 + 480);
+    expect(dashboard.stats.monthMinutes).toBe(480 + 480 + 480);
     expect(inner(dashboard)).toEqual([
       {
         kind: 'DOUBLE_ASSIGNED',
@@ -209,6 +217,17 @@ describe('assembleDashboard: 이번 주 인력', () => {
     expect(dashboardAlertPath(inner(dashboard)[0]!, TODAY)).toBe(
       `/staffing?from=2026-10-06&employee=${E1}`,
     );
+  });
+
+  it('이번 주 밖(이번 달 앞쪽)의 겹침은 요약 줄에는 세지만 겹침 알림은 만들지 않는다', () => {
+    const earlier = {
+      ...calendar,
+      workDays: [workDay(E1, '2026-10-01', P1, 'A', 240), workDay(E1, '2026-10-01', P2, 'B', 240)],
+    };
+    const dashboard = assembleDashboard(base({ calendar: earlier }));
+
+    expect(dashboard.month.conflicts).toEqual([{ employeeId: E1, name: '김겹침', dateCount: 1 }]);
+    expect(inner(dashboard)).toEqual([]);
   });
 });
 
