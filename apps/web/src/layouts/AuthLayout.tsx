@@ -2,6 +2,8 @@ import { APP_NAME } from '@field-note/shared';
 import { ClipboardList, HardHat, Images } from 'lucide-react';
 import { Link, Outlet } from 'react-router';
 
+import { Badge } from '../components/ui/badge';
+
 const FEATURES = [
   { icon: HardHat, text: '직원 투입과 인력 배치를 한눈에' },
   { icon: ClipboardList, text: '하루 작업 내역을 3분 안에 입력' },
@@ -13,7 +15,10 @@ const FEATURES = [
 export const AuthLayout = () => (
   <div className="min-h-dvh lg:grid lg:grid-cols-[minmax(0,5fr)_minmax(0,6fr)]">
     <aside className="hidden flex-col justify-between bg-primary p-12 text-primary-foreground lg:flex">
-      <p className="font-emphasis text-2xl font-bold">{APP_NAME}</p>
+      <p className="font-emphasis flex items-center gap-3 text-2xl font-bold">
+        {APP_NAME}
+        <Badge tone="primary">베타</Badge>
+      </p>
       <div className="flex flex-col gap-8">
         <h2 className="text-4xl leading-tight font-bold tracking-tight break-keep">
           현장 팀의 하루를
@@ -34,7 +39,10 @@ export const AuthLayout = () => (
     </aside>
     <div className="mx-auto flex min-h-dvh w-full max-w-md flex-col justify-center gap-6 px-4 py-8 lg:max-w-lg lg:px-8">
       <header className="text-center lg:hidden">
-        <p className="font-emphasis text-3xl font-bold text-primary">{APP_NAME}</p>
+        <p className="font-emphasis flex items-center justify-center gap-2 text-3xl font-bold text-primary">
+          {APP_NAME}
+          <Badge tone="primary">베타</Badge>
+        </p>
         <p className="mt-1 text-sm text-foreground/70">현장 팀 프로젝트 관리</p>
       </header>
       <main className="rounded-xl bg-surface-subtle p-6 lg:p-8">

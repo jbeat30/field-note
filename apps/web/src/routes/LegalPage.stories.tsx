@@ -20,9 +20,9 @@ export const PrivacyPolicy: Story = {
     await expect(
       await canvas.findByRole('heading', { name: '개인정보 수집·이용 동의' }),
     ).toBeInTheDocument();
-    // 초안임을 알리고 확정 전 항목을 보여 줌
+    // 초안이며 지인을 위한 초기 서비스임을 알림
     await expect(canvas.getByText('초안입니다')).toBeInTheDocument();
-    await expect(canvas.getByText(/수탁·위탁과 국외 이전 표기가 .* 법률 검토/)).toBeInTheDocument();
+    await expect(canvas.getByText(/지인을 위한 초기\(베타\) 서비스/)).toBeInTheDocument();
     // 보호책임자와 수탁자 현황은 기재됨
     await expect(canvas.getByText(/성명은 강주빛이고 이메일은/)).toBeInTheDocument();
     await expect(canvas.getByText('Cloudflare, Inc. (R2)')).toBeInTheDocument();
