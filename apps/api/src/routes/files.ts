@@ -8,6 +8,7 @@ import {
   fileUrlResponseSchema,
   projectFileParamsSchema,
   storedFileSchema,
+  successResponseSchema,
   type EmployeeFileUploadRequest,
   type FileUploadRequest,
   type FileUrlQuery,
@@ -134,6 +135,27 @@ export const registerFileRoutes = (registry: RouteRegistry, files?: FileService)
     async ({ auth, params }) => {
       try {
         return await files!.get(auth!.companyId, (params as { id: string }).id);
+      } catch (error) {
+        throw toAppError(error);
+      }
+    },
+  );
+
+  add(
+    {
+      method: 'delete',
+      path: '/files/{id}',
+      summary: '폼 작성 취소로 임시 파일 삭제 (폼에 연결되지 않은 파일만, 여러 번 보내도 안전)',
+      auth: 'required',
+      request: { params: fileParamsSchema },
+      response: { status: 200, schema: successResponseSchema },
+      errors: ['NOT_FOUND'],
+    },
+    async ({ auth, params }) => {
+      try {
+        await files!.discard(auth!.companyId, (params as { id: string }).id);
+
+        return { success: true as const };
       } catch (error) {
         throw toAppError(error);
       }

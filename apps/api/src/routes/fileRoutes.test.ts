@@ -255,7 +255,7 @@ describe('파일 업로드 신청', () => {
 });
 
 describe('업로드 후 검사', () => {
-  it('정상 사진은 내용 검사를 통과해 썸네일·SHA-256과 함께 사용 가능해진다', async () => {
+  it('정상 사진은 내용 검사를 통과해 썸네일·SHA-256과 함께 임시 보관된다', async () => {
     const s = await setup();
     const body = await jpeg();
     const { ticket, key, done } = await s.upload(body, {
@@ -268,7 +268,7 @@ describe('업로드 후 검사', () => {
     expect(done.status).toBe(200);
     expect(file).toMatchObject({
       id: ticket.file.id,
-      status: 'READY',
+      status: 'STAGED',
       contentType: 'image/jpeg',
       hasThumbnail: true,
       rejectReason: null,
@@ -285,7 +285,7 @@ describe('업로드 후 검사', () => {
     expect(meta).toMatchObject({ format: 'webp', width: 480, height: 320 });
   });
 
-  it('PDF 문서는 썸네일 없이 사용 가능해진다', async () => {
+  it('PDF 문서는 썸네일 없이 임시 보관된다', async () => {
     const s = await setup();
     const { done } = await s.upload(Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF'), {
       name: '시공도.pdf',
@@ -293,7 +293,7 @@ describe('업로드 후 검사', () => {
       purpose: 'DOCUMENT',
     });
 
-    expect(done.body).toMatchObject({ status: 'READY', hasThumbnail: false });
+    expect(done.body).toMatchObject({ status: 'STAGED', hasThumbnail: false });
   });
 
   it('확장자·형식을 속인 실행 파일은 거부하고 저장소에서 지운다', async () => {
@@ -368,7 +368,7 @@ describe('업로드 후 검사', () => {
 
     s.memory.upload(row.objectKey, body, 'image/jpeg');
 
-    expect((await s.post(`/files/${ticket.file.id}/complete`)).body.status).toBe('READY');
+    expect((await s.post(`/files/${ticket.file.id}/complete`)).body.status).toBe('STAGED');
   });
 
   it('완료 알림을 여러 번 보내도 결과는 같다', async () => {
