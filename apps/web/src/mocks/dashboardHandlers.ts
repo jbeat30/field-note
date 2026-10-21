@@ -7,7 +7,7 @@ import {
   monthRange,
   previousMonth,
   todayInSeoul,
-  dashboardMonthRange,
+  dashboardCalendarRange,
   type AlertKind,
   type AlertSettings,
   type ErrorCode,
@@ -129,7 +129,7 @@ const calendarOf = (account: MockAccount, from: string, to: string): StaffingCal
 const buildDashboard = (account: MockAccount) => {
   const now = new Date();
   const today = todayInSeoul(now);
-  const month = dashboardMonthRange(today);
+  const range = dashboardCalendarRange(today);
   const settings = settingsOf(account);
   const projects = getProjects(account).filter((project) =>
     ['PLANNED', 'IN_PROGRESS', 'SUSPENDED'].includes(project.status),
@@ -195,7 +195,7 @@ const buildDashboard = (account: MockAccount) => {
         .filter((log) => log.workDate === today && log.status === 'SAVED')
         .flatMap((log) => log.entries.map((entry) => entry.employeeId)),
       draftLogCount: logs.filter((log) => log.status === 'DRAFT').length,
-      calendar: calendarOf(account, month.from, month.to),
+      calendar: calendarOf(account, range.from, range.to),
       negotiatingChanges: [...ids].flatMap((projectId) =>
         listMockChangeWorks(account, projectId)
           .filter((work) => work.status === 'NEGOTIATING')

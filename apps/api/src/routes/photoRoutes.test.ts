@@ -601,6 +601,29 @@ describe('임시 보관 파일', () => {
     expect(s.memory.objects.has(row.thumbnailKey!)).toBe(false);
   });
 
+  it('취소로 지운 파일은 사진으로 등록할 수 없다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+
+    await s.del(`/files/${fileId}`);
+
+    expect((await register(s, fileId)).status).toBe(400);
+    expect((await s.get(`/files/${fileId}`)).body.status).toBe('REJECTED');
+  });
+
+  it('올리는 중에 취소한 파일은 완료 알림이 와도 되살아나지 않는다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile(s.projectId, false);
+
+    await s.del(`/files/${fileId}`);
+    await s.finish(fileId);
+
+    expect((await s.get(`/files/${fileId}`)).body).toMatchObject({
+      status: 'REJECTED',
+      rejectReason: 'DISCARDED',
+    });
+  });
+
   it('폼에 연결된 파일과 없는 파일은 취소로 지울 수 없다', async () => {
     const s = await setup();
     const fileId = await s.photoFile();

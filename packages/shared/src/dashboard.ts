@@ -460,6 +460,21 @@ const RISK_WARNINGS: ProjectWarningType[] = [...PROJECT_WARNING_TYPES];
 export const dashboardMonthRange = (today: string) => monthRange(monthOf(today));
 
 /**
+ * @description 대시보드가 불러올 인력 배치 기간: 이번 달과 이번 주를 모두 덮음 (주가 달 경계에 걸쳐도 알림이 빠지지 않게)
+ * @param today 오늘(서울 기준)
+ * @returns 불러올 시작·끝 날짜
+ */
+export const dashboardCalendarRange = (today: string) => {
+  const month = dashboardMonthRange(today);
+  const week = weekRange(today);
+
+  return {
+    from: week.from < month.from ? week.from : month.from,
+    to: week.to > month.to ? week.to : month.to,
+  };
+};
+
+/**
  * @description 이번 주의 월요일~일요일 (같은 날 중복 투입 알림 기간)
  * @param today 오늘(서울 기준)
  * @returns 이번 주 시작·끝 날짜
@@ -513,10 +528,20 @@ const collectConflicts = (timeline: StaffingTimelineRow[]) =>
 export const assembleDashboard = (input: DashboardInput): Dashboard => {
   const names = new Map(input.projects.map((project) => [project.id, project]));
   const logged = new Set(input.todayLogProjectIds);
+  // 불러온 배치는 이번 주까지 덮으므로 이번 달 집계에는 이번 달 기록만 씀
+  const monthSpan = dashboardMonthRange(input.today);
+  const monthCalendar = {
+    ...input.calendar,
+    from: monthSpan.from,
+    to: monthSpan.to,
+    workDays: input.calendar.workDays.filter(
+      (day) => day.workDate >= monthSpan.from && day.workDate <= monthSpan.to,
+    ),
+  };
   // 이번 달 저장된 작업 내역의 프로젝트별 공수 (인력 배치와 같은 기준)
   const monthByProject = new Map<string, number>();
 
-  for (const day of input.calendar.workDays) {
+  for (const day of monthCalendar.workDays) {
     monthByProject.set(day.projectId, (monthByProject.get(day.projectId) ?? 0) + day.minutes);
   }
 
@@ -587,7 +612,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     .sort((a, b) => Number(a.hasLog) - Number(b.hasLog) || a.code.localeCompare(b.code));
 
   // 이번 달 인력 (인력 배치와 같은 기준: 저장된 작업 내역에 들어간 날)
-  const timeline = buildStaffingTimeline(input.calendar);
+  const timeline = buildStaffingTimeline(monthCalendar);
   const staffing = summarizeStaffingTimeline(timeline);
   const monthConflicts = collectConflicts(timeline);
   // 같은 날 중복 투입 알림은 이번 주 기록만 봄 (지난 겹침이 한 달 내내 남지 않게)
@@ -806,7 +831,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
           .filter((item) => names.has(item.projectId))
           .map((item) => item.employeeId),
       ).size,
-      monthMinutes: input.calendar.workDays.reduce((sum, day) => sum + day.minutes, 0),
+      monthMinutes: monthCalendar.workDays.reduce((sum, day) => sum + day.minutes, 0),
     },
     todayAssignments: {
       headcount: new Set(

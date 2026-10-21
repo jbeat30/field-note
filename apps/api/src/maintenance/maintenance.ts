@@ -2,6 +2,7 @@ import { FILE_STAGED_TTL_SECONDS, FILE_UPLOAD_URL_TTL_SECONDS } from '@field-not
 
 import type { PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { lockFile } from '../file/stagedFile';
 import type { Logger } from '../logger';
 import type { SessionStore } from '../session/sessionStore';
 import type { ObjectStorage } from '../storage/objectStorage';
@@ -81,7 +82,7 @@ export const createMaintenance = ({
 
           // 폼에 연결되지 않은 채 보관 시간이 지난 임시 파일은 "만료"로 종료해 용량에서 제외, 저장소 객체도 삭제
           const expiredBefore = new Date(at.getTime() - FILE_STAGED_TTL_SECONDS * 1000);
-          const expired = await tx.storedFile.findMany({
+          const candidates = await tx.storedFile.findMany({
             where: {
               status: 'STAGED',
               createdAt: { lt: expiredBefore },
@@ -92,11 +93,24 @@ export const createMaintenance = ({
             select: { id: true, objectKey: true, thumbnailKey: true },
           });
 
-          if (expired.length > 0) {
-            await tx.storedFile.updateMany({
-              where: { id: { in: expired.map((file) => file.id) }, status: 'STAGED' },
+          // 같은 순간 폼 저장이 연결한 파일을 지우지 않도록 후보마다 잠그고 다시 확인
+          const expired: typeof candidates = [];
+
+          for (const candidate of candidates) {
+            await lockFile(tx, candidate.id);
+
+            const closed = await tx.storedFile.updateMany({
+              where: {
+                id: candidate.id,
+                status: 'STAGED',
+                photo: null,
+                documentVersion: null,
+                credentials: { none: {} },
+              },
               data: { status: 'REJECTED', rejectReason: 'EXPIRED' },
             });
+
+            if (closed.count > 0) expired.push(candidate);
           }
 
           const keys = await tx.idempotencyKey.deleteMany({ where: { expiresAt: { lte: at } } });
