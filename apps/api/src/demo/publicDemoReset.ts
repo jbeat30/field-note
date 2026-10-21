@@ -1,6 +1,6 @@
 import pg from 'pg';
 
-import { deleteCompanyBusinessData } from '../closure/purgeService';
+import { deleteCompanyBusinessData, deleteCompanyLoginData } from '../closure/purgeService';
 import type { PrismaClient } from '../db/client';
 import { seedDemoData, type SeedResult } from '../db/seed';
 import type { ObjectStorage } from '../storage/objectStorage';
@@ -36,23 +36,11 @@ type Tx = Parameters<Parameters<PrismaClient['$transaction']>[0]>[0];
 // 시연 회사의 업무 데이터와 로그인 기록·개인 설정을 모두 지움 (회사·계정 행과 약관 동의 이력은 남김)
 const wipePublicDemo = async (tx: Tx): Promise<Record<string, number>> => {
   const { companyId } = PUBLIC_DEMO;
-  const counts = await deleteCompanyBusinessData(tx, companyId);
-  const where = { companyId };
-
   // 로그인 기록과 개인 설정도 비움 (이후 시드가 처음 상태로 다시 만듦)
-  counts.sessions = (await tx.session.deleteMany({ where })).count;
-  counts.invitations = (await tx.invitation.deleteMany({ where })).count;
-  counts.email_verifications = (await tx.emailVerification.deleteMany({ where })).count;
-  counts.password_resets = (await tx.passwordReset.deleteMany({ where })).count;
-  counts.social_accounts = (await tx.socialAccount.deleteMany({ where })).count;
-  counts.user_totp = (await tx.userTotp.deleteMany({ where })).count;
-  counts.user_credentials = (await tx.userCredential.deleteMany({ where })).count;
-  counts.alert_dismissals = (await tx.alertDismissal.deleteMany({ where })).count;
-  counts.alert_preferences = (await tx.alertPreference.deleteMany({ where })).count;
-  counts.company_settings = (await tx.companySettings.deleteMany({ where })).count;
-  counts.company_closures = (await tx.companyClosure.deleteMany({ where })).count;
-
-  return counts;
+  return {
+    ...(await deleteCompanyBusinessData(tx, companyId)),
+    ...(await deleteCompanyLoginData(tx, companyId)),
+  };
 };
 
 /**

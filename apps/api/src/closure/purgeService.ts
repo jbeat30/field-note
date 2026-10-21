@@ -89,6 +89,35 @@ export const deleteCompanyBusinessData = async (
 };
 
 /**
+ * @description 회사의 로그인 기록과 개인 설정 삭제 (세션·초대·인증·소셜 연동·2단계 인증·알림 설정·회사 설정·해지 기록)
+ * 계정·회사 행과 약관 동의 이력은 지우지 않음, 호출하는 쪽이 같은 트랜잭션 안에서 실행
+ * @param tx 트랜잭션 클라이언트
+ * @param companyId 대상 회사
+ * @returns 테이블별 삭제 행 수
+ */
+export const deleteCompanyLoginData = async (
+  tx: Prisma.TransactionClient,
+  companyId: string,
+): Promise<Record<string, number>> => {
+  const deleted: Record<string, number> = {};
+  const where = { companyId };
+
+  deleted.sessions = (await tx.session.deleteMany({ where })).count;
+  deleted.invitations = (await tx.invitation.deleteMany({ where })).count;
+  deleted.email_verifications = (await tx.emailVerification.deleteMany({ where })).count;
+  deleted.password_resets = (await tx.passwordReset.deleteMany({ where })).count;
+  deleted.social_accounts = (await tx.socialAccount.deleteMany({ where })).count;
+  deleted.user_totp = (await tx.userTotp.deleteMany({ where })).count;
+  deleted.user_credentials = (await tx.userCredential.deleteMany({ where })).count;
+  deleted.alert_dismissals = (await tx.alertDismissal.deleteMany({ where })).count;
+  deleted.alert_preferences = (await tx.alertPreference.deleteMany({ where })).count;
+  deleted.company_settings = (await tx.companySettings.deleteMany({ where })).count;
+  deleted.company_closures = (await tx.companyClosure.deleteMany({ where })).count;
+
+  return deleted;
+};
+
+/**
  * @description 해지 유예가 끝난 회사의 데이터 삭제·익명화 (삭제 전용 계정 전용)
  * 한 트랜잭션이라 중간에 실패하면 아무것도 바뀌지 않는다. `PURGE_POLICY`의 DELETE는 삭제, ANONYMIZE는 개인 식별 항목 제거, KEEP은 건드리지 않음
  * 업로드 파일은 저장소를 넘기면 회사 경로(`company/{회사ID}/`) 아래 객체를 먼저 지움 (삭제 시기 확인 뒤, 중간에 실패해도 다시 실행하면 이어서 처리)

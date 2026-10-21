@@ -26,8 +26,16 @@ export const LegalPage = () => {
   }
 
   return (
-    <article className="flex flex-col gap-5">
-      <LegalDocumentBody content={getLegalDocumentContent(type)} />
+    // 화면 높이에 맞춰 틀(로그인 전 공통 틀의 여백·머리글·바닥글)을 뺀 만큼만 쓰고, 긴 본문은 안쪽에서만 스크롤
+    <article className="flex max-h-[calc(100dvh-16.5rem)] min-h-72 flex-col gap-5 lg:max-h-[calc(100dvh-12.5rem)]">
+      <div
+        role="region"
+        aria-label={`${getLegalDocumentContent(type).title} 전문`}
+        tabIndex={0}
+        className="min-h-0 flex-1 overflow-y-auto pr-2 focus-visible:outline-2 focus-visible:outline-primary"
+      >
+        <LegalDocumentBody content={getLegalDocumentContent(type)} />
+      </div>
       <nav aria-label="다른 문서" className="flex flex-wrap gap-x-4 border-t border-border pt-3">
         {Object.entries(SLUG_TO_TYPE).map(([itemSlug, itemType]) => (
           <Link

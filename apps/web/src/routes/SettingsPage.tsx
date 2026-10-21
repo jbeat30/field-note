@@ -1,11 +1,10 @@
-import { useQueryClient } from '@tanstack/react-query';
-import { Link, useNavigate, useSearchParams } from 'react-router';
+import { Link, useSearchParams } from 'react-router';
 
-import { logout } from '../api/logout';
 import { useMe } from '../auth/useMe';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { PageHeader } from '../components/ui/page-header';
+import { useLogout } from '../layouts/useLogout';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs';
 import { ClosureSection } from '../settings/ClosureSection';
 import { DataExportSection } from '../settings/DataExportSection';
@@ -28,8 +27,6 @@ export const SettingsPage = () => {
   const me = useMe();
   // 공개 시연 계정은 로그인 정보 변경·2단계 인증·소셜 연동·기기 관리·해지를 쓸 수 없음 (서버도 막고 있어 화면에서 숨김)
   const isDemo = me.data?.isDemo === true;
-  const navigate = useNavigate();
-  const queryClient = useQueryClient();
   const [searchParams, setSearchParams] = useSearchParams();
   // 선택한 탭은 주소(?tab=)에 담아 새로고침·뒤로 가기에서도 유지
   const requestedTab = searchParams.get('tab');
@@ -46,10 +43,7 @@ export const SettingsPage = () => {
       { replace: true },
     );
 
-  const onLogout = async () => {
-    await logout(queryClient);
-    await navigate('/login', { replace: true });
-  };
+  const onLogout = useLogout();
 
   return (
     <div className="flex flex-col gap-4">

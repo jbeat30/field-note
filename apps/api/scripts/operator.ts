@@ -13,7 +13,8 @@ import {
   resetPublicDemo,
   withDemoResetLock,
 } from '../src/demo/publicDemoReset';
-import { createS3Storage } from '../src/storage/objectStorage';
+import { deleteCompany, DeleteCompanyError } from '../src/operator/deleteCompany';
+import { createS3Storage, type ObjectStorage } from '../src/storage/objectStorage';
 import {
   buildInvitationLink,
   createCompanyWithInvitation,
@@ -36,7 +37,9 @@ const USAGE = `운영자 CLI (회사 업무 데이터는 조회하지 않음)
   pnpm operator closures                       # 해지 요청 목록 (삭제 전용 계정 필요)
   pnpm operator purge-due [--dry-run]          # 유예가 끝난 회사의 데이터 삭제·익명화 (삭제 전용 계정 필요)
   pnpm operator demo-reset                     # 공개 시연 회사(Test Company)를 처음 상태로 되돌림 (PUBLIC_DEMO_ENABLED=true, 소유 계정 필요, 약관 등록 뒤)
-  pnpm operator demo-remove                    # 공개 시연 회사의 데이터·파일·로그인을 없앰 (시연 환경을 끌 때, 소유 계정 필요)`;
+  pnpm operator demo-remove                    # 공개 시연 회사의 데이터·파일·로그인을 없앰 (시연 환경을 끌 때, 소유 계정 필요)
+  pnpm operator delete-company --company-id <회사 ID> --confirm-name "회사 이름" [--dry-run]
+                                               # 해지 유예 없이 회사를 완전 삭제 (시험 계정 정리용, 되돌릴 수 없음, 소유 계정 필요)`;
 
 const LEGAL_USAGE_NOTE =
   '약관·처리방침 문서를 DB에 등록 (이미 등록된 같은 버전은 건너뛰고, 내용이 달라졌는데 버전이 같으면 거부)';
@@ -57,6 +60,21 @@ const envSchema = z.object({
   S3_SECRET_KEY: z.string().min(1).optional(),
   APP_ORIGIN: z.url(),
 });
+
+// 설정이 모두 있을 때만 객체 저장소에 연결
+const createStorageFromEnv = (env: z.infer<typeof envSchema>): ObjectStorage | undefined => {
+  const { S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY } = env;
+
+  return S3_ENDPOINT && S3_REGION && S3_BUCKET && S3_ACCESS_KEY && S3_SECRET_KEY
+    ? createS3Storage({
+        endpoint: S3_ENDPOINT,
+        region: S3_REGION,
+        bucket: S3_BUCKET,
+        accessKey: S3_ACCESS_KEY,
+        secretKey: S3_SECRET_KEY,
+      }).storage
+    : undefined;
+};
 
 const printInvitation = (
   appOrigin: string,
@@ -79,6 +97,7 @@ const main = async () => {
       'company-id': { type: 'string' },
       note: { type: 'string' },
       'new-name': { type: 'string' },
+      'confirm-name': { type: 'string' },
       'dry-run': { type: 'boolean' },
       days: { type: 'string' },
     },
@@ -184,6 +203,48 @@ const main = async () => {
       } finally {
         await purgePrisma.$disconnect();
       }
+    } else if (command === 'delete-company') {
+      if (!env.DATABASE_MIGRATE_URL) {
+        throw new Error('DATABASE_MIGRATE_URL 필요 (소유 계정)');
+      }
+
+      if (!values['company-id'] || !values['confirm-name']) {
+        throw new Error('--company-id와 --confirm-name 필요 (회사 이름을 그대로 입력)');
+      }
+
+      const dryRun = values['dry-run'] ?? false;
+      const storage = createStorageFromEnv(env);
+
+      if (!storage) {
+        console.warn('※ 객체 저장소 설정이 없어 회사가 올린 파일은 지우지 않습니다');
+      }
+
+      const ownerPrisma = createPrismaClient(env.DATABASE_MIGRATE_URL);
+
+      try {
+        const result = await deleteCompany(ownerPrisma, {
+          companyId: values['company-id'],
+          confirmName: values['confirm-name'],
+          dryRun,
+          storage,
+        });
+
+        console.log(
+          dryRun
+            ? '삭제 미리보기 (실제로는 지우지 않음): 아래 행이 지워집니다'
+            : `회사 삭제 완료: 업로드 파일 ${result.removedObjects}개 삭제`,
+        );
+        console.table(result.deleted);
+
+        if (!dryRun) {
+          // 회사 행이 사라져 운영자 작업 기록에 남길 수 없으므로 실행 기록을 출력
+          console.log(
+            `[기록] ${new Date().toISOString()} delete-company 운영자=${operator} 회사ID=${values['company-id']} 이름=${result.companyName}`,
+          );
+        }
+      } finally {
+        await ownerPrisma.$disconnect();
+      }
     } else if (command === 'demo-reset' || command === 'demo-remove') {
       if (!env.DATABASE_MIGRATE_URL) {
         throw new Error('DATABASE_MIGRATE_URL 필요 (소유 계정)');
@@ -193,17 +254,7 @@ const main = async () => {
         throw new Error('PUBLIC_DEMO_ENABLED=true일 때만 시연 회사를 만들 수 있음');
       }
 
-      const { S3_ENDPOINT, S3_REGION, S3_BUCKET, S3_ACCESS_KEY, S3_SECRET_KEY } = env;
-      const storage =
-        S3_ENDPOINT && S3_REGION && S3_BUCKET && S3_ACCESS_KEY && S3_SECRET_KEY
-          ? createS3Storage({
-              endpoint: S3_ENDPOINT,
-              region: S3_REGION,
-              bucket: S3_BUCKET,
-              accessKey: S3_ACCESS_KEY,
-              secretKey: S3_SECRET_KEY,
-            }).storage
-          : undefined;
+      const storage = createStorageFromEnv(env);
 
       if (!storage) {
         console.warn('※ 객체 저장소 설정이 없어 시연 회사가 올린 파일은 지우지 않습니다');
@@ -242,6 +293,8 @@ main().catch((error: unknown) => {
     console.error(error.message);
   } else if (error instanceof DemoResetBusyError || error instanceof DemoLegalMissingError) {
     console.error(error.message);
+  } else if (error instanceof DeleteCompanyError) {
+    console.error(`삭제할 수 없음: ${error.message}`);
   } else if (error instanceof InvitationReissueError) {
     console.error(`재발급할 수 없음: ${error.message}`);
   } else if (error instanceof TakeoverIssueError) {

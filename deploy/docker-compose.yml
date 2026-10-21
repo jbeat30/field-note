@@ -1,8 +1,7 @@
 # 서버 한 대에서 서비스를 돌리는 구성 (PostgreSQL + API + Caddy 웹)
 # 저장소 루트에서 실행: docker compose -f deploy/docker-compose.yml --env-file deploy/.env <명령>
-# 환경 변수 파일(deploy/.env, deploy/ops.env)은 `pnpm env:init --production`이 비밀 값을 채워 만들고, 접속 정보는 사용자가 서버에서 직접 채운다
+# 환경 변수 파일(deploy/.env, deploy/ops.env)은 `pnpm env:init --production`이 비밀 값을 채워 만들고, 접속 정보는 사용자가 서버에서 직접 채우기
 # ops.env에는 운영자·삭제 전용 DB 계정과 백업 키가 있어 api 컨테이너에는 주지 않는다
-# 자원 한도는 서버 메모리에 맞춰 deploy/.env에서 바꿀 수 있다 (기본값은 메모리 6GB 이상 서버 기준)
 name: field-note-prod
 
 x-hardening: &hardening
@@ -16,7 +15,7 @@ x-hardening: &hardening
       max-file: '5'
 
 services:
-  # DB: 외부 포트를 열지 않음 (운영자는 SSH 터널로만 접속)
+  # DB: 서버 안(127.0.0.1)에서만 접근 가능, 바깥에는 열지 않음 (운영자는 SSH 터널로 이 포트에 접속)
   # 서비스 이름을 postgres·localhost가 아닌 db로 둔 것은 api가 로컬 주소로 보이는 이름을 운영에서 거부하기 때문
   db:
     <<: *hardening
@@ -25,13 +24,15 @@ services:
       POSTGRES_USER: ${POSTGRES_USER}
       POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
       POSTGRES_DB: ${POSTGRES_DB}
-    # api가 세 곳(앱·전용·작업 큐)에서 DB_POOL_MAX까지 열고 점검 작업이 몇 개 더 열므로 60이면 충분
+    # api가 세 곳(앱·전용·작업 큐)에서 DB_POOL_MAX까지 열고 점검
     command:
       - postgres
       - -c
       - max_connections=60
       - -c
       - shared_buffers=${DB_SHARED_BUFFERS:-256MB}
+    ports:
+      - '127.0.0.1:5432:5432'
     volumes:
       - db-data:/var/lib/postgresql
     mem_limit: ${DB_MEM_LIMIT:-1g}
@@ -43,7 +44,7 @@ services:
       timeout: 3s
       retries: 10
 
-  # DB 마이그레이션과 계정 비밀번호 설정: 배포 때 한 번 실행하고 끝난다
+  # DB 마이그레이션과 계정 비밀번호 설정: 배포 때 한 번 실행하고 끝남
   #   docker compose -f deploy/docker-compose.yml --env-file deploy/.env run --rm migrate
   migrate:
     profiles: [tools]
@@ -56,7 +57,7 @@ services:
       - .env
       - ops.env
     environment:
-      npm_config_verify_deps_before_run: 'false'
+      PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'
     depends_on:
       db:
         condition: service_healthy
@@ -141,7 +142,7 @@ services:
       # 운영자 CLI(pnpm operator)가 api와 같은 환경 변수 검사를 거치므로 필요
       APP_ORIGIN: https://${SITE_ADDRESS}
       # 컨테이너 안에서 의존성을 다시 설치하려 하지 않음
-      npm_config_verify_deps_before_run: 'false'
+      PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'
       BACKUP_DIR: /backups
       # DB 서버와 같은 주 버전의 클라이언트 도구가 이미지에 있어 컨테이너 안에서 직접 접속
       BACKUP_PG_MODE: local
