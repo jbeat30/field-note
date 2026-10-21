@@ -20,6 +20,8 @@ export type TestDatabase = {
   purge: PrismaClient;
   // 작업 큐(pg-boss) 전용 계정 접속 주소 (큐 스키마만 접근)
   queueUrl: string;
+  // 조회 전용 계정 접속 주소 (회사 지정 후 SELECT만 가능)
+  readonlyUrl: string;
   ownerUrl: string;
   stop: () => Promise<void>;
 };
@@ -82,6 +84,7 @@ export const startTestDatabase = async (): Promise<TestDatabase> => {
     operator,
     purge,
     queueUrl: roleUrl('field_note_queue'),
+    readonlyUrl: roleUrl('field_note_readonly'),
     ownerUrl,
     stop: async () => {
       await Promise.all([

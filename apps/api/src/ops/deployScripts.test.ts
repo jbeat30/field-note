@@ -88,6 +88,37 @@ describe('deploy/scripts', () => {
     },
   );
 
+  it('서버 단축어 파일은 문법이 맞고 문서의 명령을 모두 정의한다', () => {
+    const file = path.join(DEPLOY, 'server-aliases.sh');
+    const syntax = spawnSync('bash', ['-n', file], { encoding: 'utf8' });
+
+    expect(syntax.status).toBe(0);
+
+    const aliases = readFileSync(file, 'utf8');
+
+    for (const name of ['fnc', 'fn-ops', 'new-company', 'reissue-invite', 'list-companies']) {
+      expect(aliases).toContain(`\n${name}() {`);
+    }
+  });
+
+  it('ops·migrate 컨테이너는 pnpm 11이 읽는 이름으로 의존성 재설치 점검을 끈다', () => {
+    const compose = read('docker-compose.yml');
+
+    // pnpm 11은 npm_config_* 를 읽지 않으므로 옛 이름은 아무 효과가 없음
+    expect(compose).not.toMatch(/npm_config_verify_deps_before_run/);
+    expect(compose.match(/PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'/g)).toHaveLength(2);
+  });
+
+  it('DB 포트는 서버 안(127.0.0.1)에만 묶고 바깥에 열지 않는다', () => {
+    const compose = read('docker-compose.yml');
+    const published = [...compose.matchAll(/^\s+- '([^']*\d+:\d+(?:\/udp)?)'$/gm)].map(
+      (match) => match[1],
+    );
+
+    expect(published).toContain('127.0.0.1:5432:5432');
+    expect(published.filter((port) => port!.includes('5432'))).toEqual(['127.0.0.1:5432:5432']);
+  });
+
   it('crontab 예시의 작업이 run-ops.sh를 거친다', () => {
     const crontab = readFileSync(path.resolve(DEPLOY, '../ops/crontab.example'), 'utf8');
     const jobs = crontab.split('\n').filter((line) => /^[\d*]/.test(line));
