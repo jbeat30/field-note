@@ -18,7 +18,7 @@ type StagedFileFieldProps = {
   // 올리기 실패 같은 오류 문구를 폼의 오류 영역으로 전달
   onError: (message: string) => void;
   disabled?: boolean;
-  // 한 칸에 올릴 수 있는 파일 수 (기본 1: 새로 고르면 이전 파일을 바꿈)
+  // 파일 선택 칸의 접근성 이름
   label?: string;
 };
 
@@ -51,10 +51,12 @@ export const StagedFileField = ({
     setProgress(0);
 
     try {
-      // 올려 둔 파일이 있으면 지우고 바꿈
+      // 새 파일이 올라간 뒤에 이전 파일을 지움 (새 업로드가 실패해도 이전 파일은 그대로)
+      const next = await stage(picked, setProgress);
+
       if (file) await staged.remove(file.fileId);
 
-      staged.add(await stage(picked, setProgress));
+      staged.add(next);
     } catch (caught) {
       onError(
         caught instanceof Error && caught.message ? caught.message : getErrorDetailMessage(caught),

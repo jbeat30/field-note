@@ -164,9 +164,9 @@ export const createCredentialService = ({
     }
 
     // 임시 보관 중인 파일은 여기서 사용 가능으로 확정, 보관 시간이 지났으면 만료 오류
-    await confirmStagedFile(tx, file.companyId, file.id, now());
+    const confirmed = await confirmStagedFile(tx, file.companyId, file.id, now());
 
-    if (file.status === 'REJECTED') {
+    if ((confirmed ?? file).status === 'REJECTED') {
       throw invalid('body.fileId', '검사에서 거부된 파일은 연결할 수 없습니다');
     }
   };

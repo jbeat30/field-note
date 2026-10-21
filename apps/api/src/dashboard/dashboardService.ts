@@ -6,7 +6,7 @@ import {
   previousMonth,
   shiftDate,
   todayInSeoul,
-  dashboardMonthRange,
+  dashboardCalendarRange,
   type AlertDismiss,
   type AlertSettings,
   type AlertSettingsUpdate,
@@ -55,8 +55,7 @@ export const createDashboardService = (
   return {
     get: async (companyId) => {
       const today = todayInSeoul(now());
-      const month = dashboardMonthRange(today);
-      const calendar = await assignments.calendar(companyId, month);
+      const calendar = await assignments.calendar(companyId, dashboardCalendarRange(today));
       const settings = await loadSettings(companyId);
       const data = await withCompany(app, companyId, async (tx) => {
         const projects = await tx.project.findMany({

@@ -55,8 +55,8 @@ export type FileService = {
   get: (companyId: string, fileId: string) => Promise<StoredFile>;
   // 사용 가능한 파일의 내려받기 주소 (회사 범위에서 찾은 파일에만 발급)
   url: (companyId: string, fileId: string, query: FileUrlQuery) => Promise<FileUrlResponse>;
-  // 폼을 취소해 임시 파일을 바로 삭제 (폼에 연결되지 않은 파일만, 여러 번 불러도 안전)
-  discard: (companyId: string, fileId: string) => Promise<void>;
+  // 폼을 취소해 임시 파일을 바로 삭제 (올린 본인의, 폼에 연결되지 않은 파일만, 여러 번 불러도 안전)
+  discard: (companyId: string, userId: string, fileId: string) => Promise<void>;
   // 내용 검사·썸네일 작업 (작업 큐 처리기가 호출)
   process: (job: FileProcessJob) => Promise<void>;
 };
@@ -237,7 +237,7 @@ export const createFileService = ({
     complete: async (companyId, fileId) => {
       let row = await getOrThrow(companyId, fileId);
 
-      if (row.status === 'READY' || row.status === 'REJECTED') {
+      if (row.status === 'READY' || row.status === 'STAGED' || row.status === 'REJECTED') {
         return toFile(row);
       }
 
@@ -246,12 +246,18 @@ export const createFileService = ({
           throw new FileError('NOT_UPLOADED');
         }
 
-        row = await withCompany(app, companyId, (tx) =>
-          tx.storedFile.update({
-            where: { companyId_id: { companyId, id: fileId } },
+        // 그사이 취소로 거부된 파일은 되살리지 않음 (업로드 신청 상태일 때만 검사 중으로 바꿈)
+        await withCompany(app, companyId, (tx) =>
+          tx.storedFile.updateMany({
+            where: { id: fileId, status: 'PENDING' },
             data: { status: 'PROCESSING' },
           }),
         );
+        row = await getOrThrow(companyId, fileId);
+
+        if (row.status !== 'PROCESSING') {
+          return toFile(row);
+        }
       }
 
       // 작업 등록 뒤 서버가 멈춰도 같은 요청을 다시 보내면 작업이 다시 등록됨
@@ -291,7 +297,7 @@ export const createFileService = ({
       };
     },
 
-    discard: async (companyId, fileId) => {
+    discard: async (companyId, userId, fileId) => {
       const row = await withCompany(app, companyId, async (tx) => {
         await lockFile(tx, fileId);
 
@@ -300,7 +306,8 @@ export const createFileService = ({
           include: { photo: true, documentVersion: true, credentials: { take: 1 } },
         });
 
-        if (!file) {
+        // 다른 사람이 올리는 중인 파일은 지울 수 없음 (없는 파일과 구별하지 않음)
+        if (!file || file.uploadedBy !== userId) {
           throw new FileError('NOT_FOUND');
         }
 
