@@ -630,6 +630,16 @@ ssh -N -L 15432:127.0.0.1:5432 field-note
 
 DB 도구의 접속 정보: 호스트 `localhost`, 포트 `15432`, 데이터베이스 `field_note`, 사용자 `field_note_readonly`, 비밀번호는 서버 `deploy/ops.env`의 `DATABASE_READONLY_URL` 안(`field_note_readonly:`와 `@db` 사이)에 있다. 화면에 찍지 말고 비밀번호 관리자에 옮겨 둔다.
 
+**WebStorm에 미리 연결해 두기** (급할 때 바로 열 수 있게, 터널을 직접 열 필요가 없음)
+
+1. Database 도구 창 → `+` → Data Source → PostgreSQL
+2. SSH/SSL 탭 → Use SSH tunnel 체크 → `…`로 SSH 설정을 추가: Host `<서버 고정 IP>`, Port `22`, User `ubuntu`, Auth type `Key pair`, Private key file `~/.ssh/field-note-prod`
+3. General 탭: Host `127.0.0.1`, Port `5432` (SSH 터널을 쓸 때 이 주소는 **서버 안에서 본 주소**다. 위의 `ssh -N -L` 터널과 함께 쓰지 않고 둘 중 하나만 쓴다), Database `field_note`
+4. 데이터 소스를 두 개로 나눠 이름을 구분해 둔다
+   - `field-note-prod (조회)`: User `field_note_readonly`, 비밀번호를 저장해 둔다. 평소 확인용이며 회사를 지정(`set_config`)한 뒤에만 행이 보인다
+   - `field-note-prod (수정, 소유 계정)`: User `field_note`, 비밀번호 저장은 `Ask every time`으로 둔다. 급하게 데이터를 고칠 때만 쓰고 비밀번호는 서버 `deploy/.env`의 `POSTGRES_PASSWORD`에서 확인한다. 이 계정은 모든 회사가 보이고 쓰기도 되므로 자동 커밋을 끄고 `begin;`으로 시작한 뒤 결과를 확인하고 `commit;`한다
+5. 연결 테스트(Test Connection)가 되는지 한 번 확인해 둔다. 조회 전용 계정은 서버 `ops.env`에 `DATABASE_READONLY_URL` 줄을 추가하고 배포한 뒤부터 로그인된다
+
 - 조회 전용 계정은 **SELECT만** 가능하고 회사 격리(RLS)가 앱과 같다. 접속 직후에는 어떤 행도 보이지 않으므로 볼 회사를 지정한다 (세션마다 한 번)
 
   ```sql
