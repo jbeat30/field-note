@@ -1,4 +1,4 @@
-import { FILE_UPLOAD_URL_TTL_SECONDS } from '@field-note/shared';
+import { FILE_STAGED_TTL_SECONDS, FILE_UPLOAD_URL_TTL_SECONDS } from '@field-note/shared';
 
 import type { PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
@@ -13,6 +13,7 @@ export type MaintenanceResult = {
   expiredSessions: boolean;
   companies: number;
   staleUploads: number;
+  expiredStaged: number;
   expiredIdempotencyKeys: number;
 };
 
@@ -27,7 +28,7 @@ type Deps = {
 };
 
 /**
- * @description 정기 유지 작업: 만료된 로그인 세션, 올리지 않고 방치된 파일 업로드 신청, 만료된 멱등 키 정리
+ * @description 정기 유지 작업: 만료된 로그인 세션, 올리지 않고 방치된 파일 업로드 신청, 임시 보관 24시간이 지난 파일, 만료된 멱등 키 정리
  * 한 번 실행 중 일부가 실패해도 나머지는 계속 진행하고 오류는 로그 기록, 여러 번·동시 실행해도 결과 동일
  * @param deps 세션 저장소·DB·객체 저장소·로거
  * @returns 유지 작업 실행 함수
@@ -45,6 +46,7 @@ export const createMaintenance = ({
       expiredSessions: false,
       companies: 0,
       staleUploads: 0,
+      expiredStaged: 0,
       expiredIdempotencyKeys: 0,
     };
 
@@ -77,16 +79,45 @@ export const createMaintenance = ({
             });
           }
 
+          // 폼에 연결되지 않은 채 보관 시간이 지난 임시 파일은 "만료"로 종료해 용량에서 제외, 저장소 객체도 삭제
+          const expiredBefore = new Date(at.getTime() - FILE_STAGED_TTL_SECONDS * 1000);
+          const expired = await tx.storedFile.findMany({
+            where: {
+              status: 'STAGED',
+              createdAt: { lt: expiredBefore },
+              photo: null,
+              documentVersion: null,
+              credentials: { none: {} },
+            },
+            select: { id: true, objectKey: true, thumbnailKey: true },
+          });
+
+          if (expired.length > 0) {
+            await tx.storedFile.updateMany({
+              where: { id: { in: expired.map((file) => file.id) }, status: 'STAGED' },
+              data: { status: 'REJECTED', rejectReason: 'EXPIRED' },
+            });
+          }
+
           const keys = await tx.idempotencyKey.deleteMany({ where: { expiresAt: { lte: at } } });
 
-          return { stale, keys: keys.count };
+          return { stale, expired, keys: keys.count };
         });
 
         for (const file of cleaned.stale) {
           await storage.remove(file.objectKey).catch(() => undefined);
         }
 
+        for (const file of cleaned.expired) {
+          await storage.remove(file.objectKey).catch(() => undefined);
+
+          if (file.thumbnailKey) {
+            await storage.remove(file.thumbnailKey).catch(() => undefined);
+          }
+        }
+
         result.staleUploads += cleaned.stale.length;
+        result.expiredStaged += cleaned.expired.length;
         result.expiredIdempotencyKeys += cleaned.keys;
         result.companies += 1;
       } catch (error) {

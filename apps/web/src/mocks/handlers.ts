@@ -697,6 +697,8 @@ export const handlers = [
     return HttpResponse.json({
       quotaBytes: 5_368_709_120,
       usedBytes: photoBytes + 85 * 1_048_576 + 6 * 1_048_576,
+      stagedBytes: 12 * 1_048_576,
+      stagedCount: 3,
       byPurpose: [
         { purpose: 'PHOTO', bytes: photoBytes, count: byProject.reduce((s, r) => s + r.count, 0) },
         { purpose: 'DOCUMENT', bytes: 85 * 1_048_576, count: 12 },

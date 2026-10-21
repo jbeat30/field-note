@@ -12,6 +12,7 @@ import {
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import { confirmStagedFile } from '../file/stagedFile';
 import type { ObjectStorage } from '../storage/objectStorage';
 
 export class PhotoError extends Error {
@@ -134,6 +135,9 @@ export const createPhotoService = (
             message: VALIDATION_MESSAGES.PHOTO_FILE_NOT_IN_PROJECT,
           });
         }
+
+        // 임시 보관 중인 파일은 여기서 사용 가능으로 확정, 보관 시간이 지났으면 만료 오류
+        await confirmStagedFile(tx, companyId, file.id, now());
 
         if (file.status === 'REJECTED') {
           throw new PhotoError('INVALID', {

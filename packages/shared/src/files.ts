@@ -8,8 +8,8 @@ export const filePurposeSchema = z.enum(FILE_PURPOSES);
 
 export type FilePurpose = z.infer<typeof filePurposeSchema>;
 
-// 업로드 → 내용 검사·썸네일 작업 → 사용 가능, 검사에서 걸러지면 거부
-export const FILE_STATUSES = ['PENDING', 'PROCESSING', 'READY', 'REJECTED'] as const;
+// 업로드 → 내용 검사·썸네일 작업 → 임시 보관(폼에 연결 전) → 폼 저장으로 연결되면 사용 가능, 검사에서 걸러지거나 보관 시간이 지나면 거부
+export const FILE_STATUSES = ['PENDING', 'PROCESSING', 'STAGED', 'READY', 'REJECTED'] as const;
 
 export const fileStatusSchema = z.enum(FILE_STATUSES);
 
@@ -24,6 +24,10 @@ export const FILE_REJECT_REASONS = [
   'NOT_UPLOADED',
   // 이미지로 열 수 없음
   'UNREADABLE_IMAGE',
+  // 임시 보관 시간이 지나 삭제됨
+  'EXPIRED',
+  // 작성하던 폼을 취소해 바로 삭제됨
+  'DISCARDED',
 ] as const;
 
 export const fileRejectReasonSchema = z.enum(FILE_REJECT_REASONS);
@@ -35,6 +39,8 @@ export const FILE_REJECT_REASON_LABELS: Record<FileRejectReason, string> = {
   SIZE_MISMATCH: '올라온 파일 크기가 신청한 크기와 다릅니다',
   NOT_UPLOADED: '파일이 올라오지 않았습니다',
   UNREADABLE_IMAGE: '이미지를 열 수 없습니다',
+  EXPIRED: '임시 보관 시간이 지나 삭제되었습니다',
+  DISCARDED: '작성을 취소해 삭제되었습니다',
 };
 
 const MEGABYTE = 1024 * 1024;
@@ -54,6 +60,18 @@ export const FILE_NAME_MAX_LENGTH = 200;
 // 업로드 주소·내려받기 주소의 유효 시간 (짧게 유지)
 export const FILE_UPLOAD_URL_TTL_SECONDS = 15 * 60;
 export const FILE_DOWNLOAD_URL_TTL_SECONDS = 5 * 60;
+
+// 폼에 연결되지 않은 임시 파일을 보관하는 시간 (지나면 삭제, 업로드 신청 시각부터 셈)
+export const FILE_STAGED_TTL_SECONDS = 24 * 60 * 60;
+
+/**
+ * @description 임시 보관 시간이 지났는지 확인 (서버 판정과 기기의 안내가 같은 기준을 씀)
+ * @param createdAt 업로드 신청 시각
+ * @param now 현재 시각
+ * @returns 보관 시간 경과 여부
+ */
+export const isStagedExpired = (createdAt: Date | string, now: Date) =>
+  now.getTime() - new Date(createdAt).getTime() >= FILE_STAGED_TTL_SECONDS * 1000;
 
 // 허용 형식 목록 (이미지·PDF·오피스 문서만, 실행 파일 등은 목록에 없으므로 모두 거부)
 // 확장자가 아니라 내용으로 판별한 형식(mime)을 이 표와 비교

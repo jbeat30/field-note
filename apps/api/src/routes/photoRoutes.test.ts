@@ -518,3 +518,131 @@ describe('사진 수정·대표 사진·삭제', () => {
     expect((await s.post(`/projects/${s.projectId}/photos`, { fileId })).status).toBe(400);
   });
 });
+
+describe('임시 보관 파일', () => {
+  const HOUR = 60 * 60 * 1000;
+  const register = (s: Awaited<ReturnType<typeof setup>>, fileId: string) =>
+    s.post(`/projects/${s.projectId}/photos`, { fileId });
+
+  it('검사를 마친 파일은 폼에 연결되기 전까지 임시 보관이고 사진으로 등록하면 사용 가능해진다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+
+    expect((await s.get(`/files/${fileId}`)).body.status).toBe('STAGED');
+    expect((await register(s, fileId)).status).toBe(201);
+    expect((await s.get(`/files/${fileId}`)).body.status).toBe('READY');
+  });
+
+  it('검사가 끝나기 전에 등록한 파일은 검사가 끝나면 바로 사용 가능해진다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile(s.projectId, false);
+
+    expect((await register(s, fileId)).status).toBe(201);
+
+    await s.finish(fileId);
+
+    expect((await s.get(`/files/${fileId}`)).body.status).toBe('READY');
+  });
+
+  it('임시 보관 사진은 미리보기 주소를 받을 수 있고 문서 파일은 받을 수 없다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+    const pdf = await s.upload(Buffer.from('%PDF-1.7\n1 0 obj\n<<>>\nendobj\n%%EOF'), {
+      name: '시공도.pdf',
+      contentType: 'application/pdf',
+      purpose: 'DOCUMENT',
+    });
+
+    expect((await s.get(`/files/${fileId}/url?variant=thumbnail`)).status).toBe(200);
+    expect((await s.get(`/files/${pdf.ticket.file.id}/url`)).status).toBe(404);
+  });
+
+  it('올린 지 24시간이 지난 파일은 등록할 수 없고 해당 파일을 알리는 오류가 나온다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+
+    await db.owner.storedFile.updateMany({
+      where: { id: fileId },
+      data: { createdAt: new Date(NOW.getTime() - 25 * HOUR) },
+    });
+
+    const res = await register(s, fileId);
+
+    expect(res.status).toBe(409);
+    expect(res.body.error.code).toBe('STAGED_FILE_EXPIRED');
+    expect(res.body.error.details[0].path).toBe('body.fileId');
+    expect((await s.get(`/files/${fileId}`)).body.status).toBe('STAGED');
+  });
+
+  it('정리 작업이 이미 지운 파일도 같은 만료 오류가 나온다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+
+    await db.owner.storedFile.updateMany({
+      where: { id: fileId },
+      data: { status: 'REJECTED', rejectReason: 'EXPIRED' },
+    });
+
+    expect((await register(s, fileId)).body.error.code).toBe('STAGED_FILE_EXPIRED');
+  });
+
+  it('폼을 취소하면 임시 파일이 바로 지워지고 여러 번 보내도 같다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+    const row = await db.owner.storedFile.findFirstOrThrow({ where: { id: fileId } });
+
+    expect((await s.del(`/files/${fileId}`)).body).toEqual({ success: true });
+    expect((await s.del(`/files/${fileId}`)).status).toBe(200);
+    expect(await db.owner.storedFile.findFirstOrThrow({ where: { id: fileId } })).toMatchObject({
+      status: 'REJECTED',
+      rejectReason: 'DISCARDED',
+    });
+    expect(s.memory.objects.has(row.objectKey)).toBe(false);
+    expect(s.memory.objects.has(row.thumbnailKey!)).toBe(false);
+  });
+
+  it('폼에 연결된 파일과 없는 파일은 취소로 지울 수 없다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+
+    await register(s, fileId);
+
+    expect((await s.del(`/files/${fileId}`)).status).toBe(404);
+    expect((await s.get(`/files/${fileId}`)).body.status).toBe('READY');
+    expect((await s.del('/files/0198a000-0000-7000-8000-000000000000')).status).toBe(404);
+  });
+
+  it('임시 파일도 저장 용량에 포함되어 한도를 넘으면 업로드를 막고 지우면 다시 올릴 수 있다', async () => {
+    const s = await setup();
+    const fileId = await s.photoFile();
+    const row = await db.owner.storedFile.findFirstOrThrow({ where: { id: fileId } });
+
+    await db.owner.company.update({
+      where: { id: row.companyId },
+      data: { storageQuotaBytes: row.sizeBytes + 10n },
+    });
+
+    const blocked = await s.post(`/projects/${s.projectId}/files`, {
+      name: '현장2.jpg',
+      contentType: 'image/jpeg',
+      purpose: 'PHOTO',
+      size: 100,
+    });
+
+    expect(blocked.status).toBe(409);
+    expect(blocked.body.error.code).toBe('STORAGE_QUOTA_EXCEEDED');
+
+    await s.del(`/files/${fileId}`);
+
+    expect(
+      (
+        await s.post(`/projects/${s.projectId}/files`, {
+          name: '현장2.jpg',
+          contentType: 'image/jpeg',
+          purpose: 'PHOTO',
+          size: 100,
+        })
+      ).status,
+    ).toBe(201);
+  });
+});
