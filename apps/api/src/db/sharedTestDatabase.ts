@@ -17,6 +17,7 @@ export const ROLE_PASSWORDS = {
   field_note_operator: 'test_operator_password',
   field_note_queue: 'test_queue_password',
   field_note_purge: 'test_purge_password',
+  field_note_readonly: 'test_readonly_password',
 } as const;
 
 const API_ROOT = path.resolve(__dirname, '../..');

@@ -489,18 +489,18 @@ Docker와 api 없이 화면을 확인하는 모드다. 로그인은 `http://loca
 
 서버의 `/srv/field-note`에서 실행한다.
 
-| 하고 싶은 일                    | 명령                                                                                                                                                                            |
-| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 새 버전 배포                    | `./deploy/scripts/deploy.sh v1.0.0` (태그나 브랜치, 배포 전 자동 백업 → 이미지 빌드 → 마이그레이션 → 헬스 체크)                                                                 |
-| 상태 보기                       | `fnc ps`, `curl https://<주소>/api/v1/health`                                                                                                                                   |
-| 로그 보기                       | `fnc logs -f api` (web·db도 가능), 점검 작업은 `deploy/logs/*.log`                                                                                                              |
-| 서버 점검                       | `sudo ./deploy/scripts/server-check.sh` (포트·SSH·방화벽·컨테이너·파일 권한·백업 15항목)                                                                                        |
-| 백업 지금 만들기 / 복구 시험    | `./deploy/scripts/run-ops.sh backup pnpm backup create` / `./deploy/scripts/run-ops.sh drill pnpm backup drill`                                                                 |
-| 약관 등록                       | `fn-ops pnpm operator legal-register`                                                                                                                                           |
-| 해지 현황 / 삭제 대상 미리 보기 | `fn-ops pnpm operator closures` / `fn-ops pnpm operator purge-due --dry-run`                                                                                                    |
-| 시연 회사 되돌리기              | `fn-ops pnpm operator demo-reset`                                                                                                                                               |
-| 예약 작업 확인                  | `crontab -l` (백업 03:00, 해지 삭제 03:30, 복구 시험 월요일 04:00, 시연 초기화 04:30)                                                                                           |
-| DB 직접 보기                    | `fnc exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'` (DB는 외부에 열려 있지 않다. 소유 계정이라 모든 회사가 보이므로 읽기 위주로 하고, 바꿀 때는 `begin;`으로 시작) |
+| 하고 싶은 일                    | 명령                                                                                                                                                                                                                |
+| ------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 새 버전 배포                    | `./deploy/scripts/deploy.sh v1.0.0` (태그나 브랜치, 배포 전 자동 백업 → 이미지 빌드 → 마이그레이션 → 헬스 체크)                                                                                                     |
+| 상태 보기                       | `fnc ps`, `curl https://<주소>/api/v1/health`                                                                                                                                                                       |
+| 로그 보기                       | `fnc logs -f api` (web·db도 가능), 점검 작업은 `deploy/logs/*.log`                                                                                                                                                  |
+| 서버 점검                       | `sudo ./deploy/scripts/server-check.sh` (포트·SSH·방화벽·컨테이너·파일 권한·백업 15항목)                                                                                                                            |
+| 백업 지금 만들기 / 복구 시험    | `./deploy/scripts/run-ops.sh backup pnpm backup create` / `./deploy/scripts/run-ops.sh drill pnpm backup drill`                                                                                                     |
+| 약관 등록                       | `fn-ops pnpm operator legal-register`                                                                                                                                                                               |
+| 해지 현황 / 삭제 대상 미리 보기 | `fn-ops pnpm operator closures` / `fn-ops pnpm operator purge-due --dry-run`                                                                                                                                        |
+| 시연 회사 되돌리기              | `fn-ops pnpm operator demo-reset`                                                                                                                                                                                   |
+| 예약 작업 확인                  | `crontab -l` (백업 03:00, 해지 삭제 03:30, 복구 시험 월요일 04:00, 시연 초기화 04:30)                                                                                                                               |
+| DB 직접 보기                    | `fnc exec db sh -c 'psql -U "$POSTGRES_USER" -d "$POSTGRES_DB"'` (소유 계정, 모든 회사가 보이므로 읽기 위주). DB 도구는 조회 전용 계정으로 접속: [서버 구축 가이드](11-server-deploy.md)의 "운영자가 DB를 볼 때" 절 |
 
 - 예약 작업이 실패하면 `ops.env`의 `ALERT_MAIL_TO`로 알림 메일이 간다. 로그 폴더에 쓸 수 없으면 조용히 넘어가지 않고 오류로 끝난다
 - 서버에서 코드를 받는 것은 서버가 직접 하는 일이다. `main`에 머지해도 서버에 자동 배포되지 않는다 (태그 `v*`와 GitHub Release만 자동 생성)

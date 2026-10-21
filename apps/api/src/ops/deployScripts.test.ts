@@ -109,6 +109,16 @@ describe('deploy/scripts', () => {
     expect(compose.match(/PNPM_CONFIG_VERIFY_DEPS_BEFORE_RUN: 'false'/g)).toHaveLength(2);
   });
 
+  it('DB 포트는 서버 안(127.0.0.1)에만 묶고 바깥에 열지 않는다', () => {
+    const compose = read('docker-compose.yml');
+    const published = [...compose.matchAll(/^\s+- '([^']*\d+:\d+(?:\/udp)?)'$/gm)].map(
+      (match) => match[1],
+    );
+
+    expect(published).toContain('127.0.0.1:5432:5432');
+    expect(published.filter((port) => port!.includes('5432'))).toEqual(['127.0.0.1:5432:5432']);
+  });
+
   it('crontab 예시의 작업이 run-ops.sh를 거친다', () => {
     const crontab = readFileSync(path.resolve(DEPLOY, '../ops/crontab.example'), 'utf8');
     const jobs = crontab.split('\n').filter((line) => /^[\d*]/.test(line));

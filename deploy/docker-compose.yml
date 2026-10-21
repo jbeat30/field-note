@@ -15,7 +15,7 @@ x-hardening: &hardening
       max-file: '5'
 
 services:
-  # DB: 외부 포트를 열지 않음 (운영자는 SSH 터널로만 접속)
+  # DB: 서버 안(127.0.0.1)에서만 접근 가능, 바깥에는 열지 않음 (운영자는 SSH 터널로 이 포트에 접속)
   # 서비스 이름을 postgres·localhost가 아닌 db로 둔 것은 api가 로컬 주소로 보이는 이름을 운영에서 거부하기 때문
   db:
     <<: *hardening
@@ -31,6 +31,8 @@ services:
       - max_connections=60
       - -c
       - shared_buffers=${DB_SHARED_BUFFERS:-256MB}
+    ports:
+      - '127.0.0.1:5432:5432'
     volumes:
       - db-data:/var/lib/postgresql
     mem_limit: ${DB_MEM_LIMIT:-1g}
