@@ -340,6 +340,75 @@ export const AddCredential: Story = {
   },
 };
 
+// 서류 파일은 고르면 바로 올려 임시 보관하고, 등록하면 서류에 연결됨 (올린 파일이 있는 채로 창을 닫으면 확인 후 삭제)
+export const AddCredentialWithFile: Story = {
+  parameters: { router: routerFor('정판금', 'credentials') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
+
+    await userEvent.click(await panel.findByRole('button', { name: '서류 등록' }));
+
+    const form = within(await within(document.body).findByRole('form', { name: '서류 등록' }));
+
+    await chooseOption(form.getByLabelText('서류 종류'), '전기기능사');
+    await userEvent.upload(
+      form.getByLabelText('서류 파일'),
+      new File(['%PDF-1.7'], '자격증.pdf', { type: 'application/pdf' }),
+    );
+    await expect(await form.findByText(/올려 두었습니다/)).toBeInTheDocument();
+
+    // 닫으려 하면 확인, 계속 작성하면 올린 파일 유지
+    await userEvent.click(within(document.body).getByRole('button', { name: '닫기' }));
+
+    const confirmDialog = within(await within(document.body).findByRole('alertdialog'));
+
+    await userEvent.click(confirmDialog.getByRole('button', { name: '계속 작성' }));
+    await expect(form.getByText('자격증.pdf')).toBeInTheDocument();
+
+    await userEvent.click(form.getByRole('button', { name: '서류 등록' }));
+
+    await waitFor(() => expect(panel.getAllByRole('listitem')).toHaveLength(3));
+    await expect(panel.getByText(/첨부 자격증.pdf/)).toBeInTheDocument();
+  },
+};
+
+export const CloseCredentialFormDiscardsFile: Story = {
+  parameters: { router: routerFor('정판금', 'credentials') },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const panel = within(await canvas.findByRole('region', { name: '서류·자격' }));
+
+    await userEvent.click(await panel.findByRole('button', { name: '서류 등록' }));
+
+    const form = within(await within(document.body).findByRole('form', { name: '서류 등록' }));
+
+    await userEvent.upload(
+      form.getByLabelText('서류 파일'),
+      new File(['%PDF-1.7'], '임시.pdf', { type: 'application/pdf' }),
+    );
+    await form.findByText(/올려 두었습니다/);
+    await userEvent.click(within(document.body).getByRole('button', { name: '닫기' }));
+    await userEvent.click(
+      within(await within(document.body).findByRole('alertdialog')).getByRole('button', {
+        name: '그만두고 파일 삭제',
+      }),
+    );
+    await waitFor(() =>
+      expect(
+        within(document.body).queryByRole('form', { name: '서류 등록' }),
+      ).not.toBeInTheDocument(),
+    );
+
+    // 다시 열면 올린 파일이 없음
+    await userEvent.click(await panel.findByRole('button', { name: '서류 등록' }));
+
+    const reopened = within(await within(document.body).findByRole('form', { name: '서류 등록' }));
+
+    await expect(reopened.queryByText('임시.pdf')).not.toBeInTheDocument();
+  },
+};
+
 export const RenewCredential: Story = {
   parameters: { router: routerFor('정판금', 'credentials') },
   play: async ({ canvasElement }) => {
