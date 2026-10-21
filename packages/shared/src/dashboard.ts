@@ -5,6 +5,7 @@ import {
   shiftDate,
   summarizeStaffingTimeline,
   type StaffingCalendar,
+  type StaffingTimelineRow,
 } from './staffing';
 import {
   PROJECT_WARNING_TYPES,
@@ -16,6 +17,7 @@ import {
 import { CREDENTIAL_EXPIRING_DAYS, credentialDaysLeft } from './credentials';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 import { warrantyDaysLeft } from './warranty';
+import { monthOf, monthRange } from './monthlyHours';
 import { periodStart } from './workSummary';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
@@ -253,9 +255,9 @@ const dashboardProjectSchema = z.object({
   siteName: z.string(),
   status: projectStatusSchema,
   plannedEnd: dateSchema,
-  // 오늘 저장된 작업 내역이 있는지, 이번 주(월~일) 저장된 공수(분)
+  // 오늘 저장된 작업 내역이 있는지, 이번 달 저장된 공수(분)
   hasLogToday: z.boolean(),
-  weekMinutes: z.number().int(),
+  monthMinutes: z.number().int(),
   progressPercent: z.number().int().nullable(),
   // 공수 소진율(%): 계획이 없으면 null
   burnPercent: z.number().nullable(),
@@ -270,12 +272,12 @@ export const dashboardSchema = z.object({
   alerts: z.array(dashboardAlertItemSchema),
   // 사용자가 숨긴 알림 중 지금도 해당하는 것의 수
   hiddenAlertCount: z.number().int(),
-  // 홈 수치 줄: 진행 중 프로젝트, 오늘 작업 내역에 들어간 사람과 오늘 나가는 사람, 이번 주 일한 시간(분)
+  // 홈 수치 줄: 진행 중 프로젝트, 오늘 작업 내역에 들어간 사람과 오늘 나가는 사람, 이번 달 일한 시간(분)
   stats: z.object({
     inProgress: z.number().int(),
     todayLoggedHeadcount: z.number().int(),
     todayHeadcount: z.number().int(),
-    weekMinutes: z.number().int(),
+    monthMinutes: z.number().int(),
   }),
   // 오늘 투입: 진행 중 프로젝트에 오늘 나가는 사람과 작업 내역 입력 여부
   todayAssignments: z.object({
@@ -299,13 +301,13 @@ export const dashboardSchema = z.object({
   activeProjects: z.array(dashboardProjectSchema),
   // 위험 프로젝트: 공수 소진·일정 경고가 있는 프로젝트
   risks: z.array(dashboardProjectSchema),
-  week: z.object({
+  month: z.object({
     from: dateSchema,
     to: dateSchema,
     conflicts: z.array(
       z.object({ employeeId: z.uuid(), name: z.string(), dateCount: z.number().int() }),
     ),
-    // 이번 주 저장된 작업 내역에 들어간 사람, 일한 기록이 없는 재직 직원 수
+    // 이번 달 저장된 작업 내역에 들어간 사람, 일한 기록이 없는 재직 직원 수
     workingCount: z.number().int(),
     idleCount: z.number().int(),
   }),
@@ -389,7 +391,7 @@ export type DashboardInput = {
   todayLogProjectIds: readonly string[];
   todayLoggedEmployeeIds: readonly string[];
   draftLogCount: number;
-  // 이번 주(월~일) 인력 배치
+  // 이번 달(1일~말일) 인력 배치
   calendar: StaffingCalendar;
   // 협의 중인 변경·추가 작업
   negotiatingChanges: readonly {
@@ -451,7 +453,14 @@ const daysBetween = (from: string, to: string) =>
 const RISK_WARNINGS: ProjectWarningType[] = [...PROJECT_WARNING_TYPES];
 
 /**
- * @description 이번 주의 월요일~일요일
+ * @description 오늘이 속한 달의 1일~말일 (홈 인력표 기간)
+ * @param today 오늘(서울 기준)
+ * @returns 이번 달 시작·끝 날짜
+ */
+export const dashboardMonthRange = (today: string) => monthRange(monthOf(today));
+
+/**
+ * @description 이번 주의 월요일~일요일 (같은 날 중복 투입 알림 기간)
  * @param today 오늘(서울 기준)
  * @returns 이번 주 시작·끝 날짜
  */
@@ -462,6 +471,40 @@ export const weekRange = (today: string) => {
 };
 
 /**
+ * @description 인력 타임라인에서 같은 날 두 프로젝트에 들어간 사람과 이어진 첫 겹침 구간을 뽑음
+ * @param timeline 인력 배치 타임라인
+ * @returns 겹침이 있는 사람별 날짜·구간·프로젝트 이름
+ */
+const collectConflicts = (timeline: StaffingTimelineRow[]) =>
+  timeline.flatMap((row) => {
+    if (row.conflictDates.length === 0) return [];
+
+    // 이어진 첫 겹침 구간
+    const run: string[] = [row.conflictDates[0]!];
+
+    for (const date of row.conflictDates.slice(1)) {
+      if (shiftDate(run[run.length - 1]!, 1) === date) run.push(date);
+      else break;
+    }
+
+    const names = row.lanes
+      .filter((lane) =>
+        lane.segments.some((segment) => segment.days.some((day) => run.includes(day.date))),
+      )
+      .map((lane) => lane.name);
+
+    return [
+      {
+        employee: row.employee,
+        dates: row.conflictDates,
+        firstDate: run[0]!,
+        lastDate: run[run.length - 1]!,
+        projectNames: names,
+      },
+    ];
+  });
+
+/**
  * @description 모아 온 기록으로 홈 대시보드를 만듦 (서버와 목업이 같은 규칙을 쓰도록 순수 함수로 둠)
  * 위젯은 현재 기록으로 만들 수 있는 것만 포함하고 알림은 켜 둔 종류만 포함
  * @param input 프로젝트·투입·작업 내역·메모함·배치·변경 작업 현황과 켜 둔 알림 종류
@@ -470,11 +513,11 @@ export const weekRange = (today: string) => {
 export const assembleDashboard = (input: DashboardInput): Dashboard => {
   const names = new Map(input.projects.map((project) => [project.id, project]));
   const logged = new Set(input.todayLogProjectIds);
-  // 이번 주 저장된 작업 내역의 프로젝트별 공수 (인력 배치와 같은 기준)
-  const weekByProject = new Map<string, number>();
+  // 이번 달 저장된 작업 내역의 프로젝트별 공수 (인력 배치와 같은 기준)
+  const monthByProject = new Map<string, number>();
 
   for (const day of input.calendar.workDays) {
-    weekByProject.set(day.projectId, (weekByProject.get(day.projectId) ?? 0) + day.minutes);
+    monthByProject.set(day.projectId, (monthByProject.get(day.projectId) ?? 0) + day.minutes);
   }
 
   const health = new Map(
@@ -504,7 +547,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
       status: project.status,
       plannedEnd: project.plannedEnd,
       hasLogToday: logged.has(project.id),
-      weekMinutes: weekByProject.get(project.id) ?? 0,
+      monthMinutes: monthByProject.get(project.id) ?? 0,
       progressPercent: project.progressPercent,
       burnPercent: item.burnPercent,
       warnings: item.warnings,
@@ -543,36 +586,22 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     })
     .sort((a, b) => Number(a.hasLog) - Number(b.hasLog) || a.code.localeCompare(b.code));
 
-  // 이번 주 인력 (인력 배치와 같은 기준: 저장된 작업 내역에 들어간 날)
+  // 이번 달 인력 (인력 배치와 같은 기준: 저장된 작업 내역에 들어간 날)
   const timeline = buildStaffingTimeline(input.calendar);
   const staffing = summarizeStaffingTimeline(timeline);
-  const conflicts = timeline.flatMap((row) => {
-    if (row.conflictDates.length === 0) return [];
-
-    // 이어진 첫 겹침 구간
-    const run: string[] = [row.conflictDates[0]!];
-
-    for (const date of row.conflictDates.slice(1)) {
-      if (shiftDate(run[run.length - 1]!, 1) === date) run.push(date);
-      else break;
-    }
-
-    const names = row.lanes
-      .filter((lane) =>
-        lane.segments.some((segment) => segment.days.some((day) => run.includes(day.date))),
-      )
-      .map((lane) => lane.name);
-
-    return [
-      {
-        employee: row.employee,
-        dates: row.conflictDates,
-        firstDate: run[0]!,
-        lastDate: run[run.length - 1]!,
-        projectNames: names,
-      },
-    ];
-  });
+  const monthConflicts = collectConflicts(timeline);
+  // 같은 날 중복 투입 알림은 이번 주 기록만 봄 (지난 겹침이 한 달 내내 남지 않게)
+  const weekSpan = weekRange(input.today);
+  const conflicts = collectConflicts(
+    buildStaffingTimeline({
+      ...input.calendar,
+      from: weekSpan.from,
+      to: weekSpan.to,
+      workDays: input.calendar.workDays.filter(
+        (day) => day.workDate >= weekSpan.from && day.workDate <= weekSpan.to,
+      ),
+    }),
+  );
 
   // 알림 (켜 둔 종류만)
   const alerts: DashboardAlert[] = [];
@@ -753,7 +782,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     alerts.push({ kind: 'MONTH_UNCLOSED', month: input.unclosedMonth });
   }
 
-  const week = weekRange(input.today);
+  const month = dashboardMonthRange(input.today);
   const items: DashboardAlertItem[] = alerts
     .map((alert) => ({
       key: dashboardAlertKey(alert, input.today),
@@ -777,7 +806,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
           .filter((item) => names.has(item.projectId))
           .map((item) => item.employeeId),
       ).size,
-      weekMinutes: input.calendar.workDays.reduce((sum, day) => sum + day.minutes, 0),
+      monthMinutes: input.calendar.workDays.reduce((sum, day) => sum + day.minutes, 0),
     },
     todayAssignments: {
       headcount: new Set(
@@ -794,9 +823,9 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     },
     activeProjects: projects.slice(0, DASHBOARD_PROJECT_LIMIT),
     risks: risks.slice(0, DASHBOARD_PROJECT_LIMIT),
-    week: {
-      ...week,
-      conflicts: conflicts.map((item) => ({
+    month: {
+      ...month,
+      conflicts: monthConflicts.map((item) => ({
         employeeId: item.employee.id,
         name: item.employee.name,
         dateCount: item.dates.length,

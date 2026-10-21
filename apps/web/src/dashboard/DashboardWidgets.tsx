@@ -84,7 +84,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
             오늘 기록
           </th>
           <th scope="col" className="py-2 text-right font-medium whitespace-nowrap">
-            이번 주
+            이번 달
           </th>
         </tr>
       </thead>
@@ -153,7 +153,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
                 )}
               </td>
               <td className="py-3 text-right align-top whitespace-nowrap tabular-nums">
-                {hoursText(project.weekMinutes)}시간
+                {hoursText(project.monthMinutes)}시간
               </td>
             </tr>
           );
@@ -185,13 +185,13 @@ const DueRow = ({
   </li>
 );
 
-// 홈 대시보드: 수치 줄, 진행 중 프로젝트 표 + 확인할 일(알림), 이번 주 인력(weekSlot), 보증·만료 임박 줄
+// 홈 대시보드: 수치 줄, 진행 중 프로젝트 표 + 확인할 일(알림), 이번 달 인력(monthSlot), 보증·만료 임박 줄
 export const DashboardWidgets = ({
   dashboard,
-  weekSlot,
+  monthSlot,
 }: {
   dashboard: Dashboard;
-  weekSlot?: ReactNode;
+  monthSlot?: ReactNode;
 }) => {
   const { alerts, stats, activeProjects, warranty, expiring, todos, today } = dashboard;
   const dismiss = useDismissAlerts();
@@ -208,7 +208,7 @@ export const DashboardWidgets = ({
             hint: stats.todayHeadcount === 0 ? '오늘 나가는 사람 없음' : '기록 / 오늘 투입',
             tone: stats.todayHeadcount > stats.todayLoggedHeadcount ? 'warning' : 'default',
           },
-          { label: '이번 주 일한 시간', value: hoursText(stats.weekMinutes), unit: '시간' },
+          { label: '이번 달 일한 시간', value: hoursText(stats.monthMinutes), unit: '시간' },
           {
             label: '확인할 일',
             value: alerts.length,
@@ -261,7 +261,7 @@ export const DashboardWidgets = ({
         </Widget>
       </div>
 
-      {weekSlot}
+      {monthSlot}
 
       <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-2">
         <Widget title="보증 종료 임박" id="warranty-heading">

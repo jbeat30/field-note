@@ -214,15 +214,15 @@ describe('GET /dashboard', () => {
       projectCounts: { planned: 0, inProgress: 0, suspended: 0 },
       activeProjects: [],
       risks: [],
-      week: { from: '2026-10-05', to: '2026-10-11', conflicts: [] },
+      month: { from: '2026-10-01', to: '2026-10-31', conflicts: [] },
       todos: { draftLogCount: 0, unclosedMonth: null },
       hiddenAlertCount: 0,
-      stats: { inProgress: 0, todayLoggedHeadcount: 0, todayHeadcount: 0, weekMinutes: 0 },
+      stats: { inProgress: 0, todayLoggedHeadcount: 0, todayHeadcount: 0, monthMinutes: 0 },
       warranty: { ending: [], openRepairCount: 0 },
       expiring: { certificates: [], credentials: [] },
     });
-    // 직원 세 명(박소장·김작업·이작업)은 이번 주 일한 기록 없음
-    expect(dashboard.week).toMatchObject({ workingCount: 0, idleCount: 3 });
+    // 직원 세 명(박소장·김작업·이작업)은 이번 달 일한 기록 없음
+    expect(dashboard.month).toMatchObject({ workingCount: 0, idleCount: 3 });
     expect(settings.items).toHaveLength(11);
     expect(settings.items.every((item) => item.enabled)).toBe(true);
   });
@@ -365,7 +365,7 @@ describe('GET /dashboard', () => {
 
     const result = await client.dashboard();
 
-    expect(result.dashboard.week.conflicts).toEqual([
+    expect(result.dashboard.month.conflicts).toEqual([
       { employeeId: worker, name: '김작업', dateCount: 2 },
     ]);
     expect(alertsOf(result)).toContainEqual({
@@ -377,12 +377,12 @@ describe('GET /dashboard', () => {
       lastDate: '2026-10-07',
       projectNames: ['A동', 'B동'],
     });
-    // 이번 주 일한 시간과 일한 사람이 수치 줄에 모임 (5일 중 하루 8시간, 둘째·셋째 날 하루 8시간 = 32시간)
-    expect(result.dashboard.stats.weekMinutes).toBe(480 + 480 + 480);
-    expect(result.dashboard.week).toMatchObject({ workingCount: 1, idleCount: 2 });
+    // 이번 달 일한 시간과 일한 사람이 수치 줄에 모임 (5일 중 하루 8시간, 둘째·셋째 날 하루 8시간 = 32시간)
+    expect(result.dashboard.stats.monthMinutes).toBe(480 + 480 + 480);
+    expect(result.dashboard.month).toMatchObject({ workingCount: 1, idleCount: 2 });
     expect(result.dashboard.activeProjects.find((item) => item.id === a)).toMatchObject({
       siteName: 'A동 현장',
-      weekMinutes: 480 + 240 + 240,
+      monthMinutes: 480 + 240 + 240,
     });
   });
 

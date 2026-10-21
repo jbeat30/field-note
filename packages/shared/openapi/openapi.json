@@ -35639,7 +35639,7 @@
                             "todayHeadcount": {
                               "type": "integer"
                             },
-                            "weekMinutes": {
+                            "monthMinutes": {
                               "type": "integer"
                             }
                           },
@@ -35647,7 +35647,7 @@
                             "inProgress",
                             "todayLoggedHeadcount",
                             "todayHeadcount",
-                            "weekMinutes"
+                            "monthMinutes"
                           ]
                         },
                         "todayAssignments": {
@@ -35749,7 +35749,7 @@
                               "hasLogToday": {
                                 "type": "boolean"
                               },
-                              "weekMinutes": {
+                              "monthMinutes": {
                                 "type": "integer"
                               },
                               "progressPercent": {
@@ -35786,7 +35786,7 @@
                               "status",
                               "plannedEnd",
                               "hasLogToday",
-                              "weekMinutes",
+                              "monthMinutes",
                               "progressPercent",
                               "burnPercent",
                               "warnings"
@@ -35830,7 +35830,7 @@
                               "hasLogToday": {
                                 "type": "boolean"
                               },
-                              "weekMinutes": {
+                              "monthMinutes": {
                                 "type": "integer"
                               },
                               "progressPercent": {
@@ -35867,14 +35867,14 @@
                               "status",
                               "plannedEnd",
                               "hasLogToday",
-                              "weekMinutes",
+                              "monthMinutes",
                               "progressPercent",
                               "burnPercent",
                               "warnings"
                             ]
                           }
                         },
-                        "week": {
+                        "month": {
                           "type": "object",
                           "properties": {
                             "from": {
@@ -36068,7 +36068,7 @@
                         "projectCounts",
                         "activeProjects",
                         "risks",
-                        "week",
+                        "month",
                         "todos",
                         "warranty",
                         "expiring"

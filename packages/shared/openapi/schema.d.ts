@@ -11828,7 +11828,7 @@ export interface paths {
                                     inProgress: number;
                                     todayLoggedHeadcount: number;
                                     todayHeadcount: number;
-                                    weekMinutes: number;
+                                    monthMinutes: number;
                                 };
                                 todayAssignments: {
                                     headcount: number;
@@ -11857,7 +11857,7 @@ export interface paths {
                                     /** Format: date */
                                     plannedEnd: string;
                                     hasLogToday: boolean;
-                                    weekMinutes: number;
+                                    monthMinutes: number;
                                     progressPercent: number | null;
                                     burnPercent: number | null;
                                     warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
@@ -11873,12 +11873,12 @@ export interface paths {
                                     /** Format: date */
                                     plannedEnd: string;
                                     hasLogToday: boolean;
-                                    weekMinutes: number;
+                                    monthMinutes: number;
                                     progressPercent: number | null;
                                     burnPercent: number | null;
                                     warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
                                 }[];
-                                week: {
+                                month: {
                                     /** Format: date */
                                     from: string;
                                     /** Format: date */
