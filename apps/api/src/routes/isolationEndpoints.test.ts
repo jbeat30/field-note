@@ -601,6 +601,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
     ['GET /files/{id}', 'get', `/files/${a.fileId}`],
     ['POST /files/{id}/complete', 'post', `/files/${a.fileId}/complete`],
     ['GET /files/{id}/url', 'get', `/files/${a.fileId}/url`],
+    ['DELETE /files/{id}', 'delete', `/files/${a.fileId}`],
     [
       'POST /projects/{projectId}/photos',
       'post',

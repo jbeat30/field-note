@@ -362,6 +362,8 @@ describe('파일 주소 격리', () => {
     }
 
     expect((await b.post(`/files/${sa.photoFile.id}/complete`)).status).toBe(404);
+    // 다른 회사의 임시 파일은 취소로도 지울 수 없음
+    expect((await b.del(`/files/${sa.photoFile.id}`)).status).toBe(404);
     expect((await b.patch(`/photos/${sa.photo.id}`, { isCover: true })).status).toBe(404);
     expect((await b.del(`/photos/${sa.photo.id}`)).status).toBe(404);
     expect((await b.del(`/documents/${sa.document.id}`)).status).toBe(404);

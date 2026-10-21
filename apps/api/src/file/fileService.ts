@@ -18,10 +18,12 @@ import {
 
 import type { Prisma, PrismaClient } from '../db/client';
 import { withCompany } from '../db/withCompany';
+import type { Logger } from '../logger';
 import type { JobQueue } from '../queue/jobQueue';
 import type { ObjectStorage } from '../storage/objectStorage';
 
 import { createThumbnail, detectFileType } from './fileInspector';
+import { lockFile } from './stagedFile';
 
 export const FILE_PROCESS_QUEUE = 'file.process';
 
@@ -53,6 +55,8 @@ export type FileService = {
   get: (companyId: string, fileId: string) => Promise<StoredFile>;
   // 사용 가능한 파일의 내려받기 주소 (회사 범위에서 찾은 파일에만 발급)
   url: (companyId: string, fileId: string, query: FileUrlQuery) => Promise<FileUrlResponse>;
+  // 폼을 취소해 임시 파일을 바로 삭제 (폼에 연결되지 않은 파일만, 여러 번 불러도 안전)
+  discard: (companyId: string, fileId: string) => Promise<void>;
   // 내용 검사·썸네일 작업 (작업 큐 처리기가 호출)
   process: (job: FileProcessJob) => Promise<void>;
 };
@@ -80,6 +84,7 @@ export type FileServiceDeps = {
   app: PrismaClient;
   storage: ObjectStorage;
   queue: JobQueue;
+  logger?: Logger;
   now?: () => Date;
 };
 
@@ -93,6 +98,7 @@ export const createFileService = ({
   app,
   storage,
   queue,
+  logger,
   now = () => new Date(),
 }: FileServiceDeps): FileService => {
   const find = (companyId: string, fileId: string) =>
@@ -106,6 +112,17 @@ export const createFileService = ({
     }
 
     return row;
+  };
+
+  // 원본과 썸네일을 저장소에서 지움 (실패해도 로그만 남기고 계속)
+  const removeObjects = async (row: Row) => {
+    for (const key of [row.objectKey, row.thumbnailKey]) {
+      if (key) {
+        await storage.remove(key).catch((error: unknown) => {
+          logger?.error({ err: error, fileId: row.id }, '[file.discard] 저장소 객체 삭제 실패');
+        });
+      }
+    }
   };
 
   // 검사에서 걸러진 파일은 저장소에서도 지움 (악성 파일을 남겨 두지 않음)
@@ -141,12 +158,12 @@ export const createFileService = ({
       await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`files:${companyId}`}))`;
 
       const company = await tx.company.findUniqueOrThrow({ where: { id: companyId } });
-      // 사용 중: 검사 중·사용 가능 파일 + 아직 업로드 주소가 유효한 신청 (만료된 신청은 용량에서 제외)
+      // 사용 중: 검사 중·임시 보관·사용 가능 파일 + 아직 업로드 주소가 유효한 신청 (만료된 신청은 용량에서 제외)
       const used = await tx.storedFile.aggregate({
         _sum: { sizeBytes: true },
         where: {
           OR: [
-            { status: { in: ['PROCESSING', 'READY'] } },
+            { status: { in: ['PROCESSING', 'STAGED', 'READY'] } },
             {
               status: 'PENDING',
               createdAt: { gt: new Date(at.getTime() - FILE_UPLOAD_URL_TTL_SECONDS * 1000) },
@@ -156,6 +173,20 @@ export const createFileService = ({
       });
 
       if ((used._sum.sizeBytes ?? 0n) + BigInt(input.size) > company.storageQuotaBytes) {
+        const staged = await tx.storedFile.aggregate({
+          _sum: { sizeBytes: true },
+          where: { status: 'STAGED' },
+        });
+
+        logger?.warn(
+          {
+            companyId,
+            usedBytes: Number(used._sum.sizeBytes ?? 0n),
+            stagedBytes: Number(staged._sum.sizeBytes ?? 0n),
+            requestBytes: input.size,
+          },
+          '[file.request] 저장 용량 한도로 업로드 차단',
+        );
         throw new FileError('QUOTA');
       }
 
@@ -234,14 +265,15 @@ export const createFileService = ({
     url: async (companyId, fileId, { variant }) => {
       const row = await getOrThrow(companyId, fileId);
 
-      if (row.status !== 'READY') {
-        throw new FileError('NOT_READY');
-      }
-
       // 작업자료 문서 파일은 문서 API로만 열람함 (민감 자료 열람 기록을 거치지 않고 열 수 없게 함)
       // 직원 서류 파일도 서류 API로만 염 (열람 기록을 거침)
       if (row.purpose === 'DOCUMENT' || row.purpose === 'EMPLOYEE_DOCUMENT') {
         throw new FileError('NOT_FOUND');
+      }
+
+      // 임시 보관 중인 사진은 폼에서 미리 볼 수 있음
+      if (row.status !== 'READY' && !(row.status === 'STAGED' && row.purpose === 'PHOTO')) {
+        throw new FileError('NOT_READY');
       }
 
       const key = variant === 'thumbnail' ? row.thumbnailKey : row.objectKey;
@@ -257,6 +289,47 @@ export const createFileService = ({
         }),
         expiresAt: new Date(now().getTime() + FILE_DOWNLOAD_URL_TTL_SECONDS * 1000).toISOString(),
       };
+    },
+
+    discard: async (companyId, fileId) => {
+      const row = await withCompany(app, companyId, async (tx) => {
+        await lockFile(tx, fileId);
+
+        const file = await tx.storedFile.findFirst({
+          where: { id: fileId },
+          include: { photo: true, documentVersion: true, credentials: { take: 1 } },
+        });
+
+        if (!file) {
+          throw new FileError('NOT_FOUND');
+        }
+
+        // 이미 지워졌으면 그대로 성공, 폼에 연결된 파일은 여기서 지울 수 없음
+        if (file.status === 'REJECTED') {
+          return null;
+        }
+
+        if (
+          file.status === 'READY' ||
+          file.photo ||
+          file.documentVersion ||
+          file.credentials.length
+        ) {
+          throw new FileError('NOT_FOUND');
+        }
+
+        await tx.storedFile.update({
+          where: { companyId_id: { companyId, id: fileId } },
+          data: { status: 'REJECTED', rejectReason: 'DISCARDED' },
+        });
+
+        return file;
+      });
+
+      // 저장소 삭제 실패는 로그만 남김 (행은 이미 용량에서 빠졌고 요청한 쪽이 할 수 있는 일은 없음)
+      if (row) {
+        await removeObjects(row);
+      }
     },
 
     process: async ({ companyId, fileId }) => {
@@ -306,18 +379,41 @@ export const createFileService = ({
 
       const at = now();
 
-      await withCompany(app, companyId, (tx) =>
-        tx.storedFile.update({
+      const finished = await withCompany(app, companyId, async (tx) => {
+        await lockFile(tx, fileId);
+
+        const current = await tx.storedFile.findFirst({
+          where: { id: fileId },
+          include: { photo: true, documentVersion: true, credentials: { take: 1 } },
+        });
+
+        // 검사 중에 취소로 지워졌으면 결과를 반영하지 않음
+        if (!current || current.status !== 'PROCESSING') {
+          return false;
+        }
+
+        // 검사가 끝나기 전에 이미 폼에 연결됐으면 바로 사용 가능, 아니면 연결될 때까지 임시 보관
+        const linked = Boolean(
+          current.photo || current.documentVersion || current.credentials.length > 0,
+        );
+
+        await tx.storedFile.update({
           where: { companyId_id: { companyId, id: fileId } },
           data: {
-            status: 'READY',
+            status: linked ? 'READY' : 'STAGED',
             contentType: detected.mime,
             thumbnailKey,
             sha256: createHash('sha256').update(body).digest('hex'),
             readyAt: at,
           },
-        }),
-      );
+        });
+
+        return true;
+      });
+
+      if (!finished && thumbnailKey) {
+        await storage.remove(thumbnailKey).catch(() => undefined);
+      }
     },
   };
 };

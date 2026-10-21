@@ -1,5 +1,7 @@
+import { ERROR_MESSAGES } from '@field-note/shared';
 import type { ErrorRequestHandler, RequestHandler } from 'express';
 
+import { StagedFileExpiredError } from '../file/stagedFile';
 import type { Logger } from '../logger';
 
 import { AppError } from './AppError';
@@ -24,9 +26,16 @@ export const createErrorHandler =
       return;
     }
 
-    const appError = error instanceof AppError ? error : new AppError('INTERNAL_ERROR');
+    const appError =
+      error instanceof AppError
+        ? error
+        : error instanceof StagedFileExpiredError
+          ? new AppError('STAGED_FILE_EXPIRED', [
+              { path: 'body.fileId', message: ERROR_MESSAGES.STAGED_FILE_EXPIRED },
+            ])
+          : new AppError('INTERNAL_ERROR');
 
-    if (!(error instanceof AppError)) {
+    if (!(error instanceof AppError) && !(error instanceof StagedFileExpiredError)) {
       logger.error(
         // 주소 대신 라우트 형태를 남김 (재설정·초대·해지 취소 링크의 토큰이 로그에 남지 않게 함)
         { err: error, method: req.method, route: req.route?.path ?? null },
