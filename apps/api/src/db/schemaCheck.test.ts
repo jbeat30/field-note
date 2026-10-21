@@ -1,3 +1,5 @@
+import pg from 'pg';
+
 import { PURGE_POLICY } from '../closure/purgePolicy';
 
 import { startTestDatabase, type TestDatabase } from './testDatabase';
@@ -59,7 +61,8 @@ describe('스키마 검사', () => {
       `SELECT table_name, privilege_type
          FROM information_schema.role_table_grants
         WHERE grantee = 'field_note_app'
-          AND privilege_type IN ('DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER')`,
+          AND privilege_type IN ('DELETE', 'TRUNCATE', 'REFERENCES', 'TRIGGER')
+        ORDER BY table_name`,
     );
 
     // 예외: 프로젝트의 공종 선택은 수정할 때 연결 행을 지워야 하는 연결 테이블 (업무 기록이 아니라 선택 관계일 뿐이며 삭제만 허용)
@@ -68,11 +71,11 @@ describe('스키마 검사', () => {
     // 멱등 키는 업무 기록이 아니라 재전송 방지용 임시 기록이라 처리가 실패하면 선점을 풀고 만료된 것을 치움 (RLS가 자기 회사 행으로 제한)
     // 명부도 쓰이지 않은 업체는 직접 삭제할 수 있음 (RLS가 자기 회사 행으로 제한하고, 쓰고 있는 업체는 외래 키 Restrict가 막음)
     expect(rows).toEqual([
+      { table_name: 'idempotency_keys', privilege_type: 'DELETE' },
       { table_name: 'partners', privilege_type: 'DELETE' },
+      { table_name: 'project_required_credentials', privilege_type: 'DELETE' },
       { table_name: 'project_trades', privilege_type: 'DELETE' },
       { table_name: 'work_log_entries', privilege_type: 'DELETE' },
-      { table_name: 'project_required_credentials', privilege_type: 'DELETE' },
-      { table_name: 'idempotency_keys', privilege_type: 'DELETE' },
     ]);
   });
 
@@ -166,6 +169,56 @@ describe('스키마 검사', () => {
       'operator_actions',
       'users',
     ]);
+  });
+
+  it('조회 전용 계정은 앱 계정이 쓰는 업무 테이블을 읽기만 하고 로그인·비밀 값 테이블에는 접근할 수 없다', async () => {
+    const readonlyTables = await grantedTables('field_note_readonly');
+    const appTables = await grantedTables('field_note_app');
+    const { rows: privileges } = await db.ownerPool.query<{ privilege_type: string }>(
+      `SELECT DISTINCT privilege_type FROM information_schema.role_table_grants
+        WHERE table_schema = 'public' AND grantee = 'field_note_readonly'`,
+    );
+
+    // 앱 계정이 접근하는 테이블 중 공용 자료(회사 격리 정책이 없는 테이블)를 뺀 것과 같아야 함: 새 업무 테이블을 추가하면 이 시험이 실패해 조회 권한을 함께 정하게 됨
+    expect(readonlyTables).toEqual(appTables.filter((table) => !GLOBAL_TABLES.includes(table)));
+    expect(privileges.map((row) => row.privilege_type)).toEqual(['SELECT']);
+
+    for (const secret of [
+      'sessions',
+      'user_credentials',
+      'user_totp',
+      'invitations',
+      'email_verifications',
+      'password_resets',
+      'social_accounts',
+      'operator_actions',
+    ]) {
+      expect(readonlyTables).not.toContain(secret);
+    }
+  });
+
+  it('조회 전용 계정은 회사를 지정하기 전에는 아무 행도 보지 못하고 지정한 회사의 행만 읽으며 쓰기는 거부된다', async () => {
+    const mine = await db.owner.company.create({ data: { name: '조회 시험 A' } });
+    const other = await db.owner.company.create({ data: { name: '조회 시험 B' } });
+    const client = new pg.Client({ connectionString: db.readonlyUrl });
+
+    await client.connect();
+
+    try {
+      expect((await client.query('SELECT id FROM companies')).rows).toHaveLength(0);
+
+      await client.query(`SELECT set_config('app.company_id', $1, false)`, [mine.id]);
+
+      const visible = await client.query<{ id: string }>('SELECT id FROM companies');
+
+      expect(visible.rows.map((row) => row.id)).toEqual([mine.id]);
+      expect(visible.rows.map((row) => row.id)).not.toContain(other.id);
+      await expect(client.query(`UPDATE companies SET name = 'x'`)).rejects.toThrow();
+      await expect(client.query('SELECT * FROM sessions')).rejects.toThrow();
+      await expect(client.query('SELECT * FROM user_credentials')).rejects.toThrow();
+    } finally {
+      await client.end();
+    }
   });
 
   it('회사 범위 밖 전용 계정이 접근할 수 있는 테이블은 정해진 목록뿐이다 (업무 데이터는 하나도 없음)', async () => {
