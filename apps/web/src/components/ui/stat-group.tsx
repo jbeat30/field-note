@@ -47,8 +47,8 @@ const CREAM: Tile = {
   num: '',
 };
 const INK: Tile = {
-  tile: 'tile-ink bg-[#14110d] text-[#fbf7ee]',
-  sub: 'text-[#fbf7ee]/70',
+  tile: 'tile-ink bg-[#14110d] text-[#efe6d2]',
+  sub: 'text-[#efe6d2]/80',
   num: 'text-accent',
   tones: TONE_ON_INK,
 };
@@ -60,7 +60,7 @@ const tileOf = (index: number, count: number): Tile =>
 export const StatGroup = ({ items, className }: { items: StatItem[]; className?: string }) => (
   <dl
     className={cn(
-      'grid grid-cols-2 gap-3 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none',
+      'grid grid-cols-2 gap-2.5 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none md:gap-4',
       className,
     )}
   >
@@ -71,24 +71,36 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
       return (
         <div
           key={item.label}
-          className={cn('flex min-w-0 flex-col gap-1 rounded-3xl px-5 py-4', style.tile)}
+          className={cn(
+            'flex min-w-0 flex-col justify-between gap-2 rounded-[24px] px-4 pt-4 pb-3.5 md:rounded-[30px] md:px-6 md:py-[22px]',
+            style.tile,
+          )}
         >
-          <dt className={cn('text-[13px] font-bold', style.sub)}>{item.label}</dt>
+          <dt className={cn('text-[12.5px] font-semibold md:text-sm', style.sub)}>{item.label}</dt>
           <dd
             className={cn(
               'flex flex-wrap items-baseline gap-x-1 font-emphasis font-semibold tracking-tight tabular-nums',
               // 짧은 숫자는 크게, 글자나 긴 값은 한 줄에 들어가도록 한 단계 작게
-              isLong ? 'text-[24px] md:text-[28px]' : 'text-[34px] md:text-[44px]',
+              isLong ? 'text-[24px] md:text-[32px]' : 'text-[34px] md:text-[54px]',
               style.num,
               (style.tones ?? TONE)[item.tone ?? 'default'],
             )}
           >
             {item.value}
             {item.unit && (
-              <span className={cn('font-sans text-sm font-bold', style.sub)}>{item.unit}</span>
+              <span
+                className={cn(
+                  'ml-1 font-sans text-[13px] font-semibold md:ml-1.5 md:text-base',
+                  style.sub,
+                )}
+              >
+                {item.unit}
+              </span>
             )}
           </dd>
-          {item.hint && <dd className={cn('text-xs font-medium', style.sub)}>{item.hint}</dd>}
+          {item.hint && (
+            <dd className={cn('min-h-4 text-[12.5px] font-semibold', style.sub)}>{item.hint}</dd>
+          )}
         </div>
       );
     })}

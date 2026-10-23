@@ -224,26 +224,26 @@ body {
 .tile-cream {
   box-shadow:
     0 0.75px 0 1.25px #cbbf9f,
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 .tile-lime {
   box-shadow:
     0 0.75px 0 1.25px #9db534,
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 .tile-ink {
   box-shadow:
     0 0.75px 0 1.25px #000,
     inset 0 1px 0 rgb(255 255 255 / 0.14),
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 .tile-accent {
   box-shadow:
     0 0.75px 0 1.25px #a83f0c,
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 /* 주황 면 위 영역: 안쪽 색을 밝은 모드 값으로 고정해 어두운 모드에서도 글자와 버튼이 읽힘 */
