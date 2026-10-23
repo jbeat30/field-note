@@ -33,6 +33,7 @@
 
 - `feature/1.1.1`·`release/1.1.1`을 main에서 생성, `feat-demo-login`에서 작업
 - 로그인 안내를 가상 데이터·매일 초기화 문장으로 단순화하고 테스트 계정 버튼으로 즉시 로그인
+- 시연 로그인 스토리도 운영 공개 계정인 `tester` 사용, 스토리 전용 목업 계정 생성과 로그인 계정 검증으로 로컬 DB 의존 제거 (실제 화면은 서버가 제공하는 계정 사용)
 - 검증: 타입·린트·서식·주석·빌드·스토리 빌드 통과, Playwright로 로컬 API·DB의 버튼 로그인 200 응답과 대시보드 이동 확인 (chrome-devtools MCP 미제공으로 대체)
 - 검증 제한: 전체 Jest·스토리 테스트는 Windows SWC 네이티브 캐시 권한 오류(`ERR_SWC_NATIVE_CACHE`)로 실행 전 실패
 - 다음 작업: 변경 검토 후 feature → release → main 릴리즈 절차 진행
