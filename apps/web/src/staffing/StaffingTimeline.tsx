@@ -84,10 +84,7 @@ export const StaffingTimeline = ({
                 className={cn(
                   'px-1 py-1.5 text-center',
                   weekday === 0 && 'text-danger',
-                  weekday === 6 && 'text-primary',
-                  date === today
-                    ? 'bg-primary-subtle font-semibold text-primary'
-                    : 'bg-surface-nested',
+                  date === today ? 'bg-accent font-bold text-[#14110d]' : 'bg-surface-nested',
                 )}
               >
                 <span className="block text-[11px] leading-tight text-foreground/70">
@@ -209,7 +206,7 @@ const EmployeeRow = ({
           const background = cn(
             'border-l border-line',
             weekday === 0 && 'bg-surface-nested',
-            date === today && 'bg-primary-subtle/50',
+            date === today && 'bg-accent-subtle',
           );
           const style = { gridColumn: index + 1, gridRow: `1 / span ${laneCount}` };
 

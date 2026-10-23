@@ -4,6 +4,8 @@ import { useState } from 'react';
 import { DayPicker } from 'react-day-picker';
 import { ko } from 'react-day-picker/locale';
 
+import { cn } from '../../lib/cn';
+
 import { Button } from './button';
 import { formatDay, parseDay } from './date-input';
 
@@ -22,6 +24,8 @@ type PeriodNavProps = {
   onPick?: (date: string) => void;
   pickValue?: string;
   pickMax?: string;
+  // 다른 카드 안에 함께 놓을 때는 바깥 카드 면 없이 그림
+  isBare?: boolean;
 };
 
 // 기간(주·달·하루) 이동 줄: 큰 이전/다음 버튼, 가운데 기간(눌러서 달력으로 이동), 오른쪽 "오늘" 버튼
@@ -37,6 +41,7 @@ export const PeriodNav = ({
   onPick,
   pickValue,
   pickMax,
+  isBare = false,
 }: PeriodNavProps) => {
   const [open, setOpen] = useState(false);
   const selected = pickValue ? parseDay(pickValue) : undefined;
@@ -50,7 +55,7 @@ export const PeriodNav = ({
   );
 
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-surface-subtle p-2">
+    <div className={cn('flex items-center gap-2', !isBare && 'rounded-3xl bg-surface-subtle p-3')}>
       <Button variant="secondary" aria-label={prevLabel} onClick={onPrev}>
         <ChevronLeft aria-hidden className="size-5" />
       </Button>

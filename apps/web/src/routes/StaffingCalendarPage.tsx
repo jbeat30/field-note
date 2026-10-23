@@ -136,15 +136,16 @@ export const StaffingCalendarPage = () => {
 
   return (
     <div className="flex flex-col gap-5">
-      <BackLink to="/employees">직원</BackLink>
       <PageHeader
         title="인력 배치"
         description="누가 어느 프로젝트에서 일했는지, 누가 비었고 어디가 겹치는지 봅니다"
+        back={<BackLink to="/employees">직원</BackLink>}
       />
 
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-3 md:flex-row md:items-center">
         <div className="min-w-0 flex-1">
           <PeriodNav
+            isBare
             label={periodLabel(view, from, to)}
             prevLabel={view === 'month' ? '이전 달' : '이전 기간'}
             nextLabel={view === 'month' ? '다음 달' : '다음 기간'}
@@ -169,7 +170,7 @@ export const StaffingCalendarPage = () => {
       {calendar.isPending && <p>불러오는 중</p>}
 
       {calendar.data && (
-        <>
+        <div className="flex flex-col gap-4 rounded-3xl bg-surface-subtle p-5">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <p aria-label="요약" className="text-sm">
               <span className="font-semibold">일한 사람 {summary.working}명</span>
@@ -247,7 +248,7 @@ export const StaffingCalendarPage = () => {
               })}
             </ul>
           )}
-        </>
+        </div>
       )}
     </div>
   );

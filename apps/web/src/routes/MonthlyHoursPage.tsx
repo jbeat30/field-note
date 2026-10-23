@@ -14,7 +14,7 @@ import { BackLink } from '../components/ui/back-link';
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
+import { Button, pillButtonClass } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { PeriodNav } from '../components/ui/period-nav';
@@ -147,58 +147,61 @@ export const MonthlyHoursPage = () => {
   return (
     <div className="flex flex-col gap-5">
       {confirmDialog}
-      <BackLink to="/employees">직원</BackLink>
-      <PageHeader title="월 공수표" description="한 달 공수를 확인하고 확정합니다" />
-
-      {/* 달 이동 + 액션 버튼 한 줄 */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1">
-          <PeriodNav
-            label={month}
-            prevLabel="이전 달"
-            nextLabel="다음 달"
-            onPrev={() => move(-1)}
-            onNext={() => move(1)}
-            todayLabel="이번 달"
-            onToday={() => {
-              setParams({});
-              setMessage('');
-            }}
-            pickValue={`${month}-01`}
-            pickMax={today}
-            onPick={(date) => {
-              setParams({ month: monthOf(date) });
-              setMessage('');
-            }}
-          />
-        </div>
-        {data && (
-          <div className="flex shrink-0 items-center gap-2">
+      <PageHeader
+        title="월 공수표"
+        description="한 달 공수를 확인하고 확정합니다"
+        back={<BackLink to="/employees">직원</BackLink>}
+        eyebrow={
+          data && (
             <Badge tone={data.isClosed ? 'success' : 'warning'}>
               {data.isClosed ? '확정됨' : '미확정'}
             </Badge>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={isExporting}
-              onClick={() => void exportXlsx()}
-            >
-              {isExporting ? '내보내는 중' : '엑셀로 내보내기'}
-            </Button>
-            {!data.isClosed && (
-              <Button
+          )
+        }
+        actions={
+          data && (
+            <>
+              <button
                 type="button"
-                size="sm"
-                disabled={close.isPending || isFuture}
-                onClick={doClose}
+                className={pillButtonClass}
+                disabled={isExporting}
+                onClick={() => void exportXlsx()}
               >
-                {close.isPending ? '확정 중' : '공수 확정'}
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+                {isExporting ? '내보내는 중' : '엑셀로 내보내기'}
+              </button>
+              {!data.isClosed && (
+                <Button
+                  type="button"
+                  className="h-[50px] rounded-full px-5"
+                  disabled={close.isPending || isFuture}
+                  onClick={doClose}
+                >
+                  {close.isPending ? '확정 중' : '공수 확정'}
+                </Button>
+              )}
+            </>
+          )
+        }
+      />
+
+      <PeriodNav
+        label={month}
+        prevLabel="이전 달"
+        nextLabel="다음 달"
+        onPrev={() => move(-1)}
+        onNext={() => move(1)}
+        todayLabel="이번 달"
+        onToday={() => {
+          setParams({});
+          setMessage('');
+        }}
+        pickValue={`${month}-01`}
+        pickMax={today}
+        onPick={(date) => {
+          setParams({ month: monthOf(date) });
+          setMessage('');
+        }}
+      />
 
       {rootError && <Alert>{rootError}</Alert>}
       {message && (
@@ -211,13 +214,13 @@ export const MonthlyHoursPage = () => {
       {data && summary && (
         <>
           {/* 수치 요약 */}
-          <div className="rounded-xl bg-surface-subtle p-4">
+          <div>
             <StatGroup
               items={[
                 {
                   label: '합계',
                   value: `${value(summary.total).manDays} MD`,
-                  unit: `· ${value(summary.total).manMonths} MM`,
+                  hint: `${value(summary.total).manMonths} MM`,
                 },
                 { label: '일한 사람', value: summary.byEmployee.length, unit: '명' },
                 { label: '프로젝트', value: summary.byProject.length, unit: '개' },
