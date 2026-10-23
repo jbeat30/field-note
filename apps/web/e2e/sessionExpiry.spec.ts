@@ -55,7 +55,7 @@ test('직접 로그아웃하면 만료 안내 없이 로그인 화면으로 가�
   await page.getByLabel('아이디').fill(DEMO_LOGIN.loginId);
   await page.getByLabel('비밀번호', { exact: true }).fill(DEMO_LOGIN.password);
 
-  const home = page.getByRole('heading', { name: '한빛판금' });
+  const home = page.getByRole('heading', { name: /안녕하세요/ });
 
   for (let attempt = 0; attempt < 6 && !(await home.isVisible()); attempt += 1) {
     await page

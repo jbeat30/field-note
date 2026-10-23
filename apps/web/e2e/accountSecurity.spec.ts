@@ -85,7 +85,7 @@ test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복�
   // 맞는 코드면 통과 (등록에 쓴 구간은 재사용할 수 없어 다음 구간의 코드를 사용, 틀린 코드는 단위·스토리 시험이 확인)
   await page.getByLabel('인증 코드').fill(totpCode(secret, 30));
   await page.getByRole('button', { name: '로그인', exact: true }).click();
-  await expect(page.getByRole('heading', { name: '한빛판금' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /안녕하세요/ })).toBeVisible();
 
   // 끄기: 복구 코드로 본인 확인 (한 번 쓴 복구 코드는 소모됨)
   await page.goto('/settings');
