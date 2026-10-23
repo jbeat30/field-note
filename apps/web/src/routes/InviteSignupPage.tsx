@@ -70,7 +70,7 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
       <button
         type="button"
         aria-label={`${document.title} 보기`}
-        className="min-h-touch px-2 text-sm text-primary underline"
+        className="min-h-touch px-2 text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
         onClick={() => setViewing(document)}
       >
         보기
@@ -81,7 +81,9 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-bold">{invitation.companyName}</h1>
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          {invitation.companyName}
+        </h1>
         <p className="mt-1 text-sm">
           {invitation.adminName}님을 위한 초대입니다. 약관을 확인하고 동의해 주세요
         </p>
@@ -214,7 +216,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">계정 만들기</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">계정 만들기</h1>
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {signupProviders.length > 0 && (
         <>
@@ -315,11 +317,16 @@ export const InviteSignupPage = () => {
   if (!invitation.data) {
     return (
       <div className="flex flex-col gap-3">
-        <h1 className="text-xl font-bold">초대 링크를 사용할 수 없습니다</h1>
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          초대 링크를 사용할 수 없습니다
+        </h1>
         <p className="text-sm">
           링크가 만료되었거나 이미 사용되었을 수 있습니다. 운영자에게 새 링크를 요청해 주세요
         </p>
-        <Link className="min-h-touch content-center text-primary underline" to="/login">
+        <Link
+          className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
+          to="/login"
+        >
           로그인 화면으로
         </Link>
       </div>
