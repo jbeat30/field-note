@@ -36,18 +36,21 @@ export const ProfileMenu = ({ compact = false }: { compact?: boolean }) => {
           type="button"
           aria-label="내 메뉴"
           className={cn(
-            'flex min-h-touch min-w-0 flex-1 items-center gap-3 rounded-2xl p-1.5 text-left text-[#f4eee0] hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-accent',
-            compact && 'justify-center lg:justify-start',
+            'flex min-h-touch min-w-0 items-center justify-center gap-3 rounded-2xl p-1.5 text-left text-[#f4eee0] hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-accent lg:flex-1 lg:justify-start',
+            compact && 'lg:flex-none lg:justify-center',
           )}
         >
           <ProfileAvatar name={me.data?.displayName} />
-          <span className={cn('min-w-0 flex-1', compact && 'hidden')}>
+          <span className={cn('hidden min-w-0 flex-1 lg:block', compact && 'lg:hidden')}>
             <span className="block truncate text-sm font-semibold">{me.data?.displayName}</span>
             <span className="block truncate text-xs text-[#f4eee0]/65">{me.data?.companyName}</span>
           </span>
           <ChevronsUpDown
             aria-hidden
-            className={cn('size-4 shrink-0 text-[#f4eee0]/60', compact && 'hidden')}
+            className={cn(
+              'hidden size-4 shrink-0 text-[#f4eee0]/60 lg:block',
+              compact && 'lg:hidden',
+            )}
           />
         </button>
       </DropdownMenuTrigger>

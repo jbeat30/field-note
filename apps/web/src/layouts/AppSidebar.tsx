@@ -29,12 +29,7 @@ export const AppSidebar = ({ isCollapsed, onToggleCollapsed }: AppSidebarProps) 
         isCollapsed ? 'justify-center' : 'justify-center lg:justify-between',
       )}
     >
-      <BrandLogo
-        onInk
-        markOnly={isCollapsed}
-        compactBelowLg
-        className="gap-2 [&_.font-emphasis]:text-xl [&_span.rounded-full]:px-2 [&_span.rounded-full]:text-[11px]"
-      />
+      <BrandLogo onInk markOnly={isCollapsed} compactBelowLg />
       <button
         type="button"
         aria-label={isCollapsed ? '사이드바 펼치기' : '사이드바 접기'}

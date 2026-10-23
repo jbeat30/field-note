@@ -46,7 +46,7 @@ export const AppLayout = () => {
       <AppSidebar isCollapsed={isCollapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
         <header className="plane sticky top-0 z-10 flex items-center justify-between gap-2 px-4 py-3 md:hidden print:hidden">
-          <BrandLogo className="gap-2.5 [&_.font-emphasis]:text-[22px]" />
+          <BrandLogo />
           <span className="flex items-center gap-1.5">
             <AlertBell className="size-11" />
             <ThemeToggle />

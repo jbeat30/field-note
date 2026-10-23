@@ -30,7 +30,7 @@ export const SegmentedControl = <T extends string>({
     // 같은 항목을 다시 눌러 값이 비어도 선택을 유지
     onValueChange={(next) => next && onValueChange(next as T)}
     aria-label={ariaLabel}
-    className={cn('inline-flex w-full rounded-full bg-field p-1', className)}
+    className={cn('inline-flex w-full rounded-full bg-track p-1', className)}
   >
     {options.map((option) => (
       <ToggleGroup.Item

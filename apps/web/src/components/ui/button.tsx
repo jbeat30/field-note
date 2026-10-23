@@ -13,7 +13,8 @@ export const buttonVariants = cva(
         // 가장 중요한 동작 (한 화면에 하나): 잉크 면
         primary: 'bg-primary text-primary-foreground hover:bg-primary/85',
         // 보조 동작: 모래 면, 테두리 없음
-        secondary: 'bg-field text-foreground hover:bg-line',
+        secondary:
+          'bg-field text-foreground shadow-[inset_0_0_0_1.5px_var(--control-border)] hover:bg-line',
         // 가볍게 강조: 라임 면
         soft: 'bg-highlight text-[#14110d] hover:brightness-95',
         // 글자만 있는 동작 (표 안의 "자세히", 구역 제목 옆 "전체 보기")
