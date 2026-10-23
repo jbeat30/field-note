@@ -5,26 +5,27 @@ import { cn } from '../../lib/cn';
 
 type Variant = 'danger' | 'info' | 'success' | 'warning';
 
+// 네 종류 모두 면 색과 둥근 마크로 구분하고, 뜻은 글자로도 전함
 const STYLE: Record<Variant, { box: string; icon: typeof Info; iconClass: string }> = {
   danger: {
-    box: 'border-danger/30 bg-danger-subtle text-danger',
+    box: 'bg-danger-subtle text-danger',
     icon: CircleAlert,
     iconClass: 'text-danger',
   },
   warning: {
-    box: 'border-warning/30 bg-warning-subtle text-foreground',
+    box: 'bg-warning-subtle text-foreground',
     icon: TriangleAlert,
     iconClass: 'text-warning',
   },
   success: {
-    box: 'border-success/30 bg-success-subtle text-foreground',
+    box: 'bg-success-subtle text-foreground',
     icon: CircleCheck,
     iconClass: 'text-success',
   },
   info: {
-    box: 'border-primary/20 bg-primary-subtle text-foreground',
+    box: 'bg-highlight text-[#14110d]',
     icon: Info,
-    iconClass: 'text-primary',
+    iconClass: 'text-[#14110d]',
   },
 };
 
@@ -41,7 +42,7 @@ export const Alert = ({
     <div
       role={variant === 'danger' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-3 rounded-xl border px-4 py-3 text-sm',
+        'flex items-start gap-3 rounded-lg px-4 py-3.5 text-sm font-medium',
         style.box,
         className,
       )}

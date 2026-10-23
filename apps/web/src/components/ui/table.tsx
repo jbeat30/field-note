@@ -21,7 +21,7 @@ export const TableHeaderCell = ({ className, ...props }: ComponentProps<'th'>) =
   <th
     scope="col"
     className={cn(
-      'border-b border-line px-3 py-2.5 text-left text-xs font-semibold whitespace-nowrap text-foreground/65',
+      'border-b-[1.5px] border-foreground px-3 py-2.5 text-left text-xs font-bold whitespace-nowrap text-foreground/65',
       className,
     )}
     {...props}
