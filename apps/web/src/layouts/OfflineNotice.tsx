@@ -24,9 +24,9 @@ export const OfflineNotice = () => {
   return (
     <div
       role="status"
-      className="flex items-center gap-2 border-b border-warning/30 bg-warning-subtle px-4 py-2 text-sm print:hidden"
+      className="flex items-center gap-2 bg-[#14110d] px-4 py-2 text-[12.5px] font-medium text-[#d9cfb9] md:px-11 print:hidden"
     >
-      <WifiOff aria-hidden className="size-4 shrink-0 text-warning" />
+      <WifiOff aria-hidden className="size-4 shrink-0 text-accent" />
       <p>인터넷에 연결되어 있지 않습니다. 연결되면 다시 저장해 주세요</p>
     </div>
   );

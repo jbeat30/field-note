@@ -29,7 +29,7 @@ const Hit = ({ hit }: { hit: SearchHit }) => (
   <li>
     <Link
       to={searchHitLink(hit)}
-      className="flex min-h-touch flex-col gap-0.5 rounded-xl bg-surface-subtle px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+      className="flex min-h-touch flex-col gap-0.5 rounded-[20px] bg-surface-nested px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
     >
       <span className="flex flex-wrap items-center gap-2 font-medium">
         {hit.title}
@@ -62,17 +62,24 @@ export const SearchResults = ({ results }: SearchResultsProps) => {
   }
 
   return (
-    <div className="flex flex-col gap-4">
+    <div className="grid items-start gap-4 xl:grid-cols-2">
       {visible.map(({ key, type }) => {
         const group: SearchGroup = results[key];
 
         return (
           <section
             key={key}
-            className="flex flex-col gap-2"
+            className="flex flex-col gap-3 rounded-[34px] bg-surface-subtle px-7 py-6"
             aria-label={SEARCH_HIT_TYPE_LABELS[type]}
           >
-            <h2 className="text-base font-bold">{SEARCH_HIT_TYPE_LABELS[type]}</h2>
+            <div className="flex items-baseline justify-between gap-2">
+              <h2 className="text-[21px] font-bold tracking-[-0.025em]">
+                {SEARCH_HIT_TYPE_LABELS[type]}
+              </h2>
+              <span className="text-sm font-semibold underline underline-offset-[3px]">
+                {group.items.length}건
+              </span>
+            </div>
             <ul className="flex flex-col gap-2">
               {group.items.map((hit) => (
                 <Hit key={`${hit.type}:${hit.id}`} hit={hit} />

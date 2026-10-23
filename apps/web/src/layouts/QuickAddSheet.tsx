@@ -3,7 +3,8 @@ import { useState } from 'react';
 import { todayInSeoul } from '@field-note/shared';
 import { Link, useMatch } from 'react-router';
 
-import { Button } from '../components/ui/button';
+import { ChevronRight, X } from 'lucide-react';
+
 import { projectWorkPath } from '../lib/projectPaths';
 import { MemoForm } from '../memos/MemoForm';
 import { memoDraftKey } from '../memos/memoDraft';
@@ -13,7 +14,7 @@ import { useUiStore } from '../stores/uiStore';
 type Mode = 'MENU' | 'MEMO';
 
 const linkClass =
-  'flex min-h-touch items-center justify-center rounded-md bg-muted px-4 text-base font-medium text-foreground hover:bg-muted/80 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary';
+  'flex min-h-14 items-center justify-between rounded-2xl bg-surface-nested px-4 text-[15px] font-bold text-foreground hover:bg-field focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground';
 
 // 빠른 추가: 어느 화면에서든 한 번에 "메모 / 사진 / 오늘 작업" 이동, 프로젝트 화면에서는 해당 프로젝트에 바로 연결하고 그 밖은 메모함에 저장
 export const QuickAddSheet = () => {
@@ -36,29 +37,32 @@ export const QuickAddSheet = () => {
         <Dialog.Overlay className="fixed inset-0 bg-overlay" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 mx-auto flex max-w-xl flex-col gap-3 rounded-t-lg bg-surface p-4"
+          className="fixed inset-x-0 bottom-0 mx-auto flex max-w-xl flex-col gap-4 rounded-t-[30px] bg-surface-subtle p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-sheet"
         >
           <div className="flex items-center justify-between gap-2">
-            <Dialog.Title className="text-lg font-bold">
+            <Dialog.Title className="text-[21px] font-bold tracking-[-0.025em]">
               {mode === 'MEMO' ? '메모 추가' : '빠른 추가'}
             </Dialog.Title>
-            <Dialog.Close asChild>
-              <Button type="button" variant="secondary">
-                닫기
-              </Button>
+            <Dialog.Close
+              aria-label="닫기"
+              className="flex size-10 items-center justify-center rounded-full text-sub hover:bg-field hover:text-foreground focus-visible:outline-2 focus-visible:outline-foreground"
+            >
+              <X aria-hidden className="size-5" />
             </Dialog.Close>
           </div>
           {mode === 'MENU' ? (
             <div className="grid grid-cols-1 gap-2">
-              <Button type="button" onClick={() => setMode('MEMO')}>
+              <button type="button" className={linkClass} onClick={() => setMode('MEMO')}>
                 메모
-              </Button>
+                <ChevronRight aria-hidden className="size-5 text-sub" />
+              </button>
               <Link
                 className={linkClass}
                 to={currentProject ? `/projects/${currentProject}/photos` : '/projects'}
                 onClick={close}
               >
                 {currentProject ? '사진' : '사진 (프로젝트 고르기)'}
+                <ChevronRight aria-hidden className="size-5 text-sub" />
               </Link>
               <Link
                 className={linkClass}
@@ -70,6 +74,7 @@ export const QuickAddSheet = () => {
                 onClick={close}
               >
                 {currentProject ? '오늘 작업' : '오늘 작업 (프로젝트 고르기)'}
+                <ChevronRight aria-hidden className="size-5 text-sub" />
               </Link>
               <Link
                 className={linkClass}
@@ -77,6 +82,7 @@ export const QuickAddSheet = () => {
                 onClick={close}
               >
                 {currentProject ? '자재' : '자재 (프로젝트 고르기)'}
+                <ChevronRight aria-hidden className="size-5 text-sub" />
               </Link>
             </div>
           ) : (
