@@ -17,6 +17,8 @@ export const buttonVariants = cva(
           'bg-field text-foreground shadow-[inset_0_0_0_1.5px_var(--control-border)] hover:bg-line',
         // 가볍게 강조: 라임 면
         soft: 'bg-highlight text-[#14110d] hover:brightness-95',
+        // 잉크 면 위에서 지금 해야 할 동작: 주황 면 (홈의 기록하기 같은 버튼)
+        accent: 'bg-accent text-[#14110d] hover:brightness-95',
         // 글자만 있는 동작 (표 안의 "자세히", 구역 제목 옆 "전체 보기")
         link: 'h-auto! px-0! font-semibold underline decoration-accent decoration-2 underline-offset-4 hover:decoration-foreground',
         // 바탕 없는 동작 (아이콘 버튼·표 안의 동작)
