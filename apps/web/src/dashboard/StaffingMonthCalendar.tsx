@@ -5,6 +5,7 @@ import { Link } from 'react-router';
 import { cn } from '../lib/cn';
 import { formatLongDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
+import { projectChipClass } from '../lib/projectTone';
 
 const WEEKDAY_LABELS = ['월', '화', '수', '목', '금', '토', '일'];
 
@@ -35,26 +36,16 @@ export const StaffingMonthCalendar = ({
 
   return (
     <div className="flex flex-col gap-3">
-      <div
-        role="group"
-        aria-label="이번 달 인력 달력"
-        className="overflow-hidden rounded-xl border border-line bg-surface"
-      >
-        <div className="grid grid-cols-7 border-b border-line bg-surface-nested text-center text-xs font-semibold">
+      <div role="group" aria-label="이번 달 인력 달력" className="flex flex-col gap-1.5">
+        <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-bold text-foreground/70">
           {WEEKDAY_LABELS.map((label, index) => (
-            <div
-              key={label}
-              className={cn('py-1.5', index === 5 && 'text-primary', index === 6 && 'text-danger')}
-            >
+            <div key={label} className={cn('py-1.5', index === 6 && 'text-danger')}>
               {label}
             </div>
           ))}
         </div>
         {weeks.map((week) => (
-          <div
-            key={week[0]!.date}
-            className="grid grid-cols-7 border-b border-line last:border-b-0"
-          >
+          <div key={week[0]!.date} className="grid grid-cols-7 gap-1.5">
             {week.map((day, index) => {
               const isToday = day.date === today;
               const isSelected = day.date === selectedDay?.date;
@@ -64,13 +55,7 @@ export const StaffingMonthCalendar = ({
               }`;
 
               if (!day.inMonth) {
-                return (
-                  <div
-                    key={day.date}
-                    aria-hidden="true"
-                    className="min-h-14 border-r border-line bg-surface-subtle/60 last:border-r-0 sm:min-h-24"
-                  />
-                );
+                return <div key={day.date} aria-hidden="true" className="min-h-14 sm:min-h-24" />;
               }
 
               return (
@@ -82,17 +67,18 @@ export const StaffingMonthCalendar = ({
                   aria-current={isToday ? 'date' : undefined}
                   onClick={() => setSelected(isSelected ? null : day.date)}
                   className={cn(
-                    'flex min-h-14 min-w-0 flex-col gap-1 border-r border-line p-1 text-left last:border-r-0 sm:min-h-24 sm:p-1.5',
-                    isSelected ? 'bg-primary-subtle' : 'hover:bg-surface-nested',
-                    day.conflictCount > 0 && 'ring-2 ring-inset ring-danger',
+                    'flex min-h-14 min-w-0 flex-col gap-1 rounded-2xl p-1 text-left transition-colors sm:min-h-24 sm:p-2',
+                    isSelected
+                      ? 'bg-accent-subtle ring-2 ring-foreground ring-inset'
+                      : 'bg-surface-nested hover:bg-field',
+                    day.conflictCount > 0 && !isSelected && 'ring-2 ring-danger ring-inset',
                   )}
                 >
                   <span className="flex items-center justify-between gap-1">
                     <span
                       className={cn(
                         'inline-flex min-w-6 justify-center rounded-full px-1 text-sm font-semibold',
-                        isToday && 'bg-primary text-primary-foreground',
-                        !isToday && index === 5 && 'text-primary',
+                        isToday && 'bg-accent text-[#14110d]',
                         !isToday && index === 6 && 'text-danger',
                       )}
                     >
@@ -108,11 +94,10 @@ export const StaffingMonthCalendar = ({
                     {day.projects.slice(0, VISIBLE_PROJECTS).map((project) => (
                       <span
                         key={project.projectId}
-                        className="truncate rounded border-l-4 px-1 text-[11px] leading-tight"
-                        style={{
-                          borderLeftColor: colorOf(project.projectId),
-                          backgroundColor: `color-mix(in srgb, ${colorOf(project.projectId)} 16%, var(--surface))`,
-                        }}
+                        className={cn(
+                          'truncate rounded-full px-2 text-[11px] leading-5 font-bold',
+                          projectChipClass(projectColors.get(project.projectId) ?? 0),
+                        )}
                       >
                         {project.name}
                       </span>
@@ -140,7 +125,7 @@ export const StaffingMonthCalendar = ({
       {selectedDay && (
         <section
           aria-label={`${formatLongDay(selectedDay.date)} 일한 사람`}
-          className="flex flex-col gap-2 rounded-xl border border-line bg-surface p-4"
+          className="flex flex-col gap-2 rounded-2xl bg-surface-nested p-4"
         >
           <h3 className="text-base font-bold">
             {formatLongDay(selectedDay.date)}
@@ -155,14 +140,14 @@ export const StaffingMonthCalendar = ({
               {selectedDay.projects.map((project) => (
                 <li
                   key={project.projectId}
-                  className="flex flex-col gap-1 rounded-lg border-l-4 bg-surface-subtle px-3 py-2"
+                  className="flex flex-col gap-1 rounded-xl border-l-4 bg-surface-subtle px-3 py-2"
                   style={{ borderLeftColor: colorOf(project.projectId) }}
                 >
                   <div className="flex flex-wrap items-center justify-between gap-2">
                     <span className="font-semibold">{project.name}</span>
                     <Link
                       to={projectWorkPath(project.projectId, selectedDay.date)}
-                      className="inline-flex min-h-touch items-center text-sm text-primary underline"
+                      className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
                     >
                       그날 하루 기록 보기
                     </Link>

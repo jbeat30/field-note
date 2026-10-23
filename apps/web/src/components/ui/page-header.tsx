@@ -1,5 +1,7 @@
 import type { ReactNode } from 'react';
 
+import { cn } from '../../lib/cn';
+
 type PageHeaderProps = {
   title: string;
   // 제목 위 작은 글자(프로젝트 코드·상태 등)
@@ -9,6 +11,8 @@ type PageHeaderProps = {
   actions?: ReactNode;
   // 다른 제목 아래에 놓일 때는 2 (프로젝트 작업 공간 안의 화면 등)
   level?: 1 | 2;
+  // 아래 첫 카드가 평면 경계에 걸치도록 평면을 더 길게 깖 (홈의 지표 타일)
+  overlap?: boolean;
 };
 
 // 화면 맨 위 제목 줄: 넓은 화면은 제목 왼쪽·버튼 오른쪽, 좁은 화면은 위아래로 쌓임
@@ -19,6 +23,7 @@ export const PageHeader = ({
   description,
   actions,
   level = 1,
+  overlap = false,
 }: PageHeaderProps) => {
   const Heading = level === 1 ? 'h1' : 'h2';
 
@@ -46,5 +51,11 @@ export const PageHeader = ({
   );
 
   // 1단계 제목은 주황 평면 위에 놓음, 2단계는 바탕 위에 그대로
-  return level === 1 ? <div className="plane pt-3 pb-10 md:pt-0 md:pb-12">{header}</div> : header;
+  return level === 1 ? (
+    <div className={cn('plane pt-3 md:pt-0', overlap ? 'pb-24 md:pb-28' : 'pb-10 md:pb-12')}>
+      {header}
+    </div>
+  ) : (
+    header
+  );
 };
