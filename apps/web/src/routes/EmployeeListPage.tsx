@@ -185,6 +185,7 @@ export const EmployeeListPage = () => {
           <FormField label="이름">
             <Input
               type="search"
+              aria-label="이름 검색"
               placeholder="이름 검색"
               startAdornment={<Search aria-hidden />}
               value={searchText}

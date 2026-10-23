@@ -273,7 +273,7 @@ body {
 }
 
 /* 평면 바로 아래 첫 요소(카드)는 평면 경계에 걸쳐 놓음 */
-.plane-page + * {
+.plane-page + :is(.rounded-3xl, dl, [role='tabpanel']:has(> .rounded-3xl:first-child)) {
   position: relative;
   margin-top: -2.5rem;
 }
