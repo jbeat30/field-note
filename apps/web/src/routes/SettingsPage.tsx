@@ -76,7 +76,7 @@ export const SettingsPage = () => {
           <div className="grid items-start gap-4 lg:grid-cols-2">
             <div className="flex flex-col gap-4">
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="account-heading"
               >
                 <h2 id="account-heading" className="text-lg font-bold">
@@ -92,7 +92,7 @@ export const SettingsPage = () => {
               {!isDemo && (
                 <>
                   <section
-                    className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                    className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                     aria-labelledby="security-heading"
                   >
                     <h2 id="security-heading" className="text-lg font-bold">
@@ -101,7 +101,7 @@ export const SettingsPage = () => {
                     <SecurityRows email={me.data?.email} />
                   </section>
                   <section
-                    className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                    className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                     aria-labelledby="social-heading"
                   >
                     <h2 id="social-heading" className="text-lg font-bold">
@@ -114,7 +114,7 @@ export const SettingsPage = () => {
             </div>
             {!isDemo && (
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="devices-heading"
               >
                 <h2 id="devices-heading" className="text-lg font-bold">
@@ -142,7 +142,7 @@ export const SettingsPage = () => {
             </section>
             <div className="grid items-start gap-4 lg:grid-cols-2">
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="storage-heading"
               >
                 <h2 id="storage-heading" className="text-lg font-bold">
@@ -151,7 +151,7 @@ export const SettingsPage = () => {
                 <StorageSection />
               </section>
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="export-heading"
               >
                 <h2 id="export-heading" className="text-lg font-bold">
@@ -162,7 +162,7 @@ export const SettingsPage = () => {
             </div>
             <div className="grid items-start gap-4 lg:grid-cols-3">
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="lists-heading"
               >
                 <h2 id="lists-heading" className="text-lg font-bold">
@@ -176,7 +176,7 @@ export const SettingsPage = () => {
                 </Button>
               </section>
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="alerts-heading"
               >
                 <h2 id="alerts-heading" className="text-lg font-bold">
@@ -191,7 +191,7 @@ export const SettingsPage = () => {
                 </Button>
               </section>
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="records-heading"
               >
                 <h2 id="records-heading" className="text-lg font-bold">
@@ -213,7 +213,7 @@ export const SettingsPage = () => {
           <div className="gap-4 lg:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
             {!isDemo && (
               <section
-                className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+                className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
                 aria-labelledby="closure-heading"
               >
                 <h2 id="closure-heading" className="text-lg font-bold">
@@ -222,7 +222,7 @@ export const SettingsPage = () => {
                 <ClosureSection />
               </section>
             )}
-            <section className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5">
+            <section className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5">
               <p className="text-lg font-bold">안내</p>
               <Link
                 className="flex min-h-touch items-center text-sm text-primary underline"

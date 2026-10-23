@@ -62,7 +62,7 @@ export const ProjectRepairsPage = () => {
           접수 목록
         </h2>
         <Select
-          className="w-40"
+          className="w-40 bg-surface-subtle"
           aria-label="상태 필터"
           value={status}
           emptyLabel="전체 상태"

@@ -51,6 +51,7 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
   >
     {items.map((item, index) => {
       const style = TILES[index % TILES.length] ?? TILES[0];
+      const isLong = typeof item.value === 'string' && item.value.length > 7;
 
       return (
         <div
@@ -60,7 +61,9 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
           <dt className={cn('text-[13px] font-bold', style.sub)}>{item.label}</dt>
           <dd
             className={cn(
-              'flex items-baseline gap-1 font-emphasis text-[34px] font-semibold tracking-tight tabular-nums md:text-[44px]',
+              'flex flex-wrap items-baseline gap-x-1 font-emphasis font-semibold tracking-tight tabular-nums',
+              // 짧은 숫자는 크게, 글자나 긴 값은 한 줄에 들어가도록 한 단계 작게
+              isLong ? 'text-[24px] md:text-[28px]' : 'text-[34px] md:text-[44px]',
               style.num,
               ('tones' in style ? style.tones : TONE)[item.tone ?? 'default'],
             )}
