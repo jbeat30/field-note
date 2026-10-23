@@ -19,34 +19,49 @@ import { useDismissAlerts } from './useDashboard';
 // 홈에서 알림은 위에서 이 개수만큼만 표시하고 나머지는 알림 창에서 확인
 export const HOME_ALERTS = 5;
 
-const card = 'flex flex-col gap-3 rounded-3xl bg-surface-subtle p-6';
+const card = 'flex min-h-0 flex-col gap-3 rounded-[34px] bg-surface-subtle px-[30px] py-[26px]';
 
-const Widget = ({
-  title,
-  id,
-  action,
-  children,
-}: {
+type WidgetProps = {
   title: string;
   id: string;
   action?: ReactNode;
+  // 제목 옆 주황 개수 표시
+  count?: number;
+  // 높이가 정해진 칸에서 목록만 안에서 스크롤
+  isScrollable?: boolean;
   children: ReactNode;
-}) => (
+};
+
+const Widget = ({ title, id, action, count, isScrollable = false, children }: WidgetProps) => (
   <section className={cn(card)} aria-labelledby={id}>
-    <div className="flex items-center justify-between gap-2">
-      <h2 id={id} className="text-xl font-extrabold tracking-tight">
+    <div className="flex flex-none items-baseline justify-between gap-2">
+      <h2 id={id} className="text-[21px] font-bold tracking-[-0.025em]">
         {title}
+        {count !== undefined && (
+          <span
+            aria-hidden
+            className="ml-2 rounded-xl bg-accent px-[9px] align-[2px] font-emphasis text-[15px] font-semibold text-[#14110d]"
+          >
+            {count}
+          </span>
+        )}
       </h2>
       {action}
     </div>
-    {children}
+    {isScrollable ? (
+      <div className="-mr-2 flex max-h-96 min-h-0 flex-1 flex-col gap-3 overflow-y-auto pr-2 lg:max-h-none">
+        {children}
+      </div>
+    ) : (
+      children
+    )}
   </section>
 );
 
 const TextLink = ({ to, children }: { to: string; children: ReactNode }) => (
   <Link
     to={to}
-    className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
+    className="inline-flex min-h-touch items-center text-sm font-semibold underline underline-offset-[3px]"
   >
     {children}
   </Link>
@@ -68,102 +83,110 @@ const remainingDays = (today: string, plannedEnd: string) =>
     (Date.parse(`${plannedEnd}T00:00:00Z`) - Date.parse(`${today}T00:00:00Z`)) / 86_400_000,
   );
 
-const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today: string }) => (
-  <div className="overflow-x-auto">
-    <table className="w-full min-w-[34rem] text-sm">
-      <caption className="sr-only">진행 중 프로젝트</caption>
-      <thead>
-        <tr className="border-b-[1.5px] border-foreground text-left text-xs font-bold text-foreground/75">
-          <th scope="col" className="py-2 pr-3 font-medium">
-            프로젝트
-          </th>
-          <th scope="col" className="w-36 py-2 pr-3 font-medium">
-            진행률
-          </th>
-          <th scope="col" className="py-2 pr-3 font-medium whitespace-nowrap">
-            남은 기간
-          </th>
-          <th scope="col" className="py-2 pr-3 font-medium whitespace-nowrap">
-            오늘 기록
-          </th>
-          <th scope="col" className="py-2 text-right font-medium whitespace-nowrap">
-            이번 달
-          </th>
-        </tr>
-      </thead>
-      <tbody className="divide-y divide-line">
-        {projects.map((project) => {
-          const days = remainingDays(today, project.plannedEnd);
-          const inProgress = project.status === 'IN_PROGRESS';
+const HEAD_CELL =
+  'sticky top-0 z-10 bg-surface py-2 pr-3 text-left text-xs font-semibold whitespace-nowrap text-foreground/65 shadow-[inset_0_-1.5px_0_var(--foreground)]';
 
-          return (
-            <tr key={project.id}>
-              <td className="py-3 pr-3 align-top">
-                <Link
-                  to={`/projects/${project.id}`}
-                  className="inline-block py-1 font-medium underline-offset-2 hover:underline"
-                >
-                  {project.name}
-                </Link>
-                <span className="block text-xs text-foreground/75">
-                  {project.siteName}
-                  {!inProgress && ` · ${PROJECT_STATUS_LABELS[project.status]}`}
-                </span>
-                {project.warnings.length > 0 && (
-                  <span className="mt-1 flex flex-wrap gap-1">
-                    {project.warnings.map((warning) => (
-                      <Badge key={warning} tone="danger">
-                        {PROJECT_WARNING_LABELS[warning]}
-                      </Badge>
-                    ))}
-                  </span>
-                )}
-              </td>
-              <td className="py-3 pr-3 align-top">
-                {project.progressPercent === null ? (
-                  <span className="text-foreground/75">기록 없음</span>
-                ) : (
-                  <span className="flex flex-col gap-1">
-                    <span className="tabular-nums">{project.progressPercent}%</span>
-                    <ProgressBar
-                      aria-label={`${project.name} 진행률`}
-                      value={project.progressPercent}
-                    />
-                  </span>
-                )}
-              </td>
-              <td
-                className={cn(
-                  'py-3 pr-3 align-top whitespace-nowrap',
-                  days < 0 && 'font-medium text-danger',
-                )}
+// 표 머리는 고정하고 행만 스크롤, 오늘 기록은 잉크 알약 버튼
+const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today: string }) => (
+  <table className="w-full min-w-[34rem] text-[15px]">
+    <caption className="sr-only">진행 중 프로젝트</caption>
+    <thead>
+      <tr>
+        <th scope="col" className={HEAD_CELL}>
+          프로젝트
+        </th>
+        <th scope="col" className={cn(HEAD_CELL, 'w-36')}>
+          진행률
+        </th>
+        <th scope="col" className={HEAD_CELL}>
+          남은 기간
+        </th>
+        <th scope="col" className={HEAD_CELL}>
+          오늘 기록
+        </th>
+        <th scope="col" className={cn(HEAD_CELL, 'pr-0 text-right')}>
+          이번 달
+        </th>
+      </tr>
+    </thead>
+    <tbody className="divide-y divide-line">
+      {projects.map((project) => {
+        const days = remainingDays(today, project.plannedEnd);
+        const inProgress = project.status === 'IN_PROGRESS';
+
+        return (
+          <tr key={project.id}>
+            <td className="py-[15px] pr-3 align-middle">
+              <Link
+                to={`/projects/${project.id}`}
+                className="text-[15.5px] font-bold hover:underline"
               >
-                {daysLabel(days)}
-              </td>
-              <td className="py-3 pr-3 align-top whitespace-nowrap">
-                {!inProgress ? (
-                  <span className="text-foreground/75">-</span>
-                ) : project.hasLogToday ? (
-                  '기록함'
-                ) : (
-                  <Link
-                    to={projectWorkPath(project.id, today)}
-                    aria-label={`${project.name} 오늘 기록하기`}
-                    className="inline-flex min-h-touch items-center font-bold text-danger underline"
-                  >
-                    기록하기
-                  </Link>
-                )}
-              </td>
-              <td className="py-3 text-right align-top whitespace-nowrap tabular-nums">
-                {hoursText(project.monthMinutes)}시간
-              </td>
-            </tr>
-          );
-        })}
-      </tbody>
-    </table>
-  </div>
+                {project.name}
+              </Link>
+              <span className="mt-0.5 block text-[13px] text-foreground/65">
+                {project.siteName}
+                {!inProgress && ` · ${PROJECT_STATUS_LABELS[project.status]}`}
+              </span>
+              {project.warnings.length > 0 && (
+                <span className="mt-1 flex flex-wrap gap-1">
+                  {project.warnings.map((warning) => (
+                    <Badge key={warning} tone="danger">
+                      {PROJECT_WARNING_LABELS[warning]}
+                    </Badge>
+                  ))}
+                </span>
+              )}
+            </td>
+            <td className="py-[15px] pr-3 align-middle">
+              {project.progressPercent === null ? (
+                <span className="font-bold">기록 없음</span>
+              ) : (
+                <span className="flex flex-col">
+                  <span className="font-bold tabular-nums">{project.progressPercent}%</span>
+                  <ProgressBar
+                    aria-label={`${project.name} 진행률`}
+                    value={project.progressPercent}
+                    className="mt-1.5 h-1.5"
+                  />
+                </span>
+              )}
+            </td>
+            <td
+              className={cn(
+                'py-[15px] pr-3 align-middle whitespace-nowrap',
+                days < 0 && 'font-bold text-danger',
+              )}
+            >
+              {daysLabel(days)}
+            </td>
+            <td className="py-[15px] pr-3 align-middle whitespace-nowrap">
+              {!inProgress ? (
+                <span className="inline-flex size-8 items-center justify-center rounded-full bg-field text-[13px] font-bold text-foreground/65">
+                  -
+                </span>
+              ) : project.hasLogToday ? (
+                <span className="text-[13px] font-bold">기록함</span>
+              ) : (
+                <Link
+                  to={projectWorkPath(project.id, today)}
+                  aria-label={`${project.name} 오늘 기록하기`}
+                  className="inline-flex items-center rounded-full bg-primary px-3.5 py-[7px] text-[13px] font-bold text-primary-foreground hover:opacity-85"
+                >
+                  기록하기
+                </Link>
+              )}
+            </td>
+            <td className="py-[15px] text-right align-middle whitespace-nowrap">
+              <span className="font-emphasis text-[15px] font-semibold tabular-nums">
+                {hoursText(project.monthMinutes)}
+              </span>
+              <span className="text-[13px] font-semibold"> 시간</span>
+            </td>
+          </tr>
+        );
+      })}
+    </tbody>
+  </table>
 );
 
 const DueRow = ({
@@ -224,10 +247,11 @@ export const DashboardWidgets = ({
         ]}
       />
 
-      <div className="grid grid-cols-1 items-start gap-4 lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+      <div className="grid grid-cols-1 gap-4 lg:h-[420px] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
         <Widget
           title="진행 중 프로젝트"
           id="projects-heading"
+          isScrollable
           action={<TextLink to="/projects">모두 보기</TextLink>}
         >
           {activeProjects.length === 0 ? (
@@ -240,6 +264,8 @@ export const DashboardWidgets = ({
         <Widget
           title="확인할 일"
           id="alerts-heading"
+          isScrollable
+          count={alerts.length}
           action={<TextLink to="/settings/alerts">알림 설정</TextLink>}
         >
           {alerts.length === 0 ? (
