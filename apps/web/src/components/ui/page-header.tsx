@@ -13,6 +13,8 @@ type PageHeaderProps = {
   level?: 1 | 2;
   // 아래 첫 카드가 평면 경계에 걸치도록 평면을 더 길게 깖 (홈의 지표 타일)
   overlap?: boolean;
+  // 제목 위 돌아가기 링크 (평면 안에 함께 놓임)
+  back?: ReactNode;
 };
 
 // 화면 맨 위 제목 줄: 넓은 화면은 제목 왼쪽·버튼 오른쪽, 좁은 화면은 위아래로 쌓임
@@ -24,6 +26,7 @@ export const PageHeader = ({
   actions,
   level = 1,
   overlap = false,
+  back,
 }: PageHeaderProps) => {
   const Heading = level === 1 ? 'h1' : 'h2';
 
@@ -53,6 +56,7 @@ export const PageHeader = ({
   // 1단계 제목은 주황 평면 위에 놓음, 2단계는 바탕 위에 그대로
   return level === 1 ? (
     <div className={cn('plane pt-3 md:pt-0', overlap ? 'pb-24 md:pb-28' : 'pb-10 md:pb-12')}>
+      {back && <div className="pb-1">{back}</div>}
       {header}
     </div>
   ) : (
