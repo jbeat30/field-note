@@ -18,13 +18,11 @@ export const OptionListsPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <BackLink to="/settings?tab=company">설정으로</BackLink>
-        <PageHeader
-          title="목록 관리"
-          description="입력할 때 고르는 목록을 회사에 맞게 바꿉니다. 쓰지 않는 항목은 삭제하지 않고 숨기며, 숨겨도 이미 기록된 이름은 그대로 남습니다"
-        />
-      </div>
+      <PageHeader
+        title="목록 관리"
+        description="입력할 때 고르는 목록을 회사에 맞게 바꿉니다. 쓰지 않는 항목은 삭제하지 않고 숨기며, 숨겨도 이미 기록된 이름은 그대로 남습니다"
+        back={<BackLink to="/settings?tab=company">설정으로</BackLink>}
+      />
       {options.isPending && <p className="text-sm">목록을 불러오는 중</p>}
       {options.isError && <Alert>목록을 불러오지 못했습니다</Alert>}
       {options.data && (

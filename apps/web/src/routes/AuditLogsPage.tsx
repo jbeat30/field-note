@@ -150,13 +150,11 @@ export const AuditLogsPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <BackLink to="/settings?tab=company">설정으로</BackLink>
-        <PageHeader
-          title="활동 기록"
-          description="누가 언제 무엇을 저장·수정·삭제·내보내기·확정·열람했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
-        />
-      </div>
+      <PageHeader
+        title="활동 기록"
+        description="누가 언제 무엇을 저장·수정·삭제·내보내기·확정·열람했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
+        back={<BackLink to="/settings?tab=company">설정으로</BackLink>}
+      />
 
       <div role="group" aria-label="종류로 거르기" className="flex flex-wrap gap-2">
         <Chip selected={kind === ''} onClick={() => setKind('')}>
