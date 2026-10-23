@@ -1,12 +1,12 @@
 import { PROJECT_STATUS_LABELS, todayInSeoul, type ProjectStatus } from '@field-note/shared';
-import { CalendarRange, MapPin, MoreHorizontal, Printer, UserRound, Building2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
+import { Button, pillIconButtonClass } from '../components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -121,31 +121,59 @@ export const ProjectLayout = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 프로젝트 머리: 주황 평면에 돌아가기·번호·이름·상태·주 버튼, 아래 잉크 면에 현장·고객·담당자·기간 */}
-      <div className="plane pt-4 pb-20 md:pt-8 md:pb-24 print:hidden">
+      {/* 프로젝트 머리: 주황 평면에 돌아가기, 번호·상태 알약, 이름, 현장·고객·담당자·기간 한 줄, 오른쪽 주 버튼 */}
+      <div className="plane pt-4 pb-14 md:pt-8 md:pb-16 print:hidden">
         <BackLink to="/projects">프로젝트 목록</BackLink>
         <header className="mt-1 flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
-              <span>{data.code}</span>
+            <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+              <span className="rounded-full bg-[#fbf7ee] px-2.5 py-0.5">{data.code}</span>
               <Badge tone={STATUS_TONE[data.status]}>{PROJECT_STATUS_LABELS[data.status]}</Badge>
-              {due && <Badge tone={due.includes('지남') ? 'danger' : 'neutral'}>{due}</Badge>}
+              {due && <Badge tone={due.includes('지남') ? 'danger' : 'primary'}>{due}</Badge>}
             </div>
-            <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] break-keep md:text-[40px]">
+            <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] break-keep md:text-[46px]">
               {data.name}
             </h1>
+            <p className="text-[15px] font-medium">
+              {[
+                data.siteName,
+                client,
+                manager && `담당 ${manager}`,
+                `${data.plannedStart} ~ ${data.plannedEnd}`,
+              ]
+                .filter(Boolean)
+                .join(' · ')}
+              {data.siteMapUrl && (
+                <a
+                  className="ml-2 font-bold underline underline-offset-[3px]"
+                  href={data.siteMapUrl}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                >
+                  지도 열기
+                </a>
+              )}
+            </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1.5">
+          <div className="flex shrink-0 items-center gap-2">
             {showTodayBtn && (
-              <Button asChild>
-                <Link to={projectWorkPath(data.id, todayInSeoul(new Date()))}>오늘 기록</Link>
-              </Button>
+              <Link
+                to={projectWorkPath(data.id, todayInSeoul(new Date()))}
+                className={pillIconButtonClass}
+              >
+                <Pencil aria-hidden />
+                오늘 기록
+              </Link>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button type="button" size="icon" variant="secondary" aria-label="더보기">
-                  <MoreHorizontal aria-hidden />
-                </Button>
+                <button
+                  type="button"
+                  aria-label="더보기"
+                  className="inline-flex size-[50px] items-center justify-center rounded-full bg-[#fbf7ee] text-[#14110d] hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                >
+                  <MoreHorizontal aria-hidden className="size-5" />
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem asChild>
@@ -162,36 +190,12 @@ export const ProjectLayout = () => {
           </div>
         </header>
       </div>
-      <ul className="relative -mt-16 hidden flex-wrap gap-x-8 gap-y-2 rounded-3xl bg-[#14110d] px-6 py-5 text-sm text-[#fbf7ee] sm:flex md:-mt-20 print:hidden">
-        <Fact icon={MapPin} label="현장">
-          {data.siteName || '-'}
-          {data.siteMapUrl && (
-            <a
-              className="ml-2 font-bold text-accent underline"
-              href={data.siteMapUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              지도 열기
-            </a>
-          )}
-        </Fact>
-        <Fact icon={Building2} label="고객">
-          {client ?? '-'}
-        </Fact>
-        <Fact icon={UserRound} label="담당자">
-          {manager ?? '-'}
-        </Fact>
-        <Fact icon={CalendarRange} label="예정 기간">
-          {data.plannedStart} ~ {data.plannedEnd}
-        </Fact>
-      </ul>
 
       {/* 서브 메뉴: 트랙 안의 알약, 가로 스크롤만, 세로 스크롤바 없음, 현재 탭 자동 스크롤 */}
       <nav
         ref={navRef}
         aria-label="프로젝트 메뉴"
-        className="flex gap-1 overflow-x-auto overflow-y-hidden rounded-full bg-track p-1 [scrollbar-width:none] sm:w-fit sm:max-w-full print:hidden [&::-webkit-scrollbar]:hidden"
+        className="relative -mt-10 flex gap-1 overflow-x-auto overflow-y-hidden rounded-full bg-track p-1 [scrollbar-width:none] sm:w-fit sm:max-w-full print:hidden [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab) => (
           <NavLink
@@ -253,19 +257,3 @@ export const ProjectLayout = () => {
     </div>
   );
 };
-
-const Fact = ({
-  icon: Icon,
-  label,
-  children,
-}: {
-  icon: typeof MapPin;
-  label: string;
-  children: React.ReactNode;
-}) => (
-  <li className="flex items-center gap-1.5">
-    <Icon aria-hidden className="size-4 shrink-0 text-accent" />
-    <span className="text-[#fbf7ee]/65">{label}</span>
-    <span className="font-bold">{children}</span>
-  </li>
-);
