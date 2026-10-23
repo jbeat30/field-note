@@ -1,19 +1,21 @@
 import { todayInSeoul } from '@field-note/shared';
-import { Link, useNavigate } from 'react-router';
-import { useState } from 'react';
+import { FolderPlus } from 'lucide-react';
+import { Link } from 'react-router';
 
 import { useMe } from '../auth/useMe';
 import { listResumable } from '../drafts/formDraft';
 import { ResumeDrafts } from '../drafts/ResumeDrafts';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
-import { Button } from '../components/ui/button';
+import { pillIconButtonClass } from '../components/ui/button';
 import { PageHeader } from '../components/ui/page-header';
-import { Input } from '../components/ui/input';
 import { Skeleton } from '../components/ui/skeleton';
 import { Alert } from '../components/ui/alert';
+import { AlertBell } from '../dashboard/AlertBell';
 import { DashboardWidgets } from '../dashboard/DashboardWidgets';
+import { HeaderSearch } from '../dashboard/HeaderSearch';
 import { MonthStaffing } from '../dashboard/MonthStaffing';
 import { useDashboard } from '../dashboard/useDashboard';
+import { cn } from '../lib/cn';
 import { useProjectChoices } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
 
@@ -31,8 +33,6 @@ const dateText = (date: string) => {
 export const HomePage = () => {
   const me = useMe();
   const dashboard = useDashboard();
-  const navigate = useNavigate();
-  const [searchText, setSearchText] = useState('');
   const projects = useProjectChoices();
   const drafts = useDraftStore((state) => state.drafts);
   const isDraftReady = useDraftHydrated();
@@ -40,35 +40,33 @@ export const HomePage = () => {
   return (
     <section className="flex flex-col gap-4">
       <PageHeader
-        title={me.data?.companyName ?? '대시보드'}
-        description={`${me.data?.displayName}님, 안녕하세요 · ${dateText(todayInSeoul(new Date()))}`}
+        isDisplay
         overlap
+        eyebrow={
+          <>
+            {me.data?.companyName} · {dateText(todayInSeoul(new Date()))}
+          </>
+        }
+        title={
+          <>
+            안녕하세요,
+            <br />
+            {me.data?.displayName}님
+          </>
+        }
         actions={
           <>
-            <form
-              role="search"
-              className="flex w-full gap-2 md:w-auto"
-              onSubmit={(event) => {
-                event.preventDefault();
-
-                if (searchText.trim())
-                  void navigate(`/search?q=${encodeURIComponent(searchText.trim())}`);
-              }}
+            <div className="flex items-center gap-2.5 max-md:hidden">
+              <HeaderSearch />
+              <AlertBell />
+            </div>
+            <Link
+              to="/projects/new"
+              className={cn(pillIconButtonClass, 'max-md:h-[52px] max-md:w-full')}
             >
-              <Input
-                type="search"
-                className="min-w-0 flex-1 bg-surface md:w-80 md:flex-none"
-                aria-label="찾기"
-                placeholder="프로젝트·직원·메모·자료·작업 내역 찾기"
-                maxLength={50}
-                value={searchText}
-                onChange={(event) => setSearchText(event.target.value)}
-              />
-              <Button type="submit">찾기</Button>
-            </form>
-            <Button asChild className="md:hidden">
-              <Link to="/projects/new">프로젝트 등록</Link>
-            </Button>
+              <FolderPlus aria-hidden />
+              프로젝트 등록
+            </Link>
           </>
         }
       />

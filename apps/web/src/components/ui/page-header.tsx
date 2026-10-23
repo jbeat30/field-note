@@ -3,7 +3,7 @@ import type { ReactNode } from 'react';
 import { cn } from '../../lib/cn';
 
 type PageHeaderProps = {
-  title: string;
+  title: ReactNode;
   // 제목 위 작은 글자(프로젝트 코드·상태 등)
   eyebrow?: ReactNode;
   description?: ReactNode;
@@ -15,6 +15,8 @@ type PageHeaderProps = {
   overlap?: boolean;
   // 제목 위 돌아가기 링크 (평면 안에 함께 놓임)
   back?: ReactNode;
+  // 홈처럼 큰 인사 제목
+  isDisplay?: boolean;
 };
 
 // 화면 맨 위 제목 줄: 넓은 화면은 제목 왼쪽·버튼 오른쪽, 좁은 화면은 위아래로 쌓임
@@ -27,21 +29,32 @@ export const PageHeader = ({
   level = 1,
   overlap = false,
   back,
+  isDisplay = false,
 }: PageHeaderProps) => {
   const Heading = level === 1 ? 'h1' : 'h2';
 
   const header = (
-    <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
+    <header
+      className={cn(
+        'flex flex-col gap-3 sm:flex-row sm:justify-between',
+        isDisplay ? 'sm:items-start' : 'sm:items-end',
+      )}
+    >
       <div className="flex min-w-0 flex-col gap-1.5">
         {eyebrow && (
-          <div className="flex items-center gap-2 text-sm font-semibold text-foreground/75">
+          <div className="flex items-center gap-2 text-[15px] font-semibold text-foreground">
             {eyebrow}
           </div>
         )}
         <Heading
           className={
             level === 1
-              ? 'text-[34px] leading-[1.08] font-extrabold tracking-[-0.03em] break-keep md:text-[46px]'
+              ? cn(
+                  '[line-height:1.08] font-extrabold tracking-[-0.03em] break-keep',
+                  isDisplay
+                    ? 'text-[40px] md:text-[clamp(44px,4.4vw,64px)]'
+                    : 'text-[34px] md:text-[46px]',
+                )
               : 'text-xl font-extrabold tracking-[-0.02em] break-keep'
           }
         >
@@ -55,7 +68,7 @@ export const PageHeader = ({
 
   // 1단계 제목은 주황 평면 위에 놓음, 2단계는 바탕 위에 그대로
   return level === 1 ? (
-    <div className={cn('plane pt-3 md:pt-0', overlap ? 'pb-24 md:pb-28' : 'pb-10 md:pb-12')}>
+    <div className={cn('plane pt-4 md:pt-10', overlap ? 'pb-24 md:pb-28' : 'pb-10 md:pb-12')}>
       {back && <div className="pb-1">{back}</div>}
       {header}
     </div>

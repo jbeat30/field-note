@@ -47,6 +47,6 @@ export const Button = ({ className, variant, size, asChild = false, ...props }: 
   return <Component className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 };
 
-// 화면 위쪽 행동 줄용 알약 버튼: 잉크 알약 안에 주황 아이콘 원 (프로젝트 등록·간편 등록)
+// 화면 위쪽 행동 줄용 알약 버튼: 잉크 알약 안에 주황 아이콘 원 (프로젝트 등록, 폴더 더하기 아이콘)
 export const pillIconButtonClass =
-  'inline-flex h-12 shrink-0 items-center gap-2.5 rounded-full bg-primary pr-5 pl-1.5 text-[15px] font-bold whitespace-nowrap text-primary-foreground transition-opacity duration-(--duration-fast) hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [&>svg:first-child]:box-content [&>svg:first-child]:size-4.5 [&>svg:first-child]:rounded-full [&>svg:first-child]:bg-accent [&>svg:first-child]:p-2 [&>svg:first-child]:text-[#14110d]';
+  'inline-flex h-14 shrink-0 items-center gap-3 rounded-full bg-[#14110d] pr-6 pl-2 text-base font-bold whitespace-nowrap text-[#fbf7ee] transition-opacity duration-(--duration-fast) hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [&>svg:first-child]:box-content [&>svg:first-child]:size-5 [&>svg:first-child]:rounded-full [&>svg:first-child]:bg-accent [&>svg:first-child]:p-2.5 [&>svg:first-child]:text-[#14110d]';
