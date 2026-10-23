@@ -48,7 +48,7 @@ export const ProjectWarrantyPage = () => {
   );
 
   const showPeriod = data.months > 0 && data.endOn !== null && data.daysLeft !== null;
-  const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
+  const card = 'flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5';
 
   return (
     <div className="flex flex-col gap-5">

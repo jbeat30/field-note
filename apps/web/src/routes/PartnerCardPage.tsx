@@ -110,21 +110,19 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <BackLink to="/partners">명부</BackLink>
-        <PageHeader
-          title={partner.name}
-          eyebrow={
-            <>
-              <Badge tone="primary">{PARTNER_KIND_LABELS[partner.kind]}</Badge>
-              {!partner.isActive && <Badge>숨김</Badge>}
-            </>
-          }
-        />
-      </div>
+      <PageHeader
+        title={partner.name}
+        back={<BackLink to="/partners">명부</BackLink>}
+        eyebrow={
+          <>
+            <Badge tone="primary">{PARTNER_KIND_LABELS[partner.kind]}</Badge>
+            {!partner.isActive && <Badge>숨김</Badge>}
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[3fr_2fr]">
-        <div className="rounded-xl bg-surface-subtle p-5">
+        <div className="rounded-3xl bg-surface-subtle p-5">
           {saved && <Alert variant="info">{saved}</Alert>}
           {errors.root && <Alert>{errors.root.message}</Alert>}
 
@@ -162,7 +160,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
         </div>
 
         <section
-          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+          className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
           aria-labelledby="active-heading"
         >
           <h2 id="active-heading" className="text-lg font-bold">
@@ -178,7 +176,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
         </section>
 
         <section
-          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+          className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
           aria-labelledby="delete-heading"
         >
           <h2 id="delete-heading" className="text-lg font-bold">

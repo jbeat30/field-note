@@ -46,7 +46,7 @@ const CUSTOM = 'CUSTOM';
 const patternOf = (days: number | undefined) =>
   WORK_PATTERNS.find((item) => item.days === days)?.key ?? CUSTOM;
 
-const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
+const card = 'flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5';
 
 // 회사 관리의 기준값: 하루 기준시간 · 월 기준일수(MM 환산 기준) · 공수 입력 방식 (저장은 분 단위라 바꿔도 과거 기록은 변하지 않음)
 export const CompanySettingsForm = () => {

@@ -65,7 +65,7 @@ const ProjectInfoSummary = ({ project }: { project: ProjectDetail }) => {
 
 // 패널 하나를 카드로 감쌈 (패널 안의 상자는 자동으로 한 단계 어두운 면이 됨)
 const Panel = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={`rounded-xl bg-surface-subtle p-5 ${className ?? ''}`}>{children}</div>
+  <div className={`rounded-3xl bg-surface-subtle p-5 ${className ?? ''}`}>{children}</div>
 );
 
 type Section = 'overview' | 'assignments' | 'labor' | 'info' | 'all';

@@ -15,6 +15,8 @@ type PageHeaderProps = {
   overlap?: boolean;
   // 제목 위 돌아가기 링크 (평면 안에 함께 놓임)
   back?: ReactNode;
+  // 제목 아래 평면 안에 놓는 탭 (직원 목록과 단가표 같은 화면 전환)
+  tabs?: ReactNode;
   // 홈처럼 큰 인사 제목
   isDisplay?: boolean;
 };
@@ -29,6 +31,7 @@ export const PageHeader = ({
   level = 1,
   overlap = false,
   back,
+  tabs,
   isDisplay = false,
 }: PageHeaderProps) => {
   const Heading = level === 1 ? 'h1' : 'h2';
@@ -68,9 +71,15 @@ export const PageHeader = ({
 
   // 1단계 제목은 주황 평면 위에 놓음, 2단계는 바탕 위에 그대로
   return level === 1 ? (
-    <div className={cn('plane pt-4 md:pt-10', overlap ? 'pb-24 md:pb-28' : 'pb-10 md:pb-12')}>
+    <div
+      className={cn(
+        'plane pt-4 md:pt-10',
+        overlap ? 'pb-24 md:pb-28' : 'plane-page pb-12 md:pb-14',
+      )}
+    >
       {back && <div className="pb-1">{back}</div>}
       {header}
+      {tabs && <div className="mt-5">{tabs}</div>}
     </div>
   ) : (
     header

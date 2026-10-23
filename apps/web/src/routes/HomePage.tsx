@@ -62,7 +62,7 @@ export const HomePage = () => {
             </div>
             <Link
               to="/projects/new"
-              className={cn(pillIconButtonClass, 'max-md:h-[52px] max-md:w-full')}
+              className={cn(pillIconButtonClass, 'h-[52px] w-full md:h-14 md:w-auto')}
             >
               <FolderPlus aria-hidden />
               프로젝트 등록
