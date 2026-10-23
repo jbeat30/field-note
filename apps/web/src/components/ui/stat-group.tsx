@@ -37,7 +37,7 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
     )}
   >
     {items.map((item, index) => {
-      const style = TILES[index % TILES.length];
+      const style = TILES[index % TILES.length] ?? TILES[0];
 
       return (
         <div
