@@ -2,9 +2,15 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { http, HttpResponse } from 'msw';
 import { expect, userEvent, waitFor, within } from 'storybook/test';
 
-import { MOCK_TOTP_CODE } from '../mocks/data';
+import { DEMO_ACCOUNTS, MOCK_TOTP_CODE } from '../mocks/data';
 import { handlers } from '../mocks/handlers';
-import { findAccount, getCurrentAccount, saveMockTotp, startClosure } from '../mocks/state';
+import {
+  addAccount,
+  findAccount,
+  getCurrentAccount,
+  saveMockTotp,
+  startClosure,
+} from '../mocks/state';
 
 import { LoginPage } from './LoginPage';
 
@@ -191,8 +197,18 @@ export const TotpRecoveryCode: Story = {
   },
 };
 
-// 서버가 시연 계정 안내를 켠 경우: 가상 데이터 안내와 계정이 보이고 한 번에 채울 수 있음
+// 시연 안내를 켠 경우 테스트 계정 버튼으로 즉시 로그인
 export const DemoNotice: Story = {
+  beforeEach: () => {
+    addAccount({
+      ...DEMO_ACCOUNTS[0]!,
+      loginId: 'tester',
+      password: 'Visit-Demo-2026!',
+      displayName: 'Tester',
+      companyName: 'Test Company',
+      isEmailVerified: true,
+    });
+  },
   parameters: {
     msw: {
       handlers: [
@@ -206,11 +222,13 @@ export const DemoNotice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('시연용 체험 환경입니다')).toBeInTheDocument();
-    await expect(canvas.getByText(/모두 가상의 데이터/)).toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: '이 계정으로 채우기' }));
-    await expect(canvas.getByLabelText('아이디')).toHaveValue('tester');
-    await expect(canvas.getByLabelText('비밀번호')).toHaveValue('Visit-Demo-2026!');
+    await expect(await canvas.findByText(/모두 가상의 데이터/)).toHaveTextContent(
+      '화면에 나오는 회사·직원·프로젝트는 모두 가상의 데이터이며, 매일 새벽에 처음 상태로 초기화됩니다.',
+    );
+    await expect(canvas.queryByText('Visit-Demo-2026!')).not.toBeInTheDocument();
+    await userEvent.click(canvas.getByRole('button', { name: '테스트 계정 이용하기' }));
+    await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
+    await expect(getCurrentAccount()?.loginId).toBe('tester');
   },
 };
 
@@ -220,6 +238,8 @@ export const NoDemoNoticeByDefault: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.getByRole('button', { name: '로그인' })).toBeInTheDocument();
-    await expect(canvas.queryByText('시연용 체험 환경입니다')).not.toBeInTheDocument();
+    await expect(
+      canvas.queryByRole('button', { name: '테스트 계정 이용하기' }),
+    ).not.toBeInTheDocument();
   },
 };
