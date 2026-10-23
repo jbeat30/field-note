@@ -12,7 +12,7 @@ type PageHeaderProps = {
 };
 
 // 화면 맨 위 제목 줄: 넓은 화면은 제목 왼쪽·버튼 오른쪽, 좁은 화면은 위아래로 쌓임
-// 1단계 제목은 레이아웃의 주황 평면 위에 놓이며 글자색은 평면이 정함
+// 1단계 제목은 스스로 주황 평면을 깔고 그 안의 글자색은 평면이 정함
 export const PageHeader = ({
   title,
   eyebrow,
@@ -22,7 +22,7 @@ export const PageHeader = ({
 }: PageHeaderProps) => {
   const Heading = level === 1 ? 'h1' : 'h2';
 
-  return (
+  const header = (
     <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
       <div className="flex min-w-0 flex-col gap-1.5">
         {eyebrow && (
@@ -44,4 +44,7 @@ export const PageHeader = ({
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>
   );
+
+  // 1단계 제목은 주황 평면 위에 놓음, 2단계는 바탕 위에 그대로
+  return level === 1 ? <div className="plane pt-3 pb-10 md:pt-0 md:pb-12">{header}</div> : header;
 };

@@ -41,7 +41,7 @@ export const AlertBell = ({ className }: { className?: string }) => {
         aria-haspopup="dialog"
         aria-label={alerts.length > 0 ? `알림 ${alerts.length}건` : '알림'}
         className={cn(
-          'relative inline-flex size-11 shrink-0 items-center justify-center rounded-lg text-foreground/75 hover:bg-muted',
+          'relative inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-field text-foreground transition-colors hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground',
           className,
         )}
         onClick={() => setOpen(true)}
@@ -51,8 +51,8 @@ export const AlertBell = ({ className }: { className?: string }) => {
           <span
             aria-hidden
             className={cn(
-              'absolute top-1 right-0.5 min-w-5 rounded-full px-1 text-center text-[11px] leading-5 font-bold text-white',
-              hasUrgent ? 'bg-danger' : 'bg-primary',
+              'absolute top-0 right-0 min-w-5 rounded-full px-1 text-center text-[11px] leading-5 font-bold',
+              hasUrgent ? 'bg-danger text-white' : 'bg-primary text-primary-foreground',
             )}
           >
             {countLabel(alerts.length)}
@@ -77,7 +77,7 @@ export const AlertBell = ({ className }: { className?: string }) => {
           <Link
             to="/settings/alerts"
             onClick={() => setOpen(false)}
-            className="inline-flex min-h-touch items-center text-sm text-primary underline"
+            className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
           >
             알림 설정
           </Link>

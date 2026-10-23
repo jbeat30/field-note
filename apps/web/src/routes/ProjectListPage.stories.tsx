@@ -57,9 +57,9 @@ export const Default: Story = {
     await expect(row).toContain('판금');
     await expect(canvas.queryByText(/02-0000-0101/)).not.toBeInTheDocument();
     await expect(canvas.queryByText(/정문 출입증/)).not.toBeInTheDocument();
-    await expect(canvas.getByRole('link', { name: '프로젝트 등록' })).toHaveAttribute(
-      'href',
-      '/projects/new',
+    // 넓은 화면의 등록 버튼은 앱 틀 머리에 있어 이 버튼은 좁은 화면에서만 보임
+    await expect(canvasElement.querySelector('a[href="/projects/new"]')).toHaveTextContent(
+      '프로젝트 등록',
     );
   },
 };

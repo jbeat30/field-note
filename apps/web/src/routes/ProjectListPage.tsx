@@ -222,7 +222,7 @@ export const ProjectListPage = () => {
       <PageHeader
         title="프로젝트"
         actions={
-          <Button asChild>
+          <Button asChild className="md:hidden">
             <Link to="/projects/new">프로젝트 등록</Link>
           </Button>
         }

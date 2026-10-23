@@ -1,66 +1,41 @@
-import { APP_NAME } from '@field-note/shared';
-import {
-  BookUser,
-  CalendarDays,
-  FolderKanban,
-  House,
-  LogOut,
-  Menu,
-  Plus,
-  Settings,
-  Users,
-} from 'lucide-react';
+import { LogOut, Menu, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 
 import { useMe } from '../auth/useMe';
-import { AlertBell } from '../dashboard/AlertBell';
-import { Button } from '../components/ui/button';
-import { Badge } from '../components/ui/badge';
+import { Button, buttonVariants, pillIconButtonClass } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
 import { Toaster } from '../components/ui/toaster';
+import { AlertBell } from '../dashboard/AlertBell';
 import { cn } from '../lib/cn';
 import { useUiStore } from '../stores/uiStore';
 
-import { ProfileAvatar, ProfileMenu } from './ProfileMenu';
-import { QuickAddSheet } from './QuickAddSheet';
+import { AppSidebar } from './AppSidebar';
+import { BrandLogo } from './BrandLogo';
 import { DemoBanner } from './DemoBanner';
+import { MORE_ITEMS, TAB_ITEMS } from './navItems';
 import { OfflineNotice } from './OfflineNotice';
+import { ProfileAvatar } from './ProfileMenu';
+import { QuickAddSheet } from './QuickAddSheet';
 import { ThemeToggle } from './ThemeToggle';
 import { useLogout } from './useLogout';
 
-type NavItem = { to: string; label: string; end?: boolean; icon: typeof House };
-
-const HOME: NavItem = { to: '/', label: '대시보드', end: true, icon: House };
-const PROJECTS: NavItem = { to: '/projects', label: '프로젝트', icon: FolderKanban };
-const EMPLOYEES: NavItem = { to: '/employees', label: '직원', icon: Users };
-const PARTNERS: NavItem = { to: '/partners', label: '명부', icon: BookUser };
-const MONTHLY: NavItem = { to: '/monthly-hours', label: '월 공수표', icon: CalendarDays };
-const SETTINGS: NavItem = { to: '/settings', label: '설정', icon: Settings };
-
-// 왼쪽 메뉴(넓은 화면): 프로젝트 중심 업무와 회사 관리용 구분, 작업 내역은 프로젝트 안에서 처리
-const SIDEBAR_GROUPS: { title: string; items: NavItem[] }[] = [
-  { title: '프로젝트 관리', items: [HOME, PROJECTS] },
-  { title: '관리', items: [EMPLOYEES, PARTNERS, MONTHLY, SETTINGS] },
-];
-
-// 아래 메뉴(좁은 화면): 자주 쓰는 네 가지 + 더보기
-const TAB_ITEMS: NavItem[] = [HOME, PROJECTS, EMPLOYEES, PARTNERS];
-const MORE_ITEMS: NavItem[] = [MONTHLY, SETTINGS];
-
 const tabClass = (isActive: boolean) =>
   cn(
-    'flex min-h-16 flex-col items-center justify-center gap-1 text-xs font-medium',
-    isActive ? 'text-primary' : 'text-foreground/70',
+    'flex min-h-14 flex-col items-center justify-center gap-0.5 rounded-full text-[11px] font-bold',
+    isActive ? 'bg-accent text-[#14110d]' : 'text-[#f4eee0]/75',
   );
 
-// 모든 화면 공통 틀: 넓은 화면은 왼쪽 고정 메뉴(관리 화면 방식), 좁은 화면은 상단 헤더 + 하단 탭 메뉴, 빠른 추가 버튼(터치 영역 44px 이상)
+// 모든 화면 공통 틀: 넓은 화면은 잉크 사이드바와 한 줄 머리(찾기·알림·프로젝트 등록), 태블릿은 아이콘 레일
+// 좁은 화면은 주황 상단 줄과 잉크 알약 하단 메뉴, 빠른 추가 버튼(터치 영역 44px 이상)
 export const AppLayout = () => {
   const setQuickAddOpen = useUiStore((state) => state.setQuickAddOpen);
   const me = useMe();
   const onLogout = useLogout();
   const { pathname } = useLocation();
   const [isMoreOpen, setMoreOpen] = useState(false);
+  // 사이드바 접힘은 화면을 새로 열면 펼친 상태로 돌아감 (저장하지 않음)
+  const [isCollapsed, setCollapsed] = useState(false);
   // 더보기 안의 화면을 보고 있으면 더보기 탭을 강조
   const isInMore = MORE_ITEMS.some((item) => pathname.startsWith(item.to));
   // 빠른 추가(+)는 모바일의 프로젝트 밖 화면에서만 표시, 프로젝트 안에서는 머리의 주 버튼이 같은 역할, 넓은 화면은 왼쪽 메뉴·머리 버튼으로 충분
@@ -68,65 +43,39 @@ export const AppLayout = () => {
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
-      <aside className="sticky top-0 hidden h-dvh w-60 shrink-0 flex-col gap-4 border-r border-line bg-surface p-4 md:flex print:hidden">
-        <div className="flex items-center justify-between gap-2">
-          <p className="font-emphasis flex items-center gap-2 px-1 py-2 text-lg font-bold whitespace-nowrap text-primary">
-            {APP_NAME}
-            <Badge tone="primary">베타</Badge>
-          </p>
-          <AlertBell />
-        </div>
-        <nav aria-label="주 메뉴" className="flex flex-1 flex-col gap-5 overflow-y-auto">
-          {SIDEBAR_GROUPS.map((group) => (
-            <div key={group.title} className="flex flex-col gap-1">
-              <p className="px-3 pb-1 text-xs font-semibold text-foreground/70">{group.title}</p>
-              {group.items.map((item) => (
-                <NavLink
-                  key={item.to}
-                  to={item.to}
-                  end={item.end}
-                  className={({ isActive }) =>
-                    cn(
-                      'flex min-h-touch items-center gap-3 rounded-lg px-3 text-sm font-medium transition-colors',
-                      isActive
-                        ? 'bg-primary-subtle text-primary'
-                        : 'text-foreground/70 hover:bg-muted',
-                    )
-                  }
-                >
-                  <item.icon aria-hidden className="size-5" />
-                  {item.label}
-                </NavLink>
-              ))}
-            </div>
-          ))}
-        </nav>
-        <div className="flex items-center gap-1 border-t border-line pt-4">
-          <ProfileMenu />
-          <ThemeToggle />
-        </div>
-      </aside>
-      <div className="flex min-w-0 flex-1 flex-col">
-        <header className="sticky top-0 z-10 flex items-center justify-between gap-2 border-b border-border bg-surface/90 px-4 backdrop-blur md:hidden print:hidden">
-          <p className="font-emphasis flex shrink-0 items-center gap-2 text-lg font-bold text-primary">
-            {APP_NAME}
-            <Badge tone="primary">베타</Badge>
-          </p>
-          <span className="flex items-center">
-            <AlertBell />
+      <AppSidebar isCollapsed={isCollapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} />
+      <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
+        <header className="plane sticky top-0 z-10 flex items-center justify-between gap-2 px-4 py-3 md:hidden print:hidden">
+          <BrandLogo className="gap-2.5 [&_.font-emphasis]:text-[22px]" />
+          <span className="flex items-center gap-1.5">
+            <AlertBell className="size-11" />
             <ThemeToggle />
           </span>
         </header>
         <OfflineNotice />
         <DemoBanner />
-        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 pt-4 pb-40 md:px-8 md:pt-8 md:pb-24 xl:px-10 print:p-0">
+        <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 pt-0 pb-40 md:px-8 md:pb-24 xl:px-10 print:p-0">
+          <div className="plane hidden items-center justify-end gap-2 pt-6 pb-4 md:flex print:hidden">
+            <Link
+              to="/search"
+              className={cn(buttonVariants({ variant: 'secondary' }), 'rounded-full')}
+            >
+              <Search aria-hidden />
+              찾기
+            </Link>
+            <AlertBell />
+            <Link to="/projects/new" className={pillIconButtonClass}>
+              <Plus aria-hidden />
+              프로젝트 등록
+            </Link>
+          </div>
           <Outlet />
         </main>
       </div>
       {showQuickAdd && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-16 flex justify-end p-4 md:hidden print:hidden">
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 flex justify-end p-4 md:hidden print:hidden">
           <Button
-            className="pointer-events-auto size-14 rounded-full px-0 shadow-card"
+            className="pointer-events-auto size-14 rounded-full bg-accent px-0 text-[#14110d] hover:bg-accent/90"
             aria-label="빠른 추가"
             title="빠른 추가: 메모·사진·오늘 작업 내역"
             onClick={() => setQuickAddOpen(true)}
@@ -137,7 +86,7 @@ export const AppLayout = () => {
       )}
       <nav
         aria-label="하단 메뉴"
-        className="fixed inset-x-0 bottom-0 z-10 grid grid-cols-5 border-t border-border bg-surface/95 pb-[env(safe-area-inset-bottom)] backdrop-blur md:hidden print:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 grid grid-cols-5 gap-1 rounded-full bg-sidebar p-1.5 shadow-card md:hidden print:hidden"
       >
         {TAB_ITEMS.map((item) => (
           <NavLink
@@ -167,9 +116,9 @@ export const AppLayout = () => {
               <Link
                 to={item.to}
                 onClick={() => setMoreOpen(false)}
-                className="flex min-h-14 items-center gap-3 rounded-xl bg-surface-nested px-4 text-base font-medium hover:bg-muted"
+                className="flex min-h-14 items-center gap-3 rounded-xl bg-surface-nested px-4 text-base font-bold hover:bg-field"
               >
-                <item.icon aria-hidden className="size-5 text-primary" />
+                <item.icon aria-hidden className="size-5" />
                 {item.label}
               </Link>
             </li>
@@ -178,7 +127,7 @@ export const AppLayout = () => {
         <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
           <ProfileAvatar name={me.data?.displayName} />
           <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-semibold">{me.data?.displayName}</p>
+            <p className="truncate text-sm font-bold">{me.data?.displayName}</p>
             <p className="truncate text-xs text-foreground/70">{me.data?.companyName}</p>
           </div>
           <Button

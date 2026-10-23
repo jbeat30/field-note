@@ -243,6 +243,37 @@ body {
     0 6px 10px -6px rgb(20 17 13 / 0.35);
 }
 
+/* 주황 면 위 영역: 안쪽 색을 밝은 모드 값으로 고정해 어두운 모드에서도 글자와 버튼이 읽힘 */
+.on-accent,
+.plane {
+  --foreground: #14110d;
+  --primary: #14110d;
+  --primary-foreground: #fbf7ee;
+  --field: #efe8d8;
+  --muted: #efe8d8;
+  --surface: #fbf7ee;
+  --surface-subtle: #fbf7ee;
+  --surface-nested: #f3ecdb;
+  --line: #e9e1cc;
+  --control-border: #d8cfb7;
+  --danger: #b3261e;
+  color: var(--foreground);
+}
+
+/* 화면 맨 위 주황 평면: 내용 너비는 그대로 두고 면만 좌우 끝까지 펼침 (잘라내기는 바깥 틀이 담당) */
+.plane {
+  position: relative;
+  background: var(--accent);
+  box-shadow: 0 0 0 100vmax var(--accent);
+  clip-path: inset(0 -100vmax);
+}
+
+@media print {
+  .plane {
+    display: none;
+  }
+}
+
 /* 모션을 줄이도록 설정한 기기에서는 전환을 없앰 */
 @media (prefers-reduced-motion: reduce) {
   *,
