@@ -35,11 +35,18 @@ export const StaffingMonthCalendar = ({
   const colorOf = (projectId: string) => `var(--proj-${projectColors.get(projectId) ?? 0})`;
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <div role="group" aria-label="이번 달 인력 달력" className="flex flex-col gap-1.5">
-        <div className="grid grid-cols-7 gap-1.5 text-center text-xs font-bold text-foreground/70">
+        <div className="grid grid-cols-7 gap-1.5 text-center text-[13px] font-bold text-foreground/65">
           {WEEKDAY_LABELS.map((label, index) => (
-            <div key={label} className={cn('py-1.5', index === 6 && 'text-danger')}>
+            <div
+              key={label}
+              className={cn(
+                'py-1',
+                index === 5 && 'text-[#2f55c8] dark:text-[#8aa6ff]',
+                index === 6 && 'text-danger',
+              )}
+            >
               {label}
             </div>
           ))}
@@ -55,7 +62,9 @@ export const StaffingMonthCalendar = ({
               }`;
 
               if (!day.inMonth) {
-                return <div key={day.date} aria-hidden="true" className="min-h-14 sm:min-h-24" />;
+                return (
+                  <div key={day.date} aria-hidden="true" className="min-h-14 sm:min-h-[104px]" />
+                );
               }
 
               return (
@@ -67,35 +76,39 @@ export const StaffingMonthCalendar = ({
                   aria-current={isToday ? 'date' : undefined}
                   onClick={() => setSelected(isSelected ? null : day.date)}
                   className={cn(
-                    'flex min-h-14 min-w-0 flex-col gap-1 rounded-xl p-1 text-left transition-colors sm:min-h-24 sm:p-2',
+                    'flex min-h-14 min-w-0 flex-col gap-1 rounded-2xl px-1.5 py-1.5 text-left transition-colors sm:min-h-[104px] sm:px-[9px] sm:py-2',
                     isSelected
-                      ? 'bg-accent-subtle ring-2 ring-foreground ring-inset'
+                      ? 'bg-[#ffe4d3] outline-2 -outline-offset-2 outline-foreground dark:bg-[#4a2412]'
                       : 'bg-surface-nested hover:bg-field',
-                    day.conflictCount > 0 && !isSelected && 'ring-2 ring-danger ring-inset',
+                    day.conflictCount > 0 &&
+                      !isSelected &&
+                      'outline-2 -outline-offset-2 outline-danger',
                   )}
                 >
                   <span className="flex items-center justify-between gap-1">
                     <span
                       className={cn(
-                        'inline-flex min-w-6 justify-center rounded-full px-1 text-sm font-semibold',
-                        isToday && 'bg-accent text-[#14110d]',
+                        'min-w-[22px] rounded-[11px] px-[7px] text-center font-emphasis text-[13px] font-bold',
+                        isToday &&
+                          'bg-[#14110d] text-[#fbf7ee] dark:bg-[#f4eee0] dark:text-[#14110d]',
+                        !isToday && index === 5 && 'text-[#2f55c8] dark:text-[#8aa6ff]',
                         !isToday && index === 6 && 'text-danger',
                       )}
                     >
                       {Number(day.date.slice(8))}
                     </span>
                     {day.headcount > 0 && (
-                      <span className="text-[11px] font-semibold text-foreground/75">
+                      <span className="text-[11px] font-bold text-foreground/65">
                         {day.headcount}명
                       </span>
                     )}
                   </span>
-                  <span className="hidden min-w-0 flex-col gap-0.5 sm:flex">
+                  <span className="hidden min-w-0 flex-col gap-1 sm:flex">
                     {day.projects.slice(0, VISIBLE_PROJECTS).map((project) => (
                       <span
                         key={project.projectId}
                         className={cn(
-                          'truncate rounded-full px-2 text-[11px] leading-5 font-bold',
+                          'truncate rounded-lg px-[7px] py-0.5 text-[11px] font-semibold',
                           projectChipClass(projectColors.get(project.projectId) ?? 0),
                         )}
                       >
@@ -103,7 +116,7 @@ export const StaffingMonthCalendar = ({
                       </span>
                     ))}
                     {hidden > 0 && (
-                      <span className="text-[11px] text-foreground/70">+{hidden}</span>
+                      <span className="text-[11px] font-bold text-foreground/65">+{hidden}</span>
                     )}
                   </span>
                   <span className="flex gap-0.5 sm:hidden" aria-hidden="true">
@@ -125,38 +138,47 @@ export const StaffingMonthCalendar = ({
       {selectedDay && (
         <section
           aria-label={`${formatLongDay(selectedDay.date)} 일한 사람`}
-          className="flex flex-col gap-2 rounded-2xl bg-surface-nested p-4"
+          className="flex flex-col gap-2.5 rounded-3xl bg-[#14110d] px-6 py-5 text-[#fbf7ee]"
         >
-          <h3 className="text-base font-bold">
+          <h3 className="text-[17px] font-bold">
             {formatLongDay(selectedDay.date)}
-            <span className="ml-2 text-sm font-normal text-foreground/75">
+            <span className="ml-2.5 text-sm font-medium text-[#a89c84]">
               일한 사람 {selectedDay.headcount}명
             </span>
           </h3>
           {selectedDay.projects.length === 0 ? (
-            <p className="text-sm text-foreground/75">이 날 저장된 작업 내역이 없습니다</p>
+            <p className="text-sm text-[#cfc4ac]">이 날 저장된 작업 내역이 없습니다</p>
           ) : (
-            <ul className="flex flex-col gap-2">
+            <ul className="flex flex-col gap-2.5">
               {selectedDay.projects.map((project) => (
                 <li
                   key={project.projectId}
-                  className="flex flex-col gap-1 rounded-xl border-l-4 bg-surface-subtle px-3 py-2"
-                  style={{ borderLeftColor: colorOf(project.projectId) }}
+                  className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 rounded-2xl bg-[#241d15] px-4 py-3"
                 >
-                  <div className="flex flex-wrap items-center justify-between gap-2">
-                    <span className="font-semibold">{project.name}</span>
-                    <Link
-                      to={projectWorkPath(project.projectId, selectedDay.date)}
-                      className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
-                    >
-                      그날 하루 기록 보기
-                    </Link>
+                  <div className="flex items-center gap-3">
+                    <span
+                      aria-hidden
+                      className="size-3 shrink-0 rounded-[4px] border-2 border-transparent"
+                      style={{
+                        backgroundColor: colorOf(project.projectId),
+                        borderColor: 'color-mix(in srgb, #fbf7ee 70%, transparent)',
+                      }}
+                    />
+                    <div>
+                      <b className="text-[15px]">{project.name}</b>
+                      <p className="mt-0.5 text-[13px] text-[#cfc4ac]">
+                        {project.people
+                          .map((person) => `${person.name} ${hoursText(person.minutes)}`)
+                          .join(', ')}
+                      </p>
+                    </div>
                   </div>
-                  <p className="text-sm">
-                    {project.people
-                      .map((person) => `${person.name} ${hoursText(person.minutes)}`)
-                      .join(', ')}
-                  </p>
+                  <Link
+                    to={projectWorkPath(project.projectId, selectedDay.date)}
+                    className="text-[13px] font-bold whitespace-nowrap text-accent underline underline-offset-[3px]"
+                  >
+                    그날 하루 기록 보기
+                  </Link>
                 </li>
               ))}
             </ul>
