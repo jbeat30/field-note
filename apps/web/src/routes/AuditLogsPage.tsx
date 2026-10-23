@@ -174,7 +174,7 @@ export const AuditLogsPage = () => {
       </div>
 
       <form
-        className="grid gap-3 rounded-xl bg-surface-subtle p-5 md:grid-cols-3"
+        className="grid gap-3 rounded-3xl bg-surface-subtle p-5 md:grid-cols-3"
         aria-label="기록 거르기"
         onSubmit={(e) => e.preventDefault()}
       >

@@ -159,7 +159,7 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
       </div>
 
       {active ? (
-        <div className="flex flex-col gap-1 rounded-xl bg-surface-subtle p-5">
+        <div className="flex flex-col gap-1 rounded-3xl bg-surface-subtle p-5">
           <span className="text-sm text-foreground/70">현재 단가</span>
           <span className="text-3xl font-bold tabular-nums">
             {formatWon(active.amount)}
@@ -175,7 +175,7 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
           <span className="text-sm text-foreground/70">{active.effectiveFrom}부터 적용</span>
         </div>
       ) : (
-        <p className="rounded-xl bg-surface-subtle p-5 text-foreground/70">
+        <p className="rounded-3xl bg-surface-subtle p-5 text-foreground/70">
           {rates.data.length > 0 ? '적용 중인 단가가 없습니다' : '등록된 단가가 없습니다'}
         </p>
       )}

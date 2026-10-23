@@ -118,7 +118,7 @@ export const ProjectDocumentsPage = () => {
         value={category}
         onChange={setCategory}
       />
-      <div className="md:w-80">
+      <div className="rounded-3xl bg-surface-subtle p-4 md:w-96">
         <Input
           type="search"
           aria-label="문서 이름 검색"

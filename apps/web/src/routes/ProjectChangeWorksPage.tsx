@@ -71,7 +71,7 @@ export const ProjectChangeWorksPage = () => {
       <ChangeWorkUsagePanel projectId={id} />
 
       <section className="flex flex-col gap-3" aria-labelledby="change-list-heading">
-        <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center justify-between gap-3 rounded-3xl bg-surface-subtle p-4">
           <h2 id="change-list-heading" className="text-base font-semibold">
             기록 목록
           </h2>

@@ -62,7 +62,7 @@ export const DailyReportPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 print:hidden">
+      <div className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-4 print:hidden">
         <div className="flex items-center gap-2">
           <Button
             type="button"

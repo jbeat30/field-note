@@ -83,7 +83,7 @@ export const ProjectPhotosPage = () => {
         title="사진첩"
         description="하루 기록에서 올린 작업 사진을 날짜별로 모아 봅니다. 사진은 하루 기록의 작업 사진 단계에서 올립니다"
       />
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-4 md:flex-row md:items-center">
         <SegmentedControl
           aria-label="보기 방식"
           className="md:w-auto"
