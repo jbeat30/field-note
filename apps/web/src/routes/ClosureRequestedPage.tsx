@@ -9,7 +9,9 @@ export const ClosureRequestedPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold">해지를 요청했습니다</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+        해지를 요청했습니다
+      </h1>
       <p className="text-sm">
         모든 기기에서 로그아웃되었습니다.
         {purgeAfter
@@ -17,7 +19,10 @@ export const ClosureRequestedPage = () => {
           : ''}{' '}
         그 전에는 메일로 받은 해지 취소 링크로 계정을 복구할 수 있습니다
       </p>
-      <Link className="min-h-touch content-center text-primary underline" to="/login">
+      <Link
+        className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
+        to="/login"
+      >
         로그인 화면으로
       </Link>
     </div>

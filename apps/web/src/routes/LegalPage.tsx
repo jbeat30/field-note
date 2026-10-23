@@ -17,8 +17,13 @@ export const LegalPage = () => {
   if (!type) {
     return (
       <section className="flex flex-col gap-3">
-        <h1 className="text-xl font-bold">문서를 찾을 수 없습니다</h1>
-        <Link className="min-h-touch content-center text-primary underline" to="/login">
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          문서를 찾을 수 없습니다
+        </h1>
+        <Link
+          className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
+          to="/login"
+        >
           로그인 화면으로
         </Link>
       </section>
@@ -27,7 +32,7 @@ export const LegalPage = () => {
 
   return (
     // 화면 높이에 맞춰 틀(로그인 전 공통 틀의 여백·머리글·바닥글)을 뺀 만큼만 쓰고, 긴 본문은 안쪽에서만 스크롤
-    <article className="flex max-h-[calc(100dvh-16.5rem)] min-h-72 flex-col gap-5 lg:max-h-[calc(100dvh-12.5rem)]">
+    <article className="flex max-h-[calc(100dvh-18rem)] min-h-72 flex-col gap-5 lg:max-h-[calc(100dvh-14rem)]">
       <div
         role="region"
         aria-label={`${getLegalDocumentContent(type).title} 전문`}
@@ -40,13 +45,16 @@ export const LegalPage = () => {
         {Object.entries(SLUG_TO_TYPE).map(([itemSlug, itemType]) => (
           <Link
             key={itemSlug}
-            className="min-h-touch content-center text-sm text-primary underline"
+            className="min-h-touch content-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
             to={`/legal/${itemSlug}`}
           >
             {getLegalDocumentContent(itemType).title}
           </Link>
         ))}
-        <Link className="min-h-touch content-center text-sm text-primary underline" to="/login">
+        <Link
+          className="min-h-touch content-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
+          to="/login"
+        >
           로그인 화면으로
         </Link>
       </nav>

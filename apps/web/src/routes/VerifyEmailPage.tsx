@@ -60,7 +60,7 @@ const EmailEntryForm = ({ onSent }: { onSent: (email: string) => void }) => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">이메일 등록</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">이메일 등록</h1>
       <p className="text-sm">
         계정을 찾거나 알림을 받을 때 쓸 이메일을 입력해 주세요. 입력한 주소로 6자리 인증 코드를
         보냅니다
@@ -154,7 +154,7 @@ export const VerifyEmailPage = () => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">이메일 인증</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">이메일 인증</h1>
       <p className="text-sm">
         <strong>{sentTo ?? me.data.email}</strong>로 보낸 6자리 코드를 입력해 주세요. 메일이 보이지
         않으면 스팸함을 확인해 주세요

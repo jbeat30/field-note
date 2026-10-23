@@ -101,7 +101,7 @@ export const LoginPage = () => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">로그인</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">로그인</h1>
       <SocialNotice />
       {publicDemo.data?.enabled && publicDemo.data.loginId && publicDemo.data.password && (
         <DemoAccountNotice
@@ -189,7 +189,7 @@ export const LoginPage = () => {
         </>
       )}
       <Link
-        className="min-h-touch content-center text-sm text-primary underline"
+        className="min-h-touch content-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
         to="/forgot-password"
       >
         비밀번호를 잊으셨나요?
