@@ -105,11 +105,15 @@ export const LoginPage = () => {
       <SocialNotice />
       {publicDemo.data?.enabled && publicDemo.data.loginId && publicDemo.data.password && (
         <DemoAccountNotice
-          loginId={publicDemo.data.loginId}
-          password={publicDemo.data.password}
-          onFill={() => {
+          isSubmitting={isSubmitting}
+          onLogin={() => {
+            if (isSubmitting) return;
+
             setValue('loginId', publicDemo.data.loginId ?? '');
             setValue('password', publicDemo.data.password ?? '');
+            setValue('totpCode', undefined);
+            setTotpStep(false);
+            void onSubmit();
           }}
         />
       )}
