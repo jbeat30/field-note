@@ -44,23 +44,20 @@ export const ProjectWorkCalendar = ({
 
   return (
     <div className="flex flex-col">
-      <div aria-hidden className="grid grid-cols-7 border-b border-line pb-2">
+      <div aria-hidden className="grid grid-cols-7 gap-1.5 pb-2">
         {WEEKDAYS.map((label, index) => (
           <div
             key={label}
             className={cn(
-              'text-center text-xs font-semibold',
-              index === 0 ? 'text-danger' : index === 6 ? 'text-primary' : 'text-foreground/70',
+              'text-center text-xs font-bold',
+              index === 0 ? 'text-danger' : 'text-foreground/70',
             )}
           >
             {label}
           </div>
         ))}
       </div>
-      <ul
-        aria-label={`${month.slice(0, 7)} 작업 달력`}
-        className="grid grid-cols-7 gap-px bg-line [&>li]:bg-surface-subtle"
-      >
+      <ul aria-label={`${month.slice(0, 7)} 작업 달력`} className="grid grid-cols-7 gap-1.5">
         {buildDays(month).map((date) => {
           const inMonth = date.slice(0, 7) === month.slice(0, 7);
           const writable = date >= plannedStart && date <= plannedEnd && date <= today;
@@ -81,7 +78,7 @@ export const ProjectWorkCalendar = ({
                 <span
                   className={cn(
                     'grid size-6 place-items-center rounded-full text-xs font-semibold',
-                    date === today && 'bg-primary text-primary-foreground',
+                    date === today && 'bg-accent text-[#14110d]',
                   )}
                 >
                   {day}
@@ -90,7 +87,7 @@ export const ProjectWorkCalendar = ({
               </span>
               {workers.length > 0 && (
                 <span className="flex flex-col gap-0.5 text-xs">
-                  <span className="font-semibold text-primary">
+                  <span className="font-bold">
                     {workers.length}명 · {roundTo(minutes / 60, 1)}h
                   </span>
                   <span className="hidden truncate text-foreground/70 md:block">
@@ -105,8 +102,9 @@ export const ProjectWorkCalendar = ({
             </>
           );
           const base = cn(
-            'flex min-h-16 flex-col gap-1 p-1.5 text-left md:min-h-24 md:p-2',
-            !inMonth && 'bg-surface-nested',
+            'flex min-h-16 flex-col gap-1 rounded-xl p-1.5 text-left md:min-h-24 md:p-2',
+            inMonth ? 'bg-surface-nested' : 'opacity-40',
+            log && 'bg-accent-subtle',
           );
 
           return (
@@ -115,7 +113,7 @@ export const ProjectWorkCalendar = ({
                 <Link
                   aria-label={label}
                   to={projectWorkPath(projectId, date)}
-                  className={cn(base, 'hover:bg-muted')}
+                  className={cn(base, 'hover:bg-line')}
                 >
                   {content}
                 </Link>
