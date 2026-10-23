@@ -11,6 +11,8 @@ export type StatItem = {
   hint?: ReactNode;
   // 경고·위험 수치는 색을 바꿈 (글자로도 hint에 뜻을 함께 씀)
   tone?: 'default' | 'warning' | 'danger' | 'success';
+  // 타일 면을 직접 정할 때 (기본은 자리에 따라 라임·크림·잉크)
+  surface?: 'lime' | 'cream' | 'ink' | 'accent';
 };
 
 const TONE: Record<NonNullable<StatItem['tone']>, string> = {
@@ -53,8 +55,21 @@ const INK: Tile = {
   tones: TONE_ON_INK,
 };
 
-const tileOf = (index: number, count: number): Tile =>
-  index === 0 ? LIME : count === 4 && index === 3 ? INK : CREAM;
+const ACCENT: Tile = {
+  tile: 'tile-accent bg-accent text-[#14110d]',
+  sub: 'text-[#14110d]/85',
+  num: '',
+};
+
+const SURFACES: Record<NonNullable<StatItem['surface']>, Tile> = {
+  lime: LIME,
+  cream: CREAM,
+  ink: INK,
+  accent: ACCENT,
+};
+
+const tileOf = (index: number, count: number, surface?: StatItem['surface']): Tile =>
+  surface ? SURFACES[surface] : index === 0 ? LIME : count === 4 && index === 3 ? INK : CREAM;
 
 // 큰 숫자 + 라벨을 두께 있는 타일로 나열, 넓은 화면은 한 줄, 좁은 화면은 2열
 export const StatGroup = ({ items, className }: { items: StatItem[]; className?: string }) => (
@@ -65,7 +80,7 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
     )}
   >
     {items.map((item, index) => {
-      const style = tileOf(index, items.length);
+      const style = tileOf(index, items.length, item.surface);
       const isLong = typeof item.value === 'string' && item.value.length > 7;
 
       return (
