@@ -68,10 +68,17 @@ type AlertRowProps = {
   today: string;
   onDismiss: (keys: string[]) => void;
   disabled: boolean;
+  // 묶음 안의 줄은 바깥 묶음 면 위에 그대로 놓임
+  isInGroup?: boolean;
 };
 
-const AlertRow = ({ item, today, onDismiss, disabled }: AlertRowProps) => (
-  <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
+const AlertRow = ({ item, today, onDismiss, disabled, isInGroup = false }: AlertRowProps) => (
+  <li
+    className={cn(
+      'flex flex-wrap items-center gap-x-3 gap-y-1',
+      isInGroup ? 'py-2.5' : 'rounded-2xl bg-surface-nested px-4 py-3',
+    )}
+  >
     <span
       aria-hidden
       className={cn('size-2 shrink-0 rounded-full', item.urgent ? 'bg-danger' : 'bg-foreground/35')}
@@ -83,7 +90,7 @@ const AlertRow = ({ item, today, onDismiss, disabled }: AlertRowProps) => (
       <Link
         to={dashboardAlertPath(item.alert, today)}
         aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
-        className="inline-flex min-h-touch items-center rounded-md px-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
+        className="inline-flex min-h-9 items-center rounded-full bg-primary px-3.5 text-sm font-bold text-primary-foreground hover:opacity-85"
       >
         이동
       </Link>
@@ -126,7 +133,7 @@ export const AlertList = ({
       : shown.map((item) => ({ type: 'single' as const, item }));
 
   return (
-    <ul className="divide-y divide-line">
+    <ul className="flex flex-col gap-2">
       {entries.map((entry) => {
         if (entry.type === 'single') {
           return (
@@ -144,7 +151,7 @@ export const AlertList = ({
         const hasUrgent = entry.items.some((item) => item.urgent);
 
         return (
-          <li key={entry.kind} className="py-2.5">
+          <li key={entry.kind} className="rounded-2xl bg-surface-nested px-4 py-3">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span
                 aria-hidden
@@ -201,6 +208,7 @@ export const AlertList = ({
                     today={today}
                     onDismiss={onDismiss}
                     disabled={disabled}
+                    isInGroup
                   />
                 ))}
               </ul>

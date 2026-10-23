@@ -19,7 +19,7 @@ import { useDismissAlerts } from './useDashboard';
 // 홈에서 알림은 위에서 이 개수만큼만 표시하고 나머지는 알림 창에서 확인
 export const HOME_ALERTS = 5;
 
-const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
+const card = 'flex flex-col gap-3 rounded-3xl bg-surface-subtle p-6';
 
 const Widget = ({
   title,
@@ -34,7 +34,7 @@ const Widget = ({
 }) => (
   <section className={cn(card)} aria-labelledby={id}>
     <div className="flex items-center justify-between gap-2">
-      <h2 id={id} className="text-lg font-bold">
+      <h2 id={id} className="text-xl font-extrabold tracking-tight">
         {title}
       </h2>
       {action}
@@ -44,7 +44,10 @@ const Widget = ({
 );
 
 const TextLink = ({ to, children }: { to: string; children: ReactNode }) => (
-  <Link to={to} className="inline-flex min-h-touch items-center text-sm text-primary underline">
+  <Link
+    to={to}
+    className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
+  >
     {children}
   </Link>
 );
@@ -70,7 +73,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
     <table className="w-full min-w-[34rem] text-sm">
       <caption className="sr-only">진행 중 프로젝트</caption>
       <thead>
-        <tr className="border-b border-line text-left text-xs text-foreground/75">
+        <tr className="border-b-[1.5px] border-foreground text-left text-xs font-bold text-foreground/75">
           <th scope="col" className="py-2 pr-3 font-medium">
             프로젝트
           </th>
@@ -146,7 +149,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
                   <Link
                     to={projectWorkPath(project.id, today)}
                     aria-label={`${project.name} 오늘 기록하기`}
-                    className="inline-flex min-h-touch items-center font-medium text-danger underline"
+                    className="inline-flex min-h-touch items-center font-bold text-danger underline"
                   >
                     기록하기
                   </Link>
@@ -199,6 +202,7 @@ export const DashboardWidgets = ({
   return (
     <div className="flex flex-col gap-4">
       <StatGroup
+        className="relative -mt-12 md:-mt-16"
         items={[
           { label: '진행 중 프로젝트', value: stats.inProgress, unit: '건' },
           {
