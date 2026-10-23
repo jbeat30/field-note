@@ -121,30 +121,29 @@ export const ProjectLayout = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink className="print:hidden" to="/projects">
-        프로젝트 목록
-      </BackLink>
-
-      {/* 프로젝트 머리: 1줄 번호·이름·상태·남은 기간 + 주 버튼·더보기, 2줄 현장·고객·담당자·기간 */}
-      <header className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4 sm:p-5 print:hidden">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-1.5 text-sm text-foreground/70">
-              <span className="font-medium">{data.code}</span>
+      {/* 프로젝트 머리: 주황 평면에 돌아가기·번호·이름·상태·주 버튼, 아래 잉크 면에 현장·고객·담당자·기간 */}
+      <div className="plane pt-3 pb-20 md:pt-0 md:pb-24 print:hidden">
+        <BackLink to="/projects">프로젝트 목록</BackLink>
+        <header className="mt-1 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 text-sm font-semibold">
+              <span>{data.code}</span>
               <Badge tone={STATUS_TONE[data.status]}>{PROJECT_STATUS_LABELS[data.status]}</Badge>
               {due && <Badge tone={due.includes('지남') ? 'danger' : 'neutral'}>{due}</Badge>}
             </div>
-            <h1 className="text-xl font-bold tracking-tight break-keep">{data.name}</h1>
+            <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] break-keep md:text-[40px]">
+              {data.name}
+            </h1>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-1.5">
             {showTodayBtn && (
-              <Button size="sm" asChild>
+              <Button asChild>
                 <Link to={projectWorkPath(data.id, todayInSeoul(new Date()))}>오늘 기록</Link>
               </Button>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button type="button" size="icon-sm" variant="ghost" aria-label="더보기">
+                <Button type="button" size="icon" variant="secondary" aria-label="더보기">
                   <MoreHorizontal aria-hidden />
                 </Button>
               </DropdownMenuTrigger>
@@ -161,38 +160,38 @@ export const ProjectLayout = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-        <ul className="hidden flex-wrap gap-x-6 gap-y-2 text-sm sm:flex">
-          <Fact icon={MapPin} label="현장">
-            {data.siteName || '-'}
-            {data.siteMapUrl && (
-              <a
-                className="ml-2 text-primary underline"
-                href={data.siteMapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                지도 열기
-              </a>
-            )}
-          </Fact>
-          <Fact icon={Building2} label="고객">
-            {client ?? '-'}
-          </Fact>
-          <Fact icon={UserRound} label="담당자">
-            {manager ?? '-'}
-          </Fact>
-          <Fact icon={CalendarRange} label="예정 기간">
-            {data.plannedStart} ~ {data.plannedEnd}
-          </Fact>
-        </ul>
-      </header>
+        </header>
+      </div>
+      <ul className="relative -mt-16 hidden flex-wrap gap-x-8 gap-y-2 rounded-3xl bg-[#14110d] px-6 py-5 text-sm text-[#fbf7ee] sm:flex md:-mt-20 print:hidden">
+        <Fact icon={MapPin} label="현장">
+          {data.siteName || '-'}
+          {data.siteMapUrl && (
+            <a
+              className="ml-2 font-bold text-accent underline"
+              href={data.siteMapUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+            >
+              지도 열기
+            </a>
+          )}
+        </Fact>
+        <Fact icon={Building2} label="고객">
+          {client ?? '-'}
+        </Fact>
+        <Fact icon={UserRound} label="담당자">
+          {manager ?? '-'}
+        </Fact>
+        <Fact icon={CalendarRange} label="예정 기간">
+          {data.plannedStart} ~ {data.plannedEnd}
+        </Fact>
+      </ul>
 
-      {/* 서브 메뉴: 가로 스크롤만, 세로 스크롤바 없음, 현재 탭 자동 스크롤 */}
+      {/* 서브 메뉴: 트랙 안의 알약, 가로 스크롤만, 세로 스크롤바 없음, 현재 탭 자동 스크롤 */}
       <nav
         ref={navRef}
         aria-label="프로젝트 메뉴"
-        className="-mx-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 print:hidden"
+        className="flex gap-1 overflow-x-auto overflow-y-hidden rounded-full bg-track p-1 [scrollbar-width:none] sm:w-fit sm:max-w-full print:hidden [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab) => (
           <NavLink
@@ -201,13 +200,13 @@ export const ProjectLayout = () => {
             end={tab.end}
             className={({ isActive }) =>
               cn(
-                '-mb-px flex min-h-touch items-center border-b-2 px-4 text-sm font-medium whitespace-nowrap transition-colors',
+                'flex min-h-10 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors',
                 isActive ||
                   tab.active ||
                   (tab.end && pathname.startsWith(`${tab.to}/work/`)) ||
                   (tab.label === '마감·보증' && pathname.startsWith(`${base}/daily-report`))
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-foreground/70 hover:text-foreground',
+                  ? 'bg-primary font-bold text-primary-foreground'
+                  : 'text-foreground/70 hover:text-foreground',
               )
             }
           >
@@ -220,7 +219,7 @@ export const ProjectLayout = () => {
         <div className="flex items-center justify-between gap-3 print:hidden">
           <nav
             aria-label="마감·보증 메뉴"
-            className="flex gap-1 self-start rounded-xl bg-muted p-1"
+            className="flex gap-1 self-start rounded-full bg-track p-1"
           >
             {closeoutTabs.map((tab) => (
               <NavLink
@@ -228,8 +227,10 @@ export const ProjectLayout = () => {
                 to={tab.to}
                 className={({ isActive }) =>
                   cn(
-                    'flex min-h-touch items-center rounded-lg px-4 text-sm font-medium whitespace-nowrap',
-                    isActive ? 'bg-surface text-foreground shadow-xs' : 'text-foreground/70',
+                    'flex min-h-10 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap',
+                    isActive
+                      ? 'bg-primary font-bold text-primary-foreground'
+                      : 'text-foreground/70',
                   )
                 }
               >
@@ -265,8 +266,8 @@ const Fact = ({
   children: React.ReactNode;
 }) => (
   <li className="flex items-center gap-1.5">
-    <Icon aria-hidden className="size-4 shrink-0 text-foreground/70" />
-    <span className="text-foreground/70">{label}</span>
-    <span className="font-medium">{children}</span>
+    <Icon aria-hidden className="size-4 shrink-0 text-accent" />
+    <span className="text-[#fbf7ee]/65">{label}</span>
+    <span className="font-bold">{children}</span>
   </li>
 );

@@ -32,7 +32,7 @@ export const AuthLayout = () => (
     <div aria-hidden className="absolute inset-x-0 bottom-0 hidden h-[34%] bg-[#14110d] md:block" />
     <div className="relative mx-auto flex min-h-dvh w-full max-w-[1680px] flex-col gap-8 px-4 py-8 md:px-14 md:py-12 lg:grid lg:grid-cols-[minmax(0,1fr)_480px] lg:gap-20 lg:px-[120px]">
       <section className="flex flex-col gap-8 lg:justify-between lg:py-4">
-        <BrandLogo />
+        <BrandLogo size="lg" />
         <h2 className="hidden text-[clamp(52px,5.4vw,104px)] leading-[1.04] font-extrabold tracking-[-0.045em] break-keep md:block">
           현장 팀의 하루를
           <br />한 곳에서 관리하세요

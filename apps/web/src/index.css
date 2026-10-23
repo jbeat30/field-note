@@ -22,6 +22,7 @@
   --color-highlight: var(--highlight);
   --color-field: var(--field);
   --color-sidebar: var(--sidebar);
+  --color-track: var(--track);
   --color-surface: var(--surface);
   --color-surface-subtle: var(--surface-subtle);
   --color-canvas: var(--canvas);
@@ -94,6 +95,7 @@
   --surface-nested: #f3ecdb;
   --field: #efe8d8;
   --sidebar: #14110d;
+  --track: #e6dec9;
   --line: #e9e1cc;
   --control-border: #d8cfb7;
   --control-border-hover: #b9ad8f;
@@ -131,6 +133,7 @@
     --surface-nested: #241f18;
     --field: #241f18;
     --sidebar: #000000;
+    --track: #2d271e;
     --line: #2d271e;
     --control-border: #3d362a;
     --control-border-hover: #5a5040;
