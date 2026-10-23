@@ -5,9 +5,13 @@ import { cn } from '../../lib/cn';
 
 export const Tabs = TabsPrimitive.Root;
 
+// 트랙 안의 알약: 선택한 탭은 잉크 채움
 export const TabsList = ({ className, ...props }: ComponentProps<typeof TabsPrimitive.List>) => (
   <TabsPrimitive.List
-    className={cn('flex gap-1 overflow-x-auto border-b border-line', className)}
+    className={cn(
+      'flex w-fit max-w-full gap-1 overflow-x-auto rounded-full bg-field p-1',
+      className,
+    )}
     {...props}
   />
 );
@@ -18,7 +22,7 @@ export const TabsTrigger = ({
 }: ComponentProps<typeof TabsPrimitive.Trigger>) => (
   <TabsPrimitive.Trigger
     className={cn(
-      '-mb-px min-h-11 border-b-2 border-transparent px-3.5 text-[15px] font-medium whitespace-nowrap text-foreground/70 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-primary data-[state=active]:border-foreground data-[state=active]:font-semibold data-[state=active]:text-foreground',
+      'min-h-10 rounded-full px-4 text-[15px] font-semibold whitespace-nowrap text-foreground/70 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground data-[state=active]:bg-primary data-[state=active]:font-bold data-[state=active]:text-primary-foreground',
       className,
     )}
     {...props}
@@ -29,5 +33,5 @@ export const TabsContent = ({
   className,
   ...props
 }: ComponentProps<typeof TabsPrimitive.Content>) => (
-  <TabsPrimitive.Content className={cn('pt-4', className)} {...props} />
+  <TabsPrimitive.Content className={cn('pt-5', className)} {...props} />
 );
