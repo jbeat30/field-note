@@ -72,11 +72,9 @@ export const HomePage = () => {
           </>
         }
       />
-      {dashboard.isError && (
-        <Alert className="relative -mt-12 md:-mt-16">대시보드를 불러오지 못했습니다</Alert>
-      )}
+      {dashboard.isError && <Alert>대시보드를 불러오지 못했습니다</Alert>}
       {dashboard.isPending && (
-        <div className="relative -mt-12 flex flex-col gap-3 md:-mt-16">
+        <div className="flex flex-col gap-3">
           <p className="text-sm text-foreground/70">대시보드를 불러오는 중</p>
           <Skeleton className="h-32 w-full rounded-3xl" />
           <Skeleton className="h-24 w-full rounded-3xl" />
