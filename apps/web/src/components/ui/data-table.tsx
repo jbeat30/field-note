@@ -111,7 +111,7 @@ export const DataTable = <TData extends object>({
 
   return (
     <section
-      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+      className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
       aria-label={ariaLabel}
       aria-busy={isFetching}
     >
@@ -193,7 +193,7 @@ export const DataTable = <TData extends object>({
                   key={row.id}
                   className={cn(
                     'transition-colors',
-                    onRowClick && 'cursor-pointer hover:bg-muted/60',
+                    onRowClick && 'cursor-pointer hover:bg-surface-nested',
                   )}
                   onClick={onRowClick ? () => onRowClick(row.original) : undefined}
                 >

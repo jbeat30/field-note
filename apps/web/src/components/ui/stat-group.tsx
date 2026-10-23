@@ -14,44 +14,65 @@ export type StatItem = {
 };
 
 const TONE: Record<NonNullable<StatItem['tone']>, string> = {
-  default: 'text-foreground',
+  default: '',
   warning: 'text-warning',
   danger: 'text-danger',
   success: 'text-success',
 };
 
-// 큰 숫자 + 라벨 여러 개를 한 상자에 칸만 나눠 보여 줌 (카드 여러 개를 늘어놓지 않음)
-// 넓은 화면은 한 줄, 좁은 화면은 2열
+// 잉크 타일은 바탕이 어두워 상태색을 밝은 쪽으로 씀
+const TONE_ON_INK: Record<NonNullable<StatItem['tone']>, string> = {
+  default: '',
+  warning: 'text-[#f3d070]',
+  danger: 'text-[#ff9d90]',
+  success: 'text-[#7fd6a8]',
+};
+
+// 칸 면 순서: 라임, 크림, 크림, 잉크(주황 숫자), 이후 반복
+const TILES = [
+  { tile: 'tile-lime bg-highlight text-[#14110d]', sub: 'text-[#14110d]/70', num: '' },
+  { tile: 'tile-cream bg-surface-subtle text-foreground', sub: 'text-foreground/65', num: '' },
+  { tile: 'tile-cream bg-surface-subtle text-foreground', sub: 'text-foreground/65', num: '' },
+  {
+    tile: 'tile-ink bg-[#14110d] text-[#fbf7ee]',
+    sub: 'text-[#fbf7ee]/70',
+    num: 'text-accent',
+    tones: TONE_ON_INK,
+  },
+] as const;
+
+// 큰 숫자 + 라벨을 두께 있는 타일로 나열, 넓은 화면은 한 줄, 좁은 화면은 2열
 export const StatGroup = ({ items, className }: { items: StatItem[]; className?: string }) => (
   <dl
     className={cn(
-      'grid grid-cols-2 overflow-hidden rounded-xl border border-line bg-surface-subtle sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none',
+      'grid grid-cols-2 gap-3 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none',
       className,
     )}
   >
-    {items.map((item, index) => (
-      <div
-        key={item.label}
-        className={cn(
-          'flex min-w-0 flex-col gap-1 px-4 py-3.5',
-          // 칸 사이 구분선: 좁은 화면은 2열 격자, 넓은 화면은 세로선만
-          index % 2 === 1 && 'border-l border-line',
-          index >= 2 && 'border-t border-line sm:border-t-0',
-          index > 0 && 'sm:border-l',
-        )}
-      >
-        <dt className="text-[13px] text-foreground/65">{item.label}</dt>
-        <dd
-          className={cn(
-            'flex items-baseline gap-1 text-xl font-semibold tabular-nums',
-            TONE[item.tone ?? 'default'],
-          )}
+    {items.map((item, index) => {
+      const style = TILES[index % TILES.length] ?? TILES[0];
+
+      return (
+        <div
+          key={item.label}
+          className={cn('flex min-w-0 flex-col gap-1 rounded-3xl px-5 py-4', style.tile)}
         >
-          {item.value}
-          {item.unit && <span className="text-sm font-medium text-foreground/65">{item.unit}</span>}
-        </dd>
-        {item.hint && <dd className="text-xs text-foreground/65">{item.hint}</dd>}
-      </div>
-    ))}
+          <dt className={cn('text-[13px] font-bold', style.sub)}>{item.label}</dt>
+          <dd
+            className={cn(
+              'flex items-baseline gap-1 font-emphasis text-[34px] font-semibold tracking-tight tabular-nums md:text-[44px]',
+              style.num,
+              ('tones' in style ? style.tones : TONE)[item.tone ?? 'default'],
+            )}
+          >
+            {item.value}
+            {item.unit && (
+              <span className={cn('font-sans text-sm font-bold', style.sub)}>{item.unit}</span>
+            )}
+          </dd>
+          {item.hint && <dd className={cn('text-xs font-medium', style.sub)}>{item.hint}</dd>}
+        </div>
+      );
+    })}
   </dl>
 );
