@@ -20,12 +20,25 @@ const TONE: Record<NonNullable<StatItem['tone']>, string> = {
   success: 'text-success',
 };
 
+// 잉크 타일은 바탕이 어두워 상태색을 밝은 쪽으로 씀
+const TONE_ON_INK: Record<NonNullable<StatItem['tone']>, string> = {
+  default: '',
+  warning: 'text-[#f3d070]',
+  danger: 'text-[#ff9d90]',
+  success: 'text-[#7fd6a8]',
+};
+
 // 칸 면 순서: 라임, 크림, 크림, 잉크(주황 숫자), 이후 반복
 const TILES = [
   { tile: 'tile-lime bg-highlight text-[#14110d]', sub: 'text-[#14110d]/70', num: '' },
   { tile: 'tile-cream bg-surface-subtle text-foreground', sub: 'text-foreground/65', num: '' },
   { tile: 'tile-cream bg-surface-subtle text-foreground', sub: 'text-foreground/65', num: '' },
-  { tile: 'tile-ink bg-[#14110d] text-[#fbf7ee]', sub: 'text-[#fbf7ee]/70', num: 'text-accent' },
+  {
+    tile: 'tile-ink bg-[#14110d] text-[#fbf7ee]',
+    sub: 'text-[#fbf7ee]/70',
+    num: 'text-accent',
+    tones: TONE_ON_INK,
+  },
 ] as const;
 
 // 큰 숫자 + 라벨을 두께 있는 타일로 나열, 넓은 화면은 한 줄, 좁은 화면은 2열
@@ -49,7 +62,7 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
             className={cn(
               'flex items-baseline gap-1 font-emphasis text-[34px] font-semibold tracking-tight tabular-nums md:text-[44px]',
               style.num,
-              TONE[item.tone ?? 'default'],
+              ('tones' in style ? style.tones : TONE)[item.tone ?? 'default'],
             )}
           >
             {item.value}

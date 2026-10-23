@@ -291,7 +291,7 @@ const EmployeeRow = ({
                         className={cn(
                           // 제목 칸까지 포함해 막대의 그날 세로 전체가 클릭 영역
                           'pointer-events-auto flex items-end justify-center rounded pb-1.5 text-[11px] tabular-nums text-foreground/80 hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-primary',
-                          day.conflict && 'font-bold text-danger ring-2 ring-danger ring-inset',
+                          day.conflict && 'font-bold text-foreground ring-2 ring-danger ring-inset',
                         )}
                       >
                         {hours(day.minutes)}h
