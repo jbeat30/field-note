@@ -15,7 +15,7 @@ export const EmptyState = ({ title, description, action, icon }: EmptyStateProps
     <span className="text-foreground/35 [&_svg]:size-7">{icon ?? <Inbox aria-hidden />}</span>
     <div className="flex flex-col gap-1">
       <p className="text-[15px] font-semibold">{title}</p>
-      {description && <p className="text-sm text-foreground/65">{description}</p>}
+      {description && <p className="text-sm text-sub">{description}</p>}
     </div>
     {action && <div className="mt-1">{action}</div>}
   </div>

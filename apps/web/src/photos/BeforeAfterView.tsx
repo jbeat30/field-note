@@ -21,7 +21,7 @@ const Side = ({
   <div className="flex min-w-0 flex-1 flex-col gap-1.5">
     <h4 className="text-sm font-medium">{title}</h4>
     {photos.length === 0 ? (
-      <p className="flex aspect-square items-center justify-center rounded-md border border-dashed border-border p-2 text-center text-xs text-foreground/70">
+      <p className="flex aspect-square items-center justify-center rounded-md border border-dashed border-border p-2 text-center text-xs text-sub">
         아직 사진이 없습니다
       </p>
     ) : (
@@ -59,7 +59,7 @@ const Side = ({
 export const BeforeAfterView = ({ groups, onSelect }: BeforeAfterViewProps) => {
   if (groups.length === 0) {
     return (
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         작업 전·작업 후 사진이 아직 없습니다. 사진을 올릴 때 구분을 고르면 구역별로 나란히 볼 수
         있습니다
       </p>

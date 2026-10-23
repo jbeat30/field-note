@@ -45,7 +45,7 @@ export const Section = ({
           >
             {title}
           </Heading>
-          {description && <p className="text-sm text-foreground/65">{description}</p>}
+          {description && <p className="text-sm text-sub">{description}</p>}
         </div>
         {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
       </header>

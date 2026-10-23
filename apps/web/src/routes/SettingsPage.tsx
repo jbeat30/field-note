@@ -92,9 +92,9 @@ export const SettingsPage = () => {
                 계정
               </h2>
               <dl className="grid grid-cols-[6rem_1fr] gap-y-1 text-sm">
-                <dt className="text-foreground/70">회사</dt>
+                <dt className="text-sub">회사</dt>
                 <dd>{me.data?.companyName}</dd>
-                <dt className="text-foreground/70">이름</dt>
+                <dt className="text-sub">이름</dt>
                 <dd>{me.data?.displayName}</dd>
               </dl>
             </section>
@@ -176,7 +176,7 @@ export const SettingsPage = () => {
               <h2 id="lists-heading" className="text-lg font-bold">
                 목록 관리
               </h2>
-              <p className="text-sm text-foreground/70">
+              <p className="text-sm text-sub">
                 직종, 작업 구분, 공종, 직원 구분을 회사에 맞게 바꿉니다
               </p>
               <Button variant="secondary" asChild>
@@ -190,7 +190,7 @@ export const SettingsPage = () => {
               <h2 id="alerts-heading" className="text-lg font-bold">
                 알림
               </h2>
-              <p className="text-sm text-foreground/70">
+              <p className="text-sm text-sub">
                 대시보드에 보여 줄 알림(작업 내역 미입력, 공수 소진, 일정 지연 등)을 종류별로 켜고
                 끕니다
               </p>
@@ -205,7 +205,7 @@ export const SettingsPage = () => {
               <h2 id="records-heading" className="text-lg font-bold">
                 활동 기록
               </h2>
-              <p className="text-sm text-foreground/70">
+              <p className="text-sm text-sub">
                 저장·수정·삭제한 일, 내보내기, 월 공수 확정·재오픈, 민감 자료·직원 서류 열람 기록을
                 봅니다 (조회만 가능하고 수정·삭제할 수 없습니다)
               </p>

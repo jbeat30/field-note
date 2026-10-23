@@ -430,7 +430,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
                 onAdd={addClient}
               />
               {clientId === '' && clients.length === 0 && (
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-sub">
                   등록된 고객이 없습니다. 위에서 바로 추가할 수 있습니다
                 </p>
               )}

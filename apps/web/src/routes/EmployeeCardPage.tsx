@@ -202,7 +202,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
             </h2>
             {employee.status === 'LEFT' ? (
               <>
-                <p className="text-sm text-foreground/70">
+                <p className="text-sm text-sub">
                   퇴사한 직원은 새 투입·작업 내역 입력에서 빠지고, 과거 기록은 그대로 남습니다.
                   재입사하면 같은 카드를 다시 재직으로 바꿉니다
                 </p>
@@ -354,7 +354,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
             >
               <Textarea {...register('memo')} />
             </FormField>
-            <p className="text-sm text-foreground/70 md:col-span-2">
+            <p className="text-sm text-sub md:col-span-2">
               주민등록번호·계좌번호는 저장하지 않습니다. 급여는 단가만 기록합니다
             </p>
             <Button

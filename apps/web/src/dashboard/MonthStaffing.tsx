@@ -24,32 +24,32 @@ export const MonthStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
   return (
     <section
       aria-labelledby="month-heading"
-      className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-6"
+      className="flex flex-col gap-3 rounded-[34px] bg-surface-subtle px-[30px] py-[26px]"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="month-heading" className="text-xl font-extrabold tracking-tight">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="month-heading" className="text-[21px] font-bold tracking-[-0.025em]">
           이번 달 인력
         </h2>
         <Link
           to={`/staffing?view=month&from=${month.from}`}
-          className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
+          className="inline-flex min-h-touch items-center text-sm font-semibold underline underline-offset-[3px]"
         >
           인력 배치 보기
         </Link>
       </div>
-      <p className="text-sm">
-        <span className="font-semibold">일한 사람 {month.workingCount}명</span>
+      <p className="text-[15px] text-foreground/90">
+        <span className="font-bold">일한 사람 {month.workingCount}명</span>
         <span className="mx-2 text-foreground/45">·</span>
         <span>일한 기록이 없는 사람 {month.idleCount}명</span>
         <span className="mx-2 text-foreground/45">·</span>
-        <span className={month.conflicts.length > 0 ? 'font-semibold text-danger' : undefined}>
+        <span className={month.conflicts.length > 0 ? 'font-bold text-danger' : undefined}>
           {month.conflicts.length === 0
             ? '같은 날 겹친 사람 없음'
             : `겹침 ${month.conflicts.map((item) => `${item.name} ${item.dateCount}일`).join(', ')}`}
         </span>
       </p>
       {calendar.isError && <Alert role="alert">이번 달 인력을 불러오지 못했습니다</Alert>}
-      {calendar.isPending && <p className="text-sm text-foreground/75">불러오는 중</p>}
+      {calendar.isPending && <p className="text-sm text-sub">불러오는 중</p>}
       {calendar.data && (
         <StaffingMonthCalendar weeks={weeks} today={today} projectColors={projectColors} />
       )}

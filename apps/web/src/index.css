@@ -23,6 +23,7 @@
   --color-field: var(--field);
   --color-sidebar: var(--sidebar);
   --color-track: var(--track);
+  --color-sub: var(--sub);
   --color-surface: var(--surface);
   --color-surface-subtle: var(--surface-subtle);
   --color-canvas: var(--canvas);
@@ -96,6 +97,8 @@
   --field: #efe8d8;
   --sidebar: #14110d;
   --track: #e6dec9;
+  /* 보조 글자: 투명도가 아니라 고정 색 (카드 위 4.9:1) */
+  --sub: #6b6152;
   --line: #e9e1cc;
   --control-border: #d8cfb7;
   --control-border-hover: #b9ad8f;
@@ -134,6 +137,7 @@
     --field: #241f18;
     --sidebar: #000000;
     --track: #2d271e;
+    --sub: #a89c84;
     --line: #2d271e;
     --control-border: #3d362a;
     --control-border-hover: #5a5040;
@@ -224,26 +228,26 @@ body {
 .tile-cream {
   box-shadow:
     0 0.75px 0 1.25px #cbbf9f,
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 .tile-lime {
   box-shadow:
     0 0.75px 0 1.25px #9db534,
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 .tile-ink {
   box-shadow:
     0 0.75px 0 1.25px #000,
     inset 0 1px 0 rgb(255 255 255 / 0.14),
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 .tile-accent {
   box-shadow:
     0 0.75px 0 1.25px #a83f0c,
-    0 6px 10px -6px rgb(20 17 13 / 0.35);
+    0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 /* 주황 면 위 영역: 안쪽 색을 밝은 모드 값으로 고정해 어두운 모드에서도 글자와 버튼이 읽힘 */
@@ -261,6 +265,7 @@ body {
   --control-border: #d8cfb7;
   --danger: #b3261e;
   --track: #fbf7ee;
+  --sub: #2a2118;
   color: var(--foreground);
 }
 

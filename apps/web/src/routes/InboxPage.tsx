@@ -23,7 +23,7 @@ export const InboxPage = () => {
   return (
     <div className="flex flex-col gap-4">
       <PageHeader title="메모함" description="프로젝트에 연결하지 않은 메모를 모아 둡니다" />
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         프로젝트를 정하지 않고 먼저 적어 두세요. 나중에 프로젝트에 연결해 정리합니다
       </p>
       <MemoForm
@@ -35,7 +35,7 @@ export const InboxPage = () => {
       {memos.isPending && <p className="text-sm">메모를 불러오는 중</p>}
       {memos.isError && <Alert>메모를 불러오지 못했습니다</Alert>}
       {memos.isSuccess && items.length === 0 && (
-        <p className="text-sm text-foreground/70">정리할 메모가 없습니다</p>
+        <p className="text-sm text-sub">정리할 메모가 없습니다</p>
       )}
       {items.length > 0 && (
         <MemoList

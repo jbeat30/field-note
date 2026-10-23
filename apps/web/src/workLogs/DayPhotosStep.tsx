@@ -93,9 +93,9 @@ export const DayPhotosStep = ({ projectId, date }: DayPhotosStepProps) => {
         onClearDone={queue.clearDone}
       />
       {photos.isPending ? (
-        <p className="text-sm text-foreground/70">불러오는 중</p>
+        <p className="text-sm text-sub">불러오는 중</p>
       ) : items.length === 0 ? (
-        <p className="text-sm text-foreground/70">이 날 올린 사진이 없습니다</p>
+        <p className="text-sm text-sub">이 날 올린 사진이 없습니다</p>
       ) : (
         <PhotoGrid photos={items} onSelect={(photo) => setSelectedId(photo.id)} />
       )}

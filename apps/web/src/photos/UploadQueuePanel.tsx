@@ -64,7 +64,7 @@ export const UploadQueuePanel = ({
           <li key={item.id} className="flex flex-wrap items-center gap-2 py-2">
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-medium">{item.name}</span>
-              <span className="text-xs text-foreground/70">
+              <span className="text-xs text-sub">
                 {formatSize(item.size)} · {statusLabel(item)}
                 {item.status !== 'DONE' && item.attempts > 0 && item.status !== 'FAILED'
                   ? ` · ${item.attempts}번째 재시도`

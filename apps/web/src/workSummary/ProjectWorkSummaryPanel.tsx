@@ -79,19 +79,19 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
 
       <dl className="grid grid-cols-2 gap-2 rounded-xl border border-border bg-surface-subtle p-4 text-sm">
         <div>
-          <dt className="text-foreground/70">총 공수</dt>
+          <dt className="text-sub">총 공수</dt>
           <dd className="font-bold">{formatWork(data.totalMinutes, config)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/70">맨먼스</dt>
+          <dt className="text-sub">맨먼스</dt>
           <dd className="font-bold">{formatManMonths(data.totalMinutes, config)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/70">작업한 날</dt>
+          <dt className="text-sub">작업한 날</dt>
           <dd className="font-bold">{data.workedDays}일</dd>
         </div>
         <div>
-          <dt className="text-foreground/70">소진율</dt>
+          <dt className="text-sub">소진율</dt>
           <dd className="font-bold">
             {filtered
               ? '기간 선택 중에는 표시하지 않음'
@@ -100,7 +100,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
         </div>
       </dl>
       {data.draftLogCount > 0 && (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           임시 저장 작업 내역 {data.draftLogCount}건은 집계에 포함되지 않았습니다
         </p>
       )}
@@ -121,7 +121,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
                     <span className="font-medium">{nameOf.get(row.employeeId) ?? '직원'}</span>
                     <span>{formatWork(row.totalMinutes, config)}</span>
                   </span>
-                  <span className="text-foreground/70">
+                  <span className="text-sub">
                     {row.workedDays}일 · {formatManMonths(row.totalMinutes, config)}
                     {!filtered && row.plannedMinutes !== null
                       ? ` · 소진율 ${formatBurnRate(row.totalMinutes, row.plannedMinutes, config)}`

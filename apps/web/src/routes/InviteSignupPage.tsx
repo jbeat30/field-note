@@ -61,9 +61,7 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
           }
         />
         <span>
-          <span className="text-sm text-foreground/70">
-            {document.isRequired ? '[필수] ' : '[선택] '}
-          </span>
+          <span className="text-sm text-sub">{document.isRequired ? '[필수] ' : '[선택] '}</span>
           {document.title}
         </span>
       </label>
@@ -106,7 +104,7 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
           onCheckedChange={(checked) => setAgeConfirmed(checked === true)}
         />
         <span>
-          <span className="text-sm text-foreground/70">[필수] </span>만 14세 이상입니다
+          <span className="text-sm text-sub">[필수] </span>만 14세 이상입니다
         </span>
       </label>
       <Button
@@ -235,7 +233,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
             />
           ))}
           {socialStart.isError && <Alert>{socialStart.error.message}</Alert>}
-          <p className="text-center text-sm text-foreground/70">
+          <p className="text-center text-sm text-sub">
             또는 아이디로 가입 (소셜로 가입하면 이메일 등록과 아이디·비밀번호 설정은 가입 뒤에 할 수
             있습니다)
           </p>

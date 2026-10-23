@@ -12,7 +12,7 @@ export const ProjectNewPage = () => (
       description="프로젝트명, 현장 이름, 고객, 담당자, 계약일, 시작·종료 예정일만 입력하면 등록할 수 있습니다"
     />
     <Card className="flex flex-col gap-4 p-6 md:p-8">
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         프로젝트 코드는 저장할 때 자동으로 붙고 나중에 바꿀 수 없습니다. 상태는 &apos;예정&apos;으로
         시작합니다
       </p>

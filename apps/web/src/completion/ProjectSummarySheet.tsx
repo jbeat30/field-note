@@ -39,39 +39,37 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
   return (
     <article className="flex flex-col gap-4 text-foreground" aria-label="프로젝트 요약">
       <header className="flex flex-col gap-1 border-b-2 border-foreground pb-2">
-        <p className="text-sm text-foreground/70">{summary.companyName}</p>
+        <p className="text-sm text-sub">{summary.companyName}</p>
         <h1 className="text-2xl font-bold">프로젝트 요약</h1>
-        <p className="text-sm text-foreground/70">
-          {summary.generatedOn} 기준 기록으로 만든 요약입니다
-        </p>
+        <p className="text-sm text-sub">{summary.generatedOn} 기준 기록으로 만든 요약입니다</p>
       </header>
 
       <Section title="기본정보">
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
-          <dt className="text-foreground/70">프로젝트</dt>
+          <dt className="text-sub">프로젝트</dt>
           <dd>
             {project.code} {project.name} ({PROJECT_STATUS_LABELS[project.status]})
           </dd>
-          <dt className="text-foreground/70">현장</dt>
+          <dt className="text-sub">현장</dt>
           <dd>
             {project.siteName}
             {project.siteAddress ? ` (${project.siteAddress})` : ''}
           </dd>
-          <dt className="text-foreground/70">고객</dt>
+          <dt className="text-sub">고객</dt>
           <dd>{project.clientName}</dd>
-          <dt className="text-foreground/70">담당자</dt>
+          <dt className="text-sub">담당자</dt>
           <dd>{project.managerName}</dd>
-          <dt className="text-foreground/70">계약일</dt>
+          <dt className="text-sub">계약일</dt>
           <dd>{formatDay(project.contractDate)}</dd>
-          <dt className="text-foreground/70">예정 기간</dt>
+          <dt className="text-sub">예정 기간</dt>
           <dd>
             {project.plannedStart} ~ {project.plannedEnd}
           </dd>
-          <dt className="text-foreground/70">실제 기간</dt>
+          <dt className="text-sub">실제 기간</dt>
           <dd>
             {project.actualStart ?? '시작 전'} ~ {project.actualEnd ?? '진행 중'}
           </dd>
-          <dt className="text-foreground/70">진행률</dt>
+          <dt className="text-sub">진행률</dt>
           <dd>{summary.progressPercent === null ? '기록 없음' : `${summary.progressPercent}%`}</dd>
         </dl>
       </Section>
@@ -88,7 +86,7 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
             : ' · 계획 공수 없음'}
         </p>
         {work.byEmployee.length === 0 ? (
-          <p className="text-sm text-foreground/70">저장된 공수가 없습니다</p>
+          <p className="text-sm text-sub">저장된 공수가 없습니다</p>
         ) : (
           <div className="grid gap-3 sm:grid-cols-2">
             <table className="w-full border-collapse">
@@ -133,7 +131,7 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
 
       <Section title="자재 요약">
         {usedMaterials.length === 0 ? (
-          <p className="text-sm text-foreground/70">사용한 자재가 없습니다</p>
+          <p className="text-sm text-sub">사용한 자재가 없습니다</p>
         ) : (
           <table className="w-full border-collapse">
             <thead>
@@ -160,7 +158,7 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
 
       <Section title="변경·추가 작업">
         {changeWorks.items.length === 0 ? (
-          <p className="text-sm text-foreground/70">기록이 없습니다</p>
+          <p className="text-sm text-sub">기록이 없습니다</p>
         ) : (
           <ul className="flex flex-col gap-1 text-sm">
             {changeWorks.items.map((item) => (
@@ -186,7 +184,7 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
 
       <Section title="사진">
         {photos.items.length === 0 ? (
-          <p className="text-sm text-foreground/70">사진이 없습니다</p>
+          <p className="text-sm text-sub">사진이 없습니다</p>
         ) : (
           <>
             <p className="text-sm">
@@ -217,12 +215,12 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
       </Section>
 
       <Section title="작업자료">
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           안전·검사, 계약·공문 분류 중 요약에 넣기로 고른 문서입니다 (고르지 않았으면 해당 분류의
           민감하지 않은 문서 전체)
         </p>
         {documents.items.length === 0 ? (
-          <p className="text-sm text-foreground/70">공개할 자료가 없습니다</p>
+          <p className="text-sm text-sub">공개할 자료가 없습니다</p>
         ) : (
           <ul className="flex flex-col gap-0.5 text-sm">
             {documents.items.map((item) => (
@@ -234,7 +232,7 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
           </ul>
         )}
         {documents.sensitiveExcluded > 0 && (
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             민감 자료 {documents.sensitiveExcluded}건은 요약에 싣지 않았습니다
           </p>
         )}

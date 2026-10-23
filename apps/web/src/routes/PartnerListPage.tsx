@@ -42,7 +42,7 @@ const columns = helper.columns([
     header: '구분',
     sortFn: 'text',
     sortDescFirst: false,
-    cell: ({ getValue }) => <span className="text-foreground/70">{getValue()}</span>,
+    cell: ({ getValue }) => <span className="text-sub">{getValue()}</span>,
   }),
   helper.accessor((row) => row.contactName ?? undefined, {
     id: 'contactName',

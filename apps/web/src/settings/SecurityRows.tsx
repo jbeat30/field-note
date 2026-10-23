@@ -25,7 +25,7 @@ export const SecurityRows = ({ email }: { email?: string | null }) => {
         <li className="flex min-h-touch items-center justify-between gap-3 py-2">
           <div className="min-w-0">
             <p className="font-medium">{hasPassword ? '비밀번호' : '아이디·비밀번호 로그인'}</p>
-            <p className="text-sm text-foreground/70">
+            <p className="text-sm text-sub">
               {hasPassword
                 ? '바꾸면 다른 기기는 로그아웃됩니다'
                 : '설정하지 않음 · 설정하면 소셜 계정 없이도 로그인할 수 있습니다'}
@@ -43,7 +43,7 @@ export const SecurityRows = ({ email }: { email?: string | null }) => {
         <li className="flex min-h-touch items-center justify-between gap-3 py-2">
           <div className="min-w-0">
             <p className="font-medium">이메일</p>
-            <p className="truncate text-sm text-foreground/70">{email ?? '-'}</p>
+            <p className="truncate text-sm text-sub">{email ?? '-'}</p>
           </div>
           <Button
             variant="secondary"

@@ -72,7 +72,7 @@ const columns = helper.columns([
   helper.accessor('code', {
     id: 'code',
     header: '번호',
-    meta: { className: 'hidden whitespace-nowrap tabular-nums text-foreground/70 md:table-cell' },
+    meta: { className: 'hidden whitespace-nowrap tabular-nums text-sub md:table-cell' },
   }),
   helper.accessor('name', {
     id: 'name',
@@ -81,9 +81,7 @@ const columns = helper.columns([
     cell: ({ row }) => (
       <>
         {/* 좁은 화면은 번호·현장명 열이 없어 이름 위아래에 보임 */}
-        <span className="block text-xs tabular-nums text-foreground/70 md:hidden">
-          {row.original.code}
-        </span>
+        <span className="block text-xs tabular-nums text-sub md:hidden">{row.original.code}</span>
         <Link
           className="font-semibold hover:text-primary hover:underline"
           to={`/projects/${row.original.id}`}
@@ -92,9 +90,7 @@ const columns = helper.columns([
           {row.original.name}
         </Link>
         {row.original.siteName && (
-          <span className="block text-xs text-foreground/70 md:hidden">
-            {row.original.siteName}
-          </span>
+          <span className="block text-xs text-sub md:hidden">{row.original.siteName}</span>
         )}
       </>
     ),

@@ -272,7 +272,7 @@ const AfterServiceLinks = ({
       <h3 className="font-medium">연결한 사후 작업</h3>
       {error && <Alert>{error}</Alert>}
       {detail.links.length === 0 ? (
-        <p className="text-sm text-foreground/70">연결한 사후 작업이 없습니다</p>
+        <p className="text-sm text-sub">연결한 사후 작업이 없습니다</p>
       ) : (
         <ul className="flex flex-col gap-1 text-sm">
           {detail.links.map((item) => {
@@ -305,14 +305,14 @@ const AfterServiceLinks = ({
       )}
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-foreground/70">연결한 작업 내역의 공수</dt>
+          <dt className="text-sub">연결한 작업 내역의 공수</dt>
           <dd className="font-bold">
             {settings.data ? formatWork(detail.usage.minutes, settings.data) : '-'} (
             {detail.usage.workLogCount}건)
           </dd>
         </div>
         <div>
-          <dt className="text-foreground/70">사용한 자재</dt>
+          <dt className="text-sub">사용한 자재</dt>
           <dd className="font-bold">
             {detail.usage.materials.length === 0
               ? '없음'
@@ -363,7 +363,7 @@ const AfterServiceLinks = ({
           </Button>
         </div>
       )}
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         보수 작업은 작업 내역·자재 기록에서 &quot;사후 작업&quot;으로 표시한 뒤 여기서 연결합니다
       </p>
     </div>
@@ -387,7 +387,7 @@ const Body = ({
     <div className="flex flex-col gap-3 border-t border-border pt-3">
       {message && <p role="status">{message}</p>}
       <p className="whitespace-pre-wrap">{detail.content}</p>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         접수 {formatDay(detail.receivedOn)} · {detail.requester}
         {detail.location ? ` · ${detail.location}` : ''}
         {detail.resolvedOn ? ` · 완료 ${formatDay(detail.resolvedOn)}` : ''}
@@ -453,7 +453,7 @@ const Body = ({
       <div className="flex flex-col gap-1">
         <h3 className="font-medium">상태 이력</h3>
         {detail.history.length === 0 ? (
-          <p className="text-sm text-foreground/70">상태를 바꾼 적이 없습니다</p>
+          <p className="text-sm text-sub">상태를 바꾼 적이 없습니다</p>
         ) : (
           <ul className="flex flex-col gap-1 text-sm">
             {detail.history.map((item) => (
@@ -490,13 +490,13 @@ export const RepairItem = ({
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-semibold">
           {REPAIR_STATUS_LABELS[repair.status]}
         </span>
-        {repair.location && <span className="text-sm text-foreground/70">{repair.location}</span>}
+        {repair.location && <span className="text-sm text-sub">{repair.location}</span>}
         {repair.linkCount > 0 && (
-          <span className="text-sm text-foreground/70">사후 작업 {repair.linkCount}건</span>
+          <span className="text-sm text-sub">사후 작업 {repair.linkCount}건</span>
         )}
       </div>
       <p className="line-clamp-2">{repair.content}</p>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         {formatDay(repair.receivedOn)} · {repair.requester}
       </p>
       <Button

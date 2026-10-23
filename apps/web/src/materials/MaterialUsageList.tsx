@@ -41,7 +41,7 @@ export const MaterialUsageList = ({
       <div className="flex flex-col gap-5">
         {dates.map((date) => (
           <section key={date} aria-label={`${formatDay(date)} 자재`} className="flex flex-col">
-            <h3 className="border-b border-line pb-1.5 text-sm font-semibold text-foreground/75">
+            <h3 className="border-b border-line pb-1.5 text-sm font-semibold text-sub">
               {formatDay(date)}
             </h3>
             <ul className="divide-y divide-line">
@@ -57,21 +57,21 @@ export const MaterialUsageList = ({
                         <p className="flex flex-wrap items-baseline gap-x-2">
                           <span className="font-semibold">{name}</span>
                           {material?.spec && (
-                            <span className="text-sm text-foreground/75">{material.spec}</span>
+                            <span className="text-sm text-sub">{material.spec}</span>
                           )}
                           {record.kind !== 'USED' && (
                             <Badge>{MATERIAL_RECORD_KIND_LABELS[record.kind]}</Badge>
                           )}
                         </p>
                         {(record.area || record.memo) && (
-                          <p className="text-sm text-foreground/65">
+                          <p className="text-sm text-sub">
                             {[record.area, record.memo].filter(Boolean).join(' · ')}
                           </p>
                         )}
                       </div>
                       <p className="shrink-0 pt-0.5 font-semibold tabular-nums">
                         {record.quantity.toLocaleString('ko-KR')}
-                        <span className="ml-0.5 text-sm font-normal text-foreground/65">
+                        <span className="ml-0.5 text-sm font-normal text-sub">
                           {material?.unit}
                         </span>
                       </p>

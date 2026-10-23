@@ -225,7 +225,7 @@ export const StaffingCalendarPage = () => {
             />
           )}
 
-          <p className="text-sm text-foreground/65">{READING_GUIDE}</p>
+          <p className="text-sm text-sub">{READING_GUIDE}</p>
           {calendar.data.workDays.length > 0 && (
             <ul
               aria-label="표에 나온 프로젝트"
@@ -242,7 +242,7 @@ export const StaffingCalendarPage = () => {
                       style={{ backgroundColor: `var(--proj-${color})` }}
                     />
                     {item.projectName}
-                    <span className="text-foreground/70">({statusText(projectId)})</span>
+                    <span className="text-sub">({statusText(projectId)})</span>
                   </li>
                 );
               })}

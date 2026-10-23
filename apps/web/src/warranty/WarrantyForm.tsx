@@ -140,7 +140,7 @@ export const WarrantyForm = ({
         />
       </FormField>
       {startBasis === 'ACTUAL_END' ? (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           시작일: {project.actualEnd ?? '아직 완료 전'} (프로젝트 실제 완료일)
         </p>
       ) : (

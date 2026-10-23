@@ -16,8 +16,7 @@ const AXES: { value: MonthlyMatrixAxis; label: string }[] = [
   { value: 'PROJECT', label: '프로젝트별' },
 ];
 
-const th =
-  'whitespace-nowrap border-b border-line px-3 py-2.5 text-xs font-semibold text-foreground/65';
+const th = 'whitespace-nowrap border-b border-line px-3 py-2.5 text-xs font-semibold text-sub';
 const td = 'border-b border-line px-3 py-2 tabular-nums';
 
 // 월 공수표 본문: 행 직원 × 열 프로젝트(또는 반대) 표, 칸은 MD, 끝 열·아래 합계 행은 MD와 MM 병기
@@ -90,9 +89,7 @@ export const MonthlyMatrixTable = ({
                 <td className={`${td} border-l border-line text-right font-semibold`}>
                   {value(row.total).manDays}
                 </td>
-                <td className={`${td} text-right text-foreground/75`}>
-                  {value(row.total).manMonths}
-                </td>
+                <td className={`${td} text-right text-sub`}>{value(row.total).manMonths}</td>
               </tr>
             ))}
           </tbody>
@@ -114,7 +111,7 @@ export const MonthlyMatrixTable = ({
           </tfoot>
         </table>
       </div>
-      <p className="text-xs text-foreground/65">
+      <p className="text-xs text-sub">
         칸의 숫자는 MD(하루 기준시간 {settings.standardWorkMinutes / 60}시간 = 1MD)이고, MM은 1MM ={' '}
         {settings.monthlyWorkDays}MD로 환산합니다
       </p>

@@ -63,7 +63,7 @@ export const PageHeader = ({
         >
           {title}
         </Heading>
-        {description && <p className="text-sm font-medium text-foreground/75">{description}</p>}
+        {description && <p className="text-sm font-medium text-sub">{description}</p>}
       </div>
       {actions && <div className="flex shrink-0 flex-wrap items-center gap-2">{actions}</div>}
     </header>

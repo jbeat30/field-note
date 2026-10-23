@@ -33,7 +33,7 @@ export const SearchPage = () => {
     <div className="flex flex-col gap-4">
       <PageHeader title="찾기" description="프로젝트·직원·메모·자료·작업 내역을 한 번에 찾습니다" />
       {projectId && (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           {project.data ? (
             <Link className="text-primary underline" to={`/projects/${projectId}`}>
               {project.data.name}
@@ -59,7 +59,7 @@ export const SearchPage = () => {
         value={text}
         onChange={(event) => change(event.target.value)}
       />
-      {!q.trim() && <p className="text-sm text-foreground/70">찾을 말을 입력해 주세요</p>}
+      {!q.trim() && <p className="text-sm text-sub">찾을 말을 입력해 주세요</p>}
       {q.trim() && results.isPending && <p className="text-sm">찾는 중</p>}
       {results.isError && <Alert>검색하지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
       {q.trim() && results.data && <SearchResults results={results.data} />}

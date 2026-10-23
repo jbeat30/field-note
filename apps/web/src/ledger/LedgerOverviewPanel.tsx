@@ -27,13 +27,13 @@ export const LedgerOverviewPanel = ({ projectId }: { projectId: string }) => {
       {summary.data && (
         <dl className="grid grid-cols-2 gap-2 text-sm">
           <div>
-            <dt className="text-foreground/70">지출 합계</dt>
+            <dt className="text-sub">지출 합계</dt>
             <dd className="text-lg font-bold tabular-nums">
               {wonText(summary.data.expenseTotal)}원
             </dd>
           </div>
           <div>
-            <dt className="text-foreground/70">수입 합계</dt>
+            <dt className="text-sub">수입 합계</dt>
             <dd className="text-lg font-bold tabular-nums">
               {wonText(summary.data.incomeTotal)}원
             </dd>

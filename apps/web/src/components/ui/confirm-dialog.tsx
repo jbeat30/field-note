@@ -42,7 +42,7 @@ export const ConfirmDialog = ({
       >
         <AlertDialog.Title className="text-base font-semibold">{title}</AlertDialog.Title>
         {description && (
-          <AlertDialog.Description className="text-sm text-foreground/70">
+          <AlertDialog.Description className="text-sm text-sub">
             {description}
           </AlertDialog.Description>
         )}

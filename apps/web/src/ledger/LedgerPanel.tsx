@@ -227,7 +227,7 @@ export const LedgerPanel = ({ projectId }: { projectId: string }) => {
 
                 return (
                   <TableRow key={entry.id}>
-                    <TableCell className="whitespace-nowrap text-sm text-foreground/70">
+                    <TableCell className="whitespace-nowrap text-sm text-sub">
                       {formatDay(entry.entryDate)}
                     </TableCell>
                     <TableCell>
@@ -235,13 +235,13 @@ export const LedgerPanel = ({ projectId }: { projectId: string }) => {
                         {LEDGER_KIND_LABELS[entry.kind]}
                       </Badge>
                     </TableCell>
-                    <TableCell className="text-foreground/75">
+                    <TableCell className="text-sub">
                       {(entry.categoryId && categoryName.get(entry.categoryId)) || '-'}
                     </TableCell>
                     <TableCell>
                       <span className="font-medium">{entry.content ?? '-'}</span>
                       {entry.partnerId && partnerName.get(entry.partnerId) && (
-                        <span className="block text-xs text-foreground/65">
+                        <span className="block text-xs text-sub">
                           {partnerName.get(entry.partnerId)}
                         </span>
                       )}
@@ -255,7 +255,7 @@ export const LedgerPanel = ({ projectId }: { projectId: string }) => {
                     >
                       {entry.kind === 'INCOME' ? '+' : ''}
                       {wonText(entry.amount)}
-                      <span className="ml-0.5 text-foreground/65">원</span>
+                      <span className="ml-0.5 text-sub">원</span>
                     </TableCell>
                     <TableCell className="text-right whitespace-nowrap">
                       <Button

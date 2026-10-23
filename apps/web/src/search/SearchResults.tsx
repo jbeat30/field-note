@@ -41,7 +41,7 @@ const Hit = ({ hit }: { hit: SearchHit }) => (
       </span>
       {hit.snippet && <span className="text-sm text-foreground/80">{hit.snippet}</span>}
       {(hit.projectName || hit.date) && hit.type !== 'PROJECT' && (
-        <span className="text-xs text-foreground/70">
+        <span className="text-xs text-sub">
           {[hit.projectName, hit.date ? formatDay(hit.date) : null].filter(Boolean).join(' · ')}
         </span>
       )}
@@ -55,7 +55,7 @@ export const SearchResults = ({ results }: SearchResultsProps) => {
 
   if (visible.length === 0) {
     return (
-      <p className="text-sm text-foreground/70" role="status">
+      <p className="text-sm text-sub" role="status">
         ‘{results.q}’에 맞는 결과가 없습니다
       </p>
     );
@@ -79,7 +79,7 @@ export const SearchResults = ({ results }: SearchResultsProps) => {
               ))}
             </ul>
             {group.hasMore && (
-              <p className="text-sm text-foreground/70">
+              <p className="text-sm text-sub">
                 {SEARCH_HIT_TYPE_LABELS[type]} 결과가 더 있습니다. 검색어를 더 구체적으로 입력해
                 보세요
               </p>

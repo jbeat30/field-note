@@ -180,7 +180,7 @@ const CredentialRow = ({
             : '만료 없음'}
           {credential.issuedOn ? ` · 취득일 ${credential.issuedOn}` : ''}
         </span>
-        {credential.memo && <span className="text-foreground/70">{credential.memo}</span>}
+        {credential.memo && <span className="text-sub">{credential.memo}</span>}
         {credential.file && (
           <span className="flex flex-wrap items-center gap-2">
             첨부 {credential.file.name}
@@ -194,7 +194,7 @@ const CredentialRow = ({
                 열기
               </Button>
             ) : (
-              <span className="text-foreground/70">(검사 중)</span>
+              <span className="text-sub">(검사 중)</span>
             )}
           </span>
         )}
@@ -386,7 +386,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
           <h2 id="credentials-heading" className="text-lg font-bold">
             서류·자격
           </h2>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             서류 사본에 주민등록번호가 보이면 가리고 올려 주세요. 서류 파일을 열면 열람 기록이
             남습니다
           </p>
@@ -401,7 +401,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
       ) : credentials.isError ? (
         <Alert>서류를 불러오지 못했습니다</Alert>
       ) : credentials.data.length === 0 ? (
-        <p className="text-sm text-foreground/70">등록한 서류가 없습니다</p>
+        <p className="text-sm text-sub">등록한 서류가 없습니다</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {credentials.data.map((credential) => (

@@ -176,7 +176,7 @@ export const ProjectWorkPage = () => {
             nameOf={(employeeId) => names.get(employeeId) ?? '직원'}
           />
         )}
-        <p className="text-xs text-foreground/70">
+        <p className="text-xs text-sub">
           흐린 칸은 프로젝트 기간({project.data?.plannedStart} ~ {project.data?.plannedEnd})
           밖이거나 아직 오지 않은 날이라 입력할 수 없습니다
         </p>

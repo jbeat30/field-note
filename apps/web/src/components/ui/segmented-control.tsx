@@ -37,7 +37,7 @@ export const SegmentedControl = <T extends string>({
         key={option.value}
         value={option.value}
         className={cn(
-          'flex-1 rounded-full px-3 text-sm font-semibold whitespace-nowrap text-foreground/70 transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:outline-2 focus-visible:outline-foreground data-[state=on]:bg-primary data-[state=on]:font-bold data-[state=on]:text-primary-foreground',
+          'flex-1 rounded-full px-3 text-sm font-semibold whitespace-nowrap text-sub transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:outline-2 focus-visible:outline-foreground data-[state=on]:bg-primary data-[state=on]:font-bold data-[state=on]:text-primary-foreground',
           size === 'sm' ? 'h-9' : 'h-11',
         )}
       >

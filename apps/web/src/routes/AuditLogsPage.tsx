@@ -76,14 +76,14 @@ const Row = ({ item }: { item: AuditLog }) => {
               item.targetName
             )
           ) : (
-            <span className="text-foreground/70">(삭제되었거나 찾을 수 없는 대상)</span>
+            <span className="text-sub">(삭제되었거나 찾을 수 없는 대상)</span>
           )}
           {item.summary ? ` · ${item.summary}` : ''}
           {item.projectName && item.targetType !== 'PROJECT' && (
-            <span className="ml-2 text-foreground/65">({item.projectName})</span>
+            <span className="ml-2 text-sub">({item.projectName})</span>
           )}
         </span>
-        <span className="text-foreground/70">
+        <span className="text-sub">
           {timeText(item.createdAt)} · {item.actorName}
         </span>
       </div>
@@ -111,7 +111,7 @@ const Row = ({ item }: { item: AuditLog }) => {
                       '바뀜 (값은 기록하지 않음)'
                     ) : (
                       <>
-                        <span className="text-foreground/75">{change.before ?? '(없음)'}</span>
+                        <span className="text-sub">{change.before ?? '(없음)'}</span>
                         {' → '}
                         <span className="font-medium text-foreground">
                           {change.after ?? '(없음)'}

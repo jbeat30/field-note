@@ -63,13 +63,13 @@ export const Input = ({
   return (
     <div className="relative w-full">
       {startAdornment && (
-        <span className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-foreground/65 [&_svg]:size-4.5">
+        <span className="pointer-events-none absolute inset-y-0 left-0 flex w-10 items-center justify-center text-sub [&_svg]:size-4.5">
           {startAdornment}
         </span>
       )}
       {input}
       {endAdornment && (
-        <span className="pointer-events-none absolute inset-y-0 right-0 flex min-w-10 items-center justify-center pr-3 text-sm text-foreground/65">
+        <span className="pointer-events-none absolute inset-y-0 right-0 flex min-w-10 items-center justify-center pr-3 text-sm text-sub">
           {endAdornment}
         </span>
       )}

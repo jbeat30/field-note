@@ -234,9 +234,7 @@ export const MonthlyHoursPage = () => {
               ]}
             />
             {data.isClosed && data.closedAt && (
-              <p className="mt-2 text-xs text-foreground/65">
-                확정 {formatDateTime(data.closedAt)}
-              </p>
+              <p className="mt-2 text-xs text-sub">확정 {formatDateTime(data.closedAt)}</p>
             )}
           </div>
 
@@ -252,7 +250,7 @@ export const MonthlyHoursPage = () => {
                   <h2 id="monthly-drafts-heading" className="text-base font-semibold">
                     임시 저장된 작업 내역 {data.draftLogCount}건
                   </h2>
-                  <p className="text-sm text-foreground/70">확정 전에 저장하거나 정리해 주세요</p>
+                  <p className="text-sm text-sub">확정 전에 저장하거나 정리해 주세요</p>
                   <ul className="flex flex-col gap-1 text-sm">
                     {data.drafts.map((draft) => (
                       <li key={`${draft.projectId}-${draft.workDate}`}>
@@ -266,9 +264,7 @@ export const MonthlyHoursPage = () => {
                     ))}
                   </ul>
                   {data.draftLogCount > data.drafts.length && (
-                    <p className="text-sm text-foreground/70">
-                      앞의 {data.drafts.length}건만 보여 줍니다
-                    </p>
+                    <p className="text-sm text-sub">앞의 {data.drafts.length}건만 보여 줍니다</p>
                   )}
                   {data.draftLogCount > 0 && !data.isClosed && (
                     <label className="flex min-h-touch items-center gap-3 text-sm">
@@ -305,7 +301,7 @@ export const MonthlyHoursPage = () => {
                 </h2>
                 {!data.isClosed && (
                   <div className="flex flex-col gap-3">
-                    <p className="text-sm text-foreground/70">
+                    <p className="text-sm text-sub">
                       확정하면 이 달의 작업 내역을 재오픈 전까지 수정할 수 없고 기준시간·일수가
                       고정됩니다. 확정은 선택 기능입니다
                     </p>
@@ -319,9 +315,7 @@ export const MonthlyHoursPage = () => {
                       {close.isPending ? '확정 중' : `${month} 공수 확정`}
                     </Button>
                     {isFuture && (
-                      <p className="text-sm text-foreground/70">
-                        아직 오지 않은 달은 확정할 수 없습니다
-                      </p>
+                      <p className="text-sm text-sub">아직 오지 않은 달은 확정할 수 없습니다</p>
                     )}
                   </div>
                 )}
@@ -364,7 +358,7 @@ export const MonthlyHoursPage = () => {
                   확정·재오픈 이력
                 </h2>
                 {data.events.length === 0 ? (
-                  <p className="text-sm text-foreground/70">확정한 기록이 없습니다</p>
+                  <p className="text-sm text-sub">확정한 기록이 없습니다</p>
                 ) : (
                   <ol className="divide-y divide-line text-sm">
                     {data.events.map((event) => (
@@ -372,16 +366,12 @@ export const MonthlyHoursPage = () => {
                         <span className="font-semibold">
                           {event.kind === 'CLOSED' ? '확정' : '재오픈'}
                         </span>
-                        {event.reason && (
-                          <span className="text-foreground/70">사유: {event.reason}</span>
-                        )}
-                        <span className="text-foreground/65">
+                        {event.reason && <span className="text-sub">사유: {event.reason}</span>}
+                        <span className="text-sub">
                           {event.standardWorkMinutes / 60}시간 · {event.monthlyWorkDays}일
                           {event.draftLogCount > 0 ? ` · 임시 ${event.draftLogCount}건` : ''}
                         </span>
-                        <span className="text-xs text-foreground/70">
-                          {formatDateTime(event.createdAt)}
-                        </span>
+                        <span className="text-xs text-sub">{formatDateTime(event.createdAt)}</span>
                       </li>
                     ))}
                   </ol>

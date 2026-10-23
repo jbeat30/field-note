@@ -87,7 +87,7 @@ export const StaffingTimeline = ({
                   date === today ? 'bg-accent font-bold text-[#14110d]' : 'bg-surface-nested',
                 )}
               >
-                <span className="block text-[11px] leading-tight text-foreground/70">
+                <span className="block text-[11px] leading-tight text-sub">
                   {isFirst ? `${Number(date.slice(5, 7))}월` : ' '}
                 </span>
                 <span className="block text-sm font-bold">{Number(date.slice(8))}</span>
@@ -102,7 +102,7 @@ export const StaffingTimeline = ({
 
         {grouped.map(({ group, items }) => (
           <Fragment key={group}>
-            <div className="sticky left-0 border-b border-line bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-foreground/70">
+            <div className="sticky left-0 border-b border-line bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-sub">
               <span>
                 {GROUP_LABELS[group]} {items.length}명
               </span>
@@ -177,7 +177,7 @@ const EmployeeRow = ({
         >
           {employee.name}
         </Link>
-        <span className="text-xs text-foreground/65">
+        <span className="text-xs text-sub">
           {[
             employee.title,
             employee.status !== 'ACTIVE' ? EMPLOYEE_STATUS_LABELS[employee.status] : null,
@@ -186,7 +186,7 @@ const EmployeeRow = ({
             .join(' · ') || ' '}
         </span>
         {row.workedDays > 0 && (
-          <span className="text-xs tabular-nums text-foreground/65">
+          <span className="text-xs tabular-nums text-sub">
             {row.workedDays}일 · {hours(row.totalMinutes)}시간
           </span>
         )}

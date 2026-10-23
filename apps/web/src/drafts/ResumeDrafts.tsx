@@ -23,9 +23,7 @@ export const ResumeDrafts = ({ drafts, projectNames }: ResumeDraftsProps) => {
       <h2 id="resume-heading" className="text-lg font-bold">
         이어서 작성
       </h2>
-      <p className="text-sm text-foreground/70">
-        저장하지 않고 닫은 입력이 이 기기에 남아 있습니다
-      </p>
+      <p className="text-sm text-sub">저장하지 않고 닫은 입력이 이 기기에 남아 있습니다</p>
       <ul className="flex flex-col gap-2">
         {drafts.map((draft) => (
           <li key={`${draft.projectId}:${draft.date}`}>
@@ -37,7 +35,7 @@ export const ResumeDrafts = ({ drafts, projectNames }: ResumeDraftsProps) => {
                 {projectNames.get(draft.projectId) ?? '프로젝트'} · {formatDay(draft.date)}{' '}
                 {DRAFT_LABELS[draft.kind]} 작성 중
               </span>
-              <span className="text-sm text-foreground/70">
+              <span className="text-sm text-sub">
                 마지막 저장{' '}
                 {new Date(draft.savedAt).toLocaleString('ko-KR', {
                   timeZone: 'Asia/Seoul',
