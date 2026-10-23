@@ -37,7 +37,7 @@ export const PasswordInput = ({ className, size = 'md', ...props }: PasswordInpu
         aria-label={isVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
         aria-pressed={isVisible}
         onClick={() => setIsVisible((current) => !current)}
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-control text-foreground/65 transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none [&_svg]:size-4.5"
+        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-control text-sub transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none [&_svg]:size-4.5"
       >
         {isVisible ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
       </button>

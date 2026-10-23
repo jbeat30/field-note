@@ -120,7 +120,7 @@ export const SortableItem = ({ id, label, className, disabled, children }: Sorta
       ref={setActivatorNodeRef}
       aria-label={`${label} 순서 끌어서 바꾸기`}
       disabled={disabled}
-      className="flex min-h-touch min-w-touch touch-none items-center justify-center rounded-full text-foreground/70 hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
+      className="flex min-h-touch min-w-touch touch-none items-center justify-center rounded-full text-sub hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50"
       {...attributes}
       {...listeners}
     >

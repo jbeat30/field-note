@@ -146,7 +146,7 @@ const HoursInput = ({
       >
         <Plus aria-hidden />
       </Button>
-      <span className="text-sm text-foreground/65">시간</span>
+      <span className="text-sm text-sub">시간</span>
       {!compact && (
         <span className="ml-1 flex gap-1">
           {QUICK_MULTIPLIERS.map((quick) => (
@@ -611,7 +611,7 @@ export const WorkLogEditor = ({
             title="일한 사람"
             description="이 날 이 현장에서 일한 직원을 고르세요"
             aside={
-              <span className="text-sm text-foreground/65" aria-live="polite">
+              <span className="text-sm text-sub" aria-live="polite">
                 {employeeIds.length}명 선택
               </span>
             }
@@ -645,7 +645,7 @@ export const WorkLogEditor = ({
                         onCheckedChange={(next) => toggleEmployee(employee.id, next === true)}
                       />
                       <span className="min-w-0 flex-1 truncate">{employee.name}</span>
-                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-normal text-foreground/65">
+                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-normal text-sub">
                         {employee.title}
                         {assignedEmployeeIds.includes(employee.id) && (
                           <Badge tone="primary">이 현장</Badge>
@@ -658,9 +658,7 @@ export const WorkLogEditor = ({
                 );
               })}
             </ul>
-            {pickable.length === 0 && (
-              <p className="text-sm text-foreground/65">찾는 직원이 없습니다</p>
-            )}
+            {pickable.length === 0 && <p className="text-sm text-sub">찾는 직원이 없습니다</p>}
           </WorkStep>
 
           <WorkStep
@@ -670,7 +668,7 @@ export const WorkLogEditor = ({
             aside={
               employeeIds.length > 1 && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-sm text-foreground/65">모두</span>
+                  <span className="text-sm text-sub">모두</span>
                   {QUICK_MULTIPLIERS.map((quick) => (
                     <Button
                       key={quick.label}
@@ -687,7 +685,7 @@ export const WorkLogEditor = ({
             }
           >
             {employeeIds.length === 0 ? (
-              <p className="text-sm text-foreground/65">먼저 일한 사람을 고르세요</p>
+              <p className="text-sm text-sub">먼저 일한 사람을 고르세요</p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2" aria-label="직원별 일한 시간">
                 {employeeIds.map((employeeId) => {
@@ -712,7 +710,7 @@ export const WorkLogEditor = ({
                           onChange={(value) => updateLine(employeeLines[0]!.key, { value })}
                         />
                       ) : (
-                        <p className="text-sm text-foreground/65">
+                        <p className="text-sm text-sub">
                           나눠 적음 · 합계 {roundTo(personMinutes / 60, 1)}시간 (3에서 입력)
                         </p>
                       )}
@@ -750,7 +748,7 @@ export const WorkLogEditor = ({
             }
           >
             {employeeIds.length === 0 ? (
-              <p className="text-sm text-foreground/65">먼저 일한 사람을 고르세요</p>
+              <p className="text-sm text-sub">먼저 일한 사람을 고르세요</p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2" aria-label="직원별 한 일">
                 {employeeIds.map((employeeId) => {
@@ -819,7 +817,7 @@ export const WorkLogEditor = ({
                           type="button"
                           variant="link"
                           size="sm"
-                          className="self-start no-underline hover:text-foreground/60"
+                          className="self-start no-underline hover:text-sub"
                           aria-label={`${name} 작업 구분 나누기`}
                           onClick={() => splitLine(employeeId)}
                         >

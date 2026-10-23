@@ -33,7 +33,7 @@ export const FormField = ({ label, className, error, hint, children }: FormField
           id={descriptionId}
           className={cn(
             'flex items-start gap-1 text-sm',
-            error ? 'font-medium text-danger' : 'text-foreground/70',
+            error ? 'font-medium text-danger' : 'text-sub',
           )}
         >
           {error && <CircleAlert aria-hidden className="mt-0.5 size-4 shrink-0" />}

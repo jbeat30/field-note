@@ -41,7 +41,7 @@ export const SocialLoginSection = () => {
           <div key={provider} className="flex min-h-touch items-center justify-between gap-3">
             <div>
               <p className="font-medium">{label}</p>
-              <p className="text-sm text-foreground/70">{isLinked ? '연동됨' : '연동하지 않음'}</p>
+              <p className="text-sm text-sub">{isLinked ? '연동됨' : '연동하지 않음'}</p>
             </div>
             {isLinked ? (
               <Button
@@ -65,7 +65,7 @@ export const SocialLoginSection = () => {
         );
       })}
       {isLastMethod && (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           비밀번호 로그인이 없어 연동을 해제할 수 없습니다. 로그인 수단이 하나는 남아 있어야 합니다
         </p>
       )}

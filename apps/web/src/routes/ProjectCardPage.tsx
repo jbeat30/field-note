@@ -22,7 +22,7 @@ import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel'
 
 const InfoRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="grid grid-cols-[5.5rem_1fr] gap-2 text-sm">
-    <dt className="text-foreground/70">{label}</dt>
+    <dt className="text-sub">{label}</dt>
     <dd className="min-w-0 break-words">{children}</dd>
   </div>
 );

@@ -206,7 +206,7 @@ export const ProjectLayout = () => {
                   (tab.end && pathname.startsWith(`${tab.to}/work/`)) ||
                   (tab.label === '마감·보증' && pathname.startsWith(`${base}/daily-report`))
                   ? 'bg-primary font-bold text-primary-foreground'
-                  : 'text-foreground/70 hover:text-foreground',
+                  : 'text-sub hover:text-foreground',
               )
             }
           >
@@ -228,9 +228,7 @@ export const ProjectLayout = () => {
                 className={({ isActive }) =>
                   cn(
                     'flex min-h-10 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap',
-                    isActive
-                      ? 'bg-primary font-bold text-primary-foreground'
-                      : 'text-foreground/70',
+                    isActive ? 'bg-primary font-bold text-primary-foreground' : 'text-sub',
                   )
                 }
               >

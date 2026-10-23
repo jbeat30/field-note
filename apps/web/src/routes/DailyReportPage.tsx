@@ -86,7 +86,7 @@ export const DailyReportPage = () => {
             <ChevronRight aria-hidden className="size-5" />
           </Button>
         </div>
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           인쇄 창에서 “PDF로 저장”을 고르면 {formatDay(date)} 작업일보를 파일로 보관·제출할 수
           있습니다
         </p>

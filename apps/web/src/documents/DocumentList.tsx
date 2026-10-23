@@ -58,7 +58,7 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
                   민감
                 </Badge>
               )}
-              <span className="mt-0.5 block text-xs text-foreground/65 md:hidden">
+              <span className="mt-0.5 block text-xs text-sub md:hidden">
                 {DOCUMENT_CATEGORY_LABELS[document.category]} · {document.versionCount}판
               </span>
               {!isReady && (
@@ -67,17 +67,17 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
                 </span>
               )}
             </TableCell>
-            <TableCell className="hidden text-foreground/70 md:table-cell">
+            <TableCell className="hidden text-sub md:table-cell">
               {DOCUMENT_CATEGORY_LABELS[document.category]}
             </TableCell>
-            <TableCell className="whitespace-nowrap text-foreground/70">
+            <TableCell className="whitespace-nowrap text-sub">
               <span className="font-semibold tabular-nums text-foreground">
                 v{latest.versionNo}
               </span>
               <span className="ml-1.5">{formatDay(latest.revisionDate)}</span>
               <span className="ml-1.5 text-xs">{formatSize(latest.size)}</span>
             </TableCell>
-            <TableCell className="hidden text-right tabular-nums text-foreground/70 md:table-cell">
+            <TableCell className="hidden text-right tabular-nums text-sub md:table-cell">
               {document.versionCount}
             </TableCell>
             <TableCell className="text-right">

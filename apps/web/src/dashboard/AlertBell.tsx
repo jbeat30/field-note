@@ -63,7 +63,7 @@ export const AlertBell = ({ className }: { className?: string }) => {
         {dashboard.isError && <Alert>알림을 불러오지 못했습니다</Alert>}
         {dismiss.isError && <Alert>숨기지 못했습니다. 다시 시도해 주세요</Alert>}
         {dashboard.data && alerts.length === 0 && (
-          <p className="text-sm text-foreground/75">지금 확인할 알림이 없습니다</p>
+          <p className="text-sm text-sub">지금 확인할 알림이 없습니다</p>
         )}
         {alerts.length > 0 && (
           <AlertList
@@ -93,7 +93,7 @@ export const AlertBell = ({ className }: { className?: string }) => {
           )}
         </div>
         {dashboard.data && dashboard.data.dashboard.hiddenAlertCount > 0 && (
-          <p className="text-xs text-foreground/65">
+          <p className="text-xs text-sub">
             숨긴 알림 {dashboard.data.dashboard.hiddenAlertCount}건은 조건이 바뀌면 다시 나옵니다
           </p>
         )}

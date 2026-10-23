@@ -30,7 +30,7 @@ export const PhotoGrid = ({ photos, onSelect }: PhotoGridProps) => (
               className="size-full object-cover"
             />
           ) : (
-            <span className="flex size-full items-center justify-center p-1 text-center text-xs text-foreground/70">
+            <span className="flex size-full items-center justify-center p-1 text-center text-xs text-sub">
               {placeholder(photo)}
             </span>
           )}

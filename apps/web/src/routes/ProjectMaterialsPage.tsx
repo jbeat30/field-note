@@ -83,7 +83,7 @@ export const ProjectMaterialsPage = () => {
           <Section title="자재별 합계" description="이 현장에 쓴 양을 자재마다 모았습니다">
             {totals.isError && <Alert>자재 합계를 불러오지 못했습니다</Alert>}
             {totals.isSuccess && used.length === 0 && (
-              <p className="text-sm text-foreground/65">아직 기록한 자재가 없습니다</p>
+              <p className="text-sm text-sub">아직 기록한 자재가 없습니다</p>
             )}
             {used.length > 0 && (
               <Table aria-label="자재별 합계">
@@ -98,10 +98,10 @@ export const ProjectMaterialsPage = () => {
                   {used.map((item) => (
                     <TableRow key={item.materialId}>
                       <TableCell className="font-semibold">{item.name}</TableCell>
-                      <TableCell className="text-foreground/75">{item.spec ?? '-'}</TableCell>
+                      <TableCell className="text-sub">{item.spec ?? '-'}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {item.used.toLocaleString('ko-KR')}
-                        <span className="ml-0.5 text-foreground/65">{item.unit}</span>
+                        <span className="ml-0.5 text-sub">{item.unit}</span>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -142,21 +142,17 @@ export const ProjectMaterialsPage = () => {
 
                     return (
                       <TableRow key={record.id}>
-                        <TableCell className="whitespace-nowrap text-sm text-foreground/70">
+                        <TableCell className="whitespace-nowrap text-sm text-sub">
                           {formatDay(record.recordDate)}
                         </TableCell>
                         <TableCell className="font-semibold">{name}</TableCell>
-                        <TableCell className="text-foreground/70">
-                          {material?.spec ?? '-'}
-                        </TableCell>
-                        <TableCell className="text-sm text-foreground/70">
+                        <TableCell className="text-sub">{material?.spec ?? '-'}</TableCell>
+                        <TableCell className="text-sm text-sub">
                           {record.kind === 'USED' ? '' : MATERIAL_RECORD_KIND_LABELS[record.kind]}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {record.quantity.toLocaleString('ko-KR')}
-                          <span className="ml-0.5 text-sm text-foreground/65">
-                            {material?.unit}
-                          </span>
+                          <span className="ml-0.5 text-sm text-sub">{material?.unit}</span>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button

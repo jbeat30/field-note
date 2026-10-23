@@ -14,7 +14,7 @@ export const cmdkItemDisabledClass =
   'data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-45';
 
 // 묶음 제목 (예: "프로젝트 팀", "다른 직원")
-export const listboxGroupLabelClass = 'px-2.5 pt-2 pb-1 text-xs font-semibold text-foreground/65';
+export const listboxGroupLabelClass = 'px-2.5 pt-2 pb-1 text-xs font-semibold text-sub';
 
 export type ListOption = {
   value: string;

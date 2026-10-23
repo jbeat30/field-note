@@ -61,7 +61,7 @@ export const LegalDocumentBody = ({ content, showTitle = true }: LegalDocumentBo
   <div className="flex flex-col gap-5">
     <header className="flex flex-col gap-1">
       {showTitle && <h1 className="text-xl font-bold">{content.title}</h1>}
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         버전 {content.version} · {content.isRequired ? '필수' : '선택'}
       </p>
     </header>

@@ -68,7 +68,7 @@ export const TotpRow = () => {
       <div className="flex min-h-touch items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium">2단계 인증</p>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             {status.isPending
               ? '확인 중'
               : isEnabled

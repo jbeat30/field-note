@@ -200,9 +200,7 @@ export const DocumentUploadForm = ({
                 보관 시간이 지나 삭제됐습니다. 다시 올려 주세요
               </p>
             ) : (
-              <p className="text-xs text-foreground/70">
-                올려 두었습니다. 저장하면 문서로 등록됩니다
-              </p>
+              <p className="text-xs text-sub">올려 두었습니다. 저장하면 문서로 등록됩니다</p>
             )}
             <Button
               type="button"
@@ -216,7 +214,7 @@ export const DocumentUploadForm = ({
             </Button>
           </div>
         ) : (
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             {mode === 'create' ? '문서 파일을' : '새 버전 파일을'} 여기에 끌어 놓으세요 (PDF·이미지)
           </p>
         )}

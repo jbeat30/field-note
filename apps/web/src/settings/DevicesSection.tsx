@@ -45,7 +45,7 @@ const DeviceRow = ({
         {device.label}
         {device.isCurrent && <span className="ml-2 text-sm font-normal text-primary">이 기기</span>}
       </p>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         {ipText(device)} · 마지막 사용 {formatLastActive(device.lastActiveAt)}
       </p>
     </div>

@@ -81,7 +81,7 @@ export const EmployeeWorkDaysDialog = ({
       ) : !query.data ? (
         <p className="text-sm">불러오는 중</p>
       ) : days.length === 0 ? (
-        <p className="text-sm text-foreground/65">이 기간에 일한 날이 없습니다</p>
+        <p className="text-sm text-sub">이 기간에 일한 날이 없습니다</p>
       ) : (
         <>
           <StatGroup
@@ -106,7 +106,7 @@ export const EmployeeWorkDaysDialog = ({
                     >
                       <span className="flex min-w-0 flex-col gap-0.5">
                         <span className="font-medium">{formatDay(day.workDate)}</span>
-                        <span className="truncate text-xs text-foreground/65">
+                        <span className="truncate text-xs text-sub">
                           {day.categories
                             .map((item) => categoryNames.get(item.categoryId) ?? '작업')
                             .join(' · ')}
@@ -158,7 +158,7 @@ const WorkDaysCalendar = ({
         </Button>
         <p className="text-sm font-semibold">
           {monthLabel(month)}
-          <span className="ml-1.5 font-normal text-foreground/65">{monthDays.length}일</span>
+          <span className="ml-1.5 font-normal text-sub">{monthDays.length}일</span>
         </p>
         <Button
           type="button"
@@ -177,7 +177,7 @@ const WorkDaysCalendar = ({
             key={label}
             className={cn(
               'py-1',
-              index === 0 ? 'text-danger' : index === 6 ? 'text-primary' : 'text-foreground/65',
+              index === 0 ? 'text-danger' : index === 6 ? 'text-primary' : 'text-sub',
             )}
           >
             {label}
@@ -206,7 +206,7 @@ const WorkDaysCalendar = ({
                   </span>
                 </Link>
               ) : (
-                <span className="flex aspect-square items-center justify-center text-xs text-foreground/65">
+                <span className="flex aspect-square items-center justify-center text-xs text-sub">
                   {number}
                 </span>
               )}

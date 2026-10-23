@@ -130,7 +130,7 @@ const Body = ({
         />
         <span>
           준공 요약에 넣기
-          <span className="block text-sm text-foreground/65">
+          <span className="block text-sm text-sub">
             안전·검사, 계약·공문 분류의 민감하지 않은 문서만 넣을 수 있습니다
           </span>
         </span>
@@ -161,16 +161,16 @@ const Body = ({
                     최신
                   </span>
                 )}
-                <span className="ml-2 text-foreground/70">
+                <span className="ml-2 text-sub">
                   {formatDay(version.revisionDate)} 개정
                   {version.reason ? ` · ${version.reason}` : ''}
                 </span>
               </p>
-              <p className="text-sm text-foreground/70">
+              <p className="text-sm text-sub">
                 {version.fileName} · {formatSize(version.size)}
               </p>
               {version.fileStatus !== 'READY' ? (
-                <p className="text-sm text-foreground/70" role="status">
+                <p className="text-sm text-sub" role="status">
                   {version.fileStatus === 'REJECTED'
                     ? '검사에서 거부된 파일입니다'
                     : '파일을 검사하는 중입니다'}
@@ -225,7 +225,7 @@ const Body = ({
         <h3 id="new-version-heading" className="text-base font-bold">
           새 버전 올리기
         </h3>
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           개정된 파일을 올리면 최신본이 바뀌고 이전본은 그대로 남습니다
         </p>
         <DocumentUploadForm
@@ -244,7 +244,7 @@ const Body = ({
           {logs.isPending && <p className="text-sm">불러오는 중</p>}
           {logs.isError && <Alert>열람 기록을 불러오지 못했습니다</Alert>}
           {logs.isSuccess && logs.data.length === 0 && (
-            <p className="text-sm text-foreground/70">아직 열람 기록이 없습니다</p>
+            <p className="text-sm text-sub">아직 열람 기록이 없습니다</p>
           )}
           {logs.isSuccess && logs.data.length > 0 && (
             <ul className="divide-y divide-border rounded-xl border border-border text-sm">
@@ -253,7 +253,7 @@ const Body = ({
                   <span>
                     {log.actorName} · v{log.versionNo} {AUDIT_ACTION_LABELS[log.action]}
                   </span>
-                  <span className="text-foreground/70">{formatTime(log.createdAt)}</span>
+                  <span className="text-sub">{formatTime(log.createdAt)}</span>
                 </li>
               ))}
             </ul>

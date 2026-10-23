@@ -7,7 +7,6 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { Button } from '../components/ui/button';
 import { cn } from '../lib/cn';
 
 // 같은 종류가 이 개수를 넘으면 한 줄로 묶어 표시
@@ -72,39 +71,43 @@ type AlertRowProps = {
   isInGroup?: boolean;
 };
 
+// 줄 오른쪽의 "숨기기" 같은 글자 버튼: 바탕 없이 보조 글자색
+const textButtonClass =
+  'text-[13px] font-semibold text-sub hover:text-foreground disabled:opacity-50';
+
+const DOT_URGENT = 'bg-danger';
+const DOT_NORMAL = 'bg-[#8d826c]';
+
 const AlertRow = ({ item, today, onDismiss, disabled, isInGroup = false }: AlertRowProps) => (
   <li
     className={cn(
-      'flex flex-wrap items-center gap-x-3 gap-y-1',
-      isInGroup ? 'py-2.5' : 'rounded-2xl bg-surface-nested px-4 py-3',
+      'flex items-center gap-3 text-sm leading-normal',
+      isInGroup ? 'py-2' : 'rounded-[20px] bg-surface-nested py-[13px] pr-3.5 pl-4',
     )}
   >
     <span
       aria-hidden
-      className={cn('size-2 shrink-0 rounded-full', item.urgent ? 'bg-danger' : 'bg-foreground/35')}
+      className={cn('size-2.5 shrink-0 rounded-full', item.urgent ? DOT_URGENT : DOT_NORMAL)}
     />
-    <p className={cn('min-w-0 flex-1 basis-56 text-sm', item.urgent && 'font-medium text-danger')}>
+    <p className={cn('min-w-0 flex-1', item.urgent ? 'font-bold text-danger' : 'font-medium')}>
       {dashboardAlertMessage(item.alert)}
     </p>
-    <span className="flex shrink-0 items-center gap-1">
-      <Link
-        to={dashboardAlertPath(item.alert, today)}
-        aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
-        className="inline-flex min-h-9 items-center rounded-full bg-primary px-3.5 text-sm font-bold text-primary-foreground hover:opacity-85"
-      >
-        이동
-      </Link>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        disabled={disabled}
-        aria-label={`${dashboardAlertMessage(item.alert)} 숨기기`}
-        onClick={() => onDismiss([item.key])}
-      >
-        숨기기
-      </Button>
-    </span>
+    <Link
+      to={dashboardAlertPath(item.alert, today)}
+      aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
+      className="shrink-0 rounded-2xl bg-primary px-3.5 py-[7px] text-[13px] font-bold text-primary-foreground hover:opacity-85"
+    >
+      이동
+    </Link>
+    <button
+      type="button"
+      disabled={disabled}
+      aria-label={`${dashboardAlertMessage(item.alert)} 숨기기`}
+      className={cn('shrink-0', textButtonClass)}
+      onClick={() => onDismiss([item.key])}
+    >
+      숨기기
+    </button>
   </li>
 );
 
@@ -155,24 +158,20 @@ export const AlertList = ({
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span
                 aria-hidden
-                className={cn(
-                  'size-2 shrink-0 rounded-full',
-                  hasUrgent ? 'bg-danger' : 'bg-foreground/35',
-                )}
+                className={cn('size-2 shrink-0 rounded-full', hasUrgent ? DOT_URGENT : DOT_NORMAL)}
               />
               <p
                 className={cn(
-                  'min-w-0 flex-1 basis-56 text-sm',
-                  hasUrgent && 'font-medium text-danger',
+                  'min-w-0 flex-1 text-sm',
+                  hasUrgent ? 'font-bold text-danger' : 'font-medium',
                 )}
               >
                 {GROUP_TITLES[entry.kind]} {entry.items.length}건
               </p>
               <span className="flex shrink-0 items-center gap-1">
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  className={textButtonClass}
                   aria-expanded={isOpen}
                   aria-label={`${GROUP_TITLES[entry.kind]} ${isOpen ? '접기' : '펼치기'}`}
                   onClick={() =>
@@ -186,17 +185,16 @@ export const AlertList = ({
                   }
                 >
                   {isOpen ? '접기' : '펼치기'}
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  className={textButtonClass}
                   disabled={disabled}
                   aria-label={`${GROUP_TITLES[entry.kind]} ${entry.items.length}건 숨기기`}
                   onClick={() => onDismiss(entry.items.map((item) => item.key))}
                 >
                   숨기기
-                </Button>
+                </button>
               </span>
             </div>
             {isOpen && (

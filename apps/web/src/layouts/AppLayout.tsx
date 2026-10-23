@@ -124,7 +124,7 @@ export const AppLayout = () => {
           <ProfileAvatar name={me.data?.displayName} />
           <div className="min-w-0 flex-1">
             <p className="truncate text-sm font-bold">{me.data?.displayName}</p>
-            <p className="truncate text-xs text-foreground/70">{me.data?.companyName}</p>
+            <p className="truncate text-xs text-sub">{me.data?.companyName}</p>
           </div>
           <Button
             variant="secondary"

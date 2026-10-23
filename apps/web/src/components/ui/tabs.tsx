@@ -22,7 +22,7 @@ export const TabsTrigger = ({
 }: ComponentProps<typeof TabsPrimitive.Trigger>) => (
   <TabsPrimitive.Trigger
     className={cn(
-      'min-h-10 rounded-full px-4 text-[15px] font-semibold whitespace-nowrap text-foreground/70 transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground data-[state=active]:bg-primary data-[state=active]:font-bold data-[state=active]:text-primary-foreground',
+      'min-h-10 rounded-full px-4 text-[15px] font-semibold whitespace-nowrap text-sub transition-colors hover:text-foreground focus-visible:outline-2 focus-visible:outline-offset-[-2px] focus-visible:outline-foreground data-[state=active]:bg-primary data-[state=active]:font-bold data-[state=active]:text-primary-foreground',
       className,
     )}
     {...props}

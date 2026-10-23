@@ -166,7 +166,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
           <h2 id="active-heading" className="text-lg font-bold">
             사용 여부
           </h2>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             숨겨도 이 업체가 쓰인 프로젝트·자재 기록의 상호는 그대로 남고, 새로 고를 때만 보이지
             않습니다
           </p>
@@ -182,7 +182,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
           <h2 id="delete-heading" className="text-lg font-bold">
             명부에서 삭제
           </h2>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             잘못 등록했거나 쓰지 않는 업체를 지웁니다. 지운 업체는 되돌릴 수 없고, 프로젝트나 자재
             기록에서 쓰고 있는 업체는 지울 수 없습니다 (그때는 숨기기를 이용해 주세요)
           </p>

@@ -100,7 +100,7 @@ export const DateInput = ({
               aria-label="달력 열기"
               disabled={disabled}
               className={cn(
-                'absolute inset-y-0 right-0 flex items-center justify-center rounded-r-control text-foreground/65 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50',
+                'absolute inset-y-0 right-0 flex items-center justify-center rounded-r-control text-sub hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50',
                 size === 'sm' ? 'w-9' : 'w-11',
               )}
             >

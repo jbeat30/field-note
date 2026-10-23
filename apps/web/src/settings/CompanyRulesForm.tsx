@@ -101,7 +101,7 @@ export const CompanyRulesForm = () => {
 
   return (
     <div className={card}>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         프로젝트 현황·대시보드 알림의 경고 기준과 보증 기본 기간입니다. 바꾸면 모든 프로젝트에 바로
         적용됩니다
       </p>
