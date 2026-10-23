@@ -24,15 +24,15 @@ export const MonthStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
   return (
     <section
       aria-labelledby="month-heading"
-      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+      className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-6"
     >
       <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="month-heading" className="text-lg font-bold">
+        <h2 id="month-heading" className="text-xl font-extrabold tracking-tight">
           이번 달 인력
         </h2>
         <Link
           to={`/staffing?view=month&from=${month.from}`}
-          className="inline-flex min-h-touch items-center text-sm text-primary underline"
+          className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
         >
           인력 배치 보기
         </Link>
