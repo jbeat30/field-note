@@ -819,12 +819,12 @@ export const WorkLogEditor = ({
                           type="button"
                           variant="link"
                           size="sm"
-                          className="self-start"
+                          className="self-start no-underline hover:text-foreground/60"
                           aria-label={`${name} 작업 구분 나누기`}
                           onClick={() => splitLine(employeeId)}
                         >
                           <Plus aria-hidden />
-                          다른 일도 했어요
+                          작업 추가
                         </Button>
                       </div>
                     </li>
