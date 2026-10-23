@@ -39,8 +39,8 @@ export const Section = ({
           <Heading
             id={headingId}
             className={cn(
-              'font-semibold tracking-tight break-keep',
-              level === 2 ? 'text-lg' : 'text-base',
+              'font-extrabold tracking-tight break-keep',
+              level === 2 ? 'text-xl' : 'text-lg',
             )}
           >
             {title}
