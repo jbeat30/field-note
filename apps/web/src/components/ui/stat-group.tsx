@@ -28,18 +28,33 @@ const TONE_ON_INK: Record<NonNullable<StatItem['tone']>, string> = {
   success: 'text-[#7fd6a8]',
 };
 
-// 칸 면 순서: 라임, 크림, 크림, 잉크(주황 숫자), 이후 반복
-const TILES = [
-  { tile: 'tile-lime bg-highlight text-[#14110d]', sub: 'text-[#14110d]/70', num: '' },
-  { tile: 'tile-cream bg-surface-subtle text-foreground', sub: 'text-foreground/65', num: '' },
-  { tile: 'tile-cream bg-surface-subtle text-foreground', sub: 'text-foreground/65', num: '' },
-  {
-    tile: 'tile-ink bg-[#14110d] text-[#fbf7ee]',
-    sub: 'text-[#fbf7ee]/70',
-    num: 'text-accent',
-    tones: TONE_ON_INK,
-  },
-] as const;
+// 칸 면: 첫 칸은 라임, 가운데는 크림, 칸이 네 개일 때만 마지막이 잉크(주황 숫자)
+type Tile = {
+  tile: string;
+  sub: string;
+  num: string;
+  tones?: Record<NonNullable<StatItem['tone']>, string>;
+};
+
+const LIME: Tile = {
+  tile: 'tile-lime bg-highlight text-[#14110d]',
+  sub: 'text-[#14110d]/70',
+  num: '',
+};
+const CREAM: Tile = {
+  tile: 'tile-cream bg-surface-subtle text-foreground',
+  sub: 'text-foreground/65',
+  num: '',
+};
+const INK: Tile = {
+  tile: 'tile-ink bg-[#14110d] text-[#fbf7ee]',
+  sub: 'text-[#fbf7ee]/70',
+  num: 'text-accent',
+  tones: TONE_ON_INK,
+};
+
+const tileOf = (index: number, count: number): Tile =>
+  index === 0 ? LIME : count === 4 && index === 3 ? INK : CREAM;
 
 // 큰 숫자 + 라벨을 두께 있는 타일로 나열, 넓은 화면은 한 줄, 좁은 화면은 2열
 export const StatGroup = ({ items, className }: { items: StatItem[]; className?: string }) => (
@@ -50,7 +65,7 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
     )}
   >
     {items.map((item, index) => {
-      const style = TILES[index % TILES.length] ?? TILES[0];
+      const style = tileOf(index, items.length);
       const isLong = typeof item.value === 'string' && item.value.length > 7;
 
       return (
@@ -65,7 +80,7 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
               // 짧은 숫자는 크게, 글자나 긴 값은 한 줄에 들어가도록 한 단계 작게
               isLong ? 'text-[24px] md:text-[28px]' : 'text-[34px] md:text-[44px]',
               style.num,
-              ('tones' in style ? style.tones : TONE)[item.tone ?? 'default'],
+              (style.tones ?? TONE)[item.tone ?? 'default'],
             )}
           >
             {item.value}
