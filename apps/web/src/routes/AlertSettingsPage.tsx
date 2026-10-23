@@ -38,13 +38,11 @@ export const AlertSettingsPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <BackLink to="/settings">설정으로</BackLink>
-        <PageHeader
-          title="알림 설정"
-          description="대시보드에 보여 줄 알림을 종류별로 켜고 끕니다. 꺼도 대시보드의 현황은 그대로 보입니다"
-        />
-      </div>
+      <PageHeader
+        title="알림 설정"
+        description="대시보드에 보여 줄 알림을 종류별로 켜고 끕니다. 꺼도 대시보드의 현황은 그대로 보입니다"
+        back={<BackLink to="/settings">설정으로</BackLink>}
+      />
       {settings.isError && <Alert>알림 설정을 불러오지 못했습니다</Alert>}
       {save.isError && <Alert>저장하지 못했습니다. 다시 시도해 주세요</Alert>}
       {settings.isPending && <p className="text-sm">불러오는 중</p>}
