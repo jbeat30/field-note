@@ -20,7 +20,7 @@ export const AppSidebar = ({ isCollapsed, onToggleCollapsed }: AppSidebarProps) 
   <aside
     className={cn(
       'sticky top-0 hidden h-dvh w-[92px] shrink-0 flex-col gap-5 bg-sidebar p-3 text-[#f4eee0] transition-[width] duration-(--duration-base) ease-(--ease-smooth) md:flex lg:p-4 print:hidden',
-      isCollapsed ? 'lg:w-24' : 'lg:w-[248px]',
+      isCollapsed ? 'lg:w-24' : 'lg:w-[264px]',
     )}
   >
     <div
@@ -33,7 +33,7 @@ export const AppSidebar = ({ isCollapsed, onToggleCollapsed }: AppSidebarProps) 
         onInk
         markOnly={isCollapsed}
         compactBelowLg
-        className="gap-2.5 [&_.font-emphasis]:text-[22px]"
+        className="gap-2 [&_.font-emphasis]:text-xl [&_span.rounded-full]:px-2 [&_span.rounded-full]:text-[11px]"
       />
       <button
         type="button"
@@ -41,7 +41,7 @@ export const AppSidebar = ({ isCollapsed, onToggleCollapsed }: AppSidebarProps) 
         aria-expanded={!isCollapsed}
         onClick={onToggleCollapsed}
         className={cn(
-          'hidden size-10 shrink-0 items-center justify-center rounded-full text-[#f4eee0]/75 hover:bg-white/10 hover:text-[#f4eee0] focus-visible:outline-2 focus-visible:outline-accent lg:flex',
+          'hidden size-9 shrink-0 items-center justify-center rounded-full text-[#f4eee0]/75 hover:bg-white/10 hover:text-[#f4eee0] focus-visible:outline-2 focus-visible:outline-accent lg:flex',
           isCollapsed && 'lg:hidden',
         )}
       >
@@ -96,7 +96,7 @@ export const AppSidebar = ({ isCollapsed, onToggleCollapsed }: AppSidebarProps) 
 
             return isCollapsed ? (
               <Tooltip key={item.to} content={item.label} side="right">
-                {link}
+                <span className="flex flex-col">{link}</span>
               </Tooltip>
             ) : (
               link

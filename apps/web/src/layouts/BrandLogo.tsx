@@ -38,7 +38,7 @@ export const BrandLogo = ({
         <>
           <span
             className={cn(
-              'font-emphasis text-[28px] font-bold tracking-[-0.03em]',
+              'font-emphasis text-[28px] font-bold tracking-[-0.03em] whitespace-nowrap',
               compactBelowLg && 'hidden lg:inline',
             )}
           >
