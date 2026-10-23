@@ -70,21 +70,21 @@ export const AlertBell = ({ className }: { className?: string }) => {
             alerts={alerts}
             today={today}
             disabled={dismiss.isPending}
+            isModal
             onDismiss={(keys) => dismiss.mutate(keys)}
           />
         )}
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <Link
-            to="/settings/alerts"
-            onClick={() => setOpen(false)}
-            className="inline-flex min-h-touch items-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
-          >
-            알림 설정
-          </Link>
+        <div className="flex flex-wrap items-center justify-end gap-2.5">
+          <Button asChild variant="secondary" size="lg" className="rounded-full">
+            <Link to="/settings/alerts" onClick={() => setOpen(false)}>
+              알림 설정
+            </Link>
+          </Button>
           {alerts.length > 1 && (
             <Button
               type="button"
-              variant="secondary"
+              size="lg"
+              className="rounded-full"
               disabled={dismiss.isPending}
               onClick={dismissAll}
             >

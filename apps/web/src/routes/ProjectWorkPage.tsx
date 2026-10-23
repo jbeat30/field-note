@@ -15,6 +15,7 @@ import { Button } from '../components/ui/button';
 import { columnHelper, DataTable } from '../components/ui/data-table';
 import { EmptyState } from '../components/ui/empty-state';
 import { PageHeader } from '../components/ui/page-header';
+import { StatGroup } from '../components/ui/stat-group';
 import { useEmployees } from '../employees/useEmployees';
 import { PeriodNav } from '../components/ui/period-nav';
 import { formatDay } from '../lib/dates';
@@ -125,6 +126,12 @@ export const ProjectWorkPage = () => {
   );
   const names = new Map((employees.data ?? []).map((item) => [item.id, item.name]));
   const todayLog = rows.find((item) => item.workDate === today);
+  // 보고 있는 달의 기록한 날 수와 일한 시간
+  const monthRows = rows.filter((item) => item.workDate.startsWith(month.slice(0, 7)));
+  const monthMinutes = monthRows.reduce(
+    (sum, item) => sum + item.workers.reduce((inner, worker) => inner + worker.minutes, 0),
+    0,
+  );
   const todayCheck = project.data
     ? checkWorkDate(today, project.data, today)
     : { ok: false as const, message: '' };
@@ -154,6 +161,23 @@ export const ProjectWorkPage = () => {
       )}
 
       {logs.isError && <Alert>작업 내역을 불러오지 못했습니다</Alert>}
+
+      <StatGroup
+        items={[
+          { label: '이번 달 기록한 날', value: monthRows.length, unit: '일', surface: 'cream' },
+          {
+            label: '이번 달 일한 시간',
+            value: roundTo(monthMinutes / 60, 1),
+            unit: '시간',
+            surface: 'lime',
+          },
+          {
+            label: '오늘',
+            value: todayLog ? '기록함' : '기록 없음',
+            surface: 'accent',
+          },
+        ]}
+      />
 
       <section className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4 sm:p-5">
         <PeriodNav
