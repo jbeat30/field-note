@@ -2,6 +2,7 @@ import { ChevronsUpDown, LogOut, Settings } from 'lucide-react';
 import { Link } from 'react-router';
 
 import { useMe } from '../auth/useMe';
+import { cn } from '../lib/cn';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,14 +18,14 @@ import { useLogout } from './useLogout';
 export const ProfileAvatar = ({ name }: { name?: string }) => (
   <span
     aria-hidden
-    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary-subtle font-bold text-primary"
+    className="flex size-10 shrink-0 items-center justify-center rounded-full bg-accent font-bold text-[#14110d]"
   >
     {name?.slice(0, 1)}
   </span>
 );
 
 // 왼쪽 메뉴 아래의 내 정보: 누르면 설정과 로그아웃이 위로 열림
-export const ProfileMenu = () => {
+export const ProfileMenu = ({ compact = false }: { compact?: boolean }) => {
   const me = useMe();
   const onLogout = useLogout();
 
@@ -34,16 +35,20 @@ export const ProfileMenu = () => {
         <button
           type="button"
           aria-label="내 메뉴"
-          className="flex min-h-touch min-w-0 flex-1 items-center gap-3 rounded-lg p-1 text-left hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
+          className={cn(
+            'flex min-h-touch min-w-0 flex-1 items-center gap-3 rounded-2xl p-1.5 text-left text-[#f4eee0] hover:bg-white/10 focus-visible:outline-2 focus-visible:outline-accent',
+            compact && 'justify-center lg:justify-start',
+          )}
         >
           <ProfileAvatar name={me.data?.displayName} />
-          <span className="min-w-0 flex-1">
+          <span className={cn('min-w-0 flex-1', compact && 'hidden')}>
             <span className="block truncate text-sm font-semibold">{me.data?.displayName}</span>
-            <span className="block truncate text-xs text-foreground/70">
-              {me.data?.companyName}
-            </span>
+            <span className="block truncate text-xs text-[#f4eee0]/65">{me.data?.companyName}</span>
           </span>
-          <ChevronsUpDown aria-hidden className="size-4 shrink-0 text-foreground/60" />
+          <ChevronsUpDown
+            aria-hidden
+            className={cn('size-4 shrink-0 text-[#f4eee0]/60', compact && 'hidden')}
+          />
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent side="top" align="start" className="w-56">

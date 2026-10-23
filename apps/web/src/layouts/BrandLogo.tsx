@@ -7,11 +7,18 @@ type BrandLogoProps = {
   onInk?: boolean;
   // 이름 글자를 숨기고 마크만 보임 (사이드바 접힘)
   markOnly?: boolean;
+  // 태블릿 레일처럼 좁은 폭(lg 미만)에서는 마크만 보임
+  compactBelowLg?: boolean;
   className?: string;
 };
 
 // 세 줄 막대 마크 + 서비스 이름 + 베타 표시
-export const BrandLogo = ({ onInk = false, markOnly = false, className }: BrandLogoProps) => {
+export const BrandLogo = ({
+  onInk = false,
+  markOnly = false,
+  compactBelowLg = false,
+  className,
+}: BrandLogoProps) => {
   const tone = onInk ? 'bg-[#fbf7ee]' : 'bg-[#14110d]';
 
   return (
@@ -29,10 +36,18 @@ export const BrandLogo = ({ onInk = false, markOnly = false, className }: BrandL
       </span>
       {!markOnly && (
         <>
-          <span className="font-emphasis text-[28px] font-bold tracking-[-0.03em]">{APP_NAME}</span>
+          <span
+            className={cn(
+              'font-emphasis text-[28px] font-bold tracking-[-0.03em] whitespace-nowrap',
+              compactBelowLg && 'hidden lg:inline',
+            )}
+          >
+            {APP_NAME}
+          </span>
           <span
             className={cn(
               'rounded-full border-[1.5px] px-2.5 py-0.5 text-xs font-bold whitespace-nowrap',
+              compactBelowLg && 'hidden lg:inline',
               onInk ? 'border-[#fbf7ee]' : 'border-[#14110d]',
             )}
           >

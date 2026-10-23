@@ -45,7 +45,7 @@ export const HomePage = () => {
             {me.data?.displayName}님, 안녕하세요 · {dateText(todayInSeoul(new Date()))}
           </p>
         </div>
-        <Button asChild>
+        <Button asChild className="md:hidden">
           <Link to="/projects/new">프로젝트 등록</Link>
         </Button>
       </div>

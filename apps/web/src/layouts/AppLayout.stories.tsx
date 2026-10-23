@@ -111,3 +111,35 @@ export const MoreSheetLogout: Story = {
     ).toBeInTheDocument();
   },
 };
+
+// 넓은 화면 머리 한 줄에 찾기, 알림, 프로젝트 등록이 순서대로 있음
+export const TopBar: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const search = await canvas.findByRole('link', { name: '찾기' });
+    const register = canvas.getByRole('link', { name: '프로젝트 등록' });
+
+    await expect(search).toHaveAttribute('href', '/search');
+    await expect(register).toHaveAttribute('href', '/projects/new');
+    await expect(
+      search.compareDocumentPosition(register) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  },
+};
+
+// 사이드바를 접으면 이름이 사라지고 아이콘 메뉴만 남으며, 다시 펼 수 있음
+export const SidebarCollapse: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = within(await canvas.findByRole('navigation', { name: '주 메뉴' }));
+
+    await userEvent.click(await canvas.findByRole('button', { name: '사이드바 접기' }));
+    await expect(nav.getByRole('link', { name: '프로젝트' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(nav.queryByText('프로젝트 관리')).not.toBeVisible();
+    await userEvent.click(await canvas.findByRole('button', { name: '사이드바 펼치기' }));
+    await expect(await canvas.findByRole('button', { name: '사이드바 접기' })).toBeInTheDocument();
+  },
+};
