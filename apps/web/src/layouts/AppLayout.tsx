@@ -3,7 +3,7 @@ import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 
 import { useMe } from '../auth/useMe';
-import { Button, buttonVariants, pillIconButtonClass } from '../components/ui/button';
+import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
 import { Toaster } from '../components/ui/toaster';
 import { AlertBell } from '../dashboard/AlertBell';
@@ -48,27 +48,19 @@ export const AppLayout = () => {
         <header className="plane sticky top-0 z-10 flex items-center justify-between gap-2 px-4 py-3 md:hidden print:hidden">
           <BrandLogo />
           <span className="flex items-center gap-1.5">
-            <AlertBell className="size-11" />
-            <ThemeToggle />
+            <Link
+              to="/search"
+              aria-label="찾기"
+              className="inline-flex size-11 items-center justify-center rounded-full bg-surface-subtle hover:opacity-85"
+            >
+              <Search aria-hidden className="size-5" />
+            </Link>
+            <AlertBell />
           </span>
         </header>
         <OfflineNotice />
         <DemoBanner />
         <main className="mx-auto w-full max-w-[1600px] flex-1 px-4 pt-0 pb-40 md:px-8 md:pb-24 xl:px-10 print:p-0">
-          <div className="plane hidden items-center justify-end gap-2 pt-6 pb-4 md:flex print:hidden">
-            <Link
-              to="/search"
-              className={cn(buttonVariants({ variant: 'secondary' }), 'rounded-full')}
-            >
-              <Search aria-hidden />
-              찾기
-            </Link>
-            <AlertBell />
-            <Link to="/projects/new" className={pillIconButtonClass}>
-              <Plus aria-hidden />
-              프로젝트 등록
-            </Link>
-          </div>
           <Outlet />
         </main>
       </div>
@@ -124,6 +116,10 @@ export const AppLayout = () => {
             </li>
           ))}
         </ul>
+        <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
+          <span className="text-sm font-bold">화면 밝기</span>
+          <ThemeToggle />
+        </div>
         <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
           <ProfileAvatar name={me.data?.displayName} />
           <div className="min-w-0 flex-1">

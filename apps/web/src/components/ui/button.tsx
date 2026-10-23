@@ -17,6 +17,8 @@ export const buttonVariants = cva(
           'bg-field text-foreground shadow-[inset_0_0_0_1.5px_var(--control-border)] hover:bg-line',
         // 가볍게 강조: 라임 면
         soft: 'bg-highlight text-[#14110d] hover:brightness-95',
+        // 잉크 면 위에서 지금 해야 할 동작: 주황 면 (홈의 기록하기 같은 버튼)
+        accent: 'bg-accent text-[#14110d] hover:brightness-95',
         // 글자만 있는 동작 (표 안의 "자세히", 구역 제목 옆 "전체 보기")
         link: 'h-auto! px-0! font-semibold underline decoration-accent decoration-2 underline-offset-4 hover:decoration-foreground',
         // 바탕 없는 동작 (아이콘 버튼·표 안의 동작)
@@ -47,6 +49,6 @@ export const Button = ({ className, variant, size, asChild = false, ...props }: 
   return <Component className={cn(buttonVariants({ variant, size }), className)} {...props} />;
 };
 
-// 화면 위쪽 행동 줄용 알약 버튼: 잉크 알약 안에 주황 아이콘 원 (프로젝트 등록·간편 등록)
+// 화면 위쪽 행동 줄용 알약 버튼: 잉크 알약 안에 주황 아이콘 원 (프로젝트 등록, 폴더 더하기 아이콘)
 export const pillIconButtonClass =
-  'inline-flex h-12 shrink-0 items-center gap-2.5 rounded-full bg-primary pr-5 pl-1.5 text-[15px] font-bold whitespace-nowrap text-primary-foreground transition-opacity duration-(--duration-fast) hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [&>svg:first-child]:box-content [&>svg:first-child]:size-4.5 [&>svg:first-child]:rounded-full [&>svg:first-child]:bg-accent [&>svg:first-child]:p-2 [&>svg:first-child]:text-[#14110d]';
+  'inline-flex h-14 shrink-0 items-center gap-3 rounded-full bg-[#14110d] pr-6 pl-2 text-base font-bold whitespace-nowrap text-[#fbf7ee] transition-opacity duration-(--duration-fast) hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground [&>svg:first-child]:box-content [&>svg:first-child]:size-5 [&>svg:first-child]:rounded-full [&>svg:first-child]:bg-accent [&>svg:first-child]:p-2.5 [&>svg:first-child]:text-[#14110d]';

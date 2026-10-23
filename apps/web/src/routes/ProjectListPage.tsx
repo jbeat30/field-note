@@ -7,13 +7,13 @@ import {
   type ProjectStatus,
 } from '@field-note/shared';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
-import { ChevronDown } from 'lucide-react';
+import { ChevronDown, FolderPlus } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
+import { Button, pillIconButtonClass } from '../components/ui/button';
 import { Chip } from '../components/ui/chip';
 import { columnHelper, DataTable } from '../components/ui/data-table';
 import { EmptyState } from '../components/ui/empty-state';
@@ -222,9 +222,10 @@ export const ProjectListPage = () => {
       <PageHeader
         title="프로젝트"
         actions={
-          <Button asChild className="md:hidden">
-            <Link to="/projects/new">프로젝트 등록</Link>
-          </Button>
+          <Link to="/projects/new" className={pillIconButtonClass}>
+            <FolderPlus aria-hidden />
+            프로젝트 등록
+          </Link>
         }
       />
 

@@ -122,7 +122,7 @@ export const ProjectLayout = () => {
   return (
     <div className="flex flex-col gap-4">
       {/* 프로젝트 머리: 주황 평면에 돌아가기·번호·이름·상태·주 버튼, 아래 잉크 면에 현장·고객·담당자·기간 */}
-      <div className="plane pt-3 pb-20 md:pt-0 md:pb-24 print:hidden">
+      <div className="plane pt-4 pb-20 md:pt-8 md:pb-24 print:hidden">
         <BackLink to="/projects">프로젝트 목록</BackLink>
         <header className="mt-1 flex items-start justify-between gap-3">
           <div className="flex min-w-0 flex-col gap-2">
