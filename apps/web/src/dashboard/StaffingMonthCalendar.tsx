@@ -67,7 +67,7 @@ export const StaffingMonthCalendar = ({
                   aria-current={isToday ? 'date' : undefined}
                   onClick={() => setSelected(isSelected ? null : day.date)}
                   className={cn(
-                    'flex min-h-14 min-w-0 flex-col gap-1 rounded-2xl p-1 text-left transition-colors sm:min-h-24 sm:p-2',
+                    'flex min-h-14 min-w-0 flex-col gap-1 rounded-xl p-1 text-left transition-colors sm:min-h-24 sm:p-2',
                     isSelected
                       ? 'bg-accent-subtle ring-2 ring-foreground ring-inset'
                       : 'bg-surface-nested hover:bg-field',
