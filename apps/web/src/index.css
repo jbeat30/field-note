@@ -260,6 +260,7 @@ body {
   --line: #e9e1cc;
   --control-border: #d8cfb7;
   --danger: #b3261e;
+  --track: #fbf7ee;
   color: var(--foreground);
 }
 
@@ -269,6 +270,12 @@ body {
   background: var(--accent);
   box-shadow: 0 0 0 100vmax var(--accent);
   clip-path: inset(0 -100vmax);
+}
+
+/* 평면 바로 아래 첫 요소(카드)는 평면 경계에 걸쳐 놓음 */
+.plane-page + * {
+  position: relative;
+  margin-top: -2.5rem;
 }
 
 @media print {
