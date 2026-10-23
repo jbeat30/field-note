@@ -103,7 +103,7 @@ export const ProjectWorkCalendar = ({
           );
           const base = cn(
             'flex min-h-16 flex-col gap-1 rounded-xl p-1.5 text-left md:min-h-24 md:p-2',
-            inMonth ? 'bg-surface-nested' : 'opacity-40',
+            inMonth ? 'bg-surface-nested' : 'bg-transparent',
             log && 'bg-accent-subtle',
           );
 
