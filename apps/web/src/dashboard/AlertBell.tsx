@@ -41,18 +41,18 @@ export const AlertBell = ({ className }: { className?: string }) => {
         aria-haspopup="dialog"
         aria-label={alerts.length > 0 ? `알림 ${alerts.length}건` : '알림'}
         className={cn(
-          'relative inline-flex size-12 shrink-0 items-center justify-center rounded-full bg-field text-foreground transition-colors hover:bg-line focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground',
+          'relative inline-flex size-11 shrink-0 items-center justify-center rounded-full bg-surface-subtle text-foreground transition-opacity hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground md:size-14',
           className,
         )}
         onClick={() => setOpen(true)}
       >
-        <Bell aria-hidden className="size-5" />
+        <Bell aria-hidden className="size-5 md:size-6" />
         {alerts.length > 0 && (
           <span
             aria-hidden
             className={cn(
-              'absolute top-0 right-0 min-w-5 rounded-full px-1 text-center text-[11px] leading-5 font-bold',
-              hasUrgent ? 'bg-danger text-white' : 'bg-primary text-primary-foreground',
+              'absolute -top-1 -right-1 min-w-5 rounded-full px-1 text-center font-emphasis text-[11px] leading-5 font-bold md:min-w-[22px] md:text-xs md:leading-[22px]',
+              hasUrgent ? 'bg-danger text-white' : 'bg-[#14110d] text-accent',
             )}
           >
             {countLabel(alerts.length)}
