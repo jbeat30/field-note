@@ -116,15 +116,15 @@ export const DataTable = <TData extends object>({
       aria-busy={isFetching}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="text-sm text-foreground/70" aria-live="polite">
+        <div className="text-lg font-extrabold tracking-tight" aria-live="polite">
           {summary}
         </div>
-        <label className="flex items-center gap-2 text-sm text-foreground/70">
+        <label className="flex items-center gap-1 text-sm font-bold">
           쪽당
           <Select
             aria-label="쪽당 개수"
             size="sm"
-            className="w-24"
+            className="h-9 w-auto gap-1 border-transparent bg-transparent pr-1 pl-2 font-bold underline decoration-2 underline-offset-4 hover:border-transparent"
             value={String(pageSize)}
             onValueChange={(value) =>
               // 개수를 바꾸면 첫 쪽부터 재조회
