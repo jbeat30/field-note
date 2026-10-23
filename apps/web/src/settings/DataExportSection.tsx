@@ -41,7 +41,7 @@ export const DataExportSection = () => {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         프로젝트·직원·명부·투입·작업 내역(공수)·자재·지출·수입·변경 작업·보수 요청·메모·직원
         단가·파일 목록을 엑셀 한 파일로 내려받습니다. 사진·문서 파일 원본은 포함되지 않으며, 내보낸
         기록이 남습니다

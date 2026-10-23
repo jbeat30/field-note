@@ -53,9 +53,9 @@ export const DocumentCategoryCards = ({
         >
           <span className="flex items-baseline justify-between gap-2">
             <span className="font-semibold">{card.label}</span>
-            <span className="text-sm tabular-nums text-foreground/65">{card.count}</span>
+            <span className="text-sm tabular-nums text-sub">{card.count}</span>
           </span>
-          <span className="truncate text-xs text-foreground/65">{card.hint}</span>
+          <span className="truncate text-xs text-sub">{card.hint}</span>
         </button>
       ))}
     </div>

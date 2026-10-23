@@ -75,7 +75,7 @@ export const ProjectRepairsPage = () => {
         {repairs.isError && <Alert>보수 요청을 불러오지 못했습니다</Alert>}
         {repairs.isPending && <p className="text-sm">불러오는 중</p>}
         {repairs.data && repairs.data.length === 0 && (
-          <p className="text-foreground/70">접수한 보수 요청이 없습니다</p>
+          <p className="text-sub">접수한 보수 요청이 없습니다</p>
         )}
         {repairs.data && repairs.data.length > 0 && (
           <ul className="flex flex-col gap-3">

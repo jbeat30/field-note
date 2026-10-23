@@ -50,7 +50,7 @@ export const ProjectWorkCalendar = ({
             key={label}
             className={cn(
               'text-center text-xs font-bold',
-              index === 0 ? 'text-danger' : 'text-foreground/70',
+              index === 0 ? 'text-danger' : 'text-sub',
             )}
           >
             {label}
@@ -90,7 +90,7 @@ export const ProjectWorkCalendar = ({
                   <span className="font-bold">
                     {workers.length}명 · {roundTo(minutes / 60, 1)}h
                   </span>
-                  <span className="hidden truncate text-foreground/70 md:block">
+                  <span className="hidden truncate text-sub md:block">
                     {workers
                       .slice(0, 2)
                       .map((item) => nameOf(item.employeeId))
@@ -118,7 +118,7 @@ export const ProjectWorkCalendar = ({
                   {content}
                 </Link>
               ) : (
-                <div className={cn(base, 'cursor-default text-foreground/70')}>{content}</div>
+                <div className={cn(base, 'cursor-default text-sub')}>{content}</div>
               )}
             </li>
           );

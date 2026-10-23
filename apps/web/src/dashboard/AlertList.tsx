@@ -73,7 +73,7 @@ type AlertRowProps = {
 
 // 줄 오른쪽의 "숨기기" 같은 글자 버튼: 바탕 없이 보조 글자색
 const textButtonClass =
-  'text-[13px] font-semibold text-foreground/65 hover:text-foreground disabled:opacity-50';
+  'text-[13px] font-semibold text-sub hover:text-foreground disabled:opacity-50';
 
 const DOT_URGENT = 'bg-danger';
 const DOT_NORMAL = 'bg-[#8d826c]';

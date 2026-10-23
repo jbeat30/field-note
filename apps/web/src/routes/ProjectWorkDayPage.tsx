@@ -126,7 +126,7 @@ export const ProjectWorkDayPage = () => {
           )}
           {!problem && <DayLedgerStep projectId={id} date={date} today={today} />}
           {!problem && (
-            <p className="text-sm text-foreground/70">
+            <p className="text-sm text-sub">
               이 날 쓴 자재는{' '}
               <Link
                 className="font-medium text-primary underline"

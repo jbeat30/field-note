@@ -49,7 +49,7 @@ export const MonthStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
         </span>
       </p>
       {calendar.isError && <Alert role="alert">이번 달 인력을 불러오지 못했습니다</Alert>}
-      {calendar.isPending && <p className="text-sm text-foreground/75">불러오는 중</p>}
+      {calendar.isPending && <p className="text-sm text-sub">불러오는 중</p>}
       {calendar.data && (
         <StaffingMonthCalendar weeks={weeks} today={today} projectColors={projectColors} />
       )}

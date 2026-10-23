@@ -37,7 +37,7 @@ export const StaffingMonthCalendar = ({
   return (
     <div className="flex flex-col gap-4">
       <div role="group" aria-label="이번 달 인력 달력" className="flex flex-col gap-1.5">
-        <div className="grid grid-cols-7 gap-1.5 text-center text-[13px] font-bold text-foreground/65">
+        <div className="grid grid-cols-7 gap-1.5 text-center text-[13px] font-bold text-sub">
           {WEEKDAY_LABELS.map((label, index) => (
             <div
               key={label}
@@ -98,9 +98,7 @@ export const StaffingMonthCalendar = ({
                       {Number(day.date.slice(8))}
                     </span>
                     {day.headcount > 0 && (
-                      <span className="text-[11px] font-bold text-foreground/65">
-                        {day.headcount}명
-                      </span>
+                      <span className="text-[11px] font-bold text-sub">{day.headcount}명</span>
                     )}
                   </span>
                   <span className="hidden min-w-0 flex-col gap-1 sm:flex">
@@ -116,7 +114,7 @@ export const StaffingMonthCalendar = ({
                       </span>
                     ))}
                     {hidden > 0 && (
-                      <span className="text-[11px] font-bold text-foreground/65">+{hidden}</span>
+                      <span className="text-[11px] font-bold text-sub">+{hidden}</span>
                     )}
                   </span>
                   <span className="flex gap-0.5 sm:hidden" aria-hidden="true">

@@ -30,11 +30,11 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
       </h2>
       <dl className="grid grid-cols-2 gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
         <div>
-          <dt className="text-foreground/70">이번 달 공수</dt>
+          <dt className="text-sub">이번 달 공수</dt>
           <dd className="font-bold">{formatWork(data.thisMonthMinutes, config)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/70">올해 공수</dt>
+          <dt className="text-sub">올해 공수</dt>
           <dd className="font-bold">{formatWork(data.thisYearMinutes, config)}</dd>
         </div>
       </dl>
@@ -56,7 +56,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
               <span>
                 {row.workedDays}일 · {formatWork(row.totalMinutes, config)}
               </span>
-              <span className="text-foreground/70">
+              <span className="text-sub">
                 {row.assignedFrom && row.assignedTo
                   ? `투입 ${row.assignedFrom} ~ ${row.assignedTo}`
                   : '투입 기록 없음'}

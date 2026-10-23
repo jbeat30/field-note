@@ -19,7 +19,7 @@ export const ProjectPeriodHistory = ({ projectId }: { projectId: string }) => {
       {history.isPending && <p className="text-sm">이력을 불러오는 중</p>}
       {history.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
       {history.data && history.data.length === 0 && (
-        <p className="text-sm text-foreground/70">예정 기간을 바꾼 기록이 없습니다</p>
+        <p className="text-sm text-sub">예정 기간을 바꾼 기록이 없습니다</p>
       )}
       {history.data && history.data.length > 0 && (
         <ol className="divide-y divide-border">
@@ -29,7 +29,7 @@ export const ProjectPeriodHistory = ({ projectId }: { projectId: string }) => {
                 {item.fromStart} ~ {item.fromEnd} → {item.toStart} ~ {item.toEnd}
               </span>
               {item.reason && <span>사유: {item.reason}</span>}
-              <span className="text-foreground/70">기록 {formatChangedAt(item.changedAt)}</span>
+              <span className="text-sub">기록 {formatChangedAt(item.changedAt)}</span>
             </li>
           ))}
         </ol>

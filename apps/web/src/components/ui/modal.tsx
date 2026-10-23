@@ -53,15 +53,13 @@ export const Modal = ({
           <Dialog.Title className="text-xl font-extrabold tracking-tight">{title}</Dialog.Title>
           <Dialog.Close
             aria-label="닫기"
-            className="-mt-1.5 -mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-foreground/65 hover:bg-field hover:text-foreground focus-visible:outline-2 focus-visible:outline-foreground"
+            className="-mt-1.5 -mr-1.5 flex size-10 shrink-0 items-center justify-center rounded-md text-sub hover:bg-field hover:text-foreground focus-visible:outline-2 focus-visible:outline-foreground"
           >
             <X aria-hidden className="size-5" />
           </Dialog.Close>
         </div>
         {description && (
-          <Dialog.Description className="text-sm text-foreground/70">
-            {description}
-          </Dialog.Description>
+          <Dialog.Description className="text-sm text-sub">{description}</Dialog.Description>
         )}
         {children}
       </Dialog.Content>

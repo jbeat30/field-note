@@ -81,9 +81,7 @@ export const TotpSetupForm = ({
         ) : (
           <div aria-hidden className="size-48 animate-pulse rounded-lg bg-muted" />
         )}
-        <p className="text-sm text-foreground/70">
-          QR 코드를 읽을 수 없으면 아래 키를 앱에 입력하세요
-        </p>
+        <p className="text-sm text-sub">QR 코드를 읽을 수 없으면 아래 키를 앱에 입력하세요</p>
         <p className="font-mono text-base tracking-wider break-all" aria-label="인증 키">
           {groupSecret(setup.secret)}
         </p>

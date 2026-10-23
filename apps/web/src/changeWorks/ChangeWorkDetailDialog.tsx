@@ -335,7 +335,7 @@ const Evidence = ({
       )}
       {(error || opener.error) && <Alert>{error || opener.error}</Alert>}
       {detail.documents.length === 0 ? (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           {editable ? '대화 캡처·합의서·공문 사진이나 PDF를 올려 두세요' : '연결한 증빙이 없습니다'}
         </p>
       ) : (
@@ -345,7 +345,7 @@ const Evidence = ({
               key={item.documentId}
               className="flex items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2"
             >
-              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-muted text-foreground/65 [&_svg]:size-5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-muted text-sub [&_svg]:size-5">
                 {item.contentType.startsWith('image/') ? (
                   <ImageIcon aria-hidden />
                 ) : (
@@ -365,7 +365,7 @@ const Evidence = ({
                 }
               >
                 <span className="block truncate text-sm font-semibold">{item.title}</span>
-                <span className="block truncate text-xs text-foreground/65">
+                <span className="block truncate text-xs text-sub">
                   {DOCUMENT_CATEGORY_LABELS[item.category]}
                   {item.isSensitive ? ' · 민감' : ''} · {formatDay(item.linkedAt.slice(0, 10))}
                 </span>
@@ -455,7 +455,7 @@ const Body = ({
     <div className="flex flex-col gap-3 border-t border-border pt-3">
       {message && <p role="status">{message}</p>}
       <p className="whitespace-pre-wrap">{detail.content}</p>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         요청 {formatDay(detail.requestedOn)} · {detail.requester}
       </p>
 
@@ -526,7 +526,7 @@ const Body = ({
       <div className="flex flex-col gap-1">
         <h3 className="font-medium">상태 이력</h3>
         {detail.history.length === 0 ? (
-          <p className="text-sm text-foreground/70">상태를 바꾼 적이 없습니다</p>
+          <p className="text-sm text-sub">상태를 바꾼 적이 없습니다</p>
         ) : (
           <ul className="flex flex-col gap-1 text-sm">
             {detail.history.map((item) => (

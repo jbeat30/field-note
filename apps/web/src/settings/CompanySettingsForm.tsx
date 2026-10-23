@@ -137,7 +137,7 @@ export const CompanySettingsForm = () => {
           <h3 id="mm-heading" className="text-base font-bold">
             월 기준일수 (MM 환산 기준)
           </h3>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             1MM(맨먼스)을 몇 일(MD)로 볼지 정합니다. 현장은 공휴일에도 일하므로 공휴일 달력은 쓰지
             않고, 근무 형태별 연평균으로 계산합니다
           </p>
@@ -152,7 +152,7 @@ export const CompanySettingsForm = () => {
                 <RadioGroupItem value={item.key} />
                 <span>
                   {item.label} {item.days}일
-                  <span className="block text-sm text-foreground/70">{item.hint}</span>
+                  <span className="block text-sm text-sub">{item.hint}</span>
                 </span>
               </label>
             ))}
@@ -173,7 +173,7 @@ export const CompanySettingsForm = () => {
               {...register('monthlyWorkDays', { valueAsNumber: true })}
             />
           </FormField>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             이 값이면 1MM = {Number.isFinite(days) ? days : '-'}일, 하루{' '}
             {Number.isFinite(hours) ? hours : '-'}시간 기준으로{' '}
             {Number.isFinite(days) && Number.isFinite(hours) ? roundText(days * hours) : '-'}
@@ -223,7 +223,7 @@ export const CompanySettingsForm = () => {
                     <RadioGroupItem value={option.value} />
                     <span>
                       {option.label}
-                      <span className="block text-sm text-foreground/70">{option.description}</span>
+                      <span className="block text-sm text-sub">{option.description}</span>
                     </span>
                   </label>
                 ))}

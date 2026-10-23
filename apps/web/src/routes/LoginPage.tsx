@@ -175,7 +175,7 @@ export const LoginPage = () => {
       </Button>
       {enabledProviders.length > 0 && (
         <>
-          <p className="text-center text-sm text-foreground/70">또는</p>
+          <p className="text-center text-sm text-sub">또는</p>
           {enabledProviders.map((provider) => (
             <SocialButton
               key={provider}
@@ -194,9 +194,7 @@ export const LoginPage = () => {
       >
         비밀번호를 잊으셨나요?
       </Link>
-      <p className="text-sm text-foreground/70">
-        가입은 운영자가 보낸 초대 링크로만 할 수 있습니다
-      </p>
+      <p className="text-sm text-sub">가입은 운영자가 보낸 초대 링크로만 할 수 있습니다</p>
     </form>
   );
 };

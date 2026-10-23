@@ -50,7 +50,7 @@ export const PeriodNav = ({
   const title = (
     <>
       <span className="font-bold">{label}</span>
-      {onPick && <CalendarDays aria-hidden className="size-4 text-foreground/70" />}
+      {onPick && <CalendarDays aria-hidden className="size-4 text-sub" />}
     </>
   );
 

@@ -81,7 +81,7 @@ export const QuickAddSheet = () => {
             </div>
           ) : (
             <>
-              <p className="text-sm text-foreground/70">
+              <p className="text-sm text-sub">
                 {currentProject
                   ? '이 프로젝트의 메모 노트에 저장합니다'
                   : '프로젝트를 고르면 해당 메모 노트에 저장됩니다'}

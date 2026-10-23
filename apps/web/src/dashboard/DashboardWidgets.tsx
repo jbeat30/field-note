@@ -72,7 +72,7 @@ const daysLabel = (daysLeft: number) =>
   daysLeft < 0 ? `${-daysLeft}일 지남` : daysLeft === 0 ? '오늘' : `${daysLeft}일 남음`;
 
 const Empty = ({ children }: { children: ReactNode }) => (
-  <p className="text-sm text-foreground/75">{children}</p>
+  <p className="text-sm text-sub">{children}</p>
 );
 
 const hoursText = (minutes: number) => `${Math.round(minutes / 6) / 10}`;
@@ -84,7 +84,7 @@ const remainingDays = (today: string, plannedEnd: string) =>
   );
 
 const HEAD_CELL =
-  'sticky top-0 z-10 bg-surface py-2 pr-3 text-left text-xs font-semibold whitespace-nowrap text-foreground/65 shadow-[inset_0_-1.5px_0_var(--foreground)]';
+  'sticky top-0 z-10 bg-surface py-2 pr-3 text-left text-xs font-semibold whitespace-nowrap text-sub shadow-[inset_0_-1.5px_0_var(--foreground)]';
 
 // 표 머리는 고정하고 행만 스크롤, 오늘 기록은 잉크 알약 버튼
 const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today: string }) => (
@@ -123,7 +123,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
               >
                 {project.name}
               </Link>
-              <span className="mt-0.5 block text-[13px] text-foreground/65">
+              <span className="mt-0.5 block text-[13px] text-sub">
                 {project.siteName}
                 {!inProgress && ` · ${PROJECT_STATUS_LABELS[project.status]}`}
               </span>
@@ -161,7 +161,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
             </td>
             <td className="py-[15px] pr-3 align-middle whitespace-nowrap">
               {!inProgress ? (
-                <span className="inline-flex size-8 items-center justify-center rounded-full bg-field text-[13px] font-bold text-foreground/65">
+                <span className="inline-flex size-8 items-center justify-center rounded-full bg-field text-[13px] font-bold text-sub">
                   -
                 </span>
               ) : project.hasLogToday ? (
@@ -283,7 +283,7 @@ export const DashboardWidgets = ({
             />
           )}
           {alerts.length > HOME_ALERTS && (
-            <p className="text-sm text-foreground/75">
+            <p className="text-sm text-sub">
               알림 {alerts.length - HOME_ALERTS}건이 더 있습니다. 메뉴의 알림 버튼에서 모두 볼 수
               있습니다
             </p>

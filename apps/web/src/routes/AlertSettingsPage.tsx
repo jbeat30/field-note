@@ -55,7 +55,7 @@ export const AlertSettingsPage = () => {
               className="flex flex-col gap-1 rounded-3xl bg-surface-subtle p-5"
             >
               <h2 className="text-lg font-bold">{group.title}</h2>
-              <p className="mb-2 text-sm text-foreground/70">{group.description}</p>
+              <p className="mb-2 text-sm text-sub">{group.description}</p>
               <ul className="divide-y divide-line">
                 {group.kinds.map((kind) => (
                   <li key={kind}>

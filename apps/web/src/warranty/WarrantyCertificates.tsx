@@ -169,7 +169,7 @@ export const WarrantyCertificates = ({
     <div className="flex flex-col gap-3">
       {rootError && <Alert>{rootError}</Alert>}
       {warranty.certificates.length === 0 ? (
-        <p className="text-sm text-foreground/70">등록한 보증서가 없습니다</p>
+        <p className="text-sm text-sub">등록한 보증서가 없습니다</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {warranty.certificates.map((certificate) => (

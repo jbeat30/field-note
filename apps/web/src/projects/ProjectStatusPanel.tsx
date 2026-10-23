@@ -172,7 +172,7 @@ const TransitionForm = ({
         {actionLabel(project.status, to)}: &apos;{PROJECT_STATUS_LABELS[project.status]}&apos; →
         &apos;{PROJECT_STATUS_LABELS[to]}&apos;
       </p>
-      <p className="text-sm text-foreground/70">{confirmHint(project.status, to)}</p>
+      <p className="text-sm text-sub">{confirmHint(project.status, to)}</p>
       {notices.data && notices.data.length > 0 && (
         <ul className="flex flex-col gap-1 text-sm" aria-label="확인할 것">
           {notices.data.map((notice) => (
@@ -284,7 +284,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
                   index < stepIndex && 'bg-primary text-primary-foreground',
                   index === stepIndex &&
                     'bg-primary text-primary-foreground ring-4 ring-primary/20',
-                  index > stepIndex && 'bg-muted text-foreground/70',
+                  index > stepIndex && 'bg-muted text-sub',
                 )}
               >
                 {index < stepIndex ? <Check aria-hidden className="size-4" /> : index + 1}
@@ -292,7 +292,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
               <span
                 className={cn(
                   'text-center text-xs font-medium leading-tight',
-                  index <= stepIndex ? 'text-foreground' : 'text-foreground/70',
+                  index <= stepIndex ? 'text-foreground' : 'text-sub',
                 )}
               >
                 {PROJECT_STATUS_LABELS[step]}
@@ -307,7 +307,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
         <div className="flex flex-wrap items-center justify-between gap-3">
           <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
             <div className="flex gap-1.5">
-              <dt className="text-foreground/65">현재 상태</dt>
+              <dt className="text-sub">현재 상태</dt>
               <dd className="font-semibold">
                 {project.status === 'SUSPENDED'
                   ? '작업 중단'
@@ -315,16 +315,16 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
               </dd>
             </div>
             <div className="flex gap-1.5">
-              <dt className="text-foreground/65">실제 시작일</dt>
+              <dt className="text-sub">실제 시작일</dt>
               <dd className="font-semibold">{project.actualStart ?? '-'}</dd>
             </div>
             <div className="flex gap-1.5">
-              <dt className="text-foreground/65">실제 완료일</dt>
+              <dt className="text-sub">실제 완료일</dt>
               <dd className="font-semibold">{project.actualEnd ?? '-'}</dd>
             </div>
             {showWarranty && warranty.data && warranty.data.configured && (
               <div className="flex gap-1.5">
-                <dt className="text-foreground/65">보증</dt>
+                <dt className="text-sub">보증</dt>
                 <dd className="font-semibold">
                   {warranty.data.months === 0
                     ? '보증 없음'
@@ -398,7 +398,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
           {history.isPending && <p>이력을 불러오는 중</p>}
           {history.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
           {history.data && history.data.length === 0 && (
-            <p className="text-foreground/70">아직 상태를 바꾼 기록이 없습니다</p>
+            <p className="text-sub">아직 상태를 바꾼 기록이 없습니다</p>
           )}
           {history.data && history.data.length > 0 && (
             <ol className="divide-y divide-line">
@@ -409,7 +409,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
                     {PROJECT_STATUS_LABELS[item.toStatus]}
                   </span>
                   {item.reason && <span>사유: {item.reason}</span>}
-                  <span className="text-foreground/70">기록 {formatChangedAt(item.changedAt)}</span>
+                  <span className="text-sub">기록 {formatChangedAt(item.changedAt)}</span>
                 </li>
               ))}
             </ol>

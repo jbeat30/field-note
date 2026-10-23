@@ -30,7 +30,7 @@ export const EmployeeOverviewPanel = ({ employee }: { employee: EmployeeDetail }
       <dl className="grid grid-cols-[6rem_1fr] gap-x-3 gap-y-2 text-sm">
         {rows.map(([label, value]) => (
           <div key={label} className="contents">
-            <dt className="text-foreground/70">{label}</dt>
+            <dt className="text-sub">{label}</dt>
             <dd className="font-medium">{value}</dd>
           </div>
         ))}

@@ -33,25 +33,25 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
   return (
     <article className="flex flex-col gap-4 text-foreground" aria-label="작업일보">
       <header className="flex flex-col gap-1 border-b-2 border-foreground pb-2">
-        <p className="text-sm text-foreground/70">{report.companyName}</p>
+        <p className="text-sm text-sub">{report.companyName}</p>
         <h1 className="text-2xl font-bold">작업일보</h1>
         <dl className="grid grid-cols-[auto_1fr] gap-x-3 gap-y-0.5 text-sm">
-          <dt className="text-foreground/70">일자</dt>
+          <dt className="text-sub">일자</dt>
           <dd>
             {formatDay(report.date)} ({report.date})
           </dd>
-          <dt className="text-foreground/70">프로젝트</dt>
+          <dt className="text-sub">프로젝트</dt>
           <dd>
             {project.code} {project.name}
           </dd>
-          <dt className="text-foreground/70">현장</dt>
+          <dt className="text-sub">현장</dt>
           <dd>
             {project.siteName}
             {project.siteAddress ? ` (${project.siteAddress})` : ''}
           </dd>
           {project.clientName && (
             <>
-              <dt className="text-foreground/70">고객</dt>
+              <dt className="text-sub">고객</dt>
               <dd>{project.clientName}</dd>
             </>
           )}
@@ -83,13 +83,13 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
             )}
           </>
         ) : (
-          <p className="text-sm text-foreground/70">이 날 작성한 작업 내역이 없습니다</p>
+          <p className="text-sm text-sub">이 날 작성한 작업 내역이 없습니다</p>
         )}
       </Section>
 
       <Section title="투입 인원·공수">
         {entries.length === 0 ? (
-          <p className="text-sm text-foreground/70">기록된 공수가 없습니다</p>
+          <p className="text-sm text-sub">기록된 공수가 없습니다</p>
         ) : (
           <table className="w-full border-collapse">
             <thead>
@@ -124,7 +124,7 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
 
       <Section title="자재">
         {materials.length === 0 ? (
-          <p className="text-sm text-foreground/70">기록된 자재가 없습니다</p>
+          <p className="text-sm text-sub">기록된 자재가 없습니다</p>
         ) : (
           <table className="w-full border-collapse">
             <thead>
@@ -167,7 +167,7 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
 
       <Section title="사진">
         {photos.length === 0 ? (
-          <p className="text-sm text-foreground/70">이 날 올린 사진이 없습니다</p>
+          <p className="text-sm text-sub">이 날 올린 사진이 없습니다</p>
         ) : (
           <ul className="grid grid-cols-2 gap-2 sm:grid-cols-3">
             {photos.map((photo) => (
@@ -179,7 +179,7 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
                     className="aspect-[4/3] w-full rounded border border-border object-cover"
                   />
                 ) : (
-                  <span className="flex aspect-[4/3] items-center justify-center rounded border border-dashed border-border text-xs text-foreground/70">
+                  <span className="flex aspect-[4/3] items-center justify-center rounded border border-dashed border-border text-xs text-sub">
                     사진 처리 중
                   </span>
                 )}
@@ -193,7 +193,7 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
           </ul>
         )}
         {report.hasMorePhotos && (
-          <p className="text-xs text-foreground/70">
+          <p className="text-xs text-sub">
             사진이 많아 일부만 실었습니다. 전체는 사진첩에서 확인하세요
           </p>
         )}

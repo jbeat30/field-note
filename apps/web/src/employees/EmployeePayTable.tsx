@@ -53,7 +53,7 @@ export const EmployeePayTable = () => {
 
   return (
     <div className="flex flex-col gap-3">
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         프로젝트 인건비 추정에만 쓰입니다. 단가를 바꾸면 변경 기록으로 남고, 이전 날짜 근무분은 기존
         단가 그대로입니다
         {missing > 0 && ` · 단가가 없는 직원 ${missing}명`}
@@ -98,10 +98,10 @@ export const EmployeePayTable = () => {
                     <Badge tone="warning">단가 없음</Badge>
                   )}
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-foreground/75">
+                <TableCell className="whitespace-nowrap text-sub">
                   {summary?.current?.effectiveFrom ?? '-'}
                 </TableCell>
-                <TableCell className="text-foreground/75 tabular-nums">
+                <TableCell className="text-sub tabular-nums">
                   {summary?.previous ? (
                     <>
                       {rateText(summary.previous)}

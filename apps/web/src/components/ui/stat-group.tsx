@@ -43,7 +43,7 @@ const LIME: Tile = {
 };
 const CREAM: Tile = {
   tile: 'tile-cream bg-surface-subtle text-foreground',
-  sub: 'text-foreground/65',
+  sub: 'text-sub',
   num: '',
 };
 const INK: Tile = {

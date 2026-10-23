@@ -134,9 +134,7 @@ const OptionRow = ({
         <>
           <span className="flex items-center gap-1">
             {handle}
-            <span className={item.isActive ? 'font-medium' : 'text-foreground/70'}>
-              {item.name}
-            </span>
+            <span className={item.isActive ? 'font-medium' : 'text-sub'}>{item.name}</span>
             {!item.isActive && <Badge className="ml-1">숨김</Badge>}
           </span>
           <div className="flex items-center gap-0.5">
@@ -227,7 +225,7 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
           {label}
           <Badge>{items.length}개</Badge>
         </h2>
-        <p className="text-sm text-foreground/70">{KIND_HINTS[kind]}</p>
+        <p className="text-sm text-sub">{KIND_HINTS[kind]}</p>
       </div>
       <form className="flex gap-2" onSubmit={add} noValidate>
         <Input

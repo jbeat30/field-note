@@ -107,7 +107,7 @@ export const PayRateForm = ({
           onChange={(event) => setEffectiveFrom(event.target.value)}
         />
       </FormField>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         이 날짜에 일한 공수부터 새 단가로 계산됩니다. 이전 날짜는 기존 단가 그대로입니다
       </p>
       <Button type="submit" disabled={add.isPending}>
@@ -149,7 +149,7 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
           <h2 id="pay-heading" className="text-lg font-bold">
             단가
           </h2>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             프로젝트 인건비 추정에만 쓰입니다. 단가를 바꾸면 변경 기록으로 남습니다
           </p>
         </div>
@@ -160,22 +160,22 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
 
       {active ? (
         <div className="flex flex-col gap-1 rounded-3xl bg-surface-subtle p-5">
-          <span className="text-sm text-foreground/70">현재 단가</span>
+          <span className="text-sm text-sub">현재 단가</span>
           <span className="text-3xl font-bold tabular-nums">
             {formatWon(active.amount)}
-            <span className="ml-2 text-base font-medium text-foreground/70">
+            <span className="ml-2 text-base font-medium text-sub">
               {PAY_TYPE_LABELS[active.payType]}
             </span>
           </span>
           {daily !== null && (
-            <span className="text-sm text-foreground/70">
+            <span className="text-sm text-sub">
               일 환산 약 {formatWon(daily)} (하루 {settings.data.standardWorkMinutes / 60}시간 기준)
             </span>
           )}
-          <span className="text-sm text-foreground/70">{active.effectiveFrom}부터 적용</span>
+          <span className="text-sm text-sub">{active.effectiveFrom}부터 적용</span>
         </div>
       ) : (
-        <p className="rounded-3xl bg-surface-subtle p-5 text-foreground/70">
+        <p className="rounded-3xl bg-surface-subtle p-5 text-sub">
           {rates.data.length > 0 ? '적용 중인 단가가 없습니다' : '등록된 단가가 없습니다'}
         </p>
       )}
@@ -192,14 +192,12 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
                 />
                 <span className="font-semibold tabular-nums">
                   {formatWon(rate.amount)}{' '}
-                  <span className="font-normal text-foreground/70">
-                    {PAY_TYPE_LABELS[rate.payType]}
-                  </span>
+                  <span className="font-normal text-sub">{PAY_TYPE_LABELS[rate.payType]}</span>
                   {rate.effectiveFrom > today && (
                     <span className="ml-2 text-xs font-normal text-primary">적용 예정</span>
                   )}
                 </span>
-                <span className="text-foreground/70">
+                <span className="text-sub">
                   {rate.effectiveFrom}부터 · {rate.createdAt.slice(0, 10)}에 입력
                 </span>
               </li>
