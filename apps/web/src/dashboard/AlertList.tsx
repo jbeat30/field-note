@@ -69,6 +69,8 @@ type AlertRowProps = {
   disabled: boolean;
   // 묶음 안의 줄은 바깥 묶음 면 위에 그대로 놓임
   isInGroup?: boolean;
+  // 알림 창 안에서는 이동과 숨기기를 굵은 글자 버튼으로 보임
+  isModal?: boolean;
 };
 
 // 줄 오른쪽의 "숨기기" 같은 글자 버튼: 바탕 없이 보조 글자색
@@ -78,7 +80,14 @@ const textButtonClass =
 const DOT_URGENT = 'bg-danger';
 const DOT_NORMAL = 'bg-[#8d826c]';
 
-const AlertRow = ({ item, today, onDismiss, disabled, isInGroup = false }: AlertRowProps) => (
+const AlertRow = ({
+  item,
+  today,
+  onDismiss,
+  disabled,
+  isInGroup = false,
+  isModal = false,
+}: AlertRowProps) => (
   <li
     className={cn(
       'flex items-center gap-3 text-sm leading-normal',
@@ -95,15 +104,24 @@ const AlertRow = ({ item, today, onDismiss, disabled, isInGroup = false }: Alert
     <Link
       to={dashboardAlertPath(item.alert, today)}
       aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
-      className="shrink-0 rounded-2xl bg-primary px-3.5 py-[7px] text-[13px] font-bold text-primary-foreground hover:opacity-85"
+      className={cn(
+        'shrink-0 text-[13px] font-bold',
+        !isModal &&
+          'rounded-2xl bg-primary px-3.5 py-[7px] text-primary-foreground hover:opacity-85',
+      )}
     >
       이동
     </Link>
+    {isModal && (
+      <span aria-hidden className="-mx-1 text-[13px] font-bold">
+        ·
+      </span>
+    )}
     <button
       type="button"
       disabled={disabled}
       aria-label={`${dashboardAlertMessage(item.alert)} 숨기기`}
-      className={cn('shrink-0', textButtonClass)}
+      className={cn('shrink-0', textButtonClass, isModal && 'font-bold text-foreground')}
       onClick={() => onDismiss([item.key])}
     >
       숨기기
@@ -118,6 +136,8 @@ type AlertListProps = {
   disabled?: boolean;
   // 묶지 않고 앞에서부터 이만큼만 보여 줄 때 (홈)
   limit?: number;
+  // 알림 창에서 쓸 때
+  isModal?: boolean;
 };
 
 // 알림 목록: 급한 알림은 붉은 점·글자, 나머지는 회색 점, 같은 종류가 많으면 한 줄로 묶고 하나씩 "이동" "숨기기"
@@ -127,6 +147,7 @@ export const AlertList = ({
   onDismiss,
   disabled = false,
   limit,
+  isModal = false,
 }: AlertListProps) => {
   const [opened, setOpened] = useState<ReadonlySet<AlertKind>>(new Set());
   const shown = limit === undefined ? alerts : alerts.slice(0, limit);
@@ -146,6 +167,7 @@ export const AlertList = ({
               today={today}
               onDismiss={onDismiss}
               disabled={disabled}
+              isModal={isModal}
             />
           );
         }
