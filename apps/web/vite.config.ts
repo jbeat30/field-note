@@ -2,8 +2,9 @@ import tailwindcss from '@tailwindcss/vite';
 import react from '@vitejs/plugin-react';
 import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { fileURLToPath } from 'node:url';
 
-import { defineConfig, type Plugin } from 'vite';
+import { defineConfig, loadEnv, type Plugin } from 'vite';
 import { VitePWA } from 'vite-plugin-pwa';
 
 const require = createRequire(import.meta.url);
@@ -18,6 +19,14 @@ const serveMockWorker = (): Plugin => ({
     });
   },
 });
+
+// 루트 .env의 APP_ORIGIN에서 개발 서버 포트를 읽음 (api의 CSRF 허용 주소와 같은 값, 없으면 5173)
+const devPort = (mode: string) => {
+  const root = fileURLToPath(new URL('../..', import.meta.url));
+  const origin = loadEnv(mode, root, 'APP_ORIGIN').APP_ORIGIN ?? 'http://localhost:5173';
+
+  return Number(new URL(origin).port) || 5173;
+};
 
 export default defineConfig(({ mode }) => ({
   plugins: [
@@ -46,6 +55,7 @@ export default defineConfig(({ mode }) => ({
     }),
   ],
   server: {
+    port: devPort(mode),
     // 운영과 같은 도메인 구성을 맞추기 위해 /api를 api 서버로 전달
     // 3000번 포트를 다른 프로그램이 사용 중이면 api를 다른 포트로 실행하고 `API_PROXY_TARGET=http://localhost:3001`로 지정
     proxy: { '/api': process.env.API_PROXY_TARGET ?? 'http://localhost:3000' },
