@@ -138,6 +138,14 @@ const Lockable = ({ locked, children }: { locked: boolean; children: ReactNode }
  * 고객·담당자·공종은 명부·직원·선택 목록에서 선택, 목록에 없으면 그 자리에서 추가 가능
  * @param props project가 있으면 수정, 없으면 등록
  */
+// 시안의 입력 묶음 카드: 큰 둥근 면과 19px 제목
+const SectionCard = ({ title, children }: { title: string; children: ReactNode }) => (
+  <section className="flex flex-col gap-5 rounded-[30px] bg-surface-subtle p-7">
+    <h2 className="text-[19px] font-bold">{title}</h2>
+    {children}
+  </section>
+);
+
 export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   const navigate = useNavigate();
   const create = useCreateProject();
@@ -347,19 +355,15 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
         </Alert>
       )}
 
-      {/* 프로젝트명 — 전체 폭 */}
-      <Lockable locked={isLocked('name')}>
-        <FormField label="프로젝트명" error={errors.name?.message}>
-          <Input placeholder="예: 한빛빌딩 3층 리모델링" {...register('name')} />
-        </FormField>
-      </Lockable>
-
-      {/* xl+ 2열: 왼쪽 현장 / 오른쪽 고객·담당자·공종·일정 */}
-      <div className="grid items-start gap-4 xl:grid-cols-2">
-        {/* 왼쪽: 현장 */}
+      {/* 시안 구성: 기본 / 고객·담당자·공종 / 기간 세 카드 */}
+      <SectionCard title="기본">
+        <Lockable locked={isLocked('name')}>
+          <FormField label="프로젝트명" error={errors.name?.message}>
+            <Input placeholder="예: 한빛빌딩 3층 리모델링" {...register('name')} />
+          </FormField>
+        </Lockable>
         <Lockable locked={isLocked('siteName')}>
-          <fieldset className="grid gap-4 rounded-2xl bg-surface-subtle p-4 md:grid-cols-2">
-            <legend className="px-1 text-sm font-bold">현장</legend>
+          <div className="grid gap-x-4 gap-y-5 md:grid-cols-2">
             <FormField
               label="현장 이름"
               hint="건물명이나 현장 이름"
@@ -409,29 +413,32 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
                 {...register('accessMemo')}
               />
             </FormField>
-          </fieldset>
+          </div>
         </Lockable>
+      </SectionCard>
 
-        {/* 오른쪽: 고객·담당자·공종·일정 */}
-        <div className="flex flex-col gap-4">
+      <SectionCard title="고객 · 담당자 · 공종">
+        <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
+          <Lockable locked={isLocked('clientId')}>
+            <FormField
+              label="고객"
+              hint="명부의 고객(발주처·원청)"
+              error={errors.clientId?.message}
+            >
+              <Combobox
+                value={clientId}
+                placeholder="고객 선택"
+                searchPlaceholder="고객 이름으로 찾기"
+                onValueChange={(value) => setValue('clientId', value, { shouldDirty: true })}
+                options={clients.map((item) => ({
+                  value: item.id,
+                  label: item.isActive ? item.name : `${item.name} (숨김)`,
+                }))}
+              />
+            </FormField>
+          </Lockable>
           <Lockable locked={isLocked('clientId')}>
             <div className="flex flex-col gap-2">
-              <FormField
-                label="고객"
-                hint="명부의 고객(발주처·원청)"
-                error={errors.clientId?.message}
-              >
-                <Combobox
-                  value={clientId}
-                  placeholder="고객 선택"
-                  searchPlaceholder="고객 이름으로 찾기"
-                  onValueChange={(value) => setValue('clientId', value, { shouldDirty: true })}
-                  options={clients.map((item) => ({
-                    value: item.id,
-                    label: item.isActive ? item.name : `${item.name} (숨김)`,
-                  }))}
-                />
-              </FormField>
               <InlineAdd
                 label="목록에 없는 고객 추가"
                 placeholder="새 고객 상호"
@@ -465,91 +472,91 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
               />
             </FormField>
           </Lockable>
-
-          <Lockable locked={isLocked('tradeIds')}>
-            <fieldset className="flex flex-col gap-2">
-              <legend className="text-sm font-medium">공종 (여러 개 선택 가능)</legend>
-              <div className="flex flex-wrap gap-2">
-                {trades.map((trade) => (
-                  <label
-                    key={trade.id}
-                    className="flex min-h-touch items-center gap-2 rounded-xl bg-field px-3"
-                  >
-                    <input
-                      type="checkbox"
-                      className="size-5"
-                      checked={tradeIds.includes(trade.id)}
-                      onChange={() => toggleTrade(trade.id)}
-                    />
-                    {trade.name}
-                    {trade.isActive ? '' : ' (숨김)'}
-                  </label>
-                ))}
-              </div>
-              {errors.tradeIds?.message && (
-                <p className="text-sm text-danger">{errors.tradeIds.message}</p>
-              )}
-              <InlineAdd
-                label="목록에 없는 공종 추가"
-                placeholder="새 공종 이름"
-                isPending={createOption.isPending}
-                error={tradeError}
-                onAdd={addTrade}
-              />
-            </fieldset>
-          </Lockable>
-
-          <Lockable locked={isLocked('contractDate')}>
-            <fieldset className="grid gap-4 rounded-2xl bg-surface-subtle p-4 sm:grid-cols-2">
-              <legend className="px-1 text-sm font-bold">일정</legend>
-              <FormField label="계약일" error={errors.contractDate?.message}>
-                <DateInput {...register('contractDate')} />
-              </FormField>
-              <FormField
-                label="시작 예정일"
-                hint="작업 내역을 입력할 수 있는 기간이 됩니다"
-                error={errors.plannedStart?.message}
-              >
-                <DateInput {...register('plannedStart')} />
-              </FormField>
-              <FormField label="종료 예정일" error={errors.plannedEnd?.message}>
-                <DateInput {...register('plannedEnd')} />
-              </FormField>
-            </fieldset>
-          </Lockable>
-
-          {periodChanged && (
-            <Lockable locked={isLocked('plannedStart')}>
-              <FormField
-                label={reasonRequired ? '기간 변경 사유 (필수)' : '기간 변경 사유 (선택)'}
-                hint="연장·단축한 이유를 남기면 기간 변경 이력에 기록됩니다"
-                error={errors.periodChangeReason?.message}
-              >
-                <Textarea
-                  placeholder="기간을 바꾸는 사유를 입력하세요"
-                  {...register('periodChangeReason')}
-                />
-              </FormField>
-            </Lockable>
-          )}
         </div>
-      </div>
 
-      {/* 메모 — 전체 폭 */}
-      <Lockable locked={isLocked('memo')}>
-        <FormField
-          label="메모"
-          hint={`관리자만 보는 메모입니다 (${PROJECT_MEMO_MAX_LENGTH}자까지)`}
-          error={errors.memo?.message}
-        >
-          <Textarea placeholder="프로젝트 메모를 입력하세요" {...register('memo')} />
-        </FormField>
-      </Lockable>
+        <Lockable locked={isLocked('tradeIds')}>
+          <fieldset className="flex flex-col gap-2">
+            <legend className="mb-1.5 text-sm font-bold">공종 (여러 개 선택 가능)</legend>
+            <div className="flex flex-wrap gap-2">
+              {trades.map((trade) => (
+                <label
+                  key={trade.id}
+                  className="flex min-h-touch items-center gap-2 rounded-xl bg-field px-3"
+                >
+                  <input
+                    type="checkbox"
+                    className="size-5"
+                    checked={tradeIds.includes(trade.id)}
+                    onChange={() => toggleTrade(trade.id)}
+                  />
+                  {trade.name}
+                  {trade.isActive ? '' : ' (숨김)'}
+                </label>
+              ))}
+            </div>
+            {errors.tradeIds?.message && (
+              <p className="text-sm text-danger">{errors.tradeIds.message}</p>
+            )}
+            <InlineAdd
+              label="목록에 없는 공종 추가"
+              placeholder="새 공종 이름"
+              isPending={createOption.isPending}
+              error={tradeError}
+              onAdd={addTrade}
+            />
+          </fieldset>
+        </Lockable>
+      </SectionCard>
+
+      <SectionCard title="기간">
+        <Lockable locked={isLocked('contractDate')}>
+          <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-3">
+            <FormField label="계약일" error={errors.contractDate?.message}>
+              <DateInput {...register('contractDate')} />
+            </FormField>
+            <FormField
+              label="시작 예정일"
+              hint="작업 내역을 입력할 수 있는 기간이 됩니다"
+              error={errors.plannedStart?.message}
+            >
+              <DateInput {...register('plannedStart')} />
+            </FormField>
+            <FormField label="종료 예정일" error={errors.plannedEnd?.message}>
+              <DateInput {...register('plannedEnd')} />
+            </FormField>
+          </div>
+        </Lockable>
+
+        {periodChanged && (
+          <Lockable locked={isLocked('plannedStart')}>
+            <FormField
+              label={reasonRequired ? '기간 변경 사유 (필수)' : '기간 변경 사유 (선택)'}
+              hint="연장·단축한 이유를 남기면 기간 변경 이력에 기록됩니다"
+              error={errors.periodChangeReason?.message}
+            >
+              <Textarea
+                placeholder="기간을 바꾸는 사유를 입력하세요"
+                {...register('periodChangeReason')}
+              />
+            </FormField>
+          </Lockable>
+        )}
+
+        <Lockable locked={isLocked('memo')}>
+          <FormField
+            label="메모"
+            hint={`관리자만 보는 메모입니다 (${PROJECT_MEMO_MAX_LENGTH}자까지)`}
+            error={errors.memo?.message}
+          >
+            <Textarea placeholder="프로젝트 메모를 입력하세요" {...register('memo')} />
+          </FormField>
+        </Lockable>
+      </SectionCard>
 
       {!isReadOnly && (
         <Button
           type="submit"
-          className="self-start px-10"
+          className="h-14 self-end rounded-[17px] px-10 text-base font-extrabold"
           disabled={isBusy || (isEdit && !isDirty)}
         >
           {isBusy ? '저장 중' : isEdit ? '저장' : '프로젝트 등록'}

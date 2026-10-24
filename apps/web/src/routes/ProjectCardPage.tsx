@@ -79,7 +79,7 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
   const project = useProject(id);
 
   if (project.isPending) {
-    return <LoadingBlock label="프로젝트를 불러오는 중" />;
+    return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   }
 
   if (project.isError) {

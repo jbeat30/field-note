@@ -33,7 +33,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByText('A동 외장 판금 공사')).toBeInTheDocument();
-    await expect(canvas.getByText('5건')).toBeInTheDocument();
+    await expect(canvas.getByText('프로젝트 목록 · 5건')).toBeInTheDocument();
     // 코드는 숫자 순서의 최근 등록순 (2025년 번호가 맨 뒤)
     await waitFor(() => expect(rows(canvas)[0]).toContain('2026-004'));
     await expect(rows(canvas).at(-1)).toContain('2025-012');
@@ -71,7 +71,7 @@ export const FilterByStatus: Story = {
     await canvas.findByText('A동 외장 판금 공사');
     await userEvent.click(canvas.getByRole('button', { name: '중단' }));
 
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
     await expect(canvas.queryByText('A동 외장 판금 공사')).not.toBeInTheDocument();
   },
@@ -85,7 +85,7 @@ export const FilterByClient: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     await chooseOption(canvas.getByLabelText('고객 필터'), '미래오피스');
 
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(canvas.getByText('미래오피스 천장 마감')).toBeInTheDocument();
   },
 };
@@ -98,11 +98,11 @@ export const FilterByTradeAndManager: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     await chooseOption(canvas.getByLabelText('공종 필터'), '설비');
 
-    await expect(await canvas.findByText('2건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 2건')).toBeInTheDocument();
 
     await chooseOption(canvas.getByLabelText('담당자 필터'), '최설치');
 
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
   },
 };
@@ -115,7 +115,7 @@ export const SearchByNameCode: Story = {
     await canvas.findByText('A동 외장 판금 공사');
     await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '덕트');
 
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
 
     await userEvent.clear(canvas.getByLabelText('프로젝트 검색'));
@@ -134,7 +134,7 @@ export const FilterBySite: Story = {
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     await userEvent.type(canvas.getByLabelText('현장명'), '기계실');
 
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
     await expect(canvas.getByRole('columnheader', { name: '현장명' })).toBeInTheDocument();
   },
@@ -150,7 +150,7 @@ export const FilterByPeriod: Story = {
     await userEvent.type(canvas.getByLabelText('기간 시작'), '2027-01-10');
     await userEvent.type(canvas.getByLabelText('기간 끝'), '2027-01-20');
 
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(canvas.getByText('미래오피스 천장 마감')).toBeInTheDocument();
   },
 };
@@ -181,11 +181,11 @@ export const ClearFilters: Story = {
 
     await canvas.findByText('A동 외장 판금 공사');
     await userEvent.click(canvas.getByRole('button', { name: '완료' }));
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '필터 지우기' }));
 
-    await expect(await canvas.findByText('5건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 5건')).toBeInTheDocument();
     await expect(canvas.queryByRole('button', { name: '필터 지우기' })).not.toBeInTheDocument();
   },
 };
@@ -224,7 +224,7 @@ export const Pagination: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('25건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 25건')).toBeInTheDocument();
     // 고객·담당자 이름까지 불러온 뒤에 쪽을 넘김 (불러오면 표가 첫 쪽으로 돌아감)
     await waitFor(() =>
       expect(rows(canvas).some((text) => text.includes('가나다건설'))).toBe(true),
@@ -292,7 +292,7 @@ export const SearchIsDebounced: Story = {
     await canvas.findByText('A동 외장 판금 공사');
     await userEvent.type(canvas.getByLabelText('프로젝트 검색'), '덕트 설치', { delay: 30 });
 
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(searchedTerms).toEqual(['덕트 설치']);
   },
 };
@@ -310,7 +310,7 @@ export const StatusButtonsAndAdvancedToggle: Story = {
     );
 
     await userEvent.click(canvas.getByRole('button', { name: '진행 중' }));
-    await expect(await canvas.findByText('1건')).toBeInTheDocument();
+    await expect(await canvas.findByText('프로젝트 목록 · 1건')).toBeInTheDocument();
     await expect(canvas.getByRole('button', { name: '진행 중' })).toHaveAttribute(
       'aria-pressed',
       'true',

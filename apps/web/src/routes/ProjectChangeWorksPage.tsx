@@ -34,7 +34,7 @@ export const ProjectChangeWorksPage = () => {
   const [message, setMessage] = useState('');
   const works = useChangeWorks(id, status || undefined);
 
-  if (project.isPending) return <LoadingBlock label="프로젝트를 불러오는 중" />;
+  if (project.isPending) return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   if (!project.data) return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
 
   const gate = changeWorkProjectCheck(project.data.status, true);

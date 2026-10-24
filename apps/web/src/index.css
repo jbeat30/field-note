@@ -161,6 +161,27 @@
   }
 }
 
+/* 긴 화면과 짧은 화면을 오갈 때 세로 스크롤바 유무로 가로 위치가 밀리지 않게 스크롤바 자리를 항상 둠 */
+html {
+  overflow-y: scroll;
+  scrollbar-gutter: stable;
+}
+
+/* 로그인 전 화면은 한 화면에 고정이라 주황 면이 끝까지 닿도록 자리를 비우지 않음 */
+html:has(.auth-light) {
+  overflow-y: auto;
+  scrollbar-gutter: auto;
+}
+
+/* 글꼴이 들어오기 전 깜빡임(기본 글꼴에서 바뀌며 글자가 움직임)을 막으려고 잠깐 숨김 */
+html.fonts-loading #root {
+  opacity: 0;
+}
+
+#root {
+  transition: opacity var(--duration-fast, 150ms) ease-out;
+}
+
 body {
   margin: 0;
   background: var(--canvas);
@@ -384,4 +405,18 @@ input:disabled {
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
   }
+}
+
+/* 로그인 전 화면 폼 공통 크기: 입력 칸 58, 폼 바로 아래 버튼 62 */
+.auth-light main form input:not([type='checkbox']):not([type='radio']) {
+  height: 58px;
+  border-radius: 16px;
+  font-size: 16px;
+}
+
+.auth-light main form > button {
+  height: 62px;
+  border-radius: 18px;
+  font-size: 19px;
+  font-weight: 800;
 }

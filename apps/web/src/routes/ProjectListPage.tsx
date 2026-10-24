@@ -8,7 +8,7 @@ import {
 } from '@field-note/shared';
 import type { PaginationState, SortingState } from '@tanstack/react-table';
 import { ChevronDown, FolderPlus } from 'lucide-react';
-import { useMemo, useState } from 'react';
+import { useMemo, useState, type ReactNode } from 'react';
 import { Link, useNavigate } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
@@ -120,9 +120,14 @@ const columns = helper.columns([
       row.original.warnings.length === 0 ? (
         <span className="text-sub">-</span>
       ) : (
-        <span className="flex flex-wrap gap-1">
+        <span className="flex max-w-48 flex-wrap gap-1">
           {row.original.warnings.map((warning) => (
-            <Badge key={warning} tone="danger" title={PROJECT_WARNING_LABELS[warning]}>
+            <Badge
+              key={warning}
+              tone="danger"
+              className="whitespace-normal"
+              title={PROJECT_WARNING_LABELS[warning]}
+            >
               {PROJECT_WARNING_LABELS[warning]}
             </Badge>
           ))}
@@ -133,13 +138,13 @@ const columns = helper.columns([
     id: 'client',
     header: '고객',
     // 이름을 못 찾은 칸(숨긴 업체 등)은 항상 맨 뒤로
-    meta: { className: 'hidden lg:table-cell' },
+    meta: { className: 'hidden whitespace-nowrap lg:table-cell' },
     cell: ({ getValue }) => getValue() || '-',
   }),
   helper.accessor('managerName', {
     id: 'manager',
     header: '담당자',
-    meta: { className: 'hidden lg:table-cell' },
+    meta: { className: 'hidden whitespace-nowrap lg:table-cell' },
     cell: ({ getValue }) => getValue() || '-',
   }),
   helper.accessor('plannedStart', {
@@ -152,11 +157,20 @@ const columns = helper.columns([
     id: 'trades',
     header: '공종',
     enableSorting: false,
-    meta: { className: 'hidden xl:table-cell' },
+    meta: { className: 'hidden whitespace-nowrap xl:table-cell' },
     cell: ({ getValue }) => getValue() || '-',
   }),
 ]);
 
+// 필터 칸 위의 보이는 이름 (칸 자체의 접근성 이름은 aria-label이 따로 맡음)
+const FilterField = ({ label, children }: { label: string; children: ReactNode }) => (
+  <div className="flex flex-col gap-1.5">
+    <span aria-hidden className="text-[12.5px] font-bold text-sub">
+      {label}
+    </span>
+    {children}
+  </div>
+);
 // 프로젝트 목록: 번호·이름·현장명·상태·경고·고객·담당자·공종·기간만 표시, 경고는 진행·중단 프로젝트에만 부착되고 회사 설정의 경고 기준 적용 (현장 연락처·출입 메모는 카드에서만)
 export const ProjectListPage = () => {
   // 검색·필터는 서버 조회 조건, 정렬·쪽도 서버에 넘김 (한 쪽만 받음)
@@ -226,20 +240,22 @@ export const ProjectListPage = () => {
         }
       />
 
-      <section
-        className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
-        aria-label="검색과 필터"
-      >
-        <Input
-          type="search"
-          aria-label="프로젝트 검색"
-          placeholder="프로젝트명·번호로 찾기"
-          value={searchText}
-          onChange={(event) => {
-            setSearchText(event.target.value);
-            goFirstPage();
-          }}
-        />
+      <section className="flex flex-col gap-4" aria-label="검색과 필터">
+        <div className="flex flex-col gap-1.5 rounded-[30px] bg-surface-subtle px-7 py-6">
+          <label htmlFor="project-search" className="text-[12.5px] font-bold text-sub">
+            프로젝트 검색
+          </label>
+          <Input
+            id="project-search"
+            type="search"
+            placeholder="프로젝트명·번호로 찾기"
+            value={searchText}
+            onChange={(event) => {
+              setSearchText(event.target.value);
+              goFirstPage();
+            }}
+          />
+        </div>
         <ul className="flex flex-wrap gap-2" aria-label="상태로 찾기">
           {STATUS_CHIPS.map((chip) => (
             <li key={chip.label}>
@@ -278,49 +294,57 @@ export const ProjectListPage = () => {
         </button>
         {showAdvanced && (
           <>
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-              <Select
-                aria-label="상태 필터"
-                value={filter.status ?? ''}
-                emptyLabel="전체 상태"
-                onValueChange={(status) => update({ status: status || undefined })}
-                options={PROJECT_STATUSES.map((status) => ({
-                  value: status,
-                  label: PROJECT_STATUS_LABELS[status],
-                }))}
-              />
-              <Combobox
-                aria-label="고객 필터"
-                value={filter.clientId ?? ''}
-                placeholder="전체 고객"
-                searchPlaceholder="고객 이름으로 찾기"
-                clearable
-                onValueChange={(clientId) => update({ clientId: clientId || undefined })}
-                options={(partners.data ?? [])
-                  .filter((item) => item.kind === 'CLIENT')
-                  .map((item) => ({ value: item.id, label: item.name }))}
-              />
-              <Combobox
-                aria-label="담당자 필터"
-                value={filter.managerId ?? ''}
-                placeholder="전체 담당자"
-                clearable
-                onValueChange={(managerId) => update({ managerId: managerId || undefined })}
-                options={(employees.data ?? []).map((item) => ({
-                  value: item.id,
-                  label: item.name,
-                }))}
-              />
-              <Select
-                aria-label="공종 필터"
-                value={filter.tradeId ?? ''}
-                emptyLabel="전체 공종"
-                onValueChange={(tradeId) => update({ tradeId: tradeId || undefined })}
-                options={trades.map((item) => ({ value: item.id, label: item.name }))}
-              />
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4 rounded-[30px] bg-surface-subtle px-7 py-6 lg:grid-cols-4">
+              <FilterField label="상태 필터">
+                <Select
+                  aria-label="상태 필터"
+                  value={filter.status ?? ''}
+                  emptyLabel="전체 상태"
+                  onValueChange={(status) => update({ status: status || undefined })}
+                  options={PROJECT_STATUSES.map((status) => ({
+                    value: status,
+                    label: PROJECT_STATUS_LABELS[status],
+                  }))}
+                />
+              </FilterField>
+              <FilterField label="고객 필터">
+                <Combobox
+                  aria-label="고객 필터"
+                  value={filter.clientId ?? ''}
+                  placeholder="전체 고객"
+                  searchPlaceholder="고객 이름으로 찾기"
+                  clearable
+                  onValueChange={(clientId) => update({ clientId: clientId || undefined })}
+                  options={(partners.data ?? [])
+                    .filter((item) => item.kind === 'CLIENT')
+                    .map((item) => ({ value: item.id, label: item.name }))}
+                />
+              </FilterField>
+              <FilterField label="담당자 필터">
+                <Combobox
+                  aria-label="담당자 필터"
+                  value={filter.managerId ?? ''}
+                  placeholder="전체 담당자"
+                  clearable
+                  onValueChange={(managerId) => update({ managerId: managerId || undefined })}
+                  options={(employees.data ?? []).map((item) => ({
+                    value: item.id,
+                    label: item.name,
+                  }))}
+                />
+              </FilterField>
+              <FilterField label="공종 필터">
+                <Select
+                  aria-label="공종 필터"
+                  value={filter.tradeId ?? ''}
+                  emptyLabel="전체 공종"
+                  onValueChange={(tradeId) => update({ tradeId: tradeId || undefined })}
+                  options={trades.map((item) => ({ value: item.id, label: item.name }))}
+                />
+              </FilterField>
             </div>
-            <div className="grid grid-cols-2 gap-2 lg:grid-cols-4">
-              <label className="col-span-2 flex flex-col gap-1 text-sm">
+            <div className="grid grid-cols-2 gap-x-3 gap-y-4 rounded-[30px] bg-surface-subtle px-7 py-6 lg:grid-cols-4">
+              <label className="col-span-2 flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
                 현장명
                 <Input
                   type="search"
@@ -332,14 +356,14 @@ export const ProjectListPage = () => {
                   }}
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm">
+              <label className="flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
                 기간 시작
                 <DateInput
                   value={filter.from ?? ''}
                   onChange={(event) => update({ from: event.target.value || undefined })}
                 />
               </label>
-              <label className="flex flex-col gap-1 text-sm">
+              <label className="flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
                 기간 끝
                 <DateInput
                   value={filter.to ?? ''}
@@ -366,7 +390,9 @@ export const ProjectListPage = () => {
         )}
       </section>
 
-      {projects.isPending && <LoadingBlock label="프로젝트를 불러오는 중" lines={6} />}
+      {projects.isPending && (
+        <LoadingBlock label="프로젝트를 불러오는 중" variant="rows" lines={6} />
+      )}
       {projects.isError && <Alert>프로젝트 목록을 불러오지 못했습니다</Alert>}
       {projects.data && (
         <DataTable
@@ -386,7 +412,7 @@ export const ProjectListPage = () => {
             onPaginationChange: setPagination,
           }}
           onRowClick={(row) => void navigate(`/projects/${row.id}`)}
-          summary={`${projects.data.total}건`}
+          summary={`프로젝트 목록 · ${projects.data.total}건`}
           emptyState={
             <EmptyState
               title="조건에 맞는 프로젝트가 없습니다"

@@ -115,7 +115,7 @@ export const PartnerListPage = () => {
         </section>
       </div>
 
-      {partners.isPending && <LoadingBlock label="명부를 불러오는 중" lines={6} />}
+      {partners.isPending && <LoadingBlock label="명부를 불러오는 중" variant="rows" lines={6} />}
       {partners.isError && <Alert>명부를 불러오지 못했습니다</Alert>}
       {partners.data && (
         <DataTable

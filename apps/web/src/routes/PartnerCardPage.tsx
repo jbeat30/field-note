@@ -158,7 +158,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
             </FormField>
             <Button
               type="submit"
-              className="md:col-span-2 md:justify-self-start md:px-10"
+              className="h-14 rounded-[17px] text-base font-extrabold md:col-span-2 md:justify-self-end md:px-10"
               disabled={!isDirty || update.isPending}
             >
               {update.isPending ? '저장 중' : '저장'}
@@ -236,7 +236,7 @@ export const PartnerCardPage = () => {
   const partner = usePartner(id);
 
   if (partner.isPending) {
-    return <LoadingBlock label="업체 정보를 불러오는 중" />;
+    return <LoadingBlock label="업체 정보를 불러오는 중" variant="page" />;
   }
 
   if (partner.isError) {

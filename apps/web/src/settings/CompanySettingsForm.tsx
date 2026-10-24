@@ -87,7 +87,7 @@ export const CompanySettingsForm = () => {
   const hours = useWatch({ control, name: 'standardWorkHours' });
 
   if (settings.isPending) {
-    return <LoadingBlock label="회사 설정을 불러오는 중" />;
+    return <LoadingBlock label="회사 설정을 불러오는 중" variant="page" />;
   }
 
   if (settings.isError) {

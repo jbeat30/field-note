@@ -33,7 +33,7 @@ export const ProjectWarrantyPage = () => {
   const warranty = useWarranty(id);
 
   if (project.isPending || warranty.isPending) {
-    return <LoadingBlock label="보증 정보를 불러오는 중" />;
+    return <LoadingBlock label="보증 정보를 불러오는 중" variant="page" />;
   }
 
   if (!project.data || !warranty.data) {

@@ -34,7 +34,7 @@ export const ProjectMemosPage = () => {
   const remove = useDeleteMemo();
   const items = memos.data?.pages.flatMap((page) => page.items) ?? [];
 
-  if (project.isPending) return <LoadingBlock label="프로젝트를 불러오는 중" />;
+  if (project.isPending) return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   if (!project.data) return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
 
   const filters: { value: Filter; label: string }[] = [
