@@ -15,6 +15,7 @@ import { useOptions } from '../settings/useOptions';
 
 import { formatBurnRate, formatManMonths, formatWork } from './formatWork';
 import { useWorkSummary } from './useWorkSummary';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const Bar = ({ value, max }: { value: number; max: number }) => (
   <div className="h-2 rounded bg-muted" aria-hidden="true">
@@ -50,7 +51,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
   }
 
   if (!summary.data || !settings.data) {
-    return <p className="text-sm">공수 집계를 불러오는 중</p>;
+    return <LoadingBlock label="공수 집계를 불러오는 중" />;
   }
 
   const data = summary.data;

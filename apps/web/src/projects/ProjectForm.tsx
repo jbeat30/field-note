@@ -30,6 +30,7 @@ import { useCreateOption, useOptions } from '../settings/useOptions';
 
 import { InlineAdd } from './InlineAdd';
 import { useCreateProject, useUpdateProject } from './useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type FormValues = {
   name: string;
@@ -328,7 +329,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   };
 
   if (options.isPending || partners.isPending || employees.isPending) {
-    return <p className="text-sm">입력 목록을 불러오는 중</p>;
+    return <LoadingBlock label="입력 목록을 불러오는 중" />;
   }
 
   if (options.isError || partners.isError || employees.isError) {

@@ -29,6 +29,7 @@ import { useOpenDocument } from './useOpenDocument';
 import { discardStagedFile } from '../staging/stageApi';
 import { useLeaveConfirm } from '../staging/useLeaveConfirm';
 import { useStagedFiles, type StagedFiles } from '../staging/useStagedFiles';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type DocumentDetailDialogProps = {
   documentId: string;
@@ -241,7 +242,7 @@ const Body = ({
           <h3 id="logs-heading" className="text-base font-bold">
             열람 기록
           </h3>
-          {logs.isPending && <p className="text-sm">불러오는 중</p>}
+          {logs.isPending && <LoadingBlock label="불러오는 중" />}
           {logs.isError && <Alert>열람 기록을 불러오지 못했습니다</Alert>}
           {logs.isSuccess && logs.data.length === 0 && (
             <p className="text-sm text-sub">아직 열람 기록이 없습니다</p>
@@ -304,7 +305,7 @@ export const DocumentDetailDialog = ({ documentId, onClose }: DocumentDetailDial
               </Button>
             </Dialog.Close>
           </div>
-          {document.isPending && <p className="text-sm">불러오는 중</p>}
+          {document.isPending && <LoadingBlock label="불러오는 중" />}
           {document.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
           {document.data && (
             <Body

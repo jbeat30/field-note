@@ -9,6 +9,7 @@ import { memoDraftKey } from '../memos/memoDraft';
 import { MemoList } from '../memos/MemoList';
 import { useCreateMemo, useDeleteMemo, useMemoList, useUpdateMemo } from '../memos/useMemos';
 import { useProjectChoices } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 메모함: 프로젝트를 정하지 않고 먼저 적어 둔 메모 보관, 나중에 프로젝트 연결 또는 삭제
 export const InboxPage = () => {
@@ -32,7 +33,7 @@ export const InboxPage = () => {
         onSubmit={async (value) => void (await create.mutateAsync(value))}
       />
       {failure && <Alert>처리하지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
-      {memos.isPending && <p className="text-sm">메모를 불러오는 중</p>}
+      {memos.isPending && <LoadingBlock label="메모를 불러오는 중" />}
       {memos.isError && <Alert>메모를 불러오지 못했습니다</Alert>}
       {memos.isSuccess && items.length === 0 && (
         <p className="text-sm text-sub">정리할 메모가 없습니다</p>

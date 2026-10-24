@@ -17,7 +17,7 @@ export const HeaderSearch = () => {
         if (text.trim()) void navigate(`/search?q=${encodeURIComponent(text.trim())}`);
       }}
     >
-      <Search aria-hidden className="size-[18px] shrink-0 text-foreground/55" />
+      <Search aria-hidden className="size-[18px] shrink-0 text-sub" />
       <input
         type="search"
         aria-label="찾기"
@@ -25,7 +25,7 @@ export const HeaderSearch = () => {
         maxLength={50}
         value={text}
         onChange={(event) => setText(event.target.value)}
-        className="min-w-0 flex-1 bg-transparent text-[14.5px] text-foreground outline-none placeholder:text-foreground/55"
+        className="min-w-0 flex-1 bg-transparent text-[14.5px] text-foreground outline-none placeholder:text-sub"
       />
       <button
         type="submit"

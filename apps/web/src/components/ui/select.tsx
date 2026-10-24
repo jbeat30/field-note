@@ -81,7 +81,7 @@ export const Select = <T extends string>({
         <SelectPrimitive.Icon asChild>
           <ChevronDown
             aria-hidden
-            className="size-4.5 shrink-0 text-foreground/50 transition-transform duration-(--duration-fast) group-data-[state=open]:rotate-180"
+            className="size-4.5 shrink-0 text-sub transition-transform duration-(--duration-fast) group-data-[state=open]:rotate-180"
           />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>

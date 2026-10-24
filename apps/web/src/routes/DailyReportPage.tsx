@@ -13,6 +13,7 @@ import { useProject } from '../projects/useProjects';
 import { downloadReportXlsx } from '../reports/exportReport';
 import { ReportSheet } from '../reports/ReportSheet';
 import { useDailyReport } from '../reports/useDailyReport';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 작업일보 출력: 하루치를 화면에서 확인하고 인쇄·PDF로 저장하거나, 기간을 정해 엑셀로 내려받음
 export const DailyReportPage = () => {
@@ -53,7 +54,7 @@ export const DailyReportPage = () => {
   };
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" />;
   }
 
   if (!project.data) {
@@ -121,7 +122,7 @@ export const DailyReportPage = () => {
         </details>
       </div>
 
-      {report.isPending && <p className="text-sm print:hidden">작업일보를 불러오는 중</p>}
+      {report.isPending && <LoadingBlock label="작업일보를 불러오는 중" />}
       {report.isError && <Alert>작업일보를 불러오지 못했습니다</Alert>}
       {report.data && <ReportSheet report={report.data} />}
 

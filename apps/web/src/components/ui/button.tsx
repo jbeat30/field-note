@@ -6,7 +6,7 @@ import { cn } from '../../lib/cn';
 
 // 버튼: 크기 단계는 입력 칸(controlSize)과 같은 높이 규칙, 모서리는 18px
 export const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-bold whitespace-nowrap transition-[background-color,border-color,transform,opacity] duration-(--duration-fast) ease-(--ease-smooth) select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:scale-[0.98] disabled:pointer-events-none disabled:opacity-50 [&_svg]:shrink-0',
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-bold whitespace-nowrap transition-[background-color,border-color,transform,opacity] duration-(--duration-fast) ease-(--ease-smooth) select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:scale-[0.98] disabled:pointer-events-none disabled:bg-line disabled:text-sub [&_svg]:shrink-0',
   {
     variants: {
       variant: {
@@ -19,9 +19,9 @@ export const buttonVariants = cva(
         // 잉크 면 위에서 지금 해야 할 동작: 주황 면 (홈의 기록하기 같은 버튼)
         accent: 'bg-accent text-[#14110d] hover:brightness-95',
         // 글자만 있는 동작 (표 안의 "자세히", 구역 제목 옆 "전체 보기")
-        link: 'h-auto! px-0! font-semibold hover:text-sub',
+        link: 'h-auto! px-0! font-semibold hover:text-sub disabled:bg-transparent',
         // 바탕 없는 동작 (아이콘 버튼·표 안의 동작)
-        ghost: 'text-foreground/80 hover:bg-field hover:text-foreground',
+        ghost: 'text-foreground/80 hover:bg-field hover:text-foreground disabled:bg-transparent',
         // 되돌리기 어려운 동작 (삭제·취소)
         danger: 'bg-danger text-white hover:bg-danger/90 dark:text-[#14110d]',
       },

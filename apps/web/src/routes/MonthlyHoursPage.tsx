@@ -27,6 +27,7 @@ import { splitServerErrors } from '../lib/serverErrors';
 import { MonthlyMatrixTable } from '../monthly/MonthlyMatrixTable';
 import { useCloseMonth, useMonthlyHours, useReopenMonth } from '../monthly/useMonthlyHours';
 import { ReportExportError, downloadMonthlyXlsx } from '../reports/exportReport';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -209,7 +210,7 @@ export const MonthlyHoursPage = () => {
           {message}
         </p>
       )}
-      {!data && <p className="text-sm">불러오는 중</p>}
+      {!data && <LoadingBlock label="불러오는 중" />}
 
       {data && summary && (
         <>

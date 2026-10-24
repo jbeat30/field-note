@@ -19,6 +19,7 @@ import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { useDeletePartner, usePartner, useUpdatePartner } from '../partners/usePartners';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type CardForm = { name: string; contactName: string; phone: string; memo: string };
 
@@ -229,7 +230,7 @@ export const PartnerCardPage = () => {
   const partner = usePartner(id);
 
   if (partner.isPending) {
-    return <p className="text-sm">업체 정보를 불러오는 중</p>;
+    return <LoadingBlock label="업체 정보를 불러오는 중" />;
   }
 
   if (partner.isError) {

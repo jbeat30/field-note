@@ -19,6 +19,7 @@ import { cn } from '../lib/cn';
 import { projectWorkPath } from '../lib/projectPaths';
 import { usePartners } from '../partners/usePartners';
 import { useProject } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 export const STATUS_TONE: Record<
   ProjectStatus,
@@ -67,7 +68,7 @@ export const ProjectLayout = () => {
   if (project.isPending) {
     return (
       <div className="flex flex-col gap-4" aria-busy>
-        <p className="text-sm">프로젝트를 불러오는 중</p>
+        <LoadingBlock label="프로젝트를 불러오는 중" />
         <Skeleton className="h-28 w-full rounded-xl" />
       </div>
     );
@@ -195,7 +196,7 @@ export const ProjectLayout = () => {
       <nav
         ref={navRef}
         aria-label="프로젝트 메뉴"
-        className="relative -mt-10 flex gap-1 overflow-x-auto overflow-y-hidden rounded-full bg-track p-1 [scrollbar-width:none] sm:w-fit sm:max-w-full print:hidden [&::-webkit-scrollbar]:hidden"
+        className="relative -mt-10 flex gap-1 overflow-x-auto overflow-y-hidden rounded-full bg-track p-[5px] [scrollbar-width:none] sm:w-fit sm:max-w-full print:hidden [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab) => (
           <NavLink
@@ -204,7 +205,7 @@ export const ProjectLayout = () => {
             end={tab.end}
             className={({ isActive }) =>
               cn(
-                'flex min-h-10 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap transition-colors',
+                'flex min-h-10 items-center rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors',
                 isActive ||
                   tab.active ||
                   (tab.end && pathname.startsWith(`${tab.to}/work/`)) ||
@@ -231,7 +232,7 @@ export const ProjectLayout = () => {
                 to={tab.to}
                 className={({ isActive }) =>
                   cn(
-                    'flex min-h-10 items-center rounded-full px-4 text-sm font-semibold whitespace-nowrap',
+                    'flex min-h-10 items-center rounded-full px-5 text-sm font-bold whitespace-nowrap',
                     isActive ? 'bg-primary font-bold text-primary-foreground' : 'text-sub',
                   )
                 }

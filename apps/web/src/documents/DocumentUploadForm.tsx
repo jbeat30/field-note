@@ -191,7 +191,7 @@ export const DocumentUploadForm = ({
           isExpired && 'border-danger',
         )}
       >
-        <FileUp aria-hidden className="size-6 text-foreground/55" />
+        <FileUp aria-hidden className="size-6 text-sub" />
         {file ? (
           <div className="flex flex-col items-center gap-1">
             <p className="text-sm font-semibold break-all">{file.name}</p>

@@ -26,6 +26,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 import { formatWork } from '../workSummary/formatWork';
 
 import { useProgressRecords, useProjectHealth, useRecordProgress } from './useProgress';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 자주 쓰는 진행률 (한 번 눌러 고름)
 const QUICK_PERCENTS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
@@ -132,7 +133,7 @@ export const ProjectProgressPanel = ({
   }
 
   if (!health.data || !records.data || !settings.data) {
-    return <p className="text-sm">진행 현황을 불러오는 중</p>;
+    return <LoadingBlock label="진행 현황을 불러오는 중" />;
   }
 
   const data = health.data;

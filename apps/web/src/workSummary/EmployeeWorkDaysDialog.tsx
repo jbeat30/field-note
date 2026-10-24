@@ -12,6 +12,7 @@ import { addDays, formatDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 
 import { useEmployeeProjectDays } from './useWorkSummary';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -79,7 +80,7 @@ export const EmployeeWorkDaysDialog = ({
       {query.isError ? (
         <Alert>일한 날을 불러오지 못했습니다</Alert>
       ) : !query.data ? (
-        <p className="text-sm">불러오는 중</p>
+        <LoadingBlock label="불러오는 중" />
       ) : days.length === 0 ? (
         <p className="text-sm text-sub">이 기간에 일한 날이 없습니다</p>
       ) : (

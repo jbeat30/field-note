@@ -22,6 +22,7 @@ import { SegmentedControl } from '../components/ui/segmented-control';
 import { useProjectChoices } from '../projects/useProjects';
 import { StaffingTimeline } from '../staffing/StaffingTimeline';
 import { useStaffingCalendar } from '../staffing/useStaffingCalendar';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type View = 'week' | 'twoWeeks' | 'month';
 
@@ -167,22 +168,22 @@ export const StaffingCalendarPage = () => {
       </div>
 
       {calendar.isError && <Alert role="alert">배치 현황을 불러오지 못했습니다</Alert>}
-      {calendar.isPending && <p>불러오는 중</p>}
+      {calendar.isPending && <LoadingBlock label="불러오는 중" />}
 
       {calendar.data && (
         <div className="flex flex-col gap-4 rounded-3xl bg-surface-subtle p-5">
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <p aria-label="요약" className="text-sm">
               <span className="font-semibold">일한 사람 {summary.working}명</span>
-              <span className="mx-2 text-foreground/40">·</span>
+              <span className="mx-2 text-sub">·</span>
               <span>일한 기록이 없는 사람 {summary.idle}명</span>
               {summary.away > 0 && (
                 <>
-                  <span className="mx-2 text-foreground/40">·</span>
+                  <span className="mx-2 text-sub">·</span>
                   <span>휴직·퇴사 {summary.away}명</span>
                 </>
               )}
-              <span className="mx-2 text-foreground/40">·</span>
+              <span className="mx-2 text-sub">·</span>
               <span className={summary.conflicts > 0 ? 'font-semibold text-danger' : undefined}>
                 겹침 {summary.conflicts}건
               </span>

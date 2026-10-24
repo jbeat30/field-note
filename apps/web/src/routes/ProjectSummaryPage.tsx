@@ -7,6 +7,7 @@ import { ProjectSummarySheet } from '../completion/ProjectSummarySheet';
 import { useProjectSummary } from '../completion/useCompletion';
 import { useProject } from '../projects/useProjects';
 import { downloadSummaryXlsx } from '../reports/exportReport';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 프로젝트 요약 (완료 리포트): 현재 기록으로 한 장을 생성해 표시하고 인쇄·PDF 저장 또는 엑셀 내려받기
 export const ProjectSummaryPage = () => {
@@ -18,7 +19,7 @@ export const ProjectSummaryPage = () => {
   const [exportError, setExportError] = useState('');
 
   if (project.isPending || summary.isPending) {
-    return <p className="text-sm">요약을 불러오는 중</p>;
+    return <LoadingBlock label="요약을 불러오는 중" />;
   }
 
   if (!project.data || !summary.data) {

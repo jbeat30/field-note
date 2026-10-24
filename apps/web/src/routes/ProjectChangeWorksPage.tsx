@@ -21,6 +21,7 @@ import { EmptyState } from '../components/ui/empty-state';
 import { Modal } from '../components/ui/modal';
 import { Select } from '../components/ui/select';
 import { useProject } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 추가 공사: 계약 밖에서 생긴 작업의 요청·협의·승인을 표로 모아 보고, 상세 창에서 상태·증빙(사진·공문)을 다룸
 export const ProjectChangeWorksPage = () => {
@@ -33,7 +34,7 @@ export const ProjectChangeWorksPage = () => {
   const [message, setMessage] = useState('');
   const works = useChangeWorks(id, status || undefined);
 
-  if (project.isPending) return <p className="text-sm">프로젝트를 불러오는 중</p>;
+  if (project.isPending) return <LoadingBlock label="프로젝트를 불러오는 중" />;
   if (!project.data) return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
 
   const gate = changeWorkProjectCheck(project.data.status, true);
@@ -88,7 +89,7 @@ export const ProjectChangeWorksPage = () => {
           />
         </div>
         {works.isError && <Alert>추가 공사를 불러오지 못했습니다</Alert>}
-        {works.isPending && <p className="text-sm">불러오는 중</p>}
+        {works.isPending && <LoadingBlock label="불러오는 중" />}
         {works.data && works.data.length === 0 && (
           <EmptyState
             title="기록이 없습니다"

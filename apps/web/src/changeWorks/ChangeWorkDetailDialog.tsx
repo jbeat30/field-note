@@ -41,6 +41,7 @@ import {
   useUnlinkChangeWorkDocument,
   useUpdateChangeWork,
 } from './useChangeWorks';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 협의 중으로 이만큼 지나면 오래 방치된 것으로 표시 ("7일 경과")
 const STALE_DAYS = 7;
@@ -570,7 +571,7 @@ export const ChangeWorkDetailDialog = ({
       description={stale ? `${waited}일째 협의 중입니다` : undefined}
     >
       {detail.isError && <Alert>상세를 불러오지 못했습니다</Alert>}
-      {!detail.data && !detail.isError && <p className="text-sm">불러오는 중</p>}
+      {!detail.data && !detail.isError && <LoadingBlock label="불러오는 중" />}
       {detail.data && (
         <Body
           detail={detail.data}

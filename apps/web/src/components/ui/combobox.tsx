@@ -101,12 +101,12 @@ const ComboboxList = ({
   return (
     <Command filter={matches} loop>
       <div className="flex items-center gap-2 border-b border-line px-3">
-        <Search aria-hidden className="size-4 shrink-0 text-foreground/50" />
+        <Search aria-hidden className="size-4 shrink-0 text-sub" />
         <Command.Input
           value={search}
           onValueChange={setSearch}
           placeholder={searchPlaceholder}
-          className="h-10 w-full bg-transparent text-base outline-none placeholder:text-foreground/55 md:text-[15px]"
+          className="h-10 w-full bg-transparent text-base outline-none placeholder:text-sub md:text-[15px]"
         />
       </div>
       <Command.List className="max-h-80 overflow-y-auto p-1">
@@ -187,7 +187,7 @@ const Trigger = ({
       <ChevronDown
         aria-hidden
         className={cn(
-          'size-4.5 shrink-0 text-foreground/50 transition-transform duration-(--duration-fast)',
+          'size-4.5 shrink-0 text-sub transition-transform duration-(--duration-fast)',
           open && 'rotate-180',
         )}
       />

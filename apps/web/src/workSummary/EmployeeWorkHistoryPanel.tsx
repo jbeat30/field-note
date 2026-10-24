@@ -6,6 +6,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 
 import { formatWork } from './formatWork';
 import { useEmployeeWorkHistory } from './useWorkSummary';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 직원 카드의 투입 이력: 프로젝트별 투입 기간·일수·총 공수와 이번 달·올해 공수, 저장된 작업 내역만 반영
 export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string }) => {
@@ -17,7 +18,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
   }
 
   if (!history.data || !settings.data) {
-    return <p className="text-sm">투입 이력을 불러오는 중</p>;
+    return <LoadingBlock label="투입 이력을 불러오는 중" />;
   }
 
   const { data } = history;

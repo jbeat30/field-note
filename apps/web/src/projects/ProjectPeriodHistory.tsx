@@ -1,6 +1,7 @@
 import { Alert } from '../components/ui/alert';
 
 import { usePeriodHistory } from './useAssignments';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const formatChangedAt = (iso: string) =>
   new Intl.DateTimeFormat('ko-KR', { year: 'numeric', month: 'numeric', day: 'numeric' }).format(
@@ -16,7 +17,7 @@ export const ProjectPeriodHistory = ({ projectId }: { projectId: string }) => {
       <h2 id="period-history-heading" className="text-lg font-bold">
         예정 기간 변경 이력
       </h2>
-      {history.isPending && <p className="text-sm">이력을 불러오는 중</p>}
+      {history.isPending && <LoadingBlock label="이력을 불러오는 중" />}
       {history.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
       {history.data && history.data.length === 0 && (
         <p className="text-sm text-sub">예정 기간을 바꾼 기록이 없습니다</p>
