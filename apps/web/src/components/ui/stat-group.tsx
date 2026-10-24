@@ -30,6 +30,14 @@ const TONE_ON_INK: Record<NonNullable<StatItem['tone']>, string> = {
   success: 'text-[#7fd6a8]',
 };
 
+// 라임 타일은 다크 모드에서도 밝은 면이라 상태색을 어두운 쪽으로 고정
+const TONE_ON_LIME: Record<NonNullable<StatItem['tone']>, string> = {
+  default: '',
+  warning: 'text-[#6b4700]',
+  danger: 'text-[#8f1d17]',
+  success: 'text-[#0f5f33]',
+};
+
 // 칸 면: 첫 칸은 라임, 가운데는 크림, 칸이 네 개일 때만 마지막이 잉크(주황 숫자)
 type Tile = {
   tile: string;
@@ -42,6 +50,7 @@ const LIME: Tile = {
   tile: 'tile-lime bg-highlight text-[#14110d]',
   sub: 'text-[#14110d]/70',
   num: '',
+  tones: TONE_ON_LIME,
 };
 const CREAM: Tile = {
   tile: 'tile-cream bg-surface-subtle text-foreground',
@@ -59,6 +68,7 @@ const ACCENT: Tile = {
   tile: 'tile-accent bg-accent text-[#14110d]',
   sub: 'text-[#14110d]/85',
   num: '',
+  tones: { default: '', warning: '', danger: '', success: '' },
 };
 
 const SURFACES: Record<NonNullable<StatItem['surface']>, Tile> = {
