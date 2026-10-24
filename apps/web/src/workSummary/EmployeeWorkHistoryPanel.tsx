@@ -48,7 +48,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
           {data.projects.map((row) => (
             <li key={row.projectId} className="flex flex-col gap-0.5 px-3 py-2 text-sm">
               <Link
-                className="min-h-touch content-center font-medium text-primary underline"
+                className="min-h-touch content-center font-medium text-primary hover:text-sub"
                 to={`/projects/${row.projectId}`}
               >
                 {row.projectCode} {row.projectName}

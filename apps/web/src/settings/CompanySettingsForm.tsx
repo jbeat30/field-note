@@ -181,7 +181,7 @@ export const CompanySettingsForm = () => {
           </p>
           <div className="flex flex-wrap items-center justify-between gap-2">
             <a
-              className="text-sm text-primary underline"
+              className="text-sm text-primary hover:text-sub"
               href="https://www.law.go.kr/법령/근로기준법"
               target="_blank"
               rel="noopener noreferrer"

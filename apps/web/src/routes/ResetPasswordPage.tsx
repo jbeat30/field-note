@@ -37,10 +37,7 @@ const InvalidLink = () => (
     <p className="text-sm">
       링크가 만료되었거나 이미 사용되었을 수 있습니다. 재설정 링크를 다시 받아 주세요
     </p>
-    <Link
-      className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-      to="/forgot-password"
-    >
+    <Link className="min-h-touch content-center font-bold hover:text-sub" to="/forgot-password">
       재설정 링크 다시 받기
     </Link>
   </div>
@@ -102,10 +99,7 @@ export const ResetPasswordPage = () => {
         <Alert variant="info">
           모든 기기에서 로그아웃되었습니다. 새 비밀번호로 다시 로그인해 주세요
         </Alert>
-        <Link
-          className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-          to="/login"
-        >
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>

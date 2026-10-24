@@ -395,7 +395,7 @@ export const EmployeeCardPage = () => {
     return (
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">직원을 찾을 수 없습니다</h1>
-        <Link className="min-h-touch content-center text-primary underline" to="/employees">
+        <Link className="min-h-touch content-center text-primary hover:text-sub" to="/employees">
           직원 목록으로
         </Link>
       </div>

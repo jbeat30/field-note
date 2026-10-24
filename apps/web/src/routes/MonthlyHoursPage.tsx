@@ -255,7 +255,7 @@ export const MonthlyHoursPage = () => {
                     {data.drafts.map((draft) => (
                       <li key={`${draft.projectId}-${draft.workDate}`}>
                         <Link
-                          className="text-primary underline"
+                          className="text-primary hover:text-sub"
                           to={projectWorkPath(draft.projectId, draft.workDate)}
                         >
                           {formatDay(draft.workDate)} · {draft.projectName}

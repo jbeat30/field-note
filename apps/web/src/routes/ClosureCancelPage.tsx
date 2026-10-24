@@ -17,10 +17,7 @@ const InvalidLink = () => (
       링크가 만료되었거나 이미 사용되었을 수 있습니다. 해지 요청 후 14일이 지나 데이터가 삭제된
       경우에는 복구할 수 없습니다
     </p>
-    <Link
-      className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-      to="/login"
-    >
+    <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
       로그인 화면으로
     </Link>
   </div>
@@ -60,10 +57,7 @@ export const ClosureCancelPage = () => {
           해지를 취소했습니다
         </h1>
         <Alert variant="info">계정이 복구되었습니다. 다시 로그인할 수 있습니다</Alert>
-        <Link
-          className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-          to="/login"
-        >
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>

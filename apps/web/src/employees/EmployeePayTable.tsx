@@ -78,7 +78,7 @@ export const EmployeePayTable = () => {
               <TableRow key={employee.id}>
                 <TableCell>
                   <Link
-                    className="font-semibold hover:text-primary hover:underline"
+                    className="font-semibold hover:text-sub"
                     to={`/employees/${employee.id}?tab=pay`}
                   >
                     {employee.name}

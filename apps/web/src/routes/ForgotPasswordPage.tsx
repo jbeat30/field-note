@@ -47,10 +47,7 @@ export const ForgotPasswordPage = () => {
           가입된 주소라면 비밀번호 재설정 링크를 보냈습니다. 링크는 30분 동안, 한 번만 사용할 수
           있습니다. 메일이 보이지 않으면 스팸함을 확인해 주세요
         </Alert>
-        <Link
-          className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-          to="/login"
-        >
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>
@@ -70,10 +67,7 @@ export const ForgotPasswordPage = () => {
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '보내는 중' : '재설정 링크 받기'}
       </Button>
-      <Link
-        className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-        to="/login"
-      >
+      <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
         로그인 화면으로
       </Link>
     </form>

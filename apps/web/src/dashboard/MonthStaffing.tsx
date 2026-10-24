@@ -32,7 +32,7 @@ export const MonthStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
         </h2>
         <Link
           to={`/staffing?view=month&from=${month.from}`}
-          className="inline-flex min-h-touch items-center text-sm font-semibold underline underline-offset-[3px]"
+          className="inline-flex min-h-touch items-center text-sm font-semibold hover:text-sub"
         >
           인력 배치 보기
         </Link>

@@ -176,7 +176,7 @@ export const MemoList = ({ memos, projectId, ...handlers }: MemoListProps) => (
             <span className="text-sm text-sub">{items.length}건</span>
             <Link
               to={projectWorkPath(projectId, date)}
-              className="ml-auto text-sm font-medium text-primary hover:underline"
+              className="ml-auto text-sm font-medium text-primary hover:text-sub"
             >
               작업 기록 보기
             </Link>

@@ -61,7 +61,7 @@ const Widget = ({ title, id, action, count, isScrollable = false, children }: Wi
 const TextLink = ({ to, children }: { to: string; children: ReactNode }) => (
   <Link
     to={to}
-    className="inline-flex min-h-touch items-center text-sm font-semibold underline underline-offset-[3px]"
+    className="inline-flex min-h-touch items-center text-sm font-semibold hover:text-sub"
   >
     {children}
   </Link>
@@ -119,7 +119,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
             <td className="py-[15px] pr-3 align-middle">
               <Link
                 to={`/projects/${project.id}`}
-                className="text-[15.5px] font-bold hover:underline"
+                className="text-[15.5px] font-bold hover:text-sub"
               >
                 {project.name}
               </Link>
@@ -201,10 +201,7 @@ const DueRow = ({
   urgent: boolean;
 }) => (
   <li>
-    <Link
-      to={to}
-      className="flex min-h-touch items-center justify-between gap-2 underline-offset-2 hover:underline"
-    >
+    <Link to={to} className="flex min-h-touch items-center justify-between gap-2 hover:text-sub">
       <span>{label}</span>
       <span className={urgent ? 'text-sm font-medium text-danger' : 'text-sm'}>{due}</span>
     </Link>

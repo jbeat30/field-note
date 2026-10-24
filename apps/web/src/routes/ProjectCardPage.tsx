@@ -89,7 +89,7 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
     return (
       <div className="flex flex-col gap-3">
         <h2 className="text-xl font-bold">프로젝트를 찾을 수 없습니다</h2>
-        <Link className="min-h-touch content-center text-primary underline" to="/projects">
+        <Link className="min-h-touch content-center text-primary hover:text-sub" to="/projects">
           프로젝트 목록으로
         </Link>
       </div>
