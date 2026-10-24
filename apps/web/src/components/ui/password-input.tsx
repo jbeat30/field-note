@@ -1,4 +1,3 @@
-import { Eye, EyeOff } from 'lucide-react';
 import { useState, type ComponentProps } from 'react';
 
 import { cn } from '../../lib/cn';
@@ -12,12 +11,12 @@ type PasswordInputProps = Omit<
 
 // 오른쪽 보기 버튼 자리 너비 (크기 단계별)
 const BUTTON_PAD: Record<ControlSize, string> = {
-  sm: 'pr-9',
-  md: 'pr-11',
-  lg: 'pr-12',
+  sm: 'pr-12',
+  md: 'pr-14',
+  lg: 'pr-16',
 };
 
-// 입력 중인 비밀번호를 보거나 숨기는 칸 (오른쪽 눈 모양 버튼으로 전환, 기본은 숨김)
+// 입력 중인 비밀번호를 보거나 숨기는 칸 (오른쪽 글자 버튼으로 전환, 기본은 숨김)
 export const PasswordInput = ({ className, size = 'md', ...props }: PasswordInputProps) => {
   const [isVisible, setIsVisible] = useState(false);
 
@@ -37,9 +36,9 @@ export const PasswordInput = ({ className, size = 'md', ...props }: PasswordInpu
         aria-label={isVisible ? '비밀번호 숨기기' : '비밀번호 보기'}
         aria-pressed={isVisible}
         onClick={() => setIsVisible((current) => !current)}
-        className="absolute inset-y-0 right-0 flex w-10 items-center justify-center rounded-control text-sub transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:text-foreground focus-visible:ring-3 focus-visible:ring-primary/15 focus-visible:outline-none [&_svg]:size-4.5"
+        className="absolute inset-y-0 right-0 flex min-w-12 items-center justify-center rounded-control px-4 text-sm font-semibold text-sub transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:text-foreground focus-visible:outline-none"
       >
-        {isVisible ? <EyeOff aria-hidden /> : <Eye aria-hidden />}
+        {isVisible ? '숨기기' : '보기'}
       </button>
     </div>
   );

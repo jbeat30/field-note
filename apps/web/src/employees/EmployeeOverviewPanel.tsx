@@ -38,7 +38,7 @@ export const EmployeeOverviewPanel = ({ employee }: { employee: EmployeeDetail }
       {credentials.data && (
         <p className="text-sm">
           <Link
-            className="font-medium text-primary underline"
+            className="font-medium text-primary hover:text-sub"
             to={`/employees/${employee.id}?tab=credentials`}
           >
             서류·자격 {credentials.data.length}건

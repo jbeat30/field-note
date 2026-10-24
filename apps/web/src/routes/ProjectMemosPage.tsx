@@ -81,7 +81,7 @@ export const ProjectMemosPage = () => {
             filter === 'ALL' && (
               <Link
                 to={projectWorkPath(id, seoulToday())}
-                className="text-sm font-semibold text-primary hover:underline"
+                className="text-sm font-semibold text-primary hover:text-sub"
               >
                 오늘 하루 기록으로
               </Link>

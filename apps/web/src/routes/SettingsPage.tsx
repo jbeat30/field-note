@@ -9,6 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '../components/ui/tabs'
 import { ClosureSection } from '../settings/ClosureSection';
 import { DataExportSection } from '../settings/DataExportSection';
 import { StorageSection } from '../settings/StorageSection';
+import { IS_SOCIAL_LOGIN_ENABLED } from '../lib/features';
 import { SocialLoginSection } from '../settings/SocialLoginSection';
 import { CompanyRulesForm } from '../settings/CompanyRulesForm';
 import { CompanySettingsForm } from '../settings/CompanySettingsForm';
@@ -109,15 +110,17 @@ export const SettingsPage = () => {
                   </h2>
                   <SecurityRows email={me.data?.email} />
                 </section>
-                <section
-                  className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
-                  aria-labelledby="social-heading"
-                >
-                  <h2 id="social-heading" className="text-lg font-bold">
-                    소셜 로그인
-                  </h2>
-                  <SocialLoginSection />
-                </section>
+                {IS_SOCIAL_LOGIN_ENABLED && (
+                  <section
+                    className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
+                    aria-labelledby="social-heading"
+                  >
+                    <h2 id="social-heading" className="text-lg font-bold">
+                      소셜 로그인
+                    </h2>
+                    <SocialLoginSection />
+                  </section>
+                )}
               </>
             )}
           </div>
@@ -232,7 +235,7 @@ export const SettingsPage = () => {
           <section className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5">
             <p className="text-lg font-bold">안내</p>
             <Link
-              className="flex min-h-touch items-center text-sm text-primary underline"
+              className="flex min-h-touch items-center text-sm text-primary hover:text-sub"
               to="/legal/privacy"
             >
               개인정보 처리방침

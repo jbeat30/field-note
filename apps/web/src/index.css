@@ -252,6 +252,32 @@ body {
 
 /* 주황 면 위 영역: 안쪽 색을 밝은 모드 값으로 고정해 어두운 모드에서도 글자와 버튼이 읽힘 */
 .on-accent,
+/* 로그인 전 화면: 기기가 다크 모드여도 시안의 밝은 색을 그대로 씀 */
+.auth-light {
+  color-scheme: light;
+  --primary: #14110d;
+  --primary-foreground: #fbf7ee;
+  --surface: #fbf7ee;
+  --surface-subtle: #fbf7ee;
+  --surface-nested: #f3ecdb;
+  --field: #efe8d8;
+  --track: #e6dec9;
+  --sub: #6b6152;
+  --line: #e9e1cc;
+  --control-border: #d8cfb7;
+  --control-border-hover: #b9ad8f;
+  --muted: #efe8d8;
+  --foreground: #14110d;
+  --border: #d8cfb7;
+  --danger: #b3261e;
+  --danger-subtle: #ffe3de;
+  --success: #14573a;
+  --success-subtle: #d6efdf;
+  --warning: #5e4400;
+  --warning-subtle: #fbe7a0;
+  color: var(--foreground);
+}
+
 .plane {
   --foreground: #14110d;
   --primary: #14110d;

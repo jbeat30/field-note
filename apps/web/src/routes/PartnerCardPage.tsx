@@ -240,7 +240,7 @@ export const PartnerCardPage = () => {
     return (
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">업체를 찾을 수 없습니다</h1>
-        <Link className="min-h-touch content-center text-primary underline" to="/partners">
+        <Link className="min-h-touch content-center text-primary hover:text-sub" to="/partners">
           명부로
         </Link>
       </div>

@@ -111,7 +111,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
               action={
                 <Link
                   to={`/projects/${projectId}`}
-                  className="text-sm font-semibold text-primary hover:underline"
+                  className="text-sm font-semibold text-primary hover:text-sub"
                 >
                   작업 달력으로
                 </Link>
@@ -137,7 +137,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                       <TableCell>
                         <button
                           type="button"
-                          className="font-semibold hover:text-primary hover:underline"
+                          className="font-semibold hover:text-sub"
                           onClick={() => setDetailId(row.employeeId)}
                         >
                           {employee?.name ?? '직원'}

@@ -79,7 +79,7 @@ export const ProjectLayout = () => {
     return (
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">프로젝트를 찾을 수 없습니다</h1>
-        <Link className="min-h-touch content-center text-primary underline" to="/projects">
+        <Link className="min-h-touch content-center text-primary hover:text-sub" to="/projects">
           프로젝트 목록으로
         </Link>
       </div>
@@ -145,7 +145,7 @@ export const ProjectLayout = () => {
                 .join(' · ')}
               {data.siteMapUrl && (
                 <a
-                  className="ml-2 font-bold underline underline-offset-[3px]"
+                  className="ml-2 font-bold hover:text-sub"
                   href={data.siteMapUrl}
                   target="_blank"
                   rel="noopener noreferrer"

@@ -19,10 +19,7 @@ export const ClosureRequestedPage = () => {
           : ''}{' '}
         그 전에는 메일로 받은 해지 취소 링크로 계정을 복구할 수 있습니다
       </p>
-      <Link
-        className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-        to="/login"
-      >
+      <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
         로그인 화면으로
       </Link>
     </div>

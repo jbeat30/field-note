@@ -341,7 +341,7 @@ export const MultiCombobox = ({
             <span className="text-sub">{value.length}개 선택</span>
             <button
               type="button"
-              className="font-semibold text-primary hover:underline"
+              className="font-semibold text-primary hover:text-sub"
               onClick={() => onValueChange([])}
             >
               모두 해제

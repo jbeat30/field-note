@@ -20,6 +20,7 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
+import { IS_SOCIAL_LOGIN_ENABLED } from '../lib/features';
 import { toSafeReturnPath } from '../lib/safeReturnPath';
 import { queryKeys } from '../query/queryKeys';
 import { resetClientState } from '../stores/resetClientState';
@@ -39,7 +40,9 @@ export const LoginPage = () => {
   const socialStart = useSocialStart();
   // 비밀번호가 맞고 2단계 인증이 켜진 계정이면 코드 입력 칸을 보여 줌
   const [isTotpStep, setTotpStep] = useState(false);
-  const enabledProviders = SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider]);
+  const enabledProviders = IS_SOCIAL_LOGIN_ENABLED
+    ? SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider])
+    : [];
   const {
     register,
     control,
@@ -102,7 +105,7 @@ export const LoginPage = () => {
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
       <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">로그인</h1>
-      <SocialNotice />
+      {IS_SOCIAL_LOGIN_ENABLED && <SocialNotice />}
       {publicDemo.data?.enabled && publicDemo.data.loginId && publicDemo.data.password && (
         <DemoAccountNotice
           isSubmitting={isSubmitting}
@@ -128,11 +131,18 @@ export const LoginPage = () => {
           autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
+          size="lg"
+          className="h-[58px]"
           {...register('loginId')}
         />
       </FormField>
       <FormField label="비밀번호" error={errors.password && '비밀번호를 입력해 주세요'}>
-        <PasswordInput autoComplete="current-password" {...register('password')} />
+        <PasswordInput
+          autoComplete="current-password"
+          size="lg"
+          className="h-[58px]"
+          {...register('password')}
+        />
       </FormField>
       {isTotpStep && (
         <>
@@ -161,8 +171,9 @@ export const LoginPage = () => {
         control={control}
         name="isRemembered"
         render={({ field }) => (
-          <label className="flex min-h-touch items-center gap-3 text-base">
+          <label className="flex min-h-11 items-center gap-3 text-[15px] font-medium">
             <Checkbox
+              className="size-[30px] rounded-lg border-0 bg-[#14110d] data-[state=checked]:text-accent"
               checked={field.value}
               onCheckedChange={(checked) => field.onChange(checked === true)}
             />
@@ -170,7 +181,11 @@ export const LoginPage = () => {
           </label>
         )}
       />
-      <Button type="submit" disabled={isSubmitting}>
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="h-[62px] rounded-[18px] text-[19px] font-extrabold"
+      >
         {isSubmitting ? '로그인 중' : '로그인'}
       </Button>
       {enabledProviders.length > 0 && (
@@ -189,12 +204,12 @@ export const LoginPage = () => {
         </>
       )}
       <Link
-        className="min-h-touch content-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
+        className="flex min-h-11 items-center text-sm font-semibold hover:text-sub"
         to="/forgot-password"
       >
         비밀번호를 잊으셨나요?
       </Link>
-      <p className="text-sm text-sub">가입은 운영자가 보낸 초대 링크로만 할 수 있습니다</p>
+      <p className="text-[13px] text-sub">가입은 운영자가 보낸 초대 링크로만 할 수 있습니다</p>
     </form>
   );
 };

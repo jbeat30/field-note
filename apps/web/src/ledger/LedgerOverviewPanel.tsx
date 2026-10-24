@@ -18,7 +18,7 @@ export const LedgerOverviewPanel = ({ projectId }: { projectId: string }) => {
         </h2>
         <Link
           to={`/projects/${projectId}/materials`}
-          className="inline-flex min-h-touch items-center text-sm text-primary underline"
+          className="inline-flex min-h-touch items-center text-sm text-primary hover:text-sub"
         >
           내역 보기
         </Link>

@@ -35,7 +35,7 @@ export const SearchPage = () => {
       {projectId && (
         <p className="text-sm text-sub">
           {project.data ? (
-            <Link className="text-primary underline" to={`/projects/${projectId}`}>
+            <Link className="text-primary hover:text-sub" to={`/projects/${projectId}`}>
               {project.data.name}
             </Link>
           ) : (
@@ -43,7 +43,7 @@ export const SearchPage = () => {
           )}{' '}
           안에서 메모·자료·작업 내역만 찾습니다 ·{' '}
           <Link
-            className="text-primary underline"
+            className="text-primary hover:text-sub"
             to={`/search${text ? `?q=${encodeURIComponent(text)}` : ''}`}
           >
             전체에서 찾기

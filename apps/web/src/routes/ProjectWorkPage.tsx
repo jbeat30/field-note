@@ -37,7 +37,7 @@ const buildColumns = (projectId: string) =>
       sortFn: 'text',
       cell: ({ row }) => (
         <Link
-          className="font-semibold hover:text-primary hover:underline"
+          className="font-semibold hover:text-sub"
           to={projectWorkPath(projectId, row.original.workDate)}
           onClick={(event) => event.stopPropagation()}
         >

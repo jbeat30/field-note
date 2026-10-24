@@ -101,7 +101,7 @@ export const DayPhotosStep = ({ projectId, date }: DayPhotosStepProps) => {
       )}
       {photos.hasNextPage && (
         <Link
-          className="self-start text-sm font-medium text-primary underline"
+          className="self-start text-sm font-medium text-primary hover:text-sub"
           to={`/projects/${projectId}/photos`}
         >
           사진첩에서 모두 보기

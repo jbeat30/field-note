@@ -20,10 +20,7 @@ export const LegalPage = () => {
         <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
           문서를 찾을 수 없습니다
         </h1>
-        <Link
-          className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-          to="/login"
-        >
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </section>
@@ -45,16 +42,13 @@ export const LegalPage = () => {
         {Object.entries(SLUG_TO_TYPE).map(([itemSlug, itemType]) => (
           <Link
             key={itemSlug}
-            className="min-h-touch content-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
+            className="min-h-touch content-center text-sm font-bold hover:text-sub"
             to={`/legal/${itemSlug}`}
           >
             {getLegalDocumentContent(itemType).title}
           </Link>
         ))}
-        <Link
-          className="min-h-touch content-center text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
-          to="/login"
-        >
+        <Link className="min-h-touch content-center text-sm font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </nav>

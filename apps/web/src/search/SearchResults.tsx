@@ -76,9 +76,7 @@ export const SearchResults = ({ results }: SearchResultsProps) => {
               <h2 className="text-[21px] font-bold tracking-[-0.025em]">
                 {SEARCH_HIT_TYPE_LABELS[type]}
               </h2>
-              <span className="text-sm font-semibold underline underline-offset-[3px]">
-                {group.items.length}건
-              </span>
+              <span className="text-sm font-semibold hover:text-sub">{group.items.length}건</span>
             </div>
             <ul className="flex flex-col gap-2">
               {group.items.map((hit) => (

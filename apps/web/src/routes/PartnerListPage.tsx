@@ -24,7 +24,7 @@ const columns = helper.columns([
     sortDescFirst: false,
     cell: ({ row }) => (
       <Link
-        className="font-semibold hover:text-primary hover:underline"
+        className="font-semibold hover:text-sub"
         to={`/partners/${row.original.id}`}
         onClick={(event) => event.stopPropagation()}
       >

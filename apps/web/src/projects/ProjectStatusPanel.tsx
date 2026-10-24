@@ -195,7 +195,10 @@ const TransitionForm = ({
       </FormField>
       {needsSummary && (
         <div className="flex flex-col gap-1">
-          <Link to={`/projects/${project.id}/summary`} className="text-sm text-primary underline">
+          <Link
+            to={`/projects/${project.id}/summary`}
+            className="text-sm text-primary hover:text-sub"
+          >
             프로젝트 요약 보기
           </Link>
           <label className="flex min-h-touch items-center gap-3 text-base">
