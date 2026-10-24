@@ -85,10 +85,10 @@
   /* 행동 버튼은 잉크색, 주황은 면(평면·활성 메뉴·진행 막대)에만 쓰고 글자색으로 쓰지 않음 */
   --primary: #14110d;
   --primary-foreground: #fbf7ee;
-  --primary-subtle: #ffd9c4;
-  --accent: #ff6a2b;
-  --accent-subtle: #ffd9c4;
-  --highlight: #d8ec6b;
+  --primary-subtle: #f9dbc9;
+  --accent: #ee6f3d;
+  --accent-subtle: #f9dbc9;
+  --highlight: #d6e382;
   /* 화면 바탕(canvas) 위에 크림 카드(surface-subtle)를 올리는 구조. 입력 칸은 모래색 채움(field) */
   --canvas: #efe8d8;
   --surface: #fbf7ee;
@@ -114,9 +114,9 @@
   --warning-subtle: #fbe7a0;
   --overlay: rgb(20 17 13 / 0.55);
   /* 프로젝트 구분 색 (달력·인력 배치): 주황 · 잉크 · 라임 · 갈색 · 모래 · 진주황, 이름을 함께 표시 */
-  --proj-0: #ff6a2b;
+  --proj-0: #ee6f3d;
   --proj-1: #14110d;
-  --proj-2: #d8ec6b;
+  --proj-2: #d6e382;
   --proj-3: #6b6152;
   --proj-4: #cdbf9c;
   --proj-5: #a83f0c;
@@ -152,9 +152,9 @@
     --warning: #f3d070;
     --warning-subtle: #3a2f0d;
     --overlay: rgb(0 0 0 / 0.7);
-    --proj-0: #ff6a2b;
+    --proj-0: #ee6f3d;
     --proj-1: #f4eee0;
-    --proj-2: #d8ec6b;
+    --proj-2: #d6e382;
     --proj-3: #a89c84;
     --proj-4: #8a7a5a;
     --proj-5: #ff9d6a;
@@ -233,7 +233,7 @@ body {
 
 .tile-lime {
   box-shadow:
-    0 0.75px 0 1.25px #9db534,
+    0 0.75px 0 1.25px #b9c76f,
     0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
@@ -246,7 +246,7 @@ body {
 
 .tile-accent {
   box-shadow:
-    0 0.75px 0 1.25px #a83f0c,
+    0 0.75px 0 1.25px #c9582c,
     0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
