@@ -1,3 +1,5 @@
+import type { CSSProperties } from 'react';
+
 import { cn } from '../../lib/cn';
 
 import { Skeleton } from './skeleton';
@@ -8,10 +10,12 @@ const LINE_WIDTHS = ['w-full', 'w-4/5', 'w-3/5'];
 type LoadingBlockProps = {
   // 스크린 리더에 읽어 주는 안내 (예: 프로젝트를 불러오는 중)
   label: string;
-  // lines 글 줄, rows 카드 목록 줄, table 카드 안의 제목과 표(좁은 화면은 카드 목록), page 제목과 큰 면이 있는 화면 전체
-  variant?: 'lines' | 'rows' | 'table' | 'page';
+  // lines 글 줄, rows 카드 목록 줄, table 카드 안의 제목과 표(좁은 화면은 카드 목록), page 제목과 큰 면이 있는 화면 전체, blocks 실제 카드 높이(px)를 그대로 지정한 면
+  variant?: 'lines' | 'rows' | 'table' | 'page' | 'blocks';
   // 보여 줄 줄 수 (lines·rows)
   lines?: number;
+  // 카드 높이 목록 (blocks), 좁은 화면은 기준 높이의 70%
+  heights?: number[];
   className?: string;
 };
 
@@ -21,6 +25,7 @@ export const LoadingBlock = ({
   label,
   variant = 'lines',
   lines = 3,
+  heights = [],
   className,
 }: LoadingBlockProps) => (
   <div
@@ -28,7 +33,7 @@ export const LoadingBlock = ({
     aria-busy
     className={cn(
       'flex flex-col',
-      variant === 'lines' ? 'gap-2.5' : 'gap-3',
+      variant === 'lines' ? 'gap-2.5' : variant === 'blocks' ? 'gap-5' : 'gap-3',
       variant === 'table' && 'rounded-[30px] bg-surface-subtle p-5 sm:p-7',
       className,
     )}
@@ -56,6 +61,19 @@ export const LoadingBlock = ({
         </div>
       </>
     )}
+    {variant === 'blocks' &&
+      heights.map((height, index) => (
+        <Skeleton
+          key={index}
+          className="h-(--block-h) rounded-[30px] md:h-(--block-h-md)"
+          style={
+            {
+              '--block-h': `${Math.round(height * 0.7)}px`,
+              '--block-h-md': `${height}px`,
+            } as CSSProperties
+          }
+        />
+      ))}
     {variant === 'page' && (
       <>
         <Skeleton className="h-8 w-1/3" />

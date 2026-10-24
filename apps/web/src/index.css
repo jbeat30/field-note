@@ -172,6 +172,13 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* 메뉴·대화상자가 열릴 때 body에 걸리는 스크롤 잠금(overflow hidden, 여백 보정)은 html이 스크롤 영역인 구조에서는 body를 따로 스크롤하는 상자로 만들어 sticky 사이드바와 떠 있는 메뉴 위치를 깨뜨리므로 무력화 (휠·터치 잠금은 스크립트가 맡음) */
+html body[data-scroll-locked] {
+  overflow: visible !important;
+  margin-right: 0 !important;
+  padding-right: 0 !important;
+}
+
 /* 로그인 전 화면은 한 화면에 고정이라 주황 면이 끝까지 닿도록 자리를 비우지 않음 */
 html:has(.auth-light) {
   overflow-y: auto;

@@ -40,6 +40,7 @@ export const LoginPage = () => {
   const socialStart = useSocialStart();
   // 비밀번호가 맞고 2단계 인증이 켜진 계정이면 코드 입력 칸을 보여 줌
   const [isTotpStep, setTotpStep] = useState(false);
+  const [isDemoLoggingIn, setDemoLoggingIn] = useState(false);
   const enabledProviders = IS_SOCIAL_LOGIN_ENABLED
     ? SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider])
     : [];
@@ -49,7 +50,6 @@ export const LoginPage = () => {
     handleSubmit,
     setError,
     setFocus,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginRequest>({
     resolver: zodResolver(loginRequestSchema),
@@ -72,7 +72,8 @@ export const LoginPage = () => {
     return <Navigate to={returnPath ?? '/'} replace />;
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  // 입력 칸 제출과 체험하기 버튼이 같은 로그인 요청을 씀
+  const submitLogin = async (values: LoginRequest) => {
     const { data, error } = await apiClient.POST('/api/v1/auth/login', {
       body: {
         ...values,
@@ -100,7 +101,22 @@ export const LoginPage = () => {
     await resetClientState(queryClient);
     queryClient.setQueryData(queryKeys.me(), data);
     await navigate(data.isEmailVerified ? (returnPath ?? '/') : '/verify-email', { replace: true });
-  });
+  };
+  const onSubmit = handleSubmit(submitLogin);
+
+  // 체험하기는 입력 칸을 채우지 않고 서버가 알려 준 계정으로 바로 로그인
+  const loginAsDemo = async (demo: { loginId: string; password: string }) => {
+    if (isSubmitting || isDemoLoggingIn) return;
+
+    setDemoLoggingIn(true);
+    setTotpStep(false);
+
+    try {
+      await submitLogin({ ...demo, isRemembered: true });
+    } finally {
+      setDemoLoggingIn(false);
+    }
+  };
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
@@ -108,16 +124,13 @@ export const LoginPage = () => {
       {IS_SOCIAL_LOGIN_ENABLED && <SocialNotice />}
       {publicDemo.data?.enabled && publicDemo.data.loginId && publicDemo.data.password && (
         <DemoAccountNotice
-          isSubmitting={isSubmitting}
-          onLogin={() => {
-            if (isSubmitting) return;
-
-            setValue('loginId', publicDemo.data.loginId ?? '');
-            setValue('password', publicDemo.data.password ?? '');
-            setValue('totpCode', undefined);
-            setTotpStep(false);
-            void onSubmit();
-          }}
+          isSubmitting={isSubmitting || isDemoLoggingIn}
+          onLogin={() =>
+            void loginAsDemo({
+              loginId: publicDemo.data.loginId ?? '',
+              password: publicDemo.data.password ?? '',
+            })
+          }
         />
       )}
       {isExpired && (
