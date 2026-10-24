@@ -3,8 +3,8 @@ import { Link, Outlet } from 'react-router';
 import { BrandLogo } from './BrandLogo';
 
 // 인력 배치표를 흉내 낸 장식 줄 (이름, 14칸 중 칸 수와 종류만 있고 실제 데이터는 아님)
-// empty 빈 칸, work 투입, rest 쉬는 날, plan 예정
-type Kind = 'empty' | 'work' | 'rest' | 'plan';
+// empty 빈 칸(회색 테두리), today 오늘(주황 테두리), work 투입, rest 쉬는 날, plan 예정
+type Kind = 'empty' | 'today' | 'work' | 'rest' | 'plan';
 
 const SAMPLE_ROWS: { name: string; cells: [Kind, number][] }[] = [
   {
@@ -12,7 +12,7 @@ const SAMPLE_ROWS: { name: string; cells: [Kind, number][] }[] = [
     cells: [
       ['empty', 1],
       ['work', 5],
-      ['empty', 1],
+      ['today', 1],
       ['plan', 2],
       ['empty', 1],
       ['plan', 4],
@@ -25,7 +25,7 @@ const SAMPLE_ROWS: { name: string; cells: [Kind, number][] }[] = [
       ['work', 2],
       ['rest', 1],
       ['work', 2],
-      ['empty', 1],
+      ['today', 1],
       ['plan', 2],
       ['empty', 1],
       ['plan', 4],
@@ -36,7 +36,7 @@ const SAMPLE_ROWS: { name: string; cells: [Kind, number][] }[] = [
     cells: [
       ['empty', 1],
       ['work', 5],
-      ['empty', 1],
+      ['today', 1],
       ['plan', 2],
       ['empty', 1],
       ['plan', 4],
@@ -50,7 +50,7 @@ const SAMPLE_ROWS: { name: string; cells: [Kind, number][] }[] = [
       ['empty', 1],
       ['work', 1],
       ['empty', 1],
-      ['empty', 1],
+      ['today', 1],
       ['plan', 3],
       ['empty', 1],
       ['plan', 2],
@@ -59,10 +59,11 @@ const SAMPLE_ROWS: { name: string; cells: [Kind, number][] }[] = [
 ];
 
 const CELL_CLASS: Record<Kind, string> = {
-  empty: '',
-  work: 'bg-accent',
-  rest: 'bg-[#efe6d2]',
-  plan: 'bg-[#4a4034]',
+  empty: 'border-2 border-[#3a3228]',
+  today: 'border-2 border-accent',
+  work: 'border-2 border-accent bg-accent',
+  rest: 'border-2 border-[#efe6d2] bg-[#efe6d2]',
+  plan: 'border-2 border-[#4a4034] bg-[#4a4034]',
 };
 
 // 로그인·가입 등 로그인 전 화면 공통 틀: 주황 평면 + 아래쪽 잉크 띠 + 크림 폼 카드

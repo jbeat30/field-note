@@ -100,7 +100,12 @@ const Body = ({
   return (
     <>
       <FormField label="문서 이름">
-        <Input value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
+        <Input
+          placeholder="문서 이름을 입력하세요"
+          value={title}
+          maxLength={100}
+          onChange={(event) => setTitle(event.target.value)}
+        />
       </FormField>
       <FormField label="분류">
         <Select

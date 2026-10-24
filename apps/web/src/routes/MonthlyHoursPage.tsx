@@ -333,6 +333,7 @@ export const MonthlyHoursPage = () => {
                       hint="재오픈하면 이 달의 작업 내역을 다시 고칠 수 있습니다"
                     >
                       <Textarea
+                        placeholder="재오픈 사유를 입력하세요"
                         maxLength={MONTH_REASON_MAX_LENGTH}
                         value={reason}
                         onChange={(event) => setReason(event.target.value)}

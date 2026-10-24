@@ -245,6 +245,7 @@ export const DocumentUploadForm = ({
         <>
           <FormField label="문서 이름">
             <Input
+              placeholder="문서 이름을 입력하세요"
               value={shownTitle}
               maxLength={100}
               disabled={isBusy}
@@ -288,6 +289,7 @@ export const DocumentUploadForm = ({
         </FormField>
         <FormField label={mode === 'version' ? '개정 사유' : '메모 (선택)'}>
           <Input
+            placeholder="사유를 입력하세요"
             value={reason}
             maxLength={200}
             disabled={isBusy}

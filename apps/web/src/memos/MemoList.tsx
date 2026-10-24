@@ -73,6 +73,7 @@ const MemoItem = ({
           {isEditing ? (
             <div className="flex flex-col gap-2">
               <textarea
+                placeholder="메모 내용을 입력하세요"
                 aria-label="메모 내용"
                 className="min-h-16 w-full rounded-md border border-control-border bg-surface p-2 text-sm outline-none focus:border-primary"
                 value={content}

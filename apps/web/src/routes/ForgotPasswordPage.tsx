@@ -62,7 +62,13 @@ export const ForgotPasswordPage = () => {
       <p className="text-sm">가입할 때 인증한 이메일 주소를 입력하면 재설정 링크를 보내 드립니다</p>
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField label="이메일" error={errors.email && '올바른 이메일 주소를 입력해 주세요'}>
-        <Input type="email" autoComplete="email" inputMode="email" {...register('email')} />
+        <Input
+          placeholder="name@example.com"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          {...register('email')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '보내는 중' : '재설정 링크 받기'}

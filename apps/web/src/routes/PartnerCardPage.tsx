@@ -134,13 +134,19 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
               hint="구분은 등록한 뒤 바꿀 수 없습니다"
               error={errors.name?.message}
             >
-              <Input {...register('name')} />
+              <Input placeholder="상호명" {...register('name')} />
             </FormField>
             <FormField label="담당자" error={errors.contactName?.message}>
-              <Input {...register('contactName')} />
+              <Input placeholder="담당자 이름" {...register('contactName')} />
             </FormField>
             <FormField label="연락처" error={errors.phone?.message}>
-              <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
+              <Input
+                placeholder="010-0000-0000"
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
+                {...register('phone')}
+              />
             </FormField>
             <FormField
               className="md:col-span-2"
@@ -148,7 +154,7 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
               hint={`관리자만 보는 메모입니다 (${PARTNER_MEMO_MAX_LENGTH}자까지)`}
               error={errors.memo?.message}
             >
-              <Textarea {...register('memo')} />
+              <Textarea placeholder="메모를 입력하세요" {...register('memo')} />
             </FormField>
             <Button
               type="submit"

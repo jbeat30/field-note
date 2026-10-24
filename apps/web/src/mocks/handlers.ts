@@ -3148,11 +3148,11 @@ export const handlers = [
     return HttpResponse.json({ resendAfterSeconds: 30 });
   }),
 
-  // 시연 계정 안내: 목업에서는 끔 (스토리·시험이 필요할 때 이 핸들러를 덮어씀)
+  // 시연 계정 안내: 목업에서는 시드 계정으로 켬 (끈 상태가 필요한 스토리·시험은 이 핸들러를 덮어씀)
   http.get('/api/v1/public/demo', async () => {
     await simulateLatency();
 
-    return HttpResponse.json({ enabled: false });
+    return HttpResponse.json({ enabled: true, loginId: 'hanbit', password: 'Hanbit-demo-2026!' });
   }),
 
   // 소셜 로그인 (카카오·네이버·구글), 시작은 목업 소셜 화면(/mock-social) 주소를 돌려줌
