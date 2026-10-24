@@ -162,7 +162,7 @@ export const ProjectMaterialsPage = () => {
                             aria-label={`${name} 기록 지우기`}
                             onClick={() => void handleDelete(record.id, name)}
                           >
-                            <span className="text-foreground/50">✕</span>
+                            <span className="text-sub">✕</span>
                           </Button>
                         </TableCell>
                       </TableRow>

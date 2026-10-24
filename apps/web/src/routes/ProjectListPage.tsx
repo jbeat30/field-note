@@ -117,7 +117,7 @@ const columns = helper.columns([
     enableSorting: false,
     cell: ({ row }) =>
       row.original.warnings.length === 0 ? (
-        <span className="text-foreground/55">-</span>
+        <span className="text-sub">-</span>
       ) : (
         <span className="flex flex-wrap gap-1">
           {row.original.warnings.map((warning) => (

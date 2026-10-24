@@ -62,7 +62,7 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
                 {DOCUMENT_CATEGORY_LABELS[document.category]} · {document.versionCount}판
               </span>
               {!isReady && (
-                <span className="ml-2 text-xs text-foreground/55">
+                <span className="ml-2 text-xs text-sub">
                   {latest.fileStatus === 'REJECTED' ? '거부됨' : '검사 중'}
                 </span>
               )}
