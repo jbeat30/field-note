@@ -218,10 +218,13 @@ body {
 /* 카드(bg-surface-subtle)는 평면 크림, 카드 안의 카드는 한 단계 어두운 면, 그 안은 다시 카드색으로 */
 .bg-surface-subtle .bg-surface-subtle {
   background-color: var(--surface-nested);
+  /* 카드 안의 카드에서는 입력 채움이 바탕과 같아지지 않도록 카드색으로 */
+  --field: var(--surface-subtle);
 }
 
 .bg-surface-subtle .bg-surface-subtle .bg-surface-subtle {
   background-color: var(--surface-subtle);
+  --field: var(--surface-nested);
 }
 
 /* 큰 숫자(지표 타일)의 두께: 타일보다 진한 단색 테두리(상 .5 · 옆 1 · 하 2px)와 얕은 번짐 */

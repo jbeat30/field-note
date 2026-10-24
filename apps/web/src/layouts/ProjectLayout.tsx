@@ -16,6 +16,7 @@ import {
 import { Skeleton } from '../components/ui/skeleton';
 import { useEmployees } from '../employees/useEmployees';
 import { cn } from '../lib/cn';
+import { formatLongDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 import { usePartners } from '../partners/usePartners';
 import { useProject } from '../projects/useProjects';
@@ -96,6 +97,8 @@ export const ProjectLayout = () => {
   const inCloseout = closeout.some((path) => pathname.startsWith(path));
   const showWarranty = WARRANTY_STATUSES.includes(data.status);
   const showTodayBtn = WRITABLE.includes(data.status);
+  // 작업일 입력 화면은 제목을 날짜로, 프로젝트 이름은 아래 정보 줄 앞으로
+  const workDate = /\/work\/(\d{4}-\d{2}-\d{2})$/.exec(pathname)?.[1];
 
   const tabs: { to: string; label: string; end?: boolean; active?: boolean }[] = [
     { to: base, label: '작업 달력', end: true },
@@ -133,10 +136,11 @@ export const ProjectLayout = () => {
               {due && <Badge tone={due.includes('지남') ? 'danger' : 'primary'}>{due}</Badge>}
             </div>
             <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] break-keep md:text-[46px]">
-              {data.name}
+              {workDate ? `${formatLongDay(workDate)} 작업` : data.name}
             </h1>
             <p className="text-[15px] font-medium">
               {[
+                workDate && data.name,
                 data.siteName,
                 client,
                 manager && `담당 ${manager}`,

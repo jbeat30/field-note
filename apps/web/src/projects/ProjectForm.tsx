@@ -464,7 +464,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
                 {trades.map((trade) => (
                   <label
                     key={trade.id}
-                    className="flex min-h-touch items-center gap-2 rounded-md border border-border px-3"
+                    className="flex min-h-touch items-center gap-2 rounded-xl bg-field px-3"
                   >
                     <input
                       type="checkbox"
