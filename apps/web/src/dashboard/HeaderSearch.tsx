@@ -10,7 +10,7 @@ export const HeaderSearch = () => {
   return (
     <form
       role="search"
-      className="flex h-14 w-full items-center gap-2.5 rounded-full border-2 border-[#14110d] bg-surface-subtle pr-1 pl-5 focus-within:outline-2 focus-within:outline-foreground md:w-[360px]"
+      className="flex h-14 w-full items-center gap-2.5 rounded-full border-2 border-[#14110d] bg-surface-subtle pr-1 pl-5 focus-within:bg-surface md:w-[360px]"
       onSubmit={(event) => {
         event.preventDefault();
 
