@@ -78,7 +78,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
       }
     >
       {!summary.data ? (
-        <LoadingBlock label="불러오는 중" />
+        <LoadingBlock label="불러오는 중" variant="rows" lines={5} />
       ) : (
         <>
           <StatGroup

@@ -64,7 +64,7 @@ export const ProjectMemosPage = () => {
       {(update.error ?? remove.error) && (
         <Alert>처리하지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>
       )}
-      {memos.isPending && <LoadingBlock label="메모를 불러오는 중" />}
+      {memos.isPending && <LoadingBlock label="메모를 불러오는 중" variant="rows" lines={3} />}
       {memos.isError && <Alert>메모를 불러오지 못했습니다</Alert>}
       {memos.isSuccess && items.length === 0 && (
         <EmptyState
