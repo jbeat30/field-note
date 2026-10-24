@@ -26,7 +26,7 @@ import { OptionSelect } from '../employees/OptionSelect';
 import { useEmployee, useUpdateEmployee } from '../employees/useEmployees';
 import { useOptions } from '../settings/useOptions';
 import { EmployeeWorkHistoryPanel } from '../workSummary/EmployeeWorkHistoryPanel';
-import { LoadingBlock } from '../components/ui/loading-block';
+import { LoadingBlock, PlaneSkeleton } from '../components/ui/loading-block';
 
 // 입력칸은 모두 문자열로 다루고, 비어 있으면 null로 보냄 (항목 지우기)
 type CardForm = {
@@ -391,7 +391,19 @@ export const EmployeeCardPage = () => {
 
   // 선택 목록이 도착하기 전에 폼을 그리면 직종·구분 선택칸이 현재 값을 찾지 못해 비어 보임
   if (employee.isPending || options.isPending) {
-    return <LoadingBlock label="직원 정보를 불러오는 중" variant="page" />;
+    return (
+      <div className="flex flex-col gap-5">
+        <PlaneSkeleton height={[219, 264]} />
+        <LoadingBlock
+          label="직원 정보를 불러오는 중"
+          variant="blocks"
+          heights={[
+            [252, 180],
+            [345, 160],
+          ]}
+        />
+      </div>
+    );
   }
 
   if (employee.isError || options.isError) {
