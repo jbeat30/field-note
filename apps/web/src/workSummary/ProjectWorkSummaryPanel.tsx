@@ -51,7 +51,7 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
   }
 
   if (!summary.data || !settings.data) {
-    return <LoadingBlock label="공수 집계를 불러오는 중" />;
+    return <LoadingBlock label="공수 집계를 불러오는 중" variant="page" />;
   }
 
   const data = summary.data;

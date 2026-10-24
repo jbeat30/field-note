@@ -1,31 +1,32 @@
-import { CircleAlert, CircleCheck, Info, TriangleAlert } from 'lucide-react';
+import { Check, Info, TriangleAlert, type LucideIcon } from 'lucide-react';
 import type { ComponentProps } from 'react';
 
 import { cn } from '../../lib/cn';
 
 type Variant = 'danger' | 'info' | 'success' | 'warning';
 
-// 네 종류 모두 면 색과 둥근 마크로 구분하고, 뜻은 글자로도 전함
-const STYLE: Record<Variant, { box: string; icon: typeof Info; iconClass: string }> = {
+// 네 종류 모두 면 색·테두리와 둥근 마크로 구분하고, 뜻은 글자로도 전함
+// 마크 원은 종류색 면에 본문 면 색 글리프라 밝은 모드와 어두운 모드 모두 대비 유지
+const STYLE: Record<Variant, { box: string; icon: LucideIcon; dot: string }> = {
   danger: {
-    box: 'bg-danger-subtle text-danger',
-    icon: CircleAlert,
-    iconClass: 'text-danger',
+    box: 'border-[#f3b8af] bg-danger-subtle text-danger',
+    icon: TriangleAlert,
+    dot: 'bg-danger text-surface',
   },
   warning: {
-    box: 'bg-warning-subtle text-foreground',
+    box: 'border-[#e8d070] bg-warning-subtle text-foreground',
     icon: TriangleAlert,
-    iconClass: 'text-warning',
+    dot: 'bg-warning text-surface',
   },
   success: {
-    box: 'bg-success-subtle text-foreground',
-    icon: CircleCheck,
-    iconClass: 'text-success',
+    box: 'border-[#a9dcc1] bg-success-subtle text-foreground',
+    icon: Check,
+    dot: 'bg-success text-surface',
   },
   info: {
-    box: 'bg-highlight text-[#14110d]',
+    box: 'border-[#d6e382] bg-highlight text-[#14110d]',
     icon: Info,
-    iconClass: 'text-[#14110d]',
+    dot: 'bg-[#14110d] text-highlight',
   },
 };
 
@@ -42,13 +43,21 @@ export const Alert = ({
     <div
       role={variant === 'danger' ? 'alert' : 'status'}
       className={cn(
-        'flex items-start gap-3 rounded-lg px-4 py-3.5 text-sm font-medium',
+        'flex items-start gap-3 rounded-[18px] border px-[15px] py-[13px] text-sm leading-[1.55] font-medium dark:border-transparent',
         style.box,
         className,
       )}
       {...props}
     >
-      <style.icon aria-hidden className={cn('mt-0.5 size-5 shrink-0', style.iconClass)} />
+      <span
+        aria-hidden
+        className={cn(
+          'mt-px inline-flex size-[22px] shrink-0 items-center justify-center rounded-full',
+          style.dot,
+        )}
+      >
+        <style.icon className="size-3 stroke-[3]" />
+      </span>
       <div className="min-w-0 flex-1">{children}</div>
     </div>
   );

@@ -3,6 +3,7 @@ import { useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
+import { StatGroup } from '../components/ui/stat-group';
 import { ProjectSummarySheet } from '../completion/ProjectSummarySheet';
 import { useProjectSummary } from '../completion/useCompletion';
 import { useProject } from '../projects/useProjects';
@@ -19,7 +20,7 @@ export const ProjectSummaryPage = () => {
   const [exportError, setExportError] = useState('');
 
   if (project.isPending || summary.isPending) {
-    return <LoadingBlock label="요약을 불러오는 중" />;
+    return <LoadingBlock label="요약을 불러오는 중" variant="page" />;
   }
 
   if (!project.data || !summary.data) {
@@ -55,7 +56,30 @@ export const ProjectSummaryPage = () => {
           {isExporting ? '내려받는 중' : '엑셀 내려받기'}
         </Button>
       </div>
-      <ProjectSummarySheet summary={summary.data} />
+      <div className="print:hidden">
+        <StatGroup
+          items={[
+            {
+              label: '총 공수',
+              value: (
+                summary.data.work.totalMinutes / summary.data.settings.standardWorkMinutes
+              ).toFixed(1),
+              unit: 'MD',
+              surface: 'cream',
+            },
+            {
+              label: '변경·추가 작업',
+              value: summary.data.changeWorks.items.length,
+              unit: '건',
+              surface: 'cream',
+            },
+            { label: '사진', value: summary.data.photos.total, unit: '장', surface: 'lime' },
+          ]}
+        />
+      </div>
+      <div className="rounded-[30px] bg-surface-subtle p-5 sm:p-7 print:rounded-none print:bg-transparent print:p-0">
+        <ProjectSummarySheet summary={summary.data} />
+      </div>
     </div>
   );
 };

@@ -26,7 +26,7 @@ export const ProjectRepairsPage = () => {
   const repairs = useRepairs(id, status || undefined);
 
   if (project.isPending) {
-    return <LoadingBlock label="프로젝트를 불러오는 중" />;
+    return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   }
 
   if (!project.data) {

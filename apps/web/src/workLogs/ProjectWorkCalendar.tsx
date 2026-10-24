@@ -6,7 +6,11 @@ import { cn } from '../lib/cn';
 import { addDays } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 
-const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
+const WEEKDAYS = ['월', '화', '수', '목', '금', '토', '일'];
+
+// 토요일은 파랑, 일요일은 빨강 (요일 머리와 날짜 숫자 공통, 밝은 모드와 어두운 모드 모두 대비 확보)
+const weekendTone = (column: number) =>
+  column === 5 ? 'text-[#2a55c4] dark:text-[#9db8ff]' : column === 6 ? 'text-danger' : '';
 
 type Props = {
   projectId: string;
@@ -20,12 +24,13 @@ type Props = {
   nameOf: (employeeId: string) => string;
 };
 
-// 달 전체를 일요일부터 토요일까지 주 단위로 채운 날짜 목록 (앞뒤 달 날짜 포함)
+// 달 전체를 월요일부터 일요일까지 주 단위로 채운 날짜 목록 (앞뒤 달 날짜 포함)
 const buildDays = (month: string) => {
   const first = new Date(`${month}T00:00:00Z`);
-  const start = addDays(month, -first.getUTCDay());
+  const lead = (first.getUTCDay() + 6) % 7;
+  const start = addDays(month, -lead);
   const last = new Date(Date.UTC(first.getUTCFullYear(), first.getUTCMonth() + 1, 0));
-  const total = Math.ceil((first.getUTCDay() + last.getUTCDate()) / 7) * 7;
+  const total = Math.ceil((lead + last.getUTCDate()) / 7) * 7;
 
   return Array.from({ length: total }, (_, index) => addDays(start, index));
 };
@@ -48,17 +53,14 @@ export const ProjectWorkCalendar = ({
         {WEEKDAYS.map((label, index) => (
           <div
             key={label}
-            className={cn(
-              'text-center text-xs font-bold',
-              index === 0 ? 'text-danger' : 'text-sub',
-            )}
+            className={cn('text-center text-xs font-bold', weekendTone(index) || 'text-sub')}
           >
             {label}
           </div>
         ))}
       </div>
       <ul aria-label={`${month.slice(0, 7)} 작업 달력`} className="grid grid-cols-7 gap-1.5">
-        {buildDays(month).map((date) => {
+        {buildDays(month).map((date, position) => {
           const inMonth = date.slice(0, 7) === month.slice(0, 7);
           const writable = date >= plannedStart && date <= plannedEnd && date <= today;
           const log = byDate.get(date);
@@ -78,6 +80,7 @@ export const ProjectWorkCalendar = ({
                 <span
                   className={cn(
                     'grid size-6 place-items-center rounded-full text-xs font-semibold',
+                    weekendTone(position % 7),
                     date === today && 'bg-accent text-[#14110d]',
                   )}
                 >

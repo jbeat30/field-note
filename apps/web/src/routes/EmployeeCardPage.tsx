@@ -366,7 +366,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
             </p>
             <Button
               type="submit"
-              className="md:col-span-2 md:justify-self-start md:px-10"
+              className="h-14 rounded-[17px] text-base font-extrabold md:col-span-2 md:justify-self-end md:px-10"
               disabled={!isDirty || update.isPending}
             >
               {update.isPending ? '저장 중' : '저장'}
@@ -391,7 +391,7 @@ export const EmployeeCardPage = () => {
 
   // 선택 목록이 도착하기 전에 폼을 그리면 직종·구분 선택칸이 현재 값을 찾지 못해 비어 보임
   if (employee.isPending || options.isPending) {
-    return <LoadingBlock label="직원 정보를 불러오는 중" />;
+    return <LoadingBlock label="직원 정보를 불러오는 중" variant="page" />;
   }
 
   if (employee.isError || options.isError) {

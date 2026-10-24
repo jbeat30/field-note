@@ -54,7 +54,7 @@ export const DailyReportPage = () => {
   };
 
   if (project.isPending) {
-    return <LoadingBlock label="프로젝트를 불러오는 중" />;
+    return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   }
 
   if (!project.data) {
@@ -122,7 +122,7 @@ export const DailyReportPage = () => {
         </details>
       </div>
 
-      {report.isPending && <LoadingBlock label="작업일보를 불러오는 중" />}
+      {report.isPending && <LoadingBlock label="작업일보를 불러오는 중" variant="page" />}
       {report.isError && <Alert>작업일보를 불러오지 못했습니다</Alert>}
       {report.data && <ReportSheet report={report.data} />}
 
