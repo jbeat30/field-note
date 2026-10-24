@@ -41,6 +41,7 @@
   --color-warning: var(--warning);
   --color-warning-subtle: var(--warning-subtle);
   --color-overlay: var(--overlay);
+  --color-input-border: var(--input-border);
   --color-control-border: var(--control-border);
   --color-control-border-hover: var(--control-border-hover);
 
@@ -103,6 +104,8 @@
   --line: #e9e1cc;
   --control-border: #d8cfb7;
   --control-border-hover: #b9ad8f;
+  /* 입력 칸 테두리: 칸 면과 카드 면 모두에 3 대 1 이상 */
+  --input-border: #857a65;
   --muted: #efe8d8;
   --foreground: #14110d;
   --border: #d8cfb7;
@@ -142,6 +145,7 @@
     --line: #2d271e;
     --control-border: #3d362a;
     --control-border-hover: #5a5040;
+    --input-border: #7d7361;
     --muted: #241f18;
     --foreground: #f4eee0;
     --border: #3d362a;
@@ -291,6 +295,7 @@ body {
   --line: #e9e1cc;
   --control-border: #d8cfb7;
   --control-border-hover: #b9ad8f;
+  --input-border: #857a65;
   --muted: #efe8d8;
   --foreground: #14110d;
   --border: #d8cfb7;
@@ -316,6 +321,7 @@ body {
   --surface-nested: #f3ecdb;
   --line: #e9e1cc;
   --control-border: #d8cfb7;
+  --input-border: #857a65;
   --danger: #b3261e;
   --danger-subtle: #ffe3de;
   --success: #14573a;

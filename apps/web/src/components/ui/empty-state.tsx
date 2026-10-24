@@ -11,11 +11,11 @@ type EmptyStateProps = {
 
 // 목록이 비었을 때 이유와 다음 행동을 안내
 export const EmptyState = ({ title, description, action, icon }: EmptyStateProps) => (
-  <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
+  <div className="flex flex-col items-center gap-2 rounded-[30px] bg-surface-subtle px-4 py-12 text-center">
     <span className="text-sub [&_svg]:size-7">{icon ?? <Inbox aria-hidden />}</span>
     <div className="flex flex-col gap-1">
-      <p className="text-[15px] font-semibold">{title}</p>
-      {description && <p className="text-sm text-sub">{description}</p>}
+      <p className="text-[17px] font-extrabold tracking-tight">{title}</p>
+      {description && <p className="text-[13.5px] text-sub">{description}</p>}
     </div>
     {action && <div className="mt-1">{action}</div>}
   </div>
