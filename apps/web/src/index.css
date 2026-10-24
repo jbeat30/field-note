@@ -5,7 +5,8 @@
 @import 'react-day-picker/style.css';
 
 /* 다크 모드: html에 dark 클래스가 있을 때 (테마 설정 또는 기기 설정) */
-@custom-variant dark (&:where(.dark, .dark *));
+/* 주황 평면과 로그인 전 화면은 밝은 값으로 고정되므로 어두운 모드 전용 클래스도 적용하지 않음 */
+@custom-variant dark (&:where(.dark, .dark *):not(:where(.plane, .plane *, .auth-light, .auth-light *)));
 
 /* 디자인 토큰: 앱과 Storybook이 같은 파일을 불러와 모양이 같게 보임. 색은 아래 :root / .dark 의 변수를 따름 */
 @theme inline {
@@ -299,6 +300,8 @@ body {
   --success-subtle: #d6efdf;
   --warning: #5e4400;
   --warning-subtle: #fbe7a0;
+  --accent-subtle: #f9dbc9;
+  --primary-subtle: #f9dbc9;
   color: var(--foreground);
 }
 
@@ -314,6 +317,13 @@ body {
   --line: #e9e1cc;
   --control-border: #d8cfb7;
   --danger: #b3261e;
+  --danger-subtle: #ffe3de;
+  --success: #14573a;
+  --success-subtle: #d6efdf;
+  --warning: #5e4400;
+  --warning-subtle: #fbe7a0;
+  --accent-subtle: #f9dbc9;
+  --primary-subtle: #f9dbc9;
   --track: #fbf7ee;
   --sub: #2a2118;
   color: var(--foreground);

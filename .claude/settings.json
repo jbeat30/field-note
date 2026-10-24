@@ -1,4 +1,8 @@
 {
+  "attribution": {
+    "commit": "",
+    "pr": ""
+  },
   "enabledPlugins": {
     "jbeat-conventions@jbeat-plugins": true
   },
@@ -9,9 +13,5 @@
         "repo": "jbeat30/jbeat-conventions"
       }
     }
-  },
-  "attribution": {
-    "commit": "",
-    "pr": ""
   }
 }

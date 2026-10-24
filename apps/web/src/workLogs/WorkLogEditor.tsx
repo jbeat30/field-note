@@ -628,7 +628,7 @@ export const WorkLogEditor = ({
                 className="sm:max-w-72"
               />
             )}
-            <ul className="grid gap-x-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="회사 직원">
+            <ul className="grid gap-x-3 sm:grid-cols-2" aria-label="회사 직원">
               {pickable.map((employee) => {
                 const checked = employeeIds.includes(employee.id);
 
@@ -645,14 +645,16 @@ export const WorkLogEditor = ({
                         checked={checked}
                         onCheckedChange={(next) => toggleEmployee(employee.id, next === true)}
                       />
-                      <span className="min-w-0 flex-1 truncate">{employee.name}</span>
-                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-normal text-sub">
-                        {employee.title}
-                        {assignedEmployeeIds.includes(employee.id) && (
-                          <Badge tone="primary">이 현장</Badge>
-                        )}
-                        {employee.status === 'ON_LEAVE' && <Badge tone="warning">휴직</Badge>}
-                        {employee.status === 'LEFT' && <Badge tone="danger">퇴사</Badge>}
+                      <span className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className="break-keep">{employee.name}</span>
+                        <span className="flex flex-wrap items-center gap-1.5 text-xs font-normal text-sub">
+                          {employee.title}
+                          {assignedEmployeeIds.includes(employee.id) && (
+                            <Badge tone="primary">이 현장</Badge>
+                          )}
+                          {employee.status === 'ON_LEAVE' && <Badge tone="warning">휴직</Badge>}
+                          {employee.status === 'LEFT' && <Badge tone="danger">퇴사</Badge>}
+                        </span>
                       </span>
                     </label>
                   </li>
