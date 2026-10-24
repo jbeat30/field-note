@@ -27,9 +27,11 @@ export const StorageSection = () => {
   const level = storageLevel(usedBytes, quotaBytes);
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-4">
       <p className="text-sm">
-        <span className="text-lg font-bold tabular-nums">{formatBytes(usedBytes)}</span>
+        <span className="text-2xl font-extrabold tabular-nums tracking-tight">
+          {formatBytes(usedBytes)}
+        </span>
         <span className="text-sub">
           {' '}
           / {formatBytes(quotaBytes)} 사용 ({percent}%)
@@ -55,7 +57,7 @@ export const StorageSection = () => {
         </Alert>
       )}
       {byPurpose.length > 0 && (
-        <dl className="grid grid-cols-[6rem_1fr] gap-x-3 gap-y-1 text-sm">
+        <dl className="grid grid-cols-[6rem_1fr] gap-x-3 gap-y-2 rounded-2xl bg-[var(--surface-nested)] p-4 text-sm">
           {byPurpose.map((row) => (
             <div key={row.purpose} className="contents">
               <dt className="text-sub">{PURPOSE_LABELS[row.purpose]}</dt>
@@ -67,9 +69,9 @@ export const StorageSection = () => {
         </dl>
       )}
       {byProject.length > 0 && (
-        <div className="flex flex-col gap-1">
-          <h3 className="text-sm font-medium">프로젝트별 (큰 순)</h3>
-          <ul className="flex flex-col gap-0.5 text-sm">
+        <div className="flex flex-col gap-2 rounded-2xl bg-[var(--surface-nested)] p-4">
+          <h3 className="text-sm font-bold">프로젝트별 (큰 순)</h3>
+          <ul className="flex flex-col gap-1.5 text-sm">
             {byProject.slice(0, TOP_PROJECTS).map((row) => (
               <li key={row.projectId ?? 'employee'} className="flex justify-between gap-2">
                 <span className="min-w-0 truncate">{row.name}</span>

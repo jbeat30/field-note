@@ -67,19 +67,20 @@ export const PartnerListPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        overlap
         title="명부"
         description="고객·협력업체·자재 공급처를 관리합니다. 금액과 거래 내역은 다루지 않습니다"
       />
 
       {/* xl+ 2열: 간편 등록 / 검색+필터 */}
-      <div className="grid gap-5 xl:grid-cols-2">
+      <div className="relative -mt-14 grid gap-5 xl:grid-cols-2">
         <PartnerQuickAdd />
 
         <section
-          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+          className="flex flex-col gap-3 rounded-[30px] bg-surface-subtle p-5 sm:p-7"
           aria-labelledby="partner-filter-heading"
         >
-          <h2 id="partner-filter-heading" className="text-base font-bold">
+          <h2 id="partner-filter-heading" className="text-[19px] font-extrabold tracking-tight">
             업체 찾기
           </h2>
           <div className="grid gap-2 md:grid-cols-2">
