@@ -13,6 +13,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+import { SummaryExportButton } from '../completion/SummaryExportButton';
 import { Skeleton } from '../components/ui/skeleton';
 import { useEmployees } from '../employees/useEmployees';
 import { cn } from '../lib/cn';
@@ -254,16 +255,13 @@ export const ProjectLayout = () => {
               </NavLink>
             ))}
           </nav>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => window.print()}
-            className="shrink-0"
-          >
-            <Printer aria-hidden />
-            인쇄·PDF
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {pathname.startsWith(`${base}/summary`) && <SummaryExportButton projectId={data.id} />}
+            <Button type="button" variant="secondary" size="sm" onClick={() => window.print()}>
+              <Printer aria-hidden />
+              인쇄·PDF
+            </Button>
+          </div>
         </div>
       )}
 

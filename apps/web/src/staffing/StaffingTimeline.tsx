@@ -67,10 +67,10 @@ export const StaffingTimeline = ({
   })).filter((item) => item.items.length > 0);
 
   return (
-    <div className="isolate overflow-x-auto rounded-xl border border-line bg-surface">
+    <div className="isolate overflow-x-auto rounded-[30px] bg-surface-subtle p-3 sm:p-4">
       <div role="group" aria-label="인력 배치 타임라인" className="min-w-max">
-        <div className="grid border-b border-line" style={{ gridTemplateColumns: columns }}>
-          <div className="sticky left-0 z-20 border-r border-line bg-surface-nested px-3 py-2.5 text-left text-sm font-semibold">
+        <div className="grid gap-1 pb-1" style={{ gridTemplateColumns: columns }}>
+          <div className="sticky left-0 z-20 rounded-xl bg-[var(--surface-nested)] px-3 py-2.5 text-left text-sm font-bold">
             직원
           </div>
           {dates.map((date) => {
@@ -82,9 +82,11 @@ export const StaffingTimeline = ({
                 key={date}
                 aria-current={date === today ? 'date' : undefined}
                 className={cn(
-                  'px-1 py-1.5 text-center',
+                  'rounded-xl px-1 py-1.5 text-center',
                   weekday === 0 && 'text-danger',
-                  date === today ? 'bg-accent font-bold text-[#14110d]' : 'bg-surface-nested',
+                  date === today
+                    ? 'bg-accent font-bold text-[#14110d]'
+                    : 'bg-[var(--surface-nested)]',
                 )}
               >
                 <span className="block text-[11px] leading-tight text-sub">
@@ -102,7 +104,7 @@ export const StaffingTimeline = ({
 
         {grouped.map(({ group, items }) => (
           <Fragment key={group}>
-            <div className="sticky left-0 border-b border-line bg-surface-subtle px-3 py-1.5 text-xs font-semibold text-sub">
+            <div className="sticky left-0 mt-2 px-3 py-1.5 text-xs font-bold text-sub">
               <span>
                 {GROUP_LABELS[group]} {items.length}명
               </span>
@@ -162,13 +164,13 @@ const EmployeeRow = ({
     <div
       role="group"
       aria-label={employee.name}
-      className={cn('grid border-b border-line', isHighlighted && 'bg-warning-subtle/40')}
+      className={cn('grid gap-1 rounded-2xl py-0.5', isHighlighted && 'bg-warning-subtle/40')}
       style={{ gridTemplateColumns: columns }}
     >
       <div
         className={cn(
-          'sticky left-0 z-20 flex flex-col justify-center gap-0.5 border-r border-line px-3 py-2',
-          isHighlighted ? 'bg-warning-subtle' : 'bg-surface',
+          'sticky left-0 z-20 flex flex-col justify-center gap-0.5 rounded-xl px-3 py-2',
+          isHighlighted ? 'bg-warning-subtle' : 'bg-[var(--surface-subtle)]',
         )}
       >
         <Link
@@ -193,7 +195,7 @@ const EmployeeRow = ({
       </div>
 
       <div
-        className="grid"
+        className="grid gap-x-1"
         style={{
           gridColumn: `2 / span ${dates.length}`,
           gridTemplateColumns: `repeat(${dates.length}, minmax(0, 1fr))`,
@@ -204,9 +206,9 @@ const EmployeeRow = ({
           const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
           const isFuture = date > today;
           const background = cn(
-            'border-l border-line',
-            weekday === 0 && 'bg-surface-nested',
-            date === today && 'bg-accent-subtle',
+            'rounded-xl border-2 border-line',
+            weekday === 0 && 'bg-[var(--surface-nested)]',
+            date === today && 'border-accent bg-accent-subtle',
           );
           const style = { gridColumn: index + 1, gridRow: `1 / span ${laneCount}` };
 
@@ -257,12 +259,12 @@ const EmployeeRow = ({
             return (
               <div
                 key={`${lane.projectId}-${segment.startIndex}`}
-                className="pointer-events-none relative z-10 flex min-w-0 flex-col overflow-hidden rounded-md border-l-4 p-px"
+                className="pointer-events-none relative z-10 mx-px flex min-w-0 flex-col overflow-hidden rounded-xl border-2 p-px"
                 style={{
                   gridColumn: `${segment.startIndex + 1} / span ${segment.days.length}`,
                   gridRow: laneIndex + 1,
-                  borderLeftColor: `var(--proj-${color})`,
-                  backgroundColor: `color-mix(in srgb, var(--proj-${color}) 16%, var(--surface))`,
+                  borderColor: `var(--proj-${color})`,
+                  backgroundColor: `color-mix(in srgb, var(--proj-${color}) 28%, var(--surface-subtle))`,
                 }}
               >
                 <span className="truncate px-1.5 pt-0.5 text-xs font-semibold leading-tight">
