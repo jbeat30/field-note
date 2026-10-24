@@ -119,36 +119,41 @@ export const ProjectDocumentsPage = () => {
         value={category}
         onChange={setCategory}
       />
-      <div className="rounded-3xl bg-surface-subtle p-4 md:w-96">
-        <Input
-          type="search"
-          aria-label="문서 이름 검색"
-          placeholder="문서 이름 검색"
-          startAdornment={<Search aria-hidden />}
-          value={q}
-          onChange={(event) => setQ(event.target.value)}
-        />
-      </div>
-      {opener.error && (
-        <Alert>{opener.error ?? '처리하지 못했습니다. 잠시 후 다시 시도해 주세요'}</Alert>
-      )}
-      {documents.isPending && <LoadingBlock label="문서를 불러오는 중" />}
-      {documents.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
-      {documents.isSuccess && shown.length === 0 && (
-        <EmptyState
-          title={category || q ? '조건에 맞는 문서가 없습니다' : '아직 문서가 없습니다'}
-          description={
-            category || q ? undefined : '도면·작업지시서·계약서 같은 파일을 올려 보관하세요'
-          }
-        />
-      )}
-      {documents.isSuccess && shown.length > 0 && (
-        <DocumentList
-          documents={shown}
-          onOpen={(document, mode) => opener.open(document, document.latest.versionNo, mode)}
-          onDetail={(document) => setDetailId(document.id)}
-        />
-      )}
+      <section
+        className="flex flex-col gap-4 rounded-[30px] bg-surface-subtle p-5 sm:p-7"
+        aria-label="문서 목록과 검색"
+      >
+        <div className="md:w-96">
+          <Input
+            type="search"
+            aria-label="문서 이름 검색"
+            placeholder="문서 이름 검색"
+            startAdornment={<Search aria-hidden />}
+            value={q}
+            onChange={(event) => setQ(event.target.value)}
+          />
+        </div>
+        {opener.error && (
+          <Alert>{opener.error ?? '처리하지 못했습니다. 잠시 후 다시 시도해 주세요'}</Alert>
+        )}
+        {documents.isPending && <LoadingBlock label="문서를 불러오는 중" />}
+        {documents.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
+        {documents.isSuccess && shown.length === 0 && (
+          <EmptyState
+            title={category || q ? '조건에 맞는 문서가 없습니다' : '아직 문서가 없습니다'}
+            description={
+              category || q ? undefined : '도면·작업지시서·계약서 같은 파일을 올려 보관하세요'
+            }
+          />
+        )}
+        {documents.isSuccess && shown.length > 0 && (
+          <DocumentList
+            documents={shown}
+            onOpen={(document, mode) => opener.open(document, document.latest.versionNo, mode)}
+            onDetail={(document) => setDetailId(document.id)}
+          />
+        )}
+      </section>
       {detailId && (
         <DocumentDetailDialog
           documentId={detailId}
