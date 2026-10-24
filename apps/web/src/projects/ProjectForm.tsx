@@ -337,7 +337,13 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
   };
 
   if (options.isPending || partners.isPending || employees.isPending) {
-    return <LoadingBlock label="입력 목록을 불러오는 중" />;
+    return (
+      <LoadingBlock
+        label="입력 목록을 불러오는 중"
+        variant="blocks"
+        heights={[740, 620, 360, 56]}
+      />
+    );
   }
 
   if (options.isError || partners.isError || employees.isError) {
