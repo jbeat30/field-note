@@ -19,7 +19,7 @@ export const ProjectSummaryPage = () => {
   const [exportError, setExportError] = useState('');
 
   if (project.isPending || summary.isPending) {
-    return <LoadingBlock label="요약을 불러오는 중" />;
+    return <LoadingBlock label="요약을 불러오는 중" variant="page" />;
   }
 
   if (!project.data || !summary.data) {

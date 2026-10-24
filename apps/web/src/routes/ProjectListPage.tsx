@@ -366,7 +366,9 @@ export const ProjectListPage = () => {
         )}
       </section>
 
-      {projects.isPending && <LoadingBlock label="프로젝트를 불러오는 중" lines={6} />}
+      {projects.isPending && (
+        <LoadingBlock label="프로젝트를 불러오는 중" variant="rows" lines={6} />
+      )}
       {projects.isError && <Alert>프로젝트 목록을 불러오지 못했습니다</Alert>}
       {projects.data && (
         <DataTable

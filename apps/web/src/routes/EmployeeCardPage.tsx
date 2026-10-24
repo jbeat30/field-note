@@ -391,7 +391,7 @@ export const EmployeeCardPage = () => {
 
   // 선택 목록이 도착하기 전에 폼을 그리면 직종·구분 선택칸이 현재 값을 찾지 못해 비어 보임
   if (employee.isPending || options.isPending) {
-    return <LoadingBlock label="직원 정보를 불러오는 중" />;
+    return <LoadingBlock label="직원 정보를 불러오는 중" variant="page" />;
   }
 
   if (employee.isError || options.isError) {
