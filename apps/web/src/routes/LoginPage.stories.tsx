@@ -197,7 +197,7 @@ export const TotpRecoveryCode: Story = {
   },
 };
 
-// 시연 안내를 켠 경우 테스트 계정 버튼으로 즉시 로그인
+// 시연 안내를 켠 경우 체험하기 버튼으로 즉시 로그인
 export const DemoNotice: Story = {
   beforeEach: () => {
     addAccount({
@@ -222,11 +222,9 @@ export const DemoNotice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText(/모두 가상의 데이터/)).toHaveTextContent(
-      '화면에 나오는 회사·직원·프로젝트는 모두 가상의 데이터이며, 매일 새벽에 처음 상태로 초기화됩니다.',
-    );
+    await expect(await canvas.findByText('가상 데이터 · 매일 새벽 초기화')).toBeInTheDocument();
     await expect(canvas.queryByText('Visit-Demo-2026!')).not.toBeInTheDocument();
-    await userEvent.click(canvas.getByRole('button', { name: '테스트 계정 이용하기' }));
+    await userEvent.click(canvas.getByRole('button', { name: '체험하기' }));
     await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
     await expect(getCurrentAccount()?.loginId).toBe('tester');
   },
@@ -238,8 +236,6 @@ export const NoDemoNoticeByDefault: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.getByRole('button', { name: '로그인' })).toBeInTheDocument();
-    await expect(
-      canvas.queryByRole('button', { name: '테스트 계정 이용하기' }),
-    ).not.toBeInTheDocument();
+    await expect(canvas.queryByRole('button', { name: '체험하기' })).not.toBeInTheDocument();
   },
 };
