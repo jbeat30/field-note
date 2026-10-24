@@ -41,7 +41,7 @@ export const PhotoDateGroups = ({ projectId, photos, onSelect }: PhotoDateGroups
           <span className="text-sm text-sub">{items.length}장</span>
           <Link
             to={projectWorkPath(projectId, date)}
-            className="ml-auto text-sm font-medium text-primary hover:underline"
+            className="ml-auto text-sm font-medium text-primary hover:text-sub"
           >
             작업 기록 보기
           </Link>

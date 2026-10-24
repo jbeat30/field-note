@@ -69,7 +69,7 @@ const Row = ({ item }: { item: AuditLog }) => {
         <span>
           {item.targetName ? (
             path ? (
-              <Link className="text-primary underline" to={path}>
+              <Link className="text-primary hover:text-sub" to={path}>
                 {item.targetName}
               </Link>
             ) : (
@@ -93,7 +93,7 @@ const Row = ({ item }: { item: AuditLog }) => {
             type="button"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((value) => !value)}
-            className="flex w-fit items-center gap-1 text-sm font-medium text-primary hover:underline"
+            className="flex w-fit items-center gap-1 text-sm font-medium text-primary hover:text-sub"
           >
             바뀐 내용 {item.changes.length}건
             <ChevronDown

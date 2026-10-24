@@ -60,7 +60,10 @@ export const InboxPage = () => {
           {memos.isFetchingNextPage ? '불러오는 중' : '더 보기'}
         </Button>
       )}
-      <Link className="min-h-touch content-center text-sm text-primary underline" to="/projects">
+      <Link
+        className="min-h-touch content-center text-sm text-primary hover:text-sub"
+        to="/projects"
+      >
         프로젝트 목록으로
       </Link>
     </div>

@@ -83,7 +83,7 @@ const columns = helper.columns([
         {/* 좁은 화면은 번호·현장명 열이 없어 이름 위아래에 보임 */}
         <span className="block text-xs tabular-nums text-sub md:hidden">{row.original.code}</span>
         <Link
-          className="font-semibold hover:text-primary hover:underline"
+          className="font-semibold hover:text-sub"
           to={`/projects/${row.original.id}`}
           onClick={(event) => event.stopPropagation()}
         >

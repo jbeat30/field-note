@@ -129,7 +129,7 @@ export const ProjectWorkDayPage = () => {
             <p className="text-sm text-sub">
               이 날 쓴 자재는{' '}
               <Link
-                className="font-medium text-primary underline"
+                className="font-medium text-primary hover:text-sub"
                 to={`/projects/${id}/materials?date=${date}`}
               >
                 자재 메뉴

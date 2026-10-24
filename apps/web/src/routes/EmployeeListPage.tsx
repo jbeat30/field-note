@@ -43,7 +43,7 @@ const columns = helper.columns([
     meta: { className: 'min-w-32' },
     cell: ({ row }) => (
       <Link
-        className="font-semibold hover:text-primary hover:underline"
+        className="font-semibold hover:text-sub"
         to={`/employees/${row.original.id}`}
         onClick={(event) => event.stopPropagation()}
       >
