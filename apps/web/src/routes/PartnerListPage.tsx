@@ -115,7 +115,7 @@ export const PartnerListPage = () => {
         </section>
       </div>
 
-      {partners.isPending && <LoadingBlock label="명부를 불러오는 중" variant="rows" lines={6} />}
+      {partners.isPending && <LoadingBlock label="명부를 불러오는 중" variant="table" lines={6} />}
       {partners.isError && <Alert>명부를 불러오지 못했습니다</Alert>}
       {partners.data && (
         <DataTable
@@ -124,6 +124,16 @@ export const PartnerListPage = () => {
           data={visible}
           getRowId={(row) => row.id}
           onRowClick={(row) => void navigate(`/partners/${row.id}`)}
+          mobileCard={(row) => (
+            <div className="flex items-center justify-between gap-3">
+              <div className="flex min-w-0 flex-col gap-0.5">
+                <span className="font-bold">{row.name}</span>
+                <span className="text-xs text-sub">
+                  {[PARTNER_KIND_LABELS[row.kind], row.contactName].filter(Boolean).join(' · ')}
+                </span>
+              </div>
+            </div>
+          )}
           summary={`${visible.length}곳`}
           emptyState={
             <EmptyState

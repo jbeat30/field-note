@@ -158,6 +158,7 @@ export const EmployeeListPage = () => {
       }
     >
       <PageHeader
+        overlap
         title="직원"
         actions={
           <>
@@ -182,8 +183,8 @@ export const EmployeeListPage = () => {
       />
 
       <TabsContent value="list" className="flex flex-col gap-4 pt-0">
-        <div className="grid gap-4 rounded-3xl bg-surface-subtle p-5 sm:grid-cols-3">
-          <FormField label="이름">
+        <div className="relative -mt-14 grid grid-cols-2 gap-4 rounded-[30px] bg-surface-subtle p-5 sm:grid-cols-3 md:p-7">
+          <FormField label="이름" className="max-sm:col-span-2">
             <Input
               type="search"
               aria-label="이름 검색"
@@ -218,7 +219,7 @@ export const EmployeeListPage = () => {
         </div>
 
         {employees.isPending && (
-          <LoadingBlock label="직원 목록을 불러오는 중" variant="rows" lines={6} />
+          <LoadingBlock label="직원 목록을 불러오는 중" variant="table" lines={6} />
         )}
         {employees.isError && <Alert>직원 목록을 불러오지 못했습니다</Alert>}
         {employees.data && (
@@ -228,6 +229,19 @@ export const EmployeeListPage = () => {
             data={rows}
             getRowId={(row) => row.id}
             onRowClick={(row) => void navigate(`/employees/${row.id}`)}
+            mobileCard={(row) => (
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="font-bold">{row.name}</span>
+                  <span className="text-xs text-sub">
+                    {[row.title, row.jobTypeName].filter(Boolean).join(' · ') || '-'}
+                  </span>
+                </div>
+                <Badge tone={row.status === 'ACTIVE' ? 'success' : 'neutral'}>
+                  {EMPLOYEE_STATUS_LABELS[row.status]}
+                </Badge>
+              </div>
+            )}
             summary={`${employees.data.length}명`}
             emptyState={
               <EmptyState
