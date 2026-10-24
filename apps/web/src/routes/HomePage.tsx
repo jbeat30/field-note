@@ -44,7 +44,7 @@ export const HomePage = () => {
         overlap
         eyebrow={
           <>
-            {me.data?.companyName} · {dateText(todayInSeoul(new Date()))}
+            {me.data?.companyName}, {dateText(todayInSeoul(new Date()))}
           </>
         }
         title={

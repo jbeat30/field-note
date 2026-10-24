@@ -86,8 +86,8 @@ export const PartnerListPage = () => {
           <div className="grid gap-2 md:grid-cols-2">
             <Input
               type="search"
-              aria-label="상호·담당자 검색"
-              placeholder="상호·담당자 검색"
+              aria-label="상호나 담당자 검색"
+              placeholder="상호나 담당자 검색"
               value={filter.q ?? ''}
               onChange={(event) => setFilter((current) => ({ ...current, q: event.target.value }))}
             />
@@ -130,7 +130,7 @@ export const PartnerListPage = () => {
               <div className="flex min-w-0 flex-col gap-0.5">
                 <span className="font-bold">{row.name}</span>
                 <span className="text-xs text-sub">
-                  {[PARTNER_KIND_LABELS[row.kind], row.contactName].filter(Boolean).join(' · ')}
+                  {[PARTNER_KIND_LABELS[row.kind], row.contactName].filter(Boolean).join(', ')}
                 </span>
               </div>
             </div>

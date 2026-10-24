@@ -95,7 +95,7 @@ export const StaffingTimeline = ({
                 <span className="block text-sm font-bold">{Number(date.slice(8))}</span>
                 <span className="block text-[11px] leading-tight">
                   {WEEKDAYS[weekday]}
-                  {date === today && ' · 오늘'}
+                  {date === today && ', 오늘'}
                 </span>
               </div>
             );
@@ -185,11 +185,11 @@ const EmployeeRow = ({
             employee.status !== 'ACTIVE' ? EMPLOYEE_STATUS_LABELS[employee.status] : null,
           ]
             .filter(Boolean)
-            .join(' · ') || ' '}
+            .join(', ') || ' '}
         </span>
         {row.workedDays > 0 && (
           <span className="text-xs tabular-nums text-sub">
-            {row.workedDays}일 · {hours(row.totalMinutes)}시간
+            {row.workedDays}일, {hours(row.totalMinutes)}시간
           </span>
         )}
       </div>
@@ -233,7 +233,7 @@ const EmployeeRow = ({
               </DropdownMenuTrigger>
               <DropdownMenuContent align="start">
                 <DropdownMenuLabel>
-                  {employee.name} · {formatDay(date)} 하루 기록으로
+                  {employee.name}, {formatDay(date)} 하루 기록으로
                 </DropdownMenuLabel>
                 {choices.length === 0 ? (
                   <DropdownMenuItem disabled>기록할 수 있는 프로젝트가 없습니다</DropdownMenuItem>

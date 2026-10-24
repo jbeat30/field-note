@@ -21,7 +21,7 @@ export const HeaderSearch = () => {
       <input
         type="search"
         aria-label="찾기"
-        placeholder="프로젝트·직원·메모·자료·작업 내역 찾기"
+        placeholder="프로젝트, 직원, 메모 찾기"
         maxLength={50}
         value={text}
         onChange={(event) => setText(event.target.value)}

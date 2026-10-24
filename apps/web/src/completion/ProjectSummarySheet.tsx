@@ -78,12 +78,12 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
         <p className="text-sm">
           총{' '}
           {settings.workUnitMode === 'HOURS'
-            ? `${value(work.totalMinutes)} ${unit} (${manDays(work.totalMinutes).toFixed(1)} MD · ${toManMonths(manDays(work.totalMinutes), settings.monthlyWorkDays).toFixed(2)} MM)`
-            : `${manDays(work.totalMinutes).toFixed(1)} MD · ${toManMonths(manDays(work.totalMinutes), settings.monthlyWorkDays).toFixed(2)} MM`}{' '}
-          · 작업일 {work.workedDays}일 · 저장된 작업 내역 {work.savedLogCount}건
+            ? `${value(work.totalMinutes)} ${unit} (${manDays(work.totalMinutes).toFixed(1)} MD, ${toManMonths(manDays(work.totalMinutes), settings.monthlyWorkDays).toFixed(2)} MM)`
+            : `${manDays(work.totalMinutes).toFixed(1)} MD, ${toManMonths(manDays(work.totalMinutes), settings.monthlyWorkDays).toFixed(2)} MM`}
+          , 작업일 {work.workedDays}일, 저장된 작업 내역 {work.savedLogCount}건
           {work.plannedMinutes !== null
-            ? ` · 계획 ${value(work.plannedMinutes)} ${unit}${burn !== null ? ` 대비 ${burn}%` : ''}`
-            : ' · 계획 공수 없음'}
+            ? `, 계획 ${value(work.plannedMinutes)} ${unit}${burn !== null ? ` 대비 ${burn}%` : ''}`
+            : ', 계획 공수 없음'}
         </p>
         {work.byEmployee.length === 0 ? (
           <p className="text-sm text-sub">저장된 공수가 없습니다</p>
@@ -163,21 +163,21 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
           <ul className="flex flex-col gap-1 text-sm">
             {changeWorks.items.map((item) => (
               <li key={item.seq}>
-                #{item.seq} · {CHANGE_WORK_STATUS_LABELS[item.status]} ·{' '}
-                {formatDay(item.requestedOn)} {item.requester} — {item.content}
+                #{item.seq}, {CHANGE_WORK_STATUS_LABELS[item.status]}, {formatDay(item.requestedOn)}{' '}
+                {item.requester} — {item.content}
               </li>
             ))}
           </ul>
         )}
         <p className="text-sm">
-          변경·추가 작업으로 표시한 작업 내역 {changeWorks.workLogCount}건 · 공수{' '}
+          변경·추가 작업으로 표시한 작업 내역 {changeWorks.workLogCount}건, 공수{' '}
           {value(changeWorks.minutes)} {unit}
         </p>
       </Section>
 
       <Section title="사후 작업">
         <p className="text-sm">
-          사후 작업으로 표시한 작업 내역 {afterService.workLogCount}건 · 공수{' '}
+          사후 작업으로 표시한 작업 내역 {afterService.workLogCount}건, 공수{' '}
           {value(afterService.minutes)} {unit} (보수 요청 기록은 이후 단계에서 추가됩니다)
         </p>
       </Section>
@@ -205,7 +205,7 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
                   )}
                   <p>
                     {PHOTO_CATEGORY_LABELS[photo.category]}
-                    {photo.area ? ` · ${photo.area}` : ''}
+                    {photo.area ? `, ${photo.area}` : ''}
                   </p>
                 </li>
               ))}
@@ -225,8 +225,8 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
           <ul className="flex flex-col gap-0.5 text-sm">
             {documents.items.map((item) => (
               <li key={item.id}>
-                {item.title} · {DOCUMENT_CATEGORY_LABELS[item.category]} · {item.versionCount}개
-                버전 (최신 개정 {item.latestRevisionDate})
+                {item.title}, {DOCUMENT_CATEGORY_LABELS[item.category]}, {item.versionCount}개 버전
+                (최신 개정 {item.latestRevisionDate})
               </li>
             ))}
           </ul>

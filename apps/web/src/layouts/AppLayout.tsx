@@ -69,7 +69,7 @@ export const AppLayout = () => {
           <Button
             className="pointer-events-auto size-14 rounded-full bg-accent px-0 text-[#14110d] hover:bg-accent/90"
             aria-label="빠른 추가"
-            title="빠른 추가: 메모·사진·오늘 작업 내역"
+            title="빠른 추가: 메모, 사진, 오늘 작업 내역"
             onClick={() => setQuickAddOpen(true)}
           >
             <Plus aria-hidden className="size-6" />

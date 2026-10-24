@@ -31,7 +31,10 @@ export const SearchPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="찾기" description="프로젝트·직원·메모·자료·작업 내역을 한 번에 찾습니다" />
+      <PageHeader
+        title="찾기"
+        description="프로젝트, 직원, 메모, 자료, 작업 내역을 한 번에 찾습니다"
+      />
       {projectId && (
         <p className="text-sm text-sub">
           {project.data ? (
@@ -41,7 +44,7 @@ export const SearchPage = () => {
           ) : (
             '프로젝트'
           )}{' '}
-          안에서 메모·자료·작업 내역만 찾습니다 ·{' '}
+          안에서 메모·자료·작업 내역만 찾습니다,{' '}
           <Link
             className="text-primary hover:text-sub"
             to={`/search${text ? `?q=${encodeURIComponent(text)}` : ''}`}
@@ -54,7 +57,7 @@ export const SearchPage = () => {
         type="search"
         autoFocus
         aria-label="검색어"
-        placeholder="프로젝트·직원·메모·자료·작업 내역 찾기"
+        placeholder="프로젝트, 직원, 메모 찾기"
         maxLength={50}
         value={text}
         onChange={(event) => change(event.target.value)}

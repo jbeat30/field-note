@@ -74,7 +74,7 @@ export const EmployeeWorkDaysDialog = ({
       open
       onOpenChange={(open) => !open && onClose()}
       size="lg"
-      title={`${employeeName} · 일한 날`}
+      title={`${employeeName}의 일한 날`}
       description={`${rangeLabel} 동안 이 프로젝트의 작업 기록에 들어간 날입니다. 날짜를 누르면 그날 하루 기록으로 갑니다`}
     >
       {query.isError ? (
@@ -110,7 +110,7 @@ export const EmployeeWorkDaysDialog = ({
                         <span className="truncate text-xs text-sub">
                           {day.categories
                             .map((item) => categoryNames.get(item.categoryId) ?? '작업')
-                            .join(' · ')}
+                            .join(', ')}
                         </span>
                       </span>
                       <span className="shrink-0 font-semibold tabular-nums">

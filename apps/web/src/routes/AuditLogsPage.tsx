@@ -79,13 +79,13 @@ const Row = ({ item }: { item: AuditLog }) => {
           ) : (
             <span className="text-sub">(삭제되었거나 찾을 수 없는 대상)</span>
           )}
-          {item.summary ? ` · ${item.summary}` : ''}
+          {item.summary ? `, ${item.summary}` : ''}
           {item.projectName && item.targetType !== 'PROJECT' && (
             <span className="ml-2 text-sub">({item.projectName})</span>
           )}
         </span>
         <span className="text-sub">
-          {timeText(item.createdAt)} · {item.actorName}
+          {timeText(item.createdAt)}, {item.actorName}
         </span>
       </div>
       {hasChanges && (

@@ -40,7 +40,7 @@ export const StorageSection = () => {
       <ProgressBar aria-label="저장 용량 사용률" value={percent} />
       {stagedCount > 0 && (
         <p className="text-sm text-sub">
-          사용량에는 아직 저장하지 않은 임시 파일 {formatBytes(stagedBytes)} · {stagedCount}개가
+          사용량에는 아직 저장하지 않은 임시 파일 {formatBytes(stagedBytes)}, {stagedCount}개가
           포함돼 있습니다. 올린 지 하루가 지나면 자동으로 지워집니다
         </p>
       )}
@@ -62,7 +62,7 @@ export const StorageSection = () => {
             <div key={row.purpose} className="contents">
               <dt className="text-sub">{PURPOSE_LABELS[row.purpose]}</dt>
               <dd className="tabular-nums">
-                {formatBytes(row.bytes)} · {row.count}개
+                {formatBytes(row.bytes)}, {row.count}개
               </dd>
             </div>
           ))}
@@ -76,7 +76,7 @@ export const StorageSection = () => {
               <li key={row.projectId ?? 'employee'} className="flex justify-between gap-2">
                 <span className="min-w-0 truncate">{row.name}</span>
                 <span className="shrink-0 tabular-nums text-sub">
-                  {formatBytes(row.bytes)} · {row.count}개
+                  {formatBytes(row.bytes)}, {row.count}개
                 </span>
               </li>
             ))}

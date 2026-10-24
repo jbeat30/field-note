@@ -259,7 +259,7 @@ export const MonthlyHoursPage = () => {
                           className="text-primary hover:text-sub"
                           to={projectWorkPath(draft.projectId, draft.workDate)}
                         >
-                          {formatDay(draft.workDate)} · {draft.projectName}
+                          {formatDay(draft.workDate)}, {draft.projectName}
                         </Link>
                       </li>
                     ))}
@@ -370,8 +370,8 @@ export const MonthlyHoursPage = () => {
                         </span>
                         {event.reason && <span className="text-sub">사유: {event.reason}</span>}
                         <span className="text-sub">
-                          {event.standardWorkMinutes / 60}시간 · {event.monthlyWorkDays}일
-                          {event.draftLogCount > 0 ? ` · 임시 ${event.draftLogCount}건` : ''}
+                          {event.standardWorkMinutes / 60}시간, {event.monthlyWorkDays}일
+                          {event.draftLogCount > 0 ? `, 임시 ${event.draftLogCount}건` : ''}
                         </span>
                         <span className="text-xs text-sub">{formatDateTime(event.createdAt)}</span>
                       </li>

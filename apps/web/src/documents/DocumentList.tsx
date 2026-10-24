@@ -59,7 +59,7 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
                 </Badge>
               )}
               <span className="mt-0.5 block text-xs text-sub md:hidden">
-                {DOCUMENT_CATEGORY_LABELS[document.category]} · {document.versionCount}판
+                {DOCUMENT_CATEGORY_LABELS[document.category]}, {document.versionCount}판
               </span>
               {!isReady && (
                 <span className="ml-2 text-xs text-sub">

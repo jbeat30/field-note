@@ -125,7 +125,7 @@ const ProjectTable = ({ projects, today }: { projects: DashboardProject[]; today
               </Link>
               <span className="mt-0.5 block text-[13px] text-sub">
                 {project.siteName}
-                {!inProgress && ` · ${PROJECT_STATUS_LABELS[project.status]}`}
+                {!inProgress && `, ${PROJECT_STATUS_LABELS[project.status]}`}
               </span>
               {project.warnings.length > 0 && (
                 <span className="mt-1 flex flex-wrap gap-1">
@@ -319,7 +319,7 @@ export const DashboardWidgets = ({
                 <DueRow
                   key={`certificate-${index}`}
                   to={`/projects/${item.projectId}/warranty`}
-                  label={`보증서 ${item.title} · ${item.projectName}`}
+                  label={`보증서 ${item.title}, ${item.projectName}`}
                   due={`${daysLabel(item.daysLeft)} (${item.expiresOn})`}
                   urgent={item.daysLeft < 0}
                 />
@@ -328,7 +328,7 @@ export const DashboardWidgets = ({
                 <DueRow
                   key={`credential-${index}`}
                   to={`/employees/${item.employeeId}?tab=credentials`}
-                  label={`${item.employeeName} · ${item.typeName}`}
+                  label={`${item.employeeName}, ${item.typeName}`}
                   due={`${daysLabel(item.daysLeft)} (${item.expiresOn})`}
                   urgent={item.daysLeft < 0}
                 />

@@ -72,9 +72,9 @@ export const ProjectLaborCostPanel = ({ projectId }: { projectId: string }) => {
             {actual.employees.map((row) => (
               <li key={row.employeeId}>
                 <span className="font-medium">{names.get(row.employeeId) ?? '(알 수 없음)'}</span>
-                {' · '}
+                {', '}
                 {formatWork(row.minutes + row.unpricedMinutes, settings.data)}
-                {' · '}
+                {', '}
                 {row.minutes === 0 ? (
                   <span className="text-sub">단가 미등록</span>
                 ) : (
