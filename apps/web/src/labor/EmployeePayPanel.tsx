@@ -136,7 +136,7 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
   }
 
   if (!rates.data || !settings.data) {
-    return <LoadingBlock label="단가를 불러오는 중" variant="rows" lines={3} />;
+    return <LoadingBlock label="단가를 불러오는 중" variant="rows" lines={2} />;
   }
 
   const today = todayInSeoul(new Date());
