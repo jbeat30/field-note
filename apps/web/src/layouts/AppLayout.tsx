@@ -38,6 +38,7 @@ export const AppLayout = () => {
   const [isCollapsed, setCollapsed] = useState(false);
   // 더보기 안의 화면을 보고 있으면 더보기 탭을 강조
   const isInMore = MORE_ITEMS.some((item) => pathname.startsWith(item.to));
+  // 쌓임 순서: 화면 내용(10 이하) < 위쪽 머리, 하단 메뉴, 빠른 추가 버튼(20) < 대화상자와 시트 < 팝업과 알림(30)
   // 빠른 추가(+)는 모바일의 프로젝트 밖 화면에서만 표시, 프로젝트 안에서는 머리의 주 버튼이 같은 역할, 넓은 화면은 왼쪽 메뉴·머리 버튼으로 충분
   const showQuickAdd = !/^\/projects\/(?!new$)[^/]+/.test(pathname);
 
@@ -45,7 +46,7 @@ export const AppLayout = () => {
     <div className="flex min-h-dvh flex-col md:flex-row">
       <AppSidebar isCollapsed={isCollapsed} onToggleCollapsed={() => setCollapsed((v) => !v)} />
       <div className="flex min-w-0 flex-1 flex-col overflow-x-clip">
-        <header className="plane sticky top-0 z-10 flex items-center justify-between gap-2 px-4 py-3 md:hidden print:hidden">
+        <header className="plane sticky top-0 z-20 flex items-center justify-between gap-2 px-4 py-3 md:hidden print:hidden">
           <BrandLogo />
           <span className="flex items-center gap-1.5">
             <Link
@@ -65,7 +66,7 @@ export const AppLayout = () => {
         </main>
       </div>
       {showQuickAdd && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 flex justify-end p-4 md:hidden print:hidden">
+        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 flex justify-end p-4 md:hidden print:hidden">
           <Button
             className="pointer-events-auto size-14 rounded-full bg-accent px-0 text-[#14110d] hover:bg-accent/90"
             aria-label="빠른 추가"
@@ -78,7 +79,7 @@ export const AppLayout = () => {
       )}
       <nav
         aria-label="하단 메뉴"
-        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-10 grid grid-cols-5 gap-1 rounded-full bg-sidebar p-1.5 shadow-card md:hidden print:hidden"
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 grid grid-cols-5 gap-1 rounded-full bg-sidebar p-1.5 shadow-card md:hidden print:hidden"
       >
         {TAB_ITEMS.map((item) => (
           <NavLink
