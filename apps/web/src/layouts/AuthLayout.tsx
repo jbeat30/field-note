@@ -121,16 +121,16 @@ export const AuthLayout = () => (
         </main>
         <nav
           aria-label="약관"
-          className="mt-3 flex justify-center gap-5 text-[13px] font-semibold text-[#d9cfb9] lg:absolute lg:inset-x-0 lg:bottom-[clamp(12px,3vh,32px)] lg:mt-0 lg:justify-end"
+          className="mt-3 flex justify-center gap-5 text-[13px] font-semibold text-[#14110d]/90 lg:absolute lg:inset-x-0 lg:bottom-[clamp(12px,3vh,32px)] lg:mt-0 lg:justify-end"
         >
           <Link
-            className="flex min-h-touch items-center transition-colors hover:text-white"
+            className="flex min-h-touch items-center transition-colors hover:text-[#14110d]"
             to="/legal/terms"
           >
             이용약관
           </Link>
           <Link
-            className="flex min-h-touch items-center transition-colors hover:text-white"
+            className="flex min-h-touch items-center transition-colors hover:text-[#14110d]"
             to="/legal/privacy"
           >
             개인정보 처리방침
