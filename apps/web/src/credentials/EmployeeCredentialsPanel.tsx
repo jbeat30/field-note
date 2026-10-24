@@ -179,7 +179,7 @@ const CredentialRow = ({
           {credential.expiresOn
             ? `만료일 ${credential.expiresOn} (${daysText(credential.daysLeft)})`
             : '만료 없음'}
-          {credential.issuedOn ? ` · 취득일 ${credential.issuedOn}` : ''}
+          {credential.issuedOn ? `, 취득일 ${credential.issuedOn}` : ''}
         </span>
         {credential.memo && <span className="text-sub">{credential.memo}</span>}
         {credential.file && (

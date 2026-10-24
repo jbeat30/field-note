@@ -157,7 +157,7 @@ export const ProjectLayout = () => {
                 `${data.plannedStart} ~ ${data.plannedEnd}`,
               ]
                 .filter(Boolean)
-                .join(' · ')}
+                .join(', ')}
               {data.siteMapUrl && (
                 <a
                   className="ml-2 font-bold hover:text-sub"

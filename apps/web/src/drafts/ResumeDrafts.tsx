@@ -35,7 +35,7 @@ export const ResumeDrafts = ({ drafts, projectNames }: ResumeDraftsProps) => {
               className="flex min-h-touch flex-col justify-center rounded-2xl bg-surface-nested px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
             >
               <span className="font-bold">
-                {projectNames.get(draft.projectId) ?? '프로젝트'} · {formatDay(draft.date)}{' '}
+                {projectNames.get(draft.projectId) ?? '프로젝트'}, {formatDay(draft.date)}{' '}
                 {DRAFT_LABELS[draft.kind]} 작성 중
               </span>
               <span className="text-sm text-sub">

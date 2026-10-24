@@ -65,7 +65,7 @@ export const MaterialUsageList = ({
                         </p>
                         {(record.area || record.memo) && (
                           <p className="text-sm text-sub">
-                            {[record.area, record.memo].filter(Boolean).join(' · ')}
+                            {[record.area, record.memo].filter(Boolean).join(', ')}
                           </p>
                         )}
                       </div>

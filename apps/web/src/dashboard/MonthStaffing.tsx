@@ -40,9 +40,9 @@ export const MonthStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
       </div>
       <p className="text-[15px] text-foreground/90">
         <span className="font-bold">일한 사람 {month.workingCount}명</span>
-        <span className="mx-2 text-sub">·</span>
+        <span className="mr-2 text-sub">,</span>
         <span>일한 기록이 없는 사람 {month.idleCount}명</span>
-        <span className="mx-2 text-sub">·</span>
+        <span className="mr-2 text-sub">,</span>
         <span className={month.conflicts.length > 0 ? 'font-bold text-danger' : undefined}>
           {month.conflicts.length === 0
             ? '같은 날 겹친 사람 없음'

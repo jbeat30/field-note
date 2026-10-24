@@ -112,11 +112,6 @@ const AlertRow = ({
     >
       이동
     </Link>
-    {isModal && (
-      <span aria-hidden className="-mx-1 text-[13px] font-bold">
-        ·
-      </span>
-    )}
     <button
       type="button"
       disabled={disabled}

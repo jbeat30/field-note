@@ -14,7 +14,7 @@ export const DemoAccountNotice = ({ isSubmitting, onLogin }: Props) => (
   >
     <div className="flex min-w-0 flex-col gap-0.5">
       <b className="text-[15px] font-bold">체험해 보기</b>
-      <span className="text-[13px] text-[#ddd]">가상 데이터 · 매일 새벽 초기화</span>
+      <span className="text-[13px] text-[#ddd]">가상 데이터, 매일 새벽 초기화</span>
     </div>
     <Button
       type="button"

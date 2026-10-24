@@ -65,9 +65,9 @@ export const UploadQueuePanel = ({
             <div className="flex min-w-0 flex-1 flex-col">
               <span className="truncate text-sm font-medium">{item.name}</span>
               <span className="text-xs text-sub">
-                {formatSize(item.size)} · {statusLabel(item)}
+                {formatSize(item.size)}, {statusLabel(item)}
                 {item.status !== 'DONE' && item.attempts > 0 && item.status !== 'FAILED'
-                  ? ` · ${item.attempts}번째 재시도`
+                  ? `, ${item.attempts}번째 재시도`
                   : ''}
               </span>
               {item.status === 'FAILED' && item.error && (

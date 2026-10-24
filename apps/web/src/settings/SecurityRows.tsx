@@ -28,7 +28,7 @@ export const SecurityRows = ({ email }: { email?: string | null }) => {
             <p className="text-sm text-sub">
               {hasPassword
                 ? '바꾸면 다른 기기는 로그아웃됩니다'
-                : '설정하지 않음 · 설정하면 소셜 계정 없이도 로그인할 수 있습니다'}
+                : '설정하지 않음, 설정하면 소셜 계정 없이도 로그인할 수 있습니다'}
             </p>
           </div>
           <Button

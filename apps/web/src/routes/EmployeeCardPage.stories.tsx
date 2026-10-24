@@ -215,7 +215,7 @@ export const WorkHistory: Story = {
       list.getByRole('link', { name: /2026-001 A동 외장 판금 공사/ }),
     ).toBeInTheDocument();
     await expect(list.getByRole('link', { name: /2026-003 B동 덕트 설치/ })).toBeInTheDocument();
-    await expect(list.getByText(/2일 · 2.0 MD \(16시간\)/)).toBeInTheDocument();
+    await expect(list.getByText(/2일, 2.0 MD \(16시간\)/)).toBeInTheDocument();
     await expect(history.getByText('이번 달 공수')).toBeInTheDocument();
     await expect(history.getByText('올해 공수')).toBeInTheDocument();
   },

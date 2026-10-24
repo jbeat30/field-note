@@ -123,7 +123,7 @@ export const PickProjectOnEmptyCell: Story = {
 
     const menu = within(await within(document.body).findByRole('menu'));
 
-    await expect(menu.getByText(/김일용 · 9월 1일 \(화\) 하루 기록으로/)).toBeInTheDocument();
+    await expect(menu.getByText(/김일용, 9월 1일 \(화\) 하루 기록으로/)).toBeInTheDocument();
     await expect(menu.getAllByRole('menuitem').length).toBeGreaterThan(0);
     await userEvent.keyboard('{Escape}');
   },

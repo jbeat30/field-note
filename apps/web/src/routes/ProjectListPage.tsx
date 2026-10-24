@@ -259,7 +259,7 @@ export const ProjectListPage = () => {
           <Input
             id="project-search"
             type="search"
-            placeholder="프로젝트명·번호로 찾기"
+            placeholder="프로젝트명이나 번호로 찾기"
             value={searchText}
             onChange={(event) => {
               setSearchText(event.target.value);
@@ -297,7 +297,7 @@ export const ProjectListPage = () => {
           className="flex min-h-touch items-center gap-1 self-start text-sm font-medium text-primary"
           onClick={() => setShowAdvanced((value) => !value)}
         >
-          자세히 찾기 (현장명·고객·담당자·공종·기간)
+          자세히 찾기 (현장명, 고객, 담당자, 공종, 기간)
           <ChevronDown
             aria-hidden
             className={cn('size-4 transition-transform', showAdvanced && 'rotate-180')}
@@ -429,7 +429,7 @@ export const ProjectListPage = () => {
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <span className="font-bold">{row.name}</span>
                   <span className="text-xs text-sub">
-                    {[row.siteName, row.code, row.managerName].filter(Boolean).join(' · ')}
+                    {[row.siteName, row.code, row.managerName].filter(Boolean).join(', ')}
                   </span>
                 </div>
                 <Badge tone={STATUS_TONE[row.status]}>{PROJECT_STATUS_LABELS[row.status]}</Badge>
@@ -445,7 +445,7 @@ export const ProjectListPage = () => {
               )}
             </div>
           )}
-          summary={`프로젝트 목록 · ${projects.data.total}건`}
+          summary={`프로젝트 목록 ${projects.data.total}건`}
           emptyState={
             <EmptyState
               title="조건에 맞는 프로젝트가 없습니다"

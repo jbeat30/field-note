@@ -116,7 +116,7 @@ export const WarrantyForm = ({
       <FormField
         label="보증 기간 (개월)"
         error={errors.months}
-        hint={`0이면 보증 없음 · 최대 ${WARRANTY_MONTHS_MAX}개월 · 회사 기본값은 ${warranty.defaultMonths}개월`}
+        hint={`0이면 보증 없음, 최대 ${WARRANTY_MONTHS_MAX}개월, 회사 기본값은 ${warranty.defaultMonths}개월`}
       >
         <Input
           placeholder="예: 12"

@@ -42,7 +42,7 @@ const Hit = ({ hit }: { hit: SearchHit }) => (
       {hit.snippet && <span className="text-sm text-foreground/80">{hit.snippet}</span>}
       {(hit.projectName || hit.date) && hit.type !== 'PROJECT' && (
         <span className="text-xs text-sub">
-          {[hit.projectName, hit.date ? formatDay(hit.date) : null].filter(Boolean).join(' · ')}
+          {[hit.projectName, hit.date ? formatDay(hit.date) : null].filter(Boolean).join(', ')}
         </span>
       )}
     </Link>

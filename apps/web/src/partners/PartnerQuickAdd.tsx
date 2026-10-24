@@ -54,11 +54,11 @@ export const PartnerQuickAdd = () => {
 
   return (
     <form
-      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4"
+      className="flex flex-col gap-3 rounded-[30px] bg-surface-subtle p-5 sm:p-7"
       onSubmit={submit}
       noValidate
     >
-      <h2 className="text-base font-bold">간편 등록</h2>
+      <h2 className="text-[19px] font-extrabold tracking-tight">간편 등록</h2>
       {message && <Alert>{message}</Alert>}
       {saved && <Alert variant="info">{saved}</Alert>}
       <div className="flex flex-col gap-2 sm:flex-row">

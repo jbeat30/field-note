@@ -91,7 +91,7 @@ export const ProjectWorkCalendar = ({
               {workers.length > 0 && (
                 <span className="flex flex-col gap-0.5 text-xs">
                   <span className="font-bold">
-                    {workers.length}명 · {roundTo(minutes / 60, 1)}h
+                    {workers.length}명, {roundTo(minutes / 60, 1)}h
                   </span>
                   <span className="hidden truncate text-sub md:block">
                     {workers

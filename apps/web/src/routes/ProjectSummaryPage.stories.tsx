@@ -62,7 +62,7 @@ export const Default: Story = {
     await expect(sheet.getByText(/2026-001 A동 외장 판금 공사/)).toBeInTheDocument();
     await expect(sheet.getByText('40%')).toBeInTheDocument();
     // 변경·추가 작업은 번호·상태·요청자와 함께
-    await expect(sheet.getByText(/#1 · 합의됨/)).toBeInTheDocument();
+    await expect(sheet.getByText(/#1, 합의됨/)).toBeInTheDocument();
     // 민감 자료는 제외하고 건수만 안내, 금액은 어디에도 없음
     await expect(sheet.getByText(/민감 자료 1건은 요약에 싣지 않았습니다/)).toBeInTheDocument();
     await expect(sheet.queryByText('도급 계약서')).not.toBeInTheDocument();

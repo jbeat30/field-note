@@ -374,7 +374,7 @@ const Evidence = ({
                 <span className="block truncate text-sm font-semibold">{item.title}</span>
                 <span className="block truncate text-xs text-sub">
                   {DOCUMENT_CATEGORY_LABELS[item.category]}
-                  {item.isSensitive ? ' · 민감' : ''} · {formatDay(item.linkedAt.slice(0, 10))}
+                  {item.isSensitive ? ', 민감' : ''}, {formatDay(item.linkedAt.slice(0, 10))}
                 </span>
               </button>
               {editable && (
@@ -463,7 +463,7 @@ const Body = ({
       {message && <p role="status">{message}</p>}
       <p className="whitespace-pre-wrap">{detail.content}</p>
       <p className="text-sm text-sub">
-        요청 {formatDay(detail.requestedOn)} · {detail.requester}
+        요청 {formatDay(detail.requestedOn)}, {detail.requester}
       </p>
 
       {editable && (
@@ -538,9 +538,9 @@ const Body = ({
           <ul className="flex flex-col gap-1 text-sm">
             {detail.history.map((item) => (
               <li key={item.id}>
-                {formatDay(item.effectiveOn)} · {CHANGE_WORK_STATUS_LABELS[item.fromStatus]} →{' '}
+                {formatDay(item.effectiveOn)}, {CHANGE_WORK_STATUS_LABELS[item.fromStatus]} →{' '}
                 <span className="font-bold">{CHANGE_WORK_STATUS_LABELS[item.toStatus]}</span>
-                {item.note ? ` · ${item.note}` : ''}
+                {item.note ? `, ${item.note}` : ''}
               </li>
             ))}
           </ul>

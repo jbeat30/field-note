@@ -92,7 +92,7 @@ export const AuthLayout = () => (
               직원 투입과 인력 배치를 한눈에
             </span>
             <span className="rounded-full border border-accent px-4 py-[5px] text-[15px] font-bold whitespace-nowrap text-accent max-md:hidden">
-              오늘 투입 4명 · 기록 0명
+              오늘 투입 4명, 기록 0명
             </span>
           </div>
           <div className="flex flex-col gap-2.5 lg:gap-3.5">

@@ -218,11 +218,14 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
 
   return (
     <section
-      className="flex flex-col gap-4 rounded-3xl bg-surface-subtle p-5"
+      className="flex flex-col gap-4 rounded-[30px] bg-surface-subtle p-5 sm:p-7"
       aria-labelledby={`options-${kind}`}
     >
       <div>
-        <h2 id={`options-${kind}`} className="flex items-center gap-2 text-lg font-bold">
+        <h2
+          id={`options-${kind}`}
+          className="flex items-center gap-2 text-[19px] font-extrabold tracking-tight"
+        >
           {label}
           <Badge>{items.length}개</Badge>
         </h2>

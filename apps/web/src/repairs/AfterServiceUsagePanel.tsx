@@ -45,7 +45,7 @@ export const AfterServiceUsagePanel = ({ projectId }: { projectId: string }) => 
           {materials.map((item) => (
             <li key={item.materialId}>
               {item.name}
-              {item.spec ? ` (${item.spec})` : ''} ·{' '}
+              {item.spec ? ` (${item.spec})` : ''},{' '}
               <span className="font-bold">
                 {item.quantity} {item.unit}
               </span>

@@ -175,15 +175,15 @@ export const StaffingCalendarPage = () => {
           <div className="flex flex-wrap items-center gap-x-5 gap-y-2">
             <p aria-label="요약" className="text-sm">
               <span className="font-semibold">일한 사람 {summary.working}명</span>
-              <span className="mx-2 text-sub">·</span>
+              <span className="mr-2 text-sub">,</span>
               <span>일한 기록이 없는 사람 {summary.idle}명</span>
               {summary.away > 0 && (
                 <>
-                  <span className="mx-2 text-sub">·</span>
+                  <span className="mr-2 text-sub">,</span>
                   <span>휴직·퇴사 {summary.away}명</span>
                 </>
               )}
-              <span className="mx-2 text-sub">·</span>
+              <span className="mr-2 text-sub">,</span>
               <span className={summary.conflicts > 0 ? 'font-semibold text-danger' : undefined}>
                 겹침 {summary.conflicts}건
               </span>

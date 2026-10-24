@@ -123,9 +123,9 @@ export const ProjectWorkSummaryPanel = ({ projectId }: { projectId: string }) =>
                     <span>{formatWork(row.totalMinutes, config)}</span>
                   </span>
                   <span className="text-sub">
-                    {row.workedDays}일 · {formatManMonths(row.totalMinutes, config)}
+                    {row.workedDays}일, {formatManMonths(row.totalMinutes, config)}
                     {!filtered && row.plannedMinutes !== null
-                      ? ` · 소진율 ${formatBurnRate(row.totalMinutes, row.plannedMinutes, config)}`
+                      ? `, 소진율 ${formatBurnRate(row.totalMinutes, row.plannedMinutes, config)}`
                       : ''}
                   </span>
                 </li>

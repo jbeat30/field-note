@@ -336,7 +336,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
                 <dd className="font-semibold">
                   {warranty.data.months === 0
                     ? '보증 없음'
-                    : `${warranty.data.months}개월 · ~${warranty.data.endOn ?? '-'}`}
+                    : `${warranty.data.months}개월, ~${warranty.data.endOn ?? '-'}`}
                 </dd>
               </div>
             )}

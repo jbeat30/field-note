@@ -42,11 +42,11 @@ const CertificateRow = ({
       <div className="flex flex-col gap-0.5">
         <span className="font-medium">
           {certificate.title}
-          {certificate.isSensitive ? ' · 민감' : ''}
+          {certificate.isSensitive ? ', 민감' : ''}
         </span>
         <span>
           만료일 {certificate.expiresOn} ({daysText(certificate.daysLeft)})
-          {certificate.issuer ? ` · 발급처 ${certificate.issuer}` : ''}
+          {certificate.issuer ? `, 발급처 ${certificate.issuer}` : ''}
         </span>
       </div>
       {editable && !editing && (

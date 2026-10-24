@@ -128,7 +128,7 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
 
   // 4) 저장
   await user.tap(() => page.getByRole('button', { name: '저장', exact: true }).click());
-  await expect(page.getByText(/저장됐습니다 · 버전 1/)).toBeVisible();
+  await expect(page.getByText(/저장됐습니다, 버전 1/)).toBeVisible();
 
   // 5) 사진: 같은 화면의 작업 사진에서 두 장 올리기 (이 날 작업일, 구분은 작업 중)
   const photoStarted = Date.now();

@@ -333,7 +333,7 @@ export const WorkLogEditor = ({
     (sum, line) => sum + (valueToMinutes(line.value, settings) ?? 0),
     0,
   );
-  const summaryText = `${new Set(includedLines.map((line) => line.employeeId)).size}명 · ${roundTo(totalMinutes / 60, 1)}시간`;
+  const summaryText = `${new Set(includedLines.map((line) => line.employeeId)).size}명, ${roundTo(totalMinutes / 60, 1)}시간`;
   const addEmployees = (ids: readonly string[]) => {
     const fresh = ids.filter((employeeId) => !employeeIds.includes(employeeId));
 
@@ -482,7 +482,7 @@ export const WorkLogEditor = ({
         </Button>
         {log && (
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
-            {WORK_LOG_STATUS_LABELS[log.status]} · 버전 {version}
+            {WORK_LOG_STATUS_LABELS[log.status]}, 버전 {version}
           </span>
         )}
         {log?.isLate && (
@@ -621,7 +621,7 @@ export const WorkLogEditor = ({
               <Input
                 size="sm"
                 aria-label="직원 찾기"
-                placeholder="이름·직책으로 찾기"
+                placeholder="이름이나 직책으로 찾기"
                 startAdornment={<Search aria-hidden />}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
@@ -714,7 +714,7 @@ export const WorkLogEditor = ({
                         />
                       ) : (
                         <p className="text-sm text-sub">
-                          나눠 적음 · 합계 {roundTo(personMinutes / 60, 1)}시간 (3에서 입력)
+                          나눠 적음, 합계 {roundTo(personMinutes / 60, 1)}시간 (3에서 입력)
                         </p>
                       )}
                     </li>
@@ -905,7 +905,7 @@ export const WorkLogEditor = ({
               aria-live="polite"
             >
               {result
-                ? `저장됐습니다 · 버전 ${result.version}${result.isLate ? ' · 지연 입력' : ''}${result.autoAssigned.length > 0 ? ` · 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
+                ? `저장됐습니다, 버전 ${result.version}${result.isLate ? ', 지연 입력' : ''}${result.autoAssigned.length > 0 ? `, 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
                 : summaryText}
             </p>
             <Button
