@@ -25,6 +25,7 @@ import { useEmployees } from '../employees/useEmployees';
 import { usePayRateSummaries } from '../labor/useLabor';
 import { useDebouncedValue } from '../lib/useDebouncedValue';
 import { useOptions } from '../settings/useOptions';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type EmployeeItem = NonNullable<ReturnType<typeof useEmployees>['data']>[number];
 
@@ -216,7 +217,7 @@ export const EmployeeListPage = () => {
           </FormField>
         </div>
 
-        {employees.isPending && <p className="text-sm">직원 목록을 불러오는 중</p>}
+        {employees.isPending && <LoadingBlock label="직원 목록을 불러오는 중" lines={6} />}
         {employees.isError && <Alert>직원 목록을 불러오지 못했습니다</Alert>}
         {employees.data && (
           <DataTable

@@ -16,6 +16,7 @@ import { ProjectStatusPanel } from '../projects/ProjectStatusPanel';
 import { useProject } from '../projects/useProjects';
 import { ProjectPeopleStats } from '../workSummary/ProjectPeopleStats';
 import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 프로젝트 작업 공간의 메뉴별 화면: 개요 · 투입 · 공수·비용 · 정보 (머리·메뉴는 ProjectLayout이 담당)
 // 한 화면이 너무 길어지지 않게 관리 영역을 메뉴로 분리, section='all'은 시험·화면 확인용으로 모든 구역을 한 화면에 렌더링
@@ -78,7 +79,7 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
   const project = useProject(id);
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" />;
   }
 
   if (project.isError) {

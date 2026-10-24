@@ -3,6 +3,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 import { formatWork } from '../workSummary/formatWork';
 
 import { useAfterServiceUsage } from './useRepairs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 사후 작업으로 쓴 공수·자재: 작업 내역과 자재 기록에 "사후 작업" 표시를 한 것의 합계 (보증 비용 파악용)
 export const AfterServiceUsagePanel = ({ projectId }: { projectId: string }) => {
@@ -14,7 +15,7 @@ export const AfterServiceUsagePanel = ({ projectId }: { projectId: string }) => 
   }
 
   if (!usage.data || !settings.data) {
-    return <p className="text-sm">합계를 불러오는 중</p>;
+    return <LoadingBlock label="합계를 불러오는 중" />;
   }
 
   const { workLogCount, minutes, materials } = usage.data;

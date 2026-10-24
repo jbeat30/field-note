@@ -19,6 +19,7 @@ import { cn } from '../lib/cn';
 import { projectWorkPath } from '../lib/projectPaths';
 import { usePartners } from '../partners/usePartners';
 import { useProject } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 export const STATUS_TONE: Record<
   ProjectStatus,
@@ -67,7 +68,7 @@ export const ProjectLayout = () => {
   if (project.isPending) {
     return (
       <div className="flex flex-col gap-4" aria-busy>
-        <p className="text-sm">프로젝트를 불러오는 중</p>
+        <LoadingBlock label="프로젝트를 불러오는 중" />
         <Skeleton className="h-28 w-full rounded-xl" />
       </div>
     );

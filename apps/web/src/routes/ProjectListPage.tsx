@@ -28,6 +28,7 @@ import { useEmployees } from '../employees/useEmployees';
 import { usePartners } from '../partners/usePartners';
 import { useProjects } from '../projects/useProjects';
 import { useOptions } from '../settings/useOptions';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const STATUS_TONE: Record<ProjectStatus, 'neutral' | 'primary' | 'success' | 'warning' | 'danger'> =
   {
@@ -365,7 +366,7 @@ export const ProjectListPage = () => {
         )}
       </section>
 
-      {projects.isPending && <p className="text-sm">프로젝트를 불러오는 중</p>}
+      {projects.isPending && <LoadingBlock label="프로젝트를 불러오는 중" lines={6} />}
       {projects.isError && <Alert>프로젝트 목록을 불러오지 못했습니다</Alert>}
       {projects.data && (
         <DataTable

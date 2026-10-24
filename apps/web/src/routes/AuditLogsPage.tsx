@@ -22,6 +22,7 @@ import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { cn } from '../lib/cn';
 import { useProjectChoices } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 기록 시각을 서울 기준으로 보여 줌
 const timeText = (iso: string) =>
@@ -194,7 +195,7 @@ export const AuditLogsPage = () => {
 
       {logs.isError && <Alert>기록을 불러오지 못했습니다</Alert>}
       {logs.isPending ? (
-        <p className="text-sm">기록을 불러오는 중</p>
+        <LoadingBlock label="기록을 불러오는 중" />
       ) : items.length === 0 ? (
         <EmptyState title="조건에 맞는 기록이 없습니다" />
       ) : (

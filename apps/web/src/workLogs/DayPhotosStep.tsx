@@ -13,6 +13,7 @@ import { UploadQueuePanel } from '../photos/UploadQueuePanel';
 import { useDeletePhoto, usePhotoList, useUpdatePhoto } from '../photos/usePhotos';
 
 import { WorkStep } from './WorkStep';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type DayPhotosStepProps = {
   projectId: string;
@@ -93,7 +94,7 @@ export const DayPhotosStep = ({ projectId, date }: DayPhotosStepProps) => {
         onClearDone={queue.clearDone}
       />
       {photos.isPending ? (
-        <p className="text-sm text-sub">불러오는 중</p>
+        <LoadingBlock label="불러오는 중" />
       ) : items.length === 0 ? (
         <p className="text-sm text-sub">이 날 올린 사진이 없습니다</p>
       ) : (

@@ -12,6 +12,7 @@ import { useProject } from '../projects/useProjects';
 import { WarrantyCertificates } from '../warranty/WarrantyCertificates';
 import { WarrantyForm } from '../warranty/WarrantyForm';
 import { useWarranty } from '../warranty/useWarranty';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const formatChangedAt = (iso: string) =>
   new Intl.DateTimeFormat('ko-KR', {
@@ -32,7 +33,7 @@ export const ProjectWarrantyPage = () => {
   const warranty = useWarranty(id);
 
   if (project.isPending || warranty.isPending) {
-    return <p className="text-sm">보증 정보를 불러오는 중</p>;
+    return <LoadingBlock label="보증 정보를 불러오는 중" />;
   }
 
   if (!project.data || !warranty.data) {

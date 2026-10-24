@@ -23,6 +23,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 
 import { formatWon } from './formatMoney';
 import { useAddPayRate, usePayRates } from './useLabor';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 단가 변경 폼: 종류·금액·적용 시작일, 이력은 수정 없이 새로 추가
 export const PayRateForm = ({
@@ -134,7 +135,7 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
   }
 
   if (!rates.data || !settings.data) {
-    return <p className="text-sm">단가를 불러오는 중</p>;
+    return <LoadingBlock label="단가를 불러오는 중" />;
   }
 
   const today = todayInSeoul(new Date());

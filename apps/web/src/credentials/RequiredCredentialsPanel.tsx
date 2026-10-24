@@ -7,6 +7,7 @@ import { getErrorDetailMessage } from '../lib/apiError';
 import { useOptions } from '../settings/useOptions';
 
 import { useRequiredCredentials, useSaveRequiredCredentials } from './useCredentials';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const Editor = ({
   projectId,
@@ -88,7 +89,7 @@ export const RequiredCredentialsPanel = ({ projectId }: { projectId: string }) =
         정해 두면 투입할 때 서류가 없거나 만료된 직원을 경고합니다 (투입은 막지 않습니다)
       </p>
       {required.isPending || options.isPending ? (
-        <p className="text-sm">필요 자격을 불러오는 중</p>
+        <LoadingBlock label="필요 자격을 불러오는 중" />
       ) : required.isError || options.isError ? (
         <Alert>필요 자격을 불러오지 못했습니다</Alert>
       ) : (

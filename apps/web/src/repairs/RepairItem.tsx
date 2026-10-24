@@ -36,6 +36,7 @@ import {
   useUnlinkRepair,
   useUpdateRepair,
 } from './useRepairs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const TRANSITION_LABELS: Record<RepairStatus, string> = {
   RECEIVED: '접수로 되돌리기',
@@ -509,7 +510,7 @@ export const RepairItem = ({
         {open ? '접기' : '자세히'}
       </Button>
       {open && detail.isError && <Alert>상세를 불러오지 못했습니다</Alert>}
-      {open && !detail.data && !detail.isError && <p className="text-sm">불러오는 중</p>}
+      {open && !detail.data && !detail.isError && <LoadingBlock label="불러오는 중" />}
       {open && detail.data && (
         <Body detail={detail.data} projectId={projectId} editable={editable} />
       )}

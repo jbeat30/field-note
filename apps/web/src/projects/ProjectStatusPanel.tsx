@@ -33,6 +33,7 @@ import { useTransitionNotices } from '../completion/useCompletion';
 import { useWarranty } from '../warranty/useWarranty';
 
 import { useProjectHistory, useTransitionProject } from './useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 진행 단계 순서 (중단은 진행 단계에서 잠시 멈춘 것, 취소는 별도)
 const STEPS: ProjectStatus[] = ['PLANNED', 'IN_PROGRESS', 'COMPLETED', 'WARRANTY', 'CLOSED'];
@@ -398,7 +399,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
           상태 변경 이력{history.data ? ` (${history.data.length})` : ''}
         </summary>
         <div className="pb-2">
-          {history.isPending && <p>이력을 불러오는 중</p>}
+          {history.isPending && <LoadingBlock label="이력을 불러오는 중" />}
           {history.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
           {history.data && history.data.length === 0 && (
             <p className="text-sub">아직 상태를 바꾼 기록이 없습니다</p>

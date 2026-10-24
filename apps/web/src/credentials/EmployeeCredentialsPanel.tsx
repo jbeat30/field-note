@@ -35,6 +35,7 @@ import {
   useRemoveCredential,
   useUpdateCredential,
 } from './useCredentials';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const FIELDS = ['typeId', 'issuedOn', 'expiresOn', 'fileId', 'memo'] as const;
 
@@ -397,7 +398,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
       </div>
       {rootError && <Alert>{rootError}</Alert>}
       {credentials.isPending ? (
-        <p className="text-sm">서류를 불러오는 중</p>
+        <LoadingBlock label="서류를 불러오는 중" />
       ) : credentials.isError ? (
         <Alert>서류를 불러오지 못했습니다</Alert>
       ) : credentials.data.length === 0 ? (

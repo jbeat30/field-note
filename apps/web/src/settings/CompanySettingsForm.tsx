@@ -19,6 +19,7 @@ import { getErrorMessage } from '../lib/apiError';
 import { hoursToMinutes, minutesToHours } from '../lib/workTime';
 
 import { useCompanySettings, useSaveCompanySettings } from './useCompanySettings';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const formSchema = z.object({
   standardWorkHours: z
@@ -86,7 +87,7 @@ export const CompanySettingsForm = () => {
   const hours = useWatch({ control, name: 'standardWorkHours' });
 
   if (settings.isPending) {
-    return <p className="text-sm">회사 설정을 불러오는 중</p>;
+    return <LoadingBlock label="회사 설정을 불러오는 중" />;
   }
 
   if (settings.isError) {

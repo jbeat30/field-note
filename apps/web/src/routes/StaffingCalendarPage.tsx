@@ -22,6 +22,7 @@ import { SegmentedControl } from '../components/ui/segmented-control';
 import { useProjectChoices } from '../projects/useProjects';
 import { StaffingTimeline } from '../staffing/StaffingTimeline';
 import { useStaffingCalendar } from '../staffing/useStaffingCalendar';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type View = 'week' | 'twoWeeks' | 'month';
 
@@ -167,7 +168,7 @@ export const StaffingCalendarPage = () => {
       </div>
 
       {calendar.isError && <Alert role="alert">배치 현황을 불러오지 못했습니다</Alert>}
-      {calendar.isPending && <p>불러오는 중</p>}
+      {calendar.isPending && <LoadingBlock label="불러오는 중" />}
 
       {calendar.data && (
         <div className="flex flex-col gap-4 rounded-3xl bg-surface-subtle p-5">

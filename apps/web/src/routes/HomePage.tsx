@@ -18,6 +18,7 @@ import { useDashboard } from '../dashboard/useDashboard';
 import { cn } from '../lib/cn';
 import { useProjectChoices } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -73,7 +74,7 @@ export const HomePage = () => {
       {dashboard.isError && <Alert>대시보드를 불러오지 못했습니다</Alert>}
       {dashboard.isPending && (
         <div className="flex flex-col gap-3">
-          <p className="text-sm text-sub">대시보드를 불러오는 중</p>
+          <LoadingBlock label="대시보드를 불러오는 중" />
           <Skeleton className="h-32 w-full rounded-3xl" />
           <Skeleton className="h-24 w-full rounded-3xl" />
         </div>

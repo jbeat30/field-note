@@ -24,6 +24,7 @@ import { groupBeforeAfter } from '../photos/photoCompare';
 import { PhotoDateGroups, groupPhotosByDate } from '../photos/PhotoDateGroups';
 import { PhotoDetailDialog } from '../photos/PhotoDetailDialog';
 import { useDeletePhoto, usePhotoList, useUpdatePhoto } from '../photos/usePhotos';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type View = 'ALL' | 'COMPARE';
 
@@ -67,7 +68,7 @@ export const ProjectPhotosPage = () => {
   const filtered = Boolean(category || area);
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" />;
   }
 
   if (!project.data) {
@@ -118,7 +119,7 @@ export const ProjectPhotosPage = () => {
           ))}
         </div>
       )}
-      {photos.isPending && <p className="text-sm">사진을 불러오는 중</p>}
+      {photos.isPending && <LoadingBlock label="사진을 불러오는 중" />}
       {photos.isError && <Alert>사진을 불러오지 못했습니다</Alert>}
       {photos.isSuccess && items.length === 0 && view === 'ALL' && (
         <EmptyState

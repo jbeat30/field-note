@@ -23,6 +23,7 @@ import { useLeaveConfirm } from '../staging/useLeaveConfirm';
 import { useStagedFiles } from '../staging/useStagedFiles';
 
 import { VALIDATION_MESSAGES } from '@field-note/shared';
+import { LoadingBlock } from '../components/ui/loading-block';
 // 프로젝트 문서함: 도면·작업지시서·계약서·안전 서류를 분류 폴더별로 모으고, 개정되면 새 판으로 올림 (문서)
 export const ProjectDocumentsPage = () => {
   const { id = '' } = useParams();
@@ -52,7 +53,7 @@ export const ProjectDocumentsPage = () => {
   const shown = category ? all.filter((item) => item.category === category) : all;
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" />;
   }
 
   if (!project.data) {
@@ -131,7 +132,7 @@ export const ProjectDocumentsPage = () => {
       {opener.error && (
         <Alert>{opener.error ?? '처리하지 못했습니다. 잠시 후 다시 시도해 주세요'}</Alert>
       )}
-      {documents.isPending && <p className="text-sm">문서를 불러오는 중</p>}
+      {documents.isPending && <LoadingBlock label="문서를 불러오는 중" />}
       {documents.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
       {documents.isSuccess && shown.length === 0 && (
         <EmptyState
