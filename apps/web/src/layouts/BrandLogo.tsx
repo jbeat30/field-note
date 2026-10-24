@@ -72,10 +72,12 @@ export const BrandLogo = ({
           </span>
           <span
             className={cn(
-              'rounded-full border-[1.5px] font-bold whitespace-nowrap',
-              isLarge ? 'px-2.5 py-0.5 text-xs' : 'px-2 text-[11px] leading-[18px]',
+              'rounded-full font-bold whitespace-nowrap',
+              isLarge
+                ? 'border-[1.5px] px-2.5 py-0.5 text-xs'
+                : 'px-[7px] py-0.5 text-[10.5px] leading-[14px] font-extrabold',
               compactBelowLg && 'hidden lg:inline',
-              onInk ? 'border-[#fbf7ee]' : 'border-[#14110d]',
+              isLarge ? 'border-[#14110d]' : 'bg-accent text-[#14110d]',
             )}
           >
             베타
