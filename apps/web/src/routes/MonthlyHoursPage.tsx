@@ -210,7 +210,7 @@ export const MonthlyHoursPage = () => {
           {message}
         </p>
       )}
-      {!data && <LoadingBlock label="불러오는 중" />}
+      {!data && <LoadingBlock label="불러오는 중" variant="blocks" heights={[72, 180, 240]} />}
 
       {data && summary && (
         <>

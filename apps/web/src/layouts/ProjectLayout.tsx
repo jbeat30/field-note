@@ -21,7 +21,6 @@ import { formatLongDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 import { usePartners } from '../partners/usePartners';
 import { useProject } from '../projects/useProjects';
-import { LoadingBlock } from '../components/ui/loading-block';
 
 export const STATUS_TONE: Record<
   ProjectStatus,
@@ -51,6 +50,9 @@ const dueText = (end: string, status: ProjectStatus) => {
 };
 
 // 프로젝트 작업 공간 공통 틀: 프로젝트 정보 머리 + 서브 메뉴 + 콘텐츠
+// 프로젝트 탭 줄의 실제 알약 너비 (탭 글자 길이에 맞춘 값)
+const TAB_SKELETON_WIDTHS = [91, 64, 64, 92, 64, 64, 64, 104, 91, 92];
+
 export const ProjectLayout = () => {
   const { id = '' } = useParams();
   const { pathname } = useLocation();
@@ -68,19 +70,44 @@ export const ProjectLayout = () => {
   }, [pathname]);
 
   if (project.isPending) {
-    // 머리 평면과 탭 줄을 같은 크기로 먼저 깔아 내용이 나올 때 화면이 밀리지 않게 함
+    // 실제 머리 평면, 탭 줄, 본문 첫 구역과 같은 크기로 먼저 깔아 내용이 나올 때 화면이 밀리지 않게 함
     return (
-      <div className="flex flex-col gap-4" aria-busy>
+      <div className="flex flex-col gap-4" aria-busy role="status">
+        <span className="sr-only">프로젝트를 불러오는 중</span>
         <div className="plane pt-4 pb-14 md:pt-8 md:pb-16 print:hidden">
-          <div className="flex flex-col gap-3">
+          <div className="flex min-h-touch items-center">
             <Skeleton className="h-4 w-24 bg-[#fbf7ee]/45" />
-            <Skeleton className="h-7 w-40 rounded-full bg-[#fbf7ee]/45" />
-            <Skeleton className="h-9 w-2/3 max-w-xl bg-[#fbf7ee]/45 md:h-12" />
-            <Skeleton className="h-4 w-1/2 max-w-md bg-[#fbf7ee]/45" />
+          </div>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <Skeleton className="h-[22px] w-40 rounded-full bg-[#fbf7ee]/45" />
+              <Skeleton className="h-[31px] w-2/3 max-w-xl bg-[#fbf7ee]/45 md:h-[51px]" />
+              <Skeleton className="h-[23px] w-1/2 max-w-md bg-[#fbf7ee]/45" />
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Skeleton className="hidden h-[50px] w-[129px] rounded-full bg-[#fbf7ee]/45 sm:block" />
+              <Skeleton className="size-[50px] rounded-full bg-[#fbf7ee]/45" />
+            </div>
           </div>
         </div>
-        <Skeleton className="relative -mt-10 h-[50px] w-full max-w-[860px] rounded-full bg-track" />
-        <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />
+        <div className="relative -mt-10 flex gap-1 overflow-hidden rounded-full bg-track p-[5px] sm:w-fit sm:max-w-full">
+          {TAB_SKELETON_WIDTHS.map((width, index) => (
+            <Skeleton
+              key={index}
+              className="h-10 shrink-0 rounded-full bg-[#fbf7ee]/70"
+              style={{ width }}
+            />
+          ))}
+        </div>
+        <div className="flex flex-col gap-5">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:gap-4">
+            <Skeleton className="h-[110px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
+            <Skeleton className="h-[110px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
+            <Skeleton className="hidden h-[110px] rounded-[24px] sm:block md:h-[153px] md:rounded-[30px]" />
+          </div>
+          <Skeleton className="h-[540px] rounded-[30px] md:h-[759px]" />
+          <Skeleton className="h-[210px] rounded-[30px] md:h-[302px]" />
+        </div>
       </div>
     );
   }
