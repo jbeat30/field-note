@@ -13,9 +13,10 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
-import { SegmentedControl } from '../components/ui/segmented-control';
+import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
 import { Select } from '../components/ui/select';
 import { getErrorMessage } from '../lib/apiError';
+import { cn } from '../lib/cn';
 import { hoursToMinutes, minutesToHours } from '../lib/workTime';
 
 import { useCompanySettings, useSaveCompanySettings } from './useCompanySettings';
@@ -37,9 +38,24 @@ const formSchema = z.object({
 
 type Form = z.infer<typeof formSchema>;
 
-const WORK_UNIT_OPTIONS: { value: WorkUnitMode; label: string }[] = [
-  { value: 'RATIO', label: '비율 — 하루를 1.0으로 입력 (예: 1.5는 연장 근무)' },
-  { value: 'HOURS', label: '시간 — 실제 근무 시간을 입력 (예: 8시간 + 4시간)' },
+const WORK_UNIT_OPTIONS: {
+  value: WorkUnitMode;
+  title: string;
+  description: string;
+  example: string;
+}[] = [
+  {
+    value: 'RATIO',
+    title: '비율',
+    description: '하루를 1.0으로 입력합니다',
+    example: '예: 1.5는 연장 근무',
+  },
+  {
+    value: 'HOURS',
+    title: '시간',
+    description: '실제 근무 시간을 입력합니다',
+    example: '예: 8시간 + 4시간',
+  },
 ];
 
 const CUSTOM = 'CUSTOM';
@@ -58,8 +74,6 @@ const PATTERN_OPTIONS = [
 // 월 기준일수가 근무 형태 표준값과 같으면 그 형태, 아니면 직접 입력
 const patternOf = (days: number | undefined) =>
   WORK_PATTERNS.find((item) => item.days === days)?.key ?? CUSTOM;
-
-const card = 'flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5';
 
 // 회사 관리의 기준값: 하루 기준시간 · 월 기준일수(MM 환산 기준) · 공수 입력 방식 (저장은 분 단위라 바꿔도 과거 기록은 변하지 않음)
 export const CompanySettingsForm = () => {
@@ -124,37 +138,52 @@ export const CompanySettingsForm = () => {
   });
 
   return (
-    <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate aria-label="회사 기준값">
+    <form
+      className="flex flex-col gap-5 rounded-[30px] bg-surface-subtle p-5 sm:p-7"
+      onSubmit={onSubmit}
+      noValidate
+      aria-label="회사 기준값"
+    >
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {isSaved && <Alert variant="info">저장했습니다</Alert>}
-      <div className="grid items-start gap-4 lg:grid-cols-2">
-        <section className={card} aria-labelledby="hours-heading">
-          <h3 id="hours-heading" className="text-base font-bold">
+
+      <section className="flex flex-col gap-4" aria-labelledby="hours-heading">
+        <div className="flex flex-col gap-1">
+          <h3 id="hours-heading" className="text-[17px] font-extrabold tracking-tight">
             하루 기준시간
           </h3>
-          <FormField
-            label="하루 기준시간 (시간)"
-            hint="공수 1.0에 해당하는 시간입니다. 바꿔도 이미 기록된 공수는 변하지 않습니다"
-            error={errors.standardWorkHours?.message}
-          >
-            <Input
-              placeholder="예: 8"
-              type="number"
-              inputMode="decimal"
-              step="0.5"
-              {...register('standardWorkHours', { valueAsNumber: true })}
-            />
-          </FormField>
-        </section>
+          <p className="text-sm text-sub">
+            공수 1.0에 해당하는 시간입니다. 바꿔도 이미 기록된 공수는 변하지 않습니다
+          </p>
+        </div>
+        <FormField
+          className="sm:max-w-xs"
+          label="하루 기준시간 (시간)"
+          error={errors.standardWorkHours?.message}
+        >
+          <Input
+            placeholder="예: 8"
+            type="number"
+            inputMode="decimal"
+            step="0.5"
+            {...register('standardWorkHours', { valueAsNumber: true })}
+          />
+        </FormField>
+      </section>
 
-        <section className={card} aria-labelledby="mm-heading">
-          <h3 id="mm-heading" className="text-base font-bold">
-            월 기준일수 (MM 환산 기준)
+      <hr className="border-line" />
+
+      <section className="flex flex-col gap-4" aria-labelledby="mm-heading">
+        <div className="flex flex-col gap-1">
+          <h3 id="mm-heading" className="text-[17px] font-extrabold tracking-tight">
+            월 기준일수
           </h3>
           <p className="text-sm text-sub">
             1MM(맨먼스)을 몇 일(MD)로 볼지 정합니다. 현장은 공휴일에도 일하므로 공휴일 달력은 쓰지
             않고, 근무 형태별 연평균으로 계산합니다
           </p>
+        </div>
+        <div className="grid items-start gap-x-4 gap-y-4 sm:grid-cols-2">
           <FormField label="근무 형태">
             <Select
               value={pattern}
@@ -176,57 +205,95 @@ export const CompanySettingsForm = () => {
               {...register('monthlyWorkDays', { valueAsNumber: true })}
             />
           </FormField>
-          <p className="text-sm text-sub">
-            이 값이면 1MM = {Number.isFinite(days) ? days : '-'}일, 하루{' '}
-            {Number.isFinite(hours) ? hours : '-'}시간 기준으로{' '}
-            {Number.isFinite(days) && Number.isFinite(hours) ? roundText(days * hours) : '-'}
-            시간입니다
-          </p>
-          <div className="flex flex-wrap items-center justify-between gap-2">
+        </div>
+        <div className="flex flex-col gap-3 rounded-2xl bg-[var(--surface-nested)] p-4 sm:flex-row sm:items-center sm:justify-between">
+          <div className="flex flex-col gap-1 text-sm">
+            <p className="font-bold">
+              이 값이면 1MM = {Number.isFinite(days) ? days : '-'}일, 하루{' '}
+              {Number.isFinite(hours) ? hours : '-'}시간 기준으로{' '}
+              {Number.isFinite(days) && Number.isFinite(hours) ? roundText(days * hours) : '-'}
+              시간입니다
+            </p>
             <a
-              className="text-sm text-primary hover:text-sub"
+              className="text-sub hover:text-foreground"
               href="https://www.law.go.kr/법령/근로기준법"
               target="_blank"
               rel="noopener noreferrer"
             >
               근거: 월 환산 209시간(주 40시간 + 주휴 8시간) ÷ 8시간 ≈ 26.1일 (근로기준법)
             </a>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              onClick={() =>
-                setValue('monthlyWorkDays', DEFAULT_COMPANY_SETTINGS.monthlyWorkDays, {
-                  shouldDirty: true,
-                  shouldValidate: true,
-                })
-              }
-            >
-              표준값({DEFAULT_COMPANY_SETTINGS.monthlyWorkDays}일)으로
-            </Button>
           </div>
-        </section>
-      </div>
-      <section className="flex flex-col gap-3" aria-labelledby="mode-heading">
-        <h3 id="mode-heading" className="text-lg font-bold">
-          공수 입력 방식
-        </h3>
+          <Button
+            type="button"
+            variant="secondary"
+            size="sm"
+            className="shrink-0 self-start sm:self-center"
+            onClick={() =>
+              setValue('monthlyWorkDays', DEFAULT_COMPANY_SETTINGS.monthlyWorkDays, {
+                shouldDirty: true,
+                shouldValidate: true,
+              })
+            }
+          >
+            표준값({DEFAULT_COMPANY_SETTINGS.monthlyWorkDays}일)으로
+          </Button>
+        </div>
+      </section>
+
+      <hr className="border-line" />
+
+      <section className="flex flex-col gap-4" aria-labelledby="mode-heading">
+        <div className="flex flex-col gap-1">
+          <h3 id="mode-heading" className="text-[17px] font-extrabold tracking-tight">
+            공수 입력 방식
+          </h3>
+          <p className="text-sm text-sub">
+            작업일 입력에서 사람마다 일한 양을 어떻게 적을지 정합니다
+          </p>
+        </div>
         <Controller
           control={control}
           name="workUnitMode"
           render={({ field }) => (
-            <SegmentedControl
+            <RadioGroup
               value={field.value ?? 'RATIO'}
               onValueChange={field.onChange}
               aria-label="공수 입력 방식"
-              options={WORK_UNIT_OPTIONS}
-              className="w-fit max-w-full max-md:flex-col max-md:rounded-3xl"
-            />
+              className="grid gap-3 sm:grid-cols-2"
+            >
+              {WORK_UNIT_OPTIONS.map((option) => {
+                const isChecked = (field.value ?? 'RATIO') === option.value;
+
+                return (
+                  <label
+                    key={option.value}
+                    className={cn(
+                      'flex cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 transition-colors',
+                      isChecked
+                        ? 'border-foreground bg-surface'
+                        : 'border-input-border bg-transparent hover:border-foreground',
+                    )}
+                  >
+                    <RadioGroupItem value={option.value} className="mt-0.5" />
+                    <span className="flex flex-col gap-0.5">
+                      <span className="text-[15px] font-bold">{option.title}</span>
+                      <span className="text-sm">{option.description}</span>
+                      <span className="text-[13px] text-sub">{option.example}</span>
+                    </span>
+                  </label>
+                );
+              })}
+            </RadioGroup>
           )}
         />
       </section>
+
       <div className="flex justify-end">
-        <Button type="submit" disabled={!isDirty || save.isPending}>
+        <Button
+          type="submit"
+          className="h-14 rounded-[17px] px-10 text-base font-extrabold"
+          disabled={!isDirty || save.isPending}
+        >
           {save.isPending ? '저장 중' : '저장'}
         </Button>
       </div>
