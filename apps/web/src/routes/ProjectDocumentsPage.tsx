@@ -136,7 +136,9 @@ export const ProjectDocumentsPage = () => {
         {opener.error && (
           <Alert>{opener.error ?? '처리하지 못했습니다. 잠시 후 다시 시도해 주세요'}</Alert>
         )}
-        {documents.isPending && <LoadingBlock label="문서를 불러오는 중" />}
+        {documents.isPending && (
+          <LoadingBlock label="문서를 불러오는 중" variant="rows" lines={3} />
+        )}
         {documents.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
         {documents.isSuccess && shown.length === 0 && (
           <EmptyState

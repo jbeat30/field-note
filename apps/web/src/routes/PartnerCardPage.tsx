@@ -19,7 +19,7 @@ import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { useDeletePartner, usePartner, useUpdatePartner } from '../partners/usePartners';
-import { LoadingBlock } from '../components/ui/loading-block';
+import { LoadingBlock, PlaneSkeleton } from '../components/ui/loading-block';
 
 type CardForm = { name: string; contactName: string; phone: string; memo: string };
 
@@ -236,7 +236,12 @@ export const PartnerCardPage = () => {
   const partner = usePartner(id);
 
   if (partner.isPending) {
-    return <LoadingBlock label="업체 정보를 불러오는 중" variant="page" />;
+    return (
+      <div className="flex flex-col gap-6">
+        <PlaneSkeleton height={[177, 222]} />
+        <LoadingBlock label="업체 정보를 불러오는 중" variant="blocks" heights={[[980, 670]]} />
+      </div>
+    );
   }
 
   if (partner.isError) {

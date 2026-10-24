@@ -198,7 +198,7 @@ export const LedgerPanel = ({ projectId }: { projectId: string }) => {
 
         {summary.isError && <Alert>합계를 불러오지 못했습니다</Alert>}
         {remove.isError && <Alert>지우지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
-        {history.isPending && <LoadingBlock label="불러오는 중" />}
+        {history.isPending && <LoadingBlock label="불러오는 중" variant="rows" lines={3} />}
         {history.isError && <Alert>내역을 불러오지 못했습니다</Alert>}
         {history.isSuccess && entries.length === 0 && (
           <EmptyState

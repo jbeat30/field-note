@@ -92,7 +92,7 @@ export const ProjectChangeWorksPage = () => {
           />
         </div>
         {works.isError && <Alert>추가 공사를 불러오지 못했습니다</Alert>}
-        {works.isPending && <LoadingBlock label="불러오는 중" />}
+        {works.isPending && <LoadingBlock label="불러오는 중" variant="rows" lines={2} />}
         {works.data && works.data.length === 0 && (
           <EmptyState
             title="기록이 없습니다"

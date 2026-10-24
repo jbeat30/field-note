@@ -14,8 +14,8 @@ type LoadingBlockProps = {
   variant?: 'lines' | 'rows' | 'table' | 'page' | 'blocks';
   // 보여 줄 줄 수 (lines·rows)
   lines?: number;
-  // 카드 높이 목록 (blocks), 좁은 화면은 기준 높이의 70%
-  heights?: number[];
+  // 카드 높이 목록 (blocks), 숫자면 좁은 화면은 그 70%, [좁은 화면, 넓은 화면]으로 따로 줄 수도 있음
+  heights?: (number | [number, number])[];
   className?: string;
 };
 
@@ -62,18 +62,22 @@ export const LoadingBlock = ({
       </>
     )}
     {variant === 'blocks' &&
-      heights.map((height, index) => (
-        <Skeleton
-          key={index}
-          className="h-(--block-h) rounded-[30px] md:h-(--block-h-md)"
-          style={
-            {
-              '--block-h': `${Math.round(height * 0.7)}px`,
-              '--block-h-md': `${height}px`,
-            } as CSSProperties
-          }
-        />
-      ))}
+      heights.map((height, index) => {
+        const [narrow, wide] = Array.isArray(height) ? height : [Math.round(height * 0.7), height];
+
+        return (
+          <Skeleton
+            key={index}
+            className="h-(--block-h) rounded-[30px] md:h-(--block-h-md)"
+            style={
+              {
+                '--block-h': `${narrow}px`,
+                '--block-h-md': `${wide}px`,
+              } as CSSProperties
+            }
+          />
+        );
+      })}
     {variant === 'page' && (
       <>
         <Skeleton className="h-8 w-1/3" />
@@ -84,3 +88,28 @@ export const LoadingBlock = ({
     )}
   </div>
 );
+
+type PlaneSkeletonProps = {
+  // 실제 제목 평면의 높이(px), [좁은 화면, 넓은 화면]으로 따로 줄 수도 있음
+  height: number | [number, number];
+  className?: string;
+};
+
+// 제목 평면이 나오기 전에 같은 높이의 주황 면을 먼저 깔아 아래 내용이 밀리지 않게 함
+export const PlaneSkeleton = ({ height, className }: PlaneSkeletonProps) => {
+  const [narrow, wide] = Array.isArray(height) ? height : [height, height];
+
+  return (
+    <div
+      aria-hidden
+      className={cn(
+        'plane flex min-h-(--plane-h) flex-col justify-end gap-3 pt-8 pb-14 md:min-h-(--plane-h-md) md:pb-16',
+        className,
+      )}
+      style={{ '--plane-h': `${narrow}px`, '--plane-h-md': `${wide}px` } as CSSProperties}
+    >
+      <Skeleton className="h-4 w-24 bg-[#fbf7ee]/45" />
+      <Skeleton className="h-9 w-1/3 min-w-40 bg-[#fbf7ee]/45 md:h-12" />
+    </div>
+  );
+};
