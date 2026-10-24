@@ -302,14 +302,14 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
           <h2 className="mb-4 text-lg font-bold">기본정보</h2>
           <form className="grid gap-4 md:grid-cols-2" onSubmit={save} noValidate>
             <FormField label="이름" error={errors.name?.message}>
-              <Input {...register('name')} />
+              <Input placeholder="직원 이름" {...register('name')} />
             </FormField>
             <FormField
               label="직책"
               hint="표시용입니다 (예: 반장, 기공, 조공)"
               error={errors.title?.message}
             >
-              <Input {...register('title')} />
+              <Input placeholder="예: 반장" {...register('title')} />
             </FormField>
             <FormField label="직종" error={errors.jobTypeId?.message}>
               <OptionSelect
@@ -345,7 +345,13 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
               <DateInput {...register('birthDate')} />
             </FormField>
             <FormField label="연락처" error={errors.phone?.message}>
-              <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
+              <Input
+                placeholder="010-0000-0000"
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
+                {...register('phone')}
+              />
             </FormField>
             <FormField
               className="md:col-span-2"
@@ -353,7 +359,7 @@ const CardBody = ({ employee }: { employee: EmployeeDetail }) => {
               hint={`관리자만 보는 메모입니다 (${EMPLOYEE_MEMO_MAX_LENGTH}자까지)`}
               error={errors.memo?.message}
             >
-              <Textarea {...register('memo')} />
+              <Textarea placeholder="메모를 입력하세요" {...register('memo')} />
             </FormField>
             <p className="text-sm text-sub md:col-span-2">
               주민등록번호·계좌번호는 저장하지 않습니다. 급여는 단가만 기록합니다

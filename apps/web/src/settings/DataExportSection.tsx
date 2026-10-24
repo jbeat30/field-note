@@ -54,6 +54,7 @@ export const DataExportSection = () => {
       {needsPassword && (
         <FormField label="현재 비밀번호" hint="전체 데이터라 본인 확인을 위해 한 번 더 입력합니다">
           <PasswordInput
+            placeholder="현재 비밀번호를 입력하세요"
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}

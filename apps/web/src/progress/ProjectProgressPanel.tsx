@@ -90,6 +90,7 @@ const ProgressDialog = ({
         </div>
         <FormField label="진행률 (%)" error={error}>
           <Input
+            placeholder="0에서 100 사이"
             type="number"
             inputMode="numeric"
             min={0}

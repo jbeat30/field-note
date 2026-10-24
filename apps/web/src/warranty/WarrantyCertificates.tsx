@@ -202,6 +202,7 @@ export const WarrantyCertificates = ({
           </FormField>
           <FormField label="발급처 (선택)" error={errors.issuer}>
             <Input
+              placeholder="예: 시공사 또는 제조사"
               maxLength={WARRANTY_ISSUER_MAX_LENGTH}
               value={issuer}
               onChange={(event) => setIssuer(event.target.value)}

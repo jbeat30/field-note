@@ -94,6 +94,7 @@ export const PayRateForm = ({
       </FormField>
       <FormField label={PAY_AMOUNT_LABELS[payType]} error={errors.amount}>
         <Input
+          placeholder="금액을 입력하세요"
           type="number"
           inputMode="numeric"
           min={1}

@@ -69,17 +69,29 @@ export const PasswordChangeForm = () => {
         </Alert>
       )}
       <FormField label="현재 비밀번호" error={errors.currentPassword?.message}>
-        <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
+        <PasswordInput
+          placeholder="현재 비밀번호를 입력하세요"
+          autoComplete="current-password"
+          {...register('currentPassword')}
+        />
       </FormField>
       <FormField
         label="새 비밀번호"
         hint={VALIDATION_MESSAGES.PASSWORD_HINT}
         error={errors.newPassword?.message}
       >
-        <PasswordInput autoComplete="new-password" {...register('newPassword')} />
+        <PasswordInput
+          placeholder="새 비밀번호를 입력하세요"
+          autoComplete="new-password"
+          {...register('newPassword')}
+        />
       </FormField>
       <FormField label="새 비밀번호 확인" error={errors.newPasswordConfirm?.message}>
-        <PasswordInput autoComplete="new-password" {...register('newPasswordConfirm')} />
+        <PasswordInput
+          placeholder="새 비밀번호를 한 번 더 입력하세요"
+          autoComplete="new-password"
+          {...register('newPasswordConfirm')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '변경 중' : '비밀번호 변경'}

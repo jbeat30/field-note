@@ -110,6 +110,7 @@ export const CompanyRulesForm = () => {
         {LABELS.map((item) => (
           <FormField key={item.key} label={item.label} hint={item.hint} error={errors[item.key]}>
             <Input
+              placeholder="숫자를 입력하세요"
               type="number"
               inputMode="numeric"
               endAdornment={item.unit}

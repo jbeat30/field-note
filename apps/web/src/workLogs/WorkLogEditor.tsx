@@ -127,6 +127,7 @@ const HoursInput = ({
         <Minus aria-hidden />
       </Button>
       <Input
+        placeholder="0"
         type="number"
         inputMode="decimal"
         step="0.5"
@@ -842,14 +843,26 @@ export const WorkLogEditor = ({
             description="이 날 현장에서 한 일을 적어 두세요"
           >
             <FormField label="작업 내용" error={errors.content}>
-              <Textarea value={content} onChange={(event) => setContent(event.target.value)} />
+              <Textarea
+                placeholder="오늘 한 작업을 입력하세요"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+              />
             </FormField>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
               <FormField label="작업 구역">
-                <Input value={area} onChange={(event) => setArea(event.target.value)} />
+                <Input
+                  placeholder="예: 3층 복도"
+                  value={area}
+                  onChange={(event) => setArea(event.target.value)}
+                />
               </FormField>
               <FormField label="특이사항" hint="예: 비로 오후 작업 중단, 자재 입고 지연">
-                <Input value={notes} onChange={(event) => setNotes(event.target.value)} />
+                <Input
+                  placeholder="특이사항이 있으면 입력하세요"
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                />
               </FormField>
             </div>
             <label className="flex min-h-11 items-center gap-2 text-sm">

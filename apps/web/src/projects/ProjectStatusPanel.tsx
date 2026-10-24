@@ -192,7 +192,11 @@ const TransitionForm = ({
         />
       </FormField>
       <FormField label={needsReason ? '사유 (필수)' : '사유 (선택)'} error={errors.reason}>
-        <Textarea value={reason} onChange={(event) => setReason(event.target.value)} />
+        <Textarea
+          placeholder="사유를 입력하세요"
+          value={reason}
+          onChange={(event) => setReason(event.target.value)}
+        />
       </FormField>
       {needsSummary && (
         <div className="flex flex-col gap-1">

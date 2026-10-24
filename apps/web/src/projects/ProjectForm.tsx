@@ -350,7 +350,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       {/* 프로젝트명 — 전체 폭 */}
       <Lockable locked={isLocked('name')}>
         <FormField label="프로젝트명" error={errors.name?.message}>
-          <Input {...register('name')} />
+          <Input placeholder="예: 한빛빌딩 3층 리모델링" {...register('name')} />
         </FormField>
       </Lockable>
 
@@ -365,27 +365,33 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
               hint="건물명이나 현장 이름"
               error={errors.siteName?.message}
             >
-              <Input {...register('siteName')} />
+              <Input placeholder="예: 한빛빌딩" {...register('siteName')} />
             </FormField>
             <FormField label="주소" error={errors.siteAddress?.message}>
-              <Input {...register('siteAddress')} />
+              <Input placeholder="도로명 주소를 입력하세요" {...register('siteAddress')} />
             </FormField>
             <FormField
               label="지도 링크"
               hint="http:// 또는 https://로 시작하는 주소"
               error={errors.siteMapUrl?.message}
             >
-              <Input type="url" inputMode="url" {...register('siteMapUrl')} />
+              <Input
+                placeholder="https://"
+                type="url"
+                inputMode="url"
+                {...register('siteMapUrl')}
+              />
             </FormField>
             <FormField
               label="현장 담당자"
               hint="현장소장·고객 담당자"
               error={errors.siteContactName?.message}
             >
-              <Input {...register('siteContactName')} />
+              <Input placeholder="현장 담당자 이름" {...register('siteContactName')} />
             </FormField>
             <FormField label="현장 연락처" error={errors.siteContactPhone?.message}>
               <Input
+                placeholder="010-0000-0000"
                 type="tel"
                 inputMode="tel"
                 autoComplete="off"
@@ -398,7 +404,10 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
               hint="출입 방법, 주차, 작업 시간 제한"
               error={errors.accessMemo?.message}
             >
-              <Textarea {...register('accessMemo')} />
+              <Textarea
+                placeholder="출입 방법이나 주의할 점을 입력하세요"
+                {...register('accessMemo')}
+              />
             </FormField>
           </fieldset>
         </Lockable>
@@ -516,7 +525,10 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
                 hint="연장·단축한 이유를 남기면 기간 변경 이력에 기록됩니다"
                 error={errors.periodChangeReason?.message}
               >
-                <Textarea {...register('periodChangeReason')} />
+                <Textarea
+                  placeholder="기간을 바꾸는 사유를 입력하세요"
+                  {...register('periodChangeReason')}
+                />
               </FormField>
             </Lockable>
           )}
@@ -530,7 +542,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
           hint={`관리자만 보는 메모입니다 (${PROJECT_MEMO_MAX_LENGTH}자까지)`}
           error={errors.memo?.message}
         >
-          <Textarea {...register('memo')} />
+          <Textarea placeholder="프로젝트 메모를 입력하세요" {...register('memo')} />
         </FormField>
       </Lockable>
 

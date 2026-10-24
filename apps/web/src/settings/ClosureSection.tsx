@@ -98,7 +98,11 @@ export const ClosureSection = () => {
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {needsPassword && (
         <FormField label="현재 비밀번호" error={errors.currentPassword?.message}>
-          <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
+          <PasswordInput
+            placeholder="현재 비밀번호를 입력하세요"
+            autoComplete="current-password"
+            {...register('currentPassword')}
+          />
         </FormField>
       )}
       <div className="flex gap-2">
