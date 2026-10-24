@@ -150,10 +150,18 @@ export const ResetPasswordPage = () => {
         hint={VALIDATION_MESSAGES.PASSWORD_HINT}
         error={errors.newPassword?.message}
       >
-        <PasswordInput autoComplete="new-password" {...register('newPassword')} />
+        <PasswordInput
+          placeholder="새 비밀번호를 입력하세요"
+          autoComplete="new-password"
+          {...register('newPassword')}
+        />
       </FormField>
       <FormField label="새 비밀번호 확인" error={errors.newPasswordConfirm?.message}>
-        <PasswordInput autoComplete="new-password" {...register('newPasswordConfirm')} />
+        <PasswordInput
+          placeholder="새 비밀번호를 한 번 더 입력하세요"
+          autoComplete="new-password"
+          {...register('newPasswordConfirm')}
+        />
       </FormField>
       {requiresTotp && (
         <FormField
@@ -162,6 +170,7 @@ export const ResetPasswordPage = () => {
           error={errors.totpCode?.message}
         >
           <Input
+            placeholder="인증 앱의 6자리 코드"
             autoComplete="one-time-code"
             autoCapitalize="characters"
             autoCorrect="off"

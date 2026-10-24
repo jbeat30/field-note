@@ -248,6 +248,7 @@ const CredentialRow = ({
           </FormField>
           <FormField label="메모" error={errors.memo}>
             <Input
+              placeholder="메모를 입력하세요"
               maxLength={CREDENTIAL_MEMO_MAX_LENGTH}
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
@@ -448,6 +449,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
             </FormField>
             <FormField label="메모 (선택)" error={errors.memo}>
               <Input
+                placeholder="메모를 입력하세요"
                 maxLength={CREDENTIAL_MEMO_MAX_LENGTH}
                 value={memo}
                 onChange={(event) => setMemo(event.target.value)}

@@ -248,6 +248,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
         error={errors.loginId?.message}
       >
         <Input
+          placeholder="로그인에 쓸 아이디"
           autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
@@ -259,17 +260,31 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
         hint={VALIDATION_MESSAGES.PASSWORD_HINT}
         error={errors.password?.message}
       >
-        <PasswordInput autoComplete="new-password" {...register('password')} />
+        <PasswordInput
+          placeholder="비밀번호를 입력하세요"
+          autoComplete="new-password"
+          {...register('password')}
+        />
       </FormField>
       <FormField label="비밀번호 확인" error={errors.passwordConfirm?.message}>
-        <PasswordInput autoComplete="new-password" {...register('passwordConfirm')} />
+        <PasswordInput
+          placeholder="비밀번호를 한 번 더 입력하세요"
+          autoComplete="new-password"
+          {...register('passwordConfirm')}
+        />
       </FormField>
       <FormField
         label="이메일"
         hint="본인 확인, 비밀번호 재설정, 서비스 안내에 사용합니다"
         error={errors.email?.message}
       >
-        <Input type="email" autoComplete="email" inputMode="email" {...register('email')} />
+        <Input
+          placeholder="name@example.com"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          {...register('email')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '가입 중' : '가입하고 인증 코드 받기'}

@@ -138,6 +138,7 @@ export const CompanySettingsForm = () => {
             error={errors.standardWorkHours?.message}
           >
             <Input
+              placeholder="예: 8"
               type="number"
               inputMode="decimal"
               step="0.5"
@@ -168,6 +169,7 @@ export const CompanySettingsForm = () => {
             error={errors.monthlyWorkDays?.message}
           >
             <Input
+              placeholder="예: 26"
               type="number"
               inputMode="decimal"
               step="0.1"

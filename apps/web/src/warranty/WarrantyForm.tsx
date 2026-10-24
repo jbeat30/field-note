@@ -119,6 +119,7 @@ export const WarrantyForm = ({
         hint={`0이면 보증 없음 · 최대 ${WARRANTY_MONTHS_MAX}개월 · 회사 기본값은 ${warranty.defaultMonths}개월`}
       >
         <Input
+          placeholder="예: 12"
           type="number"
           inputMode="numeric"
           min={0}
@@ -174,6 +175,7 @@ export const WarrantyForm = ({
         error={errors.reason}
       >
         <Textarea
+          placeholder="사유를 입력하세요"
           maxLength={WARRANTY_REASON_MAX_LENGTH}
           value={reason}
           disabled={!editable}

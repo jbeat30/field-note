@@ -129,7 +129,11 @@ const StatusForm = ({
         />
       </FormField>
       <FormField label={to === 'WITHDRAWN' ? '사유 (필수)' : '메모 (선택)'} error={errors.note}>
-        <Textarea value={note} onChange={(event) => setNote(event.target.value)} />
+        <Textarea
+          placeholder="변경 사유나 처리 내용을 입력하세요"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+        />
       </FormField>
       <div className="flex gap-2">
         <Button
@@ -217,6 +221,7 @@ const EditForm = ({
       </FormField>
       <FormField label="요청자" error={errors.requester}>
         <Input
+          placeholder="요청한 사람 또는 업체"
           maxLength={CHANGE_WORK_REQUESTER_MAX_LENGTH}
           value={requester}
           onChange={(event) => setRequester(event.target.value)}
@@ -224,6 +229,7 @@ const EditForm = ({
       </FormField>
       <FormField label="요청 내용" error={errors.content}>
         <Textarea
+          placeholder="추가 공사 내용을 입력하세요"
           maxLength={CHANGE_WORK_CONTENT_MAX_LENGTH}
           value={content}
           onChange={(event) => setContent(event.target.value)}

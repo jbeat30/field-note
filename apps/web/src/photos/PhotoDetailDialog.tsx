@@ -163,6 +163,7 @@ export const PhotoDetailDialog = ({
             </FormField>
             <FormField label="구역">
               <Input
+                placeholder="예: 2층 복도"
                 value={area}
                 maxLength={100}
                 onChange={(event) => setArea(event.target.value)}
@@ -170,6 +171,7 @@ export const PhotoDetailDialog = ({
             </FormField>
             <FormField label="설명">
               <Textarea
+                placeholder="사진 설명을 입력하세요"
                 value={description}
                 maxLength={500}
                 onChange={(event) => setDescription(event.target.value)}

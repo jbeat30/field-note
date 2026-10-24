@@ -95,6 +95,7 @@ const OptionRow = ({
               {item.name} 이름 변경
             </label>
             <Input
+              placeholder="이름을 입력하세요"
               id={`rename-${item.id}`}
               value={name}
               onChange={(event) => setName(event.target.value)}

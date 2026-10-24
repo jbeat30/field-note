@@ -128,6 +128,7 @@ export const LoginPage = () => {
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField label="아이디" error={errors.loginId && '아이디를 입력해 주세요'}>
         <Input
+          placeholder="아이디를 입력하세요"
           autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
@@ -138,6 +139,7 @@ export const LoginPage = () => {
       </FormField>
       <FormField label="비밀번호" error={errors.password && '비밀번호를 입력해 주세요'}>
         <PasswordInput
+          placeholder="비밀번호를 입력하세요"
           autoComplete="current-password"
           size="lg"
           className="h-[58px]"
@@ -155,6 +157,7 @@ export const LoginPage = () => {
             error={errors.totpCode?.message}
           >
             <Input
+              placeholder="인증 앱의 6자리 코드"
               inputMode="text"
               autoComplete="one-time-code"
               autoCapitalize="characters"

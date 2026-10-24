@@ -67,7 +67,13 @@ const EmailEntryForm = ({ onSent }: { onSent: (email: string) => void }) => {
       </p>
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField label="이메일" error={errors.newEmail?.message}>
-        <Input type="email" autoComplete="email" inputMode="email" {...register('newEmail')} />
+        <Input
+          placeholder="name@example.com"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          {...register('newEmail')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '요청 중' : '인증 코드 받기'}
@@ -163,6 +169,7 @@ export const VerifyEmailPage = () => {
       {notice && <Alert variant="info">{notice}</Alert>}
       <FormField label="인증 코드" error={errors.code?.message}>
         <Input
+          placeholder="메일로 받은 6자리 코드"
           inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={6}
