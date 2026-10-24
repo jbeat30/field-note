@@ -1,12 +1,11 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Popover } from 'radix-ui';
 import { useState } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { ko } from 'react-day-picker/locale';
 
 import { cn } from '../../lib/cn';
 
 import { Button } from './button';
+import { Calendar } from './calendar';
 import { formatDay, parseDay } from './date-input';
 
 type PeriodNavProps = {
@@ -55,8 +54,18 @@ export const PeriodNav = ({
   );
 
   return (
-    <div className={cn('flex items-center gap-2', !isBare && 'rounded-3xl bg-surface-subtle p-3')}>
-      <Button variant="secondary" aria-label={prevLabel} onClick={onPrev}>
+    <div
+      className={cn(
+        'flex flex-wrap items-center gap-2',
+        !isBare && 'rounded-3xl bg-surface-subtle p-3',
+      )}
+    >
+      <Button
+        variant="secondary"
+        aria-label={prevLabel}
+        className="flex-1 sm:flex-none"
+        onClick={onPrev}
+      >
         <ChevronLeft aria-hidden className="size-5" />
       </Button>
       {onPick ? (
@@ -65,7 +74,7 @@ export const PeriodNav = ({
             <button
               type="button"
               aria-label={`${label} 달력에서 이동`}
-              className="flex min-h-touch flex-1 items-center justify-center gap-2 rounded-full hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
+              className="order-first flex min-h-touch w-full min-w-0 items-center justify-center gap-1.5 rounded-full whitespace-nowrap hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary sm:order-none sm:w-auto sm:flex-1"
             >
               {title}
             </button>
@@ -78,12 +87,9 @@ export const PeriodNav = ({
               aria-label="날짜 선택"
               className="z-30 rounded-xl border border-line bg-surface p-3 shadow-card"
             >
-              <DayPicker
-                mode="single"
-                locale={ko}
+              <Calendar
                 selected={selected}
-                defaultMonth={selected ?? new Date()}
-                disabled={maxDay ? { after: maxDay } : undefined}
+                maxDay={maxDay}
                 onSelect={(date) => {
                   if (!date) return;
                   onPick(formatDay(date));
@@ -94,12 +100,20 @@ export const PeriodNav = ({
           </Popover.Portal>
         </Popover.Root>
       ) : (
-        <p className="flex min-h-touch flex-1 items-center justify-center gap-2">{title}</p>
+        <p className="order-first flex min-h-touch w-full items-center justify-center gap-2 sm:order-none sm:w-auto sm:flex-1">
+          {title}
+        </p>
       )}
-      <Button variant="secondary" aria-label={nextLabel} disabled={nextDisabled} onClick={onNext}>
+      <Button
+        variant="secondary"
+        aria-label={nextLabel}
+        disabled={nextDisabled}
+        className="flex-1 sm:flex-none"
+        onClick={onNext}
+      >
         <ChevronRight aria-hidden className="size-5" />
       </Button>
-      <Button variant="secondary" onClick={onToday}>
+      <Button variant="secondary" className="flex-1 sm:flex-none" onClick={onToday}>
         {todayLabel}
       </Button>
     </div>

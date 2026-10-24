@@ -208,6 +208,36 @@ body {
     color var(--duration-base) var(--ease-smooth);
 }
 
+/* 검색 칸의 지우기(X) 버튼: 브라우저 기본 아이콘 대신 앱 모양의 둥근 버튼 */
+input[type='search']::-webkit-search-cancel-button {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 22px;
+  height: 22px;
+  margin-left: 6px;
+  border-radius: 9999px;
+  cursor: pointer;
+  background-color: var(--track);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314110d' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 7l10 10M17 7L7 17'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: center;
+  background-size: 11px;
+}
+
+input[type='search']::-webkit-search-cancel-button:hover {
+  background-color: var(--line);
+}
+
+.dark input[type='search']::-webkit-search-cancel-button {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23f4eee0' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 7l10 10M17 7L7 17'/%3E%3C/svg%3E");
+}
+
+/* 밝은 색으로 고정된 면(주황 평면, 로그인 전)에서는 어두운 모드에서도 잉크색 X */
+.dark .plane input[type='search']::-webkit-search-cancel-button,
+.dark .auth-light input[type='search']::-webkit-search-cancel-button {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2314110d' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='M7 7l10 10M17 7L7 17'/%3E%3C/svg%3E");
+}
+
 /* 달력(react-day-picker)을 앱 색·글꼴에 맞춤 */
 .rdp-root {
   --rdp-accent-color: var(--primary);
