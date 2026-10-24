@@ -1,19 +1,14 @@
 import { CalendarDays } from 'lucide-react';
 import { Popover } from 'radix-ui';
 import { useRef, useState, type ComponentProps } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { ko } from 'react-day-picker/locale';
 
 import { cn } from '../../lib/cn';
 
 import { Button } from './button';
+import { Calendar } from './calendar';
 import { Input, type ControlSize } from './input';
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
-
-// 연도 선택 범위: 생년월일부터 먼 앞날의 계획일까지
-const FIRST_YEAR = 1930;
-const YEARS_AHEAD = 15;
 
 // 'YYYY-MM-DD' → 로컬 날짜 (시간대 때문에 하루 어긋나지 않게 직접 쪼갬)
 export const parseDay = (value: string): Date | undefined => {
@@ -70,10 +65,6 @@ export const DateInput = ({
 
   const minDay = min ? parseDay(String(min)) : undefined;
   const maxDay = max ? parseDay(String(max)) : undefined;
-  const thisYear = new Date().getFullYear();
-  // 최소·최대 날짜가 있으면 그 범위 안에서만 연도·달을 고를 수 있음
-  const startMonth = minDay ?? new Date(FIRST_YEAR, 0);
-  const endMonth = maxDay ?? new Date(thisYear + YEARS_AHEAD, 11);
 
   return (
     <Popover.Root
@@ -131,20 +122,11 @@ export const DateInput = ({
           }}
           className="z-30 rounded-lg border border-line bg-surface p-3 shadow-pop"
         >
-          <DayPicker
-            mode="single"
-            locale={ko}
-            captionLayout="dropdown"
-            startMonth={startMonth}
-            endMonth={endMonth}
+          <Calendar
             selected={selected}
-            defaultMonth={selected ?? maxDay ?? new Date()}
             onSelect={(date) => date && commit(formatDay(date))}
-            disabled={[
-              ...(minDay ? [{ before: minDay }] : []),
-              ...(maxDay ? [{ after: maxDay }] : []),
-            ]}
-            weekStartsOn={0}
+            minDay={minDay}
+            maxDay={maxDay}
           />
           <div className="mt-2 flex justify-between border-t border-line pt-2">
             <Button
