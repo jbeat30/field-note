@@ -341,7 +341,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
       <LoadingBlock
         label="입력 목록을 불러오는 중"
         variant="blocks"
-        heights={[740, 620, 360, 56]}
+        heights={[[1000, 740], [800, 620], [420, 360], 56]}
       />
     );
   }

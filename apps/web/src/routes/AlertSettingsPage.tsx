@@ -46,7 +46,9 @@ export const AlertSettingsPage = () => {
       />
       {settings.isError && <Alert>알림 설정을 불러오지 못했습니다</Alert>}
       {save.isError && <Alert>저장하지 못했습니다. 다시 시도해 주세요</Alert>}
-      {settings.isPending && <LoadingBlock label="불러오는 중" />}
+      {settings.isPending && (
+        <LoadingBlock label="불러오는 중" variant="blocks" heights={[[994, 485]]} />
+      )}
       {settings.data && (
         <div className="gap-4 lg:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
           {GROUPS.map((group) => (

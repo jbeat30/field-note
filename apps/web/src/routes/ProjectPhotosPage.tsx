@@ -120,7 +120,7 @@ export const ProjectPhotosPage = () => {
         </div>
       )}
       {photos.isPending && (
-        <LoadingBlock label="사진을 불러오는 중" variant="blocks" heights={[534]} />
+        <LoadingBlock label="사진을 불러오는 중" variant="blocks" heights={[[490, 534]]} />
       )}
       {photos.isError && <Alert>사진을 불러오지 못했습니다</Alert>}
       {photos.isSuccess && items.length === 0 && view === 'ALL' && (

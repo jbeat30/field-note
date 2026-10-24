@@ -195,7 +195,7 @@ export const AuditLogsPage = () => {
 
       {logs.isError && <Alert>기록을 불러오지 못했습니다</Alert>}
       {logs.isPending ? (
-        <LoadingBlock label="기록을 불러오는 중" />
+        <LoadingBlock label="기록을 불러오는 중" variant="blocks" heights={[[508, 296]]} />
       ) : items.length === 0 ? (
         <EmptyState title="조건에 맞는 기록이 없습니다" />
       ) : (
