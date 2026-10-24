@@ -214,7 +214,7 @@ export const CompanySettingsForm = () => {
           name="workUnitMode"
           render={({ field }) => (
             <SegmentedControl
-              value={field.value}
+              value={field.value ?? 'RATIO'}
               onValueChange={field.onChange}
               aria-label="공수 입력 방식"
               options={WORK_UNIT_OPTIONS}
