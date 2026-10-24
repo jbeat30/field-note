@@ -39,8 +39,9 @@ export const PageHeader = ({
   const header = (
     <header
       className={cn(
-        'flex flex-col gap-3 sm:flex-row sm:justify-between',
-        isDisplay ? 'sm:items-start' : 'sm:items-end',
+        'flex gap-3 sm:flex-row sm:justify-between',
+        // 큰 인사 제목은 좁은 화면에서 위아래로 쌓고, 그 밖의 제목은 제목 오른쪽에 버튼을 두고 모자라면 줄을 바꿈
+        isDisplay ? 'flex-col sm:items-start' : 'flex-wrap items-end justify-between',
       )}
     >
       <div className="flex min-w-0 flex-col gap-1.5">
