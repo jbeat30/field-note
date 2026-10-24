@@ -406,3 +406,17 @@ input:disabled {
     print-color-adjust: exact;
   }
 }
+
+/* 로그인 전 화면 폼 공통 크기: 입력 칸 58, 폼 바로 아래 버튼 62 */
+.auth-light main form input:not([type='checkbox']):not([type='radio']) {
+  height: 58px;
+  border-radius: 16px;
+  font-size: 16px;
+}
+
+.auth-light main form > button {
+  height: 62px;
+  border-radius: 18px;
+  font-size: 19px;
+  font-weight: 800;
+}
