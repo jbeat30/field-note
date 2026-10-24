@@ -402,7 +402,7 @@ export const ProjectListPage = () => {
       </section>
 
       {projects.isPending && (
-        <LoadingBlock label="프로젝트를 불러오는 중" variant="rows" lines={6} />
+        <LoadingBlock label="프로젝트를 불러오는 중" variant="table" lines={6} />
       )}
       {projects.isError && <Alert>프로젝트 목록을 불러오지 못했습니다</Alert>}
       {projects.data && (
@@ -423,6 +423,28 @@ export const ProjectListPage = () => {
             onPaginationChange: setPagination,
           }}
           onRowClick={(row) => void navigate(`/projects/${row.id}`)}
+          mobileCard={(row) => (
+            <div className="flex flex-col gap-2">
+              <div className="flex items-center justify-between gap-3">
+                <div className="flex min-w-0 flex-col gap-0.5">
+                  <span className="font-bold">{row.name}</span>
+                  <span className="text-xs text-sub">
+                    {[row.siteName, row.code, row.managerName].filter(Boolean).join(' · ')}
+                  </span>
+                </div>
+                <Badge tone={STATUS_TONE[row.status]}>{PROJECT_STATUS_LABELS[row.status]}</Badge>
+              </div>
+              {row.warnings.length > 0 && (
+                <span className="flex flex-wrap gap-1">
+                  {row.warnings.map((warning) => (
+                    <Badge key={warning} tone="danger" className="whitespace-normal">
+                      {PROJECT_WARNING_LABELS[warning]}
+                    </Badge>
+                  ))}
+                </span>
+              )}
+            </div>
+          )}
           summary={`프로젝트 목록 · ${projects.data.total}건`}
           emptyState={
             <EmptyState

@@ -18,7 +18,6 @@ import { useDashboard } from '../dashboard/useDashboard';
 import { cn } from '../lib/cn';
 import { useProjectChoices } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
-import { LoadingBlock } from '../components/ui/loading-block';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -73,10 +72,18 @@ export const HomePage = () => {
       />
       {dashboard.isError && <Alert>대시보드를 불러오지 못했습니다</Alert>}
       {dashboard.isPending && (
-        <div className="flex flex-col gap-3">
-          <LoadingBlock label="대시보드를 불러오는 중" />
-          <Skeleton className="h-32 w-full rounded-3xl" />
-          <Skeleton className="h-24 w-full rounded-3xl" />
+        // 지표 타일, 진행 중 프로젝트와 확인할 일 두 칸, 아래 카드 자리를 실제 화면과 같은 배치로 깔아 둠
+        <div className="flex flex-col gap-4" role="status" aria-busy>
+          <span className="sr-only">대시보드를 불러오는 중</span>
+          <div className="relative -mt-12 grid grid-cols-2 gap-3 md:-mt-16 lg:grid-cols-4">
+            {Array.from({ length: 4 }, (_, index) => (
+              <Skeleton key={index} className="h-[154px] rounded-[30px]" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:h-[420px] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+            <Skeleton className="h-72 rounded-[30px] lg:h-full" />
+            <Skeleton className="h-72 rounded-[30px] lg:h-full" />
+          </div>
         </div>
       )}
       {dashboard.data && (

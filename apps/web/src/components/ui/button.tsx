@@ -12,8 +12,8 @@ export const buttonVariants = cva(
       variant: {
         // 가장 중요한 동작 (한 화면에 하나): 잉크 면
         primary: 'bg-primary text-primary-foreground hover:bg-primary/85',
-        // 보조 동작: 모래 면과 옅은 테두리 (바탕과 같은 모래색 위에서도 버튼 모양이 보임)
-        secondary: 'border-2 border-control-border-hover bg-field text-foreground hover:bg-line',
+        // 보조 동작: 모래 면과 옅은 테두리 (바탕과 같은 모래색 위에서도 3 대 1 이상으로 버튼 모양이 보임)
+        secondary: 'border-2 border-input-border bg-field text-foreground hover:bg-line',
         // 가볍게 강조: 라임 면
         soft: 'bg-highlight text-[#14110d] hover:brightness-95',
         // 잉크 면 위에서 지금 해야 할 동작: 주황 면 (홈의 기록하기 같은 버튼)
