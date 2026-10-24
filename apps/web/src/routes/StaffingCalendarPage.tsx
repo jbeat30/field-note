@@ -168,7 +168,9 @@ export const StaffingCalendarPage = () => {
       </div>
 
       {calendar.isError && <Alert role="alert">배치 현황을 불러오지 못했습니다</Alert>}
-      {calendar.isPending && <LoadingBlock label="불러오는 중" variant="blocks" heights={[794]} />}
+      {calendar.isPending && (
+        <LoadingBlock label="불러오는 중" variant="blocks" heights={[[874, 794]]} />
+      )}
 
       {calendar.data && (
         <div className="flex flex-col gap-4 rounded-3xl bg-surface-subtle p-5">

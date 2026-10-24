@@ -115,7 +115,7 @@ export const ProjectMaterialsPage = () => {
         <div className="rounded-xl bg-surface-subtle p-4 md:p-5">
           <Section title="날짜별 기록">
             {remove.error && <Alert>지우지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
-            {history.isPending && <LoadingBlock label="불러오는 중" />}
+            {history.isPending && <LoadingBlock label="불러오는 중" variant="rows" lines={6} />}
             {history.isSuccess && records.length === 0 && (
               <EmptyState
                 title="아직 기록한 자재가 없습니다"

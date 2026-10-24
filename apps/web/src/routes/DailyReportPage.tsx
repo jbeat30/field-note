@@ -122,7 +122,9 @@ export const DailyReportPage = () => {
         </details>
       </div>
 
-      {report.isPending && <LoadingBlock label="작업일보를 불러오는 중" variant="page" />}
+      {report.isPending && (
+        <LoadingBlock label="작업일보를 불러오는 중" variant="blocks" heights={[420]} />
+      )}
       {report.isError && <Alert>작업일보를 불러오지 못했습니다</Alert>}
       {report.data && <ReportSheet report={report.data} />}
 

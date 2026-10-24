@@ -101,12 +101,12 @@ export const ProjectLayout = () => {
         </div>
         <div className="flex flex-col gap-5">
           <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:gap-4">
-            <Skeleton className="h-[110px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
-            <Skeleton className="h-[110px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
-            <Skeleton className="hidden h-[110px] rounded-[24px] sm:block md:h-[153px] md:rounded-[30px]" />
+            <Skeleton className="h-[108px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
+            <Skeleton className="h-[108px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
+            <Skeleton className="h-[108px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
           </div>
-          <Skeleton className="h-[540px] rounded-[30px] md:h-[759px]" />
-          <Skeleton className="h-[210px] rounded-[30px] md:h-[302px]" />
+          <Skeleton className="h-[618px] rounded-[30px] md:h-[759px]" />
+          <Skeleton className="h-[302px] rounded-[30px]" />
         </div>
       </div>
     );

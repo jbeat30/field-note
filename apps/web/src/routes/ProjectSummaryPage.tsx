@@ -14,7 +14,16 @@ export const ProjectSummaryPage = () => {
   const summary = useProjectSummary(id);
 
   if (project.isPending || summary.isPending) {
-    return <LoadingBlock label="요약을 불러오는 중" variant="blocks" heights={[153, 1380]} />;
+    return (
+      <LoadingBlock
+        label="요약을 불러오는 중"
+        variant="blocks"
+        heights={[
+          [226, 153],
+          [1160, 1140],
+        ]}
+      />
+    );
   }
 
   if (!project.data || !summary.data) {
