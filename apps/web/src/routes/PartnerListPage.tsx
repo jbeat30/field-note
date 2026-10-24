@@ -11,6 +11,7 @@ import { PageHeader } from '../components/ui/page-header';
 import { Select } from '../components/ui/select';
 import { PartnerQuickAdd } from '../partners/PartnerQuickAdd';
 import { usePartners } from '../partners/usePartners';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type PartnerItem = NonNullable<ReturnType<typeof usePartners>['data']>[number];
 
@@ -114,7 +115,7 @@ export const PartnerListPage = () => {
         </section>
       </div>
 
-      {partners.isPending && <p className="text-sm">명부를 불러오는 중</p>}
+      {partners.isPending && <LoadingBlock label="명부를 불러오는 중" lines={6} />}
       {partners.isError && <Alert>명부를 불러오지 못했습니다</Alert>}
       {partners.data && (
         <DataTable

@@ -6,6 +6,7 @@ import { Button } from '../components/ui/button';
 import { useConfirm } from '../components/ui/confirm-dialog';
 
 import { useDevices, useRevokeDevice } from './useDevices';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 이만큼 쓰지 않은 로그인은 "오래 쓰지 않음"으로 접음 (로그인 유지 기간 안에서 남아 있는 것들)
 const STALE_DAYS = 7;
@@ -72,7 +73,7 @@ export const DevicesSection = () => {
   const [renderedAt] = useState(() => Date.now());
 
   if (devices.isPending) {
-    return <p className="text-sm">기기 목록을 불러오는 중</p>;
+    return <LoadingBlock label="기기 목록을 불러오는 중" />;
   }
 
   if (devices.isError) {

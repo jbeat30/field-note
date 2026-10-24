@@ -80,7 +80,7 @@ export const MonthlyMatrixTable = ({
                     {row.cells[column.id] ? (
                       value(row.cells[column.id]!).manDays
                     ) : (
-                      <span aria-hidden className="text-foreground/30">
+                      <span aria-hidden className="text-sub">
                         -
                       </span>
                     )}

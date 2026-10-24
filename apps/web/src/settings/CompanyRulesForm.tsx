@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input';
 import { getErrorMessage } from '../lib/apiError';
 
 import { useCompanyRules, useSaveCompanyRules } from './useCompanyRules';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type Fields = Record<keyof CompanyRules, string>;
 
@@ -62,7 +63,7 @@ export const CompanyRulesForm = () => {
   }
 
   if (!current) {
-    return <p className="text-sm">불러오는 중</p>;
+    return <LoadingBlock label="불러오는 중" />;
   }
 
   const change = (key: keyof CompanyRules, value: string) => {

@@ -4,6 +4,7 @@ import { Alert } from '../components/ui/alert';
 import { ProgressBar } from '../components/ui/progress-bar';
 
 import { useStorageUsage } from './useCompanyData';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const PURPOSE_LABELS = { PHOTO: '사진', DOCUMENT: '문서', EMPLOYEE_DOCUMENT: '직원 서류' } as const;
 
@@ -18,7 +19,7 @@ export const StorageSection = () => {
   }
 
   if (!usage.data) {
-    return <p className="text-sm">불러오는 중</p>;
+    return <LoadingBlock label="불러오는 중" />;
   }
 
   const { quotaBytes, usedBytes, stagedBytes, stagedCount, byPurpose, byProject } = usage.data;

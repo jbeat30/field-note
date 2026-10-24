@@ -8,6 +8,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useSocialLinkStart, useSocialMethods, useSocialUnlink } from '../auth/useSocial';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 소셜 로그인 연동: 이메일이 같다고 자동 연결하지 않고, 로그인한 상태에서만 연동
 export const SocialLoginSection = () => {
@@ -16,7 +17,7 @@ export const SocialLoginSection = () => {
   const unlink = useSocialUnlink();
 
   if (methods.isPending) {
-    return <p className="text-sm">연동 상태를 불러오는 중</p>;
+    return <LoadingBlock label="연동 상태를 불러오는 중" />;
   }
 
   if (methods.isError) {

@@ -23,6 +23,7 @@ import { projectWorkPath } from '../lib/projectPaths';
 import { useProject } from '../projects/useProjects';
 import { ProjectWorkCalendar } from '../workLogs/ProjectWorkCalendar';
 import { useWorkLogList } from '../workLogs/useWorkLogs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const helper = columnHelper<WorkLogSummary>();
 
@@ -206,7 +207,7 @@ export const ProjectWorkPage = () => {
         </p>
       </section>
 
-      {logs.isPending && <p className="text-sm">작업 내역을 불러오는 중</p>}
+      {logs.isPending && <LoadingBlock label="작업 내역을 불러오는 중" />}
       {logs.data && (
         <section className="flex flex-col gap-2" aria-labelledby="logged-days-heading">
           <h2 id="logged-days-heading" className="text-lg font-bold">

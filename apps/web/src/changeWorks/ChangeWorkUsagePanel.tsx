@@ -3,6 +3,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 import { formatWork } from '../workSummary/formatWork';
 
 import { useChangeUsage } from './useChangeWorks';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 변경·추가 작업으로 쓴 공수·자재: 작업 내역과 자재 기록에 "변경·추가 작업" 표시를 한 것의 합계 (정산·협의 근거)
 export const ChangeWorkUsagePanel = ({ projectId }: { projectId: string }) => {
@@ -14,7 +15,7 @@ export const ChangeWorkUsagePanel = ({ projectId }: { projectId: string }) => {
   }
 
   if (!usage.data || !settings.data) {
-    return <p className="text-sm">합계를 불러오는 중</p>;
+    return <LoadingBlock label="합계를 불러오는 중" />;
   }
 
   const { workLogCount, minutes, materials } = usage.data;

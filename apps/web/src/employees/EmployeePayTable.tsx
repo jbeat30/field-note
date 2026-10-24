@@ -20,6 +20,7 @@ import { PayRateForm } from '../labor/EmployeePayPanel';
 import { usePayRateSummaries } from '../labor/useLabor';
 
 import { useEmployees } from './useEmployees';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 export const rateText = (rate: Pick<PayRate, 'payType' | 'amount'>) =>
   `${PAY_TYPE_LABELS[rate.payType]} ${formatWon(rate.amount)}`;
@@ -35,7 +36,7 @@ export const EmployeePayTable = () => {
   }
 
   if (!employees.data || !summaries.data) {
-    return <p className="text-sm">단가표를 불러오는 중</p>;
+    return <LoadingBlock label="단가표를 불러오는 중" />;
   }
 
   const byEmployee = new Map(summaries.data.map((item) => [item.employeeId, item]));

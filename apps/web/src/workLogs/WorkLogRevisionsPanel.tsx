@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Alert } from '../components/ui/alert';
 
 import { useWorkLogRevisions } from './useWorkLogs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const formatChangedAt = (iso: string) =>
   new Intl.DateTimeFormat('ko-KR', {
@@ -49,7 +50,7 @@ export const WorkLogRevisionsPanel = ({
       <summary className="min-h-touch cursor-pointer content-center text-sm font-bold">
         수정 이력 보기
       </summary>
-      {revisions.isPending && open && <p className="text-sm">이력을 불러오는 중</p>}
+      {revisions.isPending && open && <LoadingBlock label="이력을 불러오는 중" />}
       {revisions.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
       {revisions.data && revisions.data.length === 0 && (
         <p className="text-sm text-sub">저장한 뒤 고친 기록이 없습니다</p>

@@ -13,11 +13,13 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
-import { RadioGroup, RadioGroupItem } from '../components/ui/radio-group';
+import { SegmentedControl } from '../components/ui/segmented-control';
+import { Select } from '../components/ui/select';
 import { getErrorMessage } from '../lib/apiError';
 import { hoursToMinutes, minutesToHours } from '../lib/workTime';
 
 import { useCompanySettings, useSaveCompanySettings } from './useCompanySettings';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const formSchema = z.object({
   standardWorkHours: z
@@ -35,12 +37,23 @@ const formSchema = z.object({
 
 type Form = z.infer<typeof formSchema>;
 
-const WORK_UNIT_OPTIONS: { value: WorkUnitMode; label: string; description: string }[] = [
-  { value: 'RATIO', label: '비율', description: '하루를 1.0으로 입력합니다 (예: 1.5는 연장 근무)' },
-  { value: 'HOURS', label: '시간', description: '실제 근무 시간을 입력합니다 (예: 8시간 + 4시간)' },
+const WORK_UNIT_OPTIONS: { value: WorkUnitMode; label: string }[] = [
+  { value: 'RATIO', label: '비율 — 하루를 1.0으로 입력 (예: 1.5는 연장 근무)' },
+  { value: 'HOURS', label: '시간 — 실제 근무 시간을 입력 (예: 8시간 + 4시간)' },
 ];
 
 const CUSTOM = 'CUSTOM';
+
+// 근무 형태 옆에 붙는 덧말
+const PATTERN_NOTE: Record<string, string> = { SIX_DAYS: ' (현장 기본)' };
+
+const PATTERN_OPTIONS = [
+  ...WORK_PATTERNS.map((item) => ({
+    value: item.key as string,
+    label: `${item.label} ${item.days}일${PATTERN_NOTE[item.key] ?? ''}`,
+  })),
+  { value: CUSTOM, label: '직접 입력' },
+];
 
 // 월 기준일수가 근무 형태 표준값과 같으면 그 형태, 아니면 직접 입력
 const patternOf = (days: number | undefined) =>
@@ -74,7 +87,7 @@ export const CompanySettingsForm = () => {
   const hours = useWatch({ control, name: 'standardWorkHours' });
 
   if (settings.isPending) {
-    return <p className="text-sm">회사 설정을 불러오는 중</p>;
+    return <LoadingBlock label="회사 설정을 불러오는 중" />;
   }
 
   if (settings.isError) {
@@ -141,26 +154,14 @@ export const CompanySettingsForm = () => {
             1MM(맨먼스)을 몇 일(MD)로 볼지 정합니다. 현장은 공휴일에도 일하므로 공휴일 달력은 쓰지
             않고, 근무 형태별 연평균으로 계산합니다
           </p>
-          <RadioGroup
-            value={pattern}
-            onValueChange={choosePattern}
-            aria-label="근무 형태"
-            className="flex flex-col gap-0.5"
-          >
-            {WORK_PATTERNS.map((item) => (
-              <label key={item.key} className="flex min-h-touch items-center gap-3">
-                <RadioGroupItem value={item.key} />
-                <span>
-                  {item.label} {item.days}일
-                  <span className="block text-sm text-sub">{item.hint}</span>
-                </span>
-              </label>
-            ))}
-            <label className="flex min-h-touch items-center gap-3">
-              <RadioGroupItem value={CUSTOM} onClick={() => choosePattern(CUSTOM)} />
-              <span>직접 입력</span>
-            </label>
-          </RadioGroup>
+          <FormField label="근무 형태">
+            <Select
+              value={pattern}
+              onValueChange={choosePattern}
+              options={PATTERN_OPTIONS}
+              aria-label="근무 형태"
+            />
+          </FormField>
           <FormField
             label="월 기준일수 (일)"
             hint="소수 첫째 자리까지 입력할 수 있습니다 (예: 21.7)"
@@ -203,35 +204,25 @@ export const CompanySettingsForm = () => {
             </Button>
           </div>
         </section>
-
-        <section className={`${card} lg:col-span-2`} aria-labelledby="mode-heading">
-          <h3 id="mode-heading" className="text-base font-bold">
-            공수 입력 방식
-          </h3>
-          <Controller
-            control={control}
-            name="workUnitMode"
-            render={({ field }) => (
-              <RadioGroup
-                value={field.value}
-                onValueChange={field.onChange}
-                aria-label="공수 입력 방식"
-                className="grid gap-0.5 sm:grid-cols-2"
-              >
-                {WORK_UNIT_OPTIONS.map((option) => (
-                  <label key={option.value} className="flex min-h-touch items-center gap-3">
-                    <RadioGroupItem value={option.value} />
-                    <span>
-                      {option.label}
-                      <span className="block text-sm text-sub">{option.description}</span>
-                    </span>
-                  </label>
-                ))}
-              </RadioGroup>
-            )}
-          />
-        </section>
       </div>
+      <section className="flex flex-col gap-3" aria-labelledby="mode-heading">
+        <h3 id="mode-heading" className="text-lg font-bold">
+          공수 입력 방식
+        </h3>
+        <Controller
+          control={control}
+          name="workUnitMode"
+          render={({ field }) => (
+            <SegmentedControl
+              value={field.value}
+              onValueChange={field.onChange}
+              aria-label="공수 입력 방식"
+              options={WORK_UNIT_OPTIONS}
+              className="w-fit max-w-full max-md:flex-col max-md:rounded-3xl"
+            />
+          )}
+        />
+      </section>
       <div className="flex justify-end">
         <Button type="submit" disabled={!isDirty || save.isPending}>
           {save.isPending ? '저장 중' : '저장'}

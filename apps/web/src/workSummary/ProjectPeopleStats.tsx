@@ -23,6 +23,7 @@ import { useOptions } from '../settings/useOptions';
 
 import { EmployeeWorkDaysDialog } from './EmployeeWorkDaysDialog';
 import { useWorkSummary } from './useWorkSummary';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type Range = 'all' | 'thisMonth' | 'lastMonth';
 
@@ -77,7 +78,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
       }
     >
       {!summary.data ? (
-        <p className="text-sm">불러오는 중</p>
+        <LoadingBlock label="불러오는 중" />
       ) : (
         <>
           <StatGroup

@@ -12,6 +12,7 @@ import { projectWorkPath } from '../lib/projectPaths';
 import { MemoList } from '../memos/MemoList';
 import { useDeleteMemo, useMemoList, useUpdateMemo } from '../memos/useMemos';
 import { useProject } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 칩 필터: 모든 메모 / 태그 하나 / 끝내지 않은 할 일
 type Filter = 'ALL' | MemoTag | 'OPEN_TODO';
@@ -33,7 +34,7 @@ export const ProjectMemosPage = () => {
   const remove = useDeleteMemo();
   const items = memos.data?.pages.flatMap((page) => page.items) ?? [];
 
-  if (project.isPending) return <p className="text-sm">프로젝트를 불러오는 중</p>;
+  if (project.isPending) return <LoadingBlock label="프로젝트를 불러오는 중" />;
   if (!project.data) return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
 
   const filters: { value: Filter; label: string }[] = [
@@ -63,7 +64,7 @@ export const ProjectMemosPage = () => {
       {(update.error ?? remove.error) && (
         <Alert>처리하지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>
       )}
-      {memos.isPending && <p className="text-sm">메모를 불러오는 중</p>}
+      {memos.isPending && <LoadingBlock label="메모를 불러오는 중" />}
       {memos.isError && <Alert>메모를 불러오지 못했습니다</Alert>}
       {memos.isSuccess && items.length === 0 && (
         <EmptyState

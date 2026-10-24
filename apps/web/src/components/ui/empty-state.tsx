@@ -12,7 +12,7 @@ type EmptyStateProps = {
 // 목록이 비었을 때 이유와 다음 행동을 안내
 export const EmptyState = ({ title, description, action, icon }: EmptyStateProps) => (
   <div className="flex flex-col items-center gap-2 px-4 py-10 text-center">
-    <span className="text-foreground/35 [&_svg]:size-7">{icon ?? <Inbox aria-hidden />}</span>
+    <span className="text-sub [&_svg]:size-7">{icon ?? <Inbox aria-hidden />}</span>
     <div className="flex flex-col gap-1">
       <p className="text-[15px] font-semibold">{title}</p>
       {description && <p className="text-sm text-sub">{description}</p>}

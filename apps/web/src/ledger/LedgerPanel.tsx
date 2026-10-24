@@ -38,6 +38,7 @@ import {
   useLedgerSummary,
   type LedgerFilter,
 } from './useLedger';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type KindFilter = LedgerKind | 'ALL';
 
@@ -166,7 +167,7 @@ export const LedgerPanel = ({ projectId }: { projectId: string }) => {
               max={to || undefined}
               onChange={(event) => setFrom(event.target.value)}
             />
-            <span aria-hidden className="text-foreground/55">
+            <span aria-hidden className="text-sub">
               ~
             </span>
             <DateInput
@@ -197,7 +198,7 @@ export const LedgerPanel = ({ projectId }: { projectId: string }) => {
 
         {summary.isError && <Alert>합계를 불러오지 못했습니다</Alert>}
         {remove.isError && <Alert>지우지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
-        {history.isPending && <p className="text-sm">불러오는 중</p>}
+        {history.isPending && <LoadingBlock label="불러오는 중" />}
         {history.isError && <Alert>내역을 불러오지 못했습니다</Alert>}
         {history.isSuccess && entries.length === 0 && (
           <EmptyState
@@ -274,7 +275,7 @@ export const LedgerPanel = ({ projectId }: { projectId: string }) => {
                         aria-label={`${label} 지우기`}
                         onClick={() => void handleDelete(entry)}
                       >
-                        <span className="text-foreground/50">✕</span>
+                        <span className="text-sub">✕</span>
                       </Button>
                     </TableCell>
                   </TableRow>
