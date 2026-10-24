@@ -5,16 +5,15 @@ import {
   todayInSeoul,
   type WorkLogSummary,
 } from '@field-note/shared';
-import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
+import { Plus } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 
+import { Button } from '../components/ui/button';
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { columnHelper, DataTable } from '../components/ui/data-table';
 import { EmptyState } from '../components/ui/empty-state';
-import { PageHeader } from '../components/ui/page-header';
 import { StatGroup } from '../components/ui/stat-group';
 import { useEmployees } from '../employees/useEmployees';
 import { PeriodNav } from '../components/ui/period-nav';
@@ -139,21 +138,7 @@ export const ProjectWorkPage = () => {
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        level={2}
-        title="작업 달력"
-        description="날짜를 눌러 그날 일한 직원과 시간, 한 일을 기록합니다. 날마다 나온 사람이 달라도 됩니다"
-        actions={
-          todayCheck.ok ? (
-            <Button asChild>
-              <Link to={projectWorkPath(id, today)}>
-                <Plus aria-hidden className="size-5" />
-                {todayLog ? '오늘 작업 고치기' : '오늘 작업 입력'}
-              </Link>
-            </Button>
-          ) : undefined
-        }
-      />
+      <h2 className="sr-only">작업 달력</h2>
 
       {project.data && !todayCheck.ok && (
         <Alert variant="info">
@@ -180,7 +165,26 @@ export const ProjectWorkPage = () => {
         ]}
       />
 
-      <section className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4 sm:p-5">
+      <section className="flex flex-col gap-3 rounded-[30px] bg-surface-subtle p-5 sm:p-7">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-xl font-extrabold tracking-tight">
+              {Number(month.slice(5, 7))}월 작업 달력
+            </h3>
+            <p className="text-[13px] text-sub">
+              날짜를 눌러 그날 일한 직원과 시간, 한 일을 기록합니다. 날마다 나온 사람이 달라도
+              됩니다
+            </p>
+          </div>
+          {todayCheck.ok && (
+            <Button asChild size="sm" className="shrink-0">
+              <Link to={projectWorkPath(id, today)}>
+                <Plus aria-hidden className="size-4" />
+                {todayLog ? '오늘 작업 고치기' : '오늘 작업 입력'}
+              </Link>
+            </Button>
+          )}
+        </div>
         <PeriodNav
           label={`${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`}
           prevLabel="이전 달"
