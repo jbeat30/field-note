@@ -48,7 +48,7 @@ test('로그인부터 작업 내역 저장·작업일보까지 핵심 흐름이 
     await page.getByLabel('작업 구역').fill('3층 301호');
     await page.getByRole('button', { name: '저장', exact: true }).click();
     await page.getByRole('button', { name: '투입 추가하고 저장' }).click();
-    await expect(page.getByText(/저장됐습니다 · 버전 1/)).toBeVisible();
+    await expect(page.getByText(/저장됐습니다, 버전 1/)).toBeVisible();
   });
 
   await test.step('자재 메뉴에서 맞춤 자재 사용 기록', async () => {

@@ -168,7 +168,7 @@ export const WarrantyAndExpiring: Story = {
 
     const expiring = within(canvas.getByRole('region', { name: '만료 임박' }));
 
-    await expect(expiring.getByText(/보증서 보증증권 · A동 판금 공사/)).toBeInTheDocument();
+    await expect(expiring.getByText(/보증서 보증증권, A동 판금 공사/)).toBeInTheDocument();
     await expect(expiring.getByText(/11일 지남 \(2026-09-30\)/)).toBeInTheDocument();
   },
 };

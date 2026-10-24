@@ -176,7 +176,7 @@ export const UploadEvidence: Story = {
 
     await expect(item).toBeInTheDocument();
     // 계약·공문 분류의 민감 자료로 생성
-    await expect(item).toHaveTextContent('계약·공문 · 민감');
+    await expect(item).toHaveTextContent('계약·공문, 민감');
     await waitFor(() => expect(rowOf(canvas, 2)).toHaveTextContent(/[1-9]$/));
   },
 };

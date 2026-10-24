@@ -222,7 +222,7 @@ export const DemoNotice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText('가상 데이터 · 매일 새벽 초기화')).toBeInTheDocument();
+    await expect(await canvas.findByText('가상 데이터, 매일 새벽 초기화')).toBeInTheDocument();
     await expect(canvas.queryByText('Visit-Demo-2026!')).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: '체험하기' }));
     await waitFor(() => expect(canvas.getByTestId('navigated')).toBeInTheDocument());
