@@ -72,8 +72,8 @@ export const TotpRow = () => {
             {status.isPending
               ? '확인 중'
               : isEnabled
-                ? `켜짐 · 복구 코드 ${left}개 남음`
-                : '꺼짐 · 켜면 로그인할 때 인증 앱의 6자리 코드가 더 필요합니다 (선택)'}
+                ? `켜짐, 복구 코드 ${left}개 남음`
+                : '꺼짐, 켜면 로그인할 때 인증 앱의 6자리 코드가 더 필요합니다 (선택)'}
           </p>
         </div>
         {!status.isPending &&

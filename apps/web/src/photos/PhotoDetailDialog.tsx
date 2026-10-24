@@ -95,7 +95,7 @@ export const PhotoDetailDialog = ({
           >
             <div className="flex items-center justify-between gap-2">
               <Dialog.Title className="text-lg font-bold">
-                {PHOTO_CATEGORY_LABELS[photo.category]} · {formatDay(photo.workDate)}
+                {PHOTO_CATEGORY_LABELS[photo.category]}, {formatDay(photo.workDate)}
               </Dialog.Title>
               <Dialog.Close asChild>
                 <Button type="button" variant="secondary">

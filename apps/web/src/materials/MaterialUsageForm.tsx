@@ -349,7 +349,7 @@ export const MaterialUsageForm = ({
                       errors[`${row.key}.unit`],
                     ]
                       .filter(Boolean)
-                      .join(' · ')}
+                      .join(', ')}
                   </p>
                 )}
               </li>

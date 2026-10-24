@@ -169,11 +169,11 @@ const Body = ({
                 )}
                 <span className="ml-2 text-sub">
                   {formatDay(version.revisionDate)} 개정
-                  {version.reason ? ` · ${version.reason}` : ''}
+                  {version.reason ? `, ${version.reason}` : ''}
                 </span>
               </p>
               <p className="text-sm text-sub">
-                {version.fileName} · {formatSize(version.size)}
+                {version.fileName}, {formatSize(version.size)}
               </p>
               {version.fileStatus !== 'READY' ? (
                 <p className="text-sm text-sub" role="status">
@@ -257,7 +257,7 @@ const Body = ({
               {logs.data.map((log) => (
                 <li key={log.id} className="flex flex-wrap justify-between gap-2 px-3 py-2">
                   <span>
-                    {log.actorName} · v{log.versionNo} {AUDIT_ACTION_LABELS[log.action]}
+                    {log.actorName}, v{log.versionNo} {AUDIT_ACTION_LABELS[log.action]}
                   </span>
                   <span className="text-sub">{formatTime(log.createdAt)}</span>
                 </li>

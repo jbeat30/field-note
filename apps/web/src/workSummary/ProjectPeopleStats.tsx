@@ -154,8 +154,8 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                       <TableCell className="whitespace-nowrap">
                         <span className="font-semibold tabular-nums">{row.workedDays}일</span>
                         {row.lastWorkDate && (
-                          <span className="ml-1.5 text-sm text-sub">
-                            · 최근 {formatDay(row.lastWorkDate)}
+                          <span className="ml-2 text-sm text-sub">
+                            최근 {formatDay(row.lastWorkDate)}
                           </span>
                         )}
                         <Button
@@ -175,7 +175,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                             (item) =>
                               `${categoryNames.get(item.categoryId) ?? '작업'} ${hours(item.totalMinutes)}시간`,
                           )
-                          .join(' · ')}
+                          .join(', ')}
                         {row.categories.length > 3 ? ` 외 ${row.categories.length - 3}` : ''}
                       </TableCell>
                     </TableRow>

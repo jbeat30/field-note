@@ -139,7 +139,7 @@ export const ProjectWarrantyPage = () => {
                       {change.fromMonths === null
                         ? `${change.toMonths}개월로 설정`
                         : `${change.fromMonths}개월 → ${change.toMonths}개월`}
-                      {' · '}
+                      {', '}
                       종료 예정일 {change.fromEndOn ? `${change.fromEndOn} → ` : ''}
                       {change.toEndOn}
                     </span>

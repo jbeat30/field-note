@@ -61,11 +61,11 @@ export const EmployeePayTable = () => {
 
   return (
     <div className="relative -mt-14 flex flex-col gap-3 rounded-[30px] bg-surface-subtle p-5 sm:p-7">
-      <h2 className="text-[19px] font-bold">단가표 · {rows.length}명</h2>
+      <h2 className="text-[19px] font-bold">단가표 {rows.length}명</h2>
       <p className="text-sm text-sub">
         프로젝트 인건비 추정에만 쓰입니다. 단가를 바꾸면 변경 기록으로 남고, 이전 날짜 근무분은 기존
         단가 그대로입니다
-        {missing > 0 && ` · 단가가 없는 직원 ${missing}명`}
+        {missing > 0 && `, 단가가 없는 직원 ${missing}명`}
       </p>
       <Table aria-label="직원 단가표" className="min-w-[44rem]">
         <TableHead>

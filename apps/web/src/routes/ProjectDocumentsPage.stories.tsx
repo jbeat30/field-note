@@ -141,7 +141,7 @@ export const SensitiveOpenIsLogged: Story = {
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
-    await expect(await dialog.findByText(/김한빛 · v1 열람/)).toBeInTheDocument();
+    await expect(await dialog.findByText(/김한빛, v1 열람/)).toBeInTheDocument();
   },
 };
 

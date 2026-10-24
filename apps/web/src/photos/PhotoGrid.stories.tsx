@@ -27,7 +27,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     // 구분·구역 표시와 대표 표시
-    await expect(canvas.getByText('작업 전 · 3층 301호')).toBeInTheDocument();
+    await expect(canvas.getByText('작업 전, 3층 301호')).toBeInTheDocument();
     await expect(canvas.getByText('대표')).toBeInTheDocument();
 
     await userEvent.click(canvas.getAllByRole('button')[1]!);

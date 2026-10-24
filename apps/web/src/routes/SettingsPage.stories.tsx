@@ -718,7 +718,7 @@ export const TotpEnable: Story = {
     await userEvent.click(codes.getByRole('checkbox'));
     await userEvent.click(codes.getByRole('button', { name: '완료' }));
 
-    await expect(await row.findByText(/켜짐 · 복구 코드 8개 남음/)).toBeInTheDocument();
+    await expect(await row.findByText(/켜짐, 복구 코드 8개 남음/)).toBeInTheDocument();
   },
 };
 
@@ -732,7 +732,7 @@ export const TotpDisable: Story = {
     const canvas = within(canvasElement);
     const row = await securityRow(canvas);
 
-    await expect(await row.findByText(/켜짐 · 복구 코드 1개 남음/)).toBeInTheDocument();
+    await expect(await row.findByText(/켜짐, 복구 코드 1개 남음/)).toBeInTheDocument();
     // 복구 코드가 거의 없으면 다시 받도록 안내
     await expect(row.getByText(/복구 코드가 1개 남았습니다/)).toBeInTheDocument();
 

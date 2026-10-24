@@ -234,7 +234,7 @@ export const EmployeeListPage = () => {
                 <div className="flex min-w-0 flex-col gap-0.5">
                   <span className="font-bold">{row.name}</span>
                   <span className="text-xs text-sub">
-                    {[row.title, row.jobTypeName].filter(Boolean).join(' · ') || '-'}
+                    {[row.title, row.jobTypeName].filter(Boolean).join(', ') || '-'}
                   </span>
                 </div>
                 <Badge tone={row.status === 'ACTIVE' ? 'success' : 'neutral'}>

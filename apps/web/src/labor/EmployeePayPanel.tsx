@@ -200,7 +200,7 @@ export const EmployeePayPanel = ({ employeeId }: { employeeId: string }) => {
                   )}
                 </span>
                 <span className="text-sub">
-                  {rate.effectiveFrom}부터 · {rate.createdAt.slice(0, 10)}에 입력
+                  {rate.effectiveFrom}부터, {rate.createdAt.slice(0, 10)}에 입력
                 </span>
               </li>
             ))}

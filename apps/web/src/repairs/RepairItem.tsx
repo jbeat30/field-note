@@ -286,7 +286,7 @@ const AfterServiceLinks = ({
           {detail.links.map((item) => {
             const label =
               item.kind === 'WORK_LOG'
-                ? `${formatDay(item.workDate)} 작업 내역 · ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
+                ? `${formatDay(item.workDate)} 작업 내역, ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
                 : `${formatDay(item.recordDate)} ${item.name}${item.spec ? ` (${item.spec})` : ''} ${MATERIAL_RECORD_KIND_LABELS[item.recordKind]} ${item.quantity} ${item.unit}`;
 
             return (
@@ -336,7 +336,7 @@ const AfterServiceLinks = ({
             <FormField label="사후 작업 연결">
               <Select
                 value={target}
-                placeholder="작업 내역·자재 기록 선택"
+                placeholder="작업 내역이나 자재 기록 선택"
                 onValueChange={setTarget}
                 options={[
                   ...logChoices.map((item) => ({
@@ -396,9 +396,9 @@ const Body = ({
       {message && <p role="status">{message}</p>}
       <p className="whitespace-pre-wrap">{detail.content}</p>
       <p className="text-sm text-sub">
-        접수 {formatDay(detail.receivedOn)} · {detail.requester}
-        {detail.location ? ` · ${detail.location}` : ''}
-        {detail.resolvedOn ? ` · 완료 ${formatDay(detail.resolvedOn)}` : ''}
+        접수 {formatDay(detail.receivedOn)}, {detail.requester}
+        {detail.location ? `, ${detail.location}` : ''}
+        {detail.resolvedOn ? `, 완료 ${formatDay(detail.resolvedOn)}` : ''}
       </p>
 
       {editable && (
@@ -466,9 +466,9 @@ const Body = ({
           <ul className="flex flex-col gap-1 text-sm">
             {detail.history.map((item) => (
               <li key={item.id}>
-                {formatDay(item.effectiveOn)} · {REPAIR_STATUS_LABELS[item.fromStatus]} →{' '}
+                {formatDay(item.effectiveOn)}, {REPAIR_STATUS_LABELS[item.fromStatus]} →{' '}
                 <span className="font-bold">{REPAIR_STATUS_LABELS[item.toStatus]}</span>
-                {item.note ? ` · ${item.note}` : ''}
+                {item.note ? `, ${item.note}` : ''}
               </li>
             ))}
           </ul>
@@ -505,7 +505,7 @@ export const RepairItem = ({
       </div>
       <p className="line-clamp-2">{repair.content}</p>
       <p className="text-sm text-sub">
-        {formatDay(repair.receivedOn)} · {repair.requester}
+        {formatDay(repair.receivedOn)}, {repair.requester}
       </p>
       <Button
         type="button"

@@ -55,13 +55,13 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
                 {row.projectCode} {row.projectName}
               </Link>
               <span>
-                {row.workedDays}일 · {formatWork(row.totalMinutes, config)}
+                {row.workedDays}일, {formatWork(row.totalMinutes, config)}
               </span>
               <span className="text-sub">
                 {row.assignedFrom && row.assignedTo
                   ? `투입 ${row.assignedFrom} ~ ${row.assignedTo}`
                   : '투입 기록 없음'}
-                {row.lastWorkDate ? ` · 최근 ${formatDay(row.lastWorkDate)}` : ' · 작업 기록 없음'}
+                {row.lastWorkDate ? `, 최근 ${formatDay(row.lastWorkDate)}` : ', 작업 기록 없음'}
               </span>
             </li>
           ))}

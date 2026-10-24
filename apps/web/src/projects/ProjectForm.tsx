@@ -417,7 +417,7 @@ export const ProjectForm = ({ project }: { project?: ProjectDetail }) => {
         </Lockable>
       </SectionCard>
 
-      <SectionCard title="고객 · 담당자 · 공종">
+      <SectionCard title="고객, 담당자, 공종">
         <div className="grid items-start gap-x-4 gap-y-5 md:grid-cols-2">
           <Lockable locked={isLocked('clientId')}>
             <FormField

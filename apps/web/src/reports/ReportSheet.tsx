@@ -70,7 +70,7 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
                   workLog.isAfterService && '사후 작업',
                 ]
                   .filter(Boolean)
-                  .join(' · ')}
+                  .join(', ')}
               </p>
             )}
             {workLog.notes && (
@@ -156,7 +156,7 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
                       material.memo,
                     ]
                       .filter(Boolean)
-                      .join(' · ')}
+                      .join(', ')}
                   </td>
                 </tr>
               ))}
@@ -185,7 +185,7 @@ export const ReportSheet = ({ report }: ReportSheetProps) => {
                 )}
                 <span className="text-xs">
                   {PHOTO_CATEGORY_LABELS[photo.category]}
-                  {photo.area ? ` · ${photo.area}` : ''}
+                  {photo.area ? `, ${photo.area}` : ''}
                   {photo.description ? ` — ${photo.description}` : ''}
                 </span>
               </li>

@@ -64,7 +64,7 @@ export const ChangeWorkTable = ({ works, onOpen }: ChangeWorkTableProps) => {
                 >
                   <span className="line-clamp-2">{work.content}</span>
                   <span className="mt-0.5 block text-xs text-sub md:hidden">
-                    {formatDay(work.requestedOn)} · {work.requester}
+                    {formatDay(work.requestedOn)}, {work.requester}
                   </span>
                 </button>
                 {stale && (
