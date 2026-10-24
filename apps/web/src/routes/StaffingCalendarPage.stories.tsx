@@ -9,8 +9,10 @@ import { StaffingCalendarPage } from './StaffingCalendarPage';
 const meta = {
   title: 'Pages/인력 배치',
   component: StaffingCalendarPage,
-  // 더미 작업 내역(2026-09-01~03)이 있는 주로 고정
-  parameters: { router: { initialEntries: ['/staffing?from=2026-08-31'], path: '/staffing' } },
+  // 더미 작업 내역(2026-09-01~03)이 있는 주로 고정, 사람별 타임라인 보기를 기본으로 시험
+  parameters: {
+    router: { initialEntries: ['/staffing?from=2026-08-31&by=person'], path: '/staffing' },
+  },
   loaders: [() => signIn('hanbit')],
 } satisfies Meta<typeof StaffingCalendarPage>;
 
@@ -25,10 +27,12 @@ export const Default: Story = {
 
     await expect(await canvas.findByText('2026-08-31 ~ 2026-09-06')).toBeInTheDocument();
 
-    const summary = await canvas.findByLabelText('요약');
+    // 위쪽 지표 타일
+    const tile = async (label: string) =>
+      (await canvas.findByText(label, { selector: 'dt' })).nextElementSibling as HTMLElement;
 
-    await expect(summary).toHaveTextContent('일한 사람 4명');
-    await expect(summary).toHaveTextContent('겹침 1건');
+    await expect(await tile('일한 사람')).toHaveTextContent('4명');
+    await expect(await tile('겹침')).toHaveTextContent('1건');
 
     // 정판금: 9/1·9/2 이틀 이어서 한 프로젝트 → 막대 하나, 날마다 시간
     const day1 = await canvas.findByRole('link', { name: /정판금 2026년 9월 1일 \(화\)/ });
@@ -71,7 +75,7 @@ export const OverlapShowsStackedBars: Story = {
     }
 
     // 겹침 있는 사람만 필터하면 겹치는 사람만 표시
-    await userEvent.click(canvas.getByRole('button', { name: '겹침 있는 사람만' }));
+    await userEvent.click(canvas.getByRole('button', { name: /겹침 있는 사람/ }));
     await waitFor(() =>
       expect(canvas.queryByRole('link', { name: '정판금' })).not.toBeInTheDocument(),
     );
@@ -126,5 +130,43 @@ export const PickProjectOnEmptyCell: Story = {
     await expect(menu.getByText(/김일용, 9월 1일 \(화\) 하루 기록으로/)).toBeInTheDocument();
     await expect(menu.getAllByRole('menuitem').length).toBeGreaterThan(0);
     await userEvent.keyboard('{Escape}');
+  },
+};
+
+// 기본은 날짜 칸 달력: 칸을 누르면 아래에 그날 일한 사람이 프로젝트별로 나옴
+export const CalendarView: Story = {
+  parameters: { router: { initialEntries: ['/staffing?from=2026-08-31'], path: '/staffing' } },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await expect(
+      await canvas.findByRole('radio', { name: '달력', checked: true }),
+    ).toBeInTheDocument();
+
+    // 9/2는 3명이 일하고 최설치는 두 곳에 들어가 겹침으로 표시됨
+    await userEvent.click(
+      await canvas.findByRole('button', { name: /2026년 9월 2일.*일한 사람 3명/ }),
+    );
+
+    const detail = within(await canvas.findByRole('region', { name: /9월 2일.*일한 사람/ }));
+
+    await expect(detail.getAllByText(/최설치/).length).toBeGreaterThan(0);
+  },
+};
+
+// 프로젝트별 카드: 프로젝트마다 누가 며칠 몇 시간 일했는지
+export const ProjectView: Story = {
+  parameters: {
+    router: { initialEntries: ['/staffing?from=2026-08-31&by=project'], path: '/staffing' },
+  },
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const list = within(await canvas.findByRole('list', { name: '프로젝트별 인력' }));
+
+    await expect(list.getByText('A동 외장 판금 공사')).toBeInTheDocument();
+    await expect(list.getByText('B동 덕트 설치')).toBeInTheDocument();
+    await expect(
+      list.getAllByRole('link', { name: /최설치 2026년 9월 2일/ }).length,
+    ).toBeGreaterThan(0);
   },
 };

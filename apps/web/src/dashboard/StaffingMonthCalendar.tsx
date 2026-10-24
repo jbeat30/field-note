@@ -19,6 +19,8 @@ export type StaffingMonthCalendarProps = {
   today: string;
   // 프로젝트별 구분 색 번호 (인력 배치 타임라인과 같은 색)
   projectColors: ReadonlyMap<string, number>;
+  // 아래 상세 제목의 단계 (위에 2단계 제목이 없는 화면은 2)
+  headingLevel?: 2 | 3;
 };
 
 // 달력 형태의 월간 인력: 날짜 칸마다 일한 사람 수와 프로젝트, 칸을 누르면 아래에 그날 일한 사람이 프로젝트별로 나옴
@@ -26,7 +28,9 @@ export const StaffingMonthCalendar = ({
   weeks,
   today,
   projectColors,
+  headingLevel = 3,
 }: StaffingMonthCalendarProps) => {
+  const Heading = headingLevel === 2 ? 'h2' : 'h3';
   const days = weeks.flat();
   const [selected, setSelected] = useState(
     () => days.find((day) => day.date === today && day.inMonth)?.date ?? null,
@@ -98,7 +102,9 @@ export const StaffingMonthCalendar = ({
                       {Number(day.date.slice(8))}
                     </span>
                     {day.headcount > 0 && (
-                      <span className="text-[11px] font-bold text-sub">{day.headcount}명</span>
+                      <span className="hidden text-[11px] font-bold text-sub sm:inline">
+                        {day.headcount}명
+                      </span>
                     )}
                   </span>
                   <span className="hidden min-w-0 flex-col gap-1 sm:flex">
@@ -117,11 +123,11 @@ export const StaffingMonthCalendar = ({
                       <span className="text-[11px] font-bold text-sub">+{hidden}</span>
                     )}
                   </span>
-                  <span className="flex gap-0.5 sm:hidden" aria-hidden="true">
+                  <span className="mt-auto flex justify-center gap-1 sm:hidden" aria-hidden="true">
                     {day.projects.slice(0, 4).map((project) => (
                       <span
                         key={project.projectId}
-                        className="size-1.5 rounded-full"
+                        className="size-[7px] rounded-full"
                         style={{ backgroundColor: colorOf(project.projectId) }}
                       />
                     ))}
@@ -138,12 +144,12 @@ export const StaffingMonthCalendar = ({
           aria-label={`${formatLongDay(selectedDay.date)} 일한 사람`}
           className="flex flex-col gap-2.5 rounded-3xl bg-[#14110d] px-6 py-5 text-[#fbf7ee]"
         >
-          <h3 className="text-[17px] font-bold">
+          <Heading className="text-[17px] font-bold">
             {formatLongDay(selectedDay.date)}
             <span className="ml-2.5 text-sm font-medium text-[#a89c84]">
               일한 사람 {selectedDay.headcount}명
             </span>
-          </h3>
+          </Heading>
           {selectedDay.projects.length === 0 ? (
             <p className="text-sm text-[#cfc4ac]">이 날 저장된 작업 내역이 없습니다</p>
           ) : (
