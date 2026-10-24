@@ -46,7 +46,8 @@ type StaffingTimelineProps = {
   columnMinWidth: string;
 };
 
-const NAME_COLUMN = 'minmax(7.5rem, 9rem)';
+// 이름 칸 너비는 좁은 화면에서 줄여 날짜 칸이 더 많이 보이게 함
+const NAME_COLUMN = 'var(--name-col)';
 
 // 사람 행 × 날짜 열 타임라인: 같은 프로젝트에 이어서 일한 날은 막대 하나, 막대 안에 그날 시간
 // 같은 날 두 프로젝트에서 일하면 막대가 위아래로 쌓이고 그 날은 빨간 테두리, 빈 칸을 누르면 프로젝트를 골라 그날 하루 기록으로 이동
@@ -68,7 +69,11 @@ export const StaffingTimeline = ({
 
   return (
     <div className="isolate overflow-x-auto rounded-[30px] bg-surface-subtle p-3 sm:p-4">
-      <div role="group" aria-label="인력 배치 타임라인" className="min-w-max">
+      <div
+        role="group"
+        aria-label="인력 배치 타임라인"
+        className="min-w-max [--name-col:5.5rem] sm:[--name-col:9rem]"
+      >
         <div className="grid gap-1 pb-1" style={{ gridTemplateColumns: columns }}>
           <div className="sticky left-0 z-20 rounded-xl bg-[var(--surface-nested)] px-3 py-2.5 text-left text-sm font-bold">
             직원
@@ -149,6 +154,7 @@ const EmployeeRow = ({
   onPickProject: (projectId: string, date: string) => void;
 }) => {
   const { employee } = row;
+  const conflictDates = new Set(row.conflictDates);
   const laneCount = Math.max(row.lanes.length, 1);
   // 날짜별로 그날 일한 곳 전체 (겹침 설명에 씀)
   const projectsOn = (date: string) =>
@@ -192,6 +198,11 @@ const EmployeeRow = ({
             {row.workedDays}일, {hours(row.totalMinutes)}시간
           </span>
         )}
+        {row.conflictDates.length > 0 && (
+          <span className="w-fit rounded-full bg-danger-subtle px-2 py-0.5 text-xs font-bold text-danger">
+            겹침 {row.conflictDates.length}일
+          </span>
+        )}
       </div>
 
       <div
@@ -200,15 +211,18 @@ const EmployeeRow = ({
           gridColumn: `2 / span ${dates.length}`,
           gridTemplateColumns: `repeat(${dates.length}, minmax(0, 1fr))`,
           gridTemplateRows: `repeat(${laneCount}, 3.25rem)`,
+          rowGap: '0.25rem',
         }}
       >
         {dates.map((date, index) => {
           const weekday = new Date(`${date}T00:00:00Z`).getUTCDay();
           const isFuture = date > today;
+          const isConflictDay = conflictDates.has(date);
           const background = cn(
             'rounded-xl border-2 border-line',
             weekday === 0 && 'bg-[var(--surface-nested)]',
             date === today && 'border-accent bg-accent-subtle',
+            isConflictDay && 'border-danger bg-danger-subtle',
           );
           const style = { gridColumn: index + 1, gridRow: `1 / span ${laneCount}` };
 
@@ -259,7 +273,7 @@ const EmployeeRow = ({
             return (
               <div
                 key={`${lane.projectId}-${segment.startIndex}`}
-                className="pointer-events-none relative z-10 mx-px flex min-w-0 flex-col overflow-hidden rounded-xl border-2 p-px"
+                className="pointer-events-none relative z-10 mx-px flex min-w-0 flex-col overflow-hidden rounded-[10px] border-2"
                 style={{
                   gridColumn: `${segment.startIndex + 1} / span ${segment.days.length}`,
                   gridRow: laneIndex + 1,
@@ -267,14 +281,14 @@ const EmployeeRow = ({
                   backgroundColor: `color-mix(in srgb, var(--proj-${color}) 28%, var(--surface-subtle))`,
                 }}
               >
-                <span className="truncate px-1.5 pt-0.5 text-xs font-semibold leading-tight">
+                <span className="truncate px-2 pt-1 text-xs leading-tight font-semibold">
                   {lane.name}
                 </span>
                 <span
                   className="absolute inset-0 grid"
                   style={{ gridTemplateColumns: `repeat(${segment.days.length}, minmax(0, 1fr))` }}
                 >
-                  {segment.days.map((day) => {
+                  {segment.days.map((day, dayIndex) => {
                     const detail = projectsOn(day.date)
                       .map((item) => `${item.name} ${hours(item.minutes)}시간`)
                       .join(', ');
@@ -288,12 +302,19 @@ const EmployeeRow = ({
                         title={label}
                         data-conflict={day.conflict || undefined}
                         className={cn(
-                          // 제목 칸까지 포함해 막대의 그날 세로 전체가 클릭 영역
-                          'pointer-events-auto flex items-end justify-center rounded pb-1.5 text-[11px] tabular-nums text-foreground/80 hover:bg-foreground/10 focus-visible:outline-2 focus-visible:outline-primary',
-                          day.conflict && 'font-bold text-foreground ring-2 ring-danger ring-inset',
+                          // 제목 칸까지 포함해 막대의 그날 세로 전체가 클릭 영역, 모서리는 막대가 잘라 줌
+                          'pointer-events-auto relative flex items-end justify-center pb-1.5 text-[11px] tabular-nums text-foreground/80 hover:bg-foreground/10 focus-visible:outline-2 focus-visible:-outline-offset-2 focus-visible:outline-primary',
+                          dayIndex > 0 && 'border-l border-foreground/15',
+                          day.conflict && 'font-bold text-foreground',
                         )}
                       >
                         {hours(day.minutes)}h
+                        {day.conflict && (
+                          <span
+                            aria-hidden
+                            className="absolute right-1 bottom-1.5 size-1.5 rounded-full bg-danger"
+                          />
+                        )}
                       </Link>
                     );
                   })}
