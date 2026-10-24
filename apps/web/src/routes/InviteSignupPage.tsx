@@ -18,6 +18,7 @@ import { apiClient } from '../api/client';
 import { SocialButton } from '../auth/SocialButton';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useSocialProviders, useSocialStart } from '../auth/useSocial';
+import { IS_SOCIAL_LOGIN_ENABLED } from '../lib/features';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -68,7 +69,7 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
       <button
         type="button"
         aria-label={`${document.title} 보기`}
-        className="min-h-touch px-2 text-sm font-bold underline decoration-accent decoration-2 underline-offset-4"
+        className="min-h-touch px-2 text-sm font-bold hover:text-sub"
         onClick={() => setViewing(document)}
       >
         보기
@@ -172,7 +173,9 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
   const queryClient = useQueryClient();
   const providers = useSocialProviders();
   const socialStart = useSocialStart();
-  const signupProviders = SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider]);
+  const signupProviders = IS_SOCIAL_LOGIN_ENABLED
+    ? SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider])
+    : [];
   const {
     register,
     handleSubmit,
@@ -321,10 +324,7 @@ export const InviteSignupPage = () => {
         <p className="text-sm">
           링크가 만료되었거나 이미 사용되었을 수 있습니다. 운영자에게 새 링크를 요청해 주세요
         </p>
-        <Link
-          className="min-h-touch content-center font-bold underline decoration-accent decoration-2 underline-offset-4"
-          to="/login"
-        >
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>
@@ -333,7 +333,7 @@ export const InviteSignupPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <SocialNotice />
+      {IS_SOCIAL_LOGIN_ENABLED && <SocialNotice />}
       {consents ? (
         <AccountStep inviteToken={token} consents={consents} onBack={() => setConsents(null)} />
       ) : (

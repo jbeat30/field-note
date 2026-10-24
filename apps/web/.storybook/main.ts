@@ -14,8 +14,10 @@ const config: StorybookConfig = {
   // 사용 통계 외부 전송 끔
   core: { disableTelemetry: true },
   // 앱의 vite.config.ts를 그대로 쓰되(Tailwind 등) PWA 플러그인은 제외 (서비스 워커 생성이 스토리북 번들과 충돌)
+  // 소셜 로그인 화면 스토리는 기능을 켠 상태로 시험
   viteFinal: (viteConfig) => ({
     ...viteConfig,
+    define: { ...viteConfig.define, 'import.meta.env.VITE_SOCIAL_LOGIN': JSON.stringify('true') },
     plugins: viteConfig.plugins
       ?.flat(Infinity)
       .filter(
