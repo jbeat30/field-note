@@ -93,6 +93,15 @@ const columns = helper.columns([
         {row.original.siteName && (
           <span className="block text-xs text-sub md:hidden">{row.original.siteName}</span>
         )}
+        {row.original.warnings.length > 0 && (
+          <span className="mt-1 flex flex-wrap gap-1 md:hidden">
+            {row.original.warnings.map((warning) => (
+              <Badge key={warning} tone="danger" className="whitespace-normal">
+                {PROJECT_WARNING_LABELS[warning]}
+              </Badge>
+            ))}
+          </span>
+        )}
       </>
     ),
   }),
@@ -116,6 +125,7 @@ const columns = helper.columns([
     id: 'warnings',
     header: '경고',
     enableSorting: false,
+    meta: { className: 'hidden md:table-cell' },
     cell: ({ row }) =>
       row.original.warnings.length === 0 ? (
         <span className="text-sub">-</span>
@@ -231,6 +241,7 @@ export const ProjectListPage = () => {
   return (
     <div className="flex flex-col gap-6">
       <PageHeader
+        overlap
         title="프로젝트"
         actions={
           <Link to="/projects/new" className={pillIconButtonClass}>
@@ -241,7 +252,7 @@ export const ProjectListPage = () => {
       />
 
       <section className="flex flex-col gap-4" aria-label="검색과 필터">
-        <div className="flex flex-col gap-1.5 rounded-[30px] bg-surface-subtle px-7 py-6">
+        <div className="relative -mt-14 flex flex-col gap-1.5 rounded-[30px] bg-surface-subtle px-5 py-5 md:px-7 md:py-6">
           <label htmlFor="project-search" className="text-[12.5px] font-bold text-sub">
             프로젝트 검색
           </label>
