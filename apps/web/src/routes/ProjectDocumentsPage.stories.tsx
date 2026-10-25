@@ -61,9 +61,9 @@ export const Default: Story = {
     await expect(headings).toEqual(['문서함']);
     await expect(canvas.queryByLabelText('문서 파일')).not.toBeInTheDocument();
     await expect(canvas.getByText('민감')).toBeInTheDocument();
-    // 분류 폴더 카드마다 문서 수가 보임
-    await expect(canvas.getByRole('button', { name: /^전체 3/ })).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: /^계약·공문 1/ })).toBeInTheDocument();
+    // 종류 폴더 카드마다 문서 수가 보임
+    await expect(await canvas.findByRole('button', { name: /^전체 3/ })).toBeInTheDocument();
+    await expect(await canvas.findByRole('button', { name: /^계약·공문 1/ })).toBeInTheDocument();
   },
 };
 
@@ -72,7 +72,7 @@ export const FilterAndSearch: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('1층 시공도');
-    await userEvent.click(canvas.getByRole('button', { name: /^계약·공문/ }));
+    await userEvent.click(await canvas.findByRole('button', { name: /^계약·공문/ }));
     await waitFor(() => expect(canvas.queryByText('외장 판금 시방서')).not.toBeInTheDocument());
     await expect(await canvas.findByText('도급 계약서')).toBeInTheDocument();
 
@@ -158,7 +158,7 @@ export const UploadNewDocument: Story = {
       new File(['%PDF-1.7'], '안전점검표.pdf', { type: 'application/pdf' }),
     );
     await dialog.findByText(/올려 두었습니다/);
-    await chooseOption(dialog.getByLabelText('분류'), '안전·검사');
+    await chooseOption(await dialog.findByLabelText('종류'), '안전·검사');
     await userEvent.click(dialog.getByRole('button', { name: '저장' }));
 
     // 올리면 창이 닫히고 목록에 보임
@@ -264,16 +264,16 @@ export const UnsupportedFileIsRejected: Story = {
   },
 };
 
-// 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 포함 가능
+// 준공 요약에는 민감하지 않은 문서만 포함 가능 (민감 자료인 계약서는 체크 칸이 막힘)
 export const SummaryCheckboxNeedsEligibleDocument: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await pickRowMenu(canvas, '외장 판금 시방서', '새 판 올리기·버전 기록');
+    await pickRowMenu(canvas, '도급 계약서', '새 판 올리기·버전 기록');
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
-    // 도면·작업지시서 분류라 포함 불가
+    // 민감 자료라 포함 불가
     await expect(await dialog.findByRole('checkbox', { name: /준공 요약에 넣기/ })).toBeDisabled();
   },
 };

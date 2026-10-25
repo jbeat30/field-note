@@ -7,7 +7,7 @@ import { createAccountService } from '../auth/accountService';
 import { createAuditService } from '../audit/auditService';
 import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
-import { markCompanyEmailsVerified } from '../db/testFixtures';
+import { documentCategoryIdOf, markCompanyEmailsVerified } from '../db/testFixtures';
 import { createDocumentService } from '../document/documentService';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
@@ -249,7 +249,7 @@ describe('활동 기록', () => {
     const document = await id(`/projects/${project}/documents`, {
       fileId: file,
       title: '1층 시공도',
-      category: 'DRAWING',
+      categoryId: documentCategoryIdOf((await get('/company/options')).body, '도면·작업지시서'),
     });
 
     expect((await send('delete', `/material-records/${record}`)).status).toBe(200);
