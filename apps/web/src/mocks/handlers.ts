@@ -950,7 +950,7 @@ export const handlers = [
     if ('response' in body) return body.response;
 
     const items = getOptions(account);
-    const { kind, name } = body.data;
+    const { kind, name, sensitiveDefault } = body.data;
     const key = normalizeOptionName(name);
 
     if (items.some((item) => item.kind === kind && normalizeOptionName(item.name) === key)) {
@@ -965,7 +965,13 @@ export const handlers = [
       ]);
     }
 
-    const created = { id: crypto.randomUUID(), kind, name, isActive: true };
+    const created = {
+      id: crypto.randomUUID(),
+      kind,
+      name,
+      isActive: true,
+      sensitiveDefault: kind === 'DOCUMENT_CATEGORY' && (sensitiveDefault ?? false),
+    };
 
     saveOptions(account, [...items, created]);
 
@@ -1038,7 +1044,7 @@ export const handlers = [
 
     if (!target) return apiError('NOT_FOUND');
 
-    const { name, isActive } = body.data;
+    const { name, isActive, sensitiveDefault } = body.data;
 
     if (
       name !== undefined &&
@@ -1054,7 +1060,15 @@ export const handlers = [
       ]);
     }
 
-    const updated = { ...target, name: name ?? target.name, isActive: isActive ?? target.isActive };
+    const updated = {
+      ...target,
+      name: name ?? target.name,
+      isActive: isActive ?? target.isActive,
+      sensitiveDefault:
+        target.kind === 'DOCUMENT_CATEGORY'
+          ? (sensitiveDefault ?? target.sensitiveDefault)
+          : target.sensitiveDefault,
+    };
 
     saveOptions(
       account,

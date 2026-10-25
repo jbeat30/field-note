@@ -157,7 +157,7 @@ export const createCompletionService = (
             }),
             tx.document.findMany({
               where: { projectId, deletedAt: null },
-              include: { versions: { select: { revisionDate: true } } },
+              include: { category: true, versions: { select: { revisionDate: true } } },
               orderBy: [{ updatedAt: 'desc' }, { id: 'desc' }],
             }),
           ]);
@@ -314,7 +314,7 @@ export const createCompletionService = (
             .map((document) => ({
               id: document.id,
               title: document.title,
-              category: document.category,
+              categoryName: document.category.name,
               versionCount: document.versions.length,
               latestRevisionDate: fromDate(
                 document.versions

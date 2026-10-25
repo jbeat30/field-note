@@ -272,11 +272,21 @@ const seedReady = async (s: Company) => {
       uploadedBy: user.id,
     },
   });
+  const documentCategory = await db.owner.optionItem.create({
+    data: {
+      companyId,
+      kind: 'DOCUMENT_CATEGORY',
+      name: '계약·공문',
+      nameKey: '계약·공문',
+      sortOrder: 0,
+      sensitiveDefault: true,
+    },
+  });
   const document = await db.owner.document.create({
     data: {
       companyId,
       projectId: s.projectId,
-      category: 'CONTRACT',
+      categoryId: documentCategory.id,
       title: `${companyId.slice(-6)} 도급 계약서`,
       isSensitive: true,
       createdBy: user.id,

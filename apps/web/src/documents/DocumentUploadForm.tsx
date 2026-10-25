@@ -1,10 +1,7 @@
 import {
-  DOCUMENT_CATEGORIES,
-  DOCUMENT_CATEGORY_HINTS,
-  DOCUMENT_CATEGORY_LABELS,
   resolveSensitive,
   todayInSeoul,
-  type DocumentCategory,
+  type OptionItem,
   ERROR_MESSAGES,
   VALIDATION_MESSAGES,
 } from '@field-note/shared';
@@ -31,8 +28,8 @@ export type DocumentFormValues = {
   // 올려 둔 임시 파일 (저장하면 서버가 문서에 연결해 확정)
   file: StagedFile;
   title: string;
-  category: DocumentCategory;
-  // 직접 정하지 않았으면 undefined (분류 기본값을 서버가 적용)
+  categoryId: string;
+  // 직접 정하지 않았으면 undefined (문서 종류의 민감 기본값을 서버가 적용)
   isSensitive: boolean | undefined;
   revisionDate: string;
   reason: string;
@@ -42,6 +39,8 @@ export type DocumentUploadFormProps = {
   // 새 문서는 이름·분류·민감 표시까지, 새 버전은 파일·개정일·사유만 입력
   mode: 'create' | 'version';
   projectId: string;
+  // 고를 수 있는 문서 종류 (새 문서에서만 씀)
+  categories?: readonly OptionItem[];
   // 올려 둔 임시 파일 목록 (닫기·이탈 확인을 위해 폼을 여는 쪽이 들고 있음)
   staged: StagedFiles;
   // 파일 올리기 (시험·스토리에서 교체)
@@ -54,6 +53,7 @@ export type DocumentUploadFormProps = {
 export const DocumentUploadForm = ({
   mode,
   projectId,
+  categories = [],
   staged,
   stage = (file, onProgress) => stageDocumentFile(projectId, file, onProgress),
   onSubmit,
@@ -66,8 +66,8 @@ export const DocumentUploadForm = ({
   const [title, setTitle] = useState('');
   // 이름을 직접 고쳤는지 (고치기 전에는 파일을 바꿀 때마다 파일 이름으로 제안)
   const [isTitleEdited, setIsTitleEdited] = useState(false);
-  const [category, setCategory] = useState<DocumentCategory>('OTHER');
-  // 사용자가 민감 표시를 직접 건드렸는지 (건드리기 전에는 분류에 따라 자동)
+  const [pickedCategoryId, setPickedCategoryId] = useState('');
+  // 사용자가 민감 표시를 직접 건드렸는지 (건드리기 전에는 종류의 민감 기본값에 따라 자동)
   const [sensitiveOverride, setSensitiveOverride] = useState<boolean | undefined>(undefined);
   const [revisionDate, setRevisionDate] = useState(today);
   const [reason, setReason] = useState('');
@@ -75,7 +75,14 @@ export const DocumentUploadForm = ({
   const [progress, setProgress] = useState<number | null>(null);
   const [isDragging, setIsDragging] = useState(false);
 
-  const isSensitive = sensitiveOverride ?? resolveSensitive(category);
+  // 고르지 않았으면 "기타", 없으면 첫 종류
+  const categoryId =
+    pickedCategoryId ||
+    (categories.find((item) => item.name === '기타') ?? categories[0])?.id ||
+    '';
+  const isSensitive =
+    sensitiveOverride ??
+    resolveSensitive(categories.find((item) => item.id === categoryId)?.sensitiveDefault ?? false);
   const isBusy = progress !== null;
   // 새 문서일 때 이름을 직접 고치기 전이면 파일 이름을 제안
   const shownTitle = isTitleEdited || !file ? title : titleFromFileName(file.name);
@@ -144,7 +151,7 @@ export const DocumentUploadForm = ({
       await onSubmit({
         file,
         title: shownTitle,
-        category,
+        categoryId,
         isSensitive: sensitiveOverride,
         revisionDate,
         reason,
@@ -152,7 +159,7 @@ export const DocumentUploadForm = ({
       staged.release();
       setTitle('');
       setIsTitleEdited(false);
-      setCategory('OTHER');
+      setPickedCategoryId('');
       setSensitiveOverride(undefined);
       setReason('');
 
@@ -255,15 +262,12 @@ export const DocumentUploadForm = ({
               }}
             />
           </FormField>
-          <FormField label="분류" hint={DOCUMENT_CATEGORY_HINTS[category] || undefined}>
+          <FormField label="종류">
             <Select
-              value={category}
+              value={categoryId}
               disabled={isBusy}
-              onValueChange={setCategory}
-              options={DOCUMENT_CATEGORIES.map((value) => ({
-                value,
-                label: DOCUMENT_CATEGORY_LABELS[value],
-              }))}
+              onValueChange={setPickedCategoryId}
+              options={categories.map((item) => ({ value: item.id, label: item.name }))}
             />
           </FormField>
           <label className="flex min-h-touch items-center gap-3 text-base">

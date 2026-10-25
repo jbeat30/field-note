@@ -2384,9 +2384,10 @@ export interface paths {
                                 /** Format: uuid */
                                 id: string;
                                 /** @enum {string} */
-                                kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
+                                kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY" | "DOCUMENT_CATEGORY";
                                 name: string;
                                 isActive: boolean;
+                                sensitiveDefault: boolean;
                             }[];
                         };
                     };
@@ -2425,8 +2426,9 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
+                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY" | "DOCUMENT_CATEGORY";
                         name: string;
+                        sensitiveDefault?: boolean;
                     };
                 };
             };
@@ -2441,9 +2443,10 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
+                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY" | "DOCUMENT_CATEGORY";
                             name: string;
                             isActive: boolean;
+                            sensitiveDefault: boolean;
                         };
                     };
                 };
@@ -2513,7 +2516,7 @@ export interface paths {
                 content: {
                     "application/json": {
                         /** @enum {string} */
-                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
+                        kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY" | "DOCUMENT_CATEGORY";
                         ids: string[];
                     };
                 };
@@ -2625,6 +2628,7 @@ export interface paths {
                     "application/json": {
                         name?: string;
                         isActive?: boolean;
+                        sensitiveDefault?: boolean;
                     };
                 };
             };
@@ -2639,9 +2643,10 @@ export interface paths {
                             /** Format: uuid */
                             id: string;
                             /** @enum {string} */
-                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY";
+                            kind: "JOB_TYPE" | "WORK_CATEGORY" | "TRADE" | "WORKER_TYPE" | "CREDENTIAL_TYPE" | "EXPENSE_CATEGORY" | "INCOME_CATEGORY" | "DOCUMENT_CATEGORY";
                             name: string;
                             isActive: boolean;
+                            sensitiveDefault: boolean;
                         };
                     };
                 };
@@ -6961,8 +6966,7 @@ export interface paths {
                                 /** Format: uuid */
                                 documentId: string;
                                 title: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                categoryName: string;
                                 isSensitive: boolean;
                                 latestVersionNo: number;
                                 contentType: string;
@@ -7204,8 +7208,7 @@ export interface paths {
                                 /** Format: uuid */
                                 documentId: string;
                                 title: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                categoryName: string;
                                 isSensitive: boolean;
                                 latestVersionNo: number;
                                 contentType: string;
@@ -7343,8 +7346,7 @@ export interface paths {
                                 /** Format: uuid */
                                 documentId: string;
                                 title: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                categoryName: string;
                                 isSensitive: boolean;
                                 latestVersionNo: number;
                                 contentType: string;
@@ -7489,8 +7491,7 @@ export interface paths {
                                 /** Format: uuid */
                                 documentId: string;
                                 title: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                categoryName: string;
                                 isSensitive: boolean;
                                 latestVersionNo: number;
                                 contentType: string;
@@ -7636,8 +7637,7 @@ export interface paths {
                                 /** Format: uuid */
                                 documentId: string;
                                 title: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                categoryName: string;
                                 isSensitive: boolean;
                                 latestVersionNo: number;
                                 contentType: string;
@@ -7784,8 +7784,7 @@ export interface paths {
                                 /** Format: uuid */
                                 documentId: string;
                                 title: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                categoryName: string;
                                 isSensitive: boolean;
                                 latestVersionNo: number;
                                 contentType: string;
@@ -7927,8 +7926,7 @@ export interface paths {
                                 /** Format: uuid */
                                 documentId: string;
                                 title: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                categoryName: string;
                                 isSensitive: boolean;
                                 latestVersionNo: number;
                                 contentType: string;
@@ -11522,8 +11520,7 @@ export interface paths {
                                     /** Format: uuid */
                                     id: string;
                                     title: string;
-                                    /** @enum {string} */
-                                    category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                    categoryName: string;
                                     versionCount: number;
                                     /** Format: date */
                                     latestRevisionDate: string;
@@ -15928,7 +15925,7 @@ export interface paths {
         get: {
             parameters: {
                 query?: {
-                    category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                    categoryId?: string;
                     q?: string;
                     pinned?: "true" | "false";
                 };
@@ -15952,8 +15949,9 @@ export interface paths {
                                 id: string;
                                 /** Format: uuid */
                                 projectId: string;
-                                /** @enum {string} */
-                                category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                                /** Format: uuid */
+                                categoryId: string;
+                                categoryName: string;
                                 title: string;
                                 isSensitive: boolean;
                                 isPinned: boolean;
@@ -16064,11 +16062,8 @@ export interface paths {
                         /** Format: uuid */
                         fileId: string;
                         title: string;
-                        /**
-                         * @default OTHER
-                         * @enum {string}
-                         */
-                        category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                        /** Format: uuid */
+                        categoryId: string;
                         isSensitive?: boolean;
                         /** Format: date */
                         revisionDate?: string;
@@ -16088,8 +16083,9 @@ export interface paths {
                             id: string;
                             /** Format: uuid */
                             projectId: string;
-                            /** @enum {string} */
-                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                            /** Format: uuid */
+                            categoryId: string;
+                            categoryName: string;
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
@@ -16237,8 +16233,9 @@ export interface paths {
                             id: string;
                             /** Format: uuid */
                             projectId: string;
-                            /** @enum {string} */
-                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                            /** Format: uuid */
+                            categoryId: string;
+                            categoryName: string;
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
@@ -16451,8 +16448,8 @@ export interface paths {
                 content: {
                     "application/json": {
                         title?: string;
-                        /** @enum {string} */
-                        category?: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                        /** Format: uuid */
+                        categoryId?: string;
                         isSensitive?: boolean;
                         isPinned?: boolean;
                         includeInSummary?: boolean;
@@ -16471,8 +16468,9 @@ export interface paths {
                             id: string;
                             /** Format: uuid */
                             projectId: string;
-                            /** @enum {string} */
-                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                            /** Format: uuid */
+                            categoryId: string;
+                            categoryName: string;
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;
@@ -16628,8 +16626,9 @@ export interface paths {
                             id: string;
                             /** Format: uuid */
                             projectId: string;
-                            /** @enum {string} */
-                            category: "DRAWING" | "CONTRACT" | "SAFETY" | "QUOTE" | "OTHER";
+                            /** Format: uuid */
+                            categoryId: string;
+                            categoryName: string;
                             title: string;
                             isSensitive: boolean;
                             isPinned: boolean;

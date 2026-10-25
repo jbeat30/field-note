@@ -1,4 +1,4 @@
-import { DOCUMENT_CATEGORY_LABELS, type Document } from '@field-note/shared';
+import type { Document } from '@field-note/shared';
 import { Ellipsis } from 'lucide-react';
 
 import { Badge } from '../components/ui/badge';
@@ -59,7 +59,7 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
                 </Badge>
               )}
               <span className="mt-0.5 block text-xs text-sub md:hidden">
-                {DOCUMENT_CATEGORY_LABELS[document.category]}, {document.versionCount}판
+                {document.categoryName}, {document.versionCount}판
               </span>
               {!isReady && (
                 <span className="ml-2 text-xs text-sub">
@@ -67,9 +67,7 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
                 </span>
               )}
             </TableCell>
-            <TableCell className="hidden text-sub md:table-cell">
-              {DOCUMENT_CATEGORY_LABELS[document.category]}
-            </TableCell>
+            <TableCell className="hidden text-sub md:table-cell">{document.categoryName}</TableCell>
             <TableCell className="whitespace-nowrap text-sub">
               <span className="font-semibold tabular-nums text-foreground">
                 v{latest.versionNo}

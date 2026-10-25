@@ -3,7 +3,6 @@ import {
   CHANGE_WORK_REQUESTER_MAX_LENGTH,
   CHANGE_WORK_STATUSES,
   CHANGE_WORK_STATUS_LABELS,
-  DOCUMENT_CATEGORY_LABELS,
   changeWorkUpdateSchema,
   daysInStatus,
   todayInSeoul,
@@ -373,7 +372,7 @@ const Evidence = ({
               >
                 <span className="block truncate text-sm font-semibold">{item.title}</span>
                 <span className="block truncate text-xs text-sub">
-                  {DOCUMENT_CATEGORY_LABELS[item.category]}
+                  {item.categoryName}
                   {item.isSensitive ? ', 민감' : ''}, {formatDay(item.linkedAt.slice(0, 10))}
                 </span>
               </button>

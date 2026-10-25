@@ -30,6 +30,19 @@ const fakeStage =
     };
   };
 
+// 목록 관리의 문서 종류 (계약·공문은 민감 자료로 시작)
+const STORY_CATEGORIES = [
+  ['도면·작업지시서', false],
+  ['계약·공문', true],
+  ['기타', false],
+].map(([name, sensitiveDefault], index) => ({
+  id: `0198d000-0000-7000-8000-00000000050${index + 1}`,
+  kind: 'DOCUMENT_CATEGORY' as const,
+  name: name as string,
+  isActive: true,
+  sensitiveDefault: sensitiveDefault as boolean,
+}));
+
 const StoryForm = ({ uploadedAt, discard, stage, ...rest }: StoryArgs) => {
   // 이전 스토리에서 기기에 남은 초안을 이어받지 않도록 렌더마다 다른 구분자를 씀
   const [scope] = useState(() => `story:${crypto.randomUUID()}`);
@@ -39,6 +52,7 @@ const StoryForm = ({ uploadedAt, discard, stage, ...rest }: StoryArgs) => {
     <DocumentUploadForm
       {...rest}
       projectId="project-1"
+      categories={STORY_CATEGORIES}
       staged={staged}
       stage={stage ?? fakeStage(uploadedAt)}
     />
@@ -72,7 +86,7 @@ export const CreateWithSuggestedTitle: Story = {
     await expect(canvas.getByLabelText('문서 이름')).toHaveValue('1층 시공도');
     await expect(await canvas.findByText(/올려 두었습니다/)).toBeInTheDocument();
 
-    await chooseOption(canvas.getByLabelText('분류'), '도면');
+    await chooseOption(canvas.getByLabelText('종류'), '도면');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await waitFor(() =>
@@ -80,7 +94,7 @@ export const CreateWithSuggestedTitle: Story = {
         expect.objectContaining({
           file: expect.objectContaining({ fileId: 'file-1층 시공도.pdf' }),
           title: '1층 시공도',
-          category: 'DRAWING',
+          categoryId: '0198d000-0000-7000-8000-000000000501',
           isSensitive: undefined,
         }),
       ),
@@ -95,7 +109,7 @@ export const ContractIsSensitiveByDefault: Story = {
     const checkbox = canvas.getByLabelText(/민감 자료/);
 
     await expect(checkbox).not.toBeChecked();
-    await chooseOption(canvas.getByLabelText('분류'), '계약·공문');
+    await chooseOption(canvas.getByLabelText('종류'), '계약·공문');
     await expect(checkbox).toBeChecked();
 
     await userEvent.click(checkbox);
@@ -107,7 +121,10 @@ export const ContractIsSensitiveByDefault: Story = {
 
     await waitFor(() =>
       expect(args.onSubmit).toHaveBeenCalledWith(
-        expect.objectContaining({ category: 'CONTRACT', isSensitive: false }),
+        expect.objectContaining({
+          categoryId: '0198d000-0000-7000-8000-000000000502',
+          isSensitive: false,
+        }),
       ),
     );
   },

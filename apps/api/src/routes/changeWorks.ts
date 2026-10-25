@@ -238,7 +238,7 @@ export const registerChangeWorkRoutes = (
         const document = await documents!.create(auth!.companyId, auth!.userId, projectId, {
           fileId: input.fileId,
           title: input.title,
-          category: 'CONTRACT',
+          categoryId: await documents!.defaultCategoryId(auth!.companyId),
         });
 
         try {
