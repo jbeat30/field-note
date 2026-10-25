@@ -70,7 +70,7 @@ export const Select = <T extends string>({
         className={cn(
           controlClass,
           controlSize({ size }),
-          'group flex items-center justify-between gap-2 text-left data-[placeholder]:text-foreground/65',
+          'group flex items-center justify-between gap-2 text-left data-[placeholder]:text-sub',
           className,
         )}
         {...aria}
@@ -81,7 +81,7 @@ export const Select = <T extends string>({
         <SelectPrimitive.Icon asChild>
           <ChevronDown
             aria-hidden
-            className="size-4.5 shrink-0 text-foreground/50 transition-transform duration-(--duration-fast) group-data-[state=open]:rotate-180"
+            className="size-4.5 shrink-0 text-sub transition-transform duration-(--duration-fast) group-data-[state=open]:rotate-180"
           />
         </SelectPrimitive.Icon>
       </SelectPrimitive.Trigger>
@@ -128,10 +128,10 @@ const SelectItem = ({ option, muted = false }: { option: SelectOption; muted?: b
   >
     <span className="min-w-0 flex-1">
       <SelectPrimitive.ItemText>
-        <span className={cn('block truncate', muted && 'text-foreground/65')}>{option.label}</span>
+        <span className={cn('block truncate', muted && 'text-sub')}>{option.label}</span>
       </SelectPrimitive.ItemText>
       {option.description && (
-        <span className="block truncate text-xs text-foreground/65">{option.description}</span>
+        <span className="block truncate text-xs text-sub">{option.description}</span>
       )}
     </span>
     <SelectPrimitive.ItemIndicator className="absolute right-2.5 flex items-center">

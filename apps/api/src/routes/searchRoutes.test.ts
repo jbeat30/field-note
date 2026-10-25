@@ -3,8 +3,9 @@ import request from 'supertest';
 
 import { createApp } from '../app';
 import { createAccountService } from '../auth/accountService';
+import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
-import { markCompanyEmailsVerified } from '../db/testFixtures';
+import { documentCategoryIdOf, markCompanyEmailsVerified } from '../db/testFixtures';
 import { createFileService, registerFileWorker } from '../file/fileService';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createCompanyWithInvitation } from '../operator/operatorService';
@@ -53,6 +54,7 @@ const harness = async () => {
   const instance = createApp({
     sessionStore: createPrismaSessionStore(db.auth),
     accountService: createAccountService({ auth: db.auth, app: db.app }),
+    options: createOptionService(db.app),
     employees: createEmployeeService(db.app, () => NOW),
     partners: createPartnerService(db.app),
     projects: createProjectService(db.app, () => NOW),
@@ -234,7 +236,7 @@ const populate = async (s: Awaited<ReturnType<typeof setup>>) => {
     await s.post(`/projects/${s.projectId}/documents`, {
       fileId,
       title: '배관 시공도',
-      category: 'CONTRACT',
+      categoryId: documentCategoryIdOf((await s.get('/company/options')).body, '계약·공문'),
     })
   ).body;
   const employee = (await s.post('/employees', { name: '배관반장', title: '반장' })).body;

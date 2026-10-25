@@ -13,9 +13,9 @@ export const DemoBanner = () => {
   return (
     <div
       role="note"
-      className="flex items-center gap-2 border-b border-primary/20 bg-primary-subtle px-4 py-2 text-sm print:hidden"
+      className="flex items-center gap-2 bg-[#14110d] px-4 py-2 text-[12.5px] font-medium text-[#d9cfb9] md:px-11 print:hidden"
     >
-      <FlaskConical aria-hidden className="size-4 shrink-0 text-primary" />
+      <FlaskConical aria-hidden className="size-4 shrink-0 text-accent" />
       <p>시연용 체험 환경입니다. 모든 데이터는 가상이며 매일 새벽에 처음 상태로 초기화됩니다</p>
     </div>
   );

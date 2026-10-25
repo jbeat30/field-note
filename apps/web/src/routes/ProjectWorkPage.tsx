@@ -5,16 +5,16 @@ import {
   todayInSeoul,
   type WorkLogSummary,
 } from '@field-note/shared';
-import { Plus } from 'lucide-react';
 import { useMemo } from 'react';
+import { Plus } from 'lucide-react';
 import { Link, useNavigate, useParams, useSearchParams } from 'react-router';
 
+import { Button } from '../components/ui/button';
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
 import { columnHelper, DataTable } from '../components/ui/data-table';
 import { EmptyState } from '../components/ui/empty-state';
-import { PageHeader } from '../components/ui/page-header';
+import { StatGroup } from '../components/ui/stat-group';
 import { useEmployees } from '../employees/useEmployees';
 import { PeriodNav } from '../components/ui/period-nav';
 import { formatDay } from '../lib/dates';
@@ -22,6 +22,7 @@ import { projectWorkPath } from '../lib/projectPaths';
 import { useProject } from '../projects/useProjects';
 import { ProjectWorkCalendar } from '../workLogs/ProjectWorkCalendar';
 import { useWorkLogList } from '../workLogs/useWorkLogs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const helper = columnHelper<WorkLogSummary>();
 
@@ -36,7 +37,7 @@ const buildColumns = (projectId: string) =>
       sortFn: 'text',
       cell: ({ row }) => (
         <Link
-          className="font-semibold hover:text-primary hover:underline"
+          className="font-semibold hover:text-sub"
           to={projectWorkPath(projectId, row.original.workDate)}
           onClick={(event) => event.stopPropagation()}
         >
@@ -125,27 +126,19 @@ export const ProjectWorkPage = () => {
   );
   const names = new Map((employees.data ?? []).map((item) => [item.id, item.name]));
   const todayLog = rows.find((item) => item.workDate === today);
+  // 보고 있는 달의 기록한 날 수와 일한 시간
+  const monthRows = rows.filter((item) => item.workDate.startsWith(month.slice(0, 7)));
+  const monthMinutes = monthRows.reduce(
+    (sum, item) => sum + item.workers.reduce((inner, worker) => inner + worker.minutes, 0),
+    0,
+  );
   const todayCheck = project.data
     ? checkWorkDate(today, project.data, today)
     : { ok: false as const, message: '' };
 
   return (
     <div className="flex flex-col gap-5">
-      <PageHeader
-        level={2}
-        title="작업 달력"
-        description="날짜를 눌러 그날 일한 직원과 시간, 한 일을 기록합니다. 날마다 나온 사람이 달라도 됩니다"
-        actions={
-          todayCheck.ok ? (
-            <Button asChild>
-              <Link to={projectWorkPath(id, today)}>
-                <Plus aria-hidden className="size-5" />
-                {todayLog ? '오늘 작업 고치기' : '오늘 작업 입력'}
-              </Link>
-            </Button>
-          ) : undefined
-        }
-      />
+      <h2 className="sr-only">작업 달력</h2>
 
       {project.data && !todayCheck.ok && (
         <Alert variant="info">
@@ -155,7 +148,43 @@ export const ProjectWorkPage = () => {
 
       {logs.isError && <Alert>작업 내역을 불러오지 못했습니다</Alert>}
 
-      <section className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4 sm:p-5">
+      <StatGroup
+        items={[
+          { label: '이번 달 기록한 날', value: monthRows.length, unit: '일', surface: 'cream' },
+          {
+            label: '이번 달 일한 시간',
+            value: roundTo(monthMinutes / 60, 1),
+            unit: '시간',
+            surface: 'lime',
+          },
+          {
+            label: '오늘',
+            value: todayLog ? '기록함' : '기록 없음',
+            surface: 'accent',
+          },
+        ]}
+      />
+
+      <section className="flex flex-col gap-3 rounded-[30px] bg-surface-subtle p-5 sm:p-7">
+        <div className="flex items-start justify-between gap-3">
+          <div className="flex flex-col gap-1">
+            <h3 className="text-xl font-extrabold tracking-tight">
+              {Number(month.slice(5, 7))}월 작업 달력
+            </h3>
+            <p className="text-[13px] text-sub">
+              날짜를 눌러 그날 일한 직원과 시간, 한 일을 기록합니다. 날마다 나온 사람이 달라도
+              됩니다
+            </p>
+          </div>
+          {todayCheck.ok && (
+            <Button asChild size="sm" className="shrink-0">
+              <Link to={projectWorkPath(id, today)}>
+                <Plus aria-hidden className="size-4" />
+                {todayLog ? '오늘 작업 고치기' : '오늘 작업 입력'}
+              </Link>
+            </Button>
+          )}
+        </div>
         <PeriodNav
           label={`${month.slice(0, 4)}년 ${Number(month.slice(5, 7))}월`}
           prevLabel="이전 달"
@@ -176,13 +205,13 @@ export const ProjectWorkPage = () => {
             nameOf={(employeeId) => names.get(employeeId) ?? '직원'}
           />
         )}
-        <p className="text-xs text-foreground/70">
+        <p className="text-xs text-sub">
           흐린 칸은 프로젝트 기간({project.data?.plannedStart} ~ {project.data?.plannedEnd})
           밖이거나 아직 오지 않은 날이라 입력할 수 없습니다
         </p>
       </section>
 
-      {logs.isPending && <p className="text-sm">작업 내역을 불러오는 중</p>}
+      {logs.isPending && <LoadingBlock label="작업 내역을 불러오는 중" />}
       {logs.data && (
         <section className="flex flex-col gap-2" aria-labelledby="logged-days-heading">
           <h2 id="logged-days-heading" className="text-lg font-bold">

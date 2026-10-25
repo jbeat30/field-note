@@ -95,7 +95,7 @@ export const PhotoDetailDialog = ({
           >
             <div className="flex items-center justify-between gap-2">
               <Dialog.Title className="text-lg font-bold">
-                {PHOTO_CATEGORY_LABELS[photo.category]} · {formatDay(photo.workDate)}
+                {PHOTO_CATEGORY_LABELS[photo.category]}, {formatDay(photo.workDate)}
               </Dialog.Title>
               <Dialog.Close asChild>
                 <Button type="button" variant="secondary">
@@ -117,7 +117,7 @@ export const PhotoDetailDialog = ({
                   className="max-h-[60vh] w-full object-contain"
                 />
               ) : (
-                <p className="p-4 text-sm text-foreground/70">
+                <p className="p-4 text-sm text-sub">
                   {photo.file.status === 'REJECTED'
                     ? '검사에서 거부된 사진입니다'
                     : '사진을 처리하는 중입니다'}
@@ -148,7 +148,7 @@ export const PhotoDetailDialog = ({
                 </Button>
               )}
             </div>
-            <p className="text-sm text-foreground/70">
+            <p className="text-sm text-sub">
               촬영 {new Date(photo.takenAt).toLocaleString('ko-KR', { timeZone: 'Asia/Seoul' })}
             </p>
             <FormField label="구분">
@@ -163,6 +163,7 @@ export const PhotoDetailDialog = ({
             </FormField>
             <FormField label="구역">
               <Input
+                placeholder="예: 2층 복도"
                 value={area}
                 maxLength={100}
                 onChange={(event) => setArea(event.target.value)}
@@ -170,6 +171,7 @@ export const PhotoDetailDialog = ({
             </FormField>
             <FormField label="설명">
               <Textarea
+                placeholder="사진 설명을 입력하세요"
                 value={description}
                 maxLength={500}
                 onChange={(event) => setDescription(event.target.value)}
@@ -184,7 +186,7 @@ export const PhotoDetailDialog = ({
               />
               <span>
                 준공 요약에 넣기
-                <span className="block text-foreground/65">
+                <span className="block text-sub">
                   고객에게 내는 준공 요약에 이 사진을 싣습니다 (프로젝트마다 {SUMMARY_PHOTO_MAX}
                   장까지, 하나도 고르지 않으면 작업 후 사진 최근 8장)
                 </span>

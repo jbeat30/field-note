@@ -72,7 +72,7 @@ test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복�
   await expect(codesDialog.getByRole('button', { name: '완료' })).toBeDisabled();
   await codesDialog.getByRole('checkbox').check();
   await codesDialog.getByRole('button', { name: '완료' }).click();
-  await expect(page.getByText('켜짐 · 복구 코드 8개 남음')).toBeVisible();
+  await expect(page.getByText('켜짐, 복구 코드 8개 남음')).toBeVisible();
 
   // 로그인: 비밀번호만으로는 통과하지 못하고 인증 코드 칸이 열림
   await logout(page);
@@ -85,7 +85,7 @@ test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복�
   // 맞는 코드면 통과 (등록에 쓴 구간은 재사용할 수 없어 다음 구간의 코드를 사용, 틀린 코드는 단위·스토리 시험이 확인)
   await page.getByLabel('인증 코드').fill(totpCode(secret, 30));
   await page.getByRole('button', { name: '로그인', exact: true }).click();
-  await expect(page.getByRole('heading', { name: '한빛판금' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /안녕하세요/ })).toBeVisible();
 
   // 끄기: 복구 코드로 본인 확인 (한 번 쓴 복구 코드는 소모됨)
   await page.goto('/settings');
@@ -96,7 +96,7 @@ test('2단계 인증을 켜면 로그인에 인증 코드가 필요하고, 복�
   await disable.getByLabel('현재 비밀번호', { exact: true }).fill(DEMO_LOGIN.password);
   await disable.getByLabel('인증 코드').fill(recoveryCodes[0]!);
   await disable.getByRole('button', { name: '2단계 인증 끄기' }).click();
-  await expect(page.getByText(/꺼짐 · 켜면 로그인할 때/)).toBeVisible();
+  await expect(page.getByText(/꺼짐, 켜면 로그인할 때/)).toBeVisible();
 
   // 꺼진 뒤에는 이전처럼 비밀번호만으로 로그인됨
   await logout(page);

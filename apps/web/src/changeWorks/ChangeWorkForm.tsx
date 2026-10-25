@@ -104,6 +104,7 @@ export const ChangeWorkForm = ({
         hint="고객 담당자, 현장소장 등 누가 요청했는지"
       >
         <Input
+          placeholder="요청한 사람 또는 업체"
           maxLength={CHANGE_WORK_REQUESTER_MAX_LENGTH}
           value={requester}
           onChange={(event) => setRequester(event.target.value)}
@@ -111,6 +112,7 @@ export const ChangeWorkForm = ({
       </FormField>
       <FormField label="요청 내용" error={errors.content} hint="무엇이 바뀌거나 추가되는지">
         <Textarea
+          placeholder="추가 공사 내용을 입력하세요"
           maxLength={CHANGE_WORK_CONTENT_MAX_LENGTH}
           value={content}
           onChange={(event) => setContent(event.target.value)}

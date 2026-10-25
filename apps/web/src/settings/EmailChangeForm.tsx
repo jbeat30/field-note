@@ -79,6 +79,7 @@ const CodeStep = ({
       {notice && <Alert variant="info">{notice}</Alert>}
       <FormField label="인증 코드" error={errors.code?.message}>
         <Input
+          placeholder="메일로 받은 6자리 코드"
           inputMode="numeric"
           autoComplete="one-time-code"
           maxLength={6}
@@ -165,7 +166,13 @@ export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: bool
         <Alert variant="info">이메일을 바꿨습니다. 이전 주소로 변경 알림을 보냈습니다</Alert>
       )}
       <FormField label="새 이메일" error={errors.newEmail?.message}>
-        <Input type="email" autoComplete="email" inputMode="email" {...register('newEmail')} />
+        <Input
+          placeholder="name@example.com"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          {...register('newEmail')}
+        />
       </FormField>
       {needsPassword && (
         <FormField
@@ -173,7 +180,11 @@ export const EmailChangeForm = ({ needsPassword = true }: { needsPassword?: bool
           hint="계정 보호를 위해 한 번 더 확인합니다"
           error={errors.currentPassword?.message}
         >
-          <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
+          <PasswordInput
+            placeholder="현재 비밀번호를 입력하세요"
+            autoComplete="current-password"
+            {...register('currentPassword')}
+          />
         </FormField>
       )}
       <Button type="submit" disabled={isSubmitting}>

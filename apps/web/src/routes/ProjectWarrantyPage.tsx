@@ -12,6 +12,7 @@ import { useProject } from '../projects/useProjects';
 import { WarrantyCertificates } from '../warranty/WarrantyCertificates';
 import { WarrantyForm } from '../warranty/WarrantyForm';
 import { useWarranty } from '../warranty/useWarranty';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const formatChangedAt = (iso: string) =>
   new Intl.DateTimeFormat('ko-KR', {
@@ -32,7 +33,9 @@ export const ProjectWarrantyPage = () => {
   const warranty = useWarranty(id);
 
   if (project.isPending || warranty.isPending) {
-    return <p className="text-sm">보증 정보를 불러오는 중</p>;
+    return (
+      <LoadingBlock label="보증 정보를 불러오는 중" variant="blocks" heights={[360, 300, 300]} />
+    );
   }
 
   if (!project.data || !warranty.data) {
@@ -48,7 +51,7 @@ export const ProjectWarrantyPage = () => {
   );
 
   const showPeriod = data.months > 0 && data.endOn !== null && data.daysLeft !== null;
-  const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
+  const card = 'flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5';
 
   return (
     <div className="flex flex-col gap-5">
@@ -60,7 +63,7 @@ export const ProjectWarrantyPage = () => {
             보증은 완료 후에 설정합니다
           </h2>
           <p className="text-sm">프로젝트를 완료하면 보증을 설정할 수 있습니다</p>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             기본값은 {data.months === 0 ? '보증 없음' : `${data.months}개월`}이고,{' '}
             {WARRANTY_START_BASIS_LABELS[data.startBasis]}부터 셉니다
           </p>
@@ -95,12 +98,12 @@ export const ProjectWarrantyPage = () => {
                 ['종료 예정일', data.endOn ?? '-'],
               ].map(([label, value]) => (
                 <div key={label} className="rounded-lg bg-surface-nested p-3">
-                  <dt className="text-xs text-foreground/70">{label}</dt>
+                  <dt className="text-xs text-sub">{label}</dt>
                   <dd className="font-semibold">{value}</dd>
                 </div>
               ))}
             </dl>
-            <p className="text-xs text-foreground/70">
+            <p className="text-xs text-sub">
               시작 기준: {WARRANTY_START_BASIS_LABELS[data.startBasis]}
             </p>
           </section>
@@ -129,7 +132,7 @@ export const ProjectWarrantyPage = () => {
               변경 이력 ({data.changes.length})
             </summary>
             {data.changes.length === 0 ? (
-              <p className="text-sm text-foreground/70">아직 저장한 보증 설정이 없습니다</p>
+              <p className="text-sm text-sub">아직 저장한 보증 설정이 없습니다</p>
             ) : (
               <ol className="divide-y divide-line">
                 {data.changes.map((change) => (
@@ -138,7 +141,7 @@ export const ProjectWarrantyPage = () => {
                       {change.fromMonths === null
                         ? `${change.toMonths}개월로 설정`
                         : `${change.fromMonths}개월 → ${change.toMonths}개월`}
-                      {' · '}
+                      {', '}
                       종료 예정일 {change.fromEndOn ? `${change.fromEndOn} → ` : ''}
                       {change.toEndOn}
                     </span>
@@ -146,9 +149,7 @@ export const ProjectWarrantyPage = () => {
                       시작일 {change.startOn} ({WARRANTY_START_BASIS_LABELS[change.startBasis]})
                     </span>
                     {change.reason && <span>사유: {change.reason}</span>}
-                    <span className="text-foreground/70">
-                      기록 {formatChangedAt(change.changedAt)}
-                    </span>
+                    <span className="text-sub">기록 {formatChangedAt(change.changedAt)}</span>
                   </li>
                 ))}
               </ol>

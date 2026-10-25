@@ -4,13 +4,16 @@ import { create } from 'zustand';
 type UiState = {
   isQuickAddOpen: boolean;
   setQuickAddOpen: (isOpen: boolean) => void;
+  isAlertsOpen: boolean;
+  setAlertsOpen: (isOpen: boolean) => void;
 };
 
-const initialUiState = { isQuickAddOpen: false };
+const initialUiState = { isQuickAddOpen: false, isAlertsOpen: false };
 
 export const useUiStore = create<UiState>((set) => ({
   ...initialUiState,
   setQuickAddOpen: (isOpen) => set({ isQuickAddOpen: isOpen }),
+  setAlertsOpen: (isOpen) => set({ isAlertsOpen: isOpen }),
 }));
 
 export const resetUiStore = () => useUiStore.setState(initialUiState);

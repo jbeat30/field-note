@@ -8,6 +8,7 @@ import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useSocialLinkStart, useSocialMethods, useSocialUnlink } from '../auth/useSocial';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 소셜 로그인 연동: 이메일이 같다고 자동 연결하지 않고, 로그인한 상태에서만 연동
 export const SocialLoginSection = () => {
@@ -16,7 +17,7 @@ export const SocialLoginSection = () => {
   const unlink = useSocialUnlink();
 
   if (methods.isPending) {
-    return <p className="text-sm">연동 상태를 불러오는 중</p>;
+    return <LoadingBlock label="연동 상태를 불러오는 중" />;
   }
 
   if (methods.isError) {
@@ -41,7 +42,7 @@ export const SocialLoginSection = () => {
           <div key={provider} className="flex min-h-touch items-center justify-between gap-3">
             <div>
               <p className="font-medium">{label}</p>
-              <p className="text-sm text-foreground/70">{isLinked ? '연동됨' : '연동하지 않음'}</p>
+              <p className="text-sm text-sub">{isLinked ? '연동됨' : '연동하지 않음'}</p>
             </div>
             {isLinked ? (
               <Button
@@ -65,7 +66,7 @@ export const SocialLoginSection = () => {
         );
       })}
       {isLastMethod && (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           비밀번호 로그인이 없어 연동을 해제할 수 없습니다. 로그인 수단이 하나는 남아 있어야 합니다
         </p>
       )}

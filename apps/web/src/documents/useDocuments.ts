@@ -14,7 +14,7 @@ const POLL_MS = 3000;
 
 const isChecking = (status: string) => status === 'PENDING' || status === 'PROCESSING';
 
-export type DocumentFilter = { category?: string; q?: string; pinned?: boolean };
+export type DocumentFilter = { categoryId?: string; q?: string; pinned?: boolean };
 
 export const useDocuments = (projectId: string, filter: DocumentFilter = {}) =>
   useQuery({
@@ -24,7 +24,7 @@ export const useDocuments = (projectId: string, filter: DocumentFilter = {}) =>
         params: {
           path: { projectId },
           query: {
-            category: (filter.category || undefined) as DocumentCreate['category'] | undefined,
+            categoryId: filter.categoryId || undefined,
             q: filter.q?.trim() || undefined,
             pinned:
               filter.pinned === undefined ? undefined : (String(filter.pinned) as 'true' | 'false'),

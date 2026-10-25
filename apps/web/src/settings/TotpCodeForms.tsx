@@ -74,11 +74,20 @@ export const TotpDisableForm = ({
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {needsPassword && (
         <FormField label="현재 비밀번호" error={errors.currentPassword?.message}>
-          <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
+          <PasswordInput
+            placeholder="현재 비밀번호를 입력하세요"
+            autoComplete="current-password"
+            {...register('currentPassword')}
+          />
         </FormField>
       )}
       <FormField label="인증 코드" hint={CODE_HINT} error={errors.code?.message}>
-        <Input autoComplete="one-time-code" autoCapitalize="characters" {...register('code')} />
+        <Input
+          placeholder="인증 앱의 6자리 코드"
+          autoComplete="one-time-code"
+          autoCapitalize="characters"
+          {...register('code')}
+        />
       </FormField>
       <Button type="submit" variant="danger" disabled={isSubmitting}>
         {isSubmitting ? '끄는 중' : '2단계 인증 끄기'}
@@ -119,7 +128,12 @@ export const TotpRegenerateForm = ({ onDone }: { onDone: (recoveryCodes: string[
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <p className="text-sm">새 복구 코드를 받으면 이전 복구 코드는 모두 쓸 수 없게 됩니다</p>
       <FormField label="인증 코드" hint={CODE_HINT} error={errors.code?.message}>
-        <Input autoComplete="one-time-code" autoCapitalize="characters" {...register('code')} />
+        <Input
+          placeholder="인증 앱의 6자리 코드"
+          autoComplete="one-time-code"
+          autoCapitalize="characters"
+          {...register('code')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '확인 중' : '새 복구 코드 받기'}

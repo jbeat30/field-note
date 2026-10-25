@@ -2,6 +2,8 @@ import type { Meta, StoryObj } from '@storybook/react-vite';
 import { useState } from 'react';
 import { expect, screen, userEvent, within } from 'storybook/test';
 
+import { chooseOption } from '../../lib/storyActions';
+
 import { DateInput } from './date-input';
 import { FormField } from './form-field';
 
@@ -33,6 +35,18 @@ export const PickFromCalendar: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '달력 열기' }));
     await userEvent.click(await screen.findByRole('button', { name: /2026년 10월 20일/ }));
     await expect(canvas.getByLabelText('작업일')).toHaveValue('2026-10-20');
+  },
+};
+
+// 달력 위쪽의 연도 선택으로 이전 달 넘기기 없이 다른 해로 이동
+export const PickOtherYear: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+
+    await userEvent.click(canvas.getByRole('button', { name: '달력 열기' }));
+    await chooseOption(await screen.findByRole('combobox', { name: '연도 선택' }), '2024');
+    await userEvent.click(await screen.findByRole('button', { name: /2024년 10월 8일/ }));
+    await expect(canvas.getByLabelText('작업일')).toHaveValue('2024-10-08');
   },
 };
 

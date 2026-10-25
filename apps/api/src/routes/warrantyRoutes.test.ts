@@ -7,7 +7,7 @@ import { createAccountService } from '../auth/accountService';
 import { createOptionService } from '../company/optionService';
 import { createWarrantyService } from '../warranty/warrantyService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
-import { markCompanyEmailsVerified } from '../db/testFixtures';
+import { documentCategoryIdOf, markCompanyEmailsVerified } from '../db/testFixtures';
 import { createDocumentService } from '../document/documentService';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
@@ -147,7 +147,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
       return send('post', `/projects/${projectId}/documents`, {
         fileId,
         title,
-        category: 'OTHER',
+        categoryId: documentCategoryIdOf((await get('/company/options')).body, '기타'),
       }).then((res) => res.body.id as string);
     },
   };

@@ -12,6 +12,7 @@ import { addDays, formatDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 
 import { useEmployeeProjectDays } from './useWorkSummary';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
@@ -73,15 +74,15 @@ export const EmployeeWorkDaysDialog = ({
       open
       onOpenChange={(open) => !open && onClose()}
       size="lg"
-      title={`${employeeName} · 일한 날`}
+      title={`${employeeName}의 일한 날`}
       description={`${rangeLabel} 동안 이 프로젝트의 작업 기록에 들어간 날입니다. 날짜를 누르면 그날 하루 기록으로 갑니다`}
     >
       {query.isError ? (
         <Alert>일한 날을 불러오지 못했습니다</Alert>
       ) : !query.data ? (
-        <p className="text-sm">불러오는 중</p>
+        <LoadingBlock label="불러오는 중" />
       ) : days.length === 0 ? (
-        <p className="text-sm text-foreground/65">이 기간에 일한 날이 없습니다</p>
+        <p className="text-sm text-sub">이 기간에 일한 날이 없습니다</p>
       ) : (
         <>
           <StatGroup
@@ -106,10 +107,10 @@ export const EmployeeWorkDaysDialog = ({
                     >
                       <span className="flex min-w-0 flex-col gap-0.5">
                         <span className="font-medium">{formatDay(day.workDate)}</span>
-                        <span className="truncate text-xs text-foreground/65">
+                        <span className="truncate text-xs text-sub">
                           {day.categories
                             .map((item) => categoryNames.get(item.categoryId) ?? '작업')
-                            .join(' · ')}
+                            .join(', ')}
                         </span>
                       </span>
                       <span className="shrink-0 font-semibold tabular-nums">
@@ -158,7 +159,7 @@ const WorkDaysCalendar = ({
         </Button>
         <p className="text-sm font-semibold">
           {monthLabel(month)}
-          <span className="ml-1.5 font-normal text-foreground/65">{monthDays.length}일</span>
+          <span className="ml-1.5 font-normal text-sub">{monthDays.length}일</span>
         </p>
         <Button
           type="button"
@@ -177,7 +178,7 @@ const WorkDaysCalendar = ({
             key={label}
             className={cn(
               'py-1',
-              index === 0 ? 'text-danger' : index === 6 ? 'text-primary' : 'text-foreground/65',
+              index === 0 ? 'text-danger' : index === 6 ? 'text-primary' : 'text-sub',
             )}
           >
             {label}
@@ -206,7 +207,7 @@ const WorkDaysCalendar = ({
                   </span>
                 </Link>
               ) : (
-                <span className="flex aspect-square items-center justify-center text-xs text-foreground/65">
+                <span className="flex aspect-square items-center justify-center text-xs text-sub">
                   {number}
                 </span>
               )}

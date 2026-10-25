@@ -36,6 +36,7 @@ import {
   useUnlinkRepair,
   useUpdateRepair,
 } from './useRepairs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const TRANSITION_LABELS: Record<RepairStatus, string> = {
   RECEIVED: '접수로 되돌리기',
@@ -114,7 +115,11 @@ const StatusForm = ({
         />
       </FormField>
       <FormField label={needsNote ? '사유 (필수)' : '메모 (선택)'} error={errors.note}>
-        <Textarea value={note} onChange={(event) => setNote(event.target.value)} />
+        <Textarea
+          placeholder="처리 내용을 입력하세요"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+        />
       </FormField>
       <div className="flex gap-2">
         <Button type="submit" disabled={transition.isPending}>
@@ -202,6 +207,7 @@ const EditForm = ({
       </FormField>
       <FormField label="요청자" error={errors.requester}>
         <Input
+          placeholder="요청한 사람 또는 업체"
           maxLength={REPAIR_REQUESTER_MAX_LENGTH}
           value={requester}
           onChange={(event) => setRequester(event.target.value)}
@@ -209,6 +215,7 @@ const EditForm = ({
       </FormField>
       <FormField label="위치 (선택)" error={errors.location}>
         <Input
+          placeholder="예: 3층 화장실"
           maxLength={REPAIR_LOCATION_MAX_LENGTH}
           value={location}
           onChange={(event) => setLocation(event.target.value)}
@@ -216,6 +223,7 @@ const EditForm = ({
       </FormField>
       <FormField label="요청 내용" error={errors.content}>
         <Textarea
+          placeholder="보수 요청 내용을 입력하세요"
           maxLength={REPAIR_CONTENT_MAX_LENGTH}
           value={content}
           onChange={(event) => setContent(event.target.value)}
@@ -272,13 +280,13 @@ const AfterServiceLinks = ({
       <h3 className="font-medium">연결한 사후 작업</h3>
       {error && <Alert>{error}</Alert>}
       {detail.links.length === 0 ? (
-        <p className="text-sm text-foreground/70">연결한 사후 작업이 없습니다</p>
+        <p className="text-sm text-sub">연결한 사후 작업이 없습니다</p>
       ) : (
         <ul className="flex flex-col gap-1 text-sm">
           {detail.links.map((item) => {
             const label =
               item.kind === 'WORK_LOG'
-                ? `${formatDay(item.workDate)} 작업 내역 · ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
+                ? `${formatDay(item.workDate)} 작업 내역, ${settings.data ? formatWork(item.minutes, settings.data) : `${item.minutes}분`}`
                 : `${formatDay(item.recordDate)} ${item.name}${item.spec ? ` (${item.spec})` : ''} ${MATERIAL_RECORD_KIND_LABELS[item.recordKind]} ${item.quantity} ${item.unit}`;
 
             return (
@@ -305,14 +313,14 @@ const AfterServiceLinks = ({
       )}
       <dl className="grid grid-cols-2 gap-2 text-sm">
         <div>
-          <dt className="text-foreground/70">연결한 작업 내역의 공수</dt>
+          <dt className="text-sub">연결한 작업 내역의 공수</dt>
           <dd className="font-bold">
             {settings.data ? formatWork(detail.usage.minutes, settings.data) : '-'} (
             {detail.usage.workLogCount}건)
           </dd>
         </div>
         <div>
-          <dt className="text-foreground/70">사용한 자재</dt>
+          <dt className="text-sub">사용한 자재</dt>
           <dd className="font-bold">
             {detail.usage.materials.length === 0
               ? '없음'
@@ -328,7 +336,7 @@ const AfterServiceLinks = ({
             <FormField label="사후 작업 연결">
               <Select
                 value={target}
-                placeholder="작업 내역·자재 기록 선택"
+                placeholder="작업 내역이나 자재 기록 선택"
                 onValueChange={setTarget}
                 options={[
                   ...logChoices.map((item) => ({
@@ -363,7 +371,7 @@ const AfterServiceLinks = ({
           </Button>
         </div>
       )}
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         보수 작업은 작업 내역·자재 기록에서 &quot;사후 작업&quot;으로 표시한 뒤 여기서 연결합니다
       </p>
     </div>
@@ -387,10 +395,10 @@ const Body = ({
     <div className="flex flex-col gap-3 border-t border-border pt-3">
       {message && <p role="status">{message}</p>}
       <p className="whitespace-pre-wrap">{detail.content}</p>
-      <p className="text-sm text-foreground/70">
-        접수 {formatDay(detail.receivedOn)} · {detail.requester}
-        {detail.location ? ` · ${detail.location}` : ''}
-        {detail.resolvedOn ? ` · 완료 ${formatDay(detail.resolvedOn)}` : ''}
+      <p className="text-sm text-sub">
+        접수 {formatDay(detail.receivedOn)}, {detail.requester}
+        {detail.location ? `, ${detail.location}` : ''}
+        {detail.resolvedOn ? `, 완료 ${formatDay(detail.resolvedOn)}` : ''}
       </p>
 
       {editable && (
@@ -453,14 +461,14 @@ const Body = ({
       <div className="flex flex-col gap-1">
         <h3 className="font-medium">상태 이력</h3>
         {detail.history.length === 0 ? (
-          <p className="text-sm text-foreground/70">상태를 바꾼 적이 없습니다</p>
+          <p className="text-sm text-sub">상태를 바꾼 적이 없습니다</p>
         ) : (
           <ul className="flex flex-col gap-1 text-sm">
             {detail.history.map((item) => (
               <li key={item.id}>
-                {formatDay(item.effectiveOn)} · {REPAIR_STATUS_LABELS[item.fromStatus]} →{' '}
+                {formatDay(item.effectiveOn)}, {REPAIR_STATUS_LABELS[item.fromStatus]} →{' '}
                 <span className="font-bold">{REPAIR_STATUS_LABELS[item.toStatus]}</span>
-                {item.note ? ` · ${item.note}` : ''}
+                {item.note ? `, ${item.note}` : ''}
               </li>
             ))}
           </ul>
@@ -490,14 +498,14 @@ export const RepairItem = ({
         <span className="rounded-full bg-muted px-2.5 py-0.5 text-sm font-semibold">
           {REPAIR_STATUS_LABELS[repair.status]}
         </span>
-        {repair.location && <span className="text-sm text-foreground/70">{repair.location}</span>}
+        {repair.location && <span className="text-sm text-sub">{repair.location}</span>}
         {repair.linkCount > 0 && (
-          <span className="text-sm text-foreground/70">사후 작업 {repair.linkCount}건</span>
+          <span className="text-sm text-sub">사후 작업 {repair.linkCount}건</span>
         )}
       </div>
       <p className="line-clamp-2">{repair.content}</p>
-      <p className="text-sm text-foreground/70">
-        {formatDay(repair.receivedOn)} · {repair.requester}
+      <p className="text-sm text-sub">
+        {formatDay(repair.receivedOn)}, {repair.requester}
       </p>
       <Button
         type="button"
@@ -509,7 +517,7 @@ export const RepairItem = ({
         {open ? '접기' : '자세히'}
       </Button>
       {open && detail.isError && <Alert>상세를 불러오지 못했습니다</Alert>}
-      {open && !detail.data && !detail.isError && <p className="text-sm">불러오는 중</p>}
+      {open && !detail.data && !detail.isError && <LoadingBlock label="불러오는 중" />}
       {open && detail.data && (
         <Body detail={detail.data} projectId={projectId} editable={editable} />
       )}

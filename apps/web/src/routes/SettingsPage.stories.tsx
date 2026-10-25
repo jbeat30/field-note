@@ -36,7 +36,9 @@ export const Default: Story = {
     await expect(await canvas.findByDisplayValue('8')).toBeInTheDocument();
     await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(22);
     // 22일은 근무 형태 표준값이 아니므로 직접 입력으로 표시
-    await expect(canvas.getByRole('radio', { name: /직접 입력/ })).toBeChecked();
+    await expect(canvas.getByRole('combobox', { name: '근무 형태' })).toHaveTextContent(
+      '직접 입력',
+    );
     await expect(canvas.getByRole('radio', { name: /비율/ })).toBeChecked();
     // 변경하기 전에는 저장할 수 없음
     await expect(canvas.getByRole('button', { name: '저장' })).toBeDisabled();
@@ -66,17 +68,24 @@ export const PickWorkPattern: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByLabelText('월 기준일수 (일)');
-    await userEvent.click(canvas.getByRole('radio', { name: /주 5일 21.7일/ }));
+    await userEvent.click(canvas.getByRole('combobox', { name: '근무 형태' }));
+    await userEvent.click(
+      await within(document.body).findByRole('option', { name: /주 5일 21.7일/ }),
+    );
     await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(21.7);
     await expect(canvas.getByText(/이 값이면 1MM = 21.7일/)).toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
     await expect(await canvas.findByText('저장했습니다')).toBeInTheDocument();
-    await expect(canvas.getByRole('radio', { name: /주 5일 21.7일/ })).toBeChecked();
+    await expect(canvas.getByRole('combobox', { name: '근무 형태' })).toHaveTextContent(
+      '주 5일 21.7일',
+    );
 
     await userEvent.click(canvas.getByRole('button', { name: '표준값(26일)으로' }));
     await expect(canvas.getByLabelText('월 기준일수 (일)')).toHaveValue(26);
-    await expect(canvas.getByRole('radio', { name: /주 6일 26일/ })).toBeChecked();
+    await expect(canvas.getByRole('combobox', { name: '근무 형태' })).toHaveTextContent(
+      '주 6일 26일',
+    );
   },
 };
 
@@ -709,7 +718,7 @@ export const TotpEnable: Story = {
     await userEvent.click(codes.getByRole('checkbox'));
     await userEvent.click(codes.getByRole('button', { name: '완료' }));
 
-    await expect(await row.findByText(/켜짐 · 복구 코드 8개 남음/)).toBeInTheDocument();
+    await expect(await row.findByText(/켜짐, 복구 코드 8개 남음/)).toBeInTheDocument();
   },
 };
 
@@ -723,7 +732,7 @@ export const TotpDisable: Story = {
     const canvas = within(canvasElement);
     const row = await securityRow(canvas);
 
-    await expect(await row.findByText(/켜짐 · 복구 코드 1개 남음/)).toBeInTheDocument();
+    await expect(await row.findByText(/켜짐, 복구 코드 1개 남음/)).toBeInTheDocument();
     // 복구 코드가 거의 없으면 다시 받도록 안내
     await expect(row.getByText(/복구 코드가 1개 남았습니다/)).toBeInTheDocument();
 

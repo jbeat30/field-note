@@ -90,7 +90,7 @@ export const StagedFileField = ({
         >
           <div className="min-w-0">
             <p className="truncate font-medium">{file.name}</p>
-            <p className={isExpired ? 'font-semibold text-danger' : 'text-xs text-foreground/70'}>
+            <p className={isExpired ? 'font-semibold text-danger' : 'text-xs text-sub'}>
               {isExpired
                 ? '보관 시간이 지나 삭제됐습니다. 다시 올려 주세요'
                 : '올려 두었습니다. 저장하면 연결됩니다'}

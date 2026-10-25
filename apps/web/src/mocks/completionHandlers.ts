@@ -278,7 +278,7 @@ export const createCompletionHandlers = ({ apiError }: Helpers) => [
           .map((item) => ({
             id: item.id,
             title: item.title,
-            category: item.category,
+            categoryName: item.categoryName,
             versionCount: item.versionCount,
             latestRevisionDate: item.latest.revisionDate,
           })),

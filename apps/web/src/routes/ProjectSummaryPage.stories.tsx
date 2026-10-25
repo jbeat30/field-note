@@ -1,9 +1,11 @@
 import type { Meta, StoryObj } from '@storybook/react-vite';
-import { expect, fn, userEvent, within } from 'storybook/test';
+import { expect, fn, screen, userEvent, within } from 'storybook/test';
 
 import { DEMO_PROJECTS } from '../mocks/demoSource';
 import { signIn } from '../mocks/state';
+import { Toaster } from '../components/ui/toaster';
 import { ProjectLayout } from '../layouts/ProjectLayout';
+import { resetToastStore } from '../stores/toastStore';
 import { Route, Routes } from 'react-router';
 
 import { ProjectSummaryPage } from './ProjectSummaryPage';
@@ -19,14 +21,18 @@ const meta = {
       path: '/projects/:id/summary',
     },
   },
+  beforeEach: () => resetToastStore(),
   loaders: [() => signIn('hanbit')],
   decorators: [
     (Story) => (
-      <Routes>
-        <Route element={<ProjectLayout />}>
-          <Route index element={<Story />} />
-        </Route>
-      </Routes>
+      <>
+        <Routes>
+          <Route element={<ProjectLayout />}>
+            <Route index element={<Story />} />
+          </Route>
+        </Routes>
+        <Toaster />
+      </>
     ),
   ],
 } satisfies Meta<typeof ProjectSummaryPage>;
@@ -56,7 +62,7 @@ export const Default: Story = {
     await expect(sheet.getByText(/2026-001 A동 외장 판금 공사/)).toBeInTheDocument();
     await expect(sheet.getByText('40%')).toBeInTheDocument();
     // 변경·추가 작업은 번호·상태·요청자와 함께
-    await expect(sheet.getByText(/#1 · 합의됨/)).toBeInTheDocument();
+    await expect(sheet.getByText(/#1, 합의됨/)).toBeInTheDocument();
     // 민감 자료는 제외하고 건수만 안내, 금액은 어디에도 없음
     await expect(sheet.getByText(/민감 자료 1건은 요약에 싣지 않았습니다/)).toBeInTheDocument();
     await expect(sheet.queryByText('도급 계약서')).not.toBeInTheDocument();
@@ -99,7 +105,7 @@ export const ExportDownloads: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '엑셀 내려받기' }));
 
     await expect(
-      await canvas.findByText(/프로젝트요약_2026-001\.xlsx 파일을 내려받았습니다/),
-    ).toBeInTheDocument();
+      await screen.findByText(/프로젝트요약_2026-001\.xlsx 파일을 내려받았습니다/),
+    ).toBeVisible();
   },
 };

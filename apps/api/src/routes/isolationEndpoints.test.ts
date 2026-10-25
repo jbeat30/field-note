@@ -17,7 +17,7 @@ import { createAssignmentService } from '../assignment/assignmentService';
 import { createAccountService } from '../auth/accountService';
 import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
-import { markCompanyEmailsVerified } from '../db/testFixtures';
+import { documentCategoryIdOf, markCompanyEmailsVerified } from '../db/testFixtures';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
 import { createDocumentService } from '../document/documentService';
@@ -247,7 +247,9 @@ const buildCompany = async () => {
   const documentId = await c.id(`/projects/${projectId}/documents`, {
     fileId: docFileId,
     title: '회사 A의 계약서',
-    category: 'CONTRACT',
+    categoryId: options.find(
+      (item) => item.kind === 'DOCUMENT_CATEGORY' && item.name === '계약·공문',
+    )!.id,
   });
   // 변경·추가 작업 한 건: 상태를 한 번 바꾸고 증빙 문서 연결
   const changeWorkId = await c.id(`/projects/${projectId}/change-works`, {
@@ -297,7 +299,8 @@ const buildCompany = async () => {
   const warrantyDocumentId = await c.id(`/projects/${warrantyProjectId}/documents`, {
     fileId: warrantyFileId,
     title: '회사 A의 보증증권',
-    category: 'OTHER',
+    categoryId: options.find((item) => item.kind === 'DOCUMENT_CATEGORY' && item.name === '기타')!
+      .id,
   });
   const certificateId = (
     await c.call('post', `/projects/${warrantyProjectId}/warranty/certificates`, {
@@ -358,6 +361,7 @@ const buildCompany = async () => {
     managerId,
     worker,
     category,
+    documentCategoryId: documentCategoryIdOf({ items: options }, '기타'),
     jobType,
     projectId,
     assignment,
@@ -646,7 +650,7 @@ const attacks = (a: Awaited<ReturnType<typeof buildCompany>>) =>
       'POST /projects/{projectId}/documents',
       'post',
       `/projects/${a.projectId}/documents`,
-      { fileId: a.docFileId, title: '침투' },
+      { fileId: a.docFileId, title: '침투', categoryId: a.documentCategoryId },
     ],
     ['GET /projects/{projectId}/documents', 'get', `/projects/${a.projectId}/documents`],
     ['PATCH /materials/{id}', 'patch', `/materials/${a.materialId}`, { name: '침투' }],
@@ -775,6 +779,7 @@ describe('회사 격리: 전 엔드포인트', () => {
       managerId: '{id}',
       worker: '{id}',
       category: '{id}',
+      documentCategoryId: '{id}',
       jobType: '{id}',
       projectId: '{id}',
       assignment: '{assignmentId}',

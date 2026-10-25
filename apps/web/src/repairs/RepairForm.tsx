@@ -86,6 +86,7 @@ export const RepairForm = ({ projectId }: { projectId: string }) => {
       </FormField>
       <FormField label="요청자" error={errors.requester} hint="고객 담당자, 관리사무소 등">
         <Input
+          placeholder="요청한 사람 또는 업체"
           maxLength={REPAIR_REQUESTER_MAX_LENGTH}
           value={requester}
           onChange={(event) => setRequester(event.target.value)}
@@ -93,6 +94,7 @@ export const RepairForm = ({ projectId }: { projectId: string }) => {
       </FormField>
       <FormField label="위치 (선택)" error={errors.location} hint="구역, 층, 호실 등">
         <Input
+          placeholder="예: 3층 화장실"
           maxLength={REPAIR_LOCATION_MAX_LENGTH}
           value={location}
           onChange={(event) => setLocation(event.target.value)}
@@ -100,6 +102,7 @@ export const RepairForm = ({ projectId }: { projectId: string }) => {
       </FormField>
       <FormField label="요청 내용" error={errors.content} hint="어디가 어떻게 문제인지">
         <Textarea
+          placeholder="보수 요청 내용을 입력하세요"
           maxLength={REPAIR_CONTENT_MAX_LENGTH}
           value={content}
           onChange={(event) => setContent(event.target.value)}

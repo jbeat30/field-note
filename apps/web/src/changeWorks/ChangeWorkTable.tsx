@@ -63,8 +63,8 @@ export const ChangeWorkTable = ({ works, onOpen }: ChangeWorkTableProps) => {
                   className="block w-full text-left hover:text-primary focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
                 >
                   <span className="line-clamp-2">{work.content}</span>
-                  <span className="mt-0.5 block text-xs text-foreground/65 md:hidden">
-                    {formatDay(work.requestedOn)} · {work.requester}
+                  <span className="mt-0.5 block text-xs text-sub md:hidden">
+                    {formatDay(work.requestedOn)}, {work.requester}
                   </span>
                 </button>
                 {stale && (
@@ -73,16 +73,16 @@ export const ChangeWorkTable = ({ works, onOpen }: ChangeWorkTableProps) => {
                   </span>
                 )}
               </TableCell>
-              <TableCell className="hidden whitespace-nowrap text-foreground/75 md:table-cell">
+              <TableCell className="hidden whitespace-nowrap text-sub md:table-cell">
                 {work.requester}
               </TableCell>
-              <TableCell className="hidden whitespace-nowrap text-foreground/75 md:table-cell">
+              <TableCell className="hidden whitespace-nowrap text-sub md:table-cell">
                 {formatDay(work.requestedOn)}
               </TableCell>
               <TableCell>
                 <Badge tone={TONE[work.status]}>{CHANGE_WORK_STATUS_LABELS[work.status]}</Badge>
               </TableCell>
-              <TableCell className="text-right tabular-nums text-foreground/75">
+              <TableCell className="text-right tabular-nums text-sub">
                 {work.documentCount}
               </TableCell>
             </TableRow>

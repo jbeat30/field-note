@@ -20,6 +20,7 @@ import { FormField } from '../components/ui/form-field';
 import { Input } from '../components/ui/input';
 import { PasswordInput } from '../components/ui/password-input';
 import { getErrorCode, getErrorMessage } from '../lib/apiError';
+import { IS_SOCIAL_LOGIN_ENABLED } from '../lib/features';
 import { toSafeReturnPath } from '../lib/safeReturnPath';
 import { queryKeys } from '../query/queryKeys';
 import { resetClientState } from '../stores/resetClientState';
@@ -39,14 +40,16 @@ export const LoginPage = () => {
   const socialStart = useSocialStart();
   // 비밀번호가 맞고 2단계 인증이 켜진 계정이면 코드 입력 칸을 보여 줌
   const [isTotpStep, setTotpStep] = useState(false);
-  const enabledProviders = SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider]);
+  const [isDemoLoggingIn, setDemoLoggingIn] = useState(false);
+  const enabledProviders = IS_SOCIAL_LOGIN_ENABLED
+    ? SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider])
+    : [];
   const {
     register,
     control,
     handleSubmit,
     setError,
     setFocus,
-    setValue,
     formState: { errors, isSubmitting },
   } = useForm<LoginRequest>({
     resolver: zodResolver(loginRequestSchema),
@@ -64,12 +67,27 @@ export const LoginPage = () => {
     }
   }, [isTotpStep, setFocus]);
 
+  // 확인이 5초 넘게 걸리면 기다려 달라는 안내를 보임
+  const [isSlow, setSlow] = useState(false);
+
+  useEffect(() => {
+    if (!isSubmitting) return;
+
+    const timer = setTimeout(() => setSlow(true), 5000);
+
+    return () => {
+      clearTimeout(timer);
+      setSlow(false);
+    };
+  }, [isSubmitting]);
+
   // 이미 로그인한 상태로 로그인 화면에 오면 홈으로 (로그인 직후에도 같은 곳으로 가도록 돌아갈 화면을 따름)
   if (me.data) {
     return <Navigate to={returnPath ?? '/'} replace />;
   }
 
-  const onSubmit = handleSubmit(async (values) => {
+  // 입력 칸 제출과 체험하기 버튼이 같은 로그인 요청을 씀
+  const submitLogin = async (values: LoginRequest) => {
     const { data, error } = await apiClient.POST('/api/v1/auth/login', {
       body: {
         ...values,
@@ -97,24 +115,36 @@ export const LoginPage = () => {
     await resetClientState(queryClient);
     queryClient.setQueryData(queryKeys.me(), data);
     await navigate(data.isEmailVerified ? (returnPath ?? '/') : '/verify-email', { replace: true });
-  });
+  };
+  const onSubmit = handleSubmit(submitLogin);
+
+  // 체험하기는 입력 칸을 채우지 않고 서버가 알려 준 계정으로 바로 로그인
+  const loginAsDemo = async (demo: { loginId: string; password: string }) => {
+    if (isSubmitting || isDemoLoggingIn) return;
+
+    setDemoLoggingIn(true);
+    setTotpStep(false);
+
+    try {
+      await submitLogin({ ...demo, isRemembered: true });
+    } finally {
+      setDemoLoggingIn(false);
+    }
+  };
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">로그인</h1>
-      <SocialNotice />
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">로그인</h1>
+      {IS_SOCIAL_LOGIN_ENABLED && <SocialNotice />}
       {publicDemo.data?.enabled && publicDemo.data.loginId && publicDemo.data.password && (
         <DemoAccountNotice
-          isSubmitting={isSubmitting}
-          onLogin={() => {
-            if (isSubmitting) return;
-
-            setValue('loginId', publicDemo.data.loginId ?? '');
-            setValue('password', publicDemo.data.password ?? '');
-            setValue('totpCode', undefined);
-            setTotpStep(false);
-            void onSubmit();
-          }}
+          isSubmitting={isSubmitting || isDemoLoggingIn}
+          onLogin={() =>
+            void loginAsDemo({
+              loginId: publicDemo.data.loginId ?? '',
+              password: publicDemo.data.password ?? '',
+            })
+          }
         />
       )}
       {isExpired && (
@@ -125,14 +155,23 @@ export const LoginPage = () => {
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField label="아이디" error={errors.loginId && '아이디를 입력해 주세요'}>
         <Input
+          placeholder="아이디를 입력하세요"
           autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
+          size="lg"
+          className="h-[58px]"
           {...register('loginId')}
         />
       </FormField>
       <FormField label="비밀번호" error={errors.password && '비밀번호를 입력해 주세요'}>
-        <PasswordInput autoComplete="current-password" {...register('password')} />
+        <PasswordInput
+          placeholder="비밀번호를 입력하세요"
+          autoComplete="current-password"
+          size="lg"
+          className="h-[58px]"
+          {...register('password')}
+        />
       </FormField>
       {isTotpStep && (
         <>
@@ -145,6 +184,7 @@ export const LoginPage = () => {
             error={errors.totpCode?.message}
           >
             <Input
+              placeholder="인증 앱의 6자리 코드"
               inputMode="text"
               autoComplete="one-time-code"
               autoCapitalize="characters"
@@ -161,8 +201,9 @@ export const LoginPage = () => {
         control={control}
         name="isRemembered"
         render={({ field }) => (
-          <label className="flex min-h-touch items-center gap-3 text-base">
+          <label className="flex min-h-11 items-center gap-3 text-[15px] font-medium">
             <Checkbox
+              className="size-[30px] rounded-lg border-0 bg-[#14110d] data-[state=checked]:text-accent"
               checked={field.value}
               onCheckedChange={(checked) => field.onChange(checked === true)}
             />
@@ -170,12 +211,21 @@ export const LoginPage = () => {
           </label>
         )}
       />
-      <Button type="submit" disabled={isSubmitting}>
-        {isSubmitting ? '로그인 중' : '로그인'}
+      <Button
+        type="submit"
+        disabled={isSubmitting}
+        className="h-[62px] rounded-[18px] text-[19px] font-extrabold"
+      >
+        {isSubmitting ? '확인 중…' : '로그인'}
       </Button>
+      {isSlow && (
+        <p role="status" className="text-center text-sm text-sub">
+          평소보다 오래 걸리고 있어요. 잠시만 기다려 주세요
+        </p>
+      )}
       {enabledProviders.length > 0 && (
         <>
-          <p className="text-center text-sm text-foreground/70">또는</p>
+          <p className="text-center text-sm text-sub">또는</p>
           {enabledProviders.map((provider) => (
             <SocialButton
               key={provider}
@@ -189,14 +239,12 @@ export const LoginPage = () => {
         </>
       )}
       <Link
-        className="min-h-touch content-center text-sm text-primary underline"
+        className="flex min-h-11 items-center text-sm font-semibold hover:text-sub"
         to="/forgot-password"
       >
         비밀번호를 잊으셨나요?
       </Link>
-      <p className="text-sm text-foreground/70">
-        가입은 운영자가 보낸 초대 링크로만 할 수 있습니다
-      </p>
+      <p className="text-[13px] text-sub">가입은 운영자가 보낸 초대 링크로만 할 수 있습니다</p>
     </form>
   );
 };

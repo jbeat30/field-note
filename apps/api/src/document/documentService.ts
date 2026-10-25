@@ -18,6 +18,7 @@ import {
 } from '@field-note/shared';
 
 import type { Prisma, PrismaClient } from '../db/client';
+import { ensurePresets } from '../company/optionService';
 import { withCompany } from '../db/withCompany';
 import { confirmStagedFile } from '../file/stagedFile';
 import type { ObjectStorage } from '../storage/objectStorage';
@@ -33,6 +34,8 @@ export class DocumentError extends Error {
 }
 
 export type DocumentService = {
+  // 종류를 정하지 않고 만드는 문서(변경 작업 증빙)가 쓸 종류: 고를 수 있는 종류 중 민감 기본값이 켜진 첫 항목, 없으면 첫 항목
+  defaultCategoryId: (companyId: string) => Promise<string>;
   // 올린 파일로 문서를 만듦 (첫 버전), 같은 파일로 다시 부르면 만들어 둔 문서를 돌려줌 (재시도에 안전)
   create: (
     companyId: string,
@@ -70,6 +73,7 @@ export type DocumentService = {
 };
 
 const include = {
+  category: true,
   versions: { include: { file: true }, orderBy: { versionNo: 'desc' } },
 } satisfies Prisma.DocumentInclude;
 
@@ -95,7 +99,8 @@ const toVersion = (row: VersionRow): DocumentVersion => ({
 const toDocument = (row: Row): Document => ({
   id: row.id,
   projectId: row.projectId,
-  category: row.category,
+  categoryId: row.categoryId,
+  categoryName: row.category.name,
   title: row.title,
   isSensitive: row.isSensitive,
   isPinned: row.isPinned,
@@ -177,10 +182,53 @@ export const createDocumentService = (
     return { file, used };
   };
 
+  // 문서 종류는 같은 회사의 문서 종류 항목만 고를 수 있고, 숨긴 항목은 새로 고를 수 없음
+  const pickCategory = async (tx: Prisma.TransactionClient, categoryId: string) => {
+    const option = await tx.optionItem.findFirst({
+      where: { id: categoryId, kind: 'DOCUMENT_CATEGORY' },
+    });
+
+    if (!option) {
+      throw new DocumentError('INVALID', {
+        path: 'body.categoryId',
+        message: VALIDATION_MESSAGES.OPTION_NOT_SELECTABLE('문서 종류'),
+      });
+    }
+
+    if (!option.isActive) {
+      throw new DocumentError('INVALID', {
+        path: 'body.categoryId',
+        message: VALIDATION_MESSAGES.OPTION_HIDDEN('문서 종류'),
+      });
+    }
+
+    return option;
+  };
+
   const revisionDateOf = (value: string | undefined) =>
     new Date(`${value ?? todayInSeoul(now())}T00:00:00Z`);
 
   return {
+    defaultCategoryId: (companyId) =>
+      withCompany(app, companyId, async (tx) => {
+        await ensurePresets(tx, companyId);
+
+        const options = await tx.optionItem.findMany({
+          where: { kind: 'DOCUMENT_CATEGORY', isActive: true },
+          orderBy: [{ sortOrder: 'asc' }, { createdAt: 'asc' }],
+        });
+        const picked = options.find((option) => option.sensitiveDefault) ?? options[0];
+
+        if (!picked) {
+          throw new DocumentError('INVALID', {
+            path: 'body.categoryId',
+            message: VALIDATION_MESSAGES.OPTION_NOT_SELECTABLE('문서 종류'),
+          });
+        }
+
+        return picked.id;
+      }),
+
     create: (companyId, userId, projectId, input) =>
       withCompany(app, companyId, async (tx) => {
         if (!(await tx.project.findFirst({ where: { id: projectId } }))) {
@@ -198,13 +246,14 @@ export const createDocumentService = (
 
         await checkFile(tx, input.fileId, projectId);
 
+        const category = await pickCategory(tx, input.categoryId);
         const created = await tx.document.create({
           data: {
             companyId,
             projectId,
-            category: input.category,
+            categoryId: category.id,
             title: input.title,
-            isSensitive: resolveSensitive(input.category, input.isSensitive),
+            isSensitive: resolveSensitive(category.sensitiveDefault, input.isSensitive),
             createdBy: userId,
           },
         });
@@ -234,7 +283,7 @@ export const createDocumentService = (
           where: {
             projectId,
             deletedAt: null,
-            category: query.category,
+            categoryId: query.categoryId,
             isPinned: query.pinned,
             title: query.q ? { contains: query.q, mode: 'insensitive' } : undefined,
           },
@@ -298,11 +347,16 @@ export const createDocumentService = (
           }
         }
 
+        // 이미 쓰는 종류는 숨겼어도 그대로 두고, 바꿀 때만 고를 수 있는 종류인지 확인
+        if (input.categoryId && input.categoryId !== current.categoryId) {
+          await pickCategory(tx, input.categoryId);
+        }
+
         await tx.document.update({
           where: { companyId_id: { companyId, id: documentId } },
           data: {
             title: input.title,
-            category: input.category,
+            categoryId: input.categoryId,
             isSensitive: input.isSensitive,
             isPinned: input.isPinned,
             includeInSummary: input.includeInSummary,

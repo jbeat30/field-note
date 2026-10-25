@@ -1,7 +1,6 @@
 import { z } from 'zod';
 
 import type { RuleCheck } from './assignments';
-import { documentCategorySchema } from './documents';
 import { projectStatusSchema, type ProjectStatus } from './projects';
 
 import { VALIDATION_MESSAGES } from './errorMessages';
@@ -164,7 +163,7 @@ export type ChangeWorkStatusChange = z.infer<typeof changeWorkStatusChangeSchema
 export const changeWorkDocumentSchema = z.object({
   documentId: z.uuid(),
   title: z.string(),
-  category: documentCategorySchema,
+  categoryName: z.string(),
   isSensitive: z.boolean(),
   // 열 때 쓰는 최신 판 번호와 파일 형식 (이미지인지 PDF인지 구분)
   latestVersionNo: z.number().int(),

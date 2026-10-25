@@ -121,9 +121,9 @@ export const Full: Story = {
     // 자재: 이름·규격·구분·수량·단위·비고
     await expect(canvas.getByText('아연도강판 1.0T')).toBeInTheDocument();
     await expect(canvas.getByText('12.5장')).toBeInTheDocument();
-    await expect(canvas.getByText('설치 · 3층 · 변경·추가')).toBeInTheDocument();
+    await expect(canvas.getByText('설치, 3층, 변경·추가')).toBeInTheDocument();
     // 사진 설명
-    await expect(canvas.getByText('작업 전 · 3층 301호 — 설치 전 상태')).toBeInTheDocument();
+    await expect(canvas.getByText('작업 전, 3층 301호 — 설치 전 상태')).toBeInTheDocument();
     await expect(canvas.getByText(/오후 우천으로/)).toBeInTheDocument();
   },
 };
