@@ -179,7 +179,7 @@ export const StaffingMonthCalendar = ({
                   </div>
                   <Link
                     to={projectWorkPath(project.projectId, selectedDay.date)}
-                    className="text-[13px] font-bold whitespace-nowrap text-accent hover:text-[#f9dbc9]"
+                    className="text-[13px] font-bold whitespace-nowrap text-accent hover:text-[#fbe4d5]"
                   >
                     그날 하루 기록 보기
                   </Link>

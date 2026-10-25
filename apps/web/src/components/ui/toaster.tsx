@@ -28,7 +28,7 @@ export const Toaster = () => {
           <Toast.Description>{item.message}</Toast.Description>
         </Toast.Root>
       ))}
-      <Toast.Viewport className="fixed inset-x-0 bottom-36 z-30 mx-auto flex w-full max-w-md list-none flex-col gap-2 px-4 outline-none md:bottom-20" />
+      <Toast.Viewport className="fixed inset-x-0 bottom-36 z-60 mx-auto flex w-full max-w-md list-none flex-col gap-2 px-4 outline-none md:bottom-20" />
     </Toast.Provider>
   );
 };
