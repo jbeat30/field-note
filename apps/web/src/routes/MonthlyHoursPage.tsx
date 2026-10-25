@@ -14,7 +14,7 @@ import { BackLink } from '../components/ui/back-link';
 import { PageHeader } from '../components/ui/page-header';
 import { Alert } from '../components/ui/alert';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
+import { Button, pillButtonClass } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
 import { FormField } from '../components/ui/form-field';
 import { PeriodNav } from '../components/ui/period-nav';
@@ -27,6 +27,7 @@ import { splitServerErrors } from '../lib/serverErrors';
 import { MonthlyMatrixTable } from '../monthly/MonthlyMatrixTable';
 import { useCloseMonth, useMonthlyHours, useReopenMonth } from '../monthly/useMonthlyHours';
 import { ReportExportError, downloadMonthlyXlsx } from '../reports/exportReport';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const MONTH_PATTERN = /^\d{4}-(0[1-9]|1[0-2])$/;
 
@@ -147,58 +148,61 @@ export const MonthlyHoursPage = () => {
   return (
     <div className="flex flex-col gap-5">
       {confirmDialog}
-      <BackLink to="/employees">직원</BackLink>
-      <PageHeader title="월 공수표" description="한 달 공수를 확인하고 확정합니다" />
-
-      {/* 달 이동 + 액션 버튼 한 줄 */}
-      <div className="flex flex-wrap items-center gap-3">
-        <div className="flex-1">
-          <PeriodNav
-            label={month}
-            prevLabel="이전 달"
-            nextLabel="다음 달"
-            onPrev={() => move(-1)}
-            onNext={() => move(1)}
-            todayLabel="이번 달"
-            onToday={() => {
-              setParams({});
-              setMessage('');
-            }}
-            pickValue={`${month}-01`}
-            pickMax={today}
-            onPick={(date) => {
-              setParams({ month: monthOf(date) });
-              setMessage('');
-            }}
-          />
-        </div>
-        {data && (
-          <div className="flex shrink-0 items-center gap-2">
+      <PageHeader
+        title="월 공수표"
+        description="한 달 공수를 확인하고 확정합니다"
+        back={<BackLink to="/employees">직원</BackLink>}
+        eyebrow={
+          data && (
             <Badge tone={data.isClosed ? 'success' : 'warning'}>
               {data.isClosed ? '확정됨' : '미확정'}
             </Badge>
-            <Button
-              type="button"
-              variant="secondary"
-              size="sm"
-              disabled={isExporting}
-              onClick={() => void exportXlsx()}
-            >
-              {isExporting ? '내보내는 중' : '엑셀로 내보내기'}
-            </Button>
-            {!data.isClosed && (
-              <Button
+          )
+        }
+        actions={
+          data && (
+            <>
+              <button
                 type="button"
-                size="sm"
-                disabled={close.isPending || isFuture}
-                onClick={doClose}
+                className={pillButtonClass}
+                disabled={isExporting}
+                onClick={() => void exportXlsx()}
               >
-                {close.isPending ? '확정 중' : '공수 확정'}
-              </Button>
-            )}
-          </div>
-        )}
-      </div>
+                {isExporting ? '내보내는 중' : '엑셀로 내보내기'}
+              </button>
+              {!data.isClosed && (
+                <Button
+                  type="button"
+                  className="h-[50px] rounded-full px-5"
+                  disabled={close.isPending || isFuture}
+                  onClick={doClose}
+                >
+                  {close.isPending ? '확정 중' : '공수 확정'}
+                </Button>
+              )}
+            </>
+          )
+        }
+      />
+
+      <PeriodNav
+        label={month}
+        prevLabel="이전 달"
+        nextLabel="다음 달"
+        onPrev={() => move(-1)}
+        onNext={() => move(1)}
+        todayLabel="이번 달"
+        onToday={() => {
+          setParams({});
+          setMessage('');
+        }}
+        pickValue={`${month}-01`}
+        pickMax={today}
+        onPick={(date) => {
+          setParams({ month: monthOf(date) });
+          setMessage('');
+        }}
+      />
 
       {rootError && <Alert>{rootError}</Alert>}
       {message && (
@@ -206,18 +210,20 @@ export const MonthlyHoursPage = () => {
           {message}
         </p>
       )}
-      {!data && <p className="text-sm">불러오는 중</p>}
+      {!data && (
+        <LoadingBlock label="불러오는 중" variant="blocks" heights={[72, [397, 180], [506, 240]]} />
+      )}
 
       {data && summary && (
         <>
           {/* 수치 요약 */}
-          <div className="rounded-xl bg-surface-subtle p-4">
+          <div>
             <StatGroup
               items={[
                 {
                   label: '합계',
                   value: `${value(summary.total).manDays} MD`,
-                  unit: `· ${value(summary.total).manMonths} MM`,
+                  hint: `${value(summary.total).manMonths} MM`,
                 },
                 { label: '일한 사람', value: summary.byEmployee.length, unit: '명' },
                 { label: '프로젝트', value: summary.byProject.length, unit: '개' },
@@ -231,9 +237,7 @@ export const MonthlyHoursPage = () => {
               ]}
             />
             {data.isClosed && data.closedAt && (
-              <p className="mt-2 text-xs text-foreground/65">
-                확정 {formatDateTime(data.closedAt)}
-              </p>
+              <p className="mt-2 text-xs text-sub">확정 {formatDateTime(data.closedAt)}</p>
             )}
           </div>
 
@@ -249,23 +253,21 @@ export const MonthlyHoursPage = () => {
                   <h2 id="monthly-drafts-heading" className="text-base font-semibold">
                     임시 저장된 작업 내역 {data.draftLogCount}건
                   </h2>
-                  <p className="text-sm text-foreground/70">확정 전에 저장하거나 정리해 주세요</p>
+                  <p className="text-sm text-sub">확정 전에 저장하거나 정리해 주세요</p>
                   <ul className="flex flex-col gap-1 text-sm">
                     {data.drafts.map((draft) => (
                       <li key={`${draft.projectId}-${draft.workDate}`}>
                         <Link
-                          className="text-primary underline"
+                          className="text-primary hover:text-sub"
                           to={projectWorkPath(draft.projectId, draft.workDate)}
                         >
-                          {formatDay(draft.workDate)} · {draft.projectName}
+                          {formatDay(draft.workDate)}, {draft.projectName}
                         </Link>
                       </li>
                     ))}
                   </ul>
                   {data.draftLogCount > data.drafts.length && (
-                    <p className="text-sm text-foreground/70">
-                      앞의 {data.drafts.length}건만 보여 줍니다
-                    </p>
+                    <p className="text-sm text-sub">앞의 {data.drafts.length}건만 보여 줍니다</p>
                   )}
                   {data.draftLogCount > 0 && !data.isClosed && (
                     <label className="flex min-h-touch items-center gap-3 text-sm">
@@ -302,7 +304,7 @@ export const MonthlyHoursPage = () => {
                 </h2>
                 {!data.isClosed && (
                   <div className="flex flex-col gap-3">
-                    <p className="text-sm text-foreground/70">
+                    <p className="text-sm text-sub">
                       확정하면 이 달의 작업 내역을 재오픈 전까지 수정할 수 없고 기준시간·일수가
                       고정됩니다. 확정은 선택 기능입니다
                     </p>
@@ -316,9 +318,7 @@ export const MonthlyHoursPage = () => {
                       {close.isPending ? '확정 중' : `${month} 공수 확정`}
                     </Button>
                     {isFuture && (
-                      <p className="text-sm text-foreground/70">
-                        아직 오지 않은 달은 확정할 수 없습니다
-                      </p>
+                      <p className="text-sm text-sub">아직 오지 않은 달은 확정할 수 없습니다</p>
                     )}
                   </div>
                 )}
@@ -335,6 +335,7 @@ export const MonthlyHoursPage = () => {
                       hint="재오픈하면 이 달의 작업 내역을 다시 고칠 수 있습니다"
                     >
                       <Textarea
+                        placeholder="재오픈 사유를 입력하세요"
                         maxLength={MONTH_REASON_MAX_LENGTH}
                         value={reason}
                         onChange={(event) => setReason(event.target.value)}
@@ -361,7 +362,7 @@ export const MonthlyHoursPage = () => {
                   확정·재오픈 이력
                 </h2>
                 {data.events.length === 0 ? (
-                  <p className="text-sm text-foreground/70">확정한 기록이 없습니다</p>
+                  <p className="text-sm text-sub">확정한 기록이 없습니다</p>
                 ) : (
                   <ol className="divide-y divide-line text-sm">
                     {data.events.map((event) => (
@@ -369,16 +370,12 @@ export const MonthlyHoursPage = () => {
                         <span className="font-semibold">
                           {event.kind === 'CLOSED' ? '확정' : '재오픈'}
                         </span>
-                        {event.reason && (
-                          <span className="text-foreground/70">사유: {event.reason}</span>
-                        )}
-                        <span className="text-foreground/65">
-                          {event.standardWorkMinutes / 60}시간 · {event.monthlyWorkDays}일
-                          {event.draftLogCount > 0 ? ` · 임시 ${event.draftLogCount}건` : ''}
+                        {event.reason && <span className="text-sub">사유: {event.reason}</span>}
+                        <span className="text-sub">
+                          {event.standardWorkMinutes / 60}시간, {event.monthlyWorkDays}일
+                          {event.draftLogCount > 0 ? `, 임시 ${event.draftLogCount}건` : ''}
                         </span>
-                        <span className="text-xs text-foreground/70">
-                          {formatDateTime(event.createdAt)}
-                        </span>
+                        <span className="text-xs text-sub">{formatDateTime(event.createdAt)}</span>
                       </li>
                     ))}
                   </ol>

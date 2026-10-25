@@ -4,6 +4,7 @@ import {
   documentDetailSchema,
   documentsResponseSchema,
   fileUploadTicketSchema,
+  optionsResponseSchema,
   projectsResponseSchema,
 } from '@field-note/shared';
 import { setupServer } from 'msw/node';
@@ -50,6 +51,12 @@ const setup = async () => {
   return projectsResponseSchema.parse(data).items[0]!.id;
 };
 
+// 문서 종류는 선택 목록의 항목이라 이름으로 id를 찾음
+const categoryIdOf = async (name: string) =>
+  optionsResponseSchema
+    .parse((await client.GET('/api/v1/company/options')).data)
+    .items.find((item) => item.kind === 'DOCUMENT_CATEGORY' && item.name === name)!.id;
+
 // 파일 신청 → 저장소 PUT → 완료 알림까지 마친 문서용 파일
 const uploadedFile = async (projectId: string, name = '새 문서.pdf') => {
   const { data } = await client.POST('/api/v1/projects/{projectId}/files', {
@@ -94,7 +101,9 @@ describe('문서 목업 서버 계약', () => {
     });
     // 계약·공문은 기본 민감 자료
     expect(items.find((item) => item.title === '도급 계약서')!.isSensitive).toBe(true);
-    expect(await list(projectId, { category: 'DRAWING' })).toHaveLength(2);
+    expect(
+      await list(projectId, { categoryId: await categoryIdOf('도면·작업지시서') }),
+    ).toHaveLength(2);
     expect(await list(projectId, { q: '계약' })).toHaveLength(1);
   });
 
@@ -103,7 +112,7 @@ describe('문서 목업 서버 계약', () => {
     const first = await uploadedFile(projectId, '견적서.pdf');
     const created = await client.POST('/api/v1/projects/{projectId}/documents', {
       params: { path: { projectId } },
-      body: { fileId: first, title: '견적서', category: 'CONTRACT' },
+      body: { fileId: first, title: '견적서', categoryId: await categoryIdOf('계약·공문') },
     });
     const detail = documentDetailSchema.parse(created.data);
 
@@ -119,7 +128,7 @@ describe('문서 목업 서버 계약', () => {
       (
         await client.POST('/api/v1/projects/{projectId}/documents', {
           params: { path: { projectId } },
-          body: { fileId: first, title: '다른 이름' },
+          body: { fileId: first, title: '다른 이름', categoryId: await categoryIdOf('기타') },
         })
       ).data,
     );
@@ -145,7 +154,11 @@ describe('문서 목업 서버 계약', () => {
     const taken = (await list(projectId))[0]!.latest.fileId;
     const taken2 = await client.POST('/api/v1/projects/{projectId}/documents', {
       params: { path: { projectId } },
-      body: { fileId: '018f3b1e-0000-7000-8000-000000000000', title: '없는 파일' },
+      body: {
+        fileId: '018f3b1e-0000-7000-8000-000000000000',
+        title: '없는 파일',
+        categoryId: await categoryIdOf('기타'),
+      },
     });
     const other = (await list(projectId))[1]!;
     const reuse = await client.POST('/api/v1/documents/{id}/versions', {
@@ -211,7 +224,7 @@ describe('문서 목업 서버 계약', () => {
         (
           await client.POST('/api/v1/projects/{projectId}/documents', {
             params: { path: { projectId } },
-            body: { fileId, title: `문서${i}` },
+            body: { fileId, title: `문서${i}`, categoryId: await categoryIdOf('기타') },
           })
         ).data,
       );
@@ -230,7 +243,11 @@ describe('문서 목업 서버 계약', () => {
       (
         await client.POST('/api/v1/projects/{projectId}/documents', {
           params: { path: { projectId } },
-          body: { fileId: await uploadedFile(projectId, '열한번째.pdf'), title: '열한 번째' },
+          body: {
+            fileId: await uploadedFile(projectId, '열한번째.pdf'),
+            title: '열한 번째',
+            categoryId: await categoryIdOf('기타'),
+          },
         })
       ).data,
     );

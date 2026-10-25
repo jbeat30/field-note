@@ -8,7 +8,7 @@ import { cn } from '../../lib/cn';
 export const BackLink = ({ className, children, ...props }: ComponentProps<typeof Link>) => (
   <Link
     className={cn(
-      '-ml-2 inline-flex min-h-touch w-fit max-w-full items-center gap-0.5 rounded-full pr-4 pl-1 text-sm font-medium text-foreground/70 transition-colors hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary',
+      '-ml-2 inline-flex min-h-touch w-fit max-w-full items-center gap-0.5 rounded-full pr-4 pl-1 text-sm font-bold text-sub transition-colors hover:bg-foreground/10 hover:text-foreground focus-visible:outline-2 focus-visible:outline-foreground',
       className,
     )}
     {...props}

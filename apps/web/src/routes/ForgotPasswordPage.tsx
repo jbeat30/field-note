@@ -40,12 +40,14 @@ export const ForgotPasswordPage = () => {
   if (isRequested) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-bold">메일을 확인해 주세요</h1>
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          메일을 확인해 주세요
+        </h1>
         <Alert variant="info">
           가입된 주소라면 비밀번호 재설정 링크를 보냈습니다. 링크는 30분 동안, 한 번만 사용할 수
           있습니다. 메일이 보이지 않으면 스팸함을 확인해 주세요
         </Alert>
-        <Link className="min-h-touch content-center text-primary underline" to="/login">
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>
@@ -54,16 +56,24 @@ export const ForgotPasswordPage = () => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">비밀번호 재설정</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+        비밀번호 재설정
+      </h1>
       <p className="text-sm">가입할 때 인증한 이메일 주소를 입력하면 재설정 링크를 보내 드립니다</p>
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField label="이메일" error={errors.email && '올바른 이메일 주소를 입력해 주세요'}>
-        <Input type="email" autoComplete="email" inputMode="email" {...register('email')} />
+        <Input
+          placeholder="name@example.com"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          {...register('email')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '보내는 중' : '재설정 링크 받기'}
       </Button>
-      <Link className="min-h-touch content-center text-primary underline" to="/login">
+      <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
         로그인 화면으로
       </Link>
     </form>

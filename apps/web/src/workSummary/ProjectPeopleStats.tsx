@@ -23,6 +23,7 @@ import { useOptions } from '../settings/useOptions';
 
 import { EmployeeWorkDaysDialog } from './EmployeeWorkDaysDialog';
 import { useWorkSummary } from './useWorkSummary';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type Range = 'all' | 'thisMonth' | 'lastMonth';
 
@@ -77,7 +78,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
       }
     >
       {!summary.data ? (
-        <p className="text-sm">불러오는 중</p>
+        <LoadingBlock label="불러오는 중" variant="rows" lines={5} />
       ) : (
         <>
           <StatGroup
@@ -100,7 +101,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
             ]}
           />
           {summary.data.draftLogCount > 0 && (
-            <p className="text-sm text-foreground/70">
+            <p className="text-sm text-sub">
               임시 저장한 작업 내역 {summary.data.draftLogCount}건은 통계에 들어가지 않았습니다
             </p>
           )}
@@ -111,7 +112,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
               action={
                 <Link
                   to={`/projects/${projectId}`}
-                  className="text-sm font-semibold text-primary hover:underline"
+                  className="text-sm font-semibold text-primary hover:text-sub"
                 >
                   작업 달력으로
                 </Link>
@@ -137,26 +138,24 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                       <TableCell>
                         <button
                           type="button"
-                          className="font-semibold hover:text-primary hover:underline"
+                          className="font-semibold hover:text-sub"
                           onClick={() => setDetailId(row.employeeId)}
                         >
                           {employee?.name ?? '직원'}
                         </button>
-                        {employee?.title && (
-                          <span className="ml-2 text-foreground/65">{employee.title}</span>
-                        )}
+                        {employee?.title && <span className="ml-2 text-sub">{employee.title}</span>}
                       </TableCell>
                       <TableCell className="text-right font-semibold tabular-nums">
                         {hours(row.totalMinutes)}시간
                       </TableCell>
-                      <TableCell className="text-right tabular-nums text-foreground/75">
+                      <TableCell className="text-right tabular-nums text-sub">
                         {hours(row.totalMinutes / Math.max(row.workedDays, 1))}시간
                       </TableCell>
                       <TableCell className="whitespace-nowrap">
                         <span className="font-semibold tabular-nums">{row.workedDays}일</span>
                         {row.lastWorkDate && (
-                          <span className="ml-1.5 text-sm text-foreground/65">
-                            · 최근 {formatDay(row.lastWorkDate)}
+                          <span className="ml-2 text-sm text-sub">
+                            최근 {formatDay(row.lastWorkDate)}
                           </span>
                         )}
                         <Button
@@ -169,14 +168,14 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                           날짜 보기
                         </Button>
                       </TableCell>
-                      <TableCell className="text-foreground/75">
+                      <TableCell className="text-sub">
                         {row.categories
                           .slice(0, 3)
                           .map(
                             (item) =>
                               `${categoryNames.get(item.categoryId) ?? '작업'} ${hours(item.totalMinutes)}시간`,
                           )
-                          .join(' · ')}
+                          .join(', ')}
                         {row.categories.length > 3 ? ` 외 ${row.categories.length - 3}` : ''}
                       </TableCell>
                     </TableRow>
@@ -188,7 +187,7 @@ export const ProjectPeopleStats = ({ projectId }: { projectId: string }) => {
                     {hours(totalMinutes)}시간
                   </TableCell>
                   <TableCell />
-                  <TableCell className="tabular-nums text-foreground/65">
+                  <TableCell className="tabular-nums text-sub">
                     작업한 날 {summary.data.workedDays}일
                   </TableCell>
                   <TableCell />

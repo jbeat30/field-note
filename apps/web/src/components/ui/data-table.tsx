@@ -18,6 +18,7 @@ import { ArrowDown, ArrowUp, ArrowUpDown } from 'lucide-react';
 import type { ReactNode } from 'react';
 
 import { cn } from '../../lib/cn';
+import { useIsMobile } from '../../lib/useIsMobile';
 
 import { Pagination } from './pagination';
 import { Select } from './select';
@@ -71,6 +72,8 @@ type DataTableProps<TData extends object> = {
   summary?: ReactNode;
   // 새 쪽을 불러오는 중 (이전 쪽을 흐리게 보여 줌)
   isFetching?: boolean;
+  // 좁은 화면(md 미만)에서 표 대신 줄마다 카드로 보여 줄 내용
+  mobileCard?: (row: TData) => ReactNode;
   'aria-label': string;
 };
 
@@ -85,8 +88,10 @@ export const DataTable = <TData extends object>({
   emptyState,
   summary,
   isFetching = false,
+  mobileCard,
   'aria-label': ariaLabel,
 }: DataTableProps<TData>) => {
+  const isMobile = useIsMobile();
   const table = useTable({
     features: dataTableFeatures,
     columns,
@@ -111,20 +116,20 @@ export const DataTable = <TData extends object>({
 
   return (
     <section
-      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+      className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
       aria-label={ariaLabel}
       aria-busy={isFetching}
     >
       <div className="flex items-center justify-between gap-3">
-        <div className="text-sm text-foreground/70" aria-live="polite">
+        <div className="text-[19px] font-bold tracking-tight" aria-live="polite">
           {summary}
         </div>
-        <label className="flex items-center gap-2 text-sm text-foreground/70">
+        <label className="flex items-center gap-1 text-sm font-bold">
           쪽당
           <Select
             aria-label="쪽당 개수"
             size="sm"
-            className="w-24"
+            className="h-9 w-auto gap-1 border-transparent bg-transparent pr-1 pl-2 font-bold hover:border-transparent"
             value={String(pageSize)}
             onValueChange={(value) =>
               // 개수를 바꾸면 첫 쪽부터 재조회
@@ -139,73 +144,100 @@ export const DataTable = <TData extends object>({
         emptyState
       ) : (
         <div className={cn('transition-opacity', isFetching && 'opacity-60')}>
-          <Table>
-            <TableHead>
-              {table.getHeaderGroups().map((group) => (
-                <TableRow key={group.id}>
-                  {group.headers.map((header) => {
-                    const sorted = header.column.getIsSorted();
-                    const canSort = header.column.getCanSort();
-                    const className = header.column.columnDef.meta?.className;
-
-                    return (
-                      <TableHeaderCell
-                        key={header.id}
-                        className={className}
-                        aria-sort={
-                          sorted === 'asc'
-                            ? 'ascending'
-                            : sorted === 'desc'
-                              ? 'descending'
-                              : undefined
-                        }
-                      >
-                        {header.isPlaceholder ? null : canSort ? (
-                          <button
-                            type="button"
-                            className={cn(
-                              '-mx-2 inline-flex min-h-9 items-center gap-1 rounded-lg px-2 font-semibold hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary',
-                              sorted && 'text-foreground',
-                            )}
-                            onClick={header.column.getToggleSortingHandler()}
-                          >
-                            <table.FlexRender header={header} />
-                            {sorted === 'asc' ? (
-                              <ArrowUp aria-hidden className="size-4" />
-                            ) : sorted === 'desc' ? (
-                              <ArrowDown aria-hidden className="size-4" />
-                            ) : (
-                              <ArrowUpDown aria-hidden className="size-4 opacity-50" />
-                            )}
-                          </button>
-                        ) : (
-                          <table.FlexRender header={header} />
-                        )}
-                      </TableHeaderCell>
-                    );
-                  })}
-                </TableRow>
-              ))}
-            </TableHead>
-            <TableBody>
+          {mobileCard && isMobile ? (
+            <ul className="flex flex-col gap-2" aria-label={ariaLabel}>
               {table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  className={cn(
-                    'transition-colors',
-                    onRowClick && 'cursor-pointer hover:bg-muted/60',
-                  )}
-                  onClick={onRowClick ? () => onRowClick(row.original) : undefined}
-                >
-                  {row.getAllCells().map((cell) => (
-                    <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
-                      <table.FlexRender cell={cell} />
-                    </TableCell>
-                  ))}
-                </TableRow>
+                <li key={row.id}>
+                  <div
+                    role={onRowClick ? 'button' : undefined}
+                    tabIndex={onRowClick ? 0 : undefined}
+                    className="rounded-2xl bg-[var(--surface-nested)] px-4 py-3.5"
+                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                    onKeyDown={
+                      onRowClick
+                        ? (event) => {
+                            if (event.key === 'Enter' || event.key === ' ') {
+                              event.preventDefault();
+                              onRowClick(row.original);
+                            }
+                          }
+                        : undefined
+                    }
+                  >
+                    {mobileCard(row.original)}
+                  </div>
+                </li>
               ))}
-            </TableBody>
-          </Table>
+            </ul>
+          ) : (
+            <Table>
+              <TableHead>
+                {table.getHeaderGroups().map((group) => (
+                  <TableRow key={group.id}>
+                    {group.headers.map((header) => {
+                      const sorted = header.column.getIsSorted();
+                      const canSort = header.column.getCanSort();
+                      const className = header.column.columnDef.meta?.className;
+
+                      return (
+                        <TableHeaderCell
+                          key={header.id}
+                          className={className}
+                          aria-sort={
+                            sorted === 'asc'
+                              ? 'ascending'
+                              : sorted === 'desc'
+                                ? 'descending'
+                                : undefined
+                          }
+                        >
+                          {header.isPlaceholder ? null : canSort ? (
+                            <button
+                              type="button"
+                              className={cn(
+                                '-mx-2 inline-flex min-h-9 items-center gap-1 rounded-lg px-2 font-semibold hover:bg-muted hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary',
+                                sorted && 'text-foreground',
+                              )}
+                              onClick={header.column.getToggleSortingHandler()}
+                            >
+                              <table.FlexRender header={header} />
+                              {sorted === 'asc' ? (
+                                <ArrowUp aria-hidden className="size-4" />
+                              ) : sorted === 'desc' ? (
+                                <ArrowDown aria-hidden className="size-4" />
+                              ) : (
+                                <ArrowUpDown aria-hidden className="size-4 opacity-50" />
+                              )}
+                            </button>
+                          ) : (
+                            <table.FlexRender header={header} />
+                          )}
+                        </TableHeaderCell>
+                      );
+                    })}
+                  </TableRow>
+                ))}
+              </TableHead>
+              <TableBody>
+                {table.getRowModel().rows.map((row) => (
+                  <TableRow
+                    key={row.id}
+                    className={cn(
+                      'transition-colors',
+                      onRowClick && 'cursor-pointer hover:bg-surface-nested',
+                    )}
+                    onClick={onRowClick ? () => onRowClick(row.original) : undefined}
+                  >
+                    {row.getAllCells().map((cell) => (
+                      <TableCell key={cell.id} className={cell.column.columnDef.meta?.className}>
+                        <table.FlexRender cell={cell} />
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          )}
         </div>
       )}
 

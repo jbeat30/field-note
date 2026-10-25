@@ -182,7 +182,7 @@ export const LinkAfterServiceLog: Story = {
     await userEvent.click(within(itemOf(canvas, 1)).getByRole('button', { name: '연결' }));
 
     await expect(
-      await canvas.findByText(/작업 내역 · /, { exact: false }, { timeout: 4000 }),
+      await canvas.findByText(/작업 내역, /, { exact: false }, { timeout: 4000 }),
     ).toBeInTheDocument();
     await expect(canvas.getAllByText('사후 작업 1건').length).toBeGreaterThan(0);
   },

@@ -116,9 +116,10 @@ export const WarrantyForm = ({
       <FormField
         label="보증 기간 (개월)"
         error={errors.months}
-        hint={`0이면 보증 없음 · 최대 ${WARRANTY_MONTHS_MAX}개월 · 회사 기본값은 ${warranty.defaultMonths}개월`}
+        hint={`0이면 보증 없음, 최대 ${WARRANTY_MONTHS_MAX}개월, 회사 기본값은 ${warranty.defaultMonths}개월`}
       >
         <Input
+          placeholder="예: 12"
           type="number"
           inputMode="numeric"
           min={0}
@@ -140,7 +141,7 @@ export const WarrantyForm = ({
         />
       </FormField>
       {startBasis === 'ACTUAL_END' ? (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           시작일: {project.actualEnd ?? '아직 완료 전'} (프로젝트 실제 완료일)
         </p>
       ) : (
@@ -174,6 +175,7 @@ export const WarrantyForm = ({
         error={errors.reason}
       >
         <Textarea
+          placeholder="사유를 입력하세요"
           maxLength={WARRANTY_REASON_MAX_LENGTH}
           value={reason}
           disabled={!editable}

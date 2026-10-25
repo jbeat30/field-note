@@ -1,12 +1,11 @@
 import { CalendarDays } from 'lucide-react';
 import { Popover } from 'radix-ui';
 import { useRef, useState, type ComponentProps } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { ko } from 'react-day-picker/locale';
 
 import { cn } from '../../lib/cn';
 
 import { Button } from './button';
+import { Calendar } from './calendar';
 import { Input, type ControlSize } from './input';
 
 const ISO_DAY = /^\d{4}-\d{2}-\d{2}$/;
@@ -100,7 +99,7 @@ export const DateInput = ({
               aria-label="달력 열기"
               disabled={disabled}
               className={cn(
-                'absolute inset-y-0 right-0 flex items-center justify-center rounded-r-control text-foreground/65 hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50',
+                'absolute inset-y-0 right-0 flex items-center justify-center rounded-r-control text-sub hover:text-primary focus-visible:outline-2 focus-visible:outline-primary disabled:opacity-50',
                 size === 'sm' ? 'w-9' : 'w-11',
               )}
             >
@@ -121,19 +120,13 @@ export const DateInput = ({
           onInteractOutside={(event) => {
             if (inputRef.current?.contains(event.target as Node)) event.preventDefault();
           }}
-          className="z-30 rounded-lg border border-line bg-surface p-3 shadow-pop"
+          className="z-50 rounded-lg border border-line bg-surface p-3 shadow-pop"
         >
-          <DayPicker
-            mode="single"
-            locale={ko}
+          <Calendar
             selected={selected}
-            defaultMonth={selected ?? maxDay ?? new Date()}
             onSelect={(date) => date && commit(formatDay(date))}
-            disabled={[
-              ...(minDay ? [{ before: minDay }] : []),
-              ...(maxDay ? [{ after: maxDay }] : []),
-            ]}
-            weekStartsOn={0}
+            minDay={minDay}
+            maxDay={maxDay}
           />
           <div className="mt-2 flex justify-between border-t border-line pt-2">
             <Button

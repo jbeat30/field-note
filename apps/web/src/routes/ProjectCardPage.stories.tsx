@@ -503,7 +503,7 @@ export const PeopleStatsWorkDays: Story = {
 
     const dialog = within(await within(document.body).findByRole('dialog'));
 
-    await expect(dialog.getByRole('heading', { name: '정판금 · 일한 날' })).toBeInTheDocument();
+    await expect(dialog.getByRole('heading', { name: '정판금의 일한 날' })).toBeInTheDocument();
 
     const calendar = within(await dialog.findByRole('region', { name: '일한 날 달력' }));
     const list = within(dialog.getByRole('region', { name: '일한 날 목록' }));

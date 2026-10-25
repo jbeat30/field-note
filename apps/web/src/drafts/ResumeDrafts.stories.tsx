@@ -39,10 +39,10 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(
-      canvas.getByRole('link', { name: /A동 외장 판금 공사 · 10월 8일 \(목\) 작업 내역 작성 중/ }),
+      canvas.getByRole('link', { name: /A동 외장 판금 공사, 10월 8일 \(목\) 작업 내역 작성 중/ }),
     ).toHaveAttribute('href', '/projects/p1/work/2026-10-08');
     await expect(
-      canvas.getByRole('link', { name: /B동 덕트 설치 · 10월 7일 \(수\) 자재 작성 중/ }),
+      canvas.getByRole('link', { name: /B동 덕트 설치, 10월 7일 \(수\) 자재 작성 중/ }),
     ).toBeInTheDocument();
   },
 };
@@ -51,7 +51,7 @@ export const Default: Story = {
 export const UnknownProject: Story = {
   args: { projectNames: new Map() },
   play: async ({ canvasElement }) => {
-    await expect(within(canvasElement).getAllByText(/프로젝트 · /)).toHaveLength(2);
+    await expect(within(canvasElement).getAllByText(/프로젝트, /)).toHaveLength(2);
   },
 };
 

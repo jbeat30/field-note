@@ -40,13 +40,13 @@ export const DataExportSection = () => {
   };
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-foreground/70">
+    <div className="flex flex-col gap-4">
+      <p className="text-sm text-sub">
         프로젝트·직원·명부·투입·작업 내역(공수)·자재·지출·수입·변경 작업·보수 요청·메모·직원
         단가·파일 목록을 엑셀 한 파일로 내려받습니다. 사진·문서 파일 원본은 포함되지 않으며, 내보낸
         기록이 남습니다
       </p>
-      <p className="text-sm font-medium">
+      <p className="rounded-2xl bg-[var(--surface-nested)] p-4 text-sm font-bold">
         계정을 해지하면 데이터가 삭제되므로 해지 전에 받아 두세요
       </p>
       {error && <Alert>{error}</Alert>}
@@ -54,6 +54,7 @@ export const DataExportSection = () => {
       {needsPassword && (
         <FormField label="현재 비밀번호" hint="전체 데이터라 본인 확인을 위해 한 번 더 입력합니다">
           <PasswordInput
+            placeholder="현재 비밀번호를 입력하세요"
             autoComplete="current-password"
             value={password}
             onChange={(event) => setPassword(event.target.value)}
@@ -63,7 +64,7 @@ export const DataExportSection = () => {
       <Button
         type="button"
         variant="secondary"
-        className="self-start"
+        className="h-12 self-end rounded-[17px] px-8 font-extrabold"
         disabled={isExporting}
         onClick={() => void submit()}
       >

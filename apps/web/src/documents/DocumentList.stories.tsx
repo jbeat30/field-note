@@ -16,8 +16,8 @@ const meta = {
         versionCount: 2,
         latest: storyVersion(2, { reason: '배관 위치 변경', revisionDate: '2026-10-06' }),
       }),
-      storyDocument(2, { title: '도급 계약서', category: 'CONTRACT', isSensitive: true }),
-      storyDocument(3, { title: '외장 시방서', category: 'QUOTE' }),
+      storyDocument(2, { title: '도급 계약서', categoryName: '계약·공문', isSensitive: true }),
+      storyDocument(3, { title: '외장 시방서', categoryName: '견적·정산' }),
     ],
   },
 } satisfies Meta<typeof DocumentList>;

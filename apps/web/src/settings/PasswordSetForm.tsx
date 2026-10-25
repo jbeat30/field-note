@@ -79,17 +79,30 @@ export const PasswordSetForm = ({ onDone }: { onDone: () => void }) => {
         hint="소문자·숫자·밑줄·하이픈 4~20자"
         error={errors.loginId?.message}
       >
-        <Input autoComplete="username" autoCapitalize="none" {...register('loginId')} />
+        <Input
+          placeholder="로그인에 쓸 아이디"
+          autoComplete="username"
+          autoCapitalize="none"
+          {...register('loginId')}
+        />
       </FormField>
       <FormField
         label="비밀번호"
         hint={VALIDATION_MESSAGES.PASSWORD_HINT}
         error={errors.newPassword?.message}
       >
-        <PasswordInput autoComplete="new-password" {...register('newPassword')} />
+        <PasswordInput
+          placeholder="비밀번호를 입력하세요"
+          autoComplete="new-password"
+          {...register('newPassword')}
+        />
       </FormField>
       <FormField label="비밀번호 확인" error={errors.newPasswordConfirm?.message}>
-        <PasswordInput autoComplete="new-password" {...register('newPasswordConfirm')} />
+        <PasswordInput
+          placeholder="비밀번호를 한 번 더 입력하세요"
+          autoComplete="new-password"
+          {...register('newPasswordConfirm')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '설정 중' : '아이디·비밀번호 설정'}

@@ -7,7 +7,6 @@ import {
 import { useState } from 'react';
 import { Link } from 'react-router';
 
-import { Button } from '../components/ui/button';
 import { cn } from '../lib/cn';
 
 // 같은 종류가 이 개수를 넘으면 한 줄로 묶어 표시
@@ -68,36 +67,60 @@ type AlertRowProps = {
   today: string;
   onDismiss: (keys: string[]) => void;
   disabled: boolean;
+  // 묶음 안의 줄은 바깥 묶음 면 위에 그대로 놓임
+  isInGroup?: boolean;
+  // 알림 창 안에서는 이동과 숨기기를 굵은 글자 버튼으로 보임
+  isModal?: boolean;
 };
 
-const AlertRow = ({ item, today, onDismiss, disabled }: AlertRowProps) => (
-  <li className="flex flex-wrap items-center gap-x-3 gap-y-1 py-2.5">
+// 줄 오른쪽의 "숨기기" 같은 글자 버튼: 바탕 없이 보조 글자색
+const textButtonClass =
+  'text-[13px] font-semibold text-sub hover:text-foreground disabled:opacity-50';
+
+const DOT_URGENT = 'bg-danger';
+const DOT_NORMAL = 'bg-[#8d826c]';
+
+const AlertRow = ({
+  item,
+  today,
+  onDismiss,
+  disabled,
+  isInGroup = false,
+  isModal = false,
+}: AlertRowProps) => (
+  <li
+    className={cn(
+      'flex items-center gap-3 text-sm leading-normal',
+      isInGroup ? 'py-2' : 'rounded-[20px] bg-surface-nested py-[13px] pr-3.5 pl-4',
+    )}
+  >
     <span
       aria-hidden
-      className={cn('size-2 shrink-0 rounded-full', item.urgent ? 'bg-danger' : 'bg-foreground/35')}
+      className={cn('size-2.5 shrink-0 rounded-full', item.urgent ? DOT_URGENT : DOT_NORMAL)}
     />
-    <p className={cn('min-w-0 flex-1 basis-56 text-sm', item.urgent && 'font-medium text-danger')}>
+    <p className={cn('min-w-0 flex-1', item.urgent ? 'font-bold text-danger' : 'font-medium')}>
       {dashboardAlertMessage(item.alert)}
     </p>
-    <span className="flex shrink-0 items-center gap-1">
-      <Link
-        to={dashboardAlertPath(item.alert, today)}
-        aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
-        className="inline-flex min-h-touch items-center rounded-md px-2 text-sm font-medium text-primary underline-offset-2 hover:underline"
-      >
-        이동
-      </Link>
-      <Button
-        type="button"
-        variant="ghost"
-        size="sm"
-        disabled={disabled}
-        aria-label={`${dashboardAlertMessage(item.alert)} 숨기기`}
-        onClick={() => onDismiss([item.key])}
-      >
-        숨기기
-      </Button>
-    </span>
+    <Link
+      to={dashboardAlertPath(item.alert, today)}
+      aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
+      className={cn(
+        'shrink-0 text-[13px] font-bold',
+        !isModal &&
+          'rounded-2xl bg-primary px-3.5 py-[7px] text-primary-foreground hover:opacity-85',
+      )}
+    >
+      이동
+    </Link>
+    <button
+      type="button"
+      disabled={disabled}
+      aria-label={`${dashboardAlertMessage(item.alert)} 숨기기`}
+      className={cn('shrink-0', textButtonClass, isModal && 'font-bold text-foreground')}
+      onClick={() => onDismiss([item.key])}
+    >
+      숨기기
+    </button>
   </li>
 );
 
@@ -108,6 +131,8 @@ type AlertListProps = {
   disabled?: boolean;
   // 묶지 않고 앞에서부터 이만큼만 보여 줄 때 (홈)
   limit?: number;
+  // 알림 창에서 쓸 때
+  isModal?: boolean;
 };
 
 // 알림 목록: 급한 알림은 붉은 점·글자, 나머지는 회색 점, 같은 종류가 많으면 한 줄로 묶고 하나씩 "이동" "숨기기"
@@ -117,6 +142,7 @@ export const AlertList = ({
   onDismiss,
   disabled = false,
   limit,
+  isModal = false,
 }: AlertListProps) => {
   const [opened, setOpened] = useState<ReadonlySet<AlertKind>>(new Set());
   const shown = limit === undefined ? alerts : alerts.slice(0, limit);
@@ -126,7 +152,7 @@ export const AlertList = ({
       : shown.map((item) => ({ type: 'single' as const, item }));
 
   return (
-    <ul className="divide-y divide-line">
+    <ul className="flex flex-col gap-2">
       {entries.map((entry) => {
         if (entry.type === 'single') {
           return (
@@ -136,6 +162,7 @@ export const AlertList = ({
               today={today}
               onDismiss={onDismiss}
               disabled={disabled}
+              isModal={isModal}
             />
           );
         }
@@ -144,28 +171,24 @@ export const AlertList = ({
         const hasUrgent = entry.items.some((item) => item.urgent);
 
         return (
-          <li key={entry.kind} className="py-2.5">
+          <li key={entry.kind} className="rounded-2xl bg-surface-nested px-4 py-3">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
               <span
                 aria-hidden
-                className={cn(
-                  'size-2 shrink-0 rounded-full',
-                  hasUrgent ? 'bg-danger' : 'bg-foreground/35',
-                )}
+                className={cn('size-2 shrink-0 rounded-full', hasUrgent ? DOT_URGENT : DOT_NORMAL)}
               />
               <p
                 className={cn(
-                  'min-w-0 flex-1 basis-56 text-sm',
-                  hasUrgent && 'font-medium text-danger',
+                  'min-w-0 flex-1 text-sm',
+                  hasUrgent ? 'font-bold text-danger' : 'font-medium',
                 )}
               >
                 {GROUP_TITLES[entry.kind]} {entry.items.length}건
               </p>
               <span className="flex shrink-0 items-center gap-1">
-                <Button
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  className={textButtonClass}
                   aria-expanded={isOpen}
                   aria-label={`${GROUP_TITLES[entry.kind]} ${isOpen ? '접기' : '펼치기'}`}
                   onClick={() =>
@@ -179,17 +202,16 @@ export const AlertList = ({
                   }
                 >
                   {isOpen ? '접기' : '펼치기'}
-                </Button>
-                <Button
+                </button>
+                <button
                   type="button"
-                  variant="ghost"
-                  size="sm"
+                  className={textButtonClass}
                   disabled={disabled}
                   aria-label={`${GROUP_TITLES[entry.kind]} ${entry.items.length}건 숨기기`}
                   onClick={() => onDismiss(entry.items.map((item) => item.key))}
                 >
                   숨기기
-                </Button>
+                </button>
               </span>
             </div>
             {isOpen && (
@@ -201,6 +223,7 @@ export const AlertList = ({
                     today={today}
                     onDismiss={onDismiss}
                     disabled={disabled}
+                    isInGroup
                   />
                 ))}
               </ul>

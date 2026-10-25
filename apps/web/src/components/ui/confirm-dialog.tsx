@@ -33,16 +33,16 @@ export const ConfirmDialog = ({
 }: ConfirmDialogProps) => (
   <AlertDialog.Root open={open}>
     <AlertDialog.Portal>
-      <AlertDialog.Overlay className="fixed inset-0 z-30 bg-overlay" />
+      <AlertDialog.Overlay className="fixed inset-0 z-40 bg-overlay" />
       <AlertDialog.Content
         className={cn(
-          'fixed top-1/2 left-1/2 z-30 w-[calc(100%-2rem)] max-w-sm',
+          'fixed top-1/2 left-1/2 z-40 w-[calc(100%-2rem)] max-w-sm',
           '-translate-x-1/2 -translate-y-1/2 flex flex-col gap-3 rounded-xl bg-surface p-5 shadow-card',
         )}
       >
         <AlertDialog.Title className="text-base font-semibold">{title}</AlertDialog.Title>
         {description && (
-          <AlertDialog.Description className="text-sm text-foreground/70">
+          <AlertDialog.Description className="text-sm text-sub">
             {description}
           </AlertDialog.Description>
         )}

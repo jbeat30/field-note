@@ -15,6 +15,7 @@ import { AfterServiceUsagePanel } from '../repairs/AfterServiceUsagePanel';
 import { RepairForm } from '../repairs/RepairForm';
 import { RepairItem } from '../repairs/RepairItem';
 import { useRepairs } from '../repairs/useRepairs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 보수 요청: 보증 중 고객이 요청한 하자 보수를 접수부터 처리까지 기록
 // 보수 작업은 작업 내역·자재 기록에 "사후 작업"으로 표시하고 요청에 연결해 건별 공수·자재 확인
@@ -25,7 +26,7 @@ export const ProjectRepairsPage = () => {
   const repairs = useRepairs(id, status || undefined);
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   }
 
   if (!project.data) {
@@ -62,7 +63,7 @@ export const ProjectRepairsPage = () => {
           접수 목록
         </h2>
         <Select
-          className="w-40"
+          className="w-40 bg-surface-subtle"
           aria-label="상태 필터"
           value={status}
           emptyLabel="전체 상태"
@@ -73,9 +74,9 @@ export const ProjectRepairsPage = () => {
           }))}
         />
         {repairs.isError && <Alert>보수 요청을 불러오지 못했습니다</Alert>}
-        {repairs.isPending && <p className="text-sm">불러오는 중</p>}
+        {repairs.isPending && <LoadingBlock label="불러오는 중" variant="rows" lines={2} />}
         {repairs.data && repairs.data.length === 0 && (
-          <p className="text-foreground/70">접수한 보수 요청이 없습니다</p>
+          <p className="text-sub">접수한 보수 요청이 없습니다</p>
         )}
         {repairs.data && repairs.data.length > 0 && (
           <ul className="flex flex-col gap-3">

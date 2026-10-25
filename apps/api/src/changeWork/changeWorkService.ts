@@ -104,6 +104,7 @@ const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<Chang
         include: {
           document: {
             include: {
+              category: true,
               versions: { include: { file: true }, orderBy: { versionNo: 'desc' }, take: 1 },
             },
           },
@@ -130,7 +131,7 @@ const detailOf = async (tx: Prisma.TransactionClient, id: string): Promise<Chang
     documents: row.documents.map((link) => ({
       documentId: link.documentId,
       title: link.document.title,
-      category: link.document.category,
+      categoryName: link.document.category.name,
       isSensitive: link.document.isSensitive,
       latestVersionNo: link.document.versions[0]!.versionNo,
       contentType: link.document.versions[0]!.file.contentType,

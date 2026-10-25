@@ -31,19 +31,22 @@ export const SearchPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <PageHeader title="찾기" description="프로젝트·직원·메모·자료·작업 내역을 한 번에 찾습니다" />
+      <PageHeader
+        title="찾기"
+        description="프로젝트, 직원, 메모, 자료, 작업 내역을 한 번에 찾습니다"
+      />
       {projectId && (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           {project.data ? (
-            <Link className="text-primary underline" to={`/projects/${projectId}`}>
+            <Link className="text-primary hover:text-sub" to={`/projects/${projectId}`}>
               {project.data.name}
             </Link>
           ) : (
             '프로젝트'
           )}{' '}
-          안에서 메모·자료·작업 내역만 찾습니다 ·{' '}
+          안에서 메모·자료·작업 내역만 찾습니다,{' '}
           <Link
-            className="text-primary underline"
+            className="text-primary hover:text-sub"
             to={`/search${text ? `?q=${encodeURIComponent(text)}` : ''}`}
           >
             전체에서 찾기
@@ -54,12 +57,12 @@ export const SearchPage = () => {
         type="search"
         autoFocus
         aria-label="검색어"
-        placeholder="프로젝트·직원·메모·자료·작업 내역 찾기"
+        placeholder="프로젝트, 직원, 메모 찾기"
         maxLength={50}
         value={text}
         onChange={(event) => change(event.target.value)}
       />
-      {!q.trim() && <p className="text-sm text-foreground/70">찾을 말을 입력해 주세요</p>}
+      {!q.trim() && <p className="text-sm text-sub">찾을 말을 입력해 주세요</p>}
       {q.trim() && results.isPending && <p className="text-sm">찾는 중</p>}
       {results.isError && <Alert>검색하지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
       {q.trim() && results.data && <SearchResults results={results.data} />}

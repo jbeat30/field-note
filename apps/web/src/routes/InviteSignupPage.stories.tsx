@@ -41,7 +41,7 @@ export const OnlyRequiredAgreed: Story = {
     await userEvent.click(canvas.getByRole('checkbox', { name: /개인정보 수집·이용 동의/ }));
     await userEvent.click(canvas.getByRole('checkbox', { name: /만 14세 이상/ }));
 
-    // 선택 약관(마케팅)은 동의하지 않아도 진행 가능
+    // 필수 약관과 만 14세 확인만으로 진행 가능
     await expect(canvas.getByRole('button', { name: '다음' })).toBeEnabled();
   },
 };

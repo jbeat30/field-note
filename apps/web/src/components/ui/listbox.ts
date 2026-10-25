@@ -1,12 +1,11 @@
 // 펼침 목록 공통 모양 (Select·Combobox·DropdownMenu가 같은 모양으로 열림)
 
 // 떠 있는 목록 상자
-export const listboxContentClass =
-  'z-40 overflow-hidden rounded-lg border border-line bg-surface shadow-pop';
+export const listboxContentClass = 'z-50 overflow-hidden rounded-xl bg-surface-subtle shadow-pop';
 
 // 목록 한 줄, 키보드·마우스로 가리킨 줄은 data-highlighted(Radix) 또는 data-selected(cmdk)
 export const listboxItemClass =
-  'relative flex min-h-10 cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-[15px] outline-none select-none data-[highlighted]:bg-muted data-[selected=true]:bg-muted md:min-h-9';
+  'relative flex min-h-10 cursor-pointer items-center gap-2 rounded-md px-2.5 py-1.5 text-[15px] outline-none select-none data-[highlighted]:bg-surface-nested data-[selected=true]:bg-surface-nested md:min-h-9';
 
 // 꺼진 줄: Radix는 꺼졌을 때만 data-disabled를 붙이고, cmdk는 늘 붙이며 값이 true/false
 export const radixItemDisabledClass =
@@ -15,7 +14,7 @@ export const cmdkItemDisabledClass =
   'data-[disabled=true]:pointer-events-none data-[disabled=true]:opacity-45';
 
 // 묶음 제목 (예: "프로젝트 팀", "다른 직원")
-export const listboxGroupLabelClass = 'px-2.5 pt-2 pb-1 text-xs font-semibold text-foreground/65';
+export const listboxGroupLabelClass = 'px-2.5 pt-2 pb-1 text-xs font-semibold text-sub';
 
 export type ListOption = {
   value: string;

@@ -24,6 +24,7 @@ import {
   useMaterials,
 } from '../materials/useMaterials';
 import { useProject } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 export const ProjectMaterialsPage = () => {
   const { id = '' } = useParams();
@@ -51,7 +52,7 @@ export const ProjectMaterialsPage = () => {
     if (ok) remove.mutate(recordId);
   };
 
-  if (project.isPending) return <p className="text-sm">프로젝트를 불러오는 중</p>;
+  if (project.isPending) return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   if (!project.data) return <Alert>프로젝트를 불러오지 못했습니다</Alert>;
 
   return (
@@ -83,7 +84,7 @@ export const ProjectMaterialsPage = () => {
           <Section title="자재별 합계" description="이 현장에 쓴 양을 자재마다 모았습니다">
             {totals.isError && <Alert>자재 합계를 불러오지 못했습니다</Alert>}
             {totals.isSuccess && used.length === 0 && (
-              <p className="text-sm text-foreground/65">아직 기록한 자재가 없습니다</p>
+              <p className="text-sm text-sub">아직 기록한 자재가 없습니다</p>
             )}
             {used.length > 0 && (
               <Table aria-label="자재별 합계">
@@ -98,10 +99,10 @@ export const ProjectMaterialsPage = () => {
                   {used.map((item) => (
                     <TableRow key={item.materialId}>
                       <TableCell className="font-semibold">{item.name}</TableCell>
-                      <TableCell className="text-foreground/75">{item.spec ?? '-'}</TableCell>
+                      <TableCell className="text-sub">{item.spec ?? '-'}</TableCell>
                       <TableCell className="text-right tabular-nums">
                         {item.used.toLocaleString('ko-KR')}
-                        <span className="ml-0.5 text-foreground/65">{item.unit}</span>
+                        <span className="ml-0.5 text-sub">{item.unit}</span>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -114,7 +115,7 @@ export const ProjectMaterialsPage = () => {
         <div className="rounded-xl bg-surface-subtle p-4 md:p-5">
           <Section title="날짜별 기록">
             {remove.error && <Alert>지우지 못했습니다. 잠시 후 다시 시도해 주세요</Alert>}
-            {history.isPending && <p className="text-sm">불러오는 중</p>}
+            {history.isPending && <LoadingBlock label="불러오는 중" variant="rows" lines={6} />}
             {history.isSuccess && records.length === 0 && (
               <EmptyState
                 title="아직 기록한 자재가 없습니다"
@@ -142,21 +143,17 @@ export const ProjectMaterialsPage = () => {
 
                     return (
                       <TableRow key={record.id}>
-                        <TableCell className="whitespace-nowrap text-sm text-foreground/70">
+                        <TableCell className="whitespace-nowrap text-sm text-sub">
                           {formatDay(record.recordDate)}
                         </TableCell>
                         <TableCell className="font-semibold">{name}</TableCell>
-                        <TableCell className="text-foreground/70">
-                          {material?.spec ?? '-'}
-                        </TableCell>
-                        <TableCell className="text-sm text-foreground/70">
+                        <TableCell className="text-sub">{material?.spec ?? '-'}</TableCell>
+                        <TableCell className="text-sm text-sub">
                           {record.kind === 'USED' ? '' : MATERIAL_RECORD_KIND_LABELS[record.kind]}
                         </TableCell>
                         <TableCell className="text-right tabular-nums">
                           {record.quantity.toLocaleString('ko-KR')}
-                          <span className="ml-0.5 text-sm text-foreground/65">
-                            {material?.unit}
-                          </span>
+                          <span className="ml-0.5 text-sm text-sub">{material?.unit}</span>
                         </TableCell>
                         <TableCell className="text-right">
                           <Button
@@ -166,7 +163,7 @@ export const ProjectMaterialsPage = () => {
                             aria-label={`${name} 기록 지우기`}
                             onClick={() => void handleDelete(record.id, name)}
                           >
-                            <span className="text-foreground/50">✕</span>
+                            <span className="text-sub">✕</span>
                           </Button>
                         </TableCell>
                       </TableRow>

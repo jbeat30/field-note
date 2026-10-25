@@ -6633,7 +6633,8 @@
                               "WORKER_TYPE",
                               "CREDENTIAL_TYPE",
                               "EXPENSE_CATEGORY",
-                              "INCOME_CATEGORY"
+                              "INCOME_CATEGORY",
+                              "DOCUMENT_CATEGORY"
                             ]
                           },
                           "name": {
@@ -6641,13 +6642,17 @@
                           },
                           "isActive": {
                             "type": "boolean"
+                          },
+                          "sensitiveDefault": {
+                            "type": "boolean"
                           }
                         },
                         "required": [
                           "id",
                           "kind",
                           "name",
-                          "isActive"
+                          "isActive",
+                          "sensitiveDefault"
                         ]
                       }
                     }
@@ -6761,13 +6766,17 @@
                       "WORKER_TYPE",
                       "CREDENTIAL_TYPE",
                       "EXPENSE_CATEGORY",
-                      "INCOME_CATEGORY"
+                      "INCOME_CATEGORY",
+                      "DOCUMENT_CATEGORY"
                     ]
                   },
                   "name": {
                     "type": "string",
                     "minLength": 1,
                     "maxLength": 30
+                  },
+                  "sensitiveDefault": {
+                    "type": "boolean"
                   }
                 },
                 "required": [
@@ -6799,7 +6808,8 @@
                         "WORKER_TYPE",
                         "CREDENTIAL_TYPE",
                         "EXPENSE_CATEGORY",
-                        "INCOME_CATEGORY"
+                        "INCOME_CATEGORY",
+                        "DOCUMENT_CATEGORY"
                       ]
                     },
                     "name": {
@@ -6807,13 +6817,17 @@
                     },
                     "isActive": {
                       "type": "boolean"
+                    },
+                    "sensitiveDefault": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "id",
                     "kind",
                     "name",
-                    "isActive"
+                    "isActive",
+                    "sensitiveDefault"
                   ]
                 }
               }
@@ -6997,7 +7011,8 @@
                       "WORKER_TYPE",
                       "CREDENTIAL_TYPE",
                       "EXPENSE_CATEGORY",
-                      "INCOME_CATEGORY"
+                      "INCOME_CATEGORY",
+                      "DOCUMENT_CATEGORY"
                     ]
                   },
                   "ids": {
@@ -7301,6 +7316,9 @@
                   },
                   "isActive": {
                     "type": "boolean"
+                  },
+                  "sensitiveDefault": {
+                    "type": "boolean"
                   }
                 }
               }
@@ -7328,7 +7346,8 @@
                         "WORKER_TYPE",
                         "CREDENTIAL_TYPE",
                         "EXPENSE_CATEGORY",
-                        "INCOME_CATEGORY"
+                        "INCOME_CATEGORY",
+                        "DOCUMENT_CATEGORY"
                       ]
                     },
                     "name": {
@@ -7336,13 +7355,17 @@
                     },
                     "isActive": {
                       "type": "boolean"
+                    },
+                    "sensitiveDefault": {
+                      "type": "boolean"
                     }
                   },
                   "required": [
                     "id",
                     "kind",
                     "name",
-                    "isActive"
+                    "isActive",
+                    "sensitiveDefault"
                   ]
                 }
               }
@@ -20962,15 +20985,8 @@
                           "title": {
                             "type": "string"
                           },
-                          "category": {
-                            "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                          "categoryName": {
+                            "type": "string"
                           },
                           "isSensitive": {
                             "type": "boolean"
@@ -20989,7 +21005,7 @@
                         "required": [
                           "documentId",
                           "title",
-                          "category",
+                          "categoryName",
                           "isSensitive",
                           "latestVersionNo",
                           "contentType",
@@ -21683,15 +21699,8 @@
                           "title": {
                             "type": "string"
                           },
-                          "category": {
-                            "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                          "categoryName": {
+                            "type": "string"
                           },
                           "isSensitive": {
                             "type": "boolean"
@@ -21710,7 +21719,7 @@
                         "required": [
                           "documentId",
                           "title",
-                          "category",
+                          "categoryName",
                           "isSensitive",
                           "latestVersionNo",
                           "contentType",
@@ -22126,15 +22135,8 @@
                           "title": {
                             "type": "string"
                           },
-                          "category": {
-                            "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                          "categoryName": {
+                            "type": "string"
                           },
                           "isSensitive": {
                             "type": "boolean"
@@ -22153,7 +22155,7 @@
                         "required": [
                           "documentId",
                           "title",
-                          "category",
+                          "categoryName",
                           "isSensitive",
                           "latestVersionNo",
                           "contentType",
@@ -22577,15 +22579,8 @@
                           "title": {
                             "type": "string"
                           },
-                          "category": {
-                            "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                          "categoryName": {
+                            "type": "string"
                           },
                           "isSensitive": {
                             "type": "boolean"
@@ -22604,7 +22599,7 @@
                         "required": [
                           "documentId",
                           "title",
-                          "category",
+                          "categoryName",
                           "isSensitive",
                           "latestVersionNo",
                           "contentType",
@@ -23015,15 +23010,8 @@
                           "title": {
                             "type": "string"
                           },
-                          "category": {
-                            "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                          "categoryName": {
+                            "type": "string"
                           },
                           "isSensitive": {
                             "type": "boolean"
@@ -23042,7 +23030,7 @@
                         "required": [
                           "documentId",
                           "title",
-                          "category",
+                          "categoryName",
                           "isSensitive",
                           "latestVersionNo",
                           "contentType",
@@ -23459,15 +23447,8 @@
                           "title": {
                             "type": "string"
                           },
-                          "category": {
-                            "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                          "categoryName": {
+                            "type": "string"
                           },
                           "isSensitive": {
                             "type": "boolean"
@@ -23486,7 +23467,7 @@
                         "required": [
                           "documentId",
                           "title",
-                          "category",
+                          "categoryName",
                           "isSensitive",
                           "latestVersionNo",
                           "contentType",
@@ -23895,15 +23876,8 @@
                           "title": {
                             "type": "string"
                           },
-                          "category": {
-                            "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                          "categoryName": {
+                            "type": "string"
                           },
                           "isSensitive": {
                             "type": "boolean"
@@ -23922,7 +23896,7 @@
                         "required": [
                           "documentId",
                           "title",
-                          "category",
+                          "categoryName",
                           "isSensitive",
                           "latestVersionNo",
                           "contentType",
@@ -35354,15 +35328,8 @@
                               "title": {
                                 "type": "string"
                               },
-                              "category": {
-                                "type": "string",
-                                "enum": [
-                                  "DRAWING",
-                                  "CONTRACT",
-                                  "SAFETY",
-                                  "QUOTE",
-                                  "OTHER"
-                                ]
+                              "categoryName": {
+                                "type": "string"
                               },
                               "versionCount": {
                                 "type": "integer"
@@ -35375,7 +35342,7 @@
                             "required": [
                               "id",
                               "title",
-                              "category",
+                              "categoryName",
                               "versionCount",
                               "latestRevisionDate"
                             ]
@@ -49087,16 +49054,9 @@
                     "minLength": 1,
                     "maxLength": 100
                   },
-                  "category": {
+                  "categoryId": {
                     "type": "string",
-                    "enum": [
-                      "DRAWING",
-                      "CONTRACT",
-                      "SAFETY",
-                      "QUOTE",
-                      "OTHER"
-                    ],
-                    "default": "OTHER"
+                    "format": "uuid"
                   },
                   "isSensitive": {
                     "type": "boolean"
@@ -49113,7 +49073,8 @@
                 },
                 "required": [
                   "fileId",
-                  "title"
+                  "title",
+                  "categoryId"
                 ]
               }
             }
@@ -49135,15 +49096,12 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "category": {
+                    "categoryId": {
                       "type": "string",
-                      "enum": [
-                        "DRAWING",
-                        "CONTRACT",
-                        "SAFETY",
-                        "QUOTE",
-                        "OTHER"
-                      ]
+                      "format": "uuid"
+                    },
+                    "categoryName": {
+                      "type": "string"
                     },
                     "title": {
                       "type": "string"
@@ -49333,7 +49291,8 @@
                   "required": [
                     "id",
                     "projectId",
-                    "category",
+                    "categoryId",
+                    "categoryName",
                     "title",
                     "isSensitive",
                     "isPinned",
@@ -49596,16 +49555,10 @@
           {
             "schema": {
               "type": "string",
-              "enum": [
-                "DRAWING",
-                "CONTRACT",
-                "SAFETY",
-                "QUOTE",
-                "OTHER"
-              ]
+              "format": "uuid"
             },
             "required": false,
-            "name": "category",
+            "name": "categoryId",
             "in": "query"
           },
           {
@@ -49651,15 +49604,12 @@
                             "type": "string",
                             "format": "uuid"
                           },
-                          "category": {
+                          "categoryId": {
                             "type": "string",
-                            "enum": [
-                              "DRAWING",
-                              "CONTRACT",
-                              "SAFETY",
-                              "QUOTE",
-                              "OTHER"
-                            ]
+                            "format": "uuid"
+                          },
+                          "categoryName": {
+                            "type": "string"
                           },
                           "title": {
                             "type": "string"
@@ -49769,7 +49719,8 @@
                         "required": [
                           "id",
                           "projectId",
-                          "category",
+                          "categoryId",
+                          "categoryName",
                           "title",
                           "isSensitive",
                           "isPinned",
@@ -50053,15 +50004,12 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "category": {
+                    "categoryId": {
                       "type": "string",
-                      "enum": [
-                        "DRAWING",
-                        "CONTRACT",
-                        "SAFETY",
-                        "QUOTE",
-                        "OTHER"
-                      ]
+                      "format": "uuid"
+                    },
+                    "categoryName": {
+                      "type": "string"
                     },
                     "title": {
                       "type": "string"
@@ -50251,7 +50199,8 @@
                   "required": [
                     "id",
                     "projectId",
-                    "category",
+                    "categoryId",
+                    "categoryName",
                     "title",
                     "isSensitive",
                     "isPinned",
@@ -50524,15 +50473,9 @@
                     "minLength": 1,
                     "maxLength": 100
                   },
-                  "category": {
+                  "categoryId": {
                     "type": "string",
-                    "enum": [
-                      "DRAWING",
-                      "CONTRACT",
-                      "SAFETY",
-                      "QUOTE",
-                      "OTHER"
-                    ]
+                    "format": "uuid"
                   },
                   "isSensitive": {
                     "type": "boolean"
@@ -50564,15 +50507,12 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "category": {
+                    "categoryId": {
                       "type": "string",
-                      "enum": [
-                        "DRAWING",
-                        "CONTRACT",
-                        "SAFETY",
-                        "QUOTE",
-                        "OTHER"
-                      ]
+                      "format": "uuid"
+                    },
+                    "categoryName": {
+                      "type": "string"
                     },
                     "title": {
                       "type": "string"
@@ -50762,7 +50702,8 @@
                   "required": [
                     "id",
                     "projectId",
-                    "category",
+                    "categoryId",
+                    "categoryName",
                     "title",
                     "isSensitive",
                     "isPinned",
@@ -51336,15 +51277,12 @@
                       "type": "string",
                       "format": "uuid"
                     },
-                    "category": {
+                    "categoryId": {
                       "type": "string",
-                      "enum": [
-                        "DRAWING",
-                        "CONTRACT",
-                        "SAFETY",
-                        "QUOTE",
-                        "OTHER"
-                      ]
+                      "format": "uuid"
+                    },
+                    "categoryName": {
+                      "type": "string"
                     },
                     "title": {
                       "type": "string"
@@ -51534,7 +51472,8 @@
                   "required": [
                     "id",
                     "projectId",
-                    "category",
+                    "categoryId",
+                    "categoryName",
                     "title",
                     "isSensitive",
                     "isPinned",
