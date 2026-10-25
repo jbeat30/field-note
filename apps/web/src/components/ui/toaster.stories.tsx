@@ -28,3 +28,28 @@ export const Success: Story = {
     await expect(await screen.findByText('저장했습니다')).toBeVisible();
   },
 };
+
+// 되돌리기 버튼이 있는 안내: 누르면 동작이 실행되고 안내가 닫힘
+export const WithUndo: Story = {
+  render: () => {
+    const calls: string[] = [];
+
+    return (
+      <>
+        <Button
+          onClick={() =>
+            toast('삭제했습니다', 'info', { label: '되돌리기', onClick: () => calls.push('undo') })
+          }
+        >
+          삭제
+        </Button>
+        <Toaster />
+      </>
+    );
+  },
+  play: async ({ canvasElement }) => {
+    await userEvent.click(within(canvasElement).getByRole('button', { name: '삭제' }));
+    await userEvent.click(await screen.findByRole('button', { name: '되돌리기' }));
+    await expect(screen.queryByText('삭제했습니다')).not.toBeInTheDocument();
+  },
+};

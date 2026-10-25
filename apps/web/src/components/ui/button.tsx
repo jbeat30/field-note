@@ -6,7 +6,7 @@ import { cn } from '../../lib/cn';
 
 // 버튼: 크기 단계는 입력 칸(controlSize)과 같은 높이 규칙, 모서리는 18px
 export const buttonVariants = cva(
-  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-bold whitespace-nowrap transition-[background-color,border-color,transform,opacity] duration-(--duration-fast) ease-(--ease-smooth) select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:scale-[0.98] disabled:pointer-events-none disabled:bg-line disabled:text-sub [&_svg]:shrink-0',
+  'inline-flex shrink-0 items-center justify-center gap-2 rounded-lg font-bold whitespace-nowrap transition-[background-color,border-color,transform,opacity] duration-120 ease-(--ease-smooth) select-none focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground active:scale-[0.97] disabled:pointer-events-none disabled:bg-line disabled:text-sub [&_svg]:shrink-0',
   {
     variants: {
       variant: {

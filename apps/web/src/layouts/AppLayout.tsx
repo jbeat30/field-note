@@ -2,11 +2,10 @@ import { LogOut, Menu, Plus, Search } from 'lucide-react';
 import { useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 
-import { useMe } from '../auth/useMe';
 import { Button } from '../components/ui/button';
 import { Modal } from '../components/ui/modal';
 import { Toaster } from '../components/ui/toaster';
-import { AlertBell } from '../dashboard/AlertBell';
+import { AlertBell, AlertDialog } from '../dashboard/AlertBell';
 import { cn } from '../lib/cn';
 import { useUiStore } from '../stores/uiStore';
 
@@ -15,9 +14,8 @@ import { BrandLogo } from './BrandLogo';
 import { DemoBanner } from './DemoBanner';
 import { MORE_ITEMS, TAB_ITEMS } from './navItems';
 import { OfflineNotice } from './OfflineNotice';
-import { ProfileAvatar } from './ProfileMenu';
 import { QuickAddSheet } from './QuickAddSheet';
-import { ThemeToggle } from './ThemeToggle';
+import { ThemeSwitch } from './ThemeSwitch';
 import { useLogout } from './useLogout';
 
 const tabClass = (isActive: boolean) =>
@@ -30,7 +28,6 @@ const tabClass = (isActive: boolean) =>
 // 좁은 화면은 주황 상단 줄과 잉크 알약 하단 메뉴, 빠른 추가 버튼(터치 영역 44px 이상)
 export const AppLayout = () => {
   const setQuickAddOpen = useUiStore((state) => state.setQuickAddOpen);
-  const me = useMe();
   const onLogout = useLogout();
   const { pathname } = useLocation();
   const [isMoreOpen, setMoreOpen] = useState(false);
@@ -118,15 +115,10 @@ export const AppLayout = () => {
           ))}
         </ul>
         <div className="mt-4 flex items-center justify-between gap-3 border-t border-line pt-4">
-          <span className="text-sm font-bold">화면 밝기</span>
-          <ThemeToggle />
+          <span className="text-sm font-bold">화면 모드</span>
+          <ThemeSwitch />
         </div>
-        <div className="mt-4 flex items-center gap-3 border-t border-line pt-4">
-          <ProfileAvatar name={me.data?.displayName} />
-          <div className="min-w-0 flex-1">
-            <p className="truncate text-sm font-bold">{me.data?.displayName}</p>
-            <p className="truncate text-xs text-sub">{me.data?.companyName}</p>
-          </div>
+        <div className="mt-4 flex justify-end border-t border-line pt-4">
           <Button
             variant="secondary"
             onClick={() => {
@@ -140,6 +132,7 @@ export const AppLayout = () => {
         </div>
       </Modal>
       <QuickAddSheet />
+      <AlertDialog />
       <Toaster />
     </div>
   );
