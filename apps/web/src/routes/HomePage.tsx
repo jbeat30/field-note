@@ -43,9 +43,9 @@ export const HomePage = () => {
         isDisplay
         overlap
         eyebrow={
-          <>
+          <span>
             {me.data?.companyName}, {dateText(todayInSeoul(new Date()))}
-          </>
+          </span>
         }
         title={
           <>
@@ -75,7 +75,7 @@ export const HomePage = () => {
         // 지표 타일, 진행 중 프로젝트와 확인할 일 두 칸, 아래 카드 자리를 실제 화면과 같은 배치로 깔아 둠
         <div className="flex flex-col gap-4" role="status" aria-busy>
           <span className="sr-only">대시보드를 불러오는 중</span>
-          <div className="relative -mt-12 grid grid-cols-2 gap-3 md:-mt-16 lg:grid-cols-4">
+          <div className="relative -mt-12 grid grid-cols-2 gap-3 md:-mt-16 xl:grid-cols-4">
             {Array.from({ length: 4 }, (_, index) => (
               <Skeleton key={index} className="h-[154px] rounded-[30px]" />
             ))}

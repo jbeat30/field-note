@@ -21,7 +21,7 @@ type PageHeaderProps = {
   isDisplay?: boolean;
 };
 
-// 화면 맨 위 제목 줄: 넓은 화면은 제목 왼쪽·버튼 오른쪽, 좁은 화면은 위아래로 쌓임
+// 화면 맨 위 제목 줄: 넓은 화면은 제목 왼쪽·버튼 오른쪽, 좁은 화면은 위아래로 쌓임 (큰 인사 제목은 버튼이 많아 태블릿 폭까지 쌓음)
 // 1단계 제목은 스스로 주황 평면을 깔고 그 안의 글자색은 평면이 정함
 export const PageHeader = ({
   title,
@@ -39,9 +39,11 @@ export const PageHeader = ({
   const header = (
     <header
       className={cn(
-        'flex gap-3 sm:flex-row sm:justify-between',
-        // 큰 인사 제목은 좁은 화면에서 위아래로 쌓고, 그 밖의 제목은 제목 오른쪽에 버튼을 두고 모자라면 줄을 바꿈
-        isDisplay ? 'flex-col sm:items-start' : 'flex-wrap items-end justify-between',
+        'flex gap-3',
+        // 큰 인사 제목은 넓은 화면(xl)부터 옆에 버튼을 두고, 그 밖의 제목은 제목 오른쪽에 버튼을 두고 모자라면 줄을 바꿈
+        isDisplay
+          ? 'flex-col xl:flex-row xl:items-start xl:justify-between'
+          : 'flex-wrap items-end justify-between sm:flex-row sm:justify-between',
       )}
     >
       <div className="flex min-w-0 flex-col gap-1.5">

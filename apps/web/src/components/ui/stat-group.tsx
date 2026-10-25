@@ -85,7 +85,11 @@ const tileOf = (index: number, count: number, surface?: StatItem['surface']): Ti
 export const StatGroup = ({ items, className }: { items: StatItem[]; className?: string }) => (
   <dl
     className={cn(
-      'grid grid-cols-2 gap-2.5 sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none md:gap-4',
+      'grid grid-cols-2 gap-2.5 md:gap-4',
+      // 네 칸처럼 짝수 개수는 태블릿까지 2열로 쌓고 넓은 화면(xl)에서 한 줄, 그 밖의 개수는 sm부터 한 줄
+      items.length > 2 && items.length % 2 === 0
+        ? 'xl:auto-cols-fr xl:grid-flow-col xl:grid-cols-none'
+        : 'sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none',
       className,
     )}
   >
