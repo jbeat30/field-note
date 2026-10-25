@@ -187,7 +187,7 @@ export const ProjectLayout = () => {
                 .join(', ')}
               {data.siteMapUrl && (
                 <a
-                  className="ml-2 font-bold hover:text-sub"
+                  className="ml-2 font-bold whitespace-nowrap hover:text-sub"
                   href={data.siteMapUrl}
                   target="_blank"
                   rel="noopener noreferrer"

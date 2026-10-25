@@ -81,7 +81,7 @@ const columns = helper.columns([
     meta: { className: 'min-w-48' },
     cell: ({ row }) => (
       <>
-        {/* 좁은 화면은 번호·현장명 열이 없어 이름 위아래에 보임 */}
+        {/* 좁은 화면은 번호 열이, 태블릿까지는 현장명·경고 열이 없어 이름 위아래에 보임 */}
         <span className="block text-xs tabular-nums text-sub md:hidden">{row.original.code}</span>
         <Link
           className="font-semibold hover:text-sub"
@@ -91,10 +91,10 @@ const columns = helper.columns([
           {row.original.name}
         </Link>
         {row.original.siteName && (
-          <span className="block text-xs text-sub md:hidden">{row.original.siteName}</span>
+          <span className="block text-xs text-sub lg:hidden">{row.original.siteName}</span>
         )}
         {row.original.warnings.length > 0 && (
-          <span className="mt-1 flex flex-wrap gap-1 md:hidden">
+          <span className="mt-1 flex flex-wrap gap-1 lg:hidden">
             {row.original.warnings.map((warning) => (
               <Badge key={warning} tone="danger" className="whitespace-normal">
                 {PROJECT_WARNING_LABELS[warning]}
@@ -109,7 +109,7 @@ const columns = helper.columns([
     id: 'site',
     header: '현장명',
     enableSorting: false,
-    meta: { className: 'hidden min-w-36 md:table-cell' },
+    meta: { className: 'hidden min-w-36 lg:table-cell' },
     cell: ({ getValue }) => getValue() || '-',
   }),
   helper.accessor((row) => PROJECT_STATUS_LABELS[row.status], {
@@ -125,7 +125,7 @@ const columns = helper.columns([
     id: 'warnings',
     header: '경고',
     enableSorting: false,
-    meta: { className: 'hidden md:table-cell' },
+    meta: { className: 'hidden min-w-44 lg:table-cell' },
     cell: ({ row }) =>
       row.original.warnings.length === 0 ? (
         <span className="text-sub">-</span>

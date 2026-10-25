@@ -178,6 +178,42 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* 창·시트의 배경은 페이드, 시트는 아래에서 올라오고 내려가며 닫힘 (닫힐 때도 끝난 뒤에 사라지도록 Radix가 애니메이션을 기다림) */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+.anim-overlay[data-state='open'] {
+  animation: overlay-in var(--duration-base) var(--ease-smooth);
+}
+.anim-overlay[data-state='closed'] {
+  animation: overlay-out var(--duration-fast) var(--ease-smooth) forwards;
+}
+@media (max-width: 767px) {
+  .anim-sheet[data-state='open'] {
+    animation: sheet-in var(--duration-base) var(--ease-out-expo);
+  }
+  .anim-sheet[data-state='closed'] {
+    animation: sheet-out var(--duration-fast) var(--ease-smooth) forwards;
+  }
+}
+
 /* 하단 메뉴는 창·시트가 열리면 아래로 내려가며 숨김 (시트 아래쪽 내용을 가리지 않게 함) */
 body[data-scroll-locked] [data-bottom-nav] {
   opacity: 0;

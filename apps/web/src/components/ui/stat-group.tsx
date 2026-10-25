@@ -95,7 +95,10 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
   >
     {items.map((item, index) => {
       const style = tileOf(index, items.length, item.surface);
-      const isLong = typeof item.value === 'string' && item.value.length > 7;
+      // 글자가 섞였거나 긴 값("기록 없음" 등)은 숫자보다 작게
+      const isLong =
+        typeof item.value === 'string' &&
+        (item.value.length > 7 || /[^ds/.,:%+-]/.test(item.value));
 
       return (
         <div
@@ -110,7 +113,7 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
             className={cn(
               'flex flex-wrap items-baseline gap-x-1 font-emphasis font-semibold tracking-tight tabular-nums',
               // 짧은 숫자는 크게, 글자나 긴 값은 한 줄에 들어가도록 한 단계 작게
-              isLong ? 'text-[24px] md:text-[32px]' : 'text-[34px] md:text-[54px]',
+              isLong ? 'text-[24px] break-keep md:text-[32px]' : 'text-[34px] md:text-[54px]',
               style.num,
               (style.tones ?? TONE)[item.tone ?? 'default'],
             )}
