@@ -42,11 +42,11 @@ const CertificateRow = ({
       <div className="flex flex-col gap-0.5">
         <span className="font-medium">
           {certificate.title}
-          {certificate.isSensitive ? ' · 민감' : ''}
+          {certificate.isSensitive ? ', 민감' : ''}
         </span>
         <span>
           만료일 {certificate.expiresOn} ({daysText(certificate.daysLeft)})
-          {certificate.issuer ? ` · 발급처 ${certificate.issuer}` : ''}
+          {certificate.issuer ? `, 발급처 ${certificate.issuer}` : ''}
         </span>
       </div>
       {editable && !editing && (
@@ -169,7 +169,7 @@ export const WarrantyCertificates = ({
     <div className="flex flex-col gap-3">
       {rootError && <Alert>{rootError}</Alert>}
       {warranty.certificates.length === 0 ? (
-        <p className="text-sm text-foreground/70">등록한 보증서가 없습니다</p>
+        <p className="text-sm text-sub">등록한 보증서가 없습니다</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {warranty.certificates.map((certificate) => (
@@ -202,6 +202,7 @@ export const WarrantyCertificates = ({
           </FormField>
           <FormField label="발급처 (선택)" error={errors.issuer}>
             <Input
+              placeholder="예: 시공사 또는 제조사"
               maxLength={WARRANTY_ISSUER_MAX_LENGTH}
               value={issuer}
               onChange={(event) => setIssuer(event.target.value)}

@@ -26,6 +26,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 import { formatWork } from '../workSummary/formatWork';
 
 import { useProgressRecords, useProjectHealth, useRecordProgress } from './useProgress';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 자주 쓰는 진행률 (한 번 눌러 고름)
 const QUICK_PERCENTS = [10, 20, 30, 40, 50, 60, 70, 80, 90, 100];
@@ -89,6 +90,7 @@ const ProgressDialog = ({
         </div>
         <FormField label="진행률 (%)" error={error}>
           <Input
+            placeholder="0에서 100 사이"
             type="number"
             inputMode="numeric"
             min={0}
@@ -132,7 +134,7 @@ export const ProjectProgressPanel = ({
   }
 
   if (!health.data || !records.data || !settings.data) {
-    return <p className="text-sm">진행 현황을 불러오는 중</p>;
+    return <LoadingBlock label="진행 현황을 불러오는 중" />;
   }
 
   const data = health.data;
@@ -205,7 +207,7 @@ export const ProjectProgressPanel = ({
         <ProgressBar aria-label="진행률 막대" value={data.progressPercent} />
       )}
       {!canRecordProgress(status) && (
-        <p className="text-sm text-foreground/70">이 상태에서는 진행률을 입력할 수 없습니다</p>
+        <p className="text-sm text-sub">이 상태에서는 진행률을 입력할 수 없습니다</p>
       )}
 
       <details className="group text-sm">
@@ -217,16 +219,14 @@ export const ProjectProgressPanel = ({
           진행률 이력 ({records.data.length})
         </summary>
         {records.data.length === 0 ? (
-          <p className="text-foreground/65">기록이 없습니다</p>
+          <p className="text-sub">기록이 없습니다</p>
         ) : (
           <ul className="flex flex-col divide-y divide-line">
             {records.data.map((item) => (
               <li key={item.id} className="flex items-center gap-3 py-2">
-                <span className="w-28 shrink-0 text-foreground/70">
-                  {formatDay(item.recordedOn)}
-                </span>
+                <span className="w-28 shrink-0 text-sub">{formatDay(item.recordedOn)}</span>
                 <span className={cn('font-semibold tabular-nums')}>{item.percent}%</span>
-                {item.note && <span className="text-foreground/65">{item.note}</span>}
+                {item.note && <span className="text-sub">{item.note}</span>}
               </li>
             ))}
           </ul>

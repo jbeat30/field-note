@@ -11,6 +11,7 @@ export const OPTION_KINDS = [
   'CREDENTIAL_TYPE',
   'EXPENSE_CATEGORY',
   'INCOME_CATEGORY',
+  'DOCUMENT_CATEGORY',
 ] as const;
 
 export const optionKindSchema = z.enum(OPTION_KINDS);
@@ -25,6 +26,7 @@ export const OPTION_KIND_LABELS: Record<OptionKind, string> = {
   CREDENTIAL_TYPE: '자격 종류',
   EXPENSE_CATEGORY: '지출 분류',
   INCOME_CATEGORY: '수입 분류',
+  DOCUMENT_CATEGORY: '문서 종류',
 };
 
 // 항목 이름 최대 길이와 종류별 최대 개수 (DB도 같은 값으로 검사)
@@ -51,6 +53,8 @@ export const optionItemSchema = z.object({
   name: z.string(),
   // 쓰지 않는 항목은 삭제하지 않고 숨김 (이미 기록에 쓰인 이름이 사라지지 않게 함)
   isActive: z.boolean(),
+  // 문서 종류에서만 쓰는 값: 이 종류로 올린 문서를 처음부터 민감 자료로 둘지 (다른 종류는 항상 false)
+  sensitiveDefault: z.boolean(),
 });
 
 export type OptionItem = z.infer<typeof optionItemSchema>;
@@ -60,17 +64,29 @@ export const optionsResponseSchema = z.object({ items: z.array(optionItemSchema)
 
 export type OptionsResponse = z.infer<typeof optionsResponseSchema>;
 
-export const optionCreateSchema = z.object({ kind: optionKindSchema, name: optionNameSchema });
+export const optionCreateSchema = z.object({
+  kind: optionKindSchema,
+  name: optionNameSchema,
+  sensitiveDefault: z.boolean().optional(),
+});
 
 export type OptionCreate = z.infer<typeof optionCreateSchema>;
 
 export const optionParamsSchema = z.object({ id: z.uuid() });
 
 export const optionUpdateSchema = z
-  .object({ name: optionNameSchema.optional(), isActive: z.boolean().optional() })
-  .refine((value) => value.name !== undefined || value.isActive !== undefined, {
-    message: VALIDATION_MESSAGES.NO_CHANGES,
-  });
+  .object({
+    name: optionNameSchema.optional(),
+    isActive: z.boolean().optional(),
+    sensitiveDefault: z.boolean().optional(),
+  })
+  .refine(
+    (value) =>
+      value.name !== undefined ||
+      value.isActive !== undefined ||
+      value.sensitiveDefault !== undefined,
+    { message: VALIDATION_MESSAGES.NO_CHANGES },
+  );
 
 export type OptionUpdate = z.infer<typeof optionUpdateSchema>;
 

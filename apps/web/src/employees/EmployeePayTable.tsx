@@ -20,6 +20,7 @@ import { PayRateForm } from '../labor/EmployeePayPanel';
 import { usePayRateSummaries } from '../labor/useLabor';
 
 import { useEmployees } from './useEmployees';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 export const rateText = (rate: Pick<PayRate, 'payType' | 'amount'>) =>
   `${PAY_TYPE_LABELS[rate.payType]} ${formatWon(rate.amount)}`;
@@ -35,7 +36,14 @@ export const EmployeePayTable = () => {
   }
 
   if (!employees.data || !summaries.data) {
-    return <p className="text-sm">단가표를 불러오는 중</p>;
+    return (
+      <LoadingBlock
+        label="단가표를 불러오는 중"
+        variant="table"
+        lines={6}
+        className="relative -mt-14"
+      />
+    );
   }
 
   const byEmployee = new Map(summaries.data.map((item) => [item.employeeId, item]));
@@ -52,11 +60,12 @@ export const EmployeePayTable = () => {
   }
 
   return (
-    <div className="flex flex-col gap-3">
-      <p className="text-sm text-foreground/70">
+    <div className="relative -mt-14 flex flex-col gap-3 rounded-[30px] bg-surface-subtle p-5 sm:p-7">
+      <h2 className="text-[19px] font-bold">단가표 {rows.length}명</h2>
+      <p className="text-sm text-sub">
         프로젝트 인건비 추정에만 쓰입니다. 단가를 바꾸면 변경 기록으로 남고, 이전 날짜 근무분은 기존
         단가 그대로입니다
-        {missing > 0 && ` · 단가가 없는 직원 ${missing}명`}
+        {missing > 0 && `, 단가가 없는 직원 ${missing}명`}
       </p>
       <Table aria-label="직원 단가표" className="min-w-[44rem]">
         <TableHead>
@@ -78,7 +87,7 @@ export const EmployeePayTable = () => {
               <TableRow key={employee.id}>
                 <TableCell>
                   <Link
-                    className="font-semibold hover:text-primary hover:underline"
+                    className="font-semibold hover:text-sub"
                     to={`/employees/${employee.id}?tab=pay`}
                   >
                     {employee.name}
@@ -98,10 +107,10 @@ export const EmployeePayTable = () => {
                     <Badge tone="warning">단가 없음</Badge>
                   )}
                 </TableCell>
-                <TableCell className="whitespace-nowrap text-foreground/75">
+                <TableCell className="whitespace-nowrap text-sub">
                   {summary?.current?.effectiveFrom ?? '-'}
                 </TableCell>
-                <TableCell className="text-foreground/75 tabular-nums">
+                <TableCell className="text-sub tabular-nums">
                   {summary?.previous ? (
                     <>
                       {rateText(summary.previous)}

@@ -39,16 +39,21 @@ const useOptionMutation = <Variables, Result>(
 };
 
 export const useCreateOption = () =>
-  useOptionMutation((body: { kind: OptionKind; name: string }) =>
+  useOptionMutation((body: { kind: OptionKind; name: string; sensitiveDefault?: boolean }) =>
     apiClient.POST('/api/v1/company/options', { body }),
   );
 
 export const useUpdateOption = () =>
-  useOptionMutation((variables: { id: string; name?: string; isActive?: boolean }) =>
-    apiClient.PATCH('/api/v1/company/options/{id}', {
-      params: { path: { id: variables.id } },
-      body: { name: variables.name, isActive: variables.isActive },
-    }),
+  useOptionMutation(
+    (variables: { id: string; name?: string; isActive?: boolean; sensitiveDefault?: boolean }) =>
+      apiClient.PATCH('/api/v1/company/options/{id}', {
+        params: { path: { id: variables.id } },
+        body: {
+          name: variables.name,
+          isActive: variables.isActive,
+          sensitiveDefault: variables.sensitiveDefault,
+        },
+      }),
   );
 
 export const useReorderOptions = () =>

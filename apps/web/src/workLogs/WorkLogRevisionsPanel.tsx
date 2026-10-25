@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { Alert } from '../components/ui/alert';
 
 import { useWorkLogRevisions } from './useWorkLogs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const formatChangedAt = (iso: string) =>
   new Intl.DateTimeFormat('ko-KR', {
@@ -49,10 +50,10 @@ export const WorkLogRevisionsPanel = ({
       <summary className="min-h-touch cursor-pointer content-center text-sm font-bold">
         수정 이력 보기
       </summary>
-      {revisions.isPending && open && <p className="text-sm">이력을 불러오는 중</p>}
+      {revisions.isPending && open && <LoadingBlock label="이력을 불러오는 중" />}
       {revisions.isError && <Alert>이력을 불러오지 못했습니다</Alert>}
       {revisions.data && revisions.data.length === 0 && (
-        <p className="text-sm text-foreground/70">저장한 뒤 고친 기록이 없습니다</p>
+        <p className="text-sm text-sub">저장한 뒤 고친 기록이 없습니다</p>
       )}
       {revisions.data && revisions.data.length > 0 && (
         <ol className="divide-y divide-border" aria-label="수정 이력">
@@ -64,9 +65,7 @@ export const WorkLogRevisionsPanel = ({
               <span>작업 내용: {item.snapshot.content || '(비어 있음)'}</span>
               {item.snapshot.area && <span>작업 구역: {item.snapshot.area}</span>}
               <span>공수: {entryText(item.snapshot)}</span>
-              <span className="text-foreground/70">
-                고친 시각 {formatChangedAt(item.changedAt)}
-              </span>
+              <span className="text-sub">고친 시각 {formatChangedAt(item.changedAt)}</span>
             </li>
           ))}
         </ol>

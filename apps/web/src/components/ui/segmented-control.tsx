@@ -30,15 +30,15 @@ export const SegmentedControl = <T extends string>({
     // 같은 항목을 다시 눌러 값이 비어도 선택을 유지
     onValueChange={(next) => next && onValueChange(next as T)}
     aria-label={ariaLabel}
-    className={cn('inline-flex w-full rounded-control bg-foreground/6 p-0.5', className)}
+    className={cn('inline-flex w-full rounded-full bg-track p-1', className)}
   >
     {options.map((option) => (
       <ToggleGroup.Item
         key={option.value}
         value={option.value}
         className={cn(
-          'flex-1 rounded-md px-3 text-sm font-medium whitespace-nowrap text-foreground/65 transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:outline-2 focus-visible:outline-primary data-[state=on]:bg-surface data-[state=on]:font-semibold data-[state=on]:text-foreground data-[state=on]:shadow-xs',
-          size === 'sm' ? 'h-8 md:h-7' : 'h-10 md:h-9',
+          'flex-1 rounded-full px-3 text-sm font-semibold whitespace-nowrap text-sub transition-colors duration-(--duration-fast) hover:text-foreground focus-visible:outline-2 focus-visible:outline-foreground data-[state=on]:bg-primary data-[state=on]:font-bold data-[state=on]:text-primary-foreground',
+          size === 'sm' ? 'h-9' : 'h-11',
         )}
       >
         {option.label}

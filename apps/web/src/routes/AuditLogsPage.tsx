@@ -22,6 +22,7 @@ import { DateInput } from '../components/ui/date-input';
 import { Select } from '../components/ui/select';
 import { cn } from '../lib/cn';
 import { useProjectChoices } from '../projects/useProjects';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 기록 시각을 서울 기준으로 보여 줌
 const timeText = (iso: string) =>
@@ -69,22 +70,22 @@ const Row = ({ item }: { item: AuditLog }) => {
         <span>
           {item.targetName ? (
             path ? (
-              <Link className="text-primary underline" to={path}>
+              <Link className="text-primary hover:text-sub" to={path}>
                 {item.targetName}
               </Link>
             ) : (
               item.targetName
             )
           ) : (
-            <span className="text-foreground/70">(삭제되었거나 찾을 수 없는 대상)</span>
+            <span className="text-sub">(삭제되었거나 찾을 수 없는 대상)</span>
           )}
-          {item.summary ? ` · ${item.summary}` : ''}
+          {item.summary ? `, ${item.summary}` : ''}
           {item.projectName && item.targetType !== 'PROJECT' && (
-            <span className="ml-2 text-foreground/65">({item.projectName})</span>
+            <span className="ml-2 text-sub">({item.projectName})</span>
           )}
         </span>
-        <span className="text-foreground/70">
-          {timeText(item.createdAt)} · {item.actorName}
+        <span className="text-sub">
+          {timeText(item.createdAt)}, {item.actorName}
         </span>
       </div>
       {hasChanges && (
@@ -93,7 +94,7 @@ const Row = ({ item }: { item: AuditLog }) => {
             type="button"
             aria-expanded={isOpen}
             onClick={() => setIsOpen((value) => !value)}
-            className="flex w-fit items-center gap-1 text-sm font-medium text-primary hover:underline"
+            className="flex w-fit items-center gap-1 text-sm font-medium text-primary hover:text-sub"
           >
             바뀐 내용 {item.changes.length}건
             <ChevronDown
@@ -111,7 +112,7 @@ const Row = ({ item }: { item: AuditLog }) => {
                       '바뀜 (값은 기록하지 않음)'
                     ) : (
                       <>
-                        <span className="text-foreground/75">{change.before ?? '(없음)'}</span>
+                        <span className="text-sub">{change.before ?? '(없음)'}</span>
                         {' → '}
                         <span className="font-medium text-foreground">
                           {change.after ?? '(없음)'}
@@ -150,13 +151,11 @@ export const AuditLogsPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <BackLink to="/settings?tab=company">설정으로</BackLink>
-        <PageHeader
-          title="활동 기록"
-          description="누가 언제 무엇을 저장·수정·삭제·내보내기·확정·열람했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
-        />
-      </div>
+      <PageHeader
+        title="활동 기록"
+        description="누가 언제 무엇을 저장·수정·삭제·내보내기·확정·열람했는지 남은 기록입니다. 수정하거나 지울 수 없습니다"
+        back={<BackLink to="/settings?tab=company">설정으로</BackLink>}
+      />
 
       <div role="group" aria-label="종류로 거르기" className="flex flex-wrap gap-2">
         <Chip selected={kind === ''} onClick={() => setKind('')}>
@@ -174,7 +173,7 @@ export const AuditLogsPage = () => {
       </div>
 
       <form
-        className="grid gap-3 rounded-xl bg-surface-subtle p-5 md:grid-cols-3"
+        className="grid gap-3 rounded-3xl bg-surface-subtle p-5 md:grid-cols-3"
         aria-label="기록 거르기"
         onSubmit={(e) => e.preventDefault()}
       >
@@ -196,7 +195,7 @@ export const AuditLogsPage = () => {
 
       {logs.isError && <Alert>기록을 불러오지 못했습니다</Alert>}
       {logs.isPending ? (
-        <p className="text-sm">기록을 불러오는 중</p>
+        <LoadingBlock label="기록을 불러오는 중" variant="blocks" heights={[[508, 296]]} />
       ) : items.length === 0 ? (
         <EmptyState title="조건에 맞는 기록이 없습니다" />
       ) : (

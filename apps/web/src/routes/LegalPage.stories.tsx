@@ -46,18 +46,16 @@ export const TermsOfService: Story = {
     await expect(
       canvas.getByRole('heading', { name: '제5조 (개인정보 처리 위탁)' }),
     ).toBeInTheDocument();
-    await expect(canvas.getByText(/버전 .* · 필수/)).toBeInTheDocument();
+    await expect(canvas.getByText(/버전 .*, 필수/)).toBeInTheDocument();
   },
 };
 
-export const Marketing: Story = {
+// 마케팅 수신 동의는 받지 않으므로 문서도 없음
+export const MarketingIsGone: Story = {
   parameters: { router: { initialEntries: ['/legal/marketing'], path: '/legal/:slug' } },
   play: async ({ canvasElement }) => {
-    const canvas = within(canvasElement);
-
-    await expect(await canvas.findByText(/버전 .* · 선택/)).toBeInTheDocument();
     await expect(
-      canvas.getByText(/현재 서비스는 광고성 정보를 보내지 않습니다/),
+      await within(canvasElement).findByRole('heading', { name: '문서를 찾을 수 없습니다' }),
     ).toBeInTheDocument();
   },
 };

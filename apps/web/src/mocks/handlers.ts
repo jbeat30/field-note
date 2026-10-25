@@ -950,7 +950,7 @@ export const handlers = [
     if ('response' in body) return body.response;
 
     const items = getOptions(account);
-    const { kind, name } = body.data;
+    const { kind, name, sensitiveDefault } = body.data;
     const key = normalizeOptionName(name);
 
     if (items.some((item) => item.kind === kind && normalizeOptionName(item.name) === key)) {
@@ -965,7 +965,13 @@ export const handlers = [
       ]);
     }
 
-    const created = { id: crypto.randomUUID(), kind, name, isActive: true };
+    const created = {
+      id: crypto.randomUUID(),
+      kind,
+      name,
+      isActive: true,
+      sensitiveDefault: kind === 'DOCUMENT_CATEGORY' && (sensitiveDefault ?? false),
+    };
 
     saveOptions(account, [...items, created]);
 
@@ -1038,7 +1044,7 @@ export const handlers = [
 
     if (!target) return apiError('NOT_FOUND');
 
-    const { name, isActive } = body.data;
+    const { name, isActive, sensitiveDefault } = body.data;
 
     if (
       name !== undefined &&
@@ -1054,7 +1060,15 @@ export const handlers = [
       ]);
     }
 
-    const updated = { ...target, name: name ?? target.name, isActive: isActive ?? target.isActive };
+    const updated = {
+      ...target,
+      name: name ?? target.name,
+      isActive: isActive ?? target.isActive,
+      sensitiveDefault:
+        target.kind === 'DOCUMENT_CATEGORY'
+          ? (sensitiveDefault ?? target.sensitiveDefault)
+          : target.sensitiveDefault,
+    };
 
     saveOptions(
       account,
@@ -3148,11 +3162,11 @@ export const handlers = [
     return HttpResponse.json({ resendAfterSeconds: 30 });
   }),
 
-  // 시연 계정 안내: 목업에서는 끔 (스토리·시험이 필요할 때 이 핸들러를 덮어씀)
+  // 시연 계정 안내: 목업에서는 시드 계정으로 켬 (끈 상태가 필요한 스토리·시험은 이 핸들러를 덮어씀)
   http.get('/api/v1/public/demo', async () => {
     await simulateLatency();
 
-    return HttpResponse.json({ enabled: false });
+    return HttpResponse.json({ enabled: true, loginId: 'hanbit', password: 'Hanbit-demo-2026!' });
   }),
 
   // 소셜 로그인 (카카오·네이버·구글), 시작은 목업 소셜 화면(/mock-social) 주소를 돌려줌

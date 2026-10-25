@@ -58,7 +58,8 @@ const signupBody = (token: string, overrides: Record<string, unknown> = {}) => (
   password: 'Correct-horse-2026!',
   email: `route-user-${sequence}@example.com`,
   isAgeConfirmed: true,
-  consents: documentIds.map((documentId, index) => ({ documentId, isAgreed: index < 2 })),
+  // 이용약관·개인정보만 동의를 받음 (마케팅 문서는 가입 동의 대상이 아님)
+  consents: documentIds.slice(0, 2).map((documentId) => ({ documentId, isAgreed: true })),
   ...overrides,
 });
 

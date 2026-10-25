@@ -35,6 +35,7 @@ import {
   useRemoveCredential,
   useUpdateCredential,
 } from './useCredentials';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const FIELDS = ['typeId', 'issuedOn', 'expiresOn', 'fileId', 'memo'] as const;
 
@@ -178,9 +179,9 @@ const CredentialRow = ({
           {credential.expiresOn
             ? `만료일 ${credential.expiresOn} (${daysText(credential.daysLeft)})`
             : '만료 없음'}
-          {credential.issuedOn ? ` · 취득일 ${credential.issuedOn}` : ''}
+          {credential.issuedOn ? `, 취득일 ${credential.issuedOn}` : ''}
         </span>
-        {credential.memo && <span className="text-foreground/70">{credential.memo}</span>}
+        {credential.memo && <span className="text-sub">{credential.memo}</span>}
         {credential.file && (
           <span className="flex flex-wrap items-center gap-2">
             첨부 {credential.file.name}
@@ -194,7 +195,7 @@ const CredentialRow = ({
                 열기
               </Button>
             ) : (
-              <span className="text-foreground/70">(검사 중)</span>
+              <span className="text-sub">(검사 중)</span>
             )}
           </span>
         )}
@@ -247,6 +248,7 @@ const CredentialRow = ({
           </FormField>
           <FormField label="메모" error={errors.memo}>
             <Input
+              placeholder="메모를 입력하세요"
               maxLength={CREDENTIAL_MEMO_MAX_LENGTH}
               value={memo}
               onChange={(event) => setMemo(event.target.value)}
@@ -386,7 +388,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
           <h2 id="credentials-heading" className="text-lg font-bold">
             서류·자격
           </h2>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             서류 사본에 주민등록번호가 보이면 가리고 올려 주세요. 서류 파일을 열면 열람 기록이
             남습니다
           </p>
@@ -397,11 +399,11 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
       </div>
       {rootError && <Alert>{rootError}</Alert>}
       {credentials.isPending ? (
-        <p className="text-sm">서류를 불러오는 중</p>
+        <LoadingBlock label="서류를 불러오는 중" />
       ) : credentials.isError ? (
         <Alert>서류를 불러오지 못했습니다</Alert>
       ) : credentials.data.length === 0 ? (
-        <p className="text-sm text-foreground/70">등록한 서류가 없습니다</p>
+        <p className="text-sm text-sub">등록한 서류가 없습니다</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {credentials.data.map((credential) => (
@@ -447,6 +449,7 @@ export const EmployeeCredentialsPanel = ({ employeeId }: { employeeId: string })
             </FormField>
             <FormField label="메모 (선택)" error={errors.memo}>
               <Input
+                placeholder="메모를 입력하세요"
                 maxLength={CREDENTIAL_MEMO_MAX_LENGTH}
                 value={memo}
                 onChange={(event) => setMemo(event.target.value)}

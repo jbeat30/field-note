@@ -33,7 +33,7 @@ export const DropdownMenuItem = ({
     className={cn(
       listboxItemClass,
       radixItemDisabledClass,
-      '[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-foreground/65',
+      '[&_svg]:size-4 [&_svg]:shrink-0 [&_svg]:text-sub',
       danger && 'text-danger [&_svg]:text-danger',
       className,
     )}
@@ -46,7 +46,7 @@ export const DropdownMenuLabel = ({
   ...props
 }: ComponentProps<typeof MenuPrimitive.Label>) => (
   <MenuPrimitive.Label
-    className={cn('px-2.5 pt-2 pb-1 text-xs font-semibold text-foreground/65', className)}
+    className={cn('px-2.5 pt-2 pb-1 text-xs font-semibold text-sub', className)}
     {...props}
   />
 );

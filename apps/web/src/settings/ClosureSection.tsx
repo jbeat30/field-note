@@ -76,11 +76,11 @@ export const ClosureSection = () => {
   if (!isOpen) {
     return (
       <div className="flex flex-col gap-3">
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           해지를 요청하면 즉시 로그아웃되며, 14일이 지나면 회사의 모든 데이터가 삭제됩니다. 그
           안에는 메일로 받은 링크로 취소할 수 있습니다
         </p>
-        <Button variant="secondary" onClick={() => setOpen(true)}>
+        <Button variant="secondary" className="self-start" onClick={() => setOpen(true)}>
           계정 해지
         </Button>
       </div>
@@ -98,10 +98,14 @@ export const ClosureSection = () => {
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {needsPassword && (
         <FormField label="현재 비밀번호" error={errors.currentPassword?.message}>
-          <PasswordInput autoComplete="current-password" {...register('currentPassword')} />
+          <PasswordInput
+            placeholder="현재 비밀번호를 입력하세요"
+            autoComplete="current-password"
+            {...register('currentPassword')}
+          />
         </FormField>
       )}
-      <div className="flex gap-2">
+      <div className="flex justify-end gap-2">
         <Button type="button" variant="secondary" onClick={() => setOpen(false)}>
           돌아가기
         </Button>

@@ -1,10 +1,11 @@
 import { CalendarDays, ChevronLeft, ChevronRight } from 'lucide-react';
 import { Popover } from 'radix-ui';
 import { useState } from 'react';
-import { DayPicker } from 'react-day-picker';
-import { ko } from 'react-day-picker/locale';
+
+import { cn } from '../../lib/cn';
 
 import { Button } from './button';
+import { Calendar } from './calendar';
 import { formatDay, parseDay } from './date-input';
 
 type PeriodNavProps = {
@@ -22,6 +23,8 @@ type PeriodNavProps = {
   onPick?: (date: string) => void;
   pickValue?: string;
   pickMax?: string;
+  // 다른 카드 안에 함께 놓을 때는 바깥 카드 면 없이 그림
+  isBare?: boolean;
 };
 
 // 기간(주·달·하루) 이동 줄: 큰 이전/다음 버튼, 가운데 기간(눌러서 달력으로 이동), 오른쪽 "오늘" 버튼
@@ -37,6 +40,7 @@ export const PeriodNav = ({
   onPick,
   pickValue,
   pickMax,
+  isBare = false,
 }: PeriodNavProps) => {
   const [open, setOpen] = useState(false);
   const selected = pickValue ? parseDay(pickValue) : undefined;
@@ -45,13 +49,23 @@ export const PeriodNav = ({
   const title = (
     <>
       <span className="font-bold">{label}</span>
-      {onPick && <CalendarDays aria-hidden className="size-4 text-foreground/70" />}
+      {onPick && <CalendarDays aria-hidden className="size-4 text-sub" />}
     </>
   );
 
   return (
-    <div className="flex items-center gap-2 rounded-xl bg-surface-subtle p-2">
-      <Button variant="secondary" aria-label={prevLabel} onClick={onPrev}>
+    <div
+      className={cn(
+        'flex flex-wrap items-center gap-2',
+        !isBare && 'rounded-3xl bg-surface-subtle p-3',
+      )}
+    >
+      <Button
+        variant="secondary"
+        aria-label={prevLabel}
+        className="flex-1 sm:flex-none"
+        onClick={onPrev}
+      >
         <ChevronLeft aria-hidden className="size-5" />
       </Button>
       {onPick ? (
@@ -60,7 +74,7 @@ export const PeriodNav = ({
             <button
               type="button"
               aria-label={`${label} 달력에서 이동`}
-              className="flex min-h-touch flex-1 items-center justify-center gap-2 rounded-full hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary"
+              className="order-first flex min-h-touch w-full min-w-0 items-center justify-center gap-1.5 rounded-full whitespace-nowrap hover:bg-muted focus-visible:outline-2 focus-visible:outline-primary sm:order-none sm:w-auto sm:flex-1"
             >
               {title}
             </button>
@@ -71,14 +85,11 @@ export const PeriodNav = ({
               sideOffset={6}
               collisionPadding={12}
               aria-label="날짜 선택"
-              className="z-30 rounded-xl border border-line bg-surface p-3 shadow-card"
+              className="z-50 rounded-xl border border-line bg-surface p-3 shadow-card"
             >
-              <DayPicker
-                mode="single"
-                locale={ko}
+              <Calendar
                 selected={selected}
-                defaultMonth={selected ?? new Date()}
-                disabled={maxDay ? { after: maxDay } : undefined}
+                maxDay={maxDay}
                 onSelect={(date) => {
                   if (!date) return;
                   onPick(formatDay(date));
@@ -89,12 +100,20 @@ export const PeriodNav = ({
           </Popover.Portal>
         </Popover.Root>
       ) : (
-        <p className="flex min-h-touch flex-1 items-center justify-center gap-2">{title}</p>
+        <p className="order-first flex min-h-touch w-full items-center justify-center gap-2 sm:order-none sm:w-auto sm:flex-1">
+          {title}
+        </p>
       )}
-      <Button variant="secondary" aria-label={nextLabel} disabled={nextDisabled} onClick={onNext}>
+      <Button
+        variant="secondary"
+        aria-label={nextLabel}
+        disabled={nextDisabled}
+        className="flex-1 sm:flex-none"
+        onClick={onNext}
+      >
         <ChevronRight aria-hidden className="size-5" />
       </Button>
-      <Button variant="secondary" onClick={onToday}>
+      <Button variant="secondary" className="flex-1 sm:flex-none" onClick={onToday}>
         {todayLabel}
       </Button>
     </div>

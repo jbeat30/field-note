@@ -10,12 +10,14 @@ import { formatClosureDate } from '../lib/formatDate';
 
 const InvalidLink = () => (
   <div className="flex flex-col gap-3">
-    <h1 className="text-xl font-bold">링크를 사용할 수 없습니다</h1>
+    <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+      링크를 사용할 수 없습니다
+    </h1>
     <p className="text-sm">
       링크가 만료되었거나 이미 사용되었을 수 있습니다. 해지 요청 후 14일이 지나 데이터가 삭제된
       경우에는 복구할 수 없습니다
     </p>
-    <Link className="min-h-touch content-center text-primary underline" to="/login">
+    <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
       로그인 화면으로
     </Link>
   </div>
@@ -51,9 +53,11 @@ export const ClosureCancelPage = () => {
   if (isDone) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-bold">해지를 취소했습니다</h1>
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          해지를 취소했습니다
+        </h1>
         <Alert variant="info">계정이 복구되었습니다. 다시 로그인할 수 있습니다</Alert>
-        <Link className="min-h-touch content-center text-primary underline" to="/login">
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>
@@ -96,7 +100,9 @@ export const ClosureCancelPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <h1 className="text-xl font-bold">해지를 취소할까요</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+        해지를 취소할까요
+      </h1>
       <p className="text-sm">
         {formatClosureDate(link.data.purgeAfter)} 이후 회사의 모든 데이터가 삭제될 예정입니다.
         취소하면 계정이 바로 복구되고 다시 로그인할 수 있습니다

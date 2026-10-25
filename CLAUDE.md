@@ -20,7 +20,7 @@
 ## 명령
 
 - `pnpm typecheck` / `pnpm lint` / `pnpm test` / `pnpm build`
-- `pnpm dev` (api :3000, web :5173)
+- `pnpm dev` (인프라 + api :3000 + web :5173), 컨테이너가 떠 있으면 `pnpm dev:all`·`pnpm dev:api`·`pnpm dev:web`
 
 ## 작업 진행 절차
 

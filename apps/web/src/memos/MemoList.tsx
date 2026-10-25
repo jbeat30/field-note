@@ -73,6 +73,7 @@ const MemoItem = ({
           {isEditing ? (
             <div className="flex flex-col gap-2">
               <textarea
+                placeholder="메모 내용을 입력하세요"
                 aria-label="메모 내용"
                 className="min-h-16 w-full rounded-md border border-control-border bg-surface p-2 text-sm outline-none focus:border-primary"
                 value={content}
@@ -119,7 +120,7 @@ const MemoItem = ({
               >
                 {MEMO_TAG_LABELS[memo.tag]}
               </Badge>
-              <span className={memo.isDone ? 'text-foreground/70 line-through' : undefined}>
+              <span className={memo.isDone ? 'text-sub line-through' : undefined}>
                 {memo.content}
               </span>
             </p>
@@ -173,16 +174,16 @@ export const MemoList = ({ memos, projectId, ...handlers }: MemoListProps) => (
         {projectId ? (
           <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
             <h3 className="font-semibold">{formatLongDay(date)}</h3>
-            <span className="text-sm text-foreground/65">{items.length}건</span>
+            <span className="text-sm text-sub">{items.length}건</span>
             <Link
               to={projectWorkPath(projectId, date)}
-              className="ml-auto text-sm font-medium text-primary hover:underline"
+              className="ml-auto text-sm font-medium text-primary hover:text-sub"
             >
               작업 기록 보기
             </Link>
           </div>
         ) : (
-          <h2 className="text-sm font-bold text-foreground/70">{formatDay(date)}</h2>
+          <h2 className="text-sm font-bold text-sub">{formatDay(date)}</h2>
         )}
         <ul className="divide-y divide-line rounded-xl border border-line bg-surface">
           {items.map((memo) => (

@@ -10,7 +10,7 @@ type ProgressBarProps = {
   className?: string;
 };
 
-const TONE = { primary: 'bg-primary', warning: 'bg-warning', danger: 'bg-danger' };
+const TONE = { primary: 'bg-accent', warning: 'bg-warning', danger: 'bg-danger' };
 
 // 진행률·소진율 막대, 값은 항상 글자로도 병행 표시
 export const ProgressBar = ({
@@ -25,7 +25,7 @@ export const ProgressBar = ({
     <Progress.Root
       value={clamped}
       aria-label={ariaLabel}
-      className={cn('h-2 w-full overflow-hidden rounded-full bg-muted', className)}
+      className={cn('h-2.5 w-full overflow-hidden rounded-full bg-surface-nested', className)}
     >
       <Progress.Indicator
         className={cn(

@@ -17,6 +17,7 @@ export const Tones: Story = {
       <Badge tone="success">완료</Badge>
       <Badge tone="warning">임박</Badge>
       <Badge tone="danger">초과</Badge>
+      <Badge tone="ink">베타</Badge>
     </div>
   ),
 };

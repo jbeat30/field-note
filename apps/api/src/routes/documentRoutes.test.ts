@@ -4,11 +4,13 @@ import {
   documentDetailSchema,
   documentsResponseSchema,
   fileUploadTicketSchema,
+  optionsResponseSchema,
 } from '@field-note/shared';
 import request from 'supertest';
 
 import { createApp } from '../app';
 import { createAccountService } from '../auth/accountService';
+import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
 import { markCompanyEmailsVerified } from '../db/testFixtures';
 import { createFileService, registerFileWorker } from '../file/fileService';
@@ -57,6 +59,7 @@ const harness = async () => {
   const instance = createApp({
     sessionStore: createPrismaSessionStore(db.auth),
     accountService: createAccountService({ auth: db.auth, app: db.app }),
+    options: createOptionService(db.app),
     employees: createEmployeeService(db.app, () => NOW),
     partners: createPartnerService(db.app),
     projects: createProjectService(db.app, () => NOW),
@@ -99,18 +102,40 @@ const signedUp = async (instance: Awaited<ReturnType<typeof harness>>['instance'
 const setup = async () => {
   const h = await harness();
   const cookie = await signedUp(h.instance);
+  // 문서 종류는 목록 관리의 항목이라 프리셋 이름으로 id를 찾아 씀 (`category` 코드는 시험을 읽기 쉽게 쓰는 줄임말)
+  const categoryNames: Record<string, string> = {
+    DRAWING: '도면·작업지시서',
+    CONTRACT: '계약·공문',
+    SAFETY: '안전·검사',
+    QUOTE: '견적·정산',
+    OTHER: '기타',
+  };
+  const categoryIds = new Map<string, string>(
+    optionsResponseSchema
+      .parse((await request(h.instance).get('/api/v1/company/options').set('Cookie', cookie)).body)
+      .items.filter((item) => item.kind === 'DOCUMENT_CATEGORY')
+      .map((item) => [item.name, item.id]),
+  );
+  const categoryId = (code: string) => categoryIds.get(categoryNames[code] ?? '') ?? code;
+  const withCategory = (body: object, isCreate: boolean) => {
+    const { category, ...rest } = body as Record<string, unknown>;
+
+    return category !== undefined || isCreate
+      ? { ...rest, categoryId: rest.categoryId ?? categoryId(String(category ?? 'OTHER')) }
+      : rest;
+  };
   const post = (path: string, body: object = {}) =>
     request(h.instance)
       .post(`/api/v1${path}`)
       .set(CSRF_HEADER, CSRF_HEADER_VALUE)
       .set('Cookie', cookie)
-      .send(body);
+      .send(path.endsWith('/documents') ? withCategory(body, true) : body);
   const patch = (path: string, body: object) =>
     request(h.instance)
       .patch(`/api/v1${path}`)
       .set(CSRF_HEADER, CSRF_HEADER_VALUE)
       .set('Cookie', cookie)
-      .send(body);
+      .send(path.startsWith('/documents/') ? withCategory(body, false) : body);
   const del = (path: string) =>
     request(h.instance)
       .delete(`/api/v1${path}`)
@@ -209,6 +234,7 @@ const setup = async () => {
     patch,
     del,
     projectId,
+    categoryId,
     upload,
     docFile,
     finish,
@@ -257,7 +283,7 @@ describe('문서 만들기', () => {
     expect(detail).toMatchObject({
       projectId: s.projectId,
       title: '1층 시공도',
-      category: 'OTHER',
+      categoryName: '기타',
       isSensitive: false,
       isPinned: false,
       versionCount: 1,
@@ -284,6 +310,62 @@ describe('문서 만들기', () => {
       true,
     );
     expect((await doc(s, { category: 'DRAWING' })).detail!.isSensitive).toBe(false);
+  });
+
+  it('목록 관리에서 만든 종류와 민감 기본값을 따르고, 숨기거나 다른 회사의 종류는 고를 수 없다', async () => {
+    const s = await setup();
+    const other = await setup();
+    const create = async (name: string, sensitiveDefault: boolean) =>
+      (
+        await request(s.instance)
+          .post('/api/v1/company/options')
+          .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+          .set('Cookie', s.cookie)
+          .send({ kind: 'DOCUMENT_CATEGORY', name, sensitiveDefault })
+      ).body.id as string;
+    const secret = await create('인사 서류', true);
+
+    // 새 종류의 민감 기본값이 적용되고 직접 정한 값이 우선
+    expect((await doc(s, { categoryId: secret })).detail).toMatchObject({
+      categoryName: '인사 서류',
+      isSensitive: true,
+    });
+    expect((await doc(s, { categoryId: secret, isSensitive: false })).detail!.isSensitive).toBe(
+      false,
+    );
+
+    // 민감 기본값은 종류 수정으로 끄고 켤 수 있음
+    const patchOption = (id: string, body: object) =>
+      request(s.instance)
+        .patch(`/api/v1/company/options/${id}`)
+        .set(CSRF_HEADER, CSRF_HEADER_VALUE)
+        .set('Cookie', s.cookie)
+        .send(body);
+
+    expect((await patchOption(secret, { sensitiveDefault: false })).body.sensitiveDefault).toBe(
+      false,
+    );
+    expect((await doc(s, { categoryId: secret })).detail!.isSensitive).toBe(false);
+
+    // 숨긴 종류는 새로 고를 수 없지만 이미 쓰는 문서는 그대로 고칠 수 있음
+    const used = (await doc(s, { categoryId: secret })).detail!;
+
+    await patchOption(secret, { isActive: false });
+    expect((await doc(s, { categoryId: secret })).res.status).toBe(400);
+    expect((await s.patch(`/documents/${used.id}`, { title: '이름만 변경' })).status).toBe(200);
+    expect(
+      (await s.patch(`/documents/${used.id}`, { categoryId: s.categoryId('DRAWING') })).status,
+    ).toBe(200);
+    expect((await s.patch(`/documents/${used.id}`, { categoryId: secret })).status).toBe(400);
+
+    // 다른 회사의 종류는 존재하지 않는 것과 같음
+    expect((await doc(s, { categoryId: other.categoryId('DRAWING') })).res.status).toBe(400);
+    // 문서 종류가 아닌 항목도 고를 수 없음
+    const trade = optionsResponseSchema
+      .parse((await s.get('/company/options')).body)
+      .items.find((item) => item.kind === 'TRADE')!;
+
+    expect((await doc(s, { categoryId: trade.id })).res.status).toBe(400);
   });
 
   it('같은 파일로 다시 만들면 같은 문서를 돌려주고 새로 만들지 않는다', async () => {
@@ -456,7 +538,10 @@ describe('문서함 조회·수정', () => {
     await s.patch(`/documents/${a.detail!.id}`, { isPinned: true });
 
     expect(await ids()).toEqual([a.detail!.id, c.detail!.id, b.detail!.id]);
-    expect(await ids('?category=DRAWING')).toEqual([c.detail!.id, b.detail!.id]);
+    expect(await ids(`?categoryId=${s.categoryId('DRAWING')}`)).toEqual([
+      c.detail!.id,
+      b.detail!.id,
+    ]);
     expect(await ids('?q=시방')).toEqual([a.detail!.id]);
     expect(await ids('?pinned=true')).toEqual([a.detail!.id]);
   });
@@ -484,7 +569,11 @@ describe('문서함 조회·수정', () => {
       isSensitive: true,
     });
 
-    expect(res.body).toMatchObject({ title: '고친 이름', category: 'CONTRACT', isSensitive: true });
+    expect(res.body).toMatchObject({
+      title: '고친 이름',
+      categoryName: '계약·공문',
+      isSensitive: true,
+    });
     expect((await s.patch(`/documents/${detail!.id}`, {})).status).toBe(400);
     expect((await s.patch(`/documents/${detail!.id}`, { title: '  ' })).status).toBe(400);
   });

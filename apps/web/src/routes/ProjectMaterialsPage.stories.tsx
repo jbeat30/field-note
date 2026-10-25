@@ -70,7 +70,7 @@ export const NeedsQuantityAndUnit: Story = {
     await userEvent.type(await canvas.findByLabelText('1번 줄 품명'), '후레싱');
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByText(/0보다 큰 수량 · 단위/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/0보다 큰 수량, 단위/)).toBeInTheDocument();
   },
 };
 

@@ -38,10 +38,10 @@ export const PhotoDateGroups = ({ projectId, photos, onSelect }: PhotoDateGroups
       >
         <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
           <h3 className="font-semibold">{formatLongDay(date)}</h3>
-          <span className="text-sm text-foreground/65">{items.length}장</span>
+          <span className="text-sm text-sub">{items.length}장</span>
           <Link
             to={projectWorkPath(projectId, date)}
-            className="ml-auto text-sm font-medium text-primary hover:underline"
+            className="ml-auto text-sm font-medium text-primary hover:text-sub"
           >
             작업 기록 보기
           </Link>

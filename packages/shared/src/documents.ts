@@ -5,36 +5,15 @@ import { fileRejectReasonSchema, fileStatusSchema } from './files';
 import { VALIDATION_MESSAGES } from './errorMessages';
 // 작업자료 문서함, 도면·시방서·작업지시서·계약서처럼 개정되는 문서를 프로젝트별로 수집
 // 파일은 덮어쓰지 않고 새 버전으로 추가하며(최신본이 기본, 이전본 보존), 민감 자료는 열람·다운로드를 감사 기록으로 남김
-export const DOCUMENT_CATEGORIES = ['DRAWING', 'CONTRACT', 'SAFETY', 'QUOTE', 'OTHER'] as const;
-
-export const documentCategorySchema = z.enum(DOCUMENT_CATEGORIES);
-
-export type DocumentCategory = z.infer<typeof documentCategorySchema>;
-
-export const DOCUMENT_CATEGORY_LABELS: Record<DocumentCategory, string> = {
-  DRAWING: '도면·작업지시서',
-  CONTRACT: '계약·공문',
-  SAFETY: '안전·검사',
-  QUOTE: '견적·정산',
-  OTHER: '기타',
-};
-
-export const DOCUMENT_CATEGORY_HINTS: Record<DocumentCategory, string> = {
-  DRAWING: '시공도, 가공도, 시방서, 작업지시서',
-  CONTRACT: '계약서, 변경 합의서, 공문',
-  SAFETY: '안전 점검표, 검사·확인서, 준공 서류',
-  QUOTE: '견적서, 정산서, 거래명세서',
-  OTHER: '',
-};
-
+// 문서 종류는 회사가 설정 > 목록 관리에서 정하는 선택 목록(DOCUMENT_CATEGORY)이며, 종류마다 민감 자료 기본값을 가짐
 /**
- * @description 분류별 민감 자료 기본값: 계약·공문은 기본적으로 민감 자료, 직접 정하면 그 값 사용
- * @param category 문서 분류
- * @param explicit 사용자가 직접 정한 값 (없으면 분류 기본값)
+ * @description 문서의 민감 자료 여부: 직접 정한 값이 있으면 그 값, 없으면 문서 종류의 민감 기본값
+ * @param categoryDefault 문서 종류의 민감 자료 기본값
+ * @param explicit 사용자가 직접 정한 값 (없으면 종류 기본값)
  * @returns 민감 자료 여부
  */
-export const resolveSensitive = (category: DocumentCategory, explicit?: boolean) =>
-  explicit ?? category === 'CONTRACT';
+export const resolveSensitive = (categoryDefault: boolean, explicit?: boolean) =>
+  explicit ?? categoryDefault;
 
 export const DOCUMENT_TITLE_MAX_LENGTH = 100;
 export const DOCUMENT_REASON_MAX_LENGTH = 200;
@@ -71,8 +50,8 @@ export const documentVersionParamsSchema = z.object({
 export const documentCreateSchema = z.object({
   fileId: z.uuid(),
   title: titleSchema,
-  category: documentCategorySchema.default('OTHER'),
-  // 비우면 분류 기본값 (계약·행정은 민감 자료)
+  categoryId: z.uuid(),
+  // 비우면 문서 종류의 민감 기본값
   isSensitive: z.boolean().optional(),
   revisionDate: dateSchema.optional(),
   reason: reasonSchema.optional(),
@@ -92,11 +71,11 @@ export type DocumentVersionCreate = z.infer<typeof documentVersionCreateSchema>;
 export const documentUpdateSchema = z
   .object({
     title: titleSchema,
-    category: documentCategorySchema,
+    categoryId: z.uuid(),
     isSensitive: z.boolean(),
     // 자주 보는 자료는 프로젝트 첫 화면에 고정
     isPinned: z.boolean(),
-    // 마감 요약(준공 보고서)에 넣을 문서로 고름 (안전·검사, 계약·공문 분류만, 민감 자료는 표시해도 싣지 않음)
+    // 마감 요약(준공 보고서)에 넣을 문서로 고름 (민감 자료는 표시해도 싣지 않음)
     includeInSummary: z.boolean(),
   })
   .partial()
@@ -105,7 +84,7 @@ export const documentUpdateSchema = z
 export type DocumentUpdate = z.infer<typeof documentUpdateSchema>;
 
 export const documentListQuerySchema = z.object({
-  category: documentCategorySchema.optional(),
+  categoryId: z.uuid().optional(),
   q: z.string().trim().max(50).optional(),
   pinned: z
     .enum(['true', 'false'])
@@ -135,7 +114,8 @@ export type DocumentVersion = z.infer<typeof documentVersionSchema>;
 export const documentSchema = z.object({
   id: z.uuid(),
   projectId: z.uuid(),
-  category: documentCategorySchema,
+  categoryId: z.uuid(),
+  categoryName: z.string(),
   title: z.string(),
   isSensitive: z.boolean(),
   isPinned: z.boolean(),

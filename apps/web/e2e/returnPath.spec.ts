@@ -25,5 +25,5 @@ test('주소에 넣은 이동 대상은 무시하고 대시보드로 간다', as
   await signIn(page);
 
   await expect(page).toHaveURL(/\/$/);
-  await expect(page.getByRole('heading', { name: '한빛판금' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /안녕하세요/ })).toBeVisible();
 });

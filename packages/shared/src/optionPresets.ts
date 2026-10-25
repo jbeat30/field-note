@@ -9,4 +9,10 @@ export const OPTION_PRESETS: Record<OptionKind, readonly string[]> = {
   CREDENTIAL_TYPE: ['용접 기능사', '판금 기능사', '전기기능사', '안전교육 이수증', '건강검진'],
   EXPENSE_CATEGORY: ['부자재', '장비', '운반', '식대', '기타'],
   INCOME_CATEGORY: ['고철 판매', '현장 지원', '기타'],
+  DOCUMENT_CATEGORY: ['도면·작업지시서', '계약·공문', '안전·검사', '견적·정산', '기타'],
+};
+
+// 프리셋 중 처음부터 민감 자료 기본값을 켜 두는 항목 (문서 종류)
+export const OPTION_PRESET_SENSITIVE: Partial<Record<OptionKind, readonly string[]>> = {
+  DOCUMENT_CATEGORY: ['계약·공문'],
 };

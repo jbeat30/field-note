@@ -229,7 +229,7 @@ export const MaterialUsageForm = ({
 
       {recent.length > 0 && (
         <div className="flex flex-wrap items-center gap-1.5">
-          <span className="text-sm text-foreground/65">최근 쓴 자재</span>
+          <span className="text-sm text-sub">최근 쓴 자재</span>
           {recent.map((material) => (
             <Button
               key={material.id}
@@ -247,10 +247,7 @@ export const MaterialUsageForm = ({
       )}
 
       <div>
-        <div
-          aria-hidden
-          className={`hidden pb-1.5 text-xs font-semibold text-foreground/65 ${GRID}`}
-        >
+        <div aria-hidden className={`hidden pb-1.5 text-xs font-semibold text-sub ${GRID}`}>
           <span>품명</span>
           <span>규격 (치수·두께·재질·색)</span>
           <span>수량</span>
@@ -352,7 +349,7 @@ export const MaterialUsageForm = ({
                       errors[`${row.key}.unit`],
                     ]
                       .filter(Boolean)
-                      .join(' · ')}
+                      .join(', ')}
                   </p>
                 )}
               </li>

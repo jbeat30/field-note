@@ -6,6 +6,7 @@ import { Alert } from '../components/ui/alert';
 import { useStaffingCalendar } from '../staffing/useStaffingCalendar';
 
 import { StaffingMonthCalendar } from './StaffingMonthCalendar';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 대시보드의 이번 달 인력: 이번 달(1일~말일)을 달력으로 보여 주고 날짜 칸마다 일한 사람과 프로젝트를 모음
 export const MonthStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
@@ -24,32 +25,32 @@ export const MonthStaffing = ({ dashboard }: { dashboard: Dashboard }) => {
   return (
     <section
       aria-labelledby="month-heading"
-      className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+      className="flex flex-col gap-3 rounded-[34px] bg-surface-subtle px-[30px] py-[26px]"
     >
-      <div className="flex flex-wrap items-center justify-between gap-2">
-        <h2 id="month-heading" className="text-lg font-bold">
+      <div className="flex flex-wrap items-baseline justify-between gap-2">
+        <h2 id="month-heading" className="text-[21px] font-bold tracking-[-0.025em]">
           이번 달 인력
         </h2>
         <Link
           to={`/staffing?view=month&from=${month.from}`}
-          className="inline-flex min-h-touch items-center text-sm text-primary underline"
+          className="inline-flex min-h-touch items-center text-sm font-semibold hover:text-sub"
         >
           인력 배치 보기
         </Link>
       </div>
-      <p className="text-sm">
-        <span className="font-semibold">일한 사람 {month.workingCount}명</span>
-        <span className="mx-2 text-foreground/45">·</span>
+      <p className="text-[15px] text-foreground/90">
+        <span className="font-bold">일한 사람 {month.workingCount}명</span>
+        <span className="mr-2 text-sub">,</span>
         <span>일한 기록이 없는 사람 {month.idleCount}명</span>
-        <span className="mx-2 text-foreground/45">·</span>
-        <span className={month.conflicts.length > 0 ? 'font-semibold text-danger' : undefined}>
+        <span className="mr-2 text-sub">,</span>
+        <span className={month.conflicts.length > 0 ? 'font-bold text-danger' : undefined}>
           {month.conflicts.length === 0
             ? '같은 날 겹친 사람 없음'
             : `겹침 ${month.conflicts.map((item) => `${item.name} ${item.dateCount}일`).join(', ')}`}
         </span>
       </p>
       {calendar.isError && <Alert role="alert">이번 달 인력을 불러오지 못했습니다</Alert>}
-      {calendar.isPending && <p className="text-sm text-foreground/75">불러오는 중</p>}
+      {calendar.isPending && <LoadingBlock label="불러오는 중" />}
       {calendar.data && (
         <StaffingMonthCalendar weeks={weeks} today={today} projectColors={projectColors} />
       )}

@@ -21,7 +21,7 @@ import { createMemoryQueue } from '../queue/jobQueue';
 import { createMemoryStorage } from '../storage/objectStorage';
 import { createDashboardService } from '../dashboard/dashboardService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
-import { markCompanyEmailsVerified } from '../db/testFixtures';
+import { documentCategoryIdOf, markCompanyEmailsVerified } from '../db/testFixtures';
 import { createEmployeeService } from '../employee/employeeService';
 import { CSRF_HEADER, CSRF_HEADER_VALUE } from '../http/csrf';
 import { createMemoService } from '../memo/memoService';
@@ -588,7 +588,7 @@ describe('4단계 알림·위젯', () => {
     const documentId = await client.id(`/projects/${warranty}/documents`, {
       fileId,
       title: '보증증권',
-      category: 'OTHER',
+      categoryId: documentCategoryIdOf((await client.get('/company/options')).body, '기타'),
     });
 
     await client.send('post', `/projects/${warranty}/warranty/certificates`, {

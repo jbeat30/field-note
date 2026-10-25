@@ -7,6 +7,7 @@ import { getErrorDetailMessage } from '../lib/apiError';
 import { useOptions } from '../settings/useOptions';
 
 import { useRequiredCredentials, useSaveRequiredCredentials } from './useCredentials';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const Editor = ({
   projectId,
@@ -33,7 +34,7 @@ const Editor = ({
       {error && <Alert>{error}</Alert>}
       {message && <Alert variant="info">{message}</Alert>}
       {choices.length === 0 ? (
-        <p className="text-sm text-foreground/70">설정에서 자격 종류를 먼저 등록해 주세요</p>
+        <p className="text-sm text-sub">설정에서 자격 종류를 먼저 등록해 주세요</p>
       ) : (
         <ul className="flex flex-col">
           {choices.map((item) => (
@@ -84,11 +85,11 @@ export const RequiredCredentialsPanel = ({ projectId }: { projectId: string }) =
       <h2 id="required-credentials-heading" className="text-lg font-bold">
         필요 자격
       </h2>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         정해 두면 투입할 때 서류가 없거나 만료된 직원을 경고합니다 (투입은 막지 않습니다)
       </p>
       {required.isPending || options.isPending ? (
-        <p className="text-sm">필요 자격을 불러오는 중</p>
+        <LoadingBlock label="필요 자격을 불러오는 중" />
       ) : required.isError || options.isError ? (
         <Alert>필요 자격을 불러오지 못했습니다</Alert>
       ) : (

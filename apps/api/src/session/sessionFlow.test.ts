@@ -84,7 +84,8 @@ describe('세션 인증 흐름', () => {
 
 describe('세션 토큰 교체', () => {
   const rotationSetup = async (isRemembered: boolean) => {
-    let nowMs = Date.parse('2026-10-18T00:00:00Z');
+    // 쿠키 수명은 실제 시계와 비교해 계산하므로, 시험 시각은 실제 시계보다 항상 뒤인 먼 미래로 둠
+    let nowMs = Date.parse('2099-01-01T00:00:00Z');
     const sessionStore = createMemorySessionStore(() => new Date(nowMs));
     const app = createApp({ sessionStore, appOrigin: ORIGIN, isSecureCookie: true });
     const { token } = await sessionStore.create(
@@ -120,10 +121,10 @@ describe('세션 토큰 교체', () => {
     expect(newToken).not.toBe(token);
     expect(cookie).toContain('HttpOnly');
     expect(cookie).toContain('Secure');
-    // 처음 로그인(2026-10-18 00:00 UTC)한 시각에서 7일 뒤를 넘지 않음
+    // 처음 로그인(2099-01-01 00:00 UTC)한 시각에서 7일 뒤를 넘지 않음
     const expires = Date.parse(/Expires=([^;]+)/.exec(cookie)?.[1] ?? '');
 
-    expect(Math.abs(expires - Date.parse('2026-10-25T00:00:00Z'))).toBeLessThanOrEqual(2000);
+    expect(Math.abs(expires - Date.parse('2099-01-08T00:00:00Z'))).toBeLessThanOrEqual(2000);
     expect((await devices(app, newToken!)).status).toBe(200);
   });
 

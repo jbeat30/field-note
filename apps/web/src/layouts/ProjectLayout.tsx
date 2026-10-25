@@ -1,21 +1,23 @@
 import { PROJECT_STATUS_LABELS, todayInSeoul, type ProjectStatus } from '@field-note/shared';
-import { CalendarRange, MapPin, MoreHorizontal, Printer, UserRound, Building2 } from 'lucide-react';
+import { MoreHorizontal, Pencil, Printer } from 'lucide-react';
 import { useEffect, useRef } from 'react';
 import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 
 import { Alert } from '../components/ui/alert';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
-import { Button } from '../components/ui/button';
+import { Button, pillIconButtonClass } from '../components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from '../components/ui/dropdown-menu';
+import { SummaryExportButton } from '../completion/SummaryExportButton';
 import { Skeleton } from '../components/ui/skeleton';
 import { useEmployees } from '../employees/useEmployees';
 import { cn } from '../lib/cn';
+import { formatLongDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 import { usePartners } from '../partners/usePartners';
 import { useProject } from '../projects/useProjects';
@@ -48,6 +50,9 @@ const dueText = (end: string, status: ProjectStatus) => {
 };
 
 // 프로젝트 작업 공간 공통 틀: 프로젝트 정보 머리 + 서브 메뉴 + 콘텐츠
+// 프로젝트 탭 줄의 실제 알약 너비 (탭 글자 길이에 맞춘 값)
+const TAB_SKELETON_WIDTHS = [91, 64, 64, 92, 64, 64, 64, 104, 91, 92];
+
 export const ProjectLayout = () => {
   const { id = '' } = useParams();
   const { pathname } = useLocation();
@@ -65,10 +70,44 @@ export const ProjectLayout = () => {
   }, [pathname]);
 
   if (project.isPending) {
+    // 실제 머리 평면, 탭 줄, 본문 첫 구역과 같은 크기로 먼저 깔아 내용이 나올 때 화면이 밀리지 않게 함
     return (
-      <div className="flex flex-col gap-4" aria-busy>
-        <p className="text-sm">프로젝트를 불러오는 중</p>
-        <Skeleton className="h-28 w-full rounded-xl" />
+      <div className="flex flex-col gap-4" aria-busy role="status">
+        <span className="sr-only">프로젝트를 불러오는 중</span>
+        <div className="plane pt-4 pb-14 md:pt-8 md:pb-16 print:hidden">
+          <div className="flex min-h-touch items-center">
+            <Skeleton className="h-4 w-24 bg-[#fbf7ee]/45" />
+          </div>
+          <div className="mt-1 flex items-start justify-between gap-3">
+            <div className="flex min-w-0 flex-1 flex-col gap-2">
+              <Skeleton className="h-[22px] w-40 rounded-full bg-[#fbf7ee]/45" />
+              <Skeleton className="h-[31px] w-2/3 max-w-xl bg-[#fbf7ee]/45 md:h-[51px]" />
+              <Skeleton className="h-[23px] w-1/2 max-w-md bg-[#fbf7ee]/45" />
+            </div>
+            <div className="flex shrink-0 items-center gap-2">
+              <Skeleton className="hidden h-[50px] w-[129px] rounded-full bg-[#fbf7ee]/45 sm:block" />
+              <Skeleton className="size-[50px] rounded-full bg-[#fbf7ee]/45" />
+            </div>
+          </div>
+        </div>
+        <div className="relative -mt-10 flex gap-1 overflow-hidden rounded-full bg-track p-[5px] sm:w-fit sm:max-w-full">
+          {TAB_SKELETON_WIDTHS.map((width, index) => (
+            <Skeleton
+              key={index}
+              className="h-10 shrink-0 rounded-full bg-[#fbf7ee]/70"
+              style={{ width }}
+            />
+          ))}
+        </div>
+        <div className="flex flex-col gap-5">
+          <div className="grid grid-cols-2 gap-2.5 sm:grid-cols-3 md:gap-4">
+            <Skeleton className="h-[108px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
+            <Skeleton className="h-[108px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
+            <Skeleton className="h-[108px] rounded-[24px] md:h-[153px] md:rounded-[30px]" />
+          </div>
+          <Skeleton className="h-[618px] rounded-[30px] md:h-[759px]" />
+          <Skeleton className="h-[302px] rounded-[30px]" />
+        </div>
       </div>
     );
   }
@@ -79,7 +118,7 @@ export const ProjectLayout = () => {
     return (
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">프로젝트를 찾을 수 없습니다</h1>
-        <Link className="min-h-touch content-center text-primary underline" to="/projects">
+        <Link className="min-h-touch content-center text-primary hover:text-sub" to="/projects">
           프로젝트 목록으로
         </Link>
       </div>
@@ -95,6 +134,8 @@ export const ProjectLayout = () => {
   const inCloseout = closeout.some((path) => pathname.startsWith(path));
   const showWarranty = WARRANTY_STATUSES.includes(data.status);
   const showTodayBtn = WRITABLE.includes(data.status);
+  // 작업일 입력 화면은 제목을 날짜로, 프로젝트 이름은 아래 정보 줄 앞으로
+  const workDate = /\/work\/(\d{4}-\d{2}-\d{2})$/.exec(pathname)?.[1];
 
   const tabs: { to: string; label: string; end?: boolean; active?: boolean }[] = [
     { to: base, label: '작업 달력', end: true },
@@ -121,32 +162,63 @@ export const ProjectLayout = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <BackLink className="print:hidden" to="/projects">
-        프로젝트 목록
-      </BackLink>
-
-      {/* 프로젝트 머리: 1줄 번호·이름·상태·남은 기간 + 주 버튼·더보기, 2줄 현장·고객·담당자·기간 */}
-      <header className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-4 sm:p-5 print:hidden">
-        <div className="flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-1">
-            <div className="flex flex-wrap items-center gap-1.5 text-sm text-foreground/70">
-              <span className="font-medium">{data.code}</span>
+      {/* 프로젝트 머리: 주황 평면에 돌아가기, 번호·상태 알약, 이름, 현장·고객·담당자·기간 한 줄, 오른쪽 주 버튼 */}
+      <div className="plane pt-4 pb-14 md:pt-8 md:pb-16 print:hidden">
+        <BackLink to="/projects">프로젝트 목록</BackLink>
+        <header className="mt-1 flex items-start justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-2">
+            <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
+              <span className="rounded-full bg-[#fbf7ee] px-2.5 py-0.5">{data.code}</span>
               <Badge tone={STATUS_TONE[data.status]}>{PROJECT_STATUS_LABELS[data.status]}</Badge>
-              {due && <Badge tone={due.includes('지남') ? 'danger' : 'neutral'}>{due}</Badge>}
+              {due && <Badge tone={due.includes('지남') ? 'danger' : 'primary'}>{due}</Badge>}
             </div>
-            <h1 className="text-xl font-bold tracking-tight break-keep">{data.name}</h1>
+            <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] break-keep md:text-[46px]">
+              {workDate ? `${formatLongDay(workDate)} 작업` : data.name}
+            </h1>
+            <p className="text-[15px] font-medium">
+              {[
+                workDate && data.name,
+                data.siteName,
+                client,
+                manager && `담당 ${manager}`,
+                `${data.plannedStart} ~ ${data.plannedEnd}`,
+              ]
+                .filter(Boolean)
+                .join(', ')}
+              {data.siteMapUrl && (
+                <>
+                  {' '}
+                  <a
+                    className="-my-2.5 inline-block py-2.5 font-bold whitespace-nowrap hover:text-sub"
+                    href={data.siteMapUrl}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                  >
+                    지도 열기
+                  </a>
+                </>
+              )}
+            </p>
           </div>
-          <div className="flex shrink-0 items-center gap-1">
+          <div className="flex shrink-0 items-center gap-2">
             {showTodayBtn && (
-              <Button size="sm" asChild>
-                <Link to={projectWorkPath(data.id, todayInSeoul(new Date()))}>오늘 기록</Link>
-              </Button>
+              <Link
+                to={projectWorkPath(data.id, todayInSeoul(new Date()))}
+                className={pillIconButtonClass}
+              >
+                <Pencil aria-hidden />
+                오늘 기록
+              </Link>
             )}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button type="button" size="icon-sm" variant="ghost" aria-label="더보기">
-                  <MoreHorizontal aria-hidden />
-                </Button>
+                <button
+                  type="button"
+                  aria-label="더보기"
+                  className="inline-flex size-[50px] items-center justify-center rounded-full bg-[#fbf7ee] text-[#14110d] hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                >
+                  <MoreHorizontal aria-hidden className="size-5" />
+                </button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 <DropdownMenuItem asChild>
@@ -161,38 +233,14 @@ export const ProjectLayout = () => {
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-        </div>
-        <ul className="hidden flex-wrap gap-x-6 gap-y-2 text-sm sm:flex">
-          <Fact icon={MapPin} label="현장">
-            {data.siteName || '-'}
-            {data.siteMapUrl && (
-              <a
-                className="ml-2 text-primary underline"
-                href={data.siteMapUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                지도 열기
-              </a>
-            )}
-          </Fact>
-          <Fact icon={Building2} label="고객">
-            {client ?? '-'}
-          </Fact>
-          <Fact icon={UserRound} label="담당자">
-            {manager ?? '-'}
-          </Fact>
-          <Fact icon={CalendarRange} label="예정 기간">
-            {data.plannedStart} ~ {data.plannedEnd}
-          </Fact>
-        </ul>
-      </header>
+        </header>
+      </div>
 
-      {/* 서브 메뉴: 가로 스크롤만, 세로 스크롤바 없음, 현재 탭 자동 스크롤 */}
+      {/* 서브 메뉴: 트랙 안의 알약, 가로 스크롤만, 세로 스크롤바 없음, 현재 탭 자동 스크롤 */}
       <nav
         ref={navRef}
         aria-label="프로젝트 메뉴"
-        className="-mx-4 flex gap-1 overflow-x-auto overflow-y-hidden border-b border-line px-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden sm:mx-0 sm:px-0 print:hidden"
+        className="relative -mt-10 flex gap-1 overflow-x-auto overflow-y-hidden rounded-full bg-track p-[5px] [scrollbar-width:none] sm:w-fit sm:max-w-full print:hidden [&::-webkit-scrollbar]:hidden"
       >
         {tabs.map((tab) => (
           <NavLink
@@ -201,13 +249,13 @@ export const ProjectLayout = () => {
             end={tab.end}
             className={({ isActive }) =>
               cn(
-                '-mb-px flex min-h-touch items-center border-b-2 px-4 text-sm font-medium whitespace-nowrap transition-colors',
+                'flex min-h-10 items-center rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors',
                 isActive ||
                   tab.active ||
                   (tab.end && pathname.startsWith(`${tab.to}/work/`)) ||
                   (tab.label === '마감·보증' && pathname.startsWith(`${base}/daily-report`))
-                  ? 'border-primary text-primary'
-                  : 'border-transparent text-foreground/70 hover:text-foreground',
+                  ? 'bg-primary font-bold text-primary-foreground'
+                  : 'text-sub hover:text-foreground',
               )
             }
           >
@@ -220,7 +268,7 @@ export const ProjectLayout = () => {
         <div className="flex items-center justify-between gap-3 print:hidden">
           <nav
             aria-label="마감·보증 메뉴"
-            className="flex gap-1 self-start rounded-xl bg-muted p-1"
+            className="flex gap-1 self-start rounded-full bg-track p-1"
           >
             {closeoutTabs.map((tab) => (
               <NavLink
@@ -228,8 +276,8 @@ export const ProjectLayout = () => {
                 to={tab.to}
                 className={({ isActive }) =>
                   cn(
-                    'flex min-h-touch items-center rounded-lg px-4 text-sm font-medium whitespace-nowrap',
-                    isActive ? 'bg-surface text-foreground shadow-xs' : 'text-foreground/70',
+                    'flex min-h-10 items-center rounded-full px-5 text-sm font-bold whitespace-nowrap',
+                    isActive ? 'bg-primary font-bold text-primary-foreground' : 'text-sub',
                   )
                 }
               >
@@ -237,16 +285,13 @@ export const ProjectLayout = () => {
               </NavLink>
             ))}
           </nav>
-          <Button
-            type="button"
-            variant="secondary"
-            size="sm"
-            onClick={() => window.print()}
-            className="shrink-0"
-          >
-            <Printer aria-hidden />
-            인쇄·PDF
-          </Button>
+          <div className="flex shrink-0 items-center gap-2">
+            {pathname.startsWith(`${base}/summary`) && <SummaryExportButton projectId={data.id} />}
+            <Button type="button" variant="secondary" size="sm" onClick={() => window.print()}>
+              <Printer aria-hidden />
+              인쇄·PDF
+            </Button>
+          </div>
         </div>
       )}
 
@@ -254,19 +299,3 @@ export const ProjectLayout = () => {
     </div>
   );
 };
-
-const Fact = ({
-  icon: Icon,
-  label,
-  children,
-}: {
-  icon: typeof MapPin;
-  label: string;
-  children: React.ReactNode;
-}) => (
-  <li className="flex items-center gap-1.5">
-    <Icon aria-hidden className="size-4 shrink-0 text-foreground/70" />
-    <span className="text-foreground/70">{label}</span>
-    <span className="font-medium">{children}</span>
-  </li>
-);
