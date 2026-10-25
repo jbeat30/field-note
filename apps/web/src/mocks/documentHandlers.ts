@@ -29,7 +29,7 @@ import {
   getMockFile,
   stagedExpiredDetail,
 } from './photoHandlers';
-import { getCurrentAccount, getProjects } from './state';
+import { getCurrentAccount, getOptions, getProjects } from './state';
 import { mockDelay } from './latency';
 
 type Helpers = {
@@ -49,7 +49,7 @@ type MockVersion = {
   createdAt: string;
 };
 
-type MockDocument = Omit<Document, 'versionCount' | 'latest'> & {
+type MockDocument = Omit<Document, 'versionCount' | 'latest' | 'categoryName'> & {
   scope: string;
   versions: MockVersion[];
   deletedAt?: string;
@@ -74,6 +74,10 @@ const MOCK_USER_ID = '0198d000-0000-7000-8000-000000000001';
 // 회사 구분 값 (회사가 없는 가입 직후 계정은 계정 단위로 나눔)
 const scopeOf = (account: MockAccount) => account.companyId ?? account.loginId;
 
+// 문서 종류는 계정의 선택 목록 항목 (프리셋 이름으로 찾음)
+const categoryByName = (account: MockAccount, name: string) =>
+  getOptions(account).find((item) => item.kind === 'DOCUMENT_CATEGORY' && item.name === name)!;
+
 const addDocument = (
   account: MockAccount,
   projectId: string,
@@ -81,7 +85,7 @@ const addDocument = (
     // 정해 두면 그 ID를 씀 (더미 문서의 고정 ID)
     id?: string;
     title: string;
-    category: Document['category'];
+    categoryId: string;
     isSensitive?: boolean;
     isPinned?: boolean;
     includeInSummary?: boolean;
@@ -110,9 +114,12 @@ const addDocument = (
     id,
     scope: scopeOf(account),
     projectId,
-    category: input.category,
+    categoryId: input.categoryId,
     title: input.title,
-    isSensitive: resolveSensitive(input.category, input.isSensitive),
+    isSensitive: resolveSensitive(
+      getOptions(account).find((item) => item.id === input.categoryId)?.sensitiveDefault ?? false,
+      input.isSensitive,
+    ),
     isPinned: input.isPinned ?? false,
     includeInSummary: input.includeInSummary ?? false,
     createdBy: MOCK_USER_ID,
@@ -138,7 +145,7 @@ const seed = (account: MockAccount) => {
     addDocument(account, project.id, {
       id: seedDocumentId(project.id, 0),
       title: '1층 시공도',
-      category: 'DRAWING',
+      categoryId: categoryByName(account, '도면·작업지시서').id,
       isPinned: true,
       versions: [
         { name: '1층시공도_rev1.pdf', date: '2026-09-20', reason: '최초' },
@@ -148,13 +155,13 @@ const seed = (account: MockAccount) => {
     addDocument(account, project.id, {
       id: seedDocumentId(project.id, 1),
       title: '도급 계약서',
-      category: 'CONTRACT',
+      categoryId: categoryByName(account, '계약·공문').id,
       versions: [{ name: '도급계약서.pdf', date: '2026-09-01' }],
     });
     addDocument(account, project.id, {
       id: seedDocumentId(project.id, 2),
       title: '외장 판금 시방서',
-      category: 'DRAWING',
+      categoryId: categoryByName(account, '도면·작업지시서').id,
       versions: [{ name: '시방서.pdf', date: '2026-09-10' }],
     });
   }
@@ -169,6 +176,26 @@ const live = (account: MockAccount, projectId?: string) => {
       !document.deletedAt &&
       (!projectId || document.projectId === projectId),
   );
+};
+
+// 고를 수 있는 문서 종류인지 확인 (없거나 숨긴 종류는 거부), 문제가 없으면 undefined
+const categoryProblem = (account: MockAccount, categoryId: string) => {
+  const option = getOptions(account).find(
+    (item) => item.id === categoryId && item.kind === 'DOCUMENT_CATEGORY',
+  );
+
+  if (!option) return VALIDATION_MESSAGES.OPTION_NOT_SELECTABLE('문서 종류');
+
+  return option.isActive ? undefined : VALIDATION_MESSAGES.OPTION_HIDDEN('문서 종류');
+};
+
+// 종류를 정하지 않고 만드는 문서(변경 작업 증빙)의 종류: 고를 수 있는 종류 중 민감 기본값이 켜진 첫 항목, 없으면 첫 항목
+const defaultCategoryId = (account: MockAccount) => {
+  const active = getOptions(account).filter(
+    (item) => item.kind === 'DOCUMENT_CATEGORY' && item.isActive,
+  );
+
+  return (active.find((item) => item.sensitiveDefault) ?? active[0])!.id;
 };
 
 // 변경·추가 작업 증빙 올리기가 쓰는 문서 만들기: 올린 파일로 문서를 만듦 (같은 파일로 이미 만들었으면 그 문서)
@@ -207,7 +234,7 @@ export const createMockEvidenceDocument = (
   return {
     id: addDocument(account, projectId, {
       title: input.title,
-      category: 'CONTRACT',
+      categoryId: defaultCategoryId(account),
       versions: [{ name: file.name, date: todayInSeoul(new Date()), fileId: input.fileId }],
     }),
   };
@@ -215,7 +242,7 @@ export const createMockEvidenceDocument = (
 
 // 검색 목업이 쓰는 문서 조회 (지운 문서 제외)
 export const listMockDocuments = (account: MockAccount) =>
-  live(account).map((document) => toDocument(document));
+  live(account).map((document) => toDocument(account, document));
 
 const toVersion = (version: MockVersion): DocumentVersion => {
   const file = getMockFile(version.fileId)!;
@@ -235,13 +262,15 @@ const toVersion = (version: MockVersion): DocumentVersion => {
   };
 };
 
-const toDocument = (document: MockDocument): Document => {
+const toDocument = (account: MockAccount, document: MockDocument): Document => {
   const versions = [...document.versions].sort((a, b) => b.versionNo - a.versionNo);
 
   return {
     id: document.id,
     projectId: document.projectId,
-    category: document.category,
+    categoryId: document.categoryId,
+    categoryName:
+      getOptions(account).find((item) => item.id === document.categoryId)?.name ?? '(알 수 없음)',
     title: document.title,
     isSensitive: document.isSensitive,
     isPinned: document.isPinned,
@@ -254,8 +283,8 @@ const toDocument = (document: MockDocument): Document => {
   };
 };
 
-const toDetail = (document: MockDocument): DocumentDetail => ({
-  ...toDocument(document),
+const toDetail = (account: MockAccount, document: MockDocument): DocumentDetail => ({
+  ...toDocument(account, document),
   versions: [...document.versions].sort((a, b) => b.versionNo - a.versionNo).map(toVersion),
 });
 
@@ -319,7 +348,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
       const existing = owner(body.data.fileId);
 
       if (existing && !existing.deletedAt && existing.projectId === path.data.projectId) {
-        return HttpResponse.json(toDetail(existing), { status: 201 });
+        return HttpResponse.json(toDetail(account, existing), { status: 201 });
       }
 
       const problem = checkFile(account, body.data.fileId, path.data.projectId);
@@ -332,10 +361,18 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
         ]);
       }
 
+      const categoryMessage = categoryProblem(account, body.data.categoryId);
+
+      if (categoryMessage) {
+        return apiError('VALIDATION_ERROR', [
+          { path: 'body.categoryId', message: categoryMessage },
+        ]);
+      }
+
       const file = getMockFile(body.data.fileId)!;
       const id = addDocument(account, path.data.projectId, {
         title: body.data.title,
-        category: body.data.category,
+        categoryId: body.data.categoryId,
         isSensitive: body.data.isSensitive,
         versions: [
           {
@@ -347,7 +384,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
         ],
       });
 
-      return HttpResponse.json(toDetail(documents.get(id)!), { status: 201 });
+      return HttpResponse.json(toDetail(account, documents.get(id)!), { status: 201 });
     }),
 
     http.get('/api/v1/projects/:projectId/documents', async ({ request, params }) => {
@@ -366,14 +403,14 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
 
       if (!path.success || !hasProject(account, path.data.projectId)) return apiError('NOT_FOUND');
 
-      const { category, q, pinned } = query.data;
+      const { categoryId, q, pinned } = query.data;
       const keyword = q?.toLowerCase();
 
       return HttpResponse.json({
         items: live(account, path.data.projectId)
           .filter(
             (document) =>
-              (!category || document.category === category) &&
+              (!categoryId || document.categoryId === categoryId) &&
               (pinned === undefined || document.isPinned === pinned) &&
               (!keyword || document.title.toLowerCase().includes(keyword)),
           )
@@ -383,7 +420,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
               b.updatedAt.localeCompare(a.updatedAt) ||
               b.id.localeCompare(a.id),
           )
-          .map(toDocument),
+          .map((item) => toDocument(account, item)),
       });
     }),
 
@@ -399,7 +436,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
         ? live(account).find((item) => item.id === parsed.data.id)
         : undefined;
 
-      return document ? HttpResponse.json(toDetail(document)) : apiError('NOT_FOUND');
+      return document ? HttpResponse.json(toDetail(account, document)) : apiError('NOT_FOUND');
     }),
 
     http.patch('/api/v1/documents/:id', async ({ request, params }) => {
@@ -434,12 +471,22 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
         ]);
       }
 
+      if (body.data.categoryId && body.data.categoryId !== document.categoryId) {
+        const categoryMessage = categoryProblem(account, body.data.categoryId);
+
+        if (categoryMessage) {
+          return apiError('VALIDATION_ERROR', [
+            { path: 'body.categoryId', message: categoryMessage },
+          ]);
+        }
+      }
+
       Object.assign(
         document,
         Object.fromEntries(Object.entries(body.data).filter(([, value]) => value !== undefined)),
       );
 
-      return HttpResponse.json(toDetail(document));
+      return HttpResponse.json(toDetail(account, document));
     }),
 
     http.delete('/api/v1/documents/:id', async ({ params }) => {
@@ -505,7 +552,7 @@ export const createDocumentHandlers = ({ apiError, parseBody }: Helpers) => {
         document.updatedAt = new Date().toISOString();
       }
 
-      return HttpResponse.json(toDetail(document), { status: 201 });
+      return HttpResponse.json(toDetail(account, document), { status: 201 });
     }),
 
     http.get('/api/v1/documents/:id/versions/:versionNo/url', async ({ request, params }) => {

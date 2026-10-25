@@ -58,3 +58,14 @@ export const markCompanyEmailsVerified = async (
     [companyId],
   );
 };
+
+/**
+ * @description 회사 선택 목록 응답(/company/options)에서 문서 종류 항목의 id를 이름으로 찾음
+ * @param body 선택 목록 응답 본문
+ * @param name 문서 종류 이름 (프리셋 이름)
+ * @returns 문서 종류 id
+ */
+export const documentCategoryIdOf = (body: unknown, name: string) =>
+  (body as { items: { kind: string; name: string; id: string }[] }).items.find(
+    (item) => item.kind === 'DOCUMENT_CATEGORY' && item.name === name,
+  )!.id;

@@ -1,11 +1,4 @@
-import {
-  AUDIT_ACTION_LABELS,
-  DOCUMENT_CATEGORIES,
-  DOCUMENT_CATEGORY_LABELS,
-  SUMMARY_DOCUMENT_CATEGORIES,
-  type DocumentCategory,
-  type DocumentDetail,
-} from '@field-note/shared';
+import { AUDIT_ACTION_LABELS, type DocumentDetail } from '@field-note/shared';
 import { Dialog } from 'radix-ui';
 import { useState } from 'react';
 
@@ -16,6 +9,7 @@ import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { formatDay } from '../lib/dates';
+import { useOptions } from '../settings/useOptions';
 
 import { DocumentUploadForm, type DocumentFormValues } from './DocumentUploadForm';
 import {
@@ -48,7 +42,7 @@ const formatTime = (iso: string) =>
     timeStyle: 'short',
   });
 
-// 문서 상세: 모든 버전(최신이 맨 앞, 이전본 보존), 새 버전 올리기, 이름·분류·민감 표시 수정, 민감 자료의 열람 기록, 삭제
+// 문서 상세: 모든 버전(최신이 맨 앞, 이전본 보존), 새 버전 올리기, 이름·종류·민감 표시 수정, 민감 자료의 열람 기록, 삭제
 const Body = ({
   document,
   staged,
@@ -63,13 +57,18 @@ const Body = ({
   const addVersion = useAddDocumentVersion();
   const logs = useDocumentAccessLogs(document.id, document.isSensitive);
   const opener = useOpenDocument();
+  const options = useOptions();
   const [title, setTitle] = useState(document.title);
-  const [category, setCategory] = useState<DocumentCategory>(document.category);
+  const [categoryId, setCategoryId] = useState(document.categoryId);
+  // 고를 수 있는 종류는 숨기지 않은 것, 이미 쓰는 종류는 숨겼어도 보여 줌
+  const categoryChoices = (options.data ?? []).filter(
+    (item) =>
+      item.kind === 'DOCUMENT_CATEGORY' && (item.isActive || item.id === document.categoryId),
+  );
   const [isSensitive, setIsSensitive] = useState(document.isSensitive);
   const [includeInSummary, setIncludeInSummary] = useState(document.includeInSummary);
-  // 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 포함 가능
-  const canSummarize =
-    (SUMMARY_DOCUMENT_CATEGORIES as readonly string[]).includes(category) && !isSensitive;
+  // 준공 요약에는 민감하지 않은 문서만 포함 가능
+  const canSummarize = !isSensitive;
   const [error, setError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
@@ -79,7 +78,12 @@ const Body = ({
     try {
       await update.mutateAsync({
         id: document.id,
-        body: { title, category, isSensitive, includeInSummary: canSummarize && includeInSummary },
+        body: {
+          title,
+          categoryId,
+          isSensitive,
+          includeInSummary: canSummarize && includeInSummary,
+        },
       });
     } catch (caught) {
       setError(getErrorDetailMessage(caught));
@@ -107,14 +111,11 @@ const Body = ({
           onChange={(event) => setTitle(event.target.value)}
         />
       </FormField>
-      <FormField label="분류">
+      <FormField label="종류">
         <Select
-          value={category}
-          onValueChange={setCategory}
-          options={DOCUMENT_CATEGORIES.map((value) => ({
-            value,
-            label: DOCUMENT_CATEGORY_LABELS[value],
-          }))}
+          value={categoryId}
+          onValueChange={setCategoryId}
+          options={categoryChoices.map((item) => ({ value: item.id, label: item.name }))}
         />
       </FormField>
       <label className="flex min-h-touch items-center gap-3 text-base">
@@ -136,9 +137,7 @@ const Body = ({
         />
         <span>
           준공 요약에 넣기
-          <span className="block text-sm text-sub">
-            안전·검사, 계약·공문 분류의 민감하지 않은 문서만 넣을 수 있습니다
-          </span>
+          <span className="block text-sm text-sub">민감하지 않은 문서만 넣을 수 있습니다</span>
         </span>
       </label>
       {error && <Alert>{error}</Alert>}

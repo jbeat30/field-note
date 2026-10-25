@@ -199,10 +199,20 @@ const closeAccount = async (h: Awaited<ReturnType<typeof createClosureHarness>>)
       uploadedBy: account.userId,
     },
   });
+  const documentCategory = await db.owner.optionItem.create({
+    data: {
+      companyId: account.companyId,
+      kind: 'DOCUMENT_CATEGORY',
+      name: '삭제될 문서 종류',
+      nameKey: '삭제될 문서 종류',
+      sortOrder: 0,
+    },
+  });
   const document = await db.owner.document.create({
     data: {
       companyId: account.companyId,
       projectId: project.id,
+      categoryId: documentCategory.id,
       title: '삭제될 문서',
       isSensitive: true,
       createdBy: account.userId,

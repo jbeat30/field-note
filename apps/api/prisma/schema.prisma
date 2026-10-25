@@ -684,6 +684,7 @@ enum OptionKind {
   CREDENTIAL_TYPE
   EXPENSE_CATEGORY
   INCOME_CATEGORY
+  DOCUMENT_CATEGORY
 
   @@map("option_kind")
 }
@@ -698,6 +699,8 @@ model OptionItem {
   nameKey               String                      @map("name_key")
   sortOrder             Int                         @map("sort_order")
   isActive              Boolean                     @default(true) @map("is_active")
+  // 문서 종류에서만 씀: 이 종류로 올린 문서를 처음부터 민감 자료로 둘지
+  sensitiveDefault      Boolean                     @default(false) @map("sensitive_default")
   createdAt             DateTime                    @default(now()) @map("created_at") @db.Timestamptz(3)
   updatedAt             DateTime                    @default(now()) @updatedAt @map("updated_at") @db.Timestamptz(3)
   company               Company                     @relation(fields: [companyId], references: [id])
@@ -709,6 +712,7 @@ model OptionItem {
   ledgerEntries         LedgerEntry[]               @relation("LedgerEntryCategory")
   credentials           EmployeeCredential[]        @relation("CredentialType")
   requiredByProjects    ProjectRequiredCredential[] @relation("RequiredCredentialType")
+  documents             Document[]                  @relation("DocumentCategory")
 
   @@id([companyId, id])
   @@unique([companyId, kind, nameKey])
@@ -1119,17 +1123,6 @@ model MaterialRecord {
   @@map("material_records")
 }
 
-// 작업자료 분류
-enum DocumentCategory {
-  DRAWING
-  CONTRACT
-  SAFETY
-  QUOTE
-  OTHER
-
-  @@map("document_category")
-}
-
 // 감사 기록 종류: 민감 자료 열람·내려받기, 내보내기
 enum AuditAction {
   DOCUMENT_VIEWED
@@ -1160,7 +1153,7 @@ model Document {
   companyId            String                @map("company_id") @db.Uuid
   id                   String                @default(dbgenerated("uuidv7()")) @db.Uuid
   projectId            String                @map("project_id") @db.Uuid
-  category             DocumentCategory      @default(OTHER)
+  categoryId           String                @map("category_id") @db.Uuid
   title                String
   isSensitive          Boolean               @default(false) @map("is_sensitive")
   isPinned             Boolean               @default(false) @map("is_pinned")
@@ -1171,6 +1164,7 @@ model Document {
   deletedAt            DateTime?             @map("deleted_at") @db.Timestamptz(3)
   company              Company               @relation(fields: [companyId], references: [id])
   project              Project               @relation(fields: [companyId, projectId], references: [companyId, id], onDelete: Restrict)
+  category             OptionItem            @relation("DocumentCategory", fields: [companyId, categoryId], references: [companyId, id], onDelete: Restrict)
   creator              User                  @relation("DocumentCreatedBy", fields: [companyId, createdBy], references: [companyId, id], onDelete: Restrict)
   versions             DocumentVersion[]
   changeWorkLinks      ChangeWorkDocument[]
@@ -1178,7 +1172,7 @@ model Document {
   warrantyCertificates WarrantyCertificate[]
 
   @@id([companyId, id])
-  @@index([companyId, projectId, category])
+  @@index([companyId, projectId, categoryId])
   @@map("documents")
 }
 

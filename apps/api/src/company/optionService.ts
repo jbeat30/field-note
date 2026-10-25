@@ -2,6 +2,7 @@ import {
   OPTION_KINDS,
   OPTION_MAX_PER_KIND,
   OPTION_PRESETS,
+  OPTION_PRESET_SENSITIVE,
   normalizeOptionName,
   type OptionItem,
   type OptionKind,
@@ -19,23 +20,33 @@ export class OptionError extends Error {
 export type OptionService = {
   // 전체 목록 (종류 순서 → 회사가 정한 순서), 비어 있는 종류는 프리셋으로 채운 뒤 돌려줌
   list: (companyId: string) => Promise<OptionItem[]>;
-  create: (companyId: string, input: { kind: OptionKind; name: string }) => Promise<OptionItem>;
+  create: (
+    companyId: string,
+    input: { kind: OptionKind; name: string; sensitiveDefault?: boolean },
+  ) => Promise<OptionItem>;
   update: (
     companyId: string,
     id: string,
-    input: { name?: string; isActive?: boolean },
+    input: { name?: string; isActive?: boolean; sensitiveDefault?: boolean },
   ) => Promise<OptionItem>;
   // 해당 종류의 모든 항목(숨긴 것 포함)을 주어진 순서로 정렬
   reorder: (companyId: string, kind: OptionKind, ids: string[]) => Promise<void>;
 };
 
-type Row = { id: string; kind: OptionKind; name: string; isActive: boolean };
+type Row = {
+  id: string;
+  kind: OptionKind;
+  name: string;
+  isActive: boolean;
+  sensitiveDefault: boolean;
+};
 
 const toItem = (row: Row): OptionItem => ({
   id: row.id,
   kind: row.kind,
   name: row.name,
   isActive: row.isActive,
+  sensitiveDefault: row.sensitiveDefault,
 });
 
 // 같은 이름이 동시에 들어오는 경우의 안전망 (사전 조회 이후 고유 제약에 걸림)
@@ -45,7 +56,7 @@ const isUniqueViolation = (error: unknown) =>
 
 // 종류별 항목이 하나도 없을 때 프리셋 채움, 항목은 삭제 없이 숨기기만 하므로 한 번 채우면 다시 비지 않음
 // 동시 요청이 겹쳐도 (회사, 종류, 이름) 고유 제약과 skipDuplicates로 중복 없이 한 번만 입력
-const ensurePresets = async (tx: Prisma.TransactionClient, companyId: string) => {
+export const ensurePresets = async (tx: Prisma.TransactionClient, companyId: string) => {
   const existing = await tx.optionItem.groupBy({ by: ['kind'], _count: { _all: true } });
   const seeded = new Set(existing.map((row) => row.kind));
 
@@ -57,6 +68,7 @@ const ensurePresets = async (tx: Prisma.TransactionClient, companyId: string) =>
         name,
         nameKey: normalizeOptionName(name),
         sortOrder: index,
+        sensitiveDefault: OPTION_PRESET_SENSITIVE[kind]?.includes(name) ?? false,
       })),
       skipDuplicates: true,
     });
@@ -81,7 +93,7 @@ export const createOptionService = (app: PrismaClient): OptionService => ({
       return OPTION_KINDS.flatMap((kind) => rows.filter((row) => row.kind === kind)).map(toItem);
     }),
 
-  create: (companyId, { kind, name }) =>
+  create: (companyId, { kind, name, sensitiveDefault }) =>
     withCompany(app, companyId, async (tx) => {
       // 목록을 열기 전에 추가부터 하더라도 프리셋이 영영 안 채워지는 일이 없도록 먼저 채움
       await ensurePresets(tx, companyId);
@@ -105,7 +117,15 @@ export const createOptionService = (app: PrismaClient): OptionService => ({
       try {
         return toItem(
           await tx.optionItem.create({
-            data: { companyId, kind, name, nameKey, sortOrder: (max.sortOrder ?? -1) + 1 },
+            data: {
+              companyId,
+              kind,
+              name,
+              nameKey,
+              sortOrder: (max.sortOrder ?? -1) + 1,
+              // 민감 기본값은 문서 종류에서만 의미가 있음
+              sensitiveDefault: kind === 'DOCUMENT_CATEGORY' && (sensitiveDefault ?? false),
+            },
           }),
         );
       } catch (error) {
@@ -113,7 +133,7 @@ export const createOptionService = (app: PrismaClient): OptionService => ({
       }
     }),
 
-  update: (companyId, id, { name, isActive }) =>
+  update: (companyId, id, { name, isActive, sensitiveDefault }) =>
     withCompany(app, companyId, async (tx) => {
       // 다른 회사의 항목은 RLS 때문에 보이지 않아 없는 것과 같은 응답이 됨
       const current = await tx.optionItem.findFirst({ where: { id } });
@@ -138,7 +158,12 @@ export const createOptionService = (app: PrismaClient): OptionService => ({
         return toItem(
           await tx.optionItem.update({
             where: { companyId_id: { companyId, id } },
-            data: { name, nameKey, isActive },
+            data: {
+              name,
+              nameKey,
+              isActive,
+              sensitiveDefault: current.kind === 'DOCUMENT_CATEGORY' ? sensitiveDefault : undefined,
+            },
           }),
         );
       } catch (error) {
