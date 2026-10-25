@@ -37,12 +37,12 @@ export const Modal = ({
 }: ModalProps) => (
   <Dialog.Root open={open} onOpenChange={onOpenChange}>
     <Dialog.Portal>
-      <Dialog.Overlay className="fixed inset-0 z-20 bg-overlay print:hidden" />
+      <Dialog.Overlay className="anim-overlay fixed inset-0 z-30 bg-overlay print:hidden" />
       <Dialog.Content
         // 설명이 없으면 Radix 경고를 피하려고 연결을 끊음
         {...(description ? {} : { 'aria-describedby': undefined })}
         className={cn(
-          'fixed z-20 flex max-h-[88dvh] flex-col gap-4 overflow-y-auto bg-surface-subtle p-6 print:hidden',
+          'anim-sheet fixed z-30 flex max-h-[88dvh] flex-col gap-4 overflow-y-auto bg-surface-subtle p-6 print:hidden',
           variant === 'sheet' && SHEET,
           variant === 'dialog' && DIALOG,
           variant === 'auto' && `${SHEET} md:right-auto md:bottom-auto md:pb-5 ${DIALOG_MD}`,

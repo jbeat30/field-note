@@ -5,8 +5,8 @@ const CHIP_CLASSES = [
   'bg-foreground text-surface',
   'bg-highlight text-[#14110d]',
   'border-[1.5px] border-foreground bg-transparent text-foreground',
-  'bg-[#cdbf9c] text-[#14110d]',
-  'bg-[#a83f0c] text-[#fbf7ee]',
+  'bg-[#9dc1c4] text-[#14110d]',
+  'bg-[#b8461a] text-[#fbf7ee]',
 ] as const;
 
 export const projectChipClass = (colorIndex: number) =>

@@ -7,7 +7,6 @@ import { cn } from '../lib/cn';
 import { BrandLogo } from './BrandLogo';
 import { SIDEBAR_GROUPS } from './navItems';
 import { ProfileMenu } from './ProfileMenu';
-import { ThemeToggle } from './ThemeToggle';
 
 type AppSidebarProps = {
   isCollapsed: boolean;
@@ -107,7 +106,6 @@ export const AppSidebar = ({ isCollapsed, onToggleCollapsed }: AppSidebarProps) 
       )}
     >
       <ProfileMenu compact={isCollapsed} />
-      <ThemeToggle className="text-[#f4eee0]/80 hover:bg-white/10 hover:text-[#f4eee0]" />
     </div>
   </aside>
 );

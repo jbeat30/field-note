@@ -50,7 +50,7 @@ describe('seedDemoData', () => {
     expect(second).toEqual(first);
     expect(await db.owner.company.count()).toBe(4);
     expect(await db.owner.user.count()).toBe(4);
-    expect(await db.owner.legalDocument.count()).toBe(3);
+    expect(await db.owner.legalDocument.count()).toBe(2);
     expect(hashAfter).toBe(hashBefore);
   });
 

@@ -20,6 +20,7 @@
   --color-primary-subtle: var(--primary-subtle);
   --color-accent: var(--accent);
   --color-accent-subtle: var(--accent-subtle);
+  --color-accent-strong: var(--accent-strong);
   --color-highlight: var(--highlight);
   --color-field: var(--field);
   --color-sidebar: var(--sidebar);
@@ -72,6 +73,8 @@
   --shadow-pop: 0 4px 8px -2px rgb(20 17 13 / 0.1), 0 14px 28px -6px rgb(20 17 13 / 0.24);
   --shadow-sheet: 0 -6px 28px rgb(20 17 13 / 0.2);
 
+  /* 쌓임 순서(z-index): 화면 내용 0 · 표 머리글 10 · 모바일 머리와 하단 메뉴와 빠른 추가 20 · 시트와 모달 30 · 확인 창 40 · 팝오버와 선택 목록과 툴팁 50 · 알림 60 */
+
   /* 모션: 짧고 가볍게 */
   --ease-smooth: cubic-bezier(0.25, 0.46, 0.45, 0.94);
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
@@ -87,43 +90,45 @@
   /* 행동 버튼은 잉크색, 주황은 면(평면·활성 메뉴·진행 막대)에만 쓰고 글자색으로 쓰지 않음 */
   --primary: #14110d;
   --primary-foreground: #fbf7ee;
-  --primary-subtle: #f9dbc9;
-  --accent: #ee6f3d;
-  --accent-subtle: #f9dbc9;
-  --highlight: #d6e382;
+  --primary-subtle: #fbe4d5;
+  --accent: #f28b5b;
+  /* 글자와 아이콘에 쓸 수 있는 진한 주황 (밝은 카드 위 5.0 대 1), 면에는 --accent */
+  --accent-strong: #b8461a;
+  --accent-subtle: #fbe4d5;
+  --highlight: #bfd0a0;
   /* 화면 바탕(canvas) 위에 크림 카드(surface-subtle)를 올리는 구조. 입력 칸은 모래색 채움(field) */
-  --canvas: #efe8d8;
-  --surface: #fbf7ee;
-  --surface-subtle: #fbf7ee;
-  --surface-nested: #f3ecdb;
-  --field: #efe8d8;
+  --canvas: #f1ebdd;
+  --surface: #fcf9f2;
+  --surface-subtle: #fcf9f2;
+  --surface-nested: #f5efe1;
+  --field: #ede5d2;
   --sidebar: #14110d;
   --track: #e6dec9;
   /* 보조 글자: 투명도가 아니라 고정 색 (카드 위 4.9:1) */
   --sub: #6b6152;
-  --line: #e9e1cc;
-  --control-border: #d8cfb7;
-  --control-border-hover: #b9ad8f;
+  --line: #e6ddc6;
+  --control-border: #cfc4a8;
+  --control-border-hover: #a89c84;
   /* 입력 칸 테두리: 칸 면과 카드 면 모두에 3 대 1 이상 */
-  --input-border: #857a65;
-  --muted: #efe8d8;
+  --input-border: #7e7461;
+  --muted: #ede5d2;
   --foreground: #14110d;
-  --border: #d8cfb7;
+  --border: #cfc4a8;
   --border-strong: #6b6152;
-  --danger: #b3261e;
-  --danger-subtle: #ffe3de;
-  --success: #14573a;
-  --success-subtle: #d6efdf;
-  --warning: #5e4400;
-  --warning-subtle: #fbe7a0;
+  --danger: #a9301f;
+  --danger-subtle: #ffe6e1;
+  --success: #2f5b3a;
+  --success-subtle: #dce8cc;
+  --warning: #6b4b00;
+  --warning-subtle: #fbebb0;
   --overlay: rgb(20 17 13 / 0.55);
   /* 프로젝트 구분 색 (달력·인력 배치): 주황 · 잉크 · 라임 · 갈색 · 모래 · 진주황, 이름을 함께 표시 */
   --proj-0: #ee6f3d;
   --proj-1: #14110d;
-  --proj-2: #d6e382;
+  --proj-2: #bfd0a0;
   --proj-3: #6b6152;
-  --proj-4: #cdbf9c;
-  --proj-5: #a83f0c;
+  --proj-4: #9dc1c4;
+  --proj-5: #b8461a;
 }
 
 /* 인쇄는 항상 밝은 색 */
@@ -132,36 +137,37 @@
     color-scheme: dark;
     --primary: #f4eee0;
     --primary-foreground: #14110d;
-    --primary-subtle: #4a2412;
-    --accent-subtle: #4a2412;
-    --canvas: #0c0b09;
-    --surface: #1a1713;
-    --surface-subtle: #1a1713;
-    --surface-nested: #241f18;
-    --field: #241f18;
+    --primary-subtle: #4a2a1a;
+    --accent-subtle: #4a2a1a;
+    --accent-strong: #f29a70;
+    --canvas: #100e0b;
+    --surface: #1c1915;
+    --surface-subtle: #1c1915;
+    --surface-nested: #26211a;
+    --field: #2d271e;
     --sidebar: #000000;
     --track: #2d271e;
-    --sub: #a89c84;
+    --sub: #b3a78f;
     --line: #2d271e;
-    --control-border: #3d362a;
-    --control-border-hover: #5a5040;
+    --control-border: #4a4136;
+    --control-border-hover: #675b49;
     --input-border: #7d7361;
-    --muted: #241f18;
+    --muted: #2d271e;
     --foreground: #f4eee0;
-    --border: #3d362a;
+    --border: #4a4136;
     --border-strong: #a89c84;
-    --danger: #ff9d90;
+    --danger: #ff9d8a;
     --danger-subtle: #3a1a15;
-    --success: #7fd6a8;
-    --success-subtle: #12301f;
+    --success: #9fd2a8;
+    --success-subtle: #1e3524;
     --warning: #f3d070;
     --warning-subtle: #3a2f0d;
     --overlay: rgb(0 0 0 / 0.7);
     --proj-0: #ee6f3d;
     --proj-1: #f4eee0;
-    --proj-2: #d6e382;
+    --proj-2: #bfd0a0;
     --proj-3: #a89c84;
-    --proj-4: #8a7a5a;
+    --proj-4: #7fb0b4;
     --proj-5: #ff9d6a;
   }
 }
@@ -170,6 +176,56 @@
 html {
   overflow-y: scroll;
   scrollbar-gutter: stable;
+}
+
+/* 창·시트의 배경은 페이드, 시트는 아래에서 올라오고 내려가며 닫힘 (닫힐 때도 끝난 뒤에 사라지도록 Radix가 애니메이션을 기다림) */
+@keyframes overlay-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes overlay-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes sheet-in {
+  from {
+    transform: translateY(100%);
+  }
+}
+@keyframes sheet-out {
+  to {
+    transform: translateY(100%);
+  }
+}
+.anim-overlay[data-state='open'] {
+  animation: overlay-in var(--duration-base) var(--ease-smooth);
+}
+.anim-overlay[data-state='closed'] {
+  animation: overlay-out var(--duration-fast) var(--ease-smooth) forwards;
+}
+@media (max-width: 767px) {
+  .anim-sheet[data-state='open'] {
+    animation: sheet-in var(--duration-base) var(--ease-out-expo);
+  }
+  .anim-sheet[data-state='closed'] {
+    animation: sheet-out var(--duration-fast) var(--ease-smooth) forwards;
+  }
+}
+
+/* 하단 메뉴는 창·시트가 열리면 아래로 내려가며 숨김 (시트 아래쪽 내용을 가리지 않게 함) */
+body[data-scroll-locked] [data-bottom-nav] {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6rem);
+}
+
+/* 빠른 추가 버튼은 창·시트가 열렸거나 글자를 입력하는 동안 숨김 (입력 칸과 키보드를 가리지 않게 함) */
+body[data-scroll-locked] [data-quick-add],
+body:has(input:focus, textarea:focus, select:focus) [data-quick-add] {
+  opacity: 0;
+  pointer-events: none;
 }
 
 /* 메뉴·대화상자가 열릴 때 body에 걸리는 스크롤 잠금(overflow hidden, 여백 보정)은 html이 스크롤 영역인 구조에서는 body를 따로 스크롤하는 상자로 만들어 sticky 사이드바와 떠 있는 메뉴 위치를 깨뜨리므로 무력화 (휠·터치 잠금은 스크립트가 맡음) */
@@ -293,13 +349,13 @@ input[type='search']::-webkit-search-cancel-button:hover {
 /* 큰 숫자(지표 타일)의 두께: 타일보다 진한 단색 테두리(상 .5 · 옆 1 · 하 2px)와 얕은 번짐 */
 .tile-cream {
   box-shadow:
-    0 0.75px 0 1.25px #cbbf9f,
+    0 0.75px 0 1.25px #cfc4a8,
     0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
 .tile-lime {
   box-shadow:
-    0 0.75px 0 1.25px #b9c76f,
+    0 0.75px 0 1.25px #a3b585,
     0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
@@ -312,7 +368,7 @@ input[type='search']::-webkit-search-cancel-button:hover {
 
 .tile-accent {
   box-shadow:
-    0 0.75px 0 1.25px #c9582c,
+    0 0.75px 0 1.25px #cf6f45,
     0 8px 12px -7px rgb(20 17 13 / 0.35);
 }
 
@@ -323,27 +379,27 @@ input[type='search']::-webkit-search-cancel-button:hover {
   color-scheme: light;
   --primary: #14110d;
   --primary-foreground: #fbf7ee;
-  --surface: #fbf7ee;
-  --surface-subtle: #fbf7ee;
-  --surface-nested: #f3ecdb;
-  --field: #efe8d8;
+  --surface: #fcf9f2;
+  --surface-subtle: #fcf9f2;
+  --surface-nested: #f5efe1;
+  --field: #ede5d2;
   --track: #e6dec9;
   --sub: #6b6152;
-  --line: #e9e1cc;
-  --control-border: #d8cfb7;
-  --control-border-hover: #b9ad8f;
-  --input-border: #857a65;
-  --muted: #efe8d8;
+  --line: #e6ddc6;
+  --control-border: #cfc4a8;
+  --control-border-hover: #a89c84;
+  --input-border: #7e7461;
+  --muted: #ede5d2;
   --foreground: #14110d;
-  --border: #d8cfb7;
-  --danger: #b3261e;
-  --danger-subtle: #ffe3de;
-  --success: #14573a;
-  --success-subtle: #d6efdf;
-  --warning: #5e4400;
-  --warning-subtle: #fbe7a0;
-  --accent-subtle: #f9dbc9;
-  --primary-subtle: #f9dbc9;
+  --border: #cfc4a8;
+  --danger: #a9301f;
+  --danger-subtle: #ffe6e1;
+  --success: #2f5b3a;
+  --success-subtle: #dce8cc;
+  --warning: #6b4b00;
+  --warning-subtle: #fbebb0;
+  --accent-subtle: #fbe4d5;
+  --primary-subtle: #fbe4d5;
   color: var(--foreground);
 }
 
@@ -351,22 +407,22 @@ input[type='search']::-webkit-search-cancel-button:hover {
   --foreground: #14110d;
   --primary: #14110d;
   --primary-foreground: #fbf7ee;
-  --field: #efe8d8;
-  --muted: #efe8d8;
-  --surface: #fbf7ee;
-  --surface-subtle: #fbf7ee;
-  --surface-nested: #f3ecdb;
-  --line: #e9e1cc;
-  --control-border: #d8cfb7;
-  --input-border: #857a65;
-  --danger: #b3261e;
-  --danger-subtle: #ffe3de;
-  --success: #14573a;
-  --success-subtle: #d6efdf;
-  --warning: #5e4400;
-  --warning-subtle: #fbe7a0;
-  --accent-subtle: #f9dbc9;
-  --primary-subtle: #f9dbc9;
+  --field: #ede5d2;
+  --muted: #ede5d2;
+  --surface: #fcf9f2;
+  --surface-subtle: #fcf9f2;
+  --surface-nested: #f5efe1;
+  --line: #e6ddc6;
+  --control-border: #cfc4a8;
+  --input-border: #7e7461;
+  --danger: #a9301f;
+  --danger-subtle: #ffe6e1;
+  --success: #2f5b3a;
+  --success-subtle: #dce8cc;
+  --warning: #6b4b00;
+  --warning-subtle: #fbebb0;
+  --accent-subtle: #fbe4d5;
+  --primary-subtle: #fbe4d5;
   --track: #fbf7ee;
   --sub: #2a2118;
   color: var(--foreground);

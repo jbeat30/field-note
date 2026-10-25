@@ -120,7 +120,7 @@ export const DateInput = ({
           onInteractOutside={(event) => {
             if (inputRef.current?.contains(event.target as Node)) event.preventDefault();
           }}
-          className="z-30 rounded-lg border border-line bg-surface p-3 shadow-pop"
+          className="z-50 rounded-lg border border-line bg-surface p-3 shadow-pop"
         >
           <Calendar
             selected={selected}

@@ -24,7 +24,7 @@ const STYLE: Record<Variant, { box: string; icon: LucideIcon; dot: string }> = {
     dot: 'bg-success text-surface',
   },
   info: {
-    box: 'border-[#d6e382] bg-highlight text-[#14110d]',
+    box: 'border-[#bfd0a0] bg-highlight text-[#14110d]',
     icon: Info,
     dot: 'bg-[#14110d] text-highlight',
   },

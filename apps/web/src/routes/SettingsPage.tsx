@@ -176,12 +176,18 @@ export const SettingsPage = () => {
             </SettingsCard>
           )}
           <SettingsCard title="안내">
-            <Link
-              className="flex min-h-touch items-center text-sm text-primary hover:text-sub"
-              to="/legal/privacy"
-            >
-              개인정보 처리방침
-            </Link>
+            {[
+              ['/legal/terms', '이용약관'],
+              ['/legal/privacy', '개인정보 처리방침'],
+            ].map(([to, label]) => (
+              <Link
+                key={to}
+                className="flex min-h-touch items-center text-sm text-primary hover:text-sub"
+                to={to!}
+              >
+                {label}
+              </Link>
+            ))}
           </SettingsCard>
         </div>
       </TabsContent>
