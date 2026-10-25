@@ -59,7 +59,6 @@ const signupInput = (token: string, overrides: Partial<SignupInput> = {}): Signu
   consents: [
     { documentId: docs.terms, isAgreed: true },
     { documentId: docs.privacy, isAgreed: true },
-    { documentId: docs.marketing, isAgreed: false },
   ],
   ...overrides,
 });
@@ -95,9 +94,9 @@ describe('가입', () => {
     expect(user?.ageConfirmedAt).not.toBeNull();
     expect(credential?.passwordHash).not.toContain(input.password);
     expect(await verifyPassword(credential!.passwordHash!, input.password)).toBe(true);
-    // 선택 약관의 거부도 이력으로 남음
-    expect(consents).toHaveLength(3);
-    expect(consents.find((consent) => consent.documentId === docs.marketing)?.isAgreed).toBe(false);
+    // 이용약관·개인정보 동의 이력만 남고 마케팅은 받지 않음
+    expect(consents).toHaveLength(2);
+    expect(consents.some((consent) => consent.documentId === docs.marketing)).toBe(false);
   });
 
   it('가입에 쓴 링크는 폐기되어 다시 쓸 수 없다', async () => {

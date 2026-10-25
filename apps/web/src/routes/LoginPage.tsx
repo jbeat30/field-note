@@ -67,6 +67,20 @@ export const LoginPage = () => {
     }
   }, [isTotpStep, setFocus]);
 
+  // 확인이 5초 넘게 걸리면 기다려 달라는 안내를 보임
+  const [isSlow, setSlow] = useState(false);
+
+  useEffect(() => {
+    if (!isSubmitting) return;
+
+    const timer = setTimeout(() => setSlow(true), 5000);
+
+    return () => {
+      clearTimeout(timer);
+      setSlow(false);
+    };
+  }, [isSubmitting]);
+
   // 이미 로그인한 상태로 로그인 화면에 오면 홈으로 (로그인 직후에도 같은 곳으로 가도록 돌아갈 화면을 따름)
   if (me.data) {
     return <Navigate to={returnPath ?? '/'} replace />;
@@ -202,8 +216,13 @@ export const LoginPage = () => {
         disabled={isSubmitting}
         className="h-[62px] rounded-[18px] text-[19px] font-extrabold"
       >
-        {isSubmitting ? '로그인 중' : '로그인'}
+        {isSubmitting ? '확인 중…' : '로그인'}
       </Button>
+      {isSlow && (
+        <p role="status" className="text-center text-sm text-sub">
+          평소보다 오래 걸리고 있어요. 잠시만 기다려 주세요
+        </p>
+      )}
       {enabledProviders.length > 0 && (
         <>
           <p className="text-center text-sm text-sub">또는</p>

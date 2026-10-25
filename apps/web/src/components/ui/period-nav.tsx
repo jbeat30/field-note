@@ -85,7 +85,7 @@ export const PeriodNav = ({
               sideOffset={6}
               collisionPadding={12}
               aria-label="날짜 선택"
-              className="z-30 rounded-xl border border-line bg-surface p-3 shadow-card"
+              className="z-50 rounded-xl border border-line bg-surface p-3 shadow-card"
             >
               <Calendar
                 selected={selected}

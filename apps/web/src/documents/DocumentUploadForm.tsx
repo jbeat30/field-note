@@ -36,7 +36,7 @@ export type DocumentFormValues = {
 };
 
 export type DocumentUploadFormProps = {
-  // 새 문서는 이름·분류·민감 표시까지, 새 버전은 파일·개정일·사유만 입력
+  // 새 문서는 이름·종류·민감 표시까지, 새 버전은 파일·개정일·사유만 입력
   mode: 'create' | 'version';
   projectId: string;
   // 고를 수 있는 문서 종류 (새 문서에서만 씀)

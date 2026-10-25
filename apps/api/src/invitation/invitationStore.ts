@@ -58,7 +58,8 @@ export const findCurrentDocuments = async (
   now: Date,
 ): Promise<CurrentLegalDocument[]> => {
   const documents = await prisma.legalDocument.findMany({
-    where: { effectiveAt: { lte: now } },
+    // 마케팅 수신 동의는 받지 않으므로(보내는 기능이 없음) 가입 동의 대상에서 제외, 이미 쌓인 동의 이력은 그대로 둠
+    where: { effectiveAt: { lte: now }, type: { not: 'MARKETING' } },
     orderBy: { effectiveAt: 'desc' },
   });
   const latestByType = new Map<string, CurrentLegalDocument>();
@@ -74,7 +75,7 @@ export const findCurrentDocuments = async (
     }
   }
 
-  // 시행 시각이 같아도 화면 순서가 흔들리지 않게 고정 순서로 정렬: 이용약관, 개인정보, 마케팅(선택)
+  // 시행 시각이 같아도 화면 순서가 흔들리지 않게 고정 순서로 정렬: 이용약관, 개인정보
   return [...latestByType.values()].sort(
     (a, b) => DOCUMENT_ORDER.indexOf(a.type) - DOCUMENT_ORDER.indexOf(b.type),
   );
@@ -83,7 +84,6 @@ export const findCurrentDocuments = async (
 const DOCUMENT_ORDER: readonly CurrentLegalDocument['type'][] = [
   'TERMS_OF_SERVICE',
   'PRIVACY_POLICY',
-  'MARKETING',
 ];
 
 export type InvitationStore = {

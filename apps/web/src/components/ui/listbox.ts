@@ -1,7 +1,7 @@
 // 펼침 목록 공통 모양 (Select·Combobox·DropdownMenu가 같은 모양으로 열림)
 
 // 떠 있는 목록 상자
-export const listboxContentClass = 'z-40 overflow-hidden rounded-xl bg-surface-subtle shadow-pop';
+export const listboxContentClass = 'z-50 overflow-hidden rounded-xl bg-surface-subtle shadow-pop';
 
 // 목록 한 줄, 키보드·마우스로 가리킨 줄은 data-highlighted(Radix) 또는 data-selected(cmdk)
 export const listboxItemClass =
