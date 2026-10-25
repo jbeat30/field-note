@@ -1,6 +1,5 @@
 import {
   CHANGE_WORK_STATUS_LABELS,
-  DOCUMENT_CATEGORY_LABELS,
   PHOTO_CATEGORY_LABELS,
   PROJECT_STATUS_LABELS,
   reportWorkUnitLabel,
@@ -225,8 +224,8 @@ export const ProjectSummarySheet = ({ summary }: { summary: ProjectCompletionSum
           <ul className="flex flex-col gap-0.5 text-sm">
             {documents.items.map((item) => (
               <li key={item.id}>
-                {item.title}, {DOCUMENT_CATEGORY_LABELS[item.category]}, {item.versionCount}개 버전
-                (최신 개정 {item.latestRevisionDate})
+                {item.title}, {item.categoryName}, {item.versionCount}개 버전 (최신 개정{' '}
+                {item.latestRevisionDate})
               </li>
             ))}
           </ul>

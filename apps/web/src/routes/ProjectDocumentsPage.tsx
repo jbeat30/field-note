@@ -1,4 +1,3 @@
-import type { DocumentCategory } from '@field-note/shared';
 import { Search, Upload } from 'lucide-react';
 import { useMemo, useState } from 'react';
 import { useParams, useSearchParams } from 'react-router';
@@ -18,6 +17,7 @@ import { DocumentUploadError } from '../documents/uploadDocument';
 import { useAddDocumentVersion, useCreateDocument, useDocuments } from '../documents/useDocuments';
 import { useOpenDocument } from '../documents/useOpenDocument';
 import { useProject } from '../projects/useProjects';
+import { useOptions } from '../settings/useOptions';
 import { discardStagedFile } from '../staging/stageApi';
 import { useLeaveConfirm } from '../staging/useLeaveConfirm';
 import { useStagedFiles } from '../staging/useStagedFiles';
@@ -28,7 +28,7 @@ import { LoadingBlock } from '../components/ui/loading-block';
 export const ProjectDocumentsPage = () => {
   const { id = '' } = useParams();
   const project = useProject(id);
-  const [category, setCategory] = useState<DocumentCategory | ''>('');
+  const [categoryId, setCategoryId] = useState('');
   const [isUploadOpen, setIsUploadOpen] = useState(false);
   const [q, setQ] = useState('');
   const [params, setParams] = useSearchParams();
@@ -36,6 +36,7 @@ export const ProjectDocumentsPage = () => {
   const [detailId, setDetailId] = useState<string | null>(params.get('doc'));
   // 분류 카드의 문서 수 계산을 위해 분류는 서버 필터 없이 화면에서 필터링
   const documents = useDocuments(id, { q });
+  const options = useOptions();
   const create = useCreateDocument(id);
   const addVersion = useAddDocumentVersion();
   const { confirm, dialog: confirmDialog } = useConfirm();
@@ -44,13 +45,19 @@ export const ProjectDocumentsPage = () => {
   const opener = useOpenDocument();
   const all = useMemo(() => documents.data ?? [], [documents.data]);
   const counts = useMemo(() => {
-    const result: Partial<Record<DocumentCategory, number>> = {};
+    const result: Record<string, number> = {};
 
-    for (const item of all) result[item.category] = (result[item.category] ?? 0) + 1;
+    for (const item of all) result[item.categoryId] = (result[item.categoryId] ?? 0) + 1;
 
     return result;
   }, [all]);
-  const shown = category ? all.filter((item) => item.category === category) : all;
+  const categories = useMemo(
+    () => (options.data ?? []).filter((item) => item.kind === 'DOCUMENT_CATEGORY'),
+    [options.data],
+  );
+  // 카드에는 숨기지 않은 종류와 문서가 남아 있는 숨긴 종류를 보여 줌
+  const cardCategories = categories.filter((item) => item.isActive || counts[item.id]);
+  const shown = categoryId ? all.filter((item) => item.categoryId === categoryId) : all;
 
   if (project.isPending) {
     return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
@@ -90,7 +97,7 @@ export const ProjectDocumentsPage = () => {
       await create.mutateAsync({
         fileId,
         title: values.title,
-        category: values.category,
+        categoryId: values.categoryId,
         isSensitive: values.isSensitive,
         revisionDate: values.revisionDate || undefined,
         reason: values.reason.trim() || undefined,
@@ -114,10 +121,11 @@ export const ProjectDocumentsPage = () => {
         }
       />
       <DocumentCategoryCards
+        categories={cardCategories}
         counts={counts}
         total={all.length}
-        value={category}
-        onChange={setCategory}
+        value={categoryId}
+        onChange={setCategoryId}
       />
       <section
         className="flex flex-col gap-4 rounded-[30px] bg-surface-subtle p-5 sm:p-7"
@@ -142,9 +150,9 @@ export const ProjectDocumentsPage = () => {
         {documents.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
         {documents.isSuccess && shown.length === 0 && (
           <EmptyState
-            title={category || q ? '조건에 맞는 문서가 없습니다' : '아직 문서가 없습니다'}
+            title={categoryId || q ? '조건에 맞는 문서가 없습니다' : '아직 문서가 없습니다'}
             description={
-              category || q ? undefined : '도면·작업지시서·계약서 같은 파일을 올려 보관하세요'
+              categoryId || q ? undefined : '도면·작업지시서·계약서 같은 파일을 올려 보관하세요'
             }
           />
         )}
@@ -178,7 +186,13 @@ export const ProjectDocumentsPage = () => {
         description="PDF·이미지 파일을 올립니다. 같은 이름의 문서가 있으면 새 판으로 올릴 수 있습니다"
         size="lg"
       >
-        <DocumentUploadForm mode="create" projectId={id} staged={staged} onSubmit={upload} />
+        <DocumentUploadForm
+          mode="create"
+          projectId={id}
+          categories={categories.filter((item) => item.isActive)}
+          staged={staged}
+          onSubmit={upload}
+        />
       </Modal>
       {confirmDialog}
       {leave.dialog}

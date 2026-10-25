@@ -12,7 +12,7 @@ import { createAccountService } from '../auth/accountService';
 import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
-import { markCompanyEmailsVerified } from '../db/testFixtures';
+import { documentCategoryIdOf, markCompanyEmailsVerified } from '../db/testFixtures';
 import { createDocumentService } from '../document/documentService';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
@@ -161,7 +161,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
       return send('post', `/projects/${projectId}/documents`, {
         fileId,
         title,
-        category: 'OTHER',
+        categoryId: documentCategoryIdOf((await get('/company/options')).body, '기타'),
       }).then((res) => res.body.id as string);
     },
   };
@@ -509,7 +509,9 @@ describe('증빙 문서', () => {
     expect(linked.status).toBe(201);
     expect(changeWorkDetailSchema.parse(linked.body)).toMatchObject({
       documentCount: 1,
-      documents: [{ documentId: doc, title: '카톡 캡처', category: 'OTHER', isSensitive: false }],
+      documents: [
+        { documentId: doc, title: '카톡 캡처', categoryName: '기타', isSensitive: false },
+      ],
     });
     // 목록에도 문서 수 표시
     expect(
@@ -573,7 +575,7 @@ describe('증빙 올리기', () => {
     expect(res.status).toBe(201);
     expect(changeWorkDetailSchema.parse(res.body)).toMatchObject({
       documentCount: 1,
-      documents: [{ title: '카톡 캡처', category: 'CONTRACT', isSensitive: true }],
+      documents: [{ title: '카톡 캡처', categoryName: '계약·공문', isSensitive: true }],
     });
 
     // 재시도: 새 문서도 중복 연결도 만들지 않고 같은 결과 반환

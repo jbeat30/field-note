@@ -140,7 +140,7 @@ const toDetail = (account: MockAccount, work: MockChangeWork): ChangeWorkDetail 
     .map(({ link, document }) => ({
       documentId: document.id,
       title: document.title,
-      category: document.category,
+      categoryName: document.categoryName,
       isSensitive: document.isSensitive,
       latestVersionNo: document.latest.versionNo,
       contentType: document.latest.contentType,

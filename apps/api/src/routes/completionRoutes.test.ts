@@ -13,7 +13,7 @@ import { createChangeWorkService } from '../changeWork/changeWorkService';
 import { createCompletionService } from '../completion/completionService';
 import { createOptionService } from '../company/optionService';
 import { startTestDatabase, type TestDatabase } from '../db/testDatabase';
-import { markCompanyEmailsVerified } from '../db/testFixtures';
+import { documentCategoryIdOf, markCompanyEmailsVerified } from '../db/testFixtures';
 import { createDocumentService } from '../document/documentService';
 import { createEmployeeService } from '../employee/employeeService';
 import { createFileService } from '../file/fileService';
@@ -163,7 +163,7 @@ const api = (instance: ReturnType<typeof app>, cookie: string) => {
         await send('post', `/projects/${projectId}/documents`, {
           fileId,
           title,
-          category,
+          categoryId: documentCategoryIdOf((await get('/company/options')).body, category),
           ...extra,
         })
       ).body.id as string;
@@ -509,35 +509,37 @@ describe('프로젝트 요약', () => {
     ]);
   });
 
-  it('안전·검사, 계약·공문 분류의 민감하지 않은 문서만 싣고, 고른 것이 있으면 그것만 싣는다', async () => {
+  it('요약에 넣기로 고른 민감하지 않은 문서만 싣고, 고르지 않으면 싣지 않는다', async () => {
     const { client, project } = await setup();
 
-    await client.makeDocument(project, '도면', 'DRAWING');
-    const contract = await client.makeDocument(project, '도급 계약서', 'CONTRACT');
-    // 계약은 기본이 민감, 다른 분류도 직접 민감 표시 가능
-    await client.makeDocument(project, '안전 점검표', 'SAFETY', { isSensitive: true });
-    const safe = await client.makeDocument(project, '준공 검사서', 'SAFETY');
+    const drawing = await client.makeDocument(project, '도면', '도면·작업지시서');
+    const contract = await client.makeDocument(project, '도급 계약서', '계약·공문');
+    // 계약 종류는 기본이 민감, 다른 종류도 직접 민감 표시 가능
+    await client.makeDocument(project, '안전 점검표', '안전·검사', { isSensitive: true });
+    const safe = await client.makeDocument(project, '준공 검사서', '안전·검사');
     const summary = async () =>
       projectCompletionSummarySchema.parse((await client.summary(project)).body).documents;
 
-    // 고르지 않으면 안전·검사, 계약·공문 중 민감하지 않은 문서 모두 (도면은 해당 분류가 아님)
+    // 고르지 않으면 싣는 문서가 없고, 민감 자료는 건수만 알림
     let documents = await summary();
 
     expect(documents.sensitiveExcluded).toBe(2);
-    expect(documents.items).toEqual([
-      expect.objectContaining({ title: '준공 검사서', category: 'SAFETY', versionCount: 1 }),
-    ]);
-    expect(JSON.stringify(documents)).not.toContain('계약서');
+    expect(documents.items).toEqual([]);
 
     // 민감 자료는 요약에 넣기로 표시해도 제외
     expect((await client.updateDocument(contract, { includeInSummary: true })).status).toBe(200);
     documents = await summary();
-    expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
+    expect(documents.items).toEqual([]);
 
-    // 고른 문서가 있으면 그 문서만 포함
+    // 종류와 상관없이 고른 문서만 포함
     await client.updateDocument(safe, { includeInSummary: true });
+    await client.updateDocument(drawing, { includeInSummary: true });
     documents = await summary();
-    expect(documents.items.map((item) => item.title)).toEqual(['준공 검사서']);
+    expect(documents.items.map((item) => item.title).sort()).toEqual(['도면', '준공 검사서']);
+    expect(documents.items).toContainEqual(
+      expect.objectContaining({ title: '준공 검사서', categoryName: '안전·검사', versionCount: 1 }),
+    );
+    expect(JSON.stringify(documents)).not.toContain('계약서');
   });
 
   it('고른 사진이 있으면 최근 촬영순으로 그것만, 없으면 작업 후 사진 최근 8장을 싣고 거부된 사진은 세지 않는다', async () => {

@@ -9,29 +9,30 @@ import {
 const fileId = '018f3b1e-0000-7000-8000-000000000001';
 
 describe('문서 규칙', () => {
-  it('계약·공문은 기본적으로 민감 자료이고 직접 정하면 그 값을 따른다', () => {
-    expect(resolveSensitive('CONTRACT')).toBe(true);
-    expect(resolveSensitive('DRAWING')).toBe(false);
-    expect(resolveSensitive('CONTRACT', false)).toBe(false);
-    expect(resolveSensitive('DRAWING', true)).toBe(true);
+  it('문서 종류의 민감 기본값을 따르고 직접 정하면 그 값이 우선한다', () => {
+    expect(resolveSensitive(true)).toBe(true);
+    expect(resolveSensitive(false)).toBe(false);
+    expect(resolveSensitive(true, false)).toBe(false);
+    expect(resolveSensitive(false, true)).toBe(true);
   });
 
-  it('파일과 이름만으로 문서를 만들 수 있고 분류는 기타', () => {
-    expect(documentCreateSchema.parse({ fileId, title: ' 시공도 ' })).toEqual({
+  it('파일과 이름과 문서 종류로 문서를 만들 수 있다', () => {
+    expect(documentCreateSchema.parse({ fileId, title: ' 시공도 ', categoryId: fileId })).toEqual({
       fileId,
       title: '시공도',
-      category: 'OTHER',
+      categoryId: fileId,
     });
   });
 
   it('이름이 비었거나 길거나, 분류·날짜가 잘못되면 거부한다', () => {
     for (const body of [
-      { fileId, title: '   ' },
-      { fileId, title: '가'.repeat(101) },
-      { fileId, title: '가', category: 'PHOTO' },
-      { fileId, title: '가', revisionDate: '어제' },
-      { fileId, title: '가', reason: '가'.repeat(201) },
-      { title: '가' },
+      { fileId, title: '   ', categoryId: fileId },
+      { fileId, title: '가'.repeat(101), categoryId: fileId },
+      { fileId, title: '가', categoryId: 'PHOTO' },
+      { fileId, title: '가' },
+      { fileId, title: '가', categoryId: fileId, revisionDate: '어제' },
+      { fileId, title: '가', categoryId: fileId, reason: '가'.repeat(201) },
+      { title: '가', categoryId: fileId },
     ]) {
       expect(documentCreateSchema.safeParse(body).success).toBe(false);
     }

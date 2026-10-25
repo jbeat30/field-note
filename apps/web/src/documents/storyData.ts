@@ -22,7 +22,8 @@ export const storyVersion = (
 export const storyDocument = (index: number, patch: Partial<Document> = {}): Document => ({
   id: `0198d000-0000-7000-8000-${String(index + 600).padStart(12, '0')}`,
   projectId: '0198d000-0000-7000-8000-000000000304',
-  category: 'DRAWING',
+  categoryId: '0198d000-0000-7000-8000-000000000501',
+  categoryName: '도면·작업지시서',
   title: `문서 ${index}`,
   isSensitive: false,
   isPinned: false,
