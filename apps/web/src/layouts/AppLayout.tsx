@@ -1,5 +1,5 @@
 import { LogOut, Menu, Plus, Search } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Link, NavLink, Outlet, useLocation } from 'react-router';
 
 import { Button } from '../components/ui/button';
@@ -24,6 +24,36 @@ const tabClass = (isActive: boolean) =>
     isActive ? 'bg-accent text-[#14110d]' : 'text-[#f4eee0]/75',
   );
 
+// 아래로 스크롤하는 동안 true, 위로 올리거나 멈추거나 맨 위 근처이면 false (빠른 추가 버튼이 읽는 내용을 가리지 않게 함)
+const useScrollingDown = () => {
+  const [isDown, setDown] = useState(false);
+
+  useEffect(() => {
+    let lastY = window.scrollY;
+    let idle: ReturnType<typeof setTimeout> | undefined;
+    const onScroll = () => {
+      const y = window.scrollY;
+
+      if (Math.abs(y - lastY) < 8) return;
+
+      setDown(y > lastY && y > 80);
+      lastY = y;
+      // 스크롤이 멈추면 다시 보임
+      clearTimeout(idle);
+      idle = setTimeout(() => setDown(false), 250);
+    };
+
+    window.addEventListener('scroll', onScroll, { passive: true });
+
+    return () => {
+      clearTimeout(idle);
+      window.removeEventListener('scroll', onScroll);
+    };
+  }, []);
+
+  return isDown;
+};
+
 // 모든 화면 공통 틀: 넓은 화면은 잉크 사이드바와 한 줄 머리(찾기·알림·프로젝트 등록), 태블릿은 아이콘 레일
 // 좁은 화면은 주황 상단 줄과 잉크 알약 하단 메뉴, 빠른 추가 버튼(터치 영역 44px 이상)
 export const AppLayout = () => {
@@ -31,13 +61,15 @@ export const AppLayout = () => {
   const onLogout = useLogout();
   const { pathname } = useLocation();
   const [isMoreOpen, setMoreOpen] = useState(false);
+  const isScrollingDown = useScrollingDown();
   // 사이드바 접힘은 화면을 새로 열면 펼친 상태로 돌아감 (저장하지 않음)
   const [isCollapsed, setCollapsed] = useState(false);
   // 더보기 안의 화면을 보고 있으면 더보기 탭을 강조
   const isInMore = MORE_ITEMS.some((item) => pathname.startsWith(item.to));
   // 쌓임 순서: 화면 내용(10 이하) < 위쪽 머리, 하단 메뉴, 빠른 추가 버튼(20) < 대화상자와 시트 < 팝업과 알림(30)
   // 빠른 추가(+)는 모바일의 프로젝트 밖 화면에서만 표시, 프로젝트 안에서는 머리의 주 버튼이 같은 역할, 넓은 화면은 왼쪽 메뉴·머리 버튼으로 충분
-  const showQuickAdd = !/^\/projects\/(?!new$)[^/]+/.test(pathname);
+  // 폼이 화면의 주인인 프로젝트 등록에서도 숨김
+  const showQuickAdd = !/^\/projects\/[^/]+/.test(pathname);
 
   return (
     <div className="flex min-h-dvh flex-col md:flex-row">
@@ -63,7 +95,13 @@ export const AppLayout = () => {
         </main>
       </div>
       {showQuickAdd && (
-        <div className="pointer-events-none fixed inset-x-0 bottom-24 z-20 flex justify-end p-4 md:hidden print:hidden">
+        <div
+          data-quick-add
+          className={cn(
+            'pointer-events-none fixed inset-x-0 bottom-24 z-20 flex justify-end p-4 transition-opacity duration-(--duration-base) ease-(--ease-smooth) md:hidden print:hidden',
+            isScrollingDown && 'opacity-0',
+          )}
+        >
           <Button
             className="pointer-events-auto size-14 rounded-full bg-accent px-0 text-[#14110d] hover:bg-accent/90"
             aria-label="빠른 추가"
@@ -76,7 +114,8 @@ export const AppLayout = () => {
       )}
       <nav
         aria-label="하단 메뉴"
-        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 grid grid-cols-5 gap-1 rounded-full bg-sidebar p-1.5 shadow-card md:hidden print:hidden"
+        data-bottom-nav
+        className="fixed inset-x-3 bottom-[max(0.75rem,env(safe-area-inset-bottom))] z-20 grid grid-cols-5 gap-1 rounded-full bg-sidebar p-1.5 shadow-card transition-[opacity,transform] duration-(--duration-base) ease-(--ease-smooth) md:hidden print:hidden"
       >
         {TAB_ITEMS.map((item) => (
           <NavLink

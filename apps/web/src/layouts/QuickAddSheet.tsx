@@ -34,10 +34,10 @@ export const QuickAddSheet = () => {
   return (
     <Dialog.Root open={isOpen} onOpenChange={(open) => (open ? setOpen(true) : close())}>
       <Dialog.Portal>
-        <Dialog.Overlay className="fixed inset-0 bg-overlay" />
+        <Dialog.Overlay className="fixed inset-0 z-30 bg-overlay" />
         <Dialog.Content
           aria-describedby={undefined}
-          className="fixed inset-x-0 bottom-0 mx-auto flex max-w-xl flex-col gap-4 rounded-t-[30px] bg-surface-subtle p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-sheet"
+          className="fixed inset-x-0 bottom-0 z-30 mx-auto flex max-h-dvh max-w-xl flex-col gap-4 overflow-y-auto rounded-t-[30px] bg-surface-subtle p-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] shadow-sheet"
         >
           <div className="flex items-center justify-between gap-2">
             <Dialog.Title className="text-[21px] font-bold tracking-[-0.025em]">

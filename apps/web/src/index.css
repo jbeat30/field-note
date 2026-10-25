@@ -178,6 +178,20 @@ html {
   scrollbar-gutter: stable;
 }
 
+/* 하단 메뉴는 창·시트가 열리면 아래로 내려가며 숨김 (시트 아래쪽 내용을 가리지 않게 함) */
+body[data-scroll-locked] [data-bottom-nav] {
+  opacity: 0;
+  pointer-events: none;
+  transform: translateY(6rem);
+}
+
+/* 빠른 추가 버튼은 창·시트가 열렸거나 글자를 입력하는 동안 숨김 (입력 칸과 키보드를 가리지 않게 함) */
+body[data-scroll-locked] [data-quick-add],
+body:has(input:focus, textarea:focus, select:focus) [data-quick-add] {
+  opacity: 0;
+  pointer-events: none;
+}
+
 /* 메뉴·대화상자가 열릴 때 body에 걸리는 스크롤 잠금(overflow hidden, 여백 보정)은 html이 스크롤 영역인 구조에서는 body를 따로 스크롤하는 상자로 만들어 sticky 사이드바와 떠 있는 메뉴 위치를 깨뜨리므로 무력화 (휠·터치 잠금은 스크립트가 맡음) */
 html body[data-scroll-locked] {
   overflow: visible !important;
