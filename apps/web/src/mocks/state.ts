@@ -1,6 +1,7 @@
 import {
   OPTION_KINDS,
   OPTION_PRESETS,
+  OPTION_PRESET_SENSITIVE,
   normalizeOptionName,
   type AlertKind,
   DEFAULT_COMPANY_RULES,
@@ -210,6 +211,7 @@ export const getOptions = (account: MockAccount): OptionItem[] => {
         kind,
         name,
         isActive: true,
+        sensitiveDefault: OPTION_PRESET_SENSITIVE[kind]?.includes(name) ?? false,
       })),
     );
     persist();

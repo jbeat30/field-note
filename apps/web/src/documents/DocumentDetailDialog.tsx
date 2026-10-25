@@ -1,11 +1,4 @@
-import {
-  AUDIT_ACTION_LABELS,
-  DOCUMENT_CATEGORIES,
-  DOCUMENT_CATEGORY_LABELS,
-  SUMMARY_DOCUMENT_CATEGORIES,
-  type DocumentCategory,
-  type DocumentDetail,
-} from '@field-note/shared';
+import { AUDIT_ACTION_LABELS, type DocumentDetail } from '@field-note/shared';
 import { Dialog } from 'radix-ui';
 import { useState } from 'react';
 
@@ -16,6 +9,7 @@ import { Input } from '../components/ui/input';
 import { Select } from '../components/ui/select';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { formatDay } from '../lib/dates';
+import { useOptions } from '../settings/useOptions';
 
 import { DocumentUploadForm, type DocumentFormValues } from './DocumentUploadForm';
 import {
@@ -29,6 +23,7 @@ import { useOpenDocument } from './useOpenDocument';
 import { discardStagedFile } from '../staging/stageApi';
 import { useLeaveConfirm } from '../staging/useLeaveConfirm';
 import { useStagedFiles, type StagedFiles } from '../staging/useStagedFiles';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type DocumentDetailDialogProps = {
   documentId: string;
@@ -47,7 +42,7 @@ const formatTime = (iso: string) =>
     timeStyle: 'short',
   });
 
-// 문서 상세: 모든 버전(최신이 맨 앞, 이전본 보존), 새 버전 올리기, 이름·분류·민감 표시 수정, 민감 자료의 열람 기록, 삭제
+// 문서 상세: 모든 버전(최신이 맨 앞, 이전본 보존), 새 버전 올리기, 이름·종류·민감 표시 수정, 민감 자료의 열람 기록, 삭제
 const Body = ({
   document,
   staged,
@@ -62,13 +57,18 @@ const Body = ({
   const addVersion = useAddDocumentVersion();
   const logs = useDocumentAccessLogs(document.id, document.isSensitive);
   const opener = useOpenDocument();
+  const options = useOptions();
   const [title, setTitle] = useState(document.title);
-  const [category, setCategory] = useState<DocumentCategory>(document.category);
+  const [categoryId, setCategoryId] = useState(document.categoryId);
+  // 고를 수 있는 종류는 숨기지 않은 것, 이미 쓰는 종류는 숨겼어도 보여 줌
+  const categoryChoices = (options.data ?? []).filter(
+    (item) =>
+      item.kind === 'DOCUMENT_CATEGORY' && (item.isActive || item.id === document.categoryId),
+  );
   const [isSensitive, setIsSensitive] = useState(document.isSensitive);
   const [includeInSummary, setIncludeInSummary] = useState(document.includeInSummary);
-  // 준공 요약에는 안전·검사, 계약·공문 분류의 민감하지 않은 문서만 포함 가능
-  const canSummarize =
-    (SUMMARY_DOCUMENT_CATEGORIES as readonly string[]).includes(category) && !isSensitive;
+  // 준공 요약에는 민감하지 않은 문서만 포함 가능
+  const canSummarize = !isSensitive;
   const [error, setError] = useState<string | null>(null);
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
@@ -78,7 +78,12 @@ const Body = ({
     try {
       await update.mutateAsync({
         id: document.id,
-        body: { title, category, isSensitive, includeInSummary: canSummarize && includeInSummary },
+        body: {
+          title,
+          categoryId,
+          isSensitive,
+          includeInSummary: canSummarize && includeInSummary,
+        },
       });
     } catch (caught) {
       setError(getErrorDetailMessage(caught));
@@ -99,16 +104,18 @@ const Body = ({
   return (
     <>
       <FormField label="문서 이름">
-        <Input value={title} maxLength={100} onChange={(event) => setTitle(event.target.value)} />
+        <Input
+          placeholder="문서 이름을 입력하세요"
+          value={title}
+          maxLength={100}
+          onChange={(event) => setTitle(event.target.value)}
+        />
       </FormField>
-      <FormField label="분류">
+      <FormField label="종류">
         <Select
-          value={category}
-          onValueChange={setCategory}
-          options={DOCUMENT_CATEGORIES.map((value) => ({
-            value,
-            label: DOCUMENT_CATEGORY_LABELS[value],
-          }))}
+          value={categoryId}
+          onValueChange={setCategoryId}
+          options={categoryChoices.map((item) => ({ value: item.id, label: item.name }))}
         />
       </FormField>
       <label className="flex min-h-touch items-center gap-3 text-base">
@@ -130,9 +137,7 @@ const Body = ({
         />
         <span>
           준공 요약에 넣기
-          <span className="block text-sm text-foreground/65">
-            안전·검사, 계약·공문 분류의 민감하지 않은 문서만 넣을 수 있습니다
-          </span>
+          <span className="block text-sm text-sub">민감하지 않은 문서만 넣을 수 있습니다</span>
         </span>
       </label>
       {error && <Alert>{error}</Alert>}
@@ -161,16 +166,16 @@ const Body = ({
                     최신
                   </span>
                 )}
-                <span className="ml-2 text-foreground/70">
+                <span className="ml-2 text-sub">
                   {formatDay(version.revisionDate)} 개정
-                  {version.reason ? ` · ${version.reason}` : ''}
+                  {version.reason ? `, ${version.reason}` : ''}
                 </span>
               </p>
-              <p className="text-sm text-foreground/70">
-                {version.fileName} · {formatSize(version.size)}
+              <p className="text-sm text-sub">
+                {version.fileName}, {formatSize(version.size)}
               </p>
               {version.fileStatus !== 'READY' ? (
-                <p className="text-sm text-foreground/70" role="status">
+                <p className="text-sm text-sub" role="status">
                   {version.fileStatus === 'REJECTED'
                     ? '검사에서 거부된 파일입니다'
                     : '파일을 검사하는 중입니다'}
@@ -225,7 +230,7 @@ const Body = ({
         <h3 id="new-version-heading" className="text-base font-bold">
           새 버전 올리기
         </h3>
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           개정된 파일을 올리면 최신본이 바뀌고 이전본은 그대로 남습니다
         </p>
         <DocumentUploadForm
@@ -241,19 +246,19 @@ const Body = ({
           <h3 id="logs-heading" className="text-base font-bold">
             열람 기록
           </h3>
-          {logs.isPending && <p className="text-sm">불러오는 중</p>}
+          {logs.isPending && <LoadingBlock label="불러오는 중" />}
           {logs.isError && <Alert>열람 기록을 불러오지 못했습니다</Alert>}
           {logs.isSuccess && logs.data.length === 0 && (
-            <p className="text-sm text-foreground/70">아직 열람 기록이 없습니다</p>
+            <p className="text-sm text-sub">아직 열람 기록이 없습니다</p>
           )}
           {logs.isSuccess && logs.data.length > 0 && (
             <ul className="divide-y divide-border rounded-xl border border-border text-sm">
               {logs.data.map((log) => (
                 <li key={log.id} className="flex flex-wrap justify-between gap-2 px-3 py-2">
                   <span>
-                    {log.actorName} · v{log.versionNo} {AUDIT_ACTION_LABELS[log.action]}
+                    {log.actorName}, v{log.versionNo} {AUDIT_ACTION_LABELS[log.action]}
                   </span>
-                  <span className="text-foreground/70">{formatTime(log.createdAt)}</span>
+                  <span className="text-sub">{formatTime(log.createdAt)}</span>
                 </li>
               ))}
             </ul>
@@ -304,7 +309,7 @@ export const DocumentDetailDialog = ({ documentId, onClose }: DocumentDetailDial
               </Button>
             </Dialog.Close>
           </div>
-          {document.isPending && <p className="text-sm">불러오는 중</p>}
+          {document.isPending && <LoadingBlock label="불러오는 중" />}
           {document.isError && <Alert>문서를 불러오지 못했습니다</Alert>}
           {document.data && (
             <Body

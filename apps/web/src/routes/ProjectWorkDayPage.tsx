@@ -19,6 +19,7 @@ import { DayLedgerStep } from '../workLogs/DayLedgerStep';
 import { DayPhotosStep } from '../workLogs/DayPhotosStep';
 import { WorkLogEditor } from '../workLogs/WorkLogEditor';
 import { useWorkLog, useWorkLogList } from '../workLogs/useWorkLogs';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 const WRITABLE = ['IN_PROGRESS', 'SUSPENDED', 'COMPLETED', 'WARRANTY'];
 
@@ -97,7 +98,7 @@ export const ProjectWorkDayPage = () => {
         onPick={goTo}
       />
       {failed && <Alert>화면에 필요한 정보를 불러오지 못했습니다</Alert>}
-      {loading && <p className="text-sm">불러오는 중</p>}
+      {loading && <LoadingBlock label="불러오는 중" />}
       {project.data && !loading && (
         <>
           {problem && <Alert>{problem}</Alert>}
@@ -126,10 +127,10 @@ export const ProjectWorkDayPage = () => {
           )}
           {!problem && <DayLedgerStep projectId={id} date={date} today={today} />}
           {!problem && (
-            <p className="text-sm text-foreground/70">
+            <p className="text-sm text-sub">
               이 날 쓴 자재는{' '}
               <Link
-                className="font-medium text-primary underline"
+                className="font-medium text-primary hover:text-sub"
                 to={`/projects/${id}/materials?date=${date}`}
               >
                 자재 메뉴

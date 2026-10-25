@@ -36,7 +36,8 @@ pnpm env:init       # .env 생성 (DB 비밀번호·저장소 키를 새로 만�
 pnpm infra:up       # Docker로 DB·객체 저장소·메일 서버 기동
 pnpm db:setup       # 테이블 생성 + DB 계정 비밀번호 설정
 pnpm db:seed        # 더미 회사·계정 입력
-pnpm dev            # api(:3000) + web(:5173)
+pnpm dev            # api(:3000) + web(:5173), 인프라가 꺼져 있으면 함께 기동
+# 컨테이너가 이미 떠 있으면 pnpm dev:all (둘 다) · pnpm dev:api · pnpm dev:web (각각)
 ```
 
 - 로그인: `hanbit` / `Hanbit-demo-2026!` (한빛판금), `saeron` / `Saeron-demo-2026!`

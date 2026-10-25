@@ -158,30 +158,18 @@ describe('마감 요약의 사진·문서 선택 규칙', () => {
     expect(selectSummaryPhotos([])).toEqual([]);
   });
 
-  it('문서: 안전·검사, 계약·공문의 민감하지 않은 문서만, 고른 것이 있으면 그것만', () => {
-    const doc = (id: string, category: string, isSensitive = false, includeInSummary = false) => ({
+  it('문서: 민감하지 않은 문서 중 직접 고른 것만, 고르지 않으면 싣지 않는다', () => {
+    const doc = (id: string, isSensitive = false, includeInSummary = false) => ({
       id,
-      category,
       isSensitive,
       includeInSummary,
     });
-    const docs = [
-      doc('d1', 'DRAWING'),
-      doc('s1', 'SAFETY'),
-      doc('s2', 'SAFETY', true),
-      doc('c1', 'CONTRACT'),
-      doc('q1', 'QUOTE', false, true),
-    ];
 
-    expect(selectSummaryDocuments(docs)).toEqual(['s1', 'c1']);
+    expect(selectSummaryDocuments([doc('d1'), doc('d2', true)])).toEqual([]);
     expect(
-      selectSummaryDocuments(
-        docs.map((item) => (item.id === 'c1' ? { ...item, includeInSummary: true } : item)),
-      ),
-    ).toEqual(['c1']);
+      selectSummaryDocuments([doc('d1'), doc('d2', false, true), doc('d3', false, true)]),
+    ).toEqual(['d2', 'd3']);
     // 민감 자료는 선택 여부와 무관하게 제외
-    expect(selectSummaryDocuments([doc('s2', 'SAFETY', true, true), doc('s1', 'SAFETY')])).toEqual([
-      's1',
-    ]);
+    expect(selectSummaryDocuments([doc('d1', true, true), doc('d2', false, true)])).toEqual(['d2']);
   });
 });

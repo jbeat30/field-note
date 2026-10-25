@@ -41,7 +41,7 @@ export const DayLedgerStep = ({
       >
         {entries.isError && <Alert>비용 기록을 불러오지 못했습니다</Alert>}
         {entries.isSuccess && entries.data.length === 0 && (
-          <p className="text-sm text-foreground/70">이 날 적은 비용이 없습니다</p>
+          <p className="text-sm text-sub">이 날 적은 비용이 없습니다</p>
         )}
         {entries.isSuccess && entries.data.length > 0 && (
           <>
@@ -49,7 +49,7 @@ export const DayLedgerStep = ({
               {entries.data.map((entry) => (
                 <li key={entry.id} className="flex items-center justify-between gap-3 py-2 text-sm">
                   <span className="min-w-0 truncate">
-                    <span className="text-foreground/65">{LEDGER_KIND_LABELS[entry.kind]}</span>{' '}
+                    <span className="text-sub">{LEDGER_KIND_LABELS[entry.kind]}</span>{' '}
                     {entry.content ?? '-'}
                   </span>
                   <span className="shrink-0 font-semibold tabular-nums">
@@ -59,7 +59,7 @@ export const DayLedgerStep = ({
                 </li>
               ))}
             </ul>
-            <p className="text-sm text-foreground/75">이 날 지출 {wonText(expense)}원</p>
+            <p className="text-sm text-sub">이 날 지출 {wonText(expense)}원</p>
           </>
         )}
       </Section>

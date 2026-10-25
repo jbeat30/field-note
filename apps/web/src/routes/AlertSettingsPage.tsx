@@ -5,6 +5,7 @@ import { BackLink } from '../components/ui/back-link';
 import { PageHeader } from '../components/ui/page-header';
 import { Switch } from '../components/ui/switch';
 import { useAlertSettings, useSaveAlertSettings } from '../dashboard/useDashboard';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 알림을 성격별로 묶어서 보여 줌 (모든 알림 종류가 한 묶음에 들어가야 함)
 const GROUPS: { title: string; description: string; kinds: AlertKind[] }[] = [
@@ -38,26 +39,26 @@ export const AlertSettingsPage = () => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <BackLink to="/settings">설정으로</BackLink>
-        <PageHeader
-          title="알림 설정"
-          description="대시보드에 보여 줄 알림을 종류별로 켜고 끕니다. 꺼도 대시보드의 현황은 그대로 보입니다"
-        />
-      </div>
+      <PageHeader
+        title="알림 설정"
+        description="대시보드에 보여 줄 알림을 종류별로 켜고 끕니다. 꺼도 대시보드의 현황은 그대로 보입니다"
+        back={<BackLink to="/settings">설정으로</BackLink>}
+      />
       {settings.isError && <Alert>알림 설정을 불러오지 못했습니다</Alert>}
       {save.isError && <Alert>저장하지 못했습니다. 다시 시도해 주세요</Alert>}
-      {settings.isPending && <p className="text-sm">불러오는 중</p>}
+      {settings.isPending && (
+        <LoadingBlock label="불러오는 중" variant="blocks" heights={[[994, 485]]} />
+      )}
       {settings.data && (
         <div className="gap-4 lg:columns-2 [&>*]:mb-4 [&>*]:break-inside-avoid">
           {GROUPS.map((group) => (
             <section
               key={group.title}
               aria-label={group.title}
-              className="flex flex-col gap-1 rounded-xl bg-surface-subtle p-5"
+              className="flex flex-col gap-1 rounded-3xl bg-surface-subtle p-5"
             >
               <h2 className="text-lg font-bold">{group.title}</h2>
-              <p className="mb-2 text-sm text-foreground/70">{group.description}</p>
+              <p className="mb-2 text-sm text-sub">{group.description}</p>
               <ul className="divide-y divide-line">
                 {group.kinds.map((kind) => (
                   <li key={kind}>

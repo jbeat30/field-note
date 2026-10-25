@@ -17,7 +17,7 @@ export const Tooltip = ({ content, children, side = 'top' }: TooltipProps) => (
         <TooltipPrimitive.Content
           side={side}
           sideOffset={6}
-          className="z-50 max-w-64 rounded-lg bg-foreground px-3 py-1.5 text-xs font-medium text-surface shadow-pop"
+          className="z-50 max-w-64 rounded-md bg-foreground px-3 py-1.5 text-xs font-bold text-surface shadow-pop"
         >
           {content}
         </TooltipPrimitive.Content>

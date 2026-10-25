@@ -6,6 +6,7 @@ import { useCompanySettings } from '../settings/useCompanySettings';
 
 import { formatWork } from './formatWork';
 import { useEmployeeWorkHistory } from './useWorkSummary';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 직원 카드의 투입 이력: 프로젝트별 투입 기간·일수·총 공수와 이번 달·올해 공수, 저장된 작업 내역만 반영
 export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string }) => {
@@ -17,7 +18,7 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
   }
 
   if (!history.data || !settings.data) {
-    return <p className="text-sm">투입 이력을 불러오는 중</p>;
+    return <LoadingBlock label="투입 이력을 불러오는 중" />;
   }
 
   const { data } = history;
@@ -30,11 +31,11 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
       </h2>
       <dl className="grid grid-cols-2 gap-2 rounded-xl bg-surface-subtle p-4 text-sm">
         <div>
-          <dt className="text-foreground/70">이번 달 공수</dt>
+          <dt className="text-sub">이번 달 공수</dt>
           <dd className="font-bold">{formatWork(data.thisMonthMinutes, config)}</dd>
         </div>
         <div>
-          <dt className="text-foreground/70">올해 공수</dt>
+          <dt className="text-sub">올해 공수</dt>
           <dd className="font-bold">{formatWork(data.thisYearMinutes, config)}</dd>
         </div>
       </dl>
@@ -48,19 +49,19 @@ export const EmployeeWorkHistoryPanel = ({ employeeId }: { employeeId: string })
           {data.projects.map((row) => (
             <li key={row.projectId} className="flex flex-col gap-0.5 px-3 py-2 text-sm">
               <Link
-                className="min-h-touch content-center font-medium text-primary underline"
+                className="min-h-touch content-center font-medium text-primary hover:text-sub"
                 to={`/projects/${row.projectId}`}
               >
                 {row.projectCode} {row.projectName}
               </Link>
               <span>
-                {row.workedDays}일 · {formatWork(row.totalMinutes, config)}
+                {row.workedDays}일, {formatWork(row.totalMinutes, config)}
               </span>
-              <span className="text-foreground/70">
+              <span className="text-sub">
                 {row.assignedFrom && row.assignedTo
                   ? `투입 ${row.assignedFrom} ~ ${row.assignedTo}`
                   : '투입 기록 없음'}
-                {row.lastWorkDate ? ` · 최근 ${formatDay(row.lastWorkDate)}` : ' · 작업 기록 없음'}
+                {row.lastWorkDate ? `, 최근 ${formatDay(row.lastWorkDate)}` : ', 작업 기록 없음'}
               </span>
             </li>
           ))}

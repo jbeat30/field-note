@@ -1,4 +1,4 @@
-import { DOCUMENT_CATEGORY_LABELS, type Document } from '@field-note/shared';
+import type { Document } from '@field-note/shared';
 import { Ellipsis } from 'lucide-react';
 
 import { Badge } from '../components/ui/badge';
@@ -30,13 +30,13 @@ const formatSize = (bytes: number) =>
     ? `${(bytes / 1024 / 1024).toFixed(1)}MB`
     : `${Math.max(1, Math.ceil(bytes / 1024))}KB`;
 
-// 문서 목록: 문서명·분류·최신 판(개정일)·판 수·민감 표시, 행 오른쪽에 열기 버튼과 더보기(내려받기·새 판 올리기·기록)
+// 문서 목록: 문서명·종류·최신 판(개정일)·판 수·민감 표시, 행 오른쪽에 열기 버튼과 더보기(내려받기·새 판 올리기·기록)
 export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps) => (
   <Table aria-label="문서 목록">
     <TableHead>
       <TableRow>
         <TableHeaderCell>문서명</TableHeaderCell>
-        <TableHeaderCell className="hidden md:table-cell">분류</TableHeaderCell>
+        <TableHeaderCell className="hidden md:table-cell">종류</TableHeaderCell>
         <TableHeaderCell>최신 판</TableHeaderCell>
         <TableHeaderCell className="hidden text-right md:table-cell">판 수</TableHeaderCell>
         <TableHeaderCell>
@@ -58,26 +58,24 @@ export const DocumentList = ({ documents, onOpen, onDetail }: DocumentListProps)
                   민감
                 </Badge>
               )}
-              <span className="mt-0.5 block text-xs text-foreground/65 md:hidden">
-                {DOCUMENT_CATEGORY_LABELS[document.category]} · {document.versionCount}판
+              <span className="mt-0.5 block text-xs text-sub md:hidden">
+                {document.categoryName}, {document.versionCount}판
               </span>
               {!isReady && (
-                <span className="ml-2 text-xs text-foreground/55">
+                <span className="ml-2 text-xs text-sub">
                   {latest.fileStatus === 'REJECTED' ? '거부됨' : '검사 중'}
                 </span>
               )}
             </TableCell>
-            <TableCell className="hidden text-foreground/70 md:table-cell">
-              {DOCUMENT_CATEGORY_LABELS[document.category]}
-            </TableCell>
-            <TableCell className="whitespace-nowrap text-foreground/70">
+            <TableCell className="hidden text-sub md:table-cell">{document.categoryName}</TableCell>
+            <TableCell className="whitespace-nowrap text-sub">
               <span className="font-semibold tabular-nums text-foreground">
                 v{latest.versionNo}
               </span>
               <span className="ml-1.5">{formatDay(latest.revisionDate)}</span>
               <span className="ml-1.5 text-xs">{formatSize(latest.size)}</span>
             </TableCell>
-            <TableCell className="hidden text-right tabular-nums text-foreground/70 md:table-cell">
+            <TableCell className="hidden text-right tabular-nums text-sub md:table-cell">
               {document.versionCount}
             </TableCell>
             <TableCell className="text-right">

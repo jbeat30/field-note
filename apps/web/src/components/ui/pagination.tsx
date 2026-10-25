@@ -57,7 +57,7 @@ export const Pagination = ({ page, pageCount, onPageChange, className }: Paginat
       </button>
       {pageWindow(page, pageCount).map((value, index) =>
         value === null ? (
-          <span key={`gap-${index}`} aria-hidden className="px-1 text-foreground/70">
+          <span key={`gap-${index}`} aria-hidden className="px-1 text-sub">
             …
           </span>
         ) : (

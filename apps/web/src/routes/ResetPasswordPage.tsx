@@ -31,11 +31,13 @@ type ResetForm = z.infer<typeof resetFormSchema>;
 
 const InvalidLink = () => (
   <div className="flex flex-col gap-3">
-    <h1 className="text-xl font-bold">링크를 사용할 수 없습니다</h1>
+    <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+      링크를 사용할 수 없습니다
+    </h1>
     <p className="text-sm">
       링크가 만료되었거나 이미 사용되었을 수 있습니다. 재설정 링크를 다시 받아 주세요
     </p>
-    <Link className="min-h-touch content-center text-primary underline" to="/forgot-password">
+    <Link className="min-h-touch content-center font-bold hover:text-sub" to="/forgot-password">
       재설정 링크 다시 받기
     </Link>
   </div>
@@ -91,11 +93,13 @@ export const ResetPasswordPage = () => {
   if (isDone) {
     return (
       <div className="flex flex-col gap-4">
-        <h1 className="text-xl font-bold">비밀번호를 바꿨습니다</h1>
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          비밀번호를 바꿨습니다
+        </h1>
         <Alert variant="info">
           모든 기기에서 로그아웃되었습니다. 새 비밀번호로 다시 로그인해 주세요
         </Alert>
-        <Link className="min-h-touch content-center text-primary underline" to="/login">
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>
@@ -137,17 +141,27 @@ export const ResetPasswordPage = () => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">새 비밀번호 설정</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+        새 비밀번호 설정
+      </h1>
       {errors.root && <Alert>{errors.root.message}</Alert>}
       <FormField
         label="새 비밀번호"
         hint={VALIDATION_MESSAGES.PASSWORD_HINT}
         error={errors.newPassword?.message}
       >
-        <PasswordInput autoComplete="new-password" {...register('newPassword')} />
+        <PasswordInput
+          placeholder="새 비밀번호를 입력하세요"
+          autoComplete="new-password"
+          {...register('newPassword')}
+        />
       </FormField>
       <FormField label="새 비밀번호 확인" error={errors.newPasswordConfirm?.message}>
-        <PasswordInput autoComplete="new-password" {...register('newPasswordConfirm')} />
+        <PasswordInput
+          placeholder="새 비밀번호를 한 번 더 입력하세요"
+          autoComplete="new-password"
+          {...register('newPasswordConfirm')}
+        />
       </FormField>
       {requiresTotp && (
         <FormField
@@ -156,6 +170,7 @@ export const ResetPasswordPage = () => {
           error={errors.totpCode?.message}
         >
           <Input
+            placeholder="인증 앱의 6자리 코드"
             autoComplete="one-time-code"
             autoCapitalize="characters"
             autoCorrect="off"

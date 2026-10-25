@@ -3,7 +3,6 @@ import {
   CHANGE_WORK_REQUESTER_MAX_LENGTH,
   CHANGE_WORK_STATUSES,
   CHANGE_WORK_STATUS_LABELS,
-  DOCUMENT_CATEGORY_LABELS,
   changeWorkUpdateSchema,
   daysInStatus,
   todayInSeoul,
@@ -41,6 +40,7 @@ import {
   useUnlinkChangeWorkDocument,
   useUpdateChangeWork,
 } from './useChangeWorks';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 협의 중으로 이만큼 지나면 오래 방치된 것으로 표시 ("7일 경과")
 const STALE_DAYS = 7;
@@ -128,7 +128,11 @@ const StatusForm = ({
         />
       </FormField>
       <FormField label={to === 'WITHDRAWN' ? '사유 (필수)' : '메모 (선택)'} error={errors.note}>
-        <Textarea value={note} onChange={(event) => setNote(event.target.value)} />
+        <Textarea
+          placeholder="변경 사유나 처리 내용을 입력하세요"
+          value={note}
+          onChange={(event) => setNote(event.target.value)}
+        />
       </FormField>
       <div className="flex gap-2">
         <Button
@@ -216,6 +220,7 @@ const EditForm = ({
       </FormField>
       <FormField label="요청자" error={errors.requester}>
         <Input
+          placeholder="요청한 사람 또는 업체"
           maxLength={CHANGE_WORK_REQUESTER_MAX_LENGTH}
           value={requester}
           onChange={(event) => setRequester(event.target.value)}
@@ -223,6 +228,7 @@ const EditForm = ({
       </FormField>
       <FormField label="요청 내용" error={errors.content}>
         <Textarea
+          placeholder="추가 공사 내용을 입력하세요"
           maxLength={CHANGE_WORK_CONTENT_MAX_LENGTH}
           value={content}
           onChange={(event) => setContent(event.target.value)}
@@ -335,7 +341,7 @@ const Evidence = ({
       )}
       {(error || opener.error) && <Alert>{error || opener.error}</Alert>}
       {detail.documents.length === 0 ? (
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           {editable ? '대화 캡처·합의서·공문 사진이나 PDF를 올려 두세요' : '연결한 증빙이 없습니다'}
         </p>
       ) : (
@@ -345,7 +351,7 @@ const Evidence = ({
               key={item.documentId}
               className="flex items-center gap-3 rounded-lg border border-line bg-surface px-3 py-2"
             >
-              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-muted text-foreground/65 [&_svg]:size-5">
+              <span className="grid size-10 shrink-0 place-items-center rounded-md bg-muted text-sub [&_svg]:size-5">
                 {item.contentType.startsWith('image/') ? (
                   <ImageIcon aria-hidden />
                 ) : (
@@ -365,9 +371,9 @@ const Evidence = ({
                 }
               >
                 <span className="block truncate text-sm font-semibold">{item.title}</span>
-                <span className="block truncate text-xs text-foreground/65">
-                  {DOCUMENT_CATEGORY_LABELS[item.category]}
-                  {item.isSensitive ? ' · 민감' : ''} · {formatDay(item.linkedAt.slice(0, 10))}
+                <span className="block truncate text-xs text-sub">
+                  {item.categoryName}
+                  {item.isSensitive ? ', 민감' : ''}, {formatDay(item.linkedAt.slice(0, 10))}
                 </span>
               </button>
               {editable && (
@@ -455,8 +461,8 @@ const Body = ({
     <div className="flex flex-col gap-3 border-t border-border pt-3">
       {message && <p role="status">{message}</p>}
       <p className="whitespace-pre-wrap">{detail.content}</p>
-      <p className="text-sm text-foreground/70">
-        요청 {formatDay(detail.requestedOn)} · {detail.requester}
+      <p className="text-sm text-sub">
+        요청 {formatDay(detail.requestedOn)}, {detail.requester}
       </p>
 
       {editable && (
@@ -526,14 +532,14 @@ const Body = ({
       <div className="flex flex-col gap-1">
         <h3 className="font-medium">상태 이력</h3>
         {detail.history.length === 0 ? (
-          <p className="text-sm text-foreground/70">상태를 바꾼 적이 없습니다</p>
+          <p className="text-sm text-sub">상태를 바꾼 적이 없습니다</p>
         ) : (
           <ul className="flex flex-col gap-1 text-sm">
             {detail.history.map((item) => (
               <li key={item.id}>
-                {formatDay(item.effectiveOn)} · {CHANGE_WORK_STATUS_LABELS[item.fromStatus]} →{' '}
+                {formatDay(item.effectiveOn)}, {CHANGE_WORK_STATUS_LABELS[item.fromStatus]} →{' '}
                 <span className="font-bold">{CHANGE_WORK_STATUS_LABELS[item.toStatus]}</span>
-                {item.note ? ` · ${item.note}` : ''}
+                {item.note ? `, ${item.note}` : ''}
               </li>
             ))}
           </ul>
@@ -570,7 +576,7 @@ export const ChangeWorkDetailDialog = ({
       description={stale ? `${waited}일째 협의 중입니다` : undefined}
     >
       {detail.isError && <Alert>상세를 불러오지 못했습니다</Alert>}
-      {!detail.data && !detail.isError && <p className="text-sm">불러오는 중</p>}
+      {!detail.data && !detail.isError && <LoadingBlock label="불러오는 중" />}
       {detail.data && (
         <Body
           detail={detail.data}

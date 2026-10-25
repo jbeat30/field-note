@@ -92,7 +92,7 @@ const ComboboxList = ({
       <span className="min-w-0 flex-1">
         <span className="block truncate">{option.label}</span>
         {option.description && (
-          <span className="block truncate text-xs text-foreground/65">{option.description}</span>
+          <span className="block truncate text-xs text-sub">{option.description}</span>
         )}
       </span>
     </Command.Item>
@@ -101,16 +101,16 @@ const ComboboxList = ({
   return (
     <Command filter={matches} loop>
       <div className="flex items-center gap-2 border-b border-line px-3">
-        <Search aria-hidden className="size-4 shrink-0 text-foreground/50" />
+        <Search aria-hidden className="size-4 shrink-0 text-sub" />
         <Command.Input
           value={search}
           onValueChange={setSearch}
           placeholder={searchPlaceholder}
-          className="h-10 w-full bg-transparent text-base outline-none placeholder:text-foreground/55 md:text-[15px]"
+          className="h-10 w-full bg-transparent text-base outline-none placeholder:text-sub md:text-[15px]"
         />
       </div>
       <Command.List className="max-h-80 overflow-y-auto p-1">
-        <Command.Empty className="px-3 py-6 text-center text-sm text-foreground/65">
+        <Command.Empty className="px-3 py-6 text-center text-sm text-sub">
           {emptyText}
         </Command.Empty>
         {groupOptions(options).map((group) =>
@@ -119,7 +119,7 @@ const ComboboxList = ({
               key={group.label}
               heading={group.label}
               // 묶음 제목 모양은 listboxGroupLabelClass와 같음 (cmdk가 제목 요소를 직접 만들어 하위 선택자로 꾸밈)
-              className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-foreground/65"
+              className="[&_[cmdk-group-heading]]:px-2.5 [&_[cmdk-group-heading]]:pt-2 [&_[cmdk-group-heading]]:pb-1 [&_[cmdk-group-heading]]:text-xs [&_[cmdk-group-heading]]:font-semibold [&_[cmdk-group-heading]]:text-sub"
             >
               {group.items.map(renderItem)}
             </Command.Group>
@@ -181,13 +181,13 @@ const Trigger = ({
       {...aria}
     >
       {/* 지우기 버튼이 겹치지 않게 글자 오른쪽에 자리를 비움 */}
-      <span className={cn('min-w-0 truncate', !hasValue && 'text-foreground/65', padEnd && 'pr-8')}>
+      <span className={cn('min-w-0 truncate', !hasValue && 'text-sub', padEnd && 'pr-8')}>
         {children}
       </span>
       <ChevronDown
         aria-hidden
         className={cn(
-          'size-4.5 shrink-0 text-foreground/50 transition-transform duration-(--duration-fast)',
+          'size-4.5 shrink-0 text-sub transition-transform duration-(--duration-fast)',
           open && 'rotate-180',
         )}
       />
@@ -247,7 +247,7 @@ export const Combobox = ({
           <button
             type="button"
             aria-label="선택 지우기"
-            className="absolute inset-y-0 right-8 my-auto flex size-7 items-center justify-center rounded-md text-foreground/65 hover:bg-muted hover:text-foreground"
+            className="absolute inset-y-0 right-8 my-auto flex size-7 items-center justify-center rounded-md text-sub hover:bg-muted hover:text-foreground"
             onClick={() => onValueChange('')}
           >
             <X aria-hidden className="size-4" />
@@ -338,10 +338,10 @@ export const MultiCombobox = ({
         />
         {value.length > 0 && (
           <div className="flex items-center justify-between border-t border-line px-3 py-2 text-sm">
-            <span className="text-foreground/70">{value.length}개 선택</span>
+            <span className="text-sub">{value.length}개 선택</span>
             <button
               type="button"
-              className="font-semibold text-primary hover:underline"
+              className="font-semibold text-primary hover:text-sub"
               onClick={() => onValueChange([])}
             >
               모두 해제

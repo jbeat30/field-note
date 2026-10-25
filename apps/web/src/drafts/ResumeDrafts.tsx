@@ -19,25 +19,26 @@ export const ResumeDrafts = ({ drafts, projectNames }: ResumeDraftsProps) => {
   if (drafts.length === 0) return null;
 
   return (
-    <section className="flex flex-col gap-2" aria-labelledby="resume-heading">
-      <h2 id="resume-heading" className="text-lg font-bold">
+    <section
+      className="flex flex-col gap-2 rounded-[34px] bg-surface-subtle px-7 py-6"
+      aria-labelledby="resume-heading"
+    >
+      <h2 id="resume-heading" className="text-[21px] font-bold tracking-[-0.025em]">
         이어서 작성
       </h2>
-      <p className="text-sm text-foreground/70">
-        저장하지 않고 닫은 입력이 이 기기에 남아 있습니다
-      </p>
+      <p className="text-sm text-sub">저장하지 않고 닫은 입력이 이 기기에 남아 있습니다</p>
       <ul className="flex flex-col gap-2">
         {drafts.map((draft) => (
           <li key={`${draft.projectId}:${draft.date}`}>
             <Link
               to={projectWorkPath(draft.projectId, draft.date)}
-              className="flex min-h-touch flex-col justify-center rounded-xl bg-surface-subtle px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary"
+              className="flex min-h-touch flex-col justify-center rounded-2xl bg-surface-nested px-4 py-3 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
             >
-              <span className="font-medium">
-                {projectNames.get(draft.projectId) ?? '프로젝트'} · {formatDay(draft.date)}{' '}
+              <span className="font-bold">
+                {projectNames.get(draft.projectId) ?? '프로젝트'}, {formatDay(draft.date)}{' '}
                 {DRAFT_LABELS[draft.kind]} 작성 중
               </span>
-              <span className="text-sm text-foreground/70">
+              <span className="text-sm text-sub">
                 마지막 저장{' '}
                 {new Date(draft.savedAt).toLocaleString('ko-KR', {
                   timeZone: 'Asia/Seoul',

@@ -1,18 +1,21 @@
 import { todayInSeoul } from '@field-note/shared';
-import { Link, useNavigate } from 'react-router';
-import { useState } from 'react';
+import { FolderPlus } from 'lucide-react';
+import { Link } from 'react-router';
 
 import { useMe } from '../auth/useMe';
 import { listResumable } from '../drafts/formDraft';
 import { ResumeDrafts } from '../drafts/ResumeDrafts';
 import { useDraftHydrated } from '../drafts/useLocalDraft';
-import { Button } from '../components/ui/button';
-import { Input } from '../components/ui/input';
+import { pillIconButtonClass } from '../components/ui/button';
+import { PageHeader } from '../components/ui/page-header';
 import { Skeleton } from '../components/ui/skeleton';
 import { Alert } from '../components/ui/alert';
+import { AlertBell } from '../dashboard/AlertBell';
 import { DashboardWidgets } from '../dashboard/DashboardWidgets';
+import { HeaderSearch } from '../dashboard/HeaderSearch';
 import { MonthStaffing } from '../dashboard/MonthStaffing';
 import { useDashboard } from '../dashboard/useDashboard';
+import { cn } from '../lib/cn';
 import { useProjectChoices } from '../projects/useProjects';
 import { useDraftStore } from '../stores/draftStore';
 
@@ -30,52 +33,57 @@ const dateText = (date: string) => {
 export const HomePage = () => {
   const me = useMe();
   const dashboard = useDashboard();
-  const navigate = useNavigate();
-  const [searchText, setSearchText] = useState('');
   const projects = useProjectChoices();
   const drafts = useDraftStore((state) => state.drafts);
   const isDraftReady = useDraftHydrated();
 
   return (
     <section className="flex flex-col gap-4">
-      <div className="flex flex-wrap items-start justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold">{me.data?.companyName ?? '대시보드'}</h1>
-          <p className="mt-1 text-sm text-foreground/75">
-            {me.data?.displayName}님, 안녕하세요 · {dateText(todayInSeoul(new Date()))}
-          </p>
-        </div>
-        <Button asChild>
-          <Link to="/projects/new">프로젝트 등록</Link>
-        </Button>
-      </div>
-      <form
-        role="search"
-        className="flex gap-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-
-          if (searchText.trim())
-            void navigate(`/search?q=${encodeURIComponent(searchText.trim())}`);
-        }}
-      >
-        <Input
-          type="search"
-          className="min-w-0 flex-1"
-          aria-label="찾기"
-          placeholder="프로젝트·직원·메모·자료·작업 내역 찾기"
-          maxLength={50}
-          value={searchText}
-          onChange={(event) => setSearchText(event.target.value)}
-        />
-        <Button type="submit">찾기</Button>
-      </form>
+      <PageHeader
+        isDisplay
+        overlap
+        eyebrow={
+          <span>
+            {me.data?.companyName}, {dateText(todayInSeoul(new Date()))}
+          </span>
+        }
+        title={
+          <>
+            안녕하세요,
+            <br />
+            {me.data?.displayName}님
+          </>
+        }
+        actions={
+          <>
+            <div className="flex items-center gap-2.5 max-md:hidden">
+              <HeaderSearch />
+              <AlertBell />
+            </div>
+            <Link
+              to="/projects/new"
+              className={cn(pillIconButtonClass, 'h-[52px] w-full md:h-14 md:w-auto')}
+            >
+              <FolderPlus aria-hidden />
+              프로젝트 등록
+            </Link>
+          </>
+        }
+      />
       {dashboard.isError && <Alert>대시보드를 불러오지 못했습니다</Alert>}
       {dashboard.isPending && (
-        <div className="flex flex-col gap-3">
-          <p className="text-sm text-foreground/70">대시보드를 불러오는 중</p>
-          <Skeleton className="h-32 w-full rounded-xl" />
-          <Skeleton className="h-24 w-full rounded-xl" />
+        // 지표 타일, 진행 중 프로젝트와 확인할 일 두 칸, 아래 카드 자리를 실제 화면과 같은 배치로 깔아 둠
+        <div className="flex flex-col gap-4" role="status" aria-busy>
+          <span className="sr-only">대시보드를 불러오는 중</span>
+          <div className="relative -mt-12 grid grid-cols-2 gap-3 md:-mt-16 xl:grid-cols-4">
+            {Array.from({ length: 4 }, (_, index) => (
+              <Skeleton key={index} className="h-[154px] rounded-[30px]" />
+            ))}
+          </div>
+          <div className="grid grid-cols-1 gap-4 lg:h-[420px] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
+            <Skeleton className="h-72 rounded-[30px] lg:h-full" />
+            <Skeleton className="h-72 rounded-[30px] lg:h-full" />
+          </div>
         </div>
       )}
       {dashboard.data && (

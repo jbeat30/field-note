@@ -18,6 +18,7 @@ import { apiClient } from '../api/client';
 import { SocialButton } from '../auth/SocialButton';
 import { SocialNotice } from '../auth/SocialNotice';
 import { useSocialProviders, useSocialStart } from '../auth/useSocial';
+import { IS_SOCIAL_LOGIN_ENABLED } from '../lib/features';
 import { Alert } from '../components/ui/alert';
 import { Button } from '../components/ui/button';
 import { Checkbox } from '../components/ui/checkbox';
@@ -61,16 +62,14 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
           }
         />
         <span>
-          <span className="text-sm text-foreground/70">
-            {document.isRequired ? '[필수] ' : '[선택] '}
-          </span>
+          <span className="text-sm text-sub">{document.isRequired ? '[필수] ' : '[선택] '}</span>
           {document.title}
         </span>
       </label>
       <button
         type="button"
         aria-label={`${document.title} 보기`}
-        className="min-h-touch px-2 text-sm text-primary underline"
+        className="min-h-touch px-2 text-sm font-bold hover:text-sub"
         onClick={() => setViewing(document)}
       >
         보기
@@ -81,7 +80,9 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
   return (
     <div className="flex flex-col gap-4">
       <div>
-        <h1 className="text-xl font-bold">{invitation.companyName}</h1>
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          {invitation.companyName}
+        </h1>
         <p className="mt-1 text-sm">
           {invitation.adminName}님을 위한 초대입니다. 약관을 확인하고 동의해 주세요
         </p>
@@ -104,7 +105,7 @@ const ConsentStep = ({ invitation, onNext }: ConsentStepProps) => {
           onCheckedChange={(checked) => setAgeConfirmed(checked === true)}
         />
         <span>
-          <span className="text-sm text-foreground/70">[필수] </span>만 14세 이상입니다
+          <span className="text-sm text-sub">[필수] </span>만 14세 이상입니다
         </span>
       </label>
       <Button
@@ -172,7 +173,9 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
   const queryClient = useQueryClient();
   const providers = useSocialProviders();
   const socialStart = useSocialStart();
-  const signupProviders = SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider]);
+  const signupProviders = IS_SOCIAL_LOGIN_ENABLED
+    ? SOCIAL_PROVIDER_KEYS.filter((provider) => providers.data?.[provider])
+    : [];
   const {
     register,
     handleSubmit,
@@ -214,7 +217,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
 
   return (
     <form className="flex flex-col gap-4" onSubmit={onSubmit} noValidate>
-      <h1 className="text-xl font-bold">계정 만들기</h1>
+      <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">계정 만들기</h1>
       {errors.root && <Alert>{errors.root.message}</Alert>}
       {signupProviders.length > 0 && (
         <>
@@ -233,7 +236,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
             />
           ))}
           {socialStart.isError && <Alert>{socialStart.error.message}</Alert>}
-          <p className="text-center text-sm text-foreground/70">
+          <p className="text-center text-sm text-sub">
             또는 아이디로 가입 (소셜로 가입하면 이메일 등록과 아이디·비밀번호 설정은 가입 뒤에 할 수
             있습니다)
           </p>
@@ -245,6 +248,7 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
         error={errors.loginId?.message}
       >
         <Input
+          placeholder="로그인에 쓸 아이디"
           autoComplete="username"
           autoCapitalize="none"
           autoCorrect="off"
@@ -256,17 +260,31 @@ const AccountStep = ({ inviteToken, consents, onBack }: AccountStepProps) => {
         hint={VALIDATION_MESSAGES.PASSWORD_HINT}
         error={errors.password?.message}
       >
-        <PasswordInput autoComplete="new-password" {...register('password')} />
+        <PasswordInput
+          placeholder="비밀번호를 입력하세요"
+          autoComplete="new-password"
+          {...register('password')}
+        />
       </FormField>
       <FormField label="비밀번호 확인" error={errors.passwordConfirm?.message}>
-        <PasswordInput autoComplete="new-password" {...register('passwordConfirm')} />
+        <PasswordInput
+          placeholder="비밀번호를 한 번 더 입력하세요"
+          autoComplete="new-password"
+          {...register('passwordConfirm')}
+        />
       </FormField>
       <FormField
         label="이메일"
         hint="본인 확인, 비밀번호 재설정, 서비스 안내에 사용합니다"
         error={errors.email?.message}
       >
-        <Input type="email" autoComplete="email" inputMode="email" {...register('email')} />
+        <Input
+          placeholder="name@example.com"
+          type="email"
+          autoComplete="email"
+          inputMode="email"
+          {...register('email')}
+        />
       </FormField>
       <Button type="submit" disabled={isSubmitting}>
         {isSubmitting ? '가입 중' : '가입하고 인증 코드 받기'}
@@ -315,11 +333,13 @@ export const InviteSignupPage = () => {
   if (!invitation.data) {
     return (
       <div className="flex flex-col gap-3">
-        <h1 className="text-xl font-bold">초대 링크를 사용할 수 없습니다</h1>
+        <h1 className="text-[26px] leading-tight font-extrabold tracking-[-0.025em]">
+          초대 링크를 사용할 수 없습니다
+        </h1>
         <p className="text-sm">
           링크가 만료되었거나 이미 사용되었을 수 있습니다. 운영자에게 새 링크를 요청해 주세요
         </p>
-        <Link className="min-h-touch content-center text-primary underline" to="/login">
+        <Link className="min-h-touch content-center font-bold hover:text-sub" to="/login">
           로그인 화면으로
         </Link>
       </div>
@@ -328,7 +348,7 @@ export const InviteSignupPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <SocialNotice />
+      {IS_SOCIAL_LOGIN_ENABLED && <SocialNotice />}
       {consents ? (
         <AccountStep inviteToken={token} consents={consents} onBack={() => setConsents(null)} />
       ) : (

@@ -50,7 +50,7 @@ export const NewDayStartsWithEmployeeTable: Story = {
     await pick(canvas, ['정판금']);
     // 선택한 사람은 '하루(8시간)'로 채움
     await expect(canvas.getByLabelText('정판금 일한 시간(시간)')).toHaveValue(8);
-    await expect(canvas.getByText('1명 · 8시간')).toBeInTheDocument();
+    await expect(canvas.getByText('1명, 8시간')).toBeInTheDocument();
   },
 };
 
@@ -67,7 +67,7 @@ export const SaveWithBulkInput: Story = {
     });
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByText(/저장됐습니다 · 버전 1/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/저장됐습니다, 버전 1/)).toBeInTheDocument();
     await expect(canvas.getByText(/지연 입력/, { selector: 'p' })).toBeInTheDocument();
     // 결근 처리한 직원은 공수 저장 제외
     await waitFor(() => {
@@ -114,7 +114,7 @@ export const SplitCategoryAndQuickValue: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '한용접 작업 구분 나누기' }));
 
     await expect(canvas.getByLabelText('한용접 일한 시간(시간) 2')).toHaveValue(4);
-    await expect(canvas.getByText(/나눠 적음 · 합계 12시간/)).toBeInTheDocument();
+    await expect(canvas.getByText(/나눠 적음, 합계 12시간/)).toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: '한용접 줄 삭제 2' }));
     await expect(canvas.queryByLabelText('한용접 일한 시간(시간) 2')).not.toBeInTheDocument();
     await userEvent.click(canvas.getByRole('button', { name: '한용접 연장' }));
@@ -168,7 +168,7 @@ export const EditSavedLogBumpsVersion: Story = {
     await fireEvent.change(content, { target: { value: '4층 패널 가공품 반입 (수정)' } });
     await userEvent.click(canvas.getByRole('button', { name: '저장' }));
 
-    await expect(await canvas.findByText(/저장됐습니다 · 버전 2/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/저장됐습니다, 버전 2/)).toBeInTheDocument();
   },
 };
 
@@ -177,7 +177,7 @@ export const DraftLogShowsNotice: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    await expect(await canvas.findByText(/임시 저장 · 버전/)).toBeInTheDocument();
+    await expect(await canvas.findByText(/임시 저장, 버전/)).toBeInTheDocument();
   },
 };
 
@@ -235,7 +235,7 @@ export const RemoveAddedEmployee: Story = {
     await userEvent.click(canvas.getByRole('checkbox', { name: '오전기 일함' }));
 
     await expect(canvas.queryByLabelText('오전기 일한 시간(시간)')).not.toBeInTheDocument();
-    await expect(canvas.getByText('0명 · 0시간')).toBeInTheDocument();
+    await expect(canvas.getByText('0명, 0시간')).toBeInTheDocument();
   },
 };
 
@@ -275,7 +275,7 @@ export const DifferentHoursPerPerson: Story = {
     const canvas = within(canvasElement);
 
     await pick(canvas);
-    await expect(canvas.getByText('4명 · 32시간')).toBeInTheDocument();
+    await expect(canvas.getByText('4명, 32시간')).toBeInTheDocument();
 
     // 정판금만 30분씩 두 번 늘리고, 최설치는 반일
     await userEvent.click(canvas.getByRole('button', { name: '정판금 30분 늘리기' }));
@@ -284,16 +284,16 @@ export const DifferentHoursPerPerson: Story = {
     await userEvent.click(canvas.getByRole('button', { name: '최설치 반일' }));
     await expect(canvas.getByLabelText('최설치 일한 시간(시간)')).toHaveValue(4);
     // 합계는 사람별 합: 9 + 4 + 8 + 8 = 29
-    await expect(canvas.getByText('4명 · 29시간')).toBeInTheDocument();
+    await expect(canvas.getByText('4명, 29시간')).toBeInTheDocument();
 
     // 안 나온 사람은 체크를 풀면 합계에서 빠짐
     await userEvent.click(canvas.getByRole('checkbox', { name: '김일용 일함' }));
-    await expect(canvas.getByText('3명 · 21시간')).toBeInTheDocument();
+    await expect(canvas.getByText('3명, 21시간')).toBeInTheDocument();
 
     // 모두에게 한 번에: 일한 시간 머리의 "모두 반일"
     await userEvent.click(canvas.getByRole('button', { name: '반일' }));
     await expect(canvas.getByLabelText('정판금 일한 시간(시간)')).toHaveValue(4);
-    await expect(canvas.getByText('3명 · 12시간')).toBeInTheDocument();
+    await expect(canvas.getByText('3명, 12시간')).toBeInTheDocument();
   },
 };
 

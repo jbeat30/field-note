@@ -17,7 +17,7 @@ export const RadioGroupItem = ({
 }: ComponentProps<typeof RadioGroupPrimitive.Item>) => (
   <RadioGroupPrimitive.Item
     className={cn(
-      'flex size-5 shrink-0 items-center justify-center rounded-full border border-control-border bg-surface shadow-xs transition-colors hover:border-control-border-hover focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary',
+      'flex size-5 shrink-0 items-center justify-center rounded-full border-2 border-border-strong bg-surface transition-colors hover:border-foreground focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-primary disabled:opacity-50 data-[state=checked]:border-primary data-[state=checked]:bg-primary',
       className,
     )}
     {...props}

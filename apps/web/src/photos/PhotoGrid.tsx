@@ -30,13 +30,13 @@ export const PhotoGrid = ({ photos, onSelect }: PhotoGridProps) => (
               className="size-full object-cover"
             />
           ) : (
-            <span className="flex size-full items-center justify-center p-1 text-center text-xs text-foreground/70">
+            <span className="flex size-full items-center justify-center p-1 text-center text-xs text-sub">
               {placeholder(photo)}
             </span>
           )}
           <span className="absolute bottom-0 left-0 right-0 truncate bg-foreground/70 px-1 py-0.5 text-left text-xs text-primary-foreground">
             {PHOTO_CATEGORY_LABELS[photo.category]}
-            {photo.area ? ` · ${photo.area}` : ''}
+            {photo.area ? `, ${photo.area}` : ''}
           </span>
           {photo.includeInSummary && (
             <span className="absolute right-1 top-1 rounded bg-foreground/75 px-1 text-xs text-primary-foreground">

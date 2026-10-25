@@ -127,6 +127,7 @@ const HoursInput = ({
         <Minus aria-hidden />
       </Button>
       <Input
+        placeholder="0"
         type="number"
         inputMode="decimal"
         step="0.5"
@@ -146,7 +147,7 @@ const HoursInput = ({
       >
         <Plus aria-hidden />
       </Button>
-      <span className="text-sm text-foreground/65">시간</span>
+      <span className="text-sm text-sub">시간</span>
       {!compact && (
         <span className="ml-1 flex gap-1">
           {QUICK_MULTIPLIERS.map((quick) => (
@@ -332,7 +333,7 @@ export const WorkLogEditor = ({
     (sum, line) => sum + (valueToMinutes(line.value, settings) ?? 0),
     0,
   );
-  const summaryText = `${new Set(includedLines.map((line) => line.employeeId)).size}명 · ${roundTo(totalMinutes / 60, 1)}시간`;
+  const summaryText = `${new Set(includedLines.map((line) => line.employeeId)).size}명, ${roundTo(totalMinutes / 60, 1)}시간`;
   const addEmployees = (ids: readonly string[]) => {
     const fresh = ids.filter((employeeId) => !employeeIds.includes(employeeId));
 
@@ -481,7 +482,7 @@ export const WorkLogEditor = ({
         </Button>
         {log && (
           <span className="rounded-full bg-muted px-2.5 py-0.5 text-xs font-semibold">
-            {WORK_LOG_STATUS_LABELS[log.status]} · 버전 {version}
+            {WORK_LOG_STATUS_LABELS[log.status]}, 버전 {version}
           </span>
         )}
         {log?.isLate && (
@@ -611,7 +612,7 @@ export const WorkLogEditor = ({
             title="일한 사람"
             description="이 날 이 현장에서 일한 직원을 고르세요"
             aside={
-              <span className="text-sm text-foreground/65" aria-live="polite">
+              <span className="text-sm text-sub" aria-live="polite">
                 {employeeIds.length}명 선택
               </span>
             }
@@ -620,14 +621,14 @@ export const WorkLogEditor = ({
               <Input
                 size="sm"
                 aria-label="직원 찾기"
-                placeholder="이름·직책으로 찾기"
+                placeholder="이름이나 직책으로 찾기"
                 startAdornment={<Search aria-hidden />}
                 value={search}
                 onChange={(event) => setSearch(event.target.value)}
                 className="sm:max-w-72"
               />
             )}
-            <ul className="grid gap-x-3 sm:grid-cols-2 lg:grid-cols-3" aria-label="회사 직원">
+            <ul className="grid gap-x-3 sm:grid-cols-2" aria-label="회사 직원">
               {pickable.map((employee) => {
                 const checked = employeeIds.includes(employee.id);
 
@@ -644,23 +645,23 @@ export const WorkLogEditor = ({
                         checked={checked}
                         onCheckedChange={(next) => toggleEmployee(employee.id, next === true)}
                       />
-                      <span className="min-w-0 flex-1 truncate">{employee.name}</span>
-                      <span className="flex shrink-0 items-center gap-1.5 text-xs font-normal text-foreground/65">
-                        {employee.title}
-                        {assignedEmployeeIds.includes(employee.id) && (
-                          <Badge tone="primary">이 현장</Badge>
-                        )}
-                        {employee.status === 'ON_LEAVE' && <Badge tone="warning">휴직</Badge>}
-                        {employee.status === 'LEFT' && <Badge tone="danger">퇴사</Badge>}
+                      <span className="flex min-w-0 flex-1 flex-col gap-1">
+                        <span className="break-keep">{employee.name}</span>
+                        <span className="flex flex-wrap items-center gap-1.5 text-xs font-normal text-sub">
+                          {employee.title}
+                          {assignedEmployeeIds.includes(employee.id) && (
+                            <Badge tone="primary">이 현장</Badge>
+                          )}
+                          {employee.status === 'ON_LEAVE' && <Badge tone="warning">휴직</Badge>}
+                          {employee.status === 'LEFT' && <Badge tone="danger">퇴사</Badge>}
+                        </span>
                       </span>
                     </label>
                   </li>
                 );
               })}
             </ul>
-            {pickable.length === 0 && (
-              <p className="text-sm text-foreground/65">찾는 직원이 없습니다</p>
-            )}
+            {pickable.length === 0 && <p className="text-sm text-sub">찾는 직원이 없습니다</p>}
           </WorkStep>
 
           <WorkStep
@@ -670,7 +671,7 @@ export const WorkLogEditor = ({
             aside={
               employeeIds.length > 1 && (
                 <div className="flex flex-wrap items-center gap-1.5">
-                  <span className="text-sm text-foreground/65">모두</span>
+                  <span className="text-sm text-sub">모두</span>
                   {QUICK_MULTIPLIERS.map((quick) => (
                     <Button
                       key={quick.label}
@@ -687,7 +688,7 @@ export const WorkLogEditor = ({
             }
           >
             {employeeIds.length === 0 ? (
-              <p className="text-sm text-foreground/65">먼저 일한 사람을 고르세요</p>
+              <p className="text-sm text-sub">먼저 일한 사람을 고르세요</p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2" aria-label="직원별 일한 시간">
                 {employeeIds.map((employeeId) => {
@@ -712,8 +713,8 @@ export const WorkLogEditor = ({
                           onChange={(value) => updateLine(employeeLines[0]!.key, { value })}
                         />
                       ) : (
-                        <p className="text-sm text-foreground/65">
-                          나눠 적음 · 합계 {roundTo(personMinutes / 60, 1)}시간 (3에서 입력)
+                        <p className="text-sm text-sub">
+                          나눠 적음, 합계 {roundTo(personMinutes / 60, 1)}시간 (3에서 입력)
                         </p>
                       )}
                     </li>
@@ -750,7 +751,7 @@ export const WorkLogEditor = ({
             }
           >
             {employeeIds.length === 0 ? (
-              <p className="text-sm text-foreground/65">먼저 일한 사람을 고르세요</p>
+              <p className="text-sm text-sub">먼저 일한 사람을 고르세요</p>
             ) : (
               <ul className="grid gap-2 sm:grid-cols-2" aria-label="직원별 한 일">
                 {employeeIds.map((employeeId) => {
@@ -819,12 +820,12 @@ export const WorkLogEditor = ({
                           type="button"
                           variant="link"
                           size="sm"
-                          className="self-start"
+                          className="self-start no-underline hover:text-sub"
                           aria-label={`${name} 작업 구분 나누기`}
                           onClick={() => splitLine(employeeId)}
                         >
                           <Plus aria-hidden />
-                          다른 일도 했어요
+                          작업 추가
                         </Button>
                       </div>
                     </li>
@@ -844,14 +845,26 @@ export const WorkLogEditor = ({
             description="이 날 현장에서 한 일을 적어 두세요"
           >
             <FormField label="작업 내용" error={errors.content}>
-              <Textarea value={content} onChange={(event) => setContent(event.target.value)} />
+              <Textarea
+                placeholder="오늘 한 작업을 입력하세요"
+                value={content}
+                onChange={(event) => setContent(event.target.value)}
+              />
             </FormField>
             <div className="grid gap-4 md:grid-cols-2 xl:grid-cols-1">
               <FormField label="작업 구역">
-                <Input value={area} onChange={(event) => setArea(event.target.value)} />
+                <Input
+                  placeholder="예: 3층 복도"
+                  value={area}
+                  onChange={(event) => setArea(event.target.value)}
+                />
               </FormField>
               <FormField label="특이사항" hint="예: 비로 오후 작업 중단, 자재 입고 지연">
-                <Input value={notes} onChange={(event) => setNotes(event.target.value)} />
+                <Input
+                  placeholder="특이사항이 있으면 입력하세요"
+                  value={notes}
+                  onChange={(event) => setNotes(event.target.value)}
+                />
               </FormField>
             </div>
             <label className="flex min-h-11 items-center gap-2 text-sm">
@@ -892,7 +905,7 @@ export const WorkLogEditor = ({
               aria-live="polite"
             >
               {result
-                ? `저장됐습니다 · 버전 ${result.version}${result.isLate ? ' · 지연 입력' : ''}${result.autoAssigned.length > 0 ? ` · 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
+                ? `저장됐습니다, 버전 ${result.version}${result.isLate ? ', 지연 입력' : ''}${result.autoAssigned.length > 0 ? `, 투입 자동 추가: ${result.autoAssigned.map((id) => names.get(id) ?? '직원').join(', ')}` : ''}`
                 : summaryText}
             </p>
             <Button

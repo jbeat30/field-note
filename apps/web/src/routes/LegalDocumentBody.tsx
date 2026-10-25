@@ -54,15 +54,21 @@ type LegalDocumentBodyProps = {
   content: LegalDocumentContent;
   // 창 제목이 이미 문서 제목을 보여 주는 곳(모달)은 본문의 제목을 생략
   showTitle?: boolean;
+  // 정하면 조항마다 이 접두사로 된 id가 붙어 목차에서 바로 이동 가능
+  sectionIdPrefix?: string;
 };
 
 // 약관·처리방침 본문 (전문 화면과 가입 화면의 보기 창이 같은 모양을 씀)
-export const LegalDocumentBody = ({ content, showTitle = true }: LegalDocumentBodyProps) => (
+export const LegalDocumentBody = ({
+  content,
+  showTitle = true,
+  sectionIdPrefix,
+}: LegalDocumentBodyProps) => (
   <div className="flex flex-col gap-5">
     <header className="flex flex-col gap-1">
       {showTitle && <h1 className="text-xl font-bold">{content.title}</h1>}
-      <p className="text-sm text-foreground/70">
-        버전 {content.version} · {content.isRequired ? '필수' : '선택'}
+      <p className="text-sm text-sub">
+        버전 {content.version}, {content.isRequired ? '필수' : '선택'}
       </p>
     </header>
     <Alert variant="info">
@@ -71,8 +77,12 @@ export const LegalDocumentBody = ({ content, showTitle = true }: LegalDocumentBo
         지인을 위한 초기(베타) 서비스 기준의 문서이며, 서비스를 개선하면서 바뀔 수 있습니다.
       </p>
     </Alert>
-    {content.sections.map((section) => (
-      <section key={section.heading} className="flex flex-col gap-2">
+    {content.sections.map((section, index) => (
+      <section
+        key={section.heading}
+        id={sectionIdPrefix ? `${sectionIdPrefix}-${index}` : undefined}
+        className="flex scroll-mt-6 flex-col gap-2"
+      >
         <h2 className="text-base font-bold">{section.heading}</h2>
         {section.blocks.map((block, index) => (
           <Block key={index} block={block} />

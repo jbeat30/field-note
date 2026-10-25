@@ -60,7 +60,7 @@ export const ResumesUnsavedWorkLog: Story = {
 
     await expect(
       await canvas.findByRole('link', {
-        name: /A동 외장 판금 공사 · 10월 8일 \(목\) 작업 내역 작성 중/,
+        name: /A동 외장 판금 공사, 10월 8일 \(목\) 작업 내역 작성 중/,
       }),
     ).toHaveAttribute('href', expect.stringMatching(/\/projects\/.+\/work\/\d{4}-\d{2}-\d{2}$/));
   },

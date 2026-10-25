@@ -41,18 +41,19 @@ export const Mobile: Story = {
   },
 };
 
-// 테마 버튼이 밝게 ↔ 어둡게로 바뀜
+// 내 메뉴의 화면 모드 스위치가 해 ↔ 달로 바뀜 (자동 칸은 없음)
 export const ThemeSwitch: Story = {
   play: async ({ canvasElement }) => {
     useThemeStore.getState().setMode('light');
-    await userEvent.click(
-      await within(canvasElement).findByRole('button', { name: '어두운 화면으로 전환' }),
-    );
+    await userEvent.click(await within(canvasElement).findByRole('button', { name: '내 메뉴' }));
+
+    const menu = within(document.body);
+
+    await userEvent.click(await menu.findByRole('radio', { name: '어두운 화면' }));
     await expect(useThemeStore.getState().mode).toBe('dark');
-    await userEvent.click(
-      await within(canvasElement).findByRole('button', { name: '밝은 화면으로 전환' }),
-    );
+    await userEvent.click(menu.getByRole('radio', { name: '밝은 화면' }));
     await expect(useThemeStore.getState().mode).toBe('light');
+    await userEvent.keyboard('{Escape}');
   },
 };
 
@@ -81,7 +82,7 @@ export const DemoBanner: Story = {
   },
 };
 
-// 왼쪽 메뉴 아래 내 정보를 누르면 설정과 로그아웃이 열림 (로그아웃은 설정까지 가지 않아도 가능)
+// 왼쪽 메뉴 아래 내 정보를 누르면 알림·설정·화면 모드·로그아웃이 열림 (로그아웃은 설정까지 가지 않아도 가능)
 export const ProfileMenu: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -94,13 +95,15 @@ export const ProfileMenu: Story = {
       'href',
       '/settings',
     );
+    await expect(menu.getByRole('menuitem', { name: '알림' })).toBeInTheDocument();
+    await expect(menu.getByRole('radiogroup', { name: '화면 모드' })).toBeInTheDocument();
     await expect(menu.getByRole('menuitem', { name: '로그아웃' })).toBeInTheDocument();
     // 열린 메뉴는 나머지 화면을 보조 기술에서 가리므로 닫은 상태에서 접근성 검사가 돌게 함
     await userEvent.keyboard('{Escape}');
   },
 };
 
-// 좁은 화면은 더보기 시트에 내 정보와 로그아웃 버튼이 있음
+// 좁은 화면은 더보기 시트에 화면 모드와 로그아웃 버튼이 있고 이름·회사는 보이지 않음
 export const MoreSheetLogout: Story = {
   play: async ({ canvasElement }) => {
     const moreButton = canvasElement.querySelector('nav[aria-label="하단 메뉴"] button');
@@ -109,5 +112,22 @@ export const MoreSheetLogout: Story = {
     await expect(
       await within(document.body).findByRole('button', { name: '로그아웃' }),
     ).toBeInTheDocument();
+  },
+};
+
+// 사이드바를 접으면 이름이 사라지고 아이콘 메뉴만 남으며, 다시 펼 수 있음
+export const SidebarCollapse: Story = {
+  play: async ({ canvasElement }) => {
+    const canvas = within(canvasElement);
+    const nav = within(await canvas.findByRole('navigation', { name: '주 메뉴' }));
+
+    await userEvent.click(await canvas.findByRole('button', { name: '사이드바 접기' }));
+    await expect(nav.getByRole('link', { name: '프로젝트' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(nav.queryByText('프로젝트 관리')).not.toBeVisible();
+    await userEvent.click(await canvas.findByRole('button', { name: '사이드바 펼치기' }));
+    await expect(await canvas.findByRole('button', { name: '사이드바 접기' })).toBeInTheDocument();
   },
 };

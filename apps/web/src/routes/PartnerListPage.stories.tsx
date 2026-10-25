@@ -115,7 +115,7 @@ export const SearchByContact: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('가나다건설');
-    await userEvent.type(canvas.getByLabelText('상호·담당자 검색'), '문반장');
+    await userEvent.type(canvas.getByLabelText('상호나 담당자 검색'), '문반장');
 
     await expect(await canvas.findByText('1곳')).toBeInTheDocument();
     await expect(canvas.getByText('대성전기')).toBeInTheDocument();
@@ -127,7 +127,7 @@ export const NoResult: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('가나다건설');
-    await userEvent.type(canvas.getByLabelText('상호·담당자 검색'), '없는업체');
+    await userEvent.type(canvas.getByLabelText('상호나 담당자 검색'), '없는업체');
 
     await expect(await canvas.findByText('조건에 맞는 업체가 없습니다')).toBeInTheDocument();
   },

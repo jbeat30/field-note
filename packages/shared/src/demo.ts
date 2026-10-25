@@ -725,7 +725,6 @@ const demoLegalDocument = (id: string, type: LegalDocumentType): DemoLegalDocume
 export const DEMO_LEGAL_DOCUMENTS: readonly DemoLegalDocument[] = [
   demoLegalDocument('0198c000-0000-7000-8000-000000000001', 'TERMS_OF_SERVICE'),
   demoLegalDocument('0198c000-0000-7000-8000-000000000002', 'PRIVACY_POLICY'),
-  demoLegalDocument('0198c000-0000-7000-8000-000000000003', 'MARKETING'),
 ];
 
 // 초대 링크 가입 시연용 (운영자가 만든 초대를 흉내)

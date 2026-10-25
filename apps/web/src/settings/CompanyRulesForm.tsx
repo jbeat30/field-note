@@ -8,6 +8,7 @@ import { Input } from '../components/ui/input';
 import { getErrorMessage } from '../lib/apiError';
 
 import { useCompanyRules, useSaveCompanyRules } from './useCompanyRules';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type Fields = Record<keyof CompanyRules, string>;
 
@@ -45,7 +46,7 @@ const LABELS: { key: keyof CompanyRules; label: string; unit: string; hint: stri
   },
 ];
 
-const card = 'flex flex-col gap-3 rounded-xl bg-surface-subtle p-5';
+const card = 'flex flex-col gap-5 rounded-[30px] bg-surface-subtle p-5 sm:p-7';
 
 // 회사 관리의 경고·보증 기준: 공수 소진율 경고·한도, 진행률 간격, 보증 기본 기간
 export const CompanyRulesForm = () => {
@@ -62,7 +63,7 @@ export const CompanyRulesForm = () => {
   }
 
   if (!current) {
-    return <p className="text-sm">불러오는 중</p>;
+    return <LoadingBlock label="불러오는 중" />;
   }
 
   const change = (key: keyof CompanyRules, value: string) => {
@@ -101,7 +102,7 @@ export const CompanyRulesForm = () => {
 
   return (
     <div className={card}>
-      <p className="text-sm text-foreground/70">
+      <p className="text-sm text-sub">
         프로젝트 현황·대시보드 알림의 경고 기준과 보증 기본 기간입니다. 바꾸면 모든 프로젝트에 바로
         적용됩니다
       </p>
@@ -109,6 +110,7 @@ export const CompanyRulesForm = () => {
         {LABELS.map((item) => (
           <FormField key={item.key} label={item.label} hint={item.hint} error={errors[item.key]}>
             <Input
+              placeholder="숫자를 입력하세요"
               type="number"
               inputMode="numeric"
               endAdornment={item.unit}
@@ -121,13 +123,11 @@ export const CompanyRulesForm = () => {
       {message && (
         <Alert variant={message === '저장했습니다' ? 'info' : undefined}>{message}</Alert>
       )}
-      <div className="flex flex-wrap gap-2">
-        <Button type="button" onClick={submit} disabled={save.isPending}>
-          {save.isPending ? '저장 중' : '기준 저장'}
-        </Button>
+      <div className="flex flex-wrap justify-end gap-2">
         <Button
           type="button"
           variant="secondary"
+          className="h-14 rounded-[17px] text-base font-extrabold"
           onClick={() => {
             setMessage('');
             setErrors({});
@@ -135,6 +135,14 @@ export const CompanyRulesForm = () => {
           }}
         >
           기본값으로
+        </Button>
+        <Button
+          type="button"
+          className="h-14 rounded-[17px] px-10 text-base font-extrabold"
+          onClick={submit}
+          disabled={save.isPending}
+        >
+          {save.isPending ? '저장 중' : '기준 저장'}
         </Button>
       </div>
     </div>

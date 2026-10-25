@@ -30,7 +30,7 @@ export const WorkStep = ({
           <h3 id={`step-${number}`} className="text-lg font-semibold">
             {title}
           </h3>
-          <p className="text-sm text-foreground/65">{description}</p>
+          <p className="text-sm text-sub">{description}</p>
         </div>
       </div>
       {aside}

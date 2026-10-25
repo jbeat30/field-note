@@ -19,6 +19,7 @@ import { Textarea } from '../components/ui/textarea';
 import { splitServerErrors } from '../lib/serverErrors';
 import { getErrorDetailMessage } from '../lib/apiError';
 import { useDeletePartner, usePartner, useUpdatePartner } from '../partners/usePartners';
+import { LoadingBlock, PlaneSkeleton } from '../components/ui/loading-block';
 
 type CardForm = { name: string; contactName: string; phone: string; memo: string };
 
@@ -110,21 +111,19 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
 
   return (
     <div className="flex flex-col gap-6">
-      <div className="flex flex-col gap-2">
-        <BackLink to="/partners">명부</BackLink>
-        <PageHeader
-          title={partner.name}
-          eyebrow={
-            <>
-              <Badge tone="primary">{PARTNER_KIND_LABELS[partner.kind]}</Badge>
-              {!partner.isActive && <Badge>숨김</Badge>}
-            </>
-          }
-        />
-      </div>
+      <PageHeader
+        title={partner.name}
+        back={<BackLink to="/partners">명부</BackLink>}
+        eyebrow={
+          <>
+            <Badge tone="primary">{PARTNER_KIND_LABELS[partner.kind]}</Badge>
+            {!partner.isActive && <Badge>숨김</Badge>}
+          </>
+        }
+      />
 
       <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[3fr_2fr]">
-        <div className="rounded-xl bg-surface-subtle p-5">
+        <div className="rounded-3xl bg-surface-subtle p-5">
           {saved && <Alert variant="info">{saved}</Alert>}
           {errors.root && <Alert>{errors.root.message}</Alert>}
 
@@ -135,13 +134,19 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
               hint="구분은 등록한 뒤 바꿀 수 없습니다"
               error={errors.name?.message}
             >
-              <Input {...register('name')} />
+              <Input placeholder="상호명" {...register('name')} />
             </FormField>
             <FormField label="담당자" error={errors.contactName?.message}>
-              <Input {...register('contactName')} />
+              <Input placeholder="담당자 이름" {...register('contactName')} />
             </FormField>
             <FormField label="연락처" error={errors.phone?.message}>
-              <Input type="tel" inputMode="tel" autoComplete="off" {...register('phone')} />
+              <Input
+                placeholder="010-0000-0000"
+                type="tel"
+                inputMode="tel"
+                autoComplete="off"
+                {...register('phone')}
+              />
             </FormField>
             <FormField
               className="md:col-span-2"
@@ -149,11 +154,11 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
               hint={`관리자만 보는 메모입니다 (${PARTNER_MEMO_MAX_LENGTH}자까지)`}
               error={errors.memo?.message}
             >
-              <Textarea {...register('memo')} />
+              <Textarea placeholder="메모를 입력하세요" {...register('memo')} />
             </FormField>
             <Button
               type="submit"
-              className="md:col-span-2 md:justify-self-start md:px-10"
+              className="h-14 rounded-[17px] text-base font-extrabold md:col-span-2 md:justify-self-end md:px-10"
               disabled={!isDirty || update.isPending}
             >
               {update.isPending ? '저장 중' : '저장'}
@@ -162,13 +167,13 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
         </div>
 
         <section
-          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+          className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
           aria-labelledby="active-heading"
         >
           <h2 id="active-heading" className="text-lg font-bold">
             사용 여부
           </h2>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             숨겨도 이 업체가 쓰인 프로젝트·자재 기록의 상호는 그대로 남고, 새로 고를 때만 보이지
             않습니다
           </p>
@@ -178,13 +183,13 @@ const CardBody = ({ partner }: { partner: PartnerDetail }) => {
         </section>
 
         <section
-          className="flex flex-col gap-3 rounded-xl bg-surface-subtle p-5"
+          className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-5"
           aria-labelledby="delete-heading"
         >
           <h2 id="delete-heading" className="text-lg font-bold">
             명부에서 삭제
           </h2>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             잘못 등록했거나 쓰지 않는 업체를 지웁니다. 지운 업체는 되돌릴 수 없고, 프로젝트나 자재
             기록에서 쓰고 있는 업체는 지울 수 없습니다 (그때는 숨기기를 이용해 주세요)
           </p>
@@ -231,7 +236,12 @@ export const PartnerCardPage = () => {
   const partner = usePartner(id);
 
   if (partner.isPending) {
-    return <p className="text-sm">업체 정보를 불러오는 중</p>;
+    return (
+      <div className="flex flex-col gap-6">
+        <PlaneSkeleton height={[177, 222]} />
+        <LoadingBlock label="업체 정보를 불러오는 중" variant="blocks" heights={[[980, 670]]} />
+      </div>
+    );
   }
 
   if (partner.isError) {
@@ -242,7 +252,7 @@ export const PartnerCardPage = () => {
     return (
       <div className="flex flex-col gap-3">
         <h1 className="text-xl font-bold">업체를 찾을 수 없습니다</h1>
-        <Link className="min-h-touch content-center text-primary underline" to="/partners">
+        <Link className="min-h-touch content-center text-primary hover:text-sub" to="/partners">
           명부로
         </Link>
       </div>

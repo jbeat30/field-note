@@ -13,6 +13,7 @@ import { useProject } from '../projects/useProjects';
 import { downloadReportXlsx } from '../reports/exportReport';
 import { ReportSheet } from '../reports/ReportSheet';
 import { useDailyReport } from '../reports/useDailyReport';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 작업일보 출력: 하루치를 화면에서 확인하고 인쇄·PDF로 저장하거나, 기간을 정해 엑셀로 내려받음
 export const DailyReportPage = () => {
@@ -53,7 +54,7 @@ export const DailyReportPage = () => {
   };
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   }
 
   if (!project.data) {
@@ -62,7 +63,7 @@ export const DailyReportPage = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-3 print:hidden">
+      <div className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-4 print:hidden">
         <div className="flex items-center gap-2">
           <Button
             type="button"
@@ -86,7 +87,7 @@ export const DailyReportPage = () => {
             <ChevronRight aria-hidden className="size-5" />
           </Button>
         </div>
-        <p className="text-sm text-foreground/70">
+        <p className="text-sm text-sub">
           인쇄 창에서 “PDF로 저장”을 고르면 {formatDay(date)} 작업일보를 파일로 보관·제출할 수
           있습니다
         </p>
@@ -121,7 +122,9 @@ export const DailyReportPage = () => {
         </details>
       </div>
 
-      {report.isPending && <p className="text-sm print:hidden">작업일보를 불러오는 중</p>}
+      {report.isPending && (
+        <LoadingBlock label="작업일보를 불러오는 중" variant="blocks" heights={[420]} />
+      )}
       {report.isError && <Alert>작업일보를 불러오지 못했습니다</Alert>}
       {report.data && <ReportSheet report={report.data} />}
 

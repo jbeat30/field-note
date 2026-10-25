@@ -16,13 +16,14 @@ import { ProjectStatusPanel } from '../projects/ProjectStatusPanel';
 import { useProject } from '../projects/useProjects';
 import { ProjectPeopleStats } from '../workSummary/ProjectPeopleStats';
 import { ProjectWorkSummaryPanel } from '../workSummary/ProjectWorkSummaryPanel';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 // 프로젝트 작업 공간의 메뉴별 화면: 개요 · 투입 · 공수·비용 · 정보 (머리·메뉴는 ProjectLayout이 담당)
 // 한 화면이 너무 길어지지 않게 관리 영역을 메뉴로 분리, section='all'은 시험·화면 확인용으로 모든 구역을 한 화면에 렌더링
 
 const InfoRow = ({ label, children }: { label: string; children: ReactNode }) => (
   <div className="grid grid-cols-[5.5rem_1fr] gap-2 text-sm">
-    <dt className="text-foreground/70">{label}</dt>
+    <dt className="text-sub">{label}</dt>
     <dd className="min-w-0 break-words">{children}</dd>
   </div>
 );
@@ -65,7 +66,7 @@ const ProjectInfoSummary = ({ project }: { project: ProjectDetail }) => {
 
 // 패널 하나를 카드로 감쌈 (패널 안의 상자는 자동으로 한 단계 어두운 면이 됨)
 const Panel = ({ children, className }: { children: ReactNode; className?: string }) => (
-  <div className={`rounded-xl bg-surface-subtle p-5 ${className ?? ''}`}>{children}</div>
+  <div className={`rounded-3xl bg-surface-subtle p-5 ${className ?? ''}`}>{children}</div>
 );
 
 type Section = 'overview' | 'assignments' | 'labor' | 'info' | 'all';
@@ -78,7 +79,7 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
   const project = useProject(id);
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   }
 
   if (project.isError) {
@@ -89,7 +90,7 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
     return (
       <div className="flex flex-col gap-3">
         <h2 className="text-xl font-bold">프로젝트를 찾을 수 없습니다</h2>
-        <Link className="min-h-touch content-center text-primary underline" to="/projects">
+        <Link className="min-h-touch content-center text-primary hover:text-sub" to="/projects">
           프로젝트 목록으로
         </Link>
       </div>

@@ -24,6 +24,7 @@ import { groupBeforeAfter } from '../photos/photoCompare';
 import { PhotoDateGroups, groupPhotosByDate } from '../photos/PhotoDateGroups';
 import { PhotoDetailDialog } from '../photos/PhotoDetailDialog';
 import { useDeletePhoto, usePhotoList, useUpdatePhoto } from '../photos/usePhotos';
+import { LoadingBlock } from '../components/ui/loading-block';
 
 type View = 'ALL' | 'COMPARE';
 
@@ -67,7 +68,7 @@ export const ProjectPhotosPage = () => {
   const filtered = Boolean(category || area);
 
   if (project.isPending) {
-    return <p className="text-sm">프로젝트를 불러오는 중</p>;
+    return <LoadingBlock label="프로젝트를 불러오는 중" variant="page" />;
   }
 
   if (!project.data) {
@@ -83,7 +84,7 @@ export const ProjectPhotosPage = () => {
         title="사진첩"
         description="하루 기록에서 올린 작업 사진을 날짜별로 모아 봅니다. 사진은 하루 기록의 작업 사진 단계에서 올립니다"
       />
-      <div className="flex flex-col gap-3 md:flex-row md:items-center">
+      <div className="flex flex-col gap-3 rounded-3xl bg-surface-subtle p-4 md:flex-row md:items-center">
         <SegmentedControl
           aria-label="보기 방식"
           className="md:w-auto"
@@ -118,7 +119,9 @@ export const ProjectPhotosPage = () => {
           ))}
         </div>
       )}
-      {photos.isPending && <p className="text-sm">사진을 불러오는 중</p>}
+      {photos.isPending && (
+        <LoadingBlock label="사진을 불러오는 중" variant="blocks" heights={[[490, 534]]} />
+      )}
       {photos.isError && <Alert>사진을 불러오지 못했습니다</Alert>}
       {photos.isSuccess && items.length === 0 && view === 'ALL' && (
         <EmptyState
@@ -132,7 +135,7 @@ export const ProjectPhotosPage = () => {
             !filtered && (
               <Link
                 to={projectWorkPath(id, seoulToday())}
-                className="text-sm font-semibold text-primary hover:underline"
+                className="text-sm font-semibold text-primary hover:text-sub"
               >
                 오늘 하루 기록으로
               </Link>

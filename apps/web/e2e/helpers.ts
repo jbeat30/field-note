@@ -30,7 +30,7 @@ export const login = async (page: Page) => {
       .first()
       .click();
 
-    const home = page.getByRole('heading', { name: '한빛판금' });
+    const home = page.getByRole('heading', { name: /안녕하세요/ });
     const limited = page.getByText('요청이 너무 많습니다');
 
     await expect(home.or(limited)).toBeVisible();

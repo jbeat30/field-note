@@ -68,12 +68,12 @@ export const TotpRow = () => {
       <div className="flex min-h-touch items-center justify-between gap-3">
         <div className="min-w-0">
           <p className="font-medium">2단계 인증</p>
-          <p className="text-sm text-foreground/70">
+          <p className="text-sm text-sub">
             {status.isPending
               ? '확인 중'
               : isEnabled
-                ? `켜짐 · 복구 코드 ${left}개 남음`
-                : '꺼짐 · 켜면 로그인할 때 인증 앱의 6자리 코드가 더 필요합니다 (선택)'}
+                ? `켜짐, 복구 코드 ${left}개 남음`
+                : '꺼짐, 켜면 로그인할 때 인증 앱의 6자리 코드가 더 필요합니다 (선택)'}
           </p>
         </div>
         {!status.isPending &&

@@ -12,6 +12,7 @@ import { Badge } from '../components/ui/badge';
 import { Button } from '../components/ui/button';
 import { Input } from '../components/ui/input';
 import { SortableItem, SortableList } from '../components/ui/sortable-list';
+import { Switch } from '../components/ui/switch';
 import { getErrorDetailMessage } from '../lib/apiError';
 
 import { useCreateOption, useReorderOptions, useUpdateOption } from './useOptions';
@@ -24,6 +25,8 @@ const KIND_HINTS: Record<OptionKind, string> = {
   CREDENTIAL_TYPE: '직원 서류의 종류입니다 (자격증, 안전교육 이수증, 건강검진 등)',
   EXPENSE_CATEGORY: '프로젝트에서 나간 돈을 나누는 분류입니다 (부자재, 장비, 식대 등)',
   INCOME_CATEGORY: '프로젝트에서 들어온 돈을 나누는 분류입니다 (고철 판매, 현장 지원 등)',
+  DOCUMENT_CATEGORY:
+    '프로젝트 문서함의 문서 종류입니다. "민감 자료로 시작"을 켠 종류는 올릴 때 민감 자료가 기본으로 켜집니다',
 };
 
 // 행 안의 아이콘 동작 버튼 (이름은 aria-label, 눈에 보이는 이름은 title)
@@ -95,6 +98,7 @@ const OptionRow = ({
               {item.name} 이름 변경
             </label>
             <Input
+              placeholder="이름을 입력하세요"
               id={`rename-${item.id}`}
               value={name}
               onChange={(event) => setName(event.target.value)}
@@ -128,15 +132,13 @@ const OptionRow = ({
       id={item.id}
       label={item.name}
       disabled={isBusy}
-      className="flex items-center justify-between gap-2 py-1"
+      className="flex flex-wrap items-center justify-between gap-2 py-1"
     >
       {(handle) => (
         <>
           <span className="flex items-center gap-1">
             {handle}
-            <span className={item.isActive ? 'font-medium' : 'text-foreground/70'}>
-              {item.name}
-            </span>
+            <span className={item.isActive ? 'font-medium' : 'text-sub'}>{item.name}</span>
             {!item.isActive && <Badge className="ml-1">숨김</Badge>}
           </span>
           <div className="flex items-center gap-0.5">
@@ -157,6 +159,22 @@ const OptionRow = ({
             <IconButton label={`${item.name} 이름 변경`} onClick={() => setEditing(true)}>
               <Pencil aria-hidden className="size-5" />
             </IconButton>
+            {item.kind === 'DOCUMENT_CATEGORY' && (
+              <label className="mr-2 flex min-h-touch items-center gap-2 text-sm text-sub">
+                민감 자료로 시작
+                <Switch
+                  aria-label={`${item.name} 민감 자료로 시작`}
+                  checked={item.sensitiveDefault}
+                  disabled={update.isPending}
+                  onCheckedChange={(checked) =>
+                    update.mutate(
+                      { id: item.id, sensitiveDefault: checked },
+                      { onError: (error) => onError(getErrorDetailMessage(error)) },
+                    )
+                  }
+                />
+              </label>
+            )}
             <IconButton
               label={`${item.name} ${item.isActive ? '숨기기' : '다시 사용'}`}
               disabled={update.isPending}
@@ -186,6 +204,7 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
   const create = useCreateOption();
   const reorder = useReorderOptions();
   const [newName, setNewName] = useState('');
+  const [newSensitive, setNewSensitive] = useState(false);
   const [message, setMessage] = useState('');
 
   const move = (from: number, to: number) => {
@@ -209,9 +228,12 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
 
     setMessage('');
     create.mutate(
-      { kind, name: parsed.data },
+      { kind, name: parsed.data, sensitiveDefault: newSensitive },
       {
-        onSuccess: () => setNewName(''),
+        onSuccess: () => {
+          setNewName('');
+          setNewSensitive(false);
+        },
         onError: (error) => setMessage(getErrorDetailMessage(error)),
       },
     );
@@ -219,15 +241,18 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
 
   return (
     <section
-      className="flex flex-col gap-4 rounded-xl bg-surface-subtle p-5"
+      className="flex flex-col gap-4 rounded-[30px] bg-surface-subtle p-5 sm:p-7"
       aria-labelledby={`options-${kind}`}
     >
       <div>
-        <h2 id={`options-${kind}`} className="flex items-center gap-2 text-lg font-bold">
+        <h2
+          id={`options-${kind}`}
+          className="flex items-center gap-2 text-[19px] font-extrabold tracking-tight"
+        >
           {label}
           <Badge>{items.length}개</Badge>
         </h2>
-        <p className="text-sm text-foreground/70">{KIND_HINTS[kind]}</p>
+        <p className="text-sm text-sub">{KIND_HINTS[kind]}</p>
       </div>
       <form className="flex gap-2" onSubmit={add} noValidate>
         <Input
@@ -240,6 +265,17 @@ export const OptionListSection = ({ kind, items }: { kind: OptionKind; items: Op
           추가
         </Button>
       </form>
+      {kind === 'DOCUMENT_CATEGORY' && (
+        <label className="flex min-h-touch items-center gap-3 text-sm">
+          <input
+            type="checkbox"
+            className="size-5"
+            checked={newSensitive}
+            onChange={(event) => setNewSensitive(event.target.checked)}
+          />
+          새 종류는 민감 자료로 시작 (열람·내려받기 기록이 남습니다)
+        </label>
+      )}
       {message && <Alert>{message}</Alert>}
       <SortableList
         ids={items.map((item) => item.id)}

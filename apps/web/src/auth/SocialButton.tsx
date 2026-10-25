@@ -21,7 +21,7 @@ export const SocialButton = ({ provider, action, className, ...props }: SocialBu
   <button
     type="button"
     className={cn(
-      'inline-flex min-h-touch w-full items-center justify-center gap-2 rounded-md px-4 text-base font-medium transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50',
+      'inline-flex h-12 w-full items-center justify-center gap-2 rounded-lg px-4 text-base font-bold transition-colors focus-visible:outline-2 focus-visible:outline-offset-2 disabled:pointer-events-none disabled:opacity-50',
       BRAND_STYLES[provider],
       className,
     )}
