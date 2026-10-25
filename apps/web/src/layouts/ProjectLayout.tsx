@@ -189,7 +189,7 @@ export const ProjectLayout = () => {
                 <>
                   {' '}
                   <a
-                    className="font-bold whitespace-nowrap hover:text-sub"
+                    className="-my-2.5 inline-block py-2.5 font-bold whitespace-nowrap hover:text-sub"
                     href={data.siteMapUrl}
                     target="_blank"
                     rel="noopener noreferrer"
