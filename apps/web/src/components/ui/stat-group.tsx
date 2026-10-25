@@ -86,8 +86,8 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
   <dl
     className={cn(
       'grid grid-cols-2 gap-2.5 md:gap-4',
-      // 네 칸처럼 짝수 개수는 태블릿까지 2열로 쌓고 넓은 화면(xl)에서 한 줄, 그 밖의 개수는 sm부터 한 줄
-      items.length > 2 && items.length % 2 === 0
+      // 네 칸 이상은 태블릿까지 2열로 쌓고(홀수면 첫 칸이 두 칸 폭) 넓은 화면(xl)에서 한 줄, 두세 칸은 sm부터 한 줄
+      items.length > 3 || (items.length > 2 && items.length % 2 === 0)
         ? 'xl:auto-cols-fr xl:grid-flow-col xl:grid-cols-none'
         : 'sm:auto-cols-fr sm:grid-flow-col sm:grid-cols-none',
       className,
@@ -106,9 +106,13 @@ export const StatGroup = ({ items, className }: { items: StatItem[]; className?:
           className={cn(
             'flex min-w-0 flex-col justify-between gap-2 rounded-[24px] px-4 pt-4 pb-3.5 md:rounded-[30px] md:px-6 md:py-[22px]',
             style.tile,
+            // 홀수 개수(다섯 칸 등)는 첫 칸을 넓게 두어 2열이 비지 않게 함
+            index === 0 && items.length > 3 && items.length % 2 === 1 && 'col-span-2 xl:col-span-1',
           )}
         >
-          <dt className={cn('text-[12.5px] font-semibold md:text-sm', style.sub)}>{item.label}</dt>
+          <dt className={cn('text-[12.5px] font-semibold break-keep md:text-sm', style.sub)}>
+            {item.label}
+          </dt>
           <dd
             className={cn(
               'flex flex-wrap items-baseline gap-x-1 font-emphasis font-semibold tracking-tight tabular-nums',
