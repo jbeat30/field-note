@@ -105,7 +105,11 @@ export const ProjectCardPage = ({ section = 'all' }: { section?: Section }) => {
         <div className="grid grid-cols-1 items-start gap-5 xl:grid-cols-[minmax(0,1fr)_24rem]">
           <div className="flex min-w-0 flex-col gap-5">
             <Panel>
-              <ProjectProgressPanel projectId={data.id} status={data.status} />
+              <ProjectProgressPanel
+                projectId={data.id}
+                status={data.status}
+                plannedEnd={data.plannedEnd}
+              />
             </Panel>
             <Panel>
               <LedgerOverviewPanel projectId={data.id} />
