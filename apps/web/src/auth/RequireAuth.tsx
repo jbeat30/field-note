@@ -3,6 +3,7 @@ import { Navigate, Outlet, useLocation, useNavigation } from 'react-router';
 
 import { Button } from '../components/ui/button';
 
+import { AuthChecking } from './AuthChecking';
 import { isSigningOut } from './signOutIntent';
 import { useMe } from './useMe';
 
@@ -19,7 +20,7 @@ export const RequireAuth = () => {
   }
 
   if (me.isPending) {
-    return <p className="p-4 text-sm">확인 중</p>;
+    return <AuthChecking />;
   }
 
   if (me.isError && !me.data) {

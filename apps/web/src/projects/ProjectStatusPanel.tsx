@@ -316,11 +316,7 @@ export const ProjectStatusPanel = ({ project }: { project: ProjectDetail }) => {
           <dl className="flex flex-wrap gap-x-5 gap-y-1 text-sm">
             <div className="flex gap-1.5">
               <dt className="text-sub">현재 상태</dt>
-              <dd className="font-semibold">
-                {project.status === 'SUSPENDED'
-                  ? '작업 중단'
-                  : PROJECT_STATUS_LABELS[project.status]}
-              </dd>
+              <dd className="font-semibold">{PROJECT_STATUS_LABELS[project.status]}</dd>
             </div>
             <div className="flex gap-1.5">
               <dt className="text-sub">실제 시작일</dt>

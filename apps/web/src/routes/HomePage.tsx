@@ -21,11 +21,11 @@ import { useDraftStore } from '../stores/draftStore';
 
 const WEEKDAYS = ['일', '월', '화', '수', '목', '금', '토'];
 
-// "10월 15일 목요일"
+// "2026.10.15 목요일"
 const dateText = (date: string) => {
   const weekday = WEEKDAYS[new Date(`${date}T00:00:00Z`).getUTCDay()];
 
-  return `${Number(date.slice(5, 7))}월 ${Number(date.slice(8))}일 ${weekday}요일`;
+  return `${date.replaceAll('-', '.')} ${weekday}요일`;
 };
 
 // 로그인 후 첫 화면: 인사·오늘 날짜와 프로젝트 등록, 검색, 수치 줄, 진행 중 프로젝트·확인할 일, 이번 달 인력
@@ -44,14 +44,14 @@ export const HomePage = () => {
         overlap
         eyebrow={
           <span>
-            {me.data?.companyName}, {dateText(todayInSeoul(new Date()))}
+            {me.data?.companyName} ·{' '}
+            <span className="font-emphasis">{dateText(todayInSeoul(new Date()))}</span>
           </span>
         }
         title={
           <>
             안녕하세요,
-            <br />
-            {me.data?.displayName}님
+            <br className="2xl:hidden" /> {me.data?.displayName}님
           </>
         }
         actions={
@@ -75,14 +75,14 @@ export const HomePage = () => {
         // 지표 타일, 진행 중 프로젝트와 확인할 일 두 칸, 아래 카드 자리를 실제 화면과 같은 배치로 깔아 둠
         <div className="flex flex-col gap-4" role="status" aria-busy>
           <span className="sr-only">대시보드를 불러오는 중</span>
-          <div className="relative -mt-12 grid grid-cols-2 gap-3 md:-mt-16 xl:grid-cols-4">
+          <div className="relative -mt-12 grid grid-cols-2 gap-3 md:-mt-[92px] xl:grid-cols-4">
             {Array.from({ length: 4 }, (_, index) => (
               <Skeleton key={index} className="h-[154px] rounded-[30px]" />
             ))}
           </div>
-          <div className="grid grid-cols-1 gap-4 lg:h-[420px] lg:grid-cols-[minmax(0,3fr)_minmax(0,2fr)]">
-            <Skeleton className="h-72 rounded-[30px] lg:h-full" />
-            <Skeleton className="h-72 rounded-[30px] lg:h-full" />
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-[minmax(0,5fr)_minmax(0,7fr)]">
+            <Skeleton className="h-72 rounded-[32px] lg:h-[640px]" />
+            <Skeleton className="h-72 rounded-[32px] lg:h-[640px]" />
           </div>
         </div>
       )}

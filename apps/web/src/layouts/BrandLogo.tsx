@@ -1,5 +1,3 @@
-import { APP_NAME } from '@field-note/shared';
-
 import { cn } from '../lib/cn';
 
 type BrandLogoProps = {
@@ -13,6 +11,9 @@ type BrandLogoProps = {
   size?: 'sm' | 'lg';
   className?: string;
 };
+
+// 화면에 보이는 서비스 이름 (서비스 식별자 APP_NAME과 별개)
+const BRAND_NAME = '현장노트';
 
 // 막대 세 줄의 높이·폭·들여쓰기: 시안의 로그인 크기와 사이드바 크기
 const BARS = {
@@ -68,7 +69,7 @@ export const BrandLogo = ({
               compactBelowLg && 'hidden lg:inline',
             )}
           >
-            {APP_NAME}
+            {BRAND_NAME}
           </span>
           <span
             className={cn(

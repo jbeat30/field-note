@@ -111,7 +111,7 @@ export const createStartedProject = async (page: Page, name: string) => {
   await page.getByLabel('실제 시작일').fill(seoulDate(-7));
   await page.getByRole('button', { name: '확인', exact: true }).click();
   await expect(page.getByText('현재 상태').locator('xpath=following-sibling::dd[1]')).toHaveText(
-    '진행',
+    '진행 중',
   );
 
   return projectId;

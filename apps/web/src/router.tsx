@@ -76,6 +76,10 @@ export const routes = [
             children: [
               {
                 index: true,
+                ...page(() => import('./routes/ProjectCardPage'), 'ProjectOverviewPage'),
+              },
+              {
+                path: 'logs',
                 ...page(() => import('./routes/ProjectWorkPage'), 'ProjectWorkPage'),
               },
               {

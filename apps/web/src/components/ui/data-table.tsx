@@ -74,6 +74,8 @@ type DataTableProps<TData extends object> = {
   isFetching?: boolean;
   // 좁은 화면(md 미만)에서 표 대신 줄마다 카드로 보여 줄 내용
   mobileCard?: (row: TData) => ReactNode;
+  // 넓은 화면에서도 표 대신 카드 격자로 보여 줌 (mobileCard가 있어야 함)
+  isCards?: boolean;
   'aria-label': string;
 };
 
@@ -89,6 +91,7 @@ export const DataTable = <TData extends object>({
   summary,
   isFetching = false,
   mobileCard,
+  isCards = false,
   'aria-label': ariaLabel,
 }: DataTableProps<TData>) => {
   const isMobile = useIsMobile();
@@ -144,8 +147,14 @@ export const DataTable = <TData extends object>({
         emptyState
       ) : (
         <div className={cn('transition-opacity', isFetching && 'opacity-60')}>
-          {mobileCard && isMobile ? (
-            <ul className="flex flex-col gap-2" aria-label={ariaLabel}>
+          {mobileCard && (isMobile || isCards) ? (
+            <ul
+              className={cn(
+                'flex flex-col gap-2',
+                isCards && !isMobile && 'grid grid-cols-2 gap-3 xl:grid-cols-3',
+              )}
+              aria-label={ariaLabel}
+            >
               {table.getRowModel().rows.map((row) => (
                 <li key={row.id}>
                   <div

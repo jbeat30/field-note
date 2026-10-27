@@ -289,6 +289,24 @@ describe('buildStaffingMonthCalendar', () => {
     ],
   };
 
+  it('일요일 시작이면 일요일부터 한 주를 묶는다', () => {
+    const weeks = buildStaffingMonthCalendar(calendar, 0);
+
+    // 첫 주: 9/27(일)~10/3(토), 1일은 목요일이라 앞 네 칸이 빈 칸
+    expect(weeks[0]!.map((item) => [item.date, item.inMonth])).toEqual([
+      ['2026-09-27', false],
+      ['2026-09-28', false],
+      ['2026-09-29', false],
+      ['2026-09-30', false],
+      ['2026-10-01', true],
+      ['2026-10-02', true],
+      ['2026-10-03', true],
+    ]);
+    // 10/31(토)에 끝나므로 마지막 주는 10/25(일)~10/31(토)
+    expect(weeks.at(-1)![0]!.date).toBe('2026-10-25');
+    expect(weeks.every((week) => week.length === 7)).toBe(true);
+  });
+
   it('월요일 시작 주 단위로 묶고 앞뒤 빈 칸으로 한 주를 7칸 채운다', () => {
     const weeks = buildStaffingMonthCalendar(calendar);
 
