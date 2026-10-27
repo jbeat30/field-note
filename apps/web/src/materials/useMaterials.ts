@@ -95,6 +95,7 @@ export const useCreateMaterial = () => {
   const invalidate = useInvalidateMaterials();
 
   return useMutation({
+    meta: { success: '자재를 등록했습니다' },
     mutationFn: async (body: MaterialCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/materials', { body });
 
@@ -112,6 +113,7 @@ export const useCreateMaterialRecords = (projectId: string) => {
   const invalidate = useInvalidateMaterials();
 
   return useMutation({
+    meta: { success: '자재 기록을 저장했습니다' },
     mutationFn: async (body: MaterialRecordBatch) => {
       const { data, error } = await apiClient.POST(
         '/api/v1/projects/{projectId}/material-records/batch',
@@ -132,6 +134,7 @@ export const useUpdateMaterialRecord = () => {
   const invalidate = useInvalidateMaterials();
 
   return useMutation({
+    meta: { success: '자재 기록을 저장했습니다' },
     mutationFn: async ({ id, body }: { id: string; body: MaterialRecordUpdate }) => {
       const { data, error } = await apiClient.PATCH('/api/v1/material-records/{id}', {
         params: { path: { id } },
@@ -152,6 +155,7 @@ export const useDeleteMaterialRecord = () => {
   const invalidate = useInvalidateMaterials();
 
   return useMutation({
+    meta: { success: '자재 기록을 삭제했습니다' },
     mutationFn: async (id: string) => {
       const { data, error } = await apiClient.DELETE('/api/v1/material-records/{id}', {
         params: { path: { id } },

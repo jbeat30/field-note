@@ -96,6 +96,7 @@ export const useCreateDocument = (projectId: string) => {
   const invalidate = useInvalidateDocuments();
 
   return useMutation({
+    meta: { success: '문서를 등록했습니다' },
     mutationFn: async (body: DocumentCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{projectId}/documents', {
         params: { path: { projectId } },
@@ -116,6 +117,7 @@ export const useAddDocumentVersion = () => {
   const invalidate = useInvalidateDocuments();
 
   return useMutation({
+    meta: { success: '새 버전을 올렸습니다' },
     mutationFn: async ({ id, body }: { id: string; body: DocumentVersionCreate }) => {
       const { data, error } = await apiClient.POST('/api/v1/documents/{id}/versions', {
         params: { path: { id } },
@@ -136,6 +138,7 @@ export const useUpdateDocument = () => {
   const invalidate = useInvalidateDocuments();
 
   return useMutation({
+    meta: { success: '문서를 저장했습니다' },
     mutationFn: async ({ id, body }: { id: string; body: DocumentUpdate }) => {
       const { data, error } = await apiClient.PATCH('/api/v1/documents/{id}', {
         params: { path: { id } },
@@ -156,6 +159,7 @@ export const useDeleteDocument = () => {
   const invalidate = useInvalidateDocuments();
 
   return useMutation({
+    meta: { success: '문서를 삭제했습니다' },
     mutationFn: async (id: string) => {
       const { data, error } = await apiClient.DELETE('/api/v1/documents/{id}', {
         params: { path: { id } },

@@ -23,6 +23,7 @@ export const useSaveCompanySettings = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '회사 정보를 저장했습니다' },
     mutationFn: async (settings: CompanySettings) => {
       const { data, error } = await apiClient.PUT('/api/v1/company/settings', { body: settings });
 

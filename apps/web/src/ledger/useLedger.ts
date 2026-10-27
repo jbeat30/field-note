@@ -79,6 +79,7 @@ export const useCreateLedgerEntry = (projectId: string) => {
   const invalidate = useInvalidateLedger();
 
   return useMutation({
+    meta: { success: '내역을 등록했습니다' },
     mutationFn: async (body: LedgerEntryCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{projectId}/ledger-entries', {
         params: { path: { projectId } },
@@ -99,6 +100,7 @@ export const useUpdateLedgerEntry = () => {
   const invalidate = useInvalidateLedger();
 
   return useMutation({
+    meta: { success: '내역을 저장했습니다' },
     mutationFn: async ({ id, body }: { id: string; body: LedgerEntryUpdate }) => {
       const { data, error } = await apiClient.PATCH('/api/v1/ledger-entries/{id}', {
         params: { path: { id } },
@@ -119,6 +121,7 @@ export const useDeleteLedgerEntry = () => {
   const invalidate = useInvalidateLedger();
 
   return useMutation({
+    meta: { success: '내역을 삭제했습니다' },
     mutationFn: async (id: string) => {
       const { data, error } = await apiClient.DELETE('/api/v1/ledger-entries/{id}', {
         params: { path: { id } },

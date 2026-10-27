@@ -58,6 +58,7 @@ export const useSaveWorkLog = (projectId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '작업일지를 저장했습니다' },
     mutationFn: async ({ workDate, body }: { workDate: string; body: WorkLogSaveInput }) => {
       const { data, error } = await apiClient.PUT('/api/v1/projects/{id}/work-logs/{workDate}', {
         params: { path: { id: projectId, workDate } },

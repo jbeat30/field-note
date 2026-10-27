@@ -49,6 +49,7 @@ export const useCreateCredential = (employeeId: string) => {
   const refresh = useRefreshCredentials(employeeId);
 
   return useMutation({
+    meta: { success: '자격을 등록했습니다' },
     mutationFn: async (body: CredentialCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/employees/{id}/credentials', {
         params: { path: { id: employeeId } },
@@ -69,6 +70,7 @@ export const useUpdateCredential = (employeeId: string) => {
   const refresh = useRefreshCredentials(employeeId);
 
   return useMutation({
+    meta: { success: '자격을 저장했습니다' },
     mutationFn: async ({
       credentialId,
       body,
@@ -95,6 +97,7 @@ export const useRemoveCredential = (employeeId: string) => {
   const refresh = useRefreshCredentials(employeeId);
 
   return useMutation({
+    meta: { success: '자격을 삭제했습니다' },
     mutationFn: async (credentialId: string) => {
       const { data, error } = await apiClient.DELETE(
         '/api/v1/employees/{id}/credentials/{credentialId}',
@@ -209,6 +212,7 @@ export const useSaveRequiredCredentials = (projectId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '필수 자격을 저장했습니다' },
     mutationFn: async (typeIds: string[]) => {
       const { data, error } = await apiClient.PUT('/api/v1/projects/{id}/required-credentials', {
         params: { path: { id: projectId } },
