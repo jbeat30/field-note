@@ -151,7 +151,7 @@ export const MultipleTradesShown: Story = {
 
     await expect(await canvas.findByLabelText('판금')).toBeChecked();
     await expect(canvas.getByLabelText('설비')).toBeChecked();
-    await expect(canvas.getByText('현재 상태').nextElementSibling).toHaveTextContent('중단');
+    await expect(canvas.getByText('현재 상태').nextElementSibling).toHaveTextContent('작업 중지');
   },
 };
 
@@ -209,7 +209,7 @@ export const StartPlannedProject: Story = {
       }),
     );
 
-    await expect(await canvas.findByText("'진행' 상태로 바꿨습니다")).toBeInTheDocument();
+    await expect(await canvas.findByText("'진행 중' 상태로 바꿨습니다")).toBeInTheDocument();
     await expect(canvas.getByText('현재 상태').nextElementSibling).toHaveTextContent('진행');
     // 실제 시작일이 오늘로 기록되고 이력이 한 건 생김
     await expect(canvas.getByText('실제 시작일').nextElementSibling).not.toHaveTextContent(/^-$/);
@@ -245,7 +245,7 @@ export const SuspendWithReasonAndResume: Story = {
     await userEvent.type(form.getByLabelText('사유 (필수)'), '우천으로 중단');
     await userEvent.click(form.getByRole('button', { name: '확인' }));
 
-    await expect(await canvas.findByText("'중단' 상태로 바꿨습니다")).toBeInTheDocument();
+    await expect(await canvas.findByText("'작업 중지' 상태로 바꿨습니다")).toBeInTheDocument();
     await expect(await canvas.findByText('사유: 우천으로 중단')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '작업 재개' }));
@@ -255,7 +255,7 @@ export const SuspendWithReasonAndResume: Story = {
       }),
     );
 
-    await expect(await canvas.findByText("'진행' 상태로 바꿨습니다")).toBeInTheDocument();
+    await expect(await canvas.findByText("'진행 중' 상태로 바꿨습니다")).toBeInTheDocument();
     // 재개해도 실제 시작일은 그대로
     await expect(canvas.getByText('2026-07-15', { selector: 'dd' })).toBeInTheDocument();
   },
@@ -358,7 +358,7 @@ export const SuspendedProjectHistory: Story = {
       .getAllByRole('listitem')
       .filter((item) => /→/.test(item.textContent ?? ''));
 
-    await expect(items[0]).toHaveTextContent('진행 → 중단');
+    await expect(items[0]).toHaveTextContent('진행 중 → 작업 중지');
   },
 };
 

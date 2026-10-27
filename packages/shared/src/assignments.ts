@@ -168,8 +168,8 @@ export const assignmentStatusCheck = (
 
 const STATUS_LABELS: Record<ProjectStatus, string> = {
   PLANNED: '예정',
-  IN_PROGRESS: '진행',
-  SUSPENDED: '중단',
+  IN_PROGRESS: '진행 중',
+  SUSPENDED: '작업 중지',
   COMPLETED: '완료',
   WARRANTY: '보증 중',
   CLOSED: '종료',

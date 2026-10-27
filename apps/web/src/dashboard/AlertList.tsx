@@ -4,6 +4,7 @@ import {
   type AlertKind,
   type DashboardAlertItem,
 } from '@field-note/shared';
+import { AlertCircle, BarChart3, Check, FileText, type LucideIcon } from 'lucide-react';
 import { useState } from 'react';
 import { Link } from 'react-router';
 
@@ -77,6 +78,21 @@ type AlertRowProps = {
 const textButtonClass =
   'text-[13px] font-semibold text-sub hover:text-foreground disabled:opacity-50';
 
+// 홈 확인할 일 줄의 아이콘 칸: 종류마다 고정된 아이콘과 색 (시안 기준, 급함 여부로 색을 바꾸지 않음)
+const ROW_ICONS: Record<AlertKind, { icon: LucideIcon; tone: string }> = {
+  NO_LOG_TODAY: { icon: FileText, tone: 'bg-accent-subtle text-[#7a2f0e]' },
+  BURN_REACHED: { icon: BarChart3, tone: 'bg-warning-subtle text-warning' },
+  BURN_AHEAD: { icon: BarChart3, tone: 'bg-warning-subtle text-warning' },
+  PROJECT_OVERDUE: { icon: AlertCircle, tone: 'bg-danger-subtle text-danger' },
+  DOUBLE_ASSIGNED: { icon: AlertCircle, tone: 'bg-danger-subtle text-danger' },
+  CHANGE_STALE: { icon: FileText, tone: 'bg-accent-subtle text-[#7a2f0e]' },
+  WARRANTY_ENDING: { icon: Check, tone: 'bg-success-subtle text-success' },
+  REPAIR_UNHANDLED: { icon: FileText, tone: 'bg-accent-subtle text-[#7a2f0e]' },
+  CERTIFICATE_EXPIRING: { icon: Check, tone: 'bg-success-subtle text-success' },
+  CREDENTIAL_EXPIRING: { icon: Check, tone: 'bg-success-subtle text-success' },
+  MONTH_UNCLOSED: { icon: FileText, tone: 'bg-accent-subtle text-[#7a2f0e]' },
+};
+
 const DOT_URGENT = 'bg-danger';
 const DOT_NORMAL = 'bg-[#8d826c]';
 
@@ -87,42 +103,84 @@ const AlertRow = ({
   disabled,
   isInGroup = false,
   isModal = false,
-}: AlertRowProps) => (
-  <li
-    className={cn(
-      'flex items-center gap-3 text-sm leading-normal',
-      isInGroup ? 'py-2' : 'rounded-[20px] bg-surface-nested py-[13px] pr-3.5 pl-4',
-    )}
-  >
-    <span
-      aria-hidden
-      className={cn('size-2.5 shrink-0 rounded-full', item.urgent ? DOT_URGENT : DOT_NORMAL)}
-    />
-    <p className={cn('min-w-0 flex-1', item.urgent ? 'font-bold text-danger' : 'font-medium')}>
-      {dashboardAlertMessage(item.alert)}
-    </p>
-    <Link
-      to={dashboardAlertPath(item.alert, today)}
-      aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
+}: AlertRowProps) => {
+  // 홈의 단독 줄은 시안의 확인할 일 모양: 아이콘 칸, 제목과 설명 두 줄, 잉크 이동 버튼
+  if (!isInGroup && !isModal) {
+    const message = dashboardAlertMessage(item.alert);
+    const split = message.indexOf(': ');
+    const title = split > 0 ? message.slice(0, split) : message;
+    const detail = split > 0 ? message.slice(split + 2) : null;
+    const { icon: Icon, tone } = ROW_ICONS[item.alert.kind];
+
+    return (
+      <li className="flex items-center gap-4 rounded-[20px] bg-surface-nested px-5 py-4">
+        <span
+          aria-hidden
+          className={cn('flex size-10 shrink-0 items-center justify-center rounded-[14px]', tone)}
+        >
+          <Icon className="size-5" />
+        </span>
+        <div className="flex min-w-0 flex-1 flex-col gap-0.5">
+          <b className="text-base">{title}</b>
+          {detail && <span className="text-sm font-medium text-sub">{detail}</span>}
+        </div>
+        <Link
+          to={dashboardAlertPath(item.alert, today)}
+          aria-label={`${message} 이동`}
+          className="inline-flex h-11 shrink-0 items-center rounded-full bg-primary px-[18px] text-sm font-bold text-primary-foreground hover:opacity-85"
+        >
+          이동
+        </Link>
+        <button
+          type="button"
+          disabled={disabled}
+          aria-label={`${message} 숨기기`}
+          className={cn('shrink-0', textButtonClass)}
+          onClick={() => onDismiss([item.key])}
+        >
+          숨기기
+        </button>
+      </li>
+    );
+  }
+
+  return (
+    <li
       className={cn(
-        'shrink-0 text-[13px] font-bold',
-        !isModal &&
-          'rounded-2xl bg-primary px-3.5 py-[7px] text-primary-foreground hover:opacity-85',
+        'flex items-center gap-3 text-sm leading-normal',
+        isInGroup ? 'py-2' : 'rounded-[20px] bg-surface-nested py-[13px] pr-3.5 pl-4',
       )}
     >
-      이동
-    </Link>
-    <button
-      type="button"
-      disabled={disabled}
-      aria-label={`${dashboardAlertMessage(item.alert)} 숨기기`}
-      className={cn('shrink-0', textButtonClass, isModal && 'font-bold text-foreground')}
-      onClick={() => onDismiss([item.key])}
-    >
-      숨기기
-    </button>
-  </li>
-);
+      <span
+        aria-hidden
+        className={cn('size-2.5 shrink-0 rounded-full', item.urgent ? DOT_URGENT : DOT_NORMAL)}
+      />
+      <p className={cn('min-w-0 flex-1', item.urgent ? 'font-bold text-danger' : 'font-medium')}>
+        {dashboardAlertMessage(item.alert)}
+      </p>
+      <Link
+        to={dashboardAlertPath(item.alert, today)}
+        aria-label={`${dashboardAlertMessage(item.alert)} 이동`}
+        className={cn(
+          'shrink-0 text-[13px] font-bold',
+          !isModal &&
+            'rounded-2xl bg-primary px-3.5 py-[7px] text-primary-foreground hover:opacity-85',
+        )}
+      >
+        이동
+      </Link>
+      <button
+        type="button"
+        disabled={disabled}
+        aria-label={`${dashboardAlertMessage(item.alert)} 숨기기`}
+        className={cn('shrink-0', textButtonClass, isModal && 'font-bold text-foreground')}
+        onClick={() => onDismiss([item.key])}
+      >
+        숨기기
+      </button>
+    </li>
+  );
+};
 
 type AlertListProps = {
   alerts: readonly DashboardAlertItem[];

@@ -24,7 +24,7 @@ import { withCompany } from '../db/withCompany';
 import { loadRepairCounts } from '../repair/repairService';
 import { createDefaultWarranty, loadWarrantyForTransition } from '../warranty/warrantyService';
 
-import { loadProjectWarnings } from './projectWarnings';
+import { loadProjectUsage, loadProjectWarnings } from './projectWarnings';
 
 type Clock = () => Date;
 
@@ -248,12 +248,28 @@ export const createProjectService = (
       });
 
       const warnings = await loadProjectWarnings(tx, rows, now());
+      const usage = await loadProjectUsage(
+        tx,
+        rows.map((row) => row.id),
+        todayInSeoul(now()),
+      );
+      const [all, inProgress] = await Promise.all([
+        tx.project.count(),
+        tx.project.count({ where: { status: 'IN_PROGRESS' } }),
+      ]);
 
       return {
-        items: rows.map((row) => ({ ...toSummary(row), warnings: warnings.get(row.id) ?? [] })),
+        items: rows.map((row) => ({
+          ...toSummary(row),
+          warnings: warnings.get(row.id) ?? [],
+          siteAddress: row.siteAddress,
+          burnPercent: usage.get(row.id)?.burnPercent ?? null,
+          todayHeadcount: usage.get(row.id)?.todayHeadcount ?? 0,
+        })),
         total,
         page,
         pageSize,
+        counts: { all, inProgress },
       };
     }),
 

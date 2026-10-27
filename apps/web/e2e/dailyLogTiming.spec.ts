@@ -108,7 +108,7 @@ test('하루 작업 내역(공수·내용·자재·사진)를 모바일 화면�
   const started = Date.now();
 
   // 1) 프로젝트 머리의 오늘 기록
-  await user.tap(() => page.getByRole('link', { name: '오늘 기록' }).click());
+  await user.tap(() => page.getByRole('link', { name: '오늘 일지 쓰기' }).click());
   for (const employee of employeeNames) {
     await user.tap(() => page.getByRole('checkbox', { name: `${employee} 일함` }).check());
   }
