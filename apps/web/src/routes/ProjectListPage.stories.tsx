@@ -37,7 +37,7 @@ export const Default: Story = {
     // 코드는 숫자 순서의 최근 등록순 (2025년 번호가 맨 뒤)
     await waitFor(() => expect(rows(canvas)[0]).toContain('2026-004'));
     await expect(rows(canvas).at(-1)).toContain('2025-012');
-    // 번호·현장명·상태·고객·담당자·기간·공종이 보이고, 현장 연락처·출입 메모는 목록에 없음
+    // 코드·이름·현장 주소·상태·고객·담당자·기간이 보이고, 현장 연락처·출입 메모는 목록에 없음
     // 고객·담당자 이름은 명부·직원 목록 로딩 후 채움
     await waitFor(() =>
       expect(rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))).toContain(
@@ -47,14 +47,13 @@ export const Default: Story = {
 
     const row = rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))!;
 
-    await expect(row).toContain('A동 신축 현장');
+    await expect(row).toContain('서울특별시 중구 세종대로 110');
     await expect(row).toContain('진행');
     await expect(row).toContain('가나다건설');
     await waitFor(() =>
       expect(rows(canvas).find((text) => text.includes('A동 외장 판금 공사'))).toContain('송소장'),
     );
-    await expect(row).toContain('2026-07-15 ~ 2026-11-30');
-    await expect(row).toContain('판금');
+    await expect(row).toContain('26.07.15 – 26.11.30');
     await expect(canvas.queryByText(/02-0000-0101/)).not.toBeInTheDocument();
     await expect(canvas.queryByText(/정문 출입증/)).not.toBeInTheDocument();
     // 넓은 화면의 등록 버튼은 앱 틀 머리에 있어 이 버튼은 좁은 화면에서만 보임
@@ -69,7 +68,7 @@ export const FilterByStatus: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.click(canvas.getByRole('button', { name: '중단' }));
+    await chooseOption(canvas.getByLabelText('상태 필터'), '중단');
 
     await expect(await canvas.findByText('프로젝트 목록 1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
@@ -82,7 +81,6 @@ export const FilterByClient: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
     await chooseOption(canvas.getByLabelText('고객 필터'), '미래오피스');
 
     await expect(await canvas.findByText('프로젝트 목록 1건')).toBeInTheDocument();
@@ -136,7 +134,6 @@ export const FilterBySite: Story = {
 
     await expect(await canvas.findByText('프로젝트 목록 1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
-    await expect(canvas.getByRole('columnheader', { name: '현장명' })).toBeInTheDocument();
   },
 };
 
@@ -180,7 +177,7 @@ export const ClearFilters: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await userEvent.click(canvas.getByRole('button', { name: '완료' }));
+    await chooseOption(canvas.getByLabelText('상태 필터'), '완료');
     await expect(await canvas.findByText('프로젝트 목록 1건')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: '필터 지우기' }));
@@ -297,27 +294,19 @@ export const SearchIsDebounced: Story = {
   },
 };
 
-// 상태는 위의 버튼 한 번으로 필터, 고객·담당자·공종·기간은 "자세히 찾기"를 펼쳐서 선택
+// 상태·고객·담당자는 필터 카드에서 바로, 현장명·공종·기간은 "자세히 찾기"를 펼쳐서 선택
 export const StatusButtonsAndAdvancedToggle: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await expect(canvas.queryByLabelText('고객 필터')).not.toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '전체' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
+    await expect(canvas.queryByLabelText('공종 필터')).not.toBeInTheDocument();
 
-    await userEvent.click(canvas.getByRole('button', { name: '진행 중' }));
+    await chooseOption(canvas.getByLabelText('상태 필터'), '진행');
     await expect(await canvas.findByText('프로젝트 목록 1건')).toBeInTheDocument();
-    await expect(canvas.getByRole('button', { name: '진행 중' })).toHaveAttribute(
-      'aria-pressed',
-      'true',
-    );
 
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
-    await expect(canvas.getByLabelText('고객 필터')).toBeInTheDocument();
+    await expect(canvas.getByLabelText('공종 필터')).toBeInTheDocument();
   },
 };
 

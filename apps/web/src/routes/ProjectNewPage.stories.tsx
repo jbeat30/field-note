@@ -32,7 +32,7 @@ export const Default: Story = {
     const canvas = within(canvasElement);
 
     await expect(await canvas.findByRole('heading', { name: '프로젝트 등록' })).toBeInTheDocument();
-    await expect(canvas.getByText(/코드는 저장할 때 자동으로 붙고/)).toBeInTheDocument();
+    await expect(canvas.getByText(/코드는 저장할 때 자동으로 붙어요/)).toBeInTheDocument();
     // 고객은 명부의 고객만, 숨긴 고객(옛날상가)과 다른 구분(공급처)은 목록에 없음
     await userEvent.click(await canvas.findByLabelText('고객'));
 

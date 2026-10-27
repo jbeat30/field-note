@@ -145,9 +145,12 @@ export const DashboardWidgets = ({
             label: '이번 달 공수',
             value: roundTo(minutesToManDays(stats.monthMinutes, standardMinutes), 1),
             unit: 'MD',
-            hint: `월 기준 ${settings.data?.monthlyWorkDays ?? '-'}일 · ${
-              dashboard.month.isClosed ? '확정' : '확정 전'
-            }`,
+            hint: [
+              settings.data && `월 기준 ${settings.data.monthlyWorkDays}일`,
+              dashboard.month.isClosed ? '확정' : '확정 전',
+            ]
+              .filter(Boolean)
+              .join(' · '),
             surface: 'ink',
           },
         ]}

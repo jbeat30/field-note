@@ -265,6 +265,7 @@ export const ProjectListPage = () => {
             검색
             <Input
               id="project-search"
+              aria-label="프로젝트 검색"
               type="search"
               placeholder="이름, 코드, 현장 주소"
               value={searchText}
