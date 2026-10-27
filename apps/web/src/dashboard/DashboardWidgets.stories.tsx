@@ -21,12 +21,25 @@ const dashboard = (alertCount: number): Dashboard => ({
   today: '2026-10-11',
   alerts: noLog(alertCount),
   hiddenAlertCount: 0,
-  stats: { inProgress: 0, todayLoggedHeadcount: 0, todayHeadcount: 0, monthMinutes: 0 },
+  stats: {
+    inProgress: 0,
+    todayLoggedHeadcount: 0,
+    todayHeadcount: 0,
+    yesterdayHeadcount: 0,
+    monthMinutes: 0,
+  },
   todayAssignments: { headcount: 0, projects: [] },
   projectCounts: { planned: 0, inProgress: 0, suspended: 0 },
   activeProjects: [],
   risks: [],
-  month: { from: '2026-10-01', to: '2026-10-31', conflicts: [], workingCount: 0, idleCount: 0 },
+  month: {
+    from: '2026-10-01',
+    to: '2026-10-31',
+    isClosed: false,
+    conflicts: [],
+    workingCount: 0,
+    idleCount: 0,
+  },
   todos: { draftLogCount: 0, unclosedMonth: null },
   warranty: { ending: [], openRepairCount: 0 },
   expiring: { certificates: [], credentials: [] },
@@ -62,16 +75,28 @@ export const NoAlerts: Story = {
     const canvas = within(canvasElement);
 
     await expect(canvas.getByText('지금 확인할 알림이 없습니다')).toBeInTheDocument();
-    await expect(canvas.getByText('진행·예정·중단 중인 프로젝트가 없습니다')).toBeInTheDocument();
   },
 };
 
-// 수치 줄과 진행 중 프로젝트 표: 오늘 기록이 없으면 기록하기, 지난 종료일은 붉게
-export const StatsAndProjects: Story = {
+// 수치 타일: 오늘 투입은 어제와 견주고, 기록 필요는 오늘 작업 내역이 없는 투입 프로젝트 수, 경고 포함 문구
+export const Stats: Story = {
   args: {
     dashboard: {
       ...dashboard(1),
-      stats: { inProgress: 2, todayLoggedHeadcount: 1, todayHeadcount: 3, monthMinutes: 2430 },
+      stats: {
+        inProgress: 2,
+        todayLoggedHeadcount: 1,
+        todayHeadcount: 3,
+        yesterdayHeadcount: 1,
+        monthMinutes: 2430,
+      },
+      todayAssignments: {
+        headcount: 3,
+        projects: [
+          { projectId: ID, code: '2026-001', name: 'A동 판금 공사', headcount: 2, hasLog: true },
+          { projectId: ID, code: '2026-002', name: 'B동 판금 공사', headcount: 1, hasLog: false },
+        ],
+      },
       activeProjects: [
         project(1, { hasLogToday: true }),
         project(2, { plannedEnd: '2026-10-08', warnings: ['OVERDUE'] }),
@@ -82,18 +107,13 @@ export const StatsAndProjects: Story = {
   },
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
-    await expect(canvas.getByText('1 / 3')).toBeInTheDocument();
-    await expect(canvas.getByText('40.5')).toBeInTheDocument();
+
+    await expect(canvas.getByText('어제보다 2명 많아요')).toBeInTheDocument();
+    await expect(canvas.getByText('작업일지 미작성 프로젝트')).toBeInTheDocument();
+    await expect(canvas.getByText('경고 1건 포함')).toBeInTheDocument();
+    await expect(canvas.getByText('5.1')).toBeInTheDocument();
+    await expect(canvas.getByText(/확정 전/)).toBeInTheDocument();
     await expect(canvas.getByText('임시 저장 작업 내역 2건')).toBeInTheDocument();
-
-    const table = within(canvas.getByRole('table', { name: '진행 중 프로젝트' }));
-
-    await expect(table.getByText('3일 지남')).toBeInTheDocument();
-    await expect(table.getByText('기록함')).toBeInTheDocument();
-    await expect(table.getByRole('link', { name: 'B동 판금 공사 오늘 기록하기' })).toHaveAttribute(
-      'href',
-      '/projects/0198d000-0000-7000-8000-000000000102/work/2026-10-11',
-    );
   },
 };
 

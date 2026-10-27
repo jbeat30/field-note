@@ -10,7 +10,7 @@ test('진행률 기록부터 완료·보증·보수 요청까지 프로젝트 �
 
   const projectId = await createStartedProject(page, projectName);
 
-  await test.step('진행률을 기록하면 현황과 홈의 진행률이 바뀐다', async () => {
+  await test.step('진행률을 기록하면 현황의 진행률이 바뀐다', async () => {
     await page.goto(`/projects/${projectId}/overview`);
     await page.getByRole('button', { name: '진행률 바꾸기' }).click();
     await page.getByRole('button', { name: '50%', exact: true }).click();
@@ -18,14 +18,6 @@ test('진행률 기록부터 완료·보증·보수 요청까지 프로젝트 �
     await expect(
       page.getByText('진행률', { exact: true }).locator('xpath=following-sibling::dd[1]'),
     ).toContainText('50');
-
-    await page.goto('/');
-    await expect(
-      page
-        .getByRole('row', { name: new RegExp(projectName) })
-        .getByText('50%')
-        .first(),
-    ).toBeVisible();
   });
 
   await test.step('완료 처리: 완료일을 정하면 완료 상태가 된다', async () => {

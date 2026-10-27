@@ -45,9 +45,9 @@ const EMPLOYEES = [
 
 const STATUSES = [
   { value: 'PLANNED', label: '예정' },
-  { value: 'IN_PROGRESS', label: '진행' },
+  { value: 'IN_PROGRESS', label: '진행 중' },
   { value: 'COMPLETED', label: '완료' },
-  { value: 'SUSPENDED', label: '중단' },
+  { value: 'SUSPENDED', label: '작업 중지' },
 ];
 
 const SIZES: { size: ControlSize; label: string; use: string }[] = [

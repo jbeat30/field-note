@@ -120,9 +120,12 @@ const ProgressDialog = ({
 export const ProjectProgressPanel = ({
   projectId,
   status,
+  plannedEnd,
 }: {
   projectId: string;
   status: ProjectStatus;
+  // 종료 예정일: 있으면 잔여 일수를 계산
+  plannedEnd?: string;
 }) => {
   const health = useProjectHealth(projectId);
   const records = useProgressRecords(projectId);
@@ -139,6 +142,13 @@ export const ProjectProgressPanel = ({
 
   const data = health.data;
   const config = settings.data;
+  const remaining = plannedEnd
+    ? Math.round(
+        (Date.parse(`${plannedEnd}T00:00:00Z`) -
+          Date.parse(`${todayInSeoul(new Date())}T00:00:00Z`)) /
+          86_400_000,
+      )
+    : null;
   const burnTone =
     data.burnPercent === null
       ? 'default'
@@ -171,41 +181,67 @@ export const ProjectProgressPanel = ({
       <StatGroup
         items={[
           {
-            label: '진행률',
-            value: data.progressPercent === null ? '-' : data.progressPercent,
-            unit: data.progressPercent === null ? undefined : '%',
-            hint: data.progressPercent === null ? '기록 없음' : undefined,
-          },
-          {
-            label: '공수 소진율',
-            value: data.burnPercent === null ? '-' : Math.round(data.burnPercent),
-            unit: data.burnPercent === null ? undefined : '%',
-            hint: data.burnPercent === null ? '계획 공수 없음' : undefined,
-            tone: burnTone,
-          },
-          {
-            label: '투입 공수',
+            label: '누적 공수',
             value: roundTo(minutesToManDays(data.usedMinutes, config.standardWorkMinutes), 1),
             unit: 'MD',
             hint:
               data.plannedMinutes === null
                 ? `${roundTo(data.usedMinutes / 60, 1)}시간`
                 : `계획 ${formatWork(data.plannedMinutes, config)}`,
+            surface: 'lime',
           },
           {
-            label: '끝내려면 필요한 공수',
-            value:
-              data.forecastMinutes === null
-                ? '-'
-                : roundTo(minutesToManDays(data.forecastMinutes, config.standardWorkMinutes), 1),
-            unit: data.forecastMinutes === null ? undefined : 'MD',
-            hint: '지금 속도 기준',
+            label: '예산 소진율',
+            value: data.burnPercent === null ? '-' : Math.round(data.burnPercent),
+            unit: data.burnPercent === null ? undefined : '%',
+            hint:
+              data.burnPercent === null ? (
+                '계획 공수 없음'
+              ) : (
+                <ProgressBar
+                  aria-label="예산 소진율 막대"
+                  value={data.burnPercent}
+                  tone={burnTone === 'default' ? 'primary' : burnTone}
+                  className="h-3"
+                />
+              ),
+            tone: burnTone,
+            surface: 'cream',
+          },
+          {
+            label: '진행률',
+            value: data.progressPercent === null ? '-' : data.progressPercent,
+            unit: data.progressPercent === null ? undefined : '%',
+            hint:
+              data.progressPercent === null ? (
+                '기록 없음'
+              ) : (
+                <ProgressBar
+                  aria-label="진행률 막대"
+                  value={data.progressPercent}
+                  className="h-3 [&>div]:bg-foreground"
+                />
+              ),
+            surface: 'cream',
+          },
+          {
+            label: '잔여 일수',
+            value: remaining === null ? '-' : Math.max(0, remaining),
+            unit: remaining === null ? undefined : '일',
+            hint:
+              remaining !== null && remaining < 0
+                ? `종료 예정일 ${-remaining}일 지남`
+                : data.forecastMinutes === null
+                  ? undefined
+                  : `끝내려면 ${roundTo(
+                      minutesToManDays(data.forecastMinutes, config.standardWorkMinutes),
+                      1,
+                    )} MD 필요`,
+            tone: remaining !== null && remaining < 0 ? 'danger' : 'default',
+            surface: 'ink',
           },
         ]}
       />
-      {data.progressPercent !== null && (
-        <ProgressBar aria-label="진행률 막대" value={data.progressPercent} />
-      )}
       {!canRecordProgress(status) && (
         <p className="text-sm text-sub">이 상태에서는 진행률을 입력할 수 없습니다</p>
       )}

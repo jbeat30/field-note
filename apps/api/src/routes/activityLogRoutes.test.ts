@@ -164,9 +164,9 @@ describe('활동 기록', () => {
       kind: 'UPDATE',
       projectId: project,
       projectName: 'A동 외장 판금 공사',
-      summary: '진행 → 중단',
+      summary: '진행 중 → 작업 중지',
       changes: [
-        { label: '상태', before: '진행', after: '중단' },
+        { label: '상태', before: '진행 중', after: '작업 중지' },
         { label: '사유', before: null, after: '우천 장기화' },
       ],
     });

@@ -2,6 +2,7 @@ import {
   ALERT_KINDS,
   CERTIFICATE_EXPIRING_DAYS,
   assembleDashboard,
+  monthOf,
   monthRange,
   previousMonth,
   shiftDate,
@@ -78,6 +79,7 @@ export const createDashboardService = (
           logs,
           records,
           todayRows,
+          yesterdayRows,
           todayLogs,
           dismissals,
           draftLogCount,
@@ -88,6 +90,7 @@ export const createDashboardService = (
           credentials,
           prevClose,
           prevLogCount,
+          currentClose,
         ] = await Promise.all([
           tx.projectAssignment.findMany({
             where: { projectId: { in: ids }, cancelledAt: null, plannedMinutes: { not: null } },
@@ -107,6 +110,16 @@ export const createDashboardService = (
               cancelledAt: null,
               startDate: { lte: new Date(`${today}T00:00:00.000Z`) },
               endDate: { gte: new Date(`${today}T00:00:00.000Z`) },
+              project: { status: 'IN_PROGRESS' },
+              employee: { status: 'ACTIVE' },
+            },
+            select: { projectId: true, employeeId: true },
+          }),
+          tx.projectAssignment.findMany({
+            where: {
+              cancelledAt: null,
+              startDate: { lte: new Date(`${shiftDate(today, -1)}T00:00:00.000Z`) },
+              endDate: { gte: new Date(`${shiftDate(today, -1)}T00:00:00.000Z`) },
               project: { status: 'IN_PROGRESS' },
               employee: { status: 'ACTIVE' },
             },
@@ -181,6 +194,9 @@ export const createDashboardService = (
               },
             },
           }),
+          tx.monthlyClose.findFirst({
+            where: { month: new Date(`${monthRange(monthOf(today)).from}T00:00:00.000Z`) },
+          }),
         ]);
 
         return {
@@ -190,6 +206,7 @@ export const createDashboardService = (
           logs,
           records,
           todayRows,
+          yesterdayRows,
           todayLogs,
           dismissals,
           draftLogCount,
@@ -198,6 +215,7 @@ export const createDashboardService = (
           openRepairs,
           certificates,
           credentials,
+          monthClosed: currentClose?.isClosed ?? false,
           unclosedMonth: !prevClose?.isClosed && prevLogCount > 0 ? prevMonth : null,
         };
       });
@@ -269,6 +287,8 @@ export const createDashboardService = (
             progressRecordedOn: latest.get(project.id)?.recordedOn ?? null,
           })),
           todayAssignments: data.todayRows,
+          yesterdayAssignments: data.yesterdayRows,
+          monthClosed: data.monthClosed,
           todayLogProjectIds: data.todayLogs.map((log) => log.projectId),
           todayLoggedEmployeeIds: data.todayLogs.flatMap((log) =>
             log.entries.map((entry) => entry.employeeId),

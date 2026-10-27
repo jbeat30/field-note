@@ -18,7 +18,7 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 홈: 확인할 일(알림)과 진행 중 프로젝트 표 표시, 알림 설정으로 이동 가능
+// 홈: 수치 타일과 확인할 일(알림) 표시, 알림 설정으로 이동 가능
 export const Default: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
@@ -28,9 +28,7 @@ export const Default: Story = {
       'href',
       '/settings/alerts',
     );
-    await expect(
-      await canvas.findByRole('table', { name: '진행 중 프로젝트' }),
-    ).toBeInTheDocument();
+    await expect(canvas.getByText('오늘 투입', { selector: 'dt' })).toBeInTheDocument();
   },
 };
 
@@ -98,18 +96,12 @@ export const EmptySearchDoesNothing: Story = {
   },
 };
 
-// 대시보드 위젯: 진행 중 프로젝트, 확인할 일, 이번 달 인력, 보증 종료 임박, 만료 임박 (09)
+// 대시보드 위젯: 수치 타일, 확인할 일, 인력 달력, 보증 종료 임박, 만료 임박
 export const DashboardWidgets: Story = {
   play: async ({ canvasElement }) => {
     const canvas = within(canvasElement);
 
-    for (const title of [
-      '진행 중 프로젝트',
-      '확인할 일',
-      '이번 달 인력',
-      '보증 종료 임박',
-      '만료 임박',
-    ]) {
+    for (const title of ['확인할 일', '이번 달 인력 달력', '보증 종료 임박', '만료 임박']) {
       await expect(await canvas.findByRole('region', { name: title })).toBeInTheDocument();
     }
 
