@@ -21,8 +21,8 @@ export type ProjectStatus = z.infer<typeof projectStatusSchema>;
 // 상태 이름은 회사가 바꿀 수 있게 확장될 수 있지만 현재는 기본 이름만 사용
 export const PROJECT_STATUS_LABELS: Record<ProjectStatus, string> = {
   PLANNED: '예정',
-  IN_PROGRESS: '진행',
-  SUSPENDED: '중단',
+  IN_PROGRESS: '진행 중',
+  SUSPENDED: '작업 중지',
   COMPLETED: '완료',
   WARRANTY: '보증 중',
   CLOSED: '종료',

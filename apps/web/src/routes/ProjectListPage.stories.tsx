@@ -68,7 +68,7 @@ export const FilterByStatus: Story = {
     const canvas = within(canvasElement);
 
     await canvas.findByText('A동 외장 판금 공사');
-    await chooseOption(canvas.getByLabelText('상태 필터'), '중단');
+    await chooseOption(canvas.getByLabelText('상태 필터'), '작업 중지');
 
     await expect(await canvas.findByText('프로젝트 목록 1건')).toBeInTheDocument();
     await expect(canvas.getByText('B동 덕트 설치')).toBeInTheDocument();
@@ -302,7 +302,7 @@ export const StatusButtonsAndAdvancedToggle: Story = {
     await canvas.findByText('A동 외장 판금 공사');
     await expect(canvas.queryByLabelText('공종 필터')).not.toBeInTheDocument();
 
-    await chooseOption(canvas.getByLabelText('상태 필터'), '진행');
+    await chooseOption(canvas.getByLabelText('상태 필터'), '진행 중');
     await expect(await canvas.findByText('프로젝트 목록 1건')).toBeInTheDocument();
 
     await userEvent.click(canvas.getByRole('button', { name: /자세히 찾기/ }));
