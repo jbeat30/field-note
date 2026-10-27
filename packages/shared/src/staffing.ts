@@ -350,9 +350,13 @@ export type StaffingMonthDay = {
  * @description 인력 캘린더를 월요일 시작 주 단위 달력으로 변환 (0분 기록은 제외, 인력 타임라인과 같은 기준)
  * 기간 앞뒤는 빈 칸으로 채워 한 주가 항상 7칸이 되게 함
  * @param calendar 캘린더 응답 (보통 한 달)
+ * @param weekStartsOn 한 주의 시작 요일 (0 일요일, 1 월요일, 기본 월요일)
  * @returns 주 단위 날짜 칸 (프로젝트는 이름순, 사람은 이름순)
  */
-export const buildStaffingMonthCalendar = (calendar: StaffingCalendar): StaffingMonthDay[][] => {
+export const buildStaffingMonthCalendar = (
+  calendar: StaffingCalendar,
+  weekStartsOn: 0 | 1 = 1,
+): StaffingMonthDay[][] => {
   const names = new Map(calendar.employees.map((employee) => [employee.id, employee.name]));
   const byDate = new Map<string, StaffingWorkDay[]>();
 
@@ -400,8 +404,9 @@ export const buildStaffingMonthCalendar = (calendar: StaffingCalendar): Staffing
     };
   };
 
-  // 월요일 시작: 일요일(0)은 6칸 앞, 그 밖은 요일 - 1칸 앞
-  const weekdayIndex = (date: string) => (new Date(`${date}T00:00:00Z`).getUTCDay() + 6) % 7;
+  // 한 주의 시작 요일 기준 칸 번호 (월요일 시작이면 일요일은 6, 일요일 시작이면 0)
+  const weekdayIndex = (date: string) =>
+    (new Date(`${date}T00:00:00Z`).getUTCDay() + 7 - weekStartsOn) % 7;
   const start = shiftDate(calendar.from, -weekdayIndex(calendar.from));
   const end = shiftDate(calendar.to, 6 - weekdayIndex(calendar.to));
   const days = listDates(start, end).map((date) =>

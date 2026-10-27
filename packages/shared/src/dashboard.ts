@@ -277,6 +277,8 @@ export const dashboardSchema = z.object({
     inProgress: z.number().int(),
     todayLoggedHeadcount: z.number().int(),
     todayHeadcount: z.number().int(),
+    // 어제 투입된 사람 수 (오늘 투입과 견주는 문구용)
+    yesterdayHeadcount: z.number().int(),
     monthMinutes: z.number().int(),
   }),
   // 오늘 투입: 진행 중 프로젝트에 오늘 나가는 사람과 작업 내역 입력 여부
@@ -304,6 +306,8 @@ export const dashboardSchema = z.object({
   month: z.object({
     from: dateSchema,
     to: dateSchema,
+    // 이번 달 월 공수를 확정했는지
+    isClosed: z.boolean(),
     conflicts: z.array(
       z.object({ employeeId: z.uuid(), name: z.string(), dateCount: z.number().int() }),
     ),
@@ -387,6 +391,10 @@ export type DashboardInput = {
   projects: readonly RawProject[];
   // 진행 중 프로젝트에 오늘 투입되는 재직 직원 (프로젝트·직원)
   todayAssignments: readonly { projectId: string; employeeId: string }[];
+  // 어제 진행 중 프로젝트에 투입되던 재직 직원
+  yesterdayAssignments: readonly { projectId: string; employeeId: string }[];
+  // 이번 달 월 공수 확정 여부
+  monthClosed: boolean;
   // 오늘 저장된 작업 내역이 있는 프로젝트와 거기 들어간 직원
   todayLogProjectIds: readonly string[];
   todayLoggedEmployeeIds: readonly string[];
@@ -831,6 +839,11 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
           .filter((item) => names.has(item.projectId))
           .map((item) => item.employeeId),
       ).size,
+      yesterdayHeadcount: new Set(
+        input.yesterdayAssignments
+          .filter((item) => names.has(item.projectId))
+          .map((item) => item.employeeId),
+      ).size,
       monthMinutes: monthCalendar.workDays.reduce((sum, day) => sum + day.minutes, 0),
     },
     todayAssignments: {
@@ -850,6 +863,7 @@ export const assembleDashboard = (input: DashboardInput): Dashboard => {
     risks: risks.slice(0, DASHBOARD_PROJECT_LIMIT),
     month: {
       ...month,
+      isClosed: input.monthClosed,
       conflicts: monthConflicts.map((item) => ({
         employeeId: item.employee.id,
         name: item.employee.name,

@@ -11825,6 +11825,7 @@ export interface paths {
                                     inProgress: number;
                                     todayLoggedHeadcount: number;
                                     todayHeadcount: number;
+                                    yesterdayHeadcount: number;
                                     monthMinutes: number;
                                 };
                                 todayAssignments: {
@@ -11880,6 +11881,7 @@ export interface paths {
                                     from: string;
                                     /** Format: date */
                                     to: string;
+                                    isClosed: boolean;
                                     conflicts: {
                                         /** Format: uuid */
                                         employeeId: string;

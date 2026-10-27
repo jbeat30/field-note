@@ -36279,6 +36279,9 @@
                             "todayHeadcount": {
                               "type": "integer"
                             },
+                            "yesterdayHeadcount": {
+                              "type": "integer"
+                            },
                             "monthMinutes": {
                               "type": "integer"
                             }
@@ -36287,6 +36290,7 @@
                             "inProgress",
                             "todayLoggedHeadcount",
                             "todayHeadcount",
+                            "yesterdayHeadcount",
                             "monthMinutes"
                           ]
                         },
@@ -36525,6 +36529,9 @@
                               "type": "string",
                               "format": "date"
                             },
+                            "isClosed": {
+                              "type": "boolean"
+                            },
                             "conflicts": {
                               "type": "array",
                               "items": {
@@ -36558,6 +36565,7 @@
                           "required": [
                             "from",
                             "to",
+                            "isClosed",
                             "conflicts",
                             "workingCount",
                             "idleCount"

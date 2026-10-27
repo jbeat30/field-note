@@ -46,6 +46,8 @@ const base = (patch: Partial<DashboardInput> = {}): DashboardInput => ({
   today: TODAY,
   projects: [project(P1, '2026-001')],
   todayAssignments: [],
+  yesterdayAssignments: [],
+  monthClosed: false,
   todayLogProjectIds: [],
   todayLoggedEmployeeIds: [],
   draftLogCount: 0,
@@ -87,6 +89,29 @@ describe('weekRange', () => {
     expect(weekRange('2026-10-11')).toEqual({ from: '2026-10-05', to: '2026-10-11' });
     expect(weekRange('2026-10-05')).toEqual({ from: '2026-10-05', to: '2026-10-11' });
     expect(weekRange('2026-10-07')).toEqual({ from: '2026-10-05', to: '2026-10-11' });
+  });
+});
+
+describe('assembleDashboard: 어제 투입과 월 확정', () => {
+  it('어제 투입 인원을 프로젝트가 달라도 한 번만 세고 목록에 없는 프로젝트는 뺀다', () => {
+    const dashboard = assembleDashboard(
+      base({
+        projects: [project(P1, '2026-001'), project(P2, '2026-002')],
+        yesterdayAssignments: [
+          { projectId: P1, employeeId: E1 },
+          { projectId: P2, employeeId: E1 },
+          { projectId: P2, employeeId: E2 },
+          { projectId: 'other', employeeId: E3 },
+        ],
+      }),
+    );
+
+    expect(dashboard.stats.yesterdayHeadcount).toBe(2);
+  });
+
+  it('이번 달 월 공수 확정 여부를 그대로 담는다', () => {
+    expect(assembleDashboard(base({ monthClosed: true })).month.isClosed).toBe(true);
+    expect(assembleDashboard(base()).month.isClosed).toBe(false);
   });
 });
 
