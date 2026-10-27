@@ -1,8 +1,6 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
   pull_request:
 
 # 변경 파일 목록 조회(pull-requests)만 더하고 쓰기 권한은 주지 않음
@@ -45,8 +43,8 @@ jobs:
           echo "$HEAD → $BASE 허용"
 
   # 검사 범위 결정
-  #   full    feature → release, release → main, main 푸시: 전체 검사
-  #   light   기능 브랜치 → feature: 정적 검사와 단위·통합 시험 (문서만 바꾸면 서식만)
+  #   full    release → main: 전체 검사 (릴리즈 때 한 번만 실행)
+  #   light   그 밖의 PR(기능 → feature, feature → release): 정적 검사와 단위·통합 시험 (문서만 바꾸면 서식만)
   #   version 버전 올림 브랜치(fix-release-version-*) → release: package.json·문서 변경만 허용
   scope:
     runs-on: ubuntu-latest
@@ -56,24 +54,22 @@ jobs:
     steps:
       - id: decide
         env:
-          EVENT: ${{ github.event_name }}
           BASE: ${{ github.base_ref }}
           HEAD: ${{ github.head_ref }}
           PR: ${{ github.event.pull_request.number }}
           REPO: ${{ github.repository }}
           GH_TOKEN: ${{ github.token }}
         run: |
-          mode=full
+          mode=light
           docs_only=false
-          if [[ "$EVENT" == "pull_request" ]]; then
-            if [[ "$HEAD" =~ ^fix-release-version- && "$BASE" =~ ^release/ ]]; then
-              mode=version
-            elif [[ "$BASE" =~ ^feature/ ]]; then
-              mode=light
-              files="$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')"
-              if [[ -n "$files" ]] && ! grep -qvE '^(docs/|[^/]+\.md$)' <<<"$files"; then
-                docs_only=true
-              fi
+          if [[ "$HEAD" =~ ^fix-release-version- && "$BASE" =~ ^release/ ]]; then
+            mode=version
+          elif [[ "$BASE" == "main" ]]; then
+            mode=full
+          else
+            files="$(gh api "repos/$REPO/pulls/$PR/files" --paginate --jq '.[].filename')"
+            if [[ -n "$files" ]] && ! grep -qvE '^(docs/|[^/]+\.md$)' <<<"$files"; then
+              docs_only=true
             fi
           fi
           echo "mode=$mode" >>"$GITHUB_OUTPUT"
