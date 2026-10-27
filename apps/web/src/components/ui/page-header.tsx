@@ -59,7 +59,7 @@ export const PageHeader = ({
                   '[line-height:1.08] font-extrabold tracking-[-0.03em] break-keep',
                   isDisplay
                     ? 'text-[40px] md:text-[clamp(44px,4.4vw,72px)]'
-                    : 'text-[34px] md:text-[46px]',
+                    : 'text-[36px] md:text-[clamp(44px,3.4vw,64px)]',
                 )
               : 'text-xl font-extrabold tracking-[-0.02em] break-keep'
           }
@@ -77,7 +77,11 @@ export const PageHeader = ({
     <div
       className={cn(
         'plane pt-4 md:pt-10',
-        overlap ? 'pb-24 md:pb-[12.5rem]' : 'plane-page pb-12 md:pb-14',
+        overlap
+          ? isDisplay
+            ? 'pb-24 md:pb-[12.5rem]'
+            : 'pb-24 md:pb-28'
+          : 'plane-page pb-12 md:pb-14',
       )}
     >
       {back && <div className="pb-1">{back}</div>}

@@ -21,6 +21,7 @@ import { Input } from '../components/ui/input';
 import { DateInput } from '../components/ui/date-input';
 import { PageHeader } from '../components/ui/page-header';
 import { Combobox } from '../components/ui/combobox';
+import { SegmentedControl } from '../components/ui/segmented-control';
 import { Select } from '../components/ui/select';
 import { cn } from '../lib/cn';
 import { useDebouncedValue } from '../lib/useDebouncedValue';
@@ -46,15 +47,6 @@ type ProjectItem = NonNullable<ReturnType<typeof useProjects>['data']>['items'][
 // 표에 넣을 줄: 고객·담당자·공종 이름을 미리 풀어 둠 (이름 조회가 끝나면 새 줄 객체가 되어 표가 다시 계산함)
 type Row = ProjectItem & { clientName?: string; managerName?: string; tradeNames: string };
 
-// 상태로 한 번에 찾는 버튼 (나머지 상태는 자세히 찾기의 상태 선택)
-const STATUS_CHIPS: { label: string; status: ProjectStatus | '' }[] = [
-  { label: '전체', status: '' },
-  { label: '진행 중', status: 'IN_PROGRESS' },
-  { label: '예정', status: 'PLANNED' },
-  { label: '중단', status: 'SUSPENDED' },
-  { label: '완료', status: 'COMPLETED' },
-];
-
 // 열 → 서버 정렬 기준
 const SORT_KEY: Record<string, ProjectSortKey> = {
   // 번호는 등록 순서대로 매겨지므로 등록순 정렬과 같음
@@ -68,81 +60,82 @@ const SORT_KEY: Record<string, ProjectSortKey> = {
 
 const helper = columnHelper<Row>();
 
+// 막대 색: 소진율이 높을수록 진한 주황, 완료 계열은 초록
+const meterColor = (row: Row) =>
+  row.status === 'COMPLETED' || row.status === 'WARRANTY' || row.status === 'CLOSED'
+    ? 'bg-success'
+    : row.status === 'SUSPENDED'
+      ? 'bg-[#9dc1c4]'
+      : (row.burnPercent ?? 0) >= 90
+        ? 'bg-accent-strong'
+        : 'bg-accent';
+
+// 소진율 막대와 퍼센트 (계획 공수가 없으면 대시)
+const BurnMeter = ({ row }: { row: Row }) =>
+  row.burnPercent === null ? (
+    <span className="text-sub">-</span>
+  ) : (
+    <span className="flex items-center gap-2.5">
+      <span aria-hidden className="h-2.5 w-[140px] shrink-0 overflow-hidden rounded-full bg-field">
+        <span
+          className={cn('block h-full rounded-full', meterColor(row))}
+          style={{ width: `${Math.min(100, Math.max(0, row.burnPercent))}%` }}
+        />
+      </span>
+      <b className="font-emphasis tabular-nums">{Math.round(row.burnPercent)}%</b>
+    </span>
+  );
+
+// "26.09.01"
+const shortDay = (date: string) => date.slice(2).replaceAll('-', '.');
+
 // 열 정의: 머리 글자를 누르면 그 열 기준으로 정렬됨 (번호는 등록순, 이름·고객·담당자는 가나다순, 기간은 시작일순)
 const columns = helper.columns([
   helper.accessor('code', {
     id: 'code',
-    header: '번호',
-    meta: { className: 'hidden whitespace-nowrap tabular-nums text-sub md:table-cell' },
+    header: '코드',
+    meta: { className: 'hidden whitespace-nowrap font-emphasis tabular-nums md:table-cell' },
   }),
   helper.accessor('name', {
     id: 'name',
-    header: '프로젝트명',
+    header: '프로젝트',
     meta: { className: 'min-w-48' },
     cell: ({ row }) => (
       <>
-        {/* 좁은 화면은 번호 열이, 태블릿까지는 현장명·경고 열이 없어 이름 위아래에 보임 */}
-        <span className="block text-xs tabular-nums text-sub md:hidden">{row.original.code}</span>
+        {/* 좁은 화면은 코드 열이 없어 이름 위에 보임 */}
+        <span className="block font-emphasis text-xs tabular-nums text-sub md:hidden">
+          {row.original.code}
+        </span>
         <Link
-          className="font-semibold hover:text-sub"
+          className="text-[15px] font-bold hover:text-sub"
           to={`/projects/${row.original.id}`}
           onClick={(event) => event.stopPropagation()}
         >
           {row.original.name}
         </Link>
-        {row.original.siteName && (
-          <span className="block text-xs text-sub lg:hidden">{row.original.siteName}</span>
-        )}
-        {row.original.warnings.length > 0 && (
-          <span className="mt-1 flex flex-wrap gap-1 lg:hidden">
-            {row.original.warnings.map((warning) => (
-              <Badge key={warning} tone="danger" className="whitespace-normal">
-                {PROJECT_WARNING_LABELS[warning]}
-              </Badge>
-            ))}
+        {(row.original.siteAddress || row.original.siteName) && (
+          <span className="block text-[13px] font-medium text-sub">
+            {row.original.siteAddress || row.original.siteName}
           </span>
         )}
       </>
     ),
   }),
-  helper.accessor('siteName', {
-    id: 'site',
-    header: '현장명',
-    enableSorting: false,
-    meta: { className: 'hidden min-w-36 lg:table-cell' },
-    cell: ({ getValue }) => getValue() || '-',
-  }),
   helper.accessor((row) => PROJECT_STATUS_LABELS[row.status], {
     id: 'status',
     header: '상태',
     cell: ({ row }) => (
-      <Badge tone={STATUS_TONE[row.original.status]}>
-        {PROJECT_STATUS_LABELS[row.original.status]}
-      </Badge>
+      <span className="flex flex-wrap gap-1">
+        <Badge tone={STATUS_TONE[row.original.status]}>
+          {PROJECT_STATUS_LABELS[row.original.status]}
+        </Badge>
+        {row.original.warnings.map((warning) => (
+          <Badge key={warning} tone="danger" className="whitespace-normal">
+            {PROJECT_WARNING_LABELS[warning]}
+          </Badge>
+        ))}
+      </span>
     ),
-  }),
-  helper.accessor((row) => row.warnings.length, {
-    id: 'warnings',
-    header: '경고',
-    enableSorting: false,
-    meta: { className: 'hidden min-w-44 lg:table-cell' },
-    cell: ({ row }) =>
-      row.original.warnings.length === 0 ? (
-        <span className="text-sub">-</span>
-      ) : (
-        <span className="flex max-w-48 flex-wrap gap-1">
-          {row.original.warnings.map((warning) => (
-            <Badge
-              key={warning}
-              tone="danger"
-              className="whitespace-normal"
-              title={PROJECT_WARNING_LABELS[warning]}
-            >
-              {PROJECT_WARNING_LABELS[warning]}
-            </Badge>
-          ))}
-        </span>
-      ),
   }),
   helper.accessor('clientName', {
     id: 'client',
@@ -160,15 +153,21 @@ const columns = helper.columns([
   helper.accessor('plannedStart', {
     id: 'period',
     header: '기간',
-    meta: { className: 'hidden whitespace-nowrap md:table-cell' },
-    cell: ({ row }) => `${row.original.plannedStart} ~ ${row.original.plannedEnd}`,
+    meta: { className: 'hidden whitespace-nowrap font-emphasis tabular-nums md:table-cell' },
+    cell: ({ row }) =>
+      `${shortDay(row.original.plannedStart)} – ${shortDay(row.original.plannedEnd)}`,
   }),
-  helper.accessor('tradeNames', {
-    id: 'trades',
-    header: '공종',
-    enableSorting: false,
-    meta: { className: 'hidden whitespace-nowrap xl:table-cell' },
-    cell: ({ getValue }) => getValue() || '-',
+  helper.display({
+    id: 'burn',
+    header: '소진율',
+    meta: { className: 'hidden xl:table-cell' },
+    cell: ({ row }) => <BurnMeter row={row.original} />,
+  }),
+  helper.display({
+    id: 'headcount',
+    header: '투입',
+    meta: { className: 'hidden whitespace-nowrap font-emphasis tabular-nums xl:table-cell' },
+    cell: ({ row }) => (row.original.todayHeadcount > 0 ? `${row.original.todayHeadcount}명` : '–'),
   }),
 ]);
 
@@ -188,6 +187,7 @@ export const ProjectListPage = () => {
   const [searchText, setSearchText] = useState('');
   const [siteText, setSiteText] = useState('');
   const [showAdvanced, setShowAdvanced] = useState(false);
+  const [view, setView] = useState<'list' | 'cards'>('list');
   const [sorting, setSorting] = useState<SortingState>([]);
   const [pagination, setPagination] = useState<PaginationState>({ pageIndex: 0, pageSize: 10 });
   // 타이핑이 멈춘 뒤에만 검색어를 조회에 반영 (글자마다 요청이 나가지 않게)
@@ -242,6 +242,14 @@ export const ProjectListPage = () => {
     <div className="flex flex-col gap-6">
       <PageHeader
         overlap
+        eyebrow={
+          projects.data && (
+            <span>
+              <span className="font-emphasis">{projects.data.counts.all}</span>개 프로젝트 · 진행 중{' '}
+              <span className="font-emphasis">{projects.data.counts.inProgress}</span>개
+            </span>
+          )
+        }
         title="프로젝트"
         actions={
           <Link to="/projects/new" className={pillIconButtonClass}>
@@ -252,137 +260,129 @@ export const ProjectListPage = () => {
       />
 
       <section className="flex flex-col gap-4" aria-label="검색과 필터">
-        <div className="relative -mt-14 flex flex-col gap-1.5 rounded-[30px] bg-surface-subtle px-5 py-5 md:px-7 md:py-6">
-          <label htmlFor="project-search" className="text-[12.5px] font-bold text-sub">
-            프로젝트 검색
+        <div className="relative -mt-14 grid grid-cols-1 items-end gap-4 rounded-[32px] bg-surface-subtle px-5 py-6 md:grid-cols-2 md:px-8 xl:grid-cols-[2fr_1fr_1fr_1fr_auto]">
+          <label htmlFor="project-search" className="flex flex-col gap-1.5 text-[13px] font-bold">
+            검색
+            <Input
+              id="project-search"
+              type="search"
+              placeholder="이름, 코드, 현장 주소"
+              value={searchText}
+              onChange={(event) => {
+                setSearchText(event.target.value);
+                goFirstPage();
+              }}
+            />
           </label>
-          <Input
-            id="project-search"
-            type="search"
-            placeholder="프로젝트명이나 번호로 찾기"
-            value={searchText}
-            onChange={(event) => {
-              setSearchText(event.target.value);
-              goFirstPage();
-            }}
+          <FilterField label="상태">
+            <Select
+              aria-label="상태 필터"
+              value={filter.status ?? ''}
+              emptyLabel="전체"
+              onValueChange={(status) => update({ status: status || undefined })}
+              options={PROJECT_STATUSES.map((status) => ({
+                value: status,
+                label: PROJECT_STATUS_LABELS[status],
+              }))}
+            />
+          </FilterField>
+          <FilterField label="고객">
+            <Combobox
+              aria-label="고객 필터"
+              value={filter.clientId ?? ''}
+              placeholder="전체"
+              searchPlaceholder="고객 이름으로 찾기"
+              clearable
+              onValueChange={(clientId) => update({ clientId: clientId || undefined })}
+              options={(partners.data ?? [])
+                .filter((item) => item.kind === 'CLIENT')
+                .map((item) => ({ value: item.id, label: item.name }))}
+            />
+          </FilterField>
+          <FilterField label="담당자">
+            <Combobox
+              aria-label="담당자 필터"
+              value={filter.managerId ?? ''}
+              placeholder="전체"
+              clearable
+              onValueChange={(managerId) => update({ managerId: managerId || undefined })}
+              options={(employees.data ?? []).map((item) => ({
+                value: item.id,
+                label: item.name,
+              }))}
+            />
+          </FilterField>
+          <SegmentedControl
+            aria-label="보기 방식"
+            value={view}
+            onValueChange={setView}
+            className="w-auto"
+            options={[
+              { value: 'list', label: '목록' },
+              { value: 'cards', label: '카드' },
+            ]}
           />
         </div>
-        <ul className="flex flex-wrap gap-2" aria-label="상태로 찾기">
-          {STATUS_CHIPS.map((chip) => (
-            <li key={chip.label}>
-              <Chip
-                selected={(filter.status ?? '') === chip.status}
-                onClick={() =>
-                  update({ status: (chip.status || undefined) as ProjectStatus | undefined })
-                }
-              >
-                {chip.label}
-              </Chip>
-            </li>
-          ))}
-          <li>
-            <Chip
-              selected={filter.hasWarning === 'true'}
-              onClick={() =>
-                update({ hasWarning: filter.hasWarning === 'true' ? undefined : 'true' })
-              }
-            >
-              경고 있음
-            </Chip>
-          </li>
-        </ul>
-        <button
-          type="button"
-          aria-expanded={showAdvanced}
-          className="flex min-h-touch items-center gap-1 self-start text-sm font-medium text-primary"
-          onClick={() => setShowAdvanced((value) => !value)}
-        >
-          자세히 찾기 (현장명, 고객, 담당자, 공종, 기간)
-          <ChevronDown
-            aria-hidden
-            className={cn('size-4 transition-transform', showAdvanced && 'rotate-180')}
-          />
-        </button>
+        <div className="flex flex-wrap items-center gap-2">
+          <Chip
+            selected={filter.hasWarning === 'true'}
+            onClick={() =>
+              update({ hasWarning: filter.hasWarning === 'true' ? undefined : 'true' })
+            }
+          >
+            경고 있음
+          </Chip>
+          <button
+            type="button"
+            aria-expanded={showAdvanced}
+            className="flex min-h-touch items-center gap-1 text-sm font-medium text-primary"
+            onClick={() => setShowAdvanced((value) => !value)}
+          >
+            자세히 찾기 (현장명, 공종, 기간)
+            <ChevronDown
+              aria-hidden
+              className={cn('size-4 transition-transform', showAdvanced && 'rotate-180')}
+            />
+          </button>
+        </div>
         {showAdvanced && (
-          <>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-4 rounded-[30px] bg-surface-subtle px-7 py-6 lg:grid-cols-4">
-              <FilterField label="상태 필터">
-                <Select
-                  aria-label="상태 필터"
-                  value={filter.status ?? ''}
-                  emptyLabel="전체 상태"
-                  onValueChange={(status) => update({ status: status || undefined })}
-                  options={PROJECT_STATUSES.map((status) => ({
-                    value: status,
-                    label: PROJECT_STATUS_LABELS[status],
-                  }))}
-                />
-              </FilterField>
-              <FilterField label="고객 필터">
-                <Combobox
-                  aria-label="고객 필터"
-                  value={filter.clientId ?? ''}
-                  placeholder="전체 고객"
-                  searchPlaceholder="고객 이름으로 찾기"
-                  clearable
-                  onValueChange={(clientId) => update({ clientId: clientId || undefined })}
-                  options={(partners.data ?? [])
-                    .filter((item) => item.kind === 'CLIENT')
-                    .map((item) => ({ value: item.id, label: item.name }))}
-                />
-              </FilterField>
-              <FilterField label="담당자 필터">
-                <Combobox
-                  aria-label="담당자 필터"
-                  value={filter.managerId ?? ''}
-                  placeholder="전체 담당자"
-                  clearable
-                  onValueChange={(managerId) => update({ managerId: managerId || undefined })}
-                  options={(employees.data ?? []).map((item) => ({
-                    value: item.id,
-                    label: item.name,
-                  }))}
-                />
-              </FilterField>
-              <FilterField label="공종 필터">
-                <Select
-                  aria-label="공종 필터"
-                  value={filter.tradeId ?? ''}
-                  emptyLabel="전체 공종"
-                  onValueChange={(tradeId) => update({ tradeId: tradeId || undefined })}
-                  options={trades.map((item) => ({ value: item.id, label: item.name }))}
-                />
-              </FilterField>
-            </div>
-            <div className="grid grid-cols-2 gap-x-3 gap-y-4 rounded-[30px] bg-surface-subtle px-7 py-6 lg:grid-cols-4">
-              <label className="col-span-2 flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
-                현장명
-                <Input
-                  type="search"
-                  placeholder="예: 강남 사옥"
-                  value={siteText}
-                  onChange={(event) => {
-                    setSiteText(event.target.value);
-                    goFirstPage();
-                  }}
-                />
-              </label>
-              <label className="flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
-                기간 시작
-                <DateInput
-                  value={filter.from ?? ''}
-                  onChange={(event) => update({ from: event.target.value || undefined })}
-                />
-              </label>
-              <label className="flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
-                기간 끝
-                <DateInput
-                  value={filter.to ?? ''}
-                  onChange={(event) => update({ to: event.target.value || undefined })}
-                />
-              </label>
-            </div>
-          </>
+          <div className="grid grid-cols-2 gap-x-3 gap-y-4 rounded-[30px] bg-surface-subtle px-7 py-6 lg:grid-cols-4">
+            <label className="flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
+              현장명
+              <Input
+                type="search"
+                placeholder="예: 강남 사옥"
+                value={siteText}
+                onChange={(event) => {
+                  setSiteText(event.target.value);
+                  goFirstPage();
+                }}
+              />
+            </label>
+            <FilterField label="공종 필터">
+              <Select
+                aria-label="공종 필터"
+                value={filter.tradeId ?? ''}
+                emptyLabel="전체 공종"
+                onValueChange={(tradeId) => update({ tradeId: tradeId || undefined })}
+                options={trades.map((item) => ({ value: item.id, label: item.name }))}
+              />
+            </FilterField>
+            <label className="flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
+              기간 시작
+              <DateInput
+                value={filter.from ?? ''}
+                onChange={(event) => update({ from: event.target.value || undefined })}
+              />
+            </label>
+            <label className="flex flex-col gap-1.5 text-[12.5px] font-bold text-sub">
+              기간 끝
+              <DateInput
+                value={filter.to ?? ''}
+                onChange={(event) => update({ to: event.target.value || undefined })}
+              />
+            </label>
+          </div>
         )}
         {isFiltered && (
           <Button
@@ -423,6 +423,7 @@ export const ProjectListPage = () => {
             onPaginationChange: setPagination,
           }}
           onRowClick={(row) => void navigate(`/projects/${row.id}`)}
+          isCards={view === 'cards'}
           mobileCard={(row) => (
             <div className="flex flex-col gap-2">
               <div className="flex items-center justify-between gap-3">
@@ -433,6 +434,12 @@ export const ProjectListPage = () => {
                   </span>
                 </div>
                 <Badge tone={STATUS_TONE[row.status]}>{PROJECT_STATUS_LABELS[row.status]}</Badge>
+              </div>
+              <div className="flex items-center justify-between gap-3 text-xs text-sub">
+                <span className="font-emphasis tabular-nums">
+                  {shortDay(row.plannedStart)} – {shortDay(row.plannedEnd)}
+                </span>
+                <BurnMeter row={row} />
               </div>
               {row.warnings.length > 0 && (
                 <span className="flex flex-wrap gap-1">

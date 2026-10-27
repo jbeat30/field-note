@@ -10696,6 +10696,22 @@
                                 "BEHIND_SCHEDULE"
                               ]
                             }
+                          },
+                          "siteAddress": {
+                            "type": [
+                              "string",
+                              "null"
+                            ]
+                          },
+                          "burnPercent": {
+                            "type": [
+                              "number",
+                              "null"
+                            ]
+                          },
+                          "todayHeadcount": {
+                            "type": "integer",
+                            "minimum": 0
                           }
                         },
                         "required": [
@@ -10709,7 +10725,10 @@
                           "tradeIds",
                           "plannedStart",
                           "plannedEnd",
-                          "warnings"
+                          "warnings",
+                          "siteAddress",
+                          "burnPercent",
+                          "todayHeadcount"
                         ]
                       }
                     },
@@ -10724,13 +10743,31 @@
                     "pageSize": {
                       "type": "integer",
                       "minimum": 1
+                    },
+                    "counts": {
+                      "type": "object",
+                      "properties": {
+                        "all": {
+                          "type": "integer",
+                          "minimum": 0
+                        },
+                        "inProgress": {
+                          "type": "integer",
+                          "minimum": 0
+                        }
+                      },
+                      "required": [
+                        "all",
+                        "inProgress"
+                      ]
                     }
                   },
                   "required": [
                     "items",
                     "total",
                     "page",
-                    "pageSize"
+                    "pageSize",
+                    "counts"
                   ]
                 }
               }

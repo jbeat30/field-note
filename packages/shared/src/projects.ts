@@ -154,6 +154,12 @@ export type ProjectDetail = z.infer<typeof projectDetailSchema>;
 // 목록의 한 줄: 요약에 경고(진행 중 프로젝트만 해당) 추가
 export const projectListItemSchema = projectSummarySchema.extend({
   warnings: z.array(projectWarningTypeSchema),
+  // 현장 주소 (목록에서 프로젝트 이름 아래에 표시)
+  siteAddress: z.string().nullable(),
+  // 공수 소진율(%): 계획 공수가 없으면 null
+  burnPercent: z.number().nullable(),
+  // 오늘 이 프로젝트에 투입되는 재직 직원 수
+  todayHeadcount: z.number().int().min(0),
 });
 
 export type ProjectListItem = z.infer<typeof projectListItemSchema>;
@@ -164,6 +170,8 @@ export const projectsResponseSchema = z.object({
   total: z.number().int().min(0),
   page: z.number().int().min(1),
   pageSize: z.number().int().min(1),
+  // 조건과 상관없는 회사 전체 프로젝트 수와 진행 중 수 (목록 머리의 요약)
+  counts: z.object({ all: z.number().int().min(0), inProgress: z.number().int().min(0) }),
 });
 
 export type ProjectsResponse = z.infer<typeof projectsResponseSchema>;

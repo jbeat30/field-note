@@ -3668,10 +3668,17 @@ export interface paths {
                                 /** Format: date */
                                 plannedEnd: string;
                                 warnings: ("BURN_WARN" | "BURN_LIMIT" | "BURN_AHEAD" | "OVERDUE" | "BEHIND_SCHEDULE")[];
+                                siteAddress: string | null;
+                                burnPercent: number | null;
+                                todayHeadcount: number;
                             }[];
                             total: number;
                             page: number;
                             pageSize: number;
+                            counts: {
+                                all: number;
+                                inProgress: number;
+                            };
                         };
                     };
                 };
