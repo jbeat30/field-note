@@ -6,7 +6,7 @@ import { Link, NavLink, Outlet, useLocation, useParams } from 'react-router';
 import { Alert } from '../components/ui/alert';
 import { BackLink } from '../components/ui/back-link';
 import { Badge } from '../components/ui/badge';
-import { Button, pillIconButtonClass } from '../components/ui/button';
+import { Button } from '../components/ui/button';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -17,7 +17,6 @@ import { SummaryExportButton } from '../completion/SummaryExportButton';
 import { Skeleton } from '../components/ui/skeleton';
 import { useEmployees } from '../employees/useEmployees';
 import { cn } from '../lib/cn';
-import { formatLongDay } from '../lib/dates';
 import { projectWorkPath } from '../lib/projectPaths';
 import { usePartners } from '../partners/usePartners';
 import { useProject } from '../projects/useProjects';
@@ -38,6 +37,9 @@ export const STATUS_TONE: Record<
 const WARRANTY_STATUSES: readonly string[] = ['COMPLETED', 'WARRANTY', 'CLOSED'];
 // 오늘 기록 버튼을 보여 줄 상태
 const WRITABLE: readonly string[] = ['IN_PROGRESS', 'SUSPENDED', 'COMPLETED', 'WARRANTY'];
+
+// "26.09.01"
+const shortDay = (date: string) => date.slice(2).replaceAll('-', '.');
 
 const dueText = (end: string, status: ProjectStatus) => {
   if (['COMPLETED', 'WARRANTY', 'CLOSED', 'CANCELLED'].includes(status)) return null;
@@ -74,7 +76,7 @@ export const ProjectLayout = () => {
     return (
       <div className="flex flex-col gap-4" aria-busy role="status">
         <span className="sr-only">프로젝트를 불러오는 중</span>
-        <div className="plane pt-4 pb-14 md:pt-8 md:pb-16 print:hidden">
+        <div className="plane pt-4 pb-24 md:pt-8 md:pb-[7.5rem] print:hidden">
           <div className="flex min-h-touch items-center">
             <Skeleton className="h-4 w-24 bg-[#fbf7ee]/45" />
           </div>
@@ -90,7 +92,8 @@ export const ProjectLayout = () => {
             </div>
           </div>
         </div>
-        <div className="relative -mt-10 flex gap-1 overflow-hidden rounded-full bg-track p-[5px] sm:w-fit sm:max-w-full">
+        <Skeleton className="relative -mt-24 h-[104px] rounded-[30px] md:-mt-[84px]" />
+        <div className="relative flex gap-1 overflow-hidden rounded-full bg-track p-[5px] sm:w-fit sm:max-w-full">
           {TAB_SKELETON_WIDTHS.map((width, index) => (
             <Skeleton
               key={index}
@@ -138,16 +141,16 @@ export const ProjectLayout = () => {
   const workDate = /\/work\/(\d{4}-\d{2}-\d{2})$/.exec(pathname)?.[1];
 
   const tabs: { to: string; label: string; end?: boolean; active?: boolean }[] = [
-    { to: base, label: '작업 달력', end: true },
-    { to: `${base}/overview`, label: '현황' },
+    { to: base, label: '현황', end: true },
     { to: `${base}/assignments`, label: '인원' },
-    { to: `${base}/materials`, label: '비용·자재' },
+    { to: `${base}/logs`, label: '일지', active: pathname.startsWith(`${base}/work/`) },
     { to: `${base}/photos`, label: '사진' },
     { to: `${base}/memos`, label: '메모' },
     { to: `${base}/documents`, label: '문서' },
-    { to: `${base}/labor`, label: '공수·인건비' },
+    { to: `${base}/materials`, label: '자재' },
+    { to: `${base}/labor`, label: '공수' },
     { to: `${base}/change-works`, label: '추가 공사' },
-    { to: `${base}/summary`, label: '마감·보증', active: inCloseout },
+    { to: `${base}/summary`, label: '마감 · 보증', active: inCloseout },
   ];
   const closeoutTabs = [
     { to: `${base}/summary`, label: '마감 요약' },
@@ -162,52 +165,41 @@ export const ProjectLayout = () => {
 
   return (
     <div className="flex flex-col gap-4">
-      {/* 프로젝트 머리: 주황 평면에 돌아가기, 번호·상태 알약, 이름, 현장·고객·담당자·기간 한 줄, 오른쪽 주 버튼 */}
-      <div className="plane pt-4 pb-14 md:pt-8 md:pb-16 print:hidden">
-        <BackLink to="/projects">프로젝트 목록</BackLink>
-        <header className="mt-1 flex items-start justify-between gap-3">
-          <div className="flex min-w-0 flex-col gap-2">
-            <div className="flex flex-wrap items-center gap-1.5 text-xs font-bold">
-              <span className="rounded-full bg-[#fbf7ee] px-2.5 py-0.5">{data.code}</span>
-              <Badge tone={STATUS_TONE[data.status]}>{PROJECT_STATUS_LABELS[data.status]}</Badge>
-              {due && <Badge tone={due.includes('지남') ? 'danger' : 'primary'}>{due}</Badge>}
-            </div>
-            <h1 className="text-[28px] leading-[1.1] font-extrabold tracking-[-0.03em] break-keep md:text-[46px]">
-              {workDate ? `${formatLongDay(workDate)} 작업` : data.name}
-            </h1>
-            <p className="text-[15px] font-medium">
-              {[
-                workDate && data.name,
-                data.siteName,
-                client,
-                manager && `담당 ${manager}`,
-                `${data.plannedStart} ~ ${data.plannedEnd}`,
-              ]
-                .filter(Boolean)
-                .join(', ')}
-              {data.siteMapUrl && (
+      {/* 프로젝트 머리: 주황 평면에 돌아가기, 번호·상태 알약, 이름, 오른쪽 주 버튼, 평면에 걸친 잉크 정보 카드(현장·고객·담당자·기간) */}
+      <div
+        className={cn(
+          'plane pt-4 md:pt-8 print:hidden',
+          workDate ? 'pb-10 md:pb-14' : 'pb-24 md:pb-[7.5rem]',
+        )}
+      >
+        <BackLink to={workDate ? base : '/projects'}>
+          {workDate ? data.name : '프로젝트 목록'}
+        </BackLink>
+        <header className="mt-1 flex items-end justify-between gap-3">
+          <div className="flex min-w-0 flex-col gap-2.5">
+            <div className="flex flex-wrap items-center gap-2.5 text-sm font-bold">
+              <span className="font-emphasis">{data.code}</span>
+              {workDate ? (
+                <span>{data.name}</span>
+              ) : (
                 <>
-                  {' '}
-                  <a
-                    className="-my-2.5 inline-block py-2.5 font-bold whitespace-nowrap hover:text-sub"
-                    href={data.siteMapUrl}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  >
-                    지도 열기
-                  </a>
+                  <Badge tone="ink">{PROJECT_STATUS_LABELS[data.status]}</Badge>
+                  {due && <Badge tone={due.includes('지남') ? 'danger' : 'neutral'}>{due}</Badge>}
                 </>
               )}
-            </p>
+            </div>
+            <h1 className="text-[32px] leading-[1.02] font-extrabold tracking-[-0.025em] break-keep md:text-[clamp(40px,2.9vw,56px)]">
+              {workDate ? '작업일지' : data.name}
+            </h1>
           </div>
           <div className="flex shrink-0 items-center gap-2">
-            {showTodayBtn && (
+            {showTodayBtn && !workDate && (
               <Link
                 to={projectWorkPath(data.id, todayInSeoul(new Date()))}
-                className={pillIconButtonClass}
+                className="inline-flex h-[52px] items-center gap-2 rounded-full bg-[#fbf7ee] px-6 text-[15px] font-bold text-[#14110d] hover:opacity-85 max-sm:size-[50px] max-sm:justify-center max-sm:px-0"
               >
-                <Pencil aria-hidden />
-                오늘 기록
+                <Pencil aria-hidden className="size-4" />
+                <span className="max-sm:sr-only">오늘 일지 쓰기</span>
               </Link>
             )}
             <DropdownMenu>
@@ -215,7 +207,7 @@ export const ProjectLayout = () => {
                 <button
                   type="button"
                   aria-label="더보기"
-                  className="inline-flex size-[50px] items-center justify-center rounded-full bg-[#fbf7ee] text-[#14110d] hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
+                  className="inline-flex size-[52px] items-center justify-center rounded-full bg-[#14110d] text-[#fbf7ee] hover:opacity-85 focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-foreground"
                 >
                   <MoreHorizontal aria-hidden className="size-5" />
                 </button>
@@ -236,33 +228,75 @@ export const ProjectLayout = () => {
         </header>
       </div>
 
+      {!workDate && (
+        <dl className="relative -mt-24 grid grid-cols-2 gap-x-6 gap-y-4 rounded-[30px] bg-[#14110d] px-6 py-5 text-[#fcf9f2] md:-mt-[84px] md:grid-cols-4 md:px-8 md:py-6 print:hidden">
+          {[
+            { label: '현장', value: data.siteAddress || data.siteName, isMap: true },
+            { label: '고객', value: client },
+            { label: '담당자', value: manager },
+            {
+              label: '기간',
+              value: `${shortDay(data.plannedStart)} – ${shortDay(data.plannedEnd)}`,
+              isNumber: true,
+            },
+          ].map((item) => (
+            <div key={item.label} className="min-w-0">
+              <dt className="mb-1 text-[12.5px] font-bold text-[#b3a78f]">{item.label}</dt>
+              <dd
+                className={cn(
+                  'text-[17px] font-bold break-words',
+                  item.isNumber && 'font-emphasis',
+                )}
+              >
+                {item.value || '-'}
+                {item.isMap && data.siteMapUrl && (
+                  <>
+                    {' '}
+                    <a
+                      className="-my-2.5 inline-block py-2.5 text-sm font-bold whitespace-nowrap text-accent hover:opacity-85"
+                      href={data.siteMapUrl}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      지도 열기
+                    </a>
+                  </>
+                )}
+              </dd>
+            </div>
+          ))}
+        </dl>
+      )}
+
       {/* 서브 메뉴: 트랙 안의 알약, 가로 스크롤만, 세로 스크롤바 없음, 현재 탭 자동 스크롤 */}
-      <nav
-        ref={navRef}
-        aria-label="프로젝트 메뉴"
-        className="relative -mt-10 flex gap-1 overflow-x-auto overflow-y-hidden rounded-full bg-track p-[5px] [scrollbar-width:none] sm:w-fit sm:max-w-full print:hidden [&::-webkit-scrollbar]:hidden"
-      >
-        {tabs.map((tab) => (
-          <NavLink
-            key={tab.to}
-            to={tab.to}
-            end={tab.end}
-            className={({ isActive }) =>
-              cn(
-                'flex min-h-10 items-center rounded-full px-5 text-sm font-bold whitespace-nowrap transition-colors',
-                isActive ||
-                  tab.active ||
-                  (tab.end && pathname.startsWith(`${tab.to}/work/`)) ||
-                  (tab.label === '마감·보증' && pathname.startsWith(`${base}/daily-report`))
-                  ? 'bg-primary font-bold text-primary-foreground'
-                  : 'text-sub hover:text-foreground',
-              )
-            }
-          >
-            {tab.label}
-          </NavLink>
-        ))}
-      </nav>
+      {!workDate && (
+        <nav
+          ref={navRef}
+          aria-label="프로젝트 메뉴"
+          className="flex gap-0.5 overflow-x-auto overflow-y-hidden rounded-full bg-field p-[5px] [scrollbar-width:none] print:hidden [&::-webkit-scrollbar]:hidden"
+        >
+          {tabs.map((tab) => (
+            <NavLink
+              key={tab.to}
+              to={tab.to}
+              end={tab.end}
+              className={({ isActive }) =>
+                cn(
+                  'flex min-h-[46px] items-center rounded-full px-[22px] text-[15px] font-bold whitespace-nowrap transition-colors',
+                  isActive ||
+                    tab.active ||
+                    (tab.label === '현황' && pathname.startsWith(`${base}/overview`)) ||
+                    (tab.label === '마감 · 보증' && pathname.startsWith(`${base}/daily-report`))
+                    ? 'bg-primary font-bold text-primary-foreground'
+                    : 'text-sub hover:bg-track hover:text-foreground',
+                )
+              }
+            >
+              {tab.label}
+            </NavLink>
+          ))}
+        </nav>
+      )}
 
       {(inCloseout || pathname.startsWith(`${base}/daily-report`)) && (
         <div className="flex items-center justify-between gap-3 print:hidden">

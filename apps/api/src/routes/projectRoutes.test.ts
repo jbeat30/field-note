@@ -447,6 +447,12 @@ describe('목록·조회', () => {
       '가 프로젝트',
     ]);
     expect([all.total, all.page, all.pageSize]).toEqual([5, 1, 20]);
+    // 머리 요약은 조건과 상관없는 전체 수, 새 프로젝트는 소진율 없음·투입 0명
+    expect(all.counts).toEqual({ all: 5, inProgress: 0 });
+    expect(all.items.every((item) => item.burnPercent === null && item.todayHeadcount === 0)).toBe(
+      true,
+    );
+    expect((await page('?pageSize=2')).counts.all).toBe(5);
 
     // 쪽 나누기: 총 건수는 그대로, 쪽마다 정해진 개수, 마지막 쪽은 남은 만큼
     const first = await page('?pageSize=2&page=1');

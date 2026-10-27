@@ -5,4 +5,4 @@
  * @returns 화면 주소
  */
 export const projectWorkPath = (projectId: string, date?: string) =>
-  date ? `/projects/${projectId}/work/${date}` : `/projects/${projectId}`;
+  date ? `/projects/${projectId}/work/${date}` : `/projects/${projectId}/logs`;

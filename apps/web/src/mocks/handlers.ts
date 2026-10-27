@@ -469,6 +469,38 @@ const projectWarningsOf = (account: MockAccount, project: ProjectDetail) => {
   }).warnings;
 };
 
+// 목록의 공수 소진율(계획 공수가 없으면 null)과 그날 투입 인원 (서버의 loadProjectUsage와 같은 규칙)
+const projectBurnOf = (account: MockAccount, project: ProjectDetail) => {
+  const planned = getAssignments(account)
+    .filter((item) => item.projectId === project.id && !item.cancelledAt)
+    .flatMap((item) => (item.plannedMinutes === null ? [] : [item.plannedMinutes]))
+    .reduce((sum, value) => sum + value, 0);
+
+  if (planned <= 0) return null;
+
+  const used = getWorkLogs(account)
+    .filter((log) => log.projectId === project.id && log.status === 'SAVED')
+    .flatMap((log) => log.entries)
+    .reduce((sum, entry) => sum + entry.minutes, 0);
+
+  return Math.round((used / planned) * 1000) / 10;
+};
+
+const projectHeadcountOn = (account: MockAccount, project: ProjectDetail, date: string) =>
+  new Set(
+    getAssignments(account)
+      .filter(
+        (item) =>
+          item.projectId === project.id &&
+          !item.cancelledAt &&
+          item.startDate <= date &&
+          item.endDate >= date &&
+          getEmployees(account).find((employee) => employee.id === item.employeeId)?.status ===
+            'ACTIVE',
+      )
+      .map((item) => item.employeeId),
+  ).size;
+
 // 복구·소유자 이전 링크 시연 토큰: 용도와 새 소유자 이름
 const TAKEOVER_DEMO_TOKENS: Record<
   string,
@@ -1620,9 +1652,19 @@ export const handlers = [
       plannedStart: item.plannedStart,
       plannedEnd: item.plannedEnd,
       warnings: projectWarningsOf(account, item),
+      siteAddress: item.siteAddress,
+      burnPercent: projectBurnOf(account, item),
+      todayHeadcount: projectHeadcountOn(account, item, todayInSeoul(new Date())),
     }));
+    const all = getProjects(account);
 
-    return HttpResponse.json({ items, total: matched.length, page, pageSize });
+    return HttpResponse.json({
+      items,
+      total: matched.length,
+      page,
+      pageSize,
+      counts: { all: all.length, inProgress: all.filter((p) => p.status === 'IN_PROGRESS').length },
+    });
   }),
 
   http.post('/api/v1/projects', async ({ request }) => {

@@ -6,6 +6,7 @@ import {
   monthOf,
   monthRange,
   previousMonth,
+  shiftDate,
   todayInSeoul,
   dashboardCalendarRange,
   type AlertKind,
@@ -144,6 +145,17 @@ const buildDashboard = (account: MockAccount) => {
       (a, b) => b.recordedOn.localeCompare(a.recordedOn) || b.createdAt.localeCompare(a.createdAt),
     )[0];
   const warranty = listMockWarrantyDashboard(account);
+  // 그날 진행 중 프로젝트에 투입되는 재직 직원 (서버와 같은 조건)
+  const assignmentsOn = (date: string) =>
+    assignments
+      .filter(
+        (item) =>
+          item.startDate <= date &&
+          item.endDate >= date &&
+          projects.find((project) => project.id === item.projectId)?.status === 'IN_PROGRESS' &&
+          employees.find((employee) => employee.id === item.employeeId)?.status === 'ACTIVE',
+      )
+      .map((item) => ({ projectId: item.projectId, employeeId: item.employeeId }));
   // 지난달에 저장한 작업 내역이 있는데 확정하지 않았으면 알림 (서버와 같은 규칙)
   const prevMonth = previousMonth(today);
   const prevRange = monthRange(prevMonth);
@@ -179,15 +191,9 @@ const buildDashboard = (account: MockAccount) => {
           progressRecordedOn: progress?.recordedOn ?? null,
         };
       }),
-      todayAssignments: assignments
-        .filter(
-          (item) =>
-            item.startDate <= today &&
-            item.endDate >= today &&
-            projects.find((project) => project.id === item.projectId)?.status === 'IN_PROGRESS' &&
-            employees.find((employee) => employee.id === item.employeeId)?.status === 'ACTIVE',
-        )
-        .map((item) => ({ projectId: item.projectId, employeeId: item.employeeId })),
+      todayAssignments: assignmentsOn(today),
+      yesterdayAssignments: assignmentsOn(shiftDate(today, -1)),
+      monthClosed: false,
       todayLogProjectIds: logs
         .filter((log) => log.workDate === today && log.status === 'SAVED')
         .map((log) => log.projectId),

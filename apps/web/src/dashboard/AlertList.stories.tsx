@@ -30,16 +30,15 @@ export default meta;
 
 type Story = StoryObj<typeof meta>;
 
-// 급한 알림은 붉은 글자, 그 밖은 기본 글자
+// 단독 줄은 제목과 설명 두 줄, 이동은 프로젝트 작업 화면으로
 export const UrgentAndNormal: Story = {
   args: { alerts: [...noLog(1), month] },
   play: async ({ canvasElement, args }) => {
     const canvas = within(canvasElement);
 
-    await expect(canvas.getByText(/프로젝트 1.*작업 내역이 아직 없습니다/)).toHaveClass(
-      'text-danger',
-    );
-    await expect(canvas.getByText(/2026-09.*확정/)).not.toHaveClass('text-danger');
+    await expect(canvas.getByText('프로젝트 1')).toBeInTheDocument();
+    await expect(canvas.getByText('오늘 투입됐는데 작업 내역이 아직 없습니다')).toBeInTheDocument();
+    await expect(canvas.getByText(/2026-09.*확정/)).toBeInTheDocument();
     await expect(canvas.getByRole('link', { name: /프로젝트 1.*이동/ })).toHaveAttribute(
       'href',
       `/projects/${ID}/work/${TODAY}`,
