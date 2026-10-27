@@ -74,6 +74,7 @@ export const useCreateRepair = (projectId: string) => {
   const invalidate = useInvalidateRepairs();
 
   return useMutation({
+    meta: { success: '하자를 등록했습니다' },
     mutationFn: async (body: RepairCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{id}/repair-requests', {
         params: { path: { id: projectId } },
@@ -94,6 +95,7 @@ export const useUpdateRepair = (id: string) => {
   const invalidate = useInvalidateRepairs();
 
   return useMutation({
+    meta: { success: '하자를 저장했습니다' },
     mutationFn: async (body: RepairUpdate) => {
       const { data, error } = await apiClient.PATCH('/api/v1/repair-requests/{id}', {
         params: { path: { id } },
@@ -114,6 +116,7 @@ export const useTransitionRepair = (id: string) => {
   const invalidate = useInvalidateRepairs();
 
   return useMutation({
+    meta: { success: '하자 상태를 바꿨습니다' },
     mutationFn: async (body: RepairTransition) => {
       const { data, error } = await apiClient.POST('/api/v1/repair-requests/{id}/status', {
         params: { path: { id } },
@@ -134,6 +137,7 @@ export const useLinkRepair = (id: string) => {
   const invalidate = useInvalidateRepairs();
 
   return useMutation({
+    meta: { success: '연결했습니다' },
     mutationFn: async (body: RepairLink) => {
       const { data, error } = await apiClient.POST('/api/v1/repair-requests/{id}/links', {
         params: { path: { id } },
@@ -154,6 +158,7 @@ export const useUnlinkRepair = (id: string) => {
   const invalidate = useInvalidateRepairs();
 
   return useMutation({
+    meta: { success: '연결을 해제했습니다' },
     mutationFn: async (linkId: string) => {
       const { data, error } = await apiClient.DELETE(
         '/api/v1/repair-requests/{id}/links/{linkId}',

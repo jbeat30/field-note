@@ -36,6 +36,7 @@ export const useSaveAlertSettings = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '알림 설정을 저장했습니다' },
     mutationFn: async (body: AlertSettingsUpdate) => {
       const { data, error } = await apiClient.PUT('/api/v1/company/alert-settings', { body });
 
@@ -59,6 +60,7 @@ export const useDismissAlerts = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '알림을 정리했습니다' },
     mutationFn: async (keys: string[]) => {
       const { data, error } = await apiClient.POST('/api/v1/alerts/dismiss', { body: { keys } });
 

@@ -65,6 +65,7 @@ export const useCreateMemo = () => {
   const invalidate = useInvalidateMemos();
 
   return useMutation({
+    meta: { success: '메모를 저장했습니다' },
     mutationFn: async (body: MemoCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/memos', { body });
 
@@ -82,6 +83,7 @@ export const useUpdateMemo = () => {
   const invalidate = useInvalidateMemos();
 
   return useMutation({
+    meta: { success: '메모를 수정했습니다' },
     mutationFn: async ({ id, body }: { id: string; body: MemoUpdate }) => {
       const { data, error } = await apiClient.PATCH('/api/v1/memos/{id}', {
         params: { path: { id } },
@@ -102,6 +104,7 @@ export const useDeleteMemo = () => {
   const invalidate = useInvalidateMemos();
 
   return useMutation({
+    meta: { success: '메모를 삭제했습니다' },
     mutationFn: async (id: string) => {
       const { data, error } = await apiClient.DELETE('/api/v1/memos/{id}', {
         params: { path: { id } },

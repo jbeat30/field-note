@@ -36,6 +36,7 @@ export const useSaveWarranty = (projectId: string) => {
   const apply = useApplyWarranty(projectId);
 
   return useMutation({
+    meta: { success: '보증 정보를 저장했습니다' },
     mutationFn: async (body: WarrantyUpdate) => {
       const { data, error } = await apiClient.PUT('/api/v1/projects/{id}/warranty', {
         params: { path: { id: projectId } },
@@ -56,6 +57,7 @@ export const useAddCertificate = (projectId: string) => {
   const apply = useApplyWarranty(projectId);
 
   return useMutation({
+    meta: { success: '증서를 추가했습니다' },
     mutationFn: async (body: WarrantyCertificateCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{id}/warranty/certificates', {
         params: { path: { id: projectId } },
@@ -76,6 +78,7 @@ export const useUpdateCertificate = (projectId: string) => {
   const apply = useApplyWarranty(projectId);
 
   return useMutation({
+    meta: { success: '증서를 저장했습니다' },
     mutationFn: async ({
       certificateId,
       body,
@@ -102,6 +105,7 @@ export const useRemoveCertificate = (projectId: string) => {
   const apply = useApplyWarranty(projectId);
 
   return useMutation({
+    meta: { success: '증서를 삭제했습니다' },
     mutationFn: async (certificateId: string) => {
       const { data, error } = await apiClient.DELETE(
         '/api/v1/projects/{id}/warranty/certificates/{certificateId}',

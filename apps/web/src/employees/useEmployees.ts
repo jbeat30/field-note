@@ -56,6 +56,7 @@ export const useCreateEmployee = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '직원을 등록했습니다' },
     mutationFn: async (body: EmployeeCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/employees', { body });
 
@@ -73,6 +74,7 @@ export const useUpdateEmployee = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '직원 정보를 저장했습니다' },
     mutationFn: async (body: EmployeeUpdate) => {
       const { data, error } = await apiClient.PATCH('/api/v1/employees/{id}', {
         params: { path: { id } },
