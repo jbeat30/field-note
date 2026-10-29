@@ -22,6 +22,7 @@ export const useRevokeDevice = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '기기를 로그아웃시켰습니다' },
     mutationFn: async (id: string) => {
       const { error } = await apiClient.DELETE('/api/v1/me/devices/{id}', {
         params: { path: { id } },

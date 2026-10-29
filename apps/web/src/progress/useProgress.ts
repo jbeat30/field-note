@@ -40,6 +40,7 @@ export const useRecordProgress = (projectId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '진행률을 기록했습니다' },
     mutationFn: async (body: ProgressRecordCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{id}/progress', {
         params: { path: { id: projectId } },
