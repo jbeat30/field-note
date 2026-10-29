@@ -1119,3 +1119,8 @@ gh pr create --base feature/0.8.0        # CI 통과 후 squash 머지
 - 서버 시험 중 사용자가 발견한 결함: 인증 코드를 짧게, 잘못 입력하면 영어 "Too small: expected …"가 그대로 보였다. 문구를 적지 않은 검증의 기본 문구를 전역으로 한국어로 바꿨다 (`ZOD_MESSAGES`, 시험 5건)
 - 실서버 시험(C) 결과: 배포, HTTPS, 보안 헤더, 메일(가입 인증, 2단계 인증, 재설정), 백업 생성과 복구 시험, `decrypt`, 크론 4개, 실패 알림 메일, `server-check.sh` 15항목, 운영 R2 업로드, 내려받기, 썸네일, 삭제, 회사 간 격리 외부 점검(호출 1,716건, 위반 0), 엑셀, 전체 내려받기 모두 통과
 - 서버 v1.0.0 배포 완료(2026-10-21). 운영 단축어(`new-company`, `reissue-invite`, `list-companies`, `fnc`, `fn-ops`)를 `deploy/server-aliases.sh`로 저장소에 두고 `docs/07-feature-reference.md`에 "서버 운영" 절을 추가했다. 다음 버전 계획은 `docs/12-next-version-plan.md`
+
+## 1.2.2 릴리즈 의존성 점검 (2026-10-30)
+
+- 릴리즈 필수 검사인 `pnpm audit --prod`의 qs 경고(GHSA-6pq8-jhm2-2vcw)를 해소하기 위해 하위 의존성을 6.16.1로 고정하고 잠금 파일 갱신
+- 수정 후 운영 의존성 감사 결과 취약점 0건. 서비스 기능 변경과 새 DB 마이그레이션 없음

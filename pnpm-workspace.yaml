@@ -19,6 +19,8 @@ allowBuilds:
 # 보안 경고가 있는 하위 의존성을 패치 버전으로 고정 (pnpm audit --prod 통과용)
 # exceljs 4.4.0이 uuid 8을 쓰는데 v3/v5/v6의 버퍼 범위 검사 누락 경고(GHSA-w5hq-g745-h8pq)가 있어 11.1.1로 올림. exceljs는 v4만 쓰므로 호환
 overrides:
+  # qs의 문자열 변환 중 예외로 인한 서비스 거부 취약점 패치 버전 고정
+  'qs@>=6.7.0 <=6.16.0': 6.16.1
   'ip-address@<=10.7.3': 10.7.4
   'uuid@<11.1.1': 11.1.1
   # ajv가 끌어오는 fast-uri와 express가 끌어오는 body-parser의 보안 경고(GHSA-xhq7-xmqj-769h 등) 패치 버전으로 고정
