@@ -34,6 +34,7 @@ export const useCloseMonth = (month: string) => {
   const apply = useApplyMonthly(month);
 
   return useMutation({
+    meta: { success: '월을 마감했습니다' },
     mutationFn: async (body: MonthlyClose) => {
       const { data, error } = await apiClient.POST('/api/v1/monthly-hours/close', { body });
 
@@ -51,6 +52,7 @@ export const useReopenMonth = (month: string) => {
   const apply = useApplyMonthly(month);
 
   return useMutation({
+    meta: { success: '마감을 해제했습니다' },
     mutationFn: async (body: MonthlyReopen) => {
       const { data, error } = await apiClient.POST('/api/v1/monthly-hours/reopen', { body });
 

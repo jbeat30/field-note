@@ -54,6 +54,7 @@ export const useCreatePartner = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '거래처를 등록했습니다' },
     mutationFn: async (body: PartnerCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/partners', { body });
 
@@ -71,6 +72,7 @@ export const useUpdatePartner = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '거래처 정보를 저장했습니다' },
     mutationFn: async (body: PartnerUpdate) => {
       const { data, error } = await apiClient.PATCH('/api/v1/partners/{id}', {
         params: { path: { id } },
@@ -96,6 +98,7 @@ export const useDeletePartner = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '거래처를 삭제했습니다' },
     mutationFn: async () => {
       const { data, error } = await apiClient.DELETE('/api/v1/partners/{id}', {
         params: { path: { id } },

@@ -34,6 +34,7 @@ export const useCreateAssignment = (projectId: string) => {
   const invalidate = useInvalidateAssignments();
 
   return useMutation({
+    meta: { success: '인력을 배치했습니다' },
     mutationFn: async (body: AssignmentCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{id}/assignments', {
         params: { path: { id: projectId } },
@@ -55,6 +56,7 @@ export const useUpdateAssignment = (projectId: string) => {
   const invalidate = useInvalidateAssignments();
 
   return useMutation({
+    meta: { success: '배치를 수정했습니다' },
     mutationFn: async ({ assignmentId, ...body }: AssignmentUpdate & { assignmentId: string }) => {
       const { data, error } = await apiClient.PATCH(
         '/api/v1/projects/{id}/assignments/{assignmentId}',
@@ -78,6 +80,7 @@ export const useCancelAssignment = (projectId: string, assignmentId: string) => 
   const invalidate = useInvalidateAssignments();
 
   return useMutation({
+    meta: { success: '배치를 취소했습니다' },
     mutationFn: async (body: AssignmentCancel) => {
       const { data, error } = await apiClient.POST(
         '/api/v1/projects/{id}/assignments/{assignmentId}/cancel',

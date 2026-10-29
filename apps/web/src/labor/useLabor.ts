@@ -42,6 +42,7 @@ export const useAddPayRate = (employeeId: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '단가를 추가했습니다' },
     mutationFn: async (body: PayRateCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/employees/{id}/pay-rates', {
         params: { path: { id: employeeId } },

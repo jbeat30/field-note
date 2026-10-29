@@ -45,6 +45,7 @@ export const useUpdatePhoto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '사진 정보를 저장했습니다' },
     mutationFn: async ({ id, body }: { id: string; body: PhotoUpdate }) => {
       const { data, error } = await apiClient.PATCH('/api/v1/photos/{id}', {
         params: { path: { id } },
@@ -65,6 +66,7 @@ export const useDeletePhoto = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '사진을 삭제했습니다' },
     mutationFn: async (id: string) => {
       const { data, error } = await apiClient.DELETE('/api/v1/photos/{id}', {
         params: { path: { id } },

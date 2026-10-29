@@ -71,6 +71,7 @@ export const useCreateChangeWork = (projectId: string) => {
   const invalidate = useInvalidateChangeWorks();
 
   return useMutation({
+    meta: { success: '추가 공사를 등록했습니다' },
     mutationFn: async (body: ChangeWorkCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{id}/change-works', {
         params: { path: { id: projectId } },
@@ -91,6 +92,7 @@ export const useUpdateChangeWork = (id: string) => {
   const invalidate = useInvalidateChangeWorks();
 
   return useMutation({
+    meta: { success: '추가 공사를 저장했습니다' },
     mutationFn: async (body: ChangeWorkUpdate) => {
       const { data, error } = await apiClient.PATCH('/api/v1/change-works/{id}', {
         params: { path: { id } },
@@ -111,6 +113,7 @@ export const useTransitionChangeWork = (id: string) => {
   const invalidate = useInvalidateChangeWorks();
 
   return useMutation({
+    meta: { success: '추가 공사 상태를 바꿨습니다' },
     mutationFn: async (body: ChangeWorkTransition) => {
       const { data, error } = await apiClient.POST('/api/v1/change-works/{id}/status', {
         params: { path: { id } },
@@ -131,6 +134,7 @@ export const useLinkChangeWorkDocument = (id: string) => {
   const invalidate = useInvalidateChangeWorks();
 
   return useMutation({
+    meta: { success: '문서를 연결했습니다' },
     mutationFn: async (body: ChangeWorkLink) => {
       const { data, error } = await apiClient.POST('/api/v1/change-works/{id}/documents', {
         params: { path: { id } },
@@ -151,6 +155,7 @@ export const useUnlinkChangeWorkDocument = (id: string) => {
   const invalidate = useInvalidateChangeWorks();
 
   return useMutation({
+    meta: { success: '문서 연결을 해제했습니다' },
     mutationFn: async ({
       documentId,
       confirmCompleted,
@@ -184,6 +189,7 @@ export const useAddChangeWorkEvidence = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '증빙을 추가했습니다' },
     mutationFn: async (body: ChangeWorkEvidenceCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/change-works/{id}/evidence', {
         params: { path: { id } },

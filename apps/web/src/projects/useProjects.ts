@@ -91,6 +91,7 @@ export const useCreateProject = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '프로젝트를 등록했습니다' },
     mutationFn: async (body: ProjectCreate) => {
       const { data, error } = await apiClient.POST('/api/v1/projects', { body });
 
@@ -112,6 +113,7 @@ export const useUpdateProject = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '프로젝트를 저장했습니다' },
     mutationFn: async (body: ProjectUpdate) => {
       const { data, error } = await apiClient.PATCH('/api/v1/projects/{id}', {
         params: { path: { id } },
@@ -156,6 +158,7 @@ export const useTransitionProject = (id: string) => {
   const queryClient = useQueryClient();
 
   return useMutation({
+    meta: { success: '프로젝트 상태를 바꿨습니다' },
     mutationFn: async (body: ProjectTransition) => {
       const { data, error } = await apiClient.POST('/api/v1/projects/{id}/status', {
         params: { path: { id } },

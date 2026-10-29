@@ -6,6 +6,7 @@ import {
   optionsResponseSchema,
   projectsResponseSchema,
   requiredCredentialsResponseSchema,
+  todayInSeoul,
 } from '@field-note/shared';
 import { setupServer } from 'msw/node';
 
@@ -16,6 +17,11 @@ import { DEMO_ACCOUNTS } from './data';
 import { handlers } from './handlers';
 import { resetMockPhotos } from './photoHandlers';
 import { resetMockState } from './state';
+
+jest.mock('@field-note/shared', () => ({
+  ...jest.requireActual('@field-note/shared'),
+  todayInSeoul: jest.fn(),
+}));
 
 // 목업 응답이 서버 계약(공유 스키마)을 지키는지 검사 (handlers.test.ts와 같은 방식)
 Object.defineProperty(globalThis, 'location', {
@@ -33,6 +39,10 @@ beforeAll(() => {
   server.listen({ onUnhandledFrame: 'error' });
   client = createApiClient('http://localhost');
 });
+beforeEach(() => {
+  jest.mocked(todayInSeoul).mockReturnValue('2026-10-20');
+});
+
 afterEach(() => {
   resetMockState();
   resetMockPhotos();
@@ -179,6 +189,22 @@ describe('직원 서류 목업', () => {
     });
 
     expect(other.response.status).toBe(400);
+  });
+});
+
+describe('직원 서류 만료 경계', () => {
+  it.each([
+    ['2026-10-28', 'EXPIRING', 0],
+    ['2026-10-29', 'EXPIRED', -1],
+  ])('기준일 %s에 맞는 상태와 잔여 일수를 반환한다', async (today, status, daysLeft) => {
+    jest.mocked(todayInSeoul).mockReturnValue(today);
+    const { employeeId } = await setup();
+    const own = await credentials(employeeId('한용접'));
+
+    expect(own.find((item) => item.typeName === '안전교육 이수증')).toMatchObject({
+      status,
+      daysLeft,
+    });
   });
 });
 
