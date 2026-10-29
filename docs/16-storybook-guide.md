@@ -1,6 +1,6 @@
-# Storybook 가이드 (화면 조각·화면 동작 시험)
+# Storybook 가이드 (화면 조각, 화면 동작 시험)
 
-스토리는 **보여 주는 문서이자 시험**이다. 화면(컴포넌트·페이지)을 상태별로 띄우고, `play`로 클릭·입력한 결과를 검사한다.
+스토리는 **보여 주는 문서이자 시험**이다. 화면(컴포넌트, 페이지)을 상태별로 띄우고, `play`로 클릭, 입력한 결과를 검사한다.
 
 ## 1. 실행
 
@@ -52,10 +52,10 @@ export const ConflictDay: Story = {
 규칙:
 
 - 스토리 이름은 **상태를 설명하는 영어 파스칼 케이스**(`ConflictDay`), 위에 한국어 주석으로 무엇을 보여 주는지 한 줄
-- 한 스토리는 한 가지 상태·한 가지 흐름만 시험한다
-- 새 화면·컴포넌트에는 스토리를 꼭 만든다 (정상, 비어 있음, 오류, 로딩 중 중 해당하는 것)
+- 한 스토리는 한 가지 상태, 한 가지 흐름만 시험한다
+- 새 화면, 컴포넌트에는 스토리를 꼭 만든다 (정상, 비어 있음, 오류, 로딩 중 중 해당하는 것)
 
-## 3. 주소·로그인이 필요한 페이지 스토리
+## 3. 주소, 로그인이 필요한 페이지 스토리
 
 페이지는 미리 만들어진 라우터 안에서 뜬다. 주소는 `parameters.router`로, 로그인은 `loaders`로 정한다.
 
@@ -70,7 +70,7 @@ const meta = {
 } satisfies Meta<typeof EmployeeCardPage>;
 ```
 
-- 목업 데이터는 `src/mocks/` (`demoSource.ts`가 시드와 같은 인물·프로젝트)
+- 목업 데이터는 `src/mocks/` (`demoSource.ts`가 시드와 같은 인물, 프로젝트)
 - 스토리마다 목업 상태가 초기화된다 (`.storybook/preview.tsx`의 loaders). 별도 초기화가 필요한 목업은 거기에 `resetMock…()`을 더한다
 - `MemoryRouter`는 이미 감싸져 있다. 스토리에서 `<MemoryRouter>`를 또 감싸면 "Router inside Router" 오류가 난다
 
@@ -93,20 +93,20 @@ play: async ({ canvasElement, args }) => {
 ```
 
 - 찾기: `getByRole` > `getByLabelText` > `getByText` 순서. 안 보이게 되는 것을 확인할 때는 `queryBy…`
-- 비동기는 `findBy…`·`waitFor`로 기다린다. 고정 시간 `setTimeout`으로 기다리지 않는다
+- 비동기는 `findBy…`, `waitFor`로 기다린다. 고정 시간 `setTimeout`으로 기다리지 않는다
 - 콜백 확인용은 `args: { onSubmit: fn(async () => undefined) }` (`import { fn } from 'storybook/test'`)
-- 창(Modal)·확인 창(alertdialog)은 `canvasElement` 밖(`document.body`)에 뜬다: `within(document.body).findByRole('alertdialog')`
+- 창(Modal), 확인 창(alertdialog)은 `canvasElement` 밖(`document.body`)에 뜬다: `within(document.body).findByRole('alertdialog')`
 - 창이 열려 있으면 뒤 화면은 접근성 트리에서 빠져 `getByRole`로 안 잡힌다. 창을 닫은 뒤에 확인한다
 - 서버 응답을 스토리에서만 바꾸고 싶으면 스토리 `parameters.msw.handlers`에 핸들러를 넘긴다
 
 ## 5. 자주 나는 문제
 
-| 증상                                                   | 원인·해결                                                                                                                                            |
+| 증상                                                   | 원인, 해결                                                                                                                                           |
 | ------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `You cannot render a <Router> inside another <Router>` | 스토리에서 라우터를 또 감쌈. 지우고 `parameters.router`만 쓴다                                                                                       |
 | `useBlocker must be used within a data router`         | 스토리의 라우터는 데이터 라우터가 아님. `LeaveGuard`처럼 라우터가 없으면 건너뛰는 컴포넌트를 쓴다                                                    |
 | `Unable to find an accessible element with the role…`  | 창이 열려 뒤 화면이 가려짐, 또는 아직 로딩 중. `findBy…`로 기다리거나 창을 닫는다                                                                    |
-| 접근성(a11y) 실패                                      | Accessibility 탭의 규칙 이름대로 라벨·대비·역할을 고친다                                                                                             |
+| 접근성(a11y) 실패                                      | Accessibility 탭의 규칙 이름대로 라벨, 대비, 역할을 고친다                                                                                           |
 | 앞 스토리의 입력이 남아 있음                           | 기기 초안(IndexedDB)은 매 스토리 초기화되지만, 스토리 안에서 만든 상태는 구분자를 스토리마다 새로 만든다 (예: `useState(() => crypto.randomUUID())`) |
 | `test:stories`가 브라우저를 못 찾음                    | `playwright install chromium` 실행                                                                                                                   |
 
